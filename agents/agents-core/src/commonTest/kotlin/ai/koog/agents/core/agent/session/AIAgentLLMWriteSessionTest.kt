@@ -495,4 +495,24 @@ class AIAgentLLMWriteSessionTest {
             "Tool call should not be added to the history twice"
         )
     }
+
+    @Test
+    fun testRequestLLMForceOneToolSkipsNonToolMessages() = runTest {
+        val testTool = TestTool()
+
+        val mockExecutor = getMockExecutor(clock = testClock, serializer = serializer) {
+            mockLLMMixedResponse(
+                toolCalls = listOf(
+                    testTool to TestTool.Args("tool"),
+                ),
+                responses = listOf("message")
+            ) onCondition { true }
+        }
+
+        val session = createSession(mockExecutor)
+
+        val response = session.requestLLMForceOneTool(TestTool())
+
+        assertIs<Message.Tool.Call>(response)
+    }
 }

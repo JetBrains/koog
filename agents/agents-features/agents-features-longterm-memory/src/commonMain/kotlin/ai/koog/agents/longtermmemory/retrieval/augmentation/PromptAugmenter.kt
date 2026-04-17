@@ -1,7 +1,8 @@
 package ai.koog.agents.longtermmemory.retrieval.augmentation
 
-import ai.koog.agents.longtermmemory.retrieval.SearchResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.rag.base.TextDocument
+import ai.koog.rag.base.storage.search.SearchResult
 
 /**
  * Interface for augmenting prompts with relevant context retrieved from memory.
@@ -32,7 +33,7 @@ public fun interface PromptAugmenter {
      * @param relevantContext The list of search results containing relevant context.
      * @return A new [Prompt] with the context inserted, or the original prompt if no augmentation is needed.
      */
-    public fun augment(originalPrompt: Prompt, relevantContext: List<SearchResult>): Prompt
+    public fun augment(originalPrompt: Prompt, relevantContext: List<SearchResult<TextDocument>>): Prompt
 
     /**
      * Companion object with constants, static methods, and builder entry point.
@@ -66,11 +67,11 @@ public fun interface PromptAugmenter {
          * Formats a list of search results into a numbered text block with the given prefix.
          */
         public fun formatContext(
-            relevantContext: List<SearchResult>,
+            relevantContext: List<SearchResult<TextDocument>>,
             contextPrefix: String = DEFAULT_CONTEXT_PREFIX
         ): String {
             return contextPrefix + relevantContext.mapIndexed { index, result ->
-                "[${index + 1}] ${result.record.content}"
+                "[${index + 1}] ${result.document.content}"
             }.joinToString("\n\n")
         }
 

@@ -20,8 +20,8 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      koog-src: ${{ steps.filter.outputs.koog-src_any_changed }}
-      simple-examples: ${{ steps.filter.outputs.simple-examples_any_changed  }}
+      koog-src: ${{ steps.filter.outputs.koog-src_any_modified }}
+      simple-examples: ${{ steps.filter.outputs.simple-examples_any_modified  }}
     steps:
       - uses: actions/checkout@v6
 

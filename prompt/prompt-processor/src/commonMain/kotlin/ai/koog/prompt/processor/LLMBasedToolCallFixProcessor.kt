@@ -11,6 +11,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
 
 /**
@@ -86,7 +87,7 @@ import kotlin.jvm.JvmStatic
  * Defaults to null, meaning that the original message is returned if the LLM fails to fix a tool call.
  * @param maxRetries The maximum number of iterations in the main loop
  */
-public class LLMBasedToolCallFixProcessor(
+public class LLMBasedToolCallFixProcessor @JvmOverloads constructor(
     toolRegistry: ToolRegistry,
     toolCallJsonConfig: ToolCallJsonConfig = ToolCallJsonConfig(),
     private val preprocessor: ResponseProcessor = ManualToolCallFixProcessor(toolRegistry, toolCallJsonConfig),

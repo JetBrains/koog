@@ -151,6 +151,20 @@ class RoundRobinRouterTest {
             throw NotImplementedError("Not implemented for test")
         }
 
+        override suspend fun embed(
+            text: String,
+            model: LLModel
+        ): List<Double> {
+            throw NotImplementedError("Not implemented for test")
+        }
+
+        override suspend fun embed(
+            inputs: List<String>,
+            model: LLModel
+        ): List<List<Double>> {
+            throw NotImplementedError("Not implemented for test")
+        }
+
         override fun close() {
             throw NotImplementedError("Not implemented for test")
         }

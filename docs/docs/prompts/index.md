@@ -6,7 +6,7 @@ This section describes how to create and run prompts with Koog.
 
 ## Creating prompts
 
-In Koog, prompts are instances of the [**Prompt**](api:prompt-model::ai.koog.prompt.dsl.Prompt) 
+In Koog, prompts are instances of the [**Prompt**](api:prompt-model::ai.koog.prompt.dsl.Prompt)
 data class with the following properties:
 
 - `id`: A unique identifier for the prompt.
@@ -14,19 +14,40 @@ data class with the following properties:
 - `params`: Optional [LLM configuration parameters](prompt-creation/index.md#prompt-parameters) (such as temperature, tool choice, and others).
 
 Although you can instantiate the `Prompt` class directly,
-the recommended way to create prompts is by using the [Kotlin DSL](prompt-creation/index.md), 
-which provides a structured way to define the conversation.
+the recommended way to create prompts is by using the [Kotlin DSL](prompt-creation/index.md) or the Java builder API,
+which provide a structured way to define the conversation.
 
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
--->
-```kotlin
-val myPrompt = prompt("hello-koog") {
-    system("You are a helpful assistant.")
-    user("What is Koog?")
-}
-```
-<!--- KNIT example-prompts-01.kt -->
+!!! note
+    Kotlin examples on this page use the Kotlin DSL. Java examples use the `Prompt.builder("id")` builder with explicit methods like `system(...)`, `user(...)`, `assistant(...)`, `toolCall(...)`, `toolResult(...)`, and `withOutput(Foo.class)` where applicable.
+
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.prompt
+    -->
+    ```kotlin
+    val myPrompt = prompt("hello-koog") {
+        system("You are a helpful assistant.")
+        user("What is Koog?")
+    }
+    ```
+    <!--- KNIT example-prompts-01.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    var myPrompt = Prompt.builder("hello-koog")
+        .system("You are a helpful assistant.")
+        .user("What is Koog?")
+        .build();
+    ```
+    <!--- KNIT example-prompts-java-01.java -->
 
 !!! note
     AI agents can take a simple text prompt as input.
@@ -42,7 +63,7 @@ The execution flow is the same for both clients and executors:
 
 ```mermaid
 flowchart TB
-    A([Prompt built with Kotlin DSL])
+    A([Prompt built with Kotlin DSL or Java builder])
     B{LLM client or prompt executor}
     C[LLM provider]
     D([Response to your application])
@@ -52,6 +73,7 @@ flowchart TB
     C -->|"returns response"| B
     B -->|"returns result"| D
 ```
+<!--- KNIT example-prompts-01.txt -->
 
 <div class="grid cards" markdown>
 
@@ -95,7 +117,7 @@ Koog allows you to optimize performance and handle failures when running prompts
 ## Prompts in AI agents
 
 In Koog, AI agents maintain and manage prompts during their lifecycle.
-While LLM clients or executors are used to run prompts, agents handle the flow of prompt updates, ensuring the 
+While LLM clients or executors are used to run prompts, agents handle the flow of prompt updates, ensuring the
 conversation history remains relevant and consistent.
 
 The prompt lifecycle in an agent usually includes several stages:
@@ -113,31 +135,50 @@ Then, when you call the agent's `run()` method,
 you typically provide an initial [user message](prompt-creation/index.md#user-messages) as input.
 Together, these messages form the agent's initial prompt. For example: 
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import kotlinx.coroutines.runBlocking
+=== "Kotlin"
 
-val apiKey = System.getenv("OPENAI_API_KEY")
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import kotlinx.coroutines.runBlocking
+    val apiKey = System.getenv("OPENAI_API_KEY")
+    fun main() = runBlocking {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    // Create an agent
+    val agent = AIAgent(
+        promptExecutor = simpleOpenAIExecutor(apiKey),
+        systemPrompt = "You are a helpful assistant.",
+        llmModel = OpenAIModels.Chat.GPT4o
+    )
+    
+    // Run the agent
+    val result = agent.run("What is Koog?")
+    ```
+    <!--- KNIT example-prompts-02.kt -->
 
-fun main() = runBlocking {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-// Create an agent
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(apiKey),
-    systemPrompt = "You are a helpful assistant.",
-    llmModel = OpenAIModels.Chat.GPT4o
-)
+=== "Java"
 
-// Run the agent
-val result = agent.run("What is Koog?")
-```
-<!--- KNIT example-prompts-02.kt -->
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
+        .systemPrompt("You are a helpful assistant. Answer user questions concisely.")
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .build();
+
+    var result = agent.run("What is Koog?");
+    ```
+    <!--- KNIT example-prompts-java-02.java -->
 
 In the example, the agent automatically converts the text prompt to the Prompt object and sends it to the prompt executor:
 
@@ -159,6 +200,7 @@ flowchart TB
     E -->|"result to"| B
     B -->|"result to"| A
 ```
+<!--- KNIT example-prompts-02.txt -->
 
 For more advanced configurations, you can also use [AIAgentConfig](api:agents-core::ai.koog.agents.core.agent.config.AIAgentConfig)
 to define the agent's initial prompt.

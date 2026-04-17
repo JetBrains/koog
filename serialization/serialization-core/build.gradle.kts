@@ -29,6 +29,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(project(":serialization:serialization-jackson"))
             }
         }
     }

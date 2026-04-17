@@ -88,12 +88,17 @@ public class ChatMemory {
         }
 
         private fun installInternal(config: ChatMemoryConfig, pipeline: AIAgentPipeline) {
-            pipeline.interceptStrategyStarting(this) {
-                val history = config.chatHistoryProvider.load(it.context.runId)
-                val processed = applyPreProcessors(history, config.preprocessors)
+            pipeline.interceptStrategyStarting(this) { ctx ->
+                val history = config.chatHistoryProvider.load(ctx.context.runId)
 
-                it.context.llm.writeSession {
-                    prompt = prompt.withMessages { processed }
+                ctx.context.llm.writeSession {
+                    val historyMessages = applyPreProcessors(history, config.preprocessors)
+                    val initialMessages = ctx.context.llm.prompt.messages
+                    prompt = prompt.withMessages {
+                        historyMessages.ifEmpty {
+                            initialMessages + historyMessages
+                        }
+                    }
                 }
             }
 

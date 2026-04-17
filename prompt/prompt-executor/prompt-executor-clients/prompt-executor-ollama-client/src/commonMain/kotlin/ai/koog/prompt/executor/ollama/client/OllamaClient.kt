@@ -11,8 +11,9 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.ollama.client.dto.EmbeddingBatchRequestDTO
+import ai.koog.prompt.executor.ollama.client.dto.EmbeddingBatchResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingRequestDTO
-import ai.koog.prompt.executor.ollama.client.dto.EmbeddingResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTOSerializer
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
@@ -82,13 +83,13 @@ public class OllamaClient @JvmOverloads constructor(
     private val clock: Clock = Clock.System,
     private val contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
     private val toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
-) : LLMClient(), LLMEmbeddingProvider {
+) : LLMClient() {
 
     private companion object {
         private val logger = KotlinLogging.logger { }
 
         private const val DEFAULT_MESSAGE_PATH = "api/chat"
-        private const val DEFAULT_EMBEDDINGS_PATH = "api/embeddings"
+        private const val DEFAULT_EMBEDDINGS_PATH = "api/embed"
         private const val DEFAULT_LIST_MODELS_PATH = "api/tags"
         private const val DEFAULT_SHOW_MODEL_PATH = "api/show"
         private const val DEFAULT_PULL_MODEL_PATH = "api/pull"
@@ -302,10 +303,10 @@ public class OllamaClient @JvmOverloads constructor(
                     val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
                     chunk.message?.let { message ->
                         if (message.content.isNotEmpty()) {
-                            emitTextDelta(message.content)
+                            emitTextDelta(text = message.content)
                         }
                         if (message.thinking.isNullOrEmpty().not()) {
-                            emitReasoningDelta(message.thinking)
+                            emitReasoningDelta(text = message.thinking)
                         }
                         message.toolCalls?.forEachIndexed { index, toolCall ->
                             val name = toolCall.function.name
@@ -353,11 +354,46 @@ public class OllamaClient @JvmOverloads constructor(
         }
 
         val response = client.post(DEFAULT_EMBEDDINGS_PATH) {
-            setBody(EmbeddingRequestDTO(model = model.id, prompt = text))
+            setBody(EmbeddingRequestDTO(model = model.id, input = text))
         }
 
-        val embeddingResponse = response.body<EmbeddingResponseDTO>()
-        return embeddingResponse.embedding
+        if (!response.status.isSuccess()) {
+            val errorBody = response.bodyAsText()
+            throw LLMClientException(
+                clientName,
+                "Embedding request failed (HTTP ${response.status.value}): $errorBody"
+            )
+        }
+
+        val embeddingResponse = response.body<EmbeddingBatchResponseDTO>()
+        return embeddingResponse.embeddings.first()
+    }
+
+    /**
+     * Embeds the given inputs using the Ollama embeddings API.
+     *
+     * @param inputs The list of texts to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability
+     *   and belong to [LLMProvider.Ollama].
+     * @return A list of embedding vectors, one per input string.
+     * @throws LLMClientException if the model does not have the Embed capability.
+     */
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
+        require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
+
+        if (!model.supports(LLMCapability.Embed)) {
+            throw LLMClientException(clientName, "Model ${model.id} does not have the Embed capability")
+        }
+
+        val response = client.post(DEFAULT_EMBEDDINGS_PATH) {
+            setBody(EmbeddingBatchRequestDTO(model = model.id, input = inputs))
+        }
+
+        val embeddingResponse = response.body<EmbeddingBatchResponseDTO>()
+        return embeddingResponse.embeddings
     }
 
     /**

@@ -50,6 +50,8 @@ To use an Ollama embedding model, make sure to have the following prerequisites:
     ```bash
     ollama pull <ollama-model-id>
     ```
+    <!--- KNIT example-embeddings-01.txt -->
+
     Replace `<ollama-model-id>` with the Ollama identifier of the specific model. For more information about available
 embedding models and their identifiers, see [Ollama models overview](#ollama-models-overview).
 

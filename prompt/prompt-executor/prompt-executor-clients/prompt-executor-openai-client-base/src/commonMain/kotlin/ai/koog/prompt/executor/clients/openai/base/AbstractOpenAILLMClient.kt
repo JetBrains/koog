@@ -34,14 +34,6 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.requireEndFrame
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.request.header
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -71,16 +63,15 @@ public abstract class OpenAIBaseSettings(
  * Abstract base class for OpenAI-compatible LLM clients.
  * Provides common functionality for communicating with OpenAI and OpenAI-compatible APIs.
  *
- * @param apiKey The API key for authentication with the OpenAI-compatible API.
  * @param settings Configuration settings including base URL, API paths, and timeout configuration.
- * @param baseClient The HTTP client to use for API requests. Defaults to a new HttpClient instance.
+ * @param httpClient A fully configured [KoogHttpClient] for making API requests. Must have authentication
+ *   and other request defaults (base URL, timeouts, headers) already embedded. To use a Ktor-backed client
+ *   with standard OpenAI-compatible defaults, use the secondary constructor that accepts an [HttpClient] and an API key.
  * @param clock Clock instance used for tracking response metadata timestamps. Defaults to Clock.System.
  */
-public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse, TStreamResponse : OpenAIBaseLLMStreamResponse>
-@JvmOverloads constructor(
-    private val apiKey: String,
+public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse, TStreamResponse : OpenAIBaseLLMStreamResponse>(
     settings: OpenAIBaseSettings,
-    baseClient: HttpClient = HttpClient(),
+    protected val httpClient: KoogHttpClient,
     protected val clock: Clock = Clock.System,
     protected val logger: KLogger,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
@@ -96,31 +87,56 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
 
     private val chatCompletionsPath: String = settings.chatCompletionsPath
 
-    protected val json: Json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        encodeDefaults = true
-        explicitNulls = false
-        namingStrategy = JsonNamingStrategy.SnakeCase
-    }
+    protected val json: Json = defaultJson
 
-    protected val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
-        clientName = clientName,
+    /**
+     * Secondary constructor for creating a client backed by a Ktor [HttpClient].
+     * Configures authentication, base URL, timeouts, and JSON serialization automatically from [apiKey] and [settings].
+     */
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: OpenAIBaseSettings,
+        baseClient: HttpClient = HttpClient(),
+        clientName: String = "OpenAICompatibleClient",
+        clock: Clock = Clock.System,
+        logger: KLogger,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(apiKey, settings, logger, baseClient, clientName),
+        clock = clock,
         logger = logger,
-        baseClient = baseClient
-    ) {
-        defaultRequest {
-            url(settings.baseUrl)
-            contentType(ContentType.Application.Json)
-            header("Authorization", "Bearer $apiKey")
+        toolsConverter = toolsConverter
+    )
+
+    public companion object {
+
+        private val defaultJson = Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+            encodeDefaults = true
+            explicitNulls = false
+            namingStrategy = JsonNamingStrategy.SnakeCase
         }
-        install(SSE)
-        install(ContentNegotiation) { json(json) }
-        install(HttpTimeout) {
-            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis // Increase timeout to 60 seconds
-            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis
-            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis
-        }
+
+        public fun createConfiguredHttpClient(
+            apiKey: String,
+            settings: OpenAIBaseSettings,
+            logger: KLogger,
+            baseClient: HttpClient = HttpClient(),
+            clientName: String
+        ): KoogHttpClient = KoogHttpClient.fromKtorClient(
+            clientName = clientName,
+            logger = logger,
+            baseClient = baseClient,
+            baseUrl = settings.baseUrl,
+            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis,
+            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
+            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
+            json = defaultJson,
+            headers = mapOf("Authorization" to "Bearer $apiKey"),
+        )
     }
 
     /**
@@ -393,71 +409,89 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         )
     }
 
+    private fun OpenAIMessage.Assistant.reasoningMessageOrNull(metaInfo: ResponseMetaInfo): Message.Reasoning? =
+        if (reasoningContent != null) {
+            Message.Reasoning(
+                content = reasoningContent,
+                metaInfo = metaInfo
+            )
+        } else {
+            null
+        }
+
+    private fun OpenAIMessage.Assistant.toolCallMessages(metaInfo: ResponseMetaInfo): List<Message.Tool.Call> =
+        toolCalls?.map { toolCall ->
+            Message.Tool.Call(
+                id = toolCall.id,
+                tool = toolCall.function.name,
+                /*
+                 If the tool has no arguments, OpenRouter puts an empty string in the arguments instead of an empty object
+                 But we always expect arguments to be a JSON object. Fixing this.
+                 */
+                content = toolCall.function.arguments
+                    .takeIf { it.isNotEmpty() }
+                    ?: "{}",
+                metaInfo = metaInfo
+            )
+        } ?: emptyList()
+
+    private fun OpenAIMessage.Assistant.assistantMessageOrNull(
+        finishReason: String?,
+        metaInfo: ResponseMetaInfo
+    ): Message.Assistant? =
+        if (content != null && content.text().isNotEmpty()) {
+            Message.Assistant(
+                content = this.content.text(),
+                finishReason = finishReason,
+                metaInfo = metaInfo
+            )
+        } else {
+            null
+        }
+
+    private fun OpenAIMessage.Assistant.audioMessageOrNull(
+        metaInfo: ResponseMetaInfo,
+        finishReason: String? = null,
+    ): Message.Assistant? =
+        if (audio?.data != null) {
+            Message.Assistant(
+                parts = buildList {
+                    audio.transcript?.let { add(ContentPart.Text(it)) }
+                    add(
+                        ContentPart.Audio(
+                            content = AttachmentContent.Binary.Base64(audio.data),
+                            format = "unknown", // FIXME: clarify format from response
+                        )
+                    )
+                },
+                finishReason = finishReason,
+                metaInfo = metaInfo
+            )
+        } else {
+            null
+        }
+
     @OptIn(ExperimentalEncodingApi::class)
     protected fun OpenAIMessage.toMessageResponses(
         finishReason: String?,
         metaInfo: ResponseMetaInfo
     ): List<Message.Response> {
-        return when {
-            this is OpenAIMessage.Assistant && !this.toolCalls.isNullOrEmpty() -> {
-                this.toolCalls.map { toolCall ->
-                    Message.Tool.Call(
-                        id = toolCall.id,
-                        tool = toolCall.function.name,
-                        /*
-                         If the tool has no arguments, OpenRouter puts an empty string in the arguments instead of an empty object
-                         But we always expect arguments to be a JSON object. Fixing this.
-                         */
-                        content = toolCall.function.arguments
-                            .takeIf { it.isNotEmpty() }
-                            ?: "{}",
-                        metaInfo = metaInfo
-                    )
-                }
+        check(this is OpenAIMessage.Assistant) { "Expected OpenAIMessage.Assistant, got $this" }
+        val messageResponses = sequence {
+            yield(reasoningMessageOrNull(metaInfo))
+            yieldAll(toolCallMessages(metaInfo))
+            yield(assistantMessageOrNull(finishReason, metaInfo))
+            yield(audioMessageOrNull(metaInfo, finishReason))
+        }.filterNotNull().toList()
+        if (messageResponses.isEmpty()) {
+            if (finishReason != null) {
+                return listOf(Message.Assistant("", metaInfo, finishReason))
             }
-
-            this is OpenAIMessage.Assistant && this.reasoningContent != null && this.content != null -> listOf(
-                Message.Reasoning(
-                    content = this.reasoningContent,
-                    metaInfo = metaInfo
-                ),
-                Message.Assistant(
-                    content = this.content.text(),
-                    finishReason = finishReason,
-                    metaInfo = metaInfo
-                )
-            )
-
-            this.content != null -> listOf(
-                Message.Assistant(
-                    content = this.content!!.text(),
-                    finishReason = finishReason,
-                    metaInfo = metaInfo
-                )
-            )
-
-            this is OpenAIMessage.Assistant && this.audio?.data != null -> listOf(
-                Message.Assistant(
-                    parts = buildList {
-                        this@toMessageResponses.audio.transcript?.let { add(ContentPart.Text(it)) }
-                        add(
-                            ContentPart.Audio(
-                                content = AttachmentContent.Binary.Base64(this@toMessageResponses.audio.data),
-                                format = "unknown", // FIXME: clarify format from response
-                            )
-                        )
-                    },
-                    finishReason = finishReason,
-                    metaInfo = metaInfo
-                )
-            )
-
-            else -> {
-                val exception = LLMClientException(clientName, "Unexpected response: no tool calls and no content")
-                logger.error(exception) { exception.message }
-                throw exception
-            }
+            val exception = LLMClientException(clientName, "Unexpected response: no tool calls and no content")
+            logger.error(exception) { exception.message }
+            throw exception
         }
+        return messageResponses
     }
 
     protected fun LLModel.requireCapability(capability: LLMCapability, message: String? = null) {

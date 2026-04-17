@@ -1,5 +1,6 @@
 package ai.koog.test.utils
 
+import ai.koog.utils.time.toJavaDuration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import org.awaitility.core.ConditionFactory
@@ -7,7 +8,6 @@ import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.time.Duration
-import kotlin.time.toJavaDuration
 
 /**
  * Repeatedly evaluates the given [block] until it does not throw any exceptions.

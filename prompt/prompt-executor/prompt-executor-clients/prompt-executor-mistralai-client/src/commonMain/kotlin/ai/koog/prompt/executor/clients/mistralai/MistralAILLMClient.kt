@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.mistralai
 
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -7,7 +8,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionRequest
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionResponse
@@ -41,6 +41,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlin.jvm.JvmOverloads
 import kotlin.time.Clock
 
 /**
@@ -48,8 +49,10 @@ import kotlin.time.Clock
  *
  * @property baseUrl The base URL of the Mistral AI API. Defaults to "https://api.mistral.ai".
  * @property chatCompletionsPath The path of the Mistral AI Chat Completions API. Defaults to "v1/chat/completions".
- * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
+ * @property embeddingsPath The path of the Mistral AI Embeddings API. Defaults to "v1/embeddings".
+ * @property moderationPath The path of the Mistral AI Moderations API. Defaults to "v1/moderations".
  * @property modelsPath The path of the Mistral AI Models API. Defaults to "v1/models".
+ * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
  */
 public class MistralAIClientSettings(
     baseUrl: String = "https://api.mistral.ai",
@@ -63,27 +66,42 @@ public class MistralAIClientSettings(
 /**
  * Implementation of [LLMClient] for Mistral AI.
  *
- * @param apiKey The API key for the Mistral AI API
  * @param settings The base URL, chat completion path, and timeouts for the Mistral AI
+ * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
+ *   to create a Ktor-backed client configured with an API key.
  * @param clock Clock instance used for tracking response metadata timestamps
  */
-public open class MistralAILLMClient(
-    apiKey: String,
+public open class MistralAILLMClient @JvmOverloads constructor(
     private val settings: MistralAIClientSettings = MistralAIClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    httpClient: KoogHttpClient,
     clock: Clock = Clock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<MistralAIChatCompletionResponse, MistralAIChatCompletionStreamResponse>(
-    apiKey = apiKey,
     settings = settings,
-    baseClient = baseClient,
+    httpClient = httpClient,
     clock = clock,
     logger = staticLogger,
     toolsConverter = toolsConverter,
-),
-    LLMEmbeddingProvider {
+) {
+
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: MistralAIClientSettings = MistralAIClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
+    ) : this(
+        settings = settings,
+        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = MISTRALAI_CLIENT_NAME),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    override val clientName: String = MISTRALAI_CLIENT_NAME
 
     private companion object {
+        private const val MISTRALAI_CLIENT_NAME = "MistralAILLMClient"
         private val staticLogger = KotlinLogging.logger { }
     }
 
@@ -196,11 +214,26 @@ public open class MistralAILLMClient(
      * @throws IllegalArgumentException if the model does not have the Embed capability.
      */
     override suspend fun embed(text: String, model: LLModel): List<Double> {
+        return embed(listOf(text), model).first()
+    }
+
+    /**
+     * Embeds the given inputs using the MistralAI embeddings API.
+     *
+     * @param inputs The list of texts to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability.
+     * @return A list of embedding vectors, one per input string.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
         model.requireCapability(LLMCapability.Embed)
 
         logger.debug { "Embedding text with model: ${model.id}" }
 
-        val request = MistralAIEmbeddingRequest(model = model.id, input = text)
+        val request = MistralAIEmbeddingRequest(model = model.id, input = inputs)
 
         val mistralAIResponse = try {
             httpClient.post(
@@ -219,11 +252,10 @@ public open class MistralAILLMClient(
             )
         }
 
-        return mistralAIResponse.data.firstOrNull()?.embedding ?: run {
-            val exception = LLMClientException(clientName, "Empty data in MistralAI embedding response")
-            logger.error(exception) { exception.message }
-            throw exception
-        }
+        val result = mistralAIResponse.data.map { it.embedding }
+        require(inputs.size == result.size) { "The size of input list and embedding result must match" }
+
+        return result
     }
 
     /**

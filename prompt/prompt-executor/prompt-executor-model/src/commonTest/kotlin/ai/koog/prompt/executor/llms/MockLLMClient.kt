@@ -28,7 +28,9 @@ internal class MockLLMClient @JvmOverloads constructor(
         val execute: Result<List<Message.Assistant>>,
         val executeStreaming: Result<Flow<StreamFrame>>,
         val executeMultipleChoices: Result<List<LLMChoice>>,
-        val moderate: Result<ModerationResult>
+        val moderate: Result<ModerationResult>,
+        val embed: Result<List<Double>>,
+        val batchEmbed: Result<List<List<Double>>>,
     ) {
 
         companion object {
@@ -36,7 +38,9 @@ internal class MockLLMClient @JvmOverloads constructor(
                 execute = executeSuccess("${provider.display} response"),
                 executeStreaming = executeStreamingSuccess(provider.display, " streaming", " response"),
                 executeMultipleChoices = Result.success(emptyList()),
-                moderate = Result.success(ModerationResult(false, emptyMap()))
+                moderate = Result.success(ModerationResult(false, emptyMap())),
+                embed = Result.success(listOf(1.0, 1.1)),
+                batchEmbed = Result.success(listOf(listOf(1.0, 1.1), listOf(1.0, 1.1))),
             )
 
             val failingSpec = ResponseSpec(
@@ -44,7 +48,9 @@ internal class MockLLMClient @JvmOverloads constructor(
                 executeStreaming = Result.failure(IllegalStateException("Mock failed to execute streaming")),
                 executeMultipleChoices =
                 Result.failure(IllegalStateException("Mock failed to execute multiple choices")),
-                moderate = Result.failure(IllegalStateException("Mock failed to moderate"))
+                moderate = Result.failure(IllegalStateException("Mock failed to moderate")),
+                embed = Result.failure(IllegalStateException("Mock failed to embed")),
+                batchEmbed = Result.failure(IllegalStateException("Mock failed to batch embed")),
             )
 
             fun executeSuccess(vararg messages: String) =
@@ -78,6 +84,8 @@ internal class MockLLMClient @JvmOverloads constructor(
             executeStreamingSpec: Result<Flow<StreamFrame>>? = null,
             executeMultipleChoicesSpec: Result<List<LLMChoice>>? = null,
             moderateSpec: Result<ModerationResult>? = null,
+            embedSpec: Result<List<Double>>? = null,
+            batchEmbedSpec: Result<List<List<Double>>>? = null,
         ): MockLLMClient {
             val defaultSpec = ResponseSpec.defaultSpec(provider)
             return MockLLMClient(
@@ -86,7 +94,9 @@ internal class MockLLMClient @JvmOverloads constructor(
                     execute = executeSpec ?: defaultSpec.execute,
                     executeStreaming = executeStreamingSpec ?: defaultSpec.executeStreaming,
                     executeMultipleChoices = executeMultipleChoicesSpec ?: defaultSpec.executeMultipleChoices,
-                    moderate = moderateSpec ?: defaultSpec.moderate
+                    moderate = moderateSpec ?: defaultSpec.moderate,
+                    embed = embedSpec ?: defaultSpec.embed,
+                    batchEmbed = batchEmbedSpec ?: defaultSpec.batchEmbed,
                 )
             )
         }
@@ -97,6 +107,8 @@ internal class MockLLMClient @JvmOverloads constructor(
             executeStreamingContent: List<String>? = null,
             executeMultipleContent: List<LLMChoice>? = null,
             moderateContent: ModerationResult? = null,
+            embedContent: List<Double>? = null,
+            batchEmbedContent: List<List<Double>>? = null,
         ): MockLLMClient {
             val defaultSpec = ResponseSpec.defaultSpec(provider)
             return MockLLMClient(
@@ -107,7 +119,9 @@ internal class MockLLMClient @JvmOverloads constructor(
                         ?: defaultSpec.executeStreaming,
                     executeMultipleChoices = executeMultipleContent?.let { Result.success(it) }
                         ?: defaultSpec.executeMultipleChoices,
-                    moderate = moderateContent?.let { Result.success(it) } ?: defaultSpec.moderate
+                    moderate = moderateContent?.let { Result.success(it) } ?: defaultSpec.moderate,
+                    embed = embedContent?.let { Result.success(it) } ?: defaultSpec.embed,
+                    batchEmbed = batchEmbedContent?.let { Result.success(it) } ?: defaultSpec.batchEmbed,
                 )
             )
         }
@@ -135,6 +149,16 @@ internal class MockLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel
     ): ModerationResult = moderateResponse
+
+    override suspend fun embed(
+        text: String,
+        model: LLModel
+    ): List<Double> = embedResponse
+
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> = batchEmbedResponse
 
     override fun llmProvider(): LLMProvider = provider
 
@@ -170,4 +194,10 @@ internal class MockLLMClient @JvmOverloads constructor(
 
     val moderateFailure: Throwable?
         get() = responseSpec.moderate.exceptionOrNull()
+
+    val embedResponse: List<Double>
+        get() = responseSpec.embed.getOrThrow()
+
+    val batchEmbedResponse: List<List<Double>>
+        get() = responseSpec.batchEmbed.getOrThrow()
 }

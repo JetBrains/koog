@@ -314,7 +314,7 @@ internal object OpenTelemetryTestAPI {
                 clock = testClock,
                 params = LLMParams(
                     temperature = temperature,
-                    maxTokens = maxTokens
+                    maxTokens = maxTokens,
                 )
             ) {
                 systemPrompt?.let { system(systemPrompt) }

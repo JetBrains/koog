@@ -128,6 +128,38 @@ class DashscopeLLMClientTest {
         }
     """.trimIndent()
 
+    //language=json
+    val toolCallWithReasoningBody = """
+        {
+          "id": "chatcmpl-tool",
+          "object": "chat.completion",
+          "created": 1716920005,
+          "model": "qwen-plus",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "",
+                "reasoning_content": "I should call the weather tool first.",
+                "tool_calls": [
+                  {
+                    "id": "call_weather",
+                    "type": "function",
+                    "function": {
+                      "name": "weather",
+                      "arguments": "{\"city\":\"Boston\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ],
+          "usage": {"total_tokens": 10, "prompt_tokens": 5, "completion_tokens": 5}
+        }
+    """.trimIndent()
+
     @Test
     fun testExecute() = runTest {
         var capturedUrl = ""
@@ -237,6 +269,33 @@ class DashscopeLLMClientTest {
         // For now, we'd only verify that streaming flow can be created
         // as MockEngine does not support Ktor SSE end-to-end streaming reliably in tests
         assertNotNull(flow, "Flow should not be null")
+    }
+
+    @Test
+    fun testExecuteToolCallResponsePreservesReasoningMessage() = runTest {
+        val engine = MockEngine { _ ->
+            respond(
+                content = toolCallWithReasoningBody,
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, Json.toString())
+            )
+        }
+        val http = HttpClient(engine) {}
+        val client = DashscopeLLMClient(apiKey = key, baseClient = http, clock = FixedClock)
+
+        val prompt = Prompt.build(id = "p-tool-response", clock = FixedClock) {
+            user("What is the weather in Boston?")
+        }
+
+        val responses = client.execute(prompt, DashscopeModels.QWEN_PLUS)
+
+        assertEquals(2, responses.size, "Response should contain reasoning and tool call")
+        assertIs<Message.Reasoning>(responses[0])
+        assertEquals("I should call the weather tool first.", responses[0].content)
+        val toolCall = assertIs<Message.Tool.Call>(responses[1])
+        assertEquals("call_weather", toolCall.id)
+        assertEquals("weather", toolCall.tool)
+        assertEquals("{\"city\":\"Boston\"}", toolCall.content)
     }
 
     @Test

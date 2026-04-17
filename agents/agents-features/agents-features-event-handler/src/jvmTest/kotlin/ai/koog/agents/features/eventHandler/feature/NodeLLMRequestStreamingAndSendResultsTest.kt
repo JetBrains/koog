@@ -9,9 +9,12 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.agents.testing.tools.mockLLMStream
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.streaming.streamFrameFlowOf
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -71,7 +74,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
 
         val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             // Match on the test user message from createAgent
-            mockLLMAnswer(assistantResponse) onRequestContains "Test user message"
+            mockLLMStream(streamFrameFlowOf(assistantResponse)) onRequestContains "Test user message"
         }
 
         val agent = createStreamingTestAgent(
@@ -113,8 +116,8 @@ class NodeLLMRequestStreamingAndSendResultsTest {
             )
         }
 
-        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
-            mockLLMAnswer(assistantResponse) onRequestContains "Test user message"
+        val mockExecutor = getMockExecutor(clock = testClock) {
+            mockLLMStream(streamFrameFlowOf(assistantResponse)) onRequestContains "Test user message"
         }
 
         val agent = createStreamingTestAgent(
@@ -195,8 +198,8 @@ class NodeLLMRequestStreamingAndSendResultsTest {
             )
         }
 
-        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
-            mockLLMAnswer(assistantResponse) onRequestContains "Test user message"
+        val mockExecutor = getMockExecutor(clock = testClock) {
+            mockLLMStream(streamFrameFlowOf(assistantResponse)) onRequestContains "Test user message"
         }
 
         val agent = createStreamingTestAgent(strategy, promptExecutor = mockExecutor) {

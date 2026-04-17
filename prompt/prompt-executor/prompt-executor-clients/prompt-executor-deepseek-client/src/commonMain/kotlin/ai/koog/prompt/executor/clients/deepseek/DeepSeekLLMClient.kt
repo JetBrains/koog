@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.deepseek
 
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -49,27 +50,43 @@ public class DeepSeekClientSettings(
 /**
  * Implementation of [LLMClient] for DeepSeek API.
  *
- * @param apiKey The API key for the DeepSeek API
  * @param settings The base URL, chat completion path, and timeouts for the DeepSeek API,
  * defaults to "https://api.deepseek.com" and 900s
+ * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
+ *   to create a Ktor-backed client configured with an API key.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public class DeepSeekLLMClient @JvmOverloads constructor(
-    apiKey: String,
     private val settings: DeepSeekClientSettings = DeepSeekClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    httpClient: KoogHttpClient,
     clock: Clock = Clock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DeepSeekChatCompletionResponse, DeepSeekChatCompletionStreamResponse>(
-    apiKey = apiKey,
     settings = settings,
-    baseClient = baseClient,
+    httpClient = httpClient,
     clock = clock,
     logger = staticLogger,
     toolsConverter = toolsConverter
 ) {
 
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: DeepSeekClientSettings = DeepSeekClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = DEEPSEEK_CLIENT_NAME),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    override val clientName: String = DEEPSEEK_CLIENT_NAME
+
     private companion object {
+        private const val DEEPSEEK_CLIENT_NAME = "DeepSeekLLMClient"
         private val staticLogger = KotlinLogging.logger { }
     }
 
@@ -94,13 +111,7 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         val deepSeekParams = params.toDeepSeekParams()
         val responseFormat = createResponseFormat(params.schema, model)
 
-        val preparedMessages = if (params.schema != null) {
-            // Add a message having the word `JSON` explicitly
-            // it is required by the deepseek api for structured output
-            messages + OpenAIMessage.Assistant(Content.Text("Respond with JSON"))
-        } else {
-            messages
-        }
+        val preparedMessages = prepareMessagesForDeepSeek(messages, addJsonResponseHint = params.schema != null)
 
         val request = DeepSeekChatCompletionRequest(
             messages = preparedMessages,
@@ -121,6 +132,44 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         )
 
         return json.encodeToString(DeepSeekChatCompletionRequestSerializer, request)
+    }
+
+    private fun prepareMessagesForDeepSeek(
+        messages: List<OpenAIMessage>,
+        addJsonResponseHint: Boolean = false
+    ): List<OpenAIMessage> {
+        val preparedMessages = mutableListOf<OpenAIMessage>()
+
+        for (message in messages) {
+            val previousMessage = preparedMessages.lastOrNull() as? OpenAIMessage.Assistant
+
+            if (
+                previousMessage?.reasoningContent != null &&
+                message is OpenAIMessage.Assistant &&
+                message.reasoningContent == null &&
+                !message.toolCalls.isNullOrEmpty()
+            ) {
+                preparedMessages.removeLast()
+                preparedMessages += OpenAIMessage.Assistant(
+                    content = previousMessage.content ?: message.content,
+                    reasoningContent = previousMessage.reasoningContent,
+                    audio = message.audio ?: previousMessage.audio,
+                    name = message.name ?: previousMessage.name,
+                    refusal = message.refusal ?: previousMessage.refusal,
+                    toolCalls = message.toolCalls,
+                    annotations = message.annotations ?: previousMessage.annotations
+                )
+            } else {
+                preparedMessages += message
+            }
+        }
+
+        if (addJsonResponseHint) {
+            // DeepSeek requires an explicit JSON mention for structured output mode.
+            preparedMessages += OpenAIMessage.Assistant(Content.Text("Respond with JSON"))
+        }
+
+        return preparedMessages
     }
 
     override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<LLMChoice> {
@@ -199,5 +248,31 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         val modelsById = DeepSeekModels.modelsById()
 
         return models.data.map { modelsById[it.id] ?: LLModel(provider = llmProvider(), id = it.id) }
+    }
+
+    /**
+     * Embedding is not supported by the DeepSeek API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
+    override suspend fun embed(
+        text: String,
+        model: LLModel
+    ): List<Double> {
+        logger.warn { "Embedding is not supported by DeepSeek API" }
+        throw UnsupportedOperationException("Embedding is not supported by DeepSeek API.")
+    }
+
+    /**
+     * Batch embedding is not supported by the DeepSeek API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
+        logger.warn { "Embedding is not supported by DeepSeek API" }
+        throw UnsupportedOperationException("Embedding is not supported by DeepSeek API.")
     }
 }

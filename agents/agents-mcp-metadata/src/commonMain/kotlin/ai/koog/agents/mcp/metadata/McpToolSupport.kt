@@ -75,4 +75,12 @@ public enum class McpTransportType(public val value: String) {
      * Suitable for distributed architectures and cloud-based MCP servers.
      */
     Tcp("tcp"),
+
+    /**
+     * Represents an unknown or undefined transport protocol type.
+     *
+     * This value is used as a fallback or default when the transport type
+     * cannot be identified or does not match any of the predefined types.
+     */
+    Unknown("unknown"),
 }

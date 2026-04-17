@@ -48,6 +48,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotest.assertions.core)
+                implementation(libs.assertj.core)
                 implementation(libs.aws.sdk.kotlin.sts)
                 implementation(libs.aws.sdk.kotlin.bedrock)
                 implementation(libs.aws.sdk.kotlin.bedrockruntime)
@@ -68,9 +69,15 @@ val envs = credentialsResolver.resolve(
 )
 
 tasks.withType<Test> {
-    // Forward system properties to the test JVM
+    // Forward test-relevant system properties to the test JVM.
+    // Exclude JVM-internal properties (java.*, sun.*, jdk.*, etc.) to avoid conflicts
+    // when the Gradle daemon runs on a different JDK version than the test toolchain.
+    val jvmInternalPrefixes = setOf("java.", "sun.", "jdk.", "os.", "user.", "file.", "line.", "path.", "native.", "stderr.", "stdout.")
     System.getProperties().forEach { key, value ->
-        systemProperty(key.toString(), value)
+        val k = key.toString()
+        if (jvmInternalPrefixes.none { k.startsWith(it) }) {
+            systemProperty(k, value)
+        }
     }
 }
 

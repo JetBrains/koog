@@ -25,29 +25,60 @@ you can see how to re-create the predefined strategy graph used by basic agents.
 To create the most basic agent, instantiate [`AIAgent`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent/-a-i-agent/index.html)
 and provide a [prompt executor](../prompts/prompt-executors.md) with a [language model](../model-capabilities.md#creating-a-model-llmodel-configuration):
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import kotlinx.coroutines.runBlocking
--->
-```kotlin
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    llmModel = OpenAIModels.Chat.GPT4o
-)
-```
+=== "Kotlin"
 
-This agent will expect a string as input and return a string as output.
-To run the agent, use the `run()` function with some user input:
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import kotlinx.coroutines.runBlocking
+    -->
+    ```kotlin
+    val agent = AIAgent(
+        promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
+        llmModel = OpenAIModels.Chat.GPT4o
+    )
+    ```
 
-```kotlin
-fun main() = runBlocking {
-    val result = agent.run("Hello! How can you help me?")
-    println(result)
-}
-```
-<!--- KNIT example-basic-01.kt -->
+    This agent will expect a string as input and return a string as output.
+    To run the agent, use the `run()` function with some user input:
+
+    ```kotlin
+    fun main() = runBlocking {
+        val result = agent.run("Hello! How can you help me?")
+        println(result)
+    }
+    ```
+    <!--- KNIT example-basic-01.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+    class exampleBasicJava01 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .build();
+    ```
+
+    This agent expects a string as input and returns a string as output.
+    To run the agent, use the `run()` method with some user input:
+
+    ```java
+    String result = agent.run("Hello! How can you help me?");
+    System.out.println(result);
+    ```
+    <!--- KNIT exampleBasicJava01.java -->
 
 The agent will return a generic answer, such as:
 
@@ -64,25 +95,50 @@ I can assist with a wide range of topics and tasks. Here are some examples:
 
 What's on your mind? Do you have a specific question, topic, or task you'd like to tackle?
 ```
+<!--- KNIT example-basic-01.txt -->
 
 ## Add a system prompt
 
 Provide a [system message](../prompts/prompt-creation/index.md#system-message) to define the agent's role
 as well as the purpose, context, and instructions related to the task.
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
--->
-```kotlin
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
-    systemPrompt = "You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.",
-    llmModel = OpenAIModels.Chat.GPT4o
-)
-```
-<!--- KNIT example-basic-02.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    -->
+    ```kotlin
+    val agent = AIAgent(
+        promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
+        systemPrompt = "You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.",
+        llmModel = OpenAIModels.Chat.GPT4o
+    )
+    ```
+    <!--- KNIT example-basic-02.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+    class exampleBasicJava02 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
+        .systemPrompt("You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.")
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .build();
+    ```
+    <!--- KNIT exampleBasicJava02.java -->
 
 The instructions in the system prompt will guide the agent's response:
 
@@ -91,27 +147,53 @@ I'm here to help you navigate the wild world of internet memes!
 
 What's on your mind? Are you trying to understand a specific meme, need help finding a popular joke, or perhaps want some recommendations for trending memes? Let me know, and I'll do my best to provide you with some LOLs!
 ```
+<!--- KNIT example-basic-02.txt -->
 
 ## Configure LLM output
 
-You can provide some [LLM parameters](../llm-parameters.md#llm-parameter-reference) directly to the agent constructor
-to customize the behavior of the LLM.
+You can provide some [LLM parameters](../llm-parameters.md#llm-parameter-reference) directly to the agent constructor 
+(Kotlin) or via the builder methods (Java) to customize the behavior of the LLM.
 For example, use the `temperature` parameter to adjust the randomness of the generated responses:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
--->
-```kotlin
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
-    systemPrompt = "You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.",
-    llmModel = OpenAIModels.Chat.GPT4o,
-    temperature = 0.7
-)
-```
-<!--- KNIT example-basic-03.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    -->
+    ```kotlin
+    val agent = AIAgent(
+        promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
+        systemPrompt = "You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.",
+        llmModel = OpenAIModels.Chat.GPT4o,
+        temperature = 0.7
+    )
+    ```
+    <!--- KNIT example-basic-java-01.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+    class exampleBasicJava03 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
+        .systemPrompt("You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.")
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .temperature(0.7)
+        .build();
+    ```
+    <!--- KNIT exampleBasicJava03.java -->
 
 Here are some response examples with different temperature values:
 
@@ -120,6 +202,7 @@ Here are some response examples with different temperature values:
     ```text
     I'm here to help you navigate the wild world of internet memes! Whether you're looking for explanations, examples, or just want to share a meme with someone, I'm your go-to expert. What's on your mind? Got a specific meme in mind that's got you curious? Or maybe you need some meme-related advice? Fire away!
     ```
+    <!--- KNIT example-basic-03.txt -->
 
 === "0.7"
 
@@ -128,6 +211,7 @@ Here are some response examples with different temperature values:
     
     What's on your mind? Need help understanding a specific meme, finding a popular joke or trend, or maybe even creating your own meme? Let's get this meme party started!
     ```
+    <!--- KNIT example-basic-04.txt -->
 
 === "1.0"
 
@@ -138,53 +222,109 @@ Here are some response examples with different temperature values:
     
     Do you have a specific question about memes (e.g., "What does this meme mean?"), or are you looking for some meme-related recommendations (e.g., "Can you recommend a funny meme to share with friends?"). Let me know how I can help!
     ```
-    
+    <!--- KNIT example-basic-05.txt -->
+
 ## Add tools
 
 Agents can use [tools](../tools-overview.md) to perform specific tasks.
 
-First, create a tool by annotating a function with the [`@Tool`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools.annotations/-tool/index.html) annotation:
+First, create a tool by annotating a function (Kotlin) or method (Java) with the [`@Tool`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools.annotations/-tool/index.html) annotation:
 
+=== "Kotlin"
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.tool
--->
-```kotlin
-@Tool
-@LLMDescription("Ask the user a question by sending it to stdout and return the answer from stdin")
-fun askUser(
-    @LLMDescription("Question from the agent")
-    question: String
-): String {
-    println(question)
-    return readln()
-}
-```
-
-Then, use the [`ToolRegistry`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool-registry/index.html) to make this tool available to the agent:
-
-```kotlin
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
-    systemPrompt = "You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.",
-    llmModel = OpenAIModels.Chat.GPT4o,
-    temperature = 0.7,
-    toolRegistry = ToolRegistry {
-        tool(::askUser)
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.agents.core.tools.annotations.Tool
+    -->
+    ```kotlin
+    @Tool
+    @LLMDescription("Ask the user a question by sending it to stdout and return the answer from stdin")
+    fun askUser(
+        @LLMDescription("Question from the agent")
+        question: String
+    ): String {
+        println(question)
+        return readln()
     }
-)
-```
-<!--- KNIT example-basic-04.kt -->
+    ```
 
-In the example, `askUser` is a tool that helps the agent maintain a conversation with the user via printing and reading from the console.
-If the agent decides to ask the user a question,
-it can call this tool that writes to `stdout` via `println()` and reads from `stdin` via `readln()`.
+    Then, use the [`ToolRegistry`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool-registry/index.html) to make this tool available to the agent:
+
+    ```kotlin
+    val agent = AIAgent(
+        promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
+        systemPrompt = "You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.",
+        llmModel = OpenAIModels.Chat.GPT4o,
+        temperature = 0.7,
+        toolRegistry = ToolRegistry {
+            tool(::askUser)
+        }
+    )
+    ```
+    <!--- KNIT example-basic-03.kt -->
+
+    In the example, `askUser` is a tool that helps the agent maintain a conversation with the user via printing and reading from the console.
+    If the agent decides to ask the user a question,
+    it can call this tool that writes to `stdout` via `println()` and reads from `stdin` via `readln()`.
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.core.tools.annotations.LLMDescription;
+    import ai.koog.agents.core.tools.annotations.Tool;
+    import ai.koog.agents.core.tools.reflect.ToolSet;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import java.util.Scanner;
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+    class exampleBasicJava04 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    // Create a ToolSet class
+    class UserConversationTools implements ToolSet {
+        @Tool
+        @LLMDescription("Ask the user a question by sending it to stdout and return the answer from stdin")
+        public String askUser(
+            @LLMDescription("Question from the agent")
+            String question
+        ) {
+            System.out.println(question);
+            Scanner scanner = new Scanner(System.in);
+            return scanner.nextLine();
+        }
+    }
+    ```
+    
+    Then, use the [`ToolRegistry`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool-registry/index.html) to make this tool available to the agent:
+
+    ```java
+    UserConversationTools askUser = new UserConversationTools();
+
+    ToolRegistry toolRegistry = ToolRegistry.builder()
+            .tools(askUser)
+            .build();
+
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
+        .systemPrompt("You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.")
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .temperature(0.7)
+        .toolRegistry(toolRegistry)
+        .build();
+    ```
+    <!--- KNIT exampleBasicJava04.java -->
+
+    In the example, `askUser` is a tool that helps the agent maintain a conversation with the user via printing and reading from the console.
 
 Here is an example interaction with the agent:
 
@@ -213,6 +353,7 @@ Examples of Doge memes might include:
 
 The meme is known for its lighthearted and playful tone, and is often used to express excitement, happiness, or silliness. The meme has since become a cultural phenomenon, with countless variations and parodies emerging online.
 ```
+<!--- KNIT example-basic-06.txt -->
 
 ## Adjust agent iterations
 
@@ -221,100 +362,211 @@ Use the `maxIterations` parameter to either increase this limit if you expect th
 (such as tool calls and LLM requests) or decrease it for agents that require only a few steps.
 For example, a simple agent described here is not likely to require more than 10 steps:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.tool
+=== "Kotlin"
 
-@Tool
-@LLMDescription("Asks the user a question by sending it to stdout and returns the answer from stdin")
-fun askUser(
-    @LLMDescription("Question from the agent")
-    question: String
-): String {
-    println(question)
-    return readln()
-}
--->
-```kotlin
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
-    systemPrompt = "You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.",
-    llmModel = OpenAIModels.Chat.GPT4o,
-    temperature = 0.7,
-    toolRegistry = ToolRegistry {
-        tool(::askUser)
-    },
-    maxIterations = 10
-)
-```
-<!--- KNIT example-basic-05.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.agents.core.tools.annotations.Tool
+    @Tool
+    @LLMDescription("Asks the user a question by sending it to stdout and returns the answer from stdin")
+    fun askUser(
+        @LLMDescription("Question from the agent")
+        question: String
+    ): String {
+        println(question)
+        return readln()
+    }
+    -->
+    ```kotlin
+    val agent = AIAgent(
+        promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
+        systemPrompt = "You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.",
+        llmModel = OpenAIModels.Chat.GPT4o,
+        temperature = 0.7,
+        toolRegistry = ToolRegistry {
+            tool(::askUser)
+        },
+        maxIterations = 10
+    )
+    ```
+    <!--- KNIT example-basic-04.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.core.tools.annotations.LLMDescription;
+    import ai.koog.agents.core.tools.annotations.Tool;
+    import ai.koog.agents.core.tools.reflect.ToolSet;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import java.util.Scanner;
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+    class exampleBasicJava05 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    // Create a ToolSet class
+    class UserConversationTools implements ToolSet {
+        @Tool
+        @LLMDescription("Ask the user a question by sending it to stdout and return the answer from stdin")
+        public String askUser(
+            @LLMDescription("Question from the agent")
+            String question
+        ) {
+            System.out.println(question);
+            Scanner scanner = new Scanner(System.in);
+            return scanner.nextLine();
+        }
+    }
+
+    // In main method:
+    UserConversationTools askUser = new UserConversationTools();
+
+    ToolRegistry toolRegistry = ToolRegistry.builder()
+            .tools(askUser)
+            .build();
+
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
+        .systemPrompt("You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.")
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .temperature(0.7)
+        .toolRegistry(toolRegistry)
+        .maxIterations(10)
+        .build();
+    ```
+    <!--- KNIT exampleBasicJava05.java -->
 
 !!! tip
 
-    Instead of passing the model, temperature, max iterations,
-    and other parameters directly to the agent constructor,
-    you can also define and pass them as a separate configuration object.
+    Instead of passing the model, temperature, max iterations, and other parameters directly to the Kotlin constructor 
+    or Java builder, you can also define and pass them as a separate configuration object.
     For more information, see [Agent configuration](index.md#agent-configuration).
 
 ## Handle events during agent runtime
 
 To assist with testing and debugging, as well as making hooks for chained agent interactions,
 Koog provides the [EventHandler](https://api.koog.ai/agents/agents-features/agents-features-event-handler/ai.koog.agents.features.eventHandler.feature/-event-handler/index.html) feature.
-Call the `handleEvents()` function inside the agent constructor lambda to install the feature and register event handlers:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.eventHandler.feature.handleEvents
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.tool
+=== "Kotlin"
 
-@Tool
-@LLMDescription("Asks the user a question by sending it to stdout and returns the answer from stdin")
-fun askUser(
-    @LLMDescription("Question from the agent")
-    question: String
-): String {
-    println(question)
-    return readln()
-}
--->
-```kotlin
-val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
-    systemPrompt = "You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.",
-    llmModel = OpenAIModels.Chat.GPT4o,
-    temperature = 0.7,
-    toolRegistry = ToolRegistry {
-        tool(::askUser)
-    },
-    maxIterations = 10
-){
-    handleEvents {
-        // Handle tool calls
-        onToolCallStarting { eventContext ->
-            println("Tool called: ${eventContext.toolName} with args ${eventContext.toolArgs}")
+    Call the `handleEvents()` function inside the agent constructor lambda to install the feature and register event handlers:
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.agents.features.eventHandler.feature.handleEvents
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.agents.core.tools.annotations.Tool
+    @Tool
+    @LLMDescription("Asks the user a question by sending it to stdout and returns the answer from stdin")
+    fun askUser(
+        @LLMDescription("Question from the agent")
+        question: String
+    ): String {
+        println(question)
+        return readln()
+    }
+    -->
+    ```kotlin
+    val agent = AIAgent(
+        promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
+        systemPrompt = "You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.",
+        llmModel = OpenAIModels.Chat.GPT4o,
+        temperature = 0.7,
+        toolRegistry = ToolRegistry {
+            tool(::askUser)
+        },
+        maxIterations = 10
+    ){
+        handleEvents {
+            // Handle tool calls
+            onToolCallStarting { eventContext ->
+                println("Tool called: ${eventContext.toolName} with args ${eventContext.toolArgs}")
+            }
         }
     }
-}
-```
-<!--- KNIT example-basic-06.kt -->
+    ```
+    <!--- KNIT example-basic-05.kt -->
+
+=== "Java"
+    Use the `.install()` method on the agent builder to register event handlers with `EventHandler.Feature`:
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.core.tools.annotations.LLMDescription;
+    import ai.koog.agents.core.tools.annotations.Tool;
+    import ai.koog.agents.core.tools.reflect.ToolSet;
+    import ai.koog.agents.features.eventHandler.feature.EventHandler;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import java.util.Scanner;
+    import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+    class exampleBasicJava06 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    // Create a ToolSet class
+    class UserConversationTools implements ToolSet {
+        @Tool
+        @LLMDescription("Ask the user a question by sending it to stdout and return the answer from stdin")
+        public String askUser(
+            @LLMDescription("Question from the agent")
+            String question
+        ) {
+            System.out.println(question);
+            Scanner scanner = new Scanner(System.in);
+            return scanner.nextLine();
+        }
+    }
+
+    // In main method:
+    UserConversationTools askUser = new UserConversationTools();
+
+    ToolRegistry toolRegistry = ToolRegistry.builder()
+            .tools(askUser)
+            .build();
+
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
+        .systemPrompt("You are an expert in internet memes. Be helpful, friendly, and answer user questions concisely, showing your knowledge of memes.")
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .temperature(0.7)
+        .toolRegistry(toolRegistry)
+        .maxIterations(10)
+        .install(EventHandler.Feature, config -> {
+            config.onToolCallStarting(eventContext -> {
+                System.out.println("Tool called: " + eventContext.getToolName() +
+                    " with args " + eventContext.getToolArgs());
+            });
+        })
+        .build();
+    ```
+    <!--- KNIT exampleBasicJava06.java -->
 
 The agent will now output something similar to the following when it calls the `askUser` tool:
 
 ```text
 Tool called: askUser with args {"question":"Which meme would you like me to explain?"}
 ```
+<!--- KNIT example-basic-07.txt -->
 
-For more information about Koog agent features, see [Features overview](../features-overview.md).
+For more information about Koog agent features, see [Features](../features/index.md).
 
 ## Next steps
 

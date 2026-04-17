@@ -1,7 +1,6 @@
 package ai.koog.agents.features.tracing.writer
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
@@ -40,6 +39,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -487,7 +487,7 @@ class TraceFeatureMessageTestWriterTest {
 
             override fun executeStreaming(
                 prompt: Prompt,
-                model: ai.koog.prompt.llm.LLModel,
+                model: LLModel,
                 tools: List<ToolDescriptor>
             ): Flow<StreamFrame> = flow {
                 val testException = IllegalStateException(testStreamingErrorMessage)
@@ -497,7 +497,7 @@ class TraceFeatureMessageTestWriterTest {
 
             override suspend fun moderate(
                 prompt: Prompt,
-                model: ai.koog.prompt.llm.LLModel
+                model: LLModel
             ): ai.koog.prompt.dsl.ModerationResult {
                 throw UnsupportedOperationException("Not used in test")
             }

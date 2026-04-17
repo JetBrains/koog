@@ -1,3 +1,5 @@
+@file:JvmName("AIAgentStrategies")
+
 package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
@@ -21,6 +23,7 @@ import ai.koog.agents.core.environment.result
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.structure.StructuredRequestConfig
+import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
 
 // FIXME improve this strategy to use Message.Assistant to chat, it works better than tools
@@ -122,7 +125,8 @@ public fun chatAgentStrategy(): AIAgentGraphStrategy<String, String> = strategy(
 @JvmOverloads
 public fun reActStrategy(
     reasoningInterval: Int = 1,
-    name: String = "re_act"
+    name: String = "re_act",
+    reasoningPrompt: String = "Please give your thoughts about the task and plan the next steps."
 ): AIAgentGraphStrategy<String, String> = strategy(name) {
     require(reasoningInterval > 0) { "Reasoning interval must be greater than 0" }
     val reasoningStepKey = createStorageKey<Int>("reasoning_step")
@@ -137,7 +141,6 @@ public fun reActStrategy(
     }
     val nodeExecuteTool by nodeExecuteTool()
 
-    val reasoningPrompt = "Please give your thoughts about the task and plan the next steps."
     val nodeCallLLMReasonInput by node<String, Unit> { stageInput ->
         llm.writeSession {
             appendPrompt {

@@ -13,12 +13,18 @@ The key-value data storage structure relies on the `AIAgentStorageKey` data clas
 
 ### AIAgentStorageKey
 
-The storage uses a typed key system to ensure type safety when storing and retrieving data:
+The storage uses a typed key system to provide type safety when storing and retrieving data.
 
-- `AIAgentStorageKey<T>`: A data class that represents a storage key used for identifying and accessing data. Here are
-  the key features of the `AIAgentStorageKey` class:
-    - The generic type parameter `T` specifies the type of data associated with this key, ensuring type safety.
-    - Each key has a `name` property which is a string identifier that uniquely represents the storage key.
+`AIAgentStorageKey<T>` data class represents a storage key used for identifying and accessing data. Here are
+  the key features of this class:
+
+- The generic type parameter `T` specifies the type of data associated with this key, providing type safety.
+
+- Each key has a `name` property which is a string identifier for easier identification and debugging.
+
+- Each key instance is unique. `name` is not used to determine uniqueness, so it is acceptable to have several 
+  keys with the same name. This allows resuing existing strategy components without the risk of 
+  accidentally overwriting your data in the storage.
 
 ## Usage examples
 
@@ -29,13 +35,26 @@ The following sections provide an actual example of creating a storage key and u
 The first step in storing data that you want to pass is creating a class that represents your data. Here is an example
 of a simple class with basic user data:
 
-```kotlin
-class UserData(
-   val name: String,
-   val age: Int
-)
-```
-<!--- KNIT example-data-transfer-between-nodes-01.kt -->
+=== "Kotlin"
+
+    ```kotlin
+    class UserData(
+       val name: String,
+       val age: Int
+    )
+    ```
+    <!--- KNIT example-data-transfer-between-nodes-01.kt -->
+
+=== "Java"
+
+    ```java
+    record UserData(
+        String name,
+        int age
+    ) {}
+    ```
+    <!--- KNIT exampleDataTransferBetweenNodesJava01.java -->
+
 
 Once defined, use the class to create a storage key as described below.
 
@@ -43,23 +62,40 @@ Once defined, use the class to create a storage key as described below.
 
 Create a typed storage key for the defined data structure:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.entity.createStorageKey
+=== "Kotlin"
 
-class UserData(
-    val name: String,
-    val age: Int
-)
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.createStorageKey
+    class UserData(
+        val name: String,
+        val age: Int
+    )
+    -->
+    ```kotlin
+    val userDataKey = createStorageKey<UserData>("user-data")
+    ```
+    <!--- KNIT example-data-transfer-between-nodes-02.kt -->
 
-fun main() {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val userDataKey = createStorageKey<UserData>("user-data")
-```
-<!--- KNIT example-data-transfer-between-nodes-02.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentStorage;
+    import ai.koog.agents.core.agent.entity.AIAgentStorageKey;
+    class exampleDataTransferBetweenNodesJava02 {
+        record UserData(
+            String name,
+            int age
+        ) {}
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    AIAgentStorageKey<UserData> userDataKey = AIAgentStorage.createStorageKey("user-data");
+    ```
+    <!--- KNIT exampleDataTransferBetweenNodesJava02.java -->
 
 The `createStorageKey` function takes a single string parameter that uniquely identifies the key.
 
@@ -67,63 +103,116 @@ The `createStorageKey` function takes a single string parameter that uniquely id
 
 To save data using a created storage key, use the `storage.set(key: AIAgentStorageKey<T>, value: T)` method in a node:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.agent.entity.createStorageKey
+=== "Kotlin"
 
-class UserData(
-   val name: String,
-   val age: Int
-)
-
-fun main() {
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.agent.entity.createStorageKey
+    class UserData(
+       val name: String,
+       val age: Int
+    )
     val userDataKey = createStorageKey<UserData>("user-data")
-
-    val str = strategy<Unit, Unit>("my-strategy") {
--->
-<!--- SUFFIX
+    -->
+    ```kotlin
+    val nodeSaveData by node<Unit, Unit> {
+        storage.set(userDataKey, UserData("John", 26))
     }
-}
--->
-```kotlin
-val nodeSaveData by node<Unit, Unit> {
-    storage.set(userDataKey, UserData("John", 26))
-}
-```
-<!--- KNIT example-data-transfer-between-nodes-03.kt -->
+    ```
+    <!--- KNIT example-data-transfer-between-nodes-03.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentStorage;
+    import ai.koog.agents.core.agent.entity.AIAgentStorageKey;
+    public class exampleDataTransferBetweenNodesJava03 {
+        record UserData(
+            String name,
+            int age
+        ) {}
+        public static void main(String[] args) {
+            AIAgentStorageKey<UserData> userDataKey = AIAgentStorage.createStorageKey("user-data");
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var nodeSaveData = AIAgentNode.builder("nodeSaveData")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .withAction((input, ctx) -> {
+            ctx.getStorage().set(userDataKey, new UserData("John", 26));
+            return "";
+        })
+        .build();
+    ```
+    <!--- KNIT exampleDataTransferBetweenNodesJava03.java -->
 
 ### Retrieving data
 
 To retrieve the data, use the `storage.get` method in a node:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.entity.createStorageKey
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
+=== "Kotlin"
 
-class UserData(
-    val name: String,
-    val age: Int
-)
-
-fun main() {
-    val userDataKey = createStorageKey<UserData>("user-data")
-
-    val str = strategy<String, Unit>("my-strategy") {
--->
-<!--- SUFFIX
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.createStorageKey
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    class UserData(
+        val name: String,
+        val age: Int
+    )
+    fun main() {
+        val userDataKey = createStorageKey<UserData>("user-data")
+        val str = strategy<String, Unit>("my-strategy") {
+    -->
+    <!--- SUFFIX
+        }
     }
-}
--->
-```kotlin
-val nodeRetrieveData by node<String, Unit> { message ->
-    storage.get(userDataKey)?.let { userFromStorage ->
-        println("Hello dear $userFromStorage, here's a message for you: $message")
+    -->
+    ```kotlin
+    val nodeRetrieveData by node<String, Unit> { message ->
+        storage.get(userDataKey)?.let { userFromStorage ->
+            println("Hello dear $userFromStorage, here's a message for you: $message")
+        }
     }
-}
-```
-<!--- KNIT example-data-transfer-between-nodes-04.kt -->
+    ```
+    <!--- KNIT example-data-transfer-between-nodes-04.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentStorage;
+    import ai.koog.agents.core.agent.entity.AIAgentStorageKey;
+    public class exampleDataTransferBetweenNodesJava04 {
+        record UserData(
+            String name,
+            int age
+        ) {}
+        public static void main(String[] args) {
+            AIAgentStorageKey<UserData> userDataKey = AIAgentStorage.createStorageKey("user-data");
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var nodeRetrieveData = AIAgentNode.builder("nodeRetrieveData")
+        .withInput(String.class)
+        .withOutput(String.class)
+        .withAction((message, ctx) -> {
+            var userData = ctx.getStorage().get(userDataKey);
+            System.out.println("Hello dear %s, here's a message for you: %s".formatted(userData, message));
+            return "";
+        })
+        .build();
+    ```
+    <!--- KNIT exampleDataTransferBetweenNodesJava04.java -->
 
 ## API documentation
 
@@ -142,7 +231,6 @@ For individual functions available in the `AIAgentStorage` class, see the follow
 ## Additional information
 
 - `AIAgentStorage` is thread-safe, using a Mutex to ensure concurrent access is handled properly.
-- The storage is designed to work with any type that extends `Any`.
 - When retrieving values, type casting is handled automatically, ensuring type safety throughout your application.
 - For non-nullable access to values, use the `getValue` method which throws an exception if the key does not exist.
 - You can clear the storage entirely using the `clear` method, which removes all stored key-value pairs.

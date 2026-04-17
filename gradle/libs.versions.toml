@@ -2,10 +2,10 @@
 acp = "0.13.1"
 agp = "8.12.3"
 annotations = "26.0.2-1"
-assertj = "3.27.6"
+assertj = "3.27.7"
 awaitility = "4.3.0"
 aws-sdk-kotlin = "1.6.17"
-dokka = "2.1.0"
+dokka = "2.2.0"
 exposed = "0.61.0"
 h2 = "2.4.240"
 hikaricp = "6.2.1"
@@ -19,9 +19,9 @@ kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1"
 kotlinx-io = "0.7.0"
 kotlinx-serialization = "1.10.0" # check with IJ
-kotlinx-schema = "0.4.1"
-kover = "0.9.4"
-ktlint = "14.0.1"
+kotlinx-schema = "0.4.4"
+kover = "0.9.8"
+ktlint = "14.2.0"
 ktor3 = "3.2.2"
 lettuce = "7.2.1.RELEASE"
 logback = "1.5.13"
@@ -29,19 +29,19 @@ mcp = "0.8.1"
 mockito = "5.21.0"
 mockk = "1.14.7"
 mokksy = "0.5.1"
-mysql = "8.0.33"
+mysql = "9.6.0"
 netty = "4.2.9.Final"
 okhttp = "5.3.2"
 opentelemetry = "1.51.0"
 oshai-logging = "7.0.7"
-postgresql = "42.7.4"
+postgresql = "42.7.10"
 slf4j = "2.0.17"
-spring-ai = "1.1.2"
-spring-boot = "3.5.9"
+spring-ai = "1.1.4"
+spring-boot = "3.5.13"
 spring-management = "1.1.7"
 sqlite = "3.51.1.0"
 testcontainers = "1.21.4"
-jackson = "2.19.4"
+jackson = "2.21.2"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -116,6 +116,7 @@ opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporte
 opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-exporter-logging" }
 aws-sdk-kotlin-bedrock = { module = "aws.sdk.kotlin:bedrock", version.ref = "aws-sdk-kotlin" }
 aws-sdk-kotlin-bedrockruntime = { module = "aws.sdk.kotlin:bedrockruntime", version.ref = "aws-sdk-kotlin" }
+aws-sdk-kotlin-bedrockagentcore = { module = "aws.sdk.kotlin:bedrockagentcore", version.ref = "aws-sdk-kotlin" }
 aws-sdk-kotlin-sts = { module = "aws.sdk.kotlin:sts", version.ref = "aws-sdk-kotlin" }
 android-tools-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
@@ -129,6 +130,7 @@ reactor-kotlin-extensions = { module = "io.projectreactor.kotlin:reactor-kotlin-
 # Spring AI
 spring-ai-bom = { module = "org.springframework.ai:spring-ai-bom", version.ref = "spring-ai" }
 spring-ai-model = { module = "org.springframework.ai:spring-ai-model" }
+spring-ai-vectorstore = { module = "org.springframework.ai:spring-ai-vector-store" }
 
 [bundles]
 spring-boot-core = [

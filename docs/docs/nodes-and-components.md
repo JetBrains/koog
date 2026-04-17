@@ -7,14 +7,14 @@ In general, nodes let you encapsulate complex logic into reusable components tha
 different agent workflows. This guide will walk you through the existing nodes that can be used in your agent
 strategies.
 
-Each node is essentially a function that takes an input of a specific type and returns an output of a specific type.
+Each node is essentially a function (Kotlin) or action (Java) that takes an input of a specific type and returns an output of a specific type.
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["node"]
+    subgraph node ["Node"]
         execute(Do stuff)
     end
     
@@ -22,39 +22,62 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-01.txt -->
+
 
 Here is how you can define a node that expects a string as input and returns the length of the string (an integer) as output:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
+=== "Kotlin"
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val nodeLength by node<String, Int> { input ->
+        input.length
+    }
+    ```
+    <!--- KNIT example-nodes-and-component-01.kt -->
 
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val nodeLength by node<String, Int> { input ->
-    input.length
-}
-```
-<!--- KNIT example-nodes-and-component-01.kt -->
+=== "Java"
 
-For more information, see [`node()`](api:agents-core::ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase.node).
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleNodesAndComponentsJava01 {
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var nodeLength = AIAgentNode.builder("nodeLength")
+        .withInput(String.class)
+        .withOutput(Integer.class)
+        .withAction((input, ctx) -> input.length())
+        .build();
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava01.java -->
+
+For more information, see [node()](api:agents-core::ai.koog.agents.core.dsl.builder.node) (Kotlin) or [AIAgentNode.builder()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.builder) for Java.
 
 ## Utility nodes
 
-### nodeDoNothing
+### Pass-through node
 
-A simple pass-through node that does nothing and returns the input as output. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeDoNothing).
+A simple pass-through node that does nothing and returns the input as output. For details, see [nodeDoNothing](api:agents-core::ai.koog.agents.core.dsl.extension.nodeDoNothing) (Kotlin) or [AIAgentNode.doNothing()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.doNothing) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeDoNothing"]
+    subgraph node ["Pass-through node"]
         execute(Do nothing)
     end
     
@@ -62,6 +85,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-02.txt -->
 
 You can use this node for the following purposes:
 
@@ -70,38 +94,63 @@ You can use this node for the following purposes:
 
 Here is an example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.nodeDoNothing
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val passthrough by nodeDoNothing<String>("passthrough")
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.nodeDoNothing
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val passthrough by nodeDoNothing<String>("passthrough")
 
-edge(nodeStart forwardTo passthrough)
-edge(passthrough forwardTo nodeFinish)
-```
-<!--- KNIT example-nodes-and-component-02.kt -->
+    edge(nodeStart forwardTo passthrough)
+    edge(passthrough forwardTo nodeFinish)
+    ```
+    <!--- KNIT example-nodes-and-component-02.kt -->
+
+=== "Java"
+    
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleNodesAndComponentsJava02 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var passthrough = AIAgentNode.doNothing(String.class);
+
+    strategy.edge(strategy.nodeStart, passthrough);
+    strategy.edge(passthrough, strategy.nodeFinish);
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava02.java -->
 
 ## LLM nodes
 
-### nodeAppendPrompt
+### Prompt preparation node
 
-A node that adds messages to the LLM prompt using the provided prompt builder.
-This is useful for modifying the conversation context before making an actual LLM request. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeUpdatePrompt).
+**A node that adds messages to the LLM prompt using the provided prompt builder.
+This is useful for modifying the conversation context before making an actual LLM request.** For details, see [nodeAppendPrompt](api:agents-core::ai.koog.agents.core.dsl.extension.nodeAppendPrompt) (Kotlin) or [AIAgentNode.appendPrompt()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNodeBuilderWithInput.appendPrompt
+) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeAppendPrompt"]
+    subgraph node ["Prompt preparation node"]
         execute(Append prompt)
     end
     
@@ -109,6 +158,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-03.txt -->
 
 You can use this node for the following purposes:
 
@@ -118,50 +168,98 @@ You can use this node for the following purposes:
 
 Here is an example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.nodeAppendPrompt
+=== "Kotlin"
 
-typealias Input = Unit
-typealias Output = Unit
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.nodeAppendPrompt
+    typealias Input = Unit
+    typealias Output = Unit
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val firstNode by node<Input, Output> {
+        // Transform input to output
+    }
 
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val firstNode by node<Input, Output> {
-    // Transform input to output
-}
+    val secondNode by node<Output, Output> {
+        // Transform output to output
+    }
 
-val secondNode by node<Output, Output> {
-    // Transform output to output
-}
+    // Node will get the value of type Output as input from the previous node and path through it to the next node
+    val setupContext by nodeAppendPrompt<Output>("setupContext") {
+        system("You are a helpful assistant specialized in Kotlin programming.")
+        user("I need help with Kotlin coroutines.")
+    }
 
-// Node will get the value of type Output as input from the previous node and path through it to the next node
-val setupContext by nodeAppendPrompt<Output>("setupContext") {
-    system("You are a helpful assistant specialized in Kotlin programming.")
-    user("I need help with Kotlin coroutines.")
-}
+    edge(firstNode forwardTo setupContext)
+    edge(setupContext forwardTo secondNode)
+    ```
+    <!--- KNIT example-nodes-and-component-03.kt -->
 
-edge(firstNode forwardTo setupContext)
-edge(setupContext forwardTo secondNode)
-```
-<!--- KNIT example-nodes-and-component-03.kt -->
+=== "Java"
 
-### nodeLLMSendMessageOnlyCallingTools
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleNodesAndComponentsJava03 {
+        class Output {}
+        class Input extends Output { }
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var firstNode = AIAgentNode.builder()
+        .withInput(Input.class)
+        .withOutput(Output.class)
+        .withAction((input, ctx) -> {
+            // Transform input to output
+            return input;
+        })
+        .build();
 
-A node that appends a user message to the LLM prompt and gets a response where the LLM can only call tools. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMessageOnlyCallingTools).
+    var secondNode = AIAgentNode.builder()
+        .withInput(Output.class)
+        .withOutput(Output.class)
+        .withAction((output, ctx) -> {
+            // Transform output to output
+            return output;
+        })
+        .build();
+
+    var setupContext = AIAgentNode.builder()
+        .withInput(Output.class)
+        .appendPrompt(prompt -> {
+            prompt.system("You are a helpful assistant specialized in Kotlin programming.");
+            prompt.user("I need help with Kotlin coroutines.");
+        });
+
+    strategy.edge(firstNode, setupContext);
+    strategy.edge(setupContext, secondNode);
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava03.java -->
+
+### Tool-only node
+
+A node that appends a user message to the LLM prompt and gets a response where the LLM can only call tools. For details, see [nodeLLMSendMessageOnlyCallingTools](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMessageOnlyCallingTools) (Kotlin) or [AIAgentNode.llmSendMessageOnlyCallingTools()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmSendMessageOnlyCallingTools) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMSendMessageOnlyCallingTools"]
+    subgraph node ["Tool-only node"]
         execute(Request LLM expecting only tool calls)
     end
     
@@ -169,17 +267,18 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-04.txt -->
 
-### nodeLLMSendMessageForceOneTool
+### Forced single tool use node
 
-A node that that appends a user message to the LLM prompt and forces the LLM to use a specific tool. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMessageForceOneTool).
+A node that that appends a user message to the LLM prompt and forces the LLM to use a specific tool. For details, see [nodeLLMSendMessageForceOneTool](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMessageForceOneTool) (Kotlin) or [AIAgentNode.llmSendMessageForceOneTool()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmSendMessageForceOneTool) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMSendMessageForceOneTool"]
+    subgraph node ["Forced single tool use node"]
         execute(Request LLM expecting a specific tool call)
     end
     
@@ -187,18 +286,19 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-05.txt -->
 
-### nodeLLMRequest
+### LLM request node
 
 A node that appends a user message to the LLM prompt and gets a response with optional tool usage. The node configuration determines whether
-tool calls are allowed during the processing of the message. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequest).
+tool calls are allowed during the processing of the message. For details, see [nodeLLMRequest](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequest) (Kotlin) or [AIAgentNode.llmRequest()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmRequest) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMRequest"]
+    subgraph node ["LLM request node"]
         execute(Request LLM)
     end
     
@@ -206,6 +306,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-06.txt -->
 
 You can use this node for the following purposes:
 
@@ -213,35 +314,63 @@ You can use this node for the following purposes:
 
 Here is an example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeDoNothing
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
-    val getUserQuestion by nodeDoNothing<String>()
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val requestLLM by nodeLLMRequest("requestLLM", allowToolCalls = true)
-edge(getUserQuestion forwardTo requestLLM)
-```
-<!--- KNIT example-nodes-and-component-04.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+    import ai.koog.agents.core.dsl.extension.nodeDoNothing
+    val strategy = strategy<String, String>("strategy_name") {
+        val getUserQuestion by nodeDoNothing<String>()
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val requestLLM by nodeLLMRequest("requestLLM", allowToolCalls = true)
+    edge(getUserQuestion forwardTo requestLLM)
+    ```
+    <!--- KNIT example-nodes-and-component-04.kt -->
 
-### nodeLLMRequestStructured
+=== "Java"
 
-A node that appends a user message to the LLM prompt and requests structured data from the LLM with error correction capabilities. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured).
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleNodesAndComponentsJava04 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+            var getUserQuestion = AIAgentNode.builder("getUserQuestion")
+                .withInput(String.class)
+                .withOutput(String.class)
+                .withAction((input, ctx) -> input)
+                .build();
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var requestLLM = AIAgentNode.llmRequest(true, "requestLLM");
+
+    strategy.edge(getUserQuestion, requestLLM);
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava04.java -->
+
+### LLM request node with structured response
+
+A node that appends a user message to the LLM prompt and requests structured data from the LLM with error correction capabilities. For details, see [nodeLLMRequestStructured](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured) (Kotlin) or [AIAgentNode.llmRequestStructured()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmRequestStructured) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMRequestStructured"]
+    subgraph node ["LLM request node, structured response"]
         execute(Request LLM structured)
     end
     
@@ -249,17 +378,18 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-07.txt -->
 
-### nodeLLMRequestStreaming
+### LLM request node with streaming response
 
-A node that appends a user message to the LLM prompt and streams LLM response with or without stream data transformation. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming).
+A node that appends a user message to the LLM prompt and streams LLM response with or without stream data transformation. For details, see [nodeLLMRequestStreaming](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming) (Kotlin) or [AIAgentNode.llmRequestStreaming()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmRequestStreaming) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMRequestStreaming"]
+    subgraph node ["LLM request node, streaming response"]
         execute(Request LLM streaming)
     end
     
@@ -267,17 +397,18 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-08.txt -->
 
-### nodeLLMRequestMultiple
+### LLM request node with multiple responses
 
-A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple).
+A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled. For details, see [nodeLLMRequestMultiple](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple) (Kotlin) or [AIAgentNode.llmRequestMultiple()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmRequestMultiple) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMRequestMultiple"]
+    subgraph node ["LLM request node, multiple responses"]
         execute(Request LLM expecting multiple responses)
     end
     
@@ -285,6 +416,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-09.txt -->
 
 You can use this node for the following purposes:
 
@@ -294,36 +426,63 @@ You can use this node for the following purposes:
 
 Here is an example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
-import ai.koog.agents.core.dsl.extension.nodeDoNothing
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
-    val getComplexUserQuestion by nodeDoNothing<String>()
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val requestLLMMultipleTools by nodeLLMRequestMultiple()
-edge(getComplexUserQuestion forwardTo requestLLMMultipleTools)
-```
-<!--- KNIT example-nodes-and-component-05.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
+    import ai.koog.agents.core.dsl.extension.nodeDoNothing
+    val strategy = strategy<String, String>("strategy_name") {
+        val getComplexUserQuestion by nodeDoNothing<String>()
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val requestLLMMultipleTools by nodeLLMRequestMultiple()
+    edge(getComplexUserQuestion forwardTo requestLLMMultipleTools)
+    ```
+    <!--- KNIT example-nodes-and-component-05.kt -->
 
-### nodeLLMCompressHistory
+=== "Java"
 
-A node that compresses the current LLM prompt (message history) into a summary, replacing messages with a concise summary (TL;DR). For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory).
-This is useful for managing long conversations by compressing the history to reduce token usage.
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleNodesAndComponentsJava05 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+            var getComplexUserQuestion = AIAgentNode.builder("getComplexUserQuestion")
+                .withInput(String.class)
+                .withOutput(String.class)
+                .withAction((input, ctx) -> input)
+                .build();
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var requestLLMMultipleTools = AIAgentNode.llmRequestMultiple("requestLLMMultipleTools");
+
+    strategy.edge(getComplexUserQuestion, requestLLMMultipleTools);
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava05.java -->
+
+### History compression node
+
+A node that compresses the current LLM prompt (message history) into a summary, replacing messages with a concise summary (TL;DR). This is useful for managing long conversations by compressing the history to reduce token usage. For details, see [nodeLLMCompressHistory](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory) (Kotlin) or [AIAgentNode.llmCompressHistory()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmCompressHistory) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMCompressHistory"]
+    subgraph node ["History compression node"]
         execute(Compress current prompt)
     end
     
@@ -331,6 +490,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-10.txt -->
 
 To learn more about history compression, see [History compression](history-compression.md).
 
@@ -342,42 +502,72 @@ You can use this node for the following purposes:
 
 Here is an example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
-import ai.koog.agents.core.dsl.extension.nodeDoNothing
-import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
-    val generateHugeHistory by nodeDoNothing<String>()
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val compressHistory by nodeLLMCompressHistory<String>(
-    "compressHistory",
-    strategy = HistoryCompressionStrategy.FromLastNMessages(10),
-    preserveMemory = true
-)
-edge(generateHugeHistory forwardTo compressHistory)
-```
-<!--- KNIT example-nodes-and-component-06.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
+    import ai.koog.agents.core.dsl.extension.nodeDoNothing
+    import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+    val strategy = strategy<String, String>("strategy_name") {
+        val generateHugeHistory by nodeDoNothing<String>()
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val compressHistory by nodeLLMCompressHistory<String>(
+        "compressHistory",
+        strategy = HistoryCompressionStrategy.FromLastNMessages(10),
+        preserveMemory = true
+    )
+    edge(generateHugeHistory forwardTo compressHistory)
+    ```
+    <!--- KNIT example-nodes-and-component-06.kt -->
+
+=== "Java"
+    
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleNodesAndComponentsJava06 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+            var generateHugeHistory = AIAgentNode.builder("generateHugeHistory")
+                .withInput(String.class)
+                .withOutput(String.class)
+                .withAction((input, ctx) -> input)
+                .build();
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var compressHistory = AIAgentNode.llmCompressHistory("compressHistory")
+        .withInput(String.class)
+        .build();
+
+    strategy.edge(generateHugeHistory, compressHistory);
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava06.java -->
 
 ## Tool nodes
 
-### nodeExecuteTool
+### Tool execution node
 
-A node that executes a single tool call and returns its result. This node is used to handle tool calls made by the LLM. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteTool).
+A node that executes a single tool call and returns its result. This node is used to handle tool calls made by the LLM. For details, see [nodeExecuteTool](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteTool) (Kotlin) or [AIAgentNode.executeTool()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.executeTool) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeExecuteTool"]
+    subgraph node ["Tool execution node"]
         execute(Execute tool call)
     end
     
@@ -385,6 +575,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-11.txt -->
 
 You can use this node for the following purposes:
 
@@ -394,36 +585,66 @@ You can use this node for the following purposes:
 
 Here is an example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.onToolCall
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val requestLLM by nodeLLMRequest()
-val executeTool by nodeExecuteTool()
-edge(requestLLM forwardTo executeTool onToolCall { true })
-```
-<!--- KNIT example-nodes-and-component-07.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+    import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+    import ai.koog.agents.core.dsl.extension.onToolCall
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val requestLLM by nodeLLMRequest()
+    val executeTool by nodeExecuteTool()
+    edge(requestLLM forwardTo executeTool onToolCall { true })
+    ```
+    <!--- KNIT example-nodes-and-component-07.kt -->
 
-### nodeLLMSendToolResult
+=== "Java"
 
-A node that adds a tool result to the prompt and requests an LLM response. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult).
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentEdge;
+    import ai.koog.prompt.message.Message;
+    class exampleNodesAndComponentsJava07 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var requestLLM = AIAgentNode.llmRequest(true, "requestLLM");
+    var executeTool = AIAgentNode.executeTool("executeTool");
+
+    strategy.edge(AIAgentEdge.builder()
+        .from(requestLLM)
+        .to(executeTool)
+        .onIsInstance(Message.Tool.Call.class)
+        .build());
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava07.java -->
+
+### Tool result follow-up node
+
+A node that adds a tool result to the prompt and requests an LLM response. For details, see [nodeLLMSendToolResult](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult) (Kotlin) or [AIAgentNode.llmSendToolResult()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmSendToolResult) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMSendToolResult"]
+    subgraph node ["Tool result follow-up node"]
         execute(Request LLM)
     end
     
@@ -431,6 +652,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-12.txt -->
 
 You can use this node for the following purposes:
 
@@ -440,35 +662,59 @@ You can use this node for the following purposes:
 
 Here is an example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val executeTool by nodeExecuteTool()
-val sendToolResultToLLM by nodeLLMSendToolResult()
-edge(executeTool forwardTo sendToolResultToLLM)
-```
-<!--- KNIT example-nodes-and-component-08.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val executeTool by nodeExecuteTool()
+    val sendToolResultToLLM by nodeLLMSendToolResult()
+    edge(executeTool forwardTo sendToolResultToLLM)
+    ```
+    <!--- KNIT example-nodes-and-component-08.kt -->
 
-### nodeExecuteMultipleTools
+=== "Java"
+    
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleNodesAndComponentsJava08 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var executeTool = AIAgentNode.executeTool("executeTool");
+    var sendToolResultToLLM = AIAgentNode.llmSendToolResult("sendToolResultToLLM");
 
-A node that executes multiple tool calls. These calls can optionally be executed in parallel. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools).
+    strategy.edge(executeTool, sendToolResultToLLM);
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava08.java -->
+
+### Multi-tool execution node
+
+A node that executes multiple tool calls. These calls can optionally be executed in parallel. For details, see [nodeExecuteMultipleTools](api:agents-core::ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools) (Kotlin) or [AIAgentNode.executeMultipleTools()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.executeMultipleTools) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeExecuteMultipleTools"]
+    subgraph node ["Multi-tool execution node"]
         execute(Execute multiple tool calls)
     end
     
@@ -476,6 +722,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-13.txt -->
 
 You can use this node for the following purposes:
 
@@ -485,36 +732,72 @@ You can use this node for the following purposes:
 
 Here is an example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
-import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
-import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val requestLLMMultipleTools by nodeLLMRequestMultiple()
-val executeMultipleTools by nodeExecuteMultipleTools()
-edge(requestLLMMultipleTools forwardTo executeMultipleTools onMultipleToolCalls { true })
-```
-<!--- KNIT example-nodes-and-component-09.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
+    import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
+    import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val requestLLMMultipleTools by nodeLLMRequestMultiple()
+    val executeMultipleTools by nodeExecuteMultipleTools()
+    edge(requestLLMMultipleTools forwardTo executeMultipleTools onMultipleToolCalls { true })
+    ```
+    <!--- KNIT example-nodes-and-component-09.kt -->
 
-### nodeLLMSendMultipleToolResults
+=== "Java"
 
-A node that adds multiple tool results to the prompt and gets multiple LLM responses. For details, see [API reference](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults).
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.agents.core.agent.entity.AIAgentEdge;
+    import ai.koog.prompt.message.Message;
+    class exampleNodesAndComponentsJava09 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var requestLLMMultipleTools = AIAgentNode.llmRequestMultiple("requestLLMMultipleTools");
+    var executeMultipleTools = AIAgentNode.executeMultipleTools(false, "executeMultipleTools");
+
+    // Extract tool calls from the list of responses
+    strategy.edge(AIAgentEdge.builder()
+        .from(requestLLMMultipleTools)
+        .to(executeMultipleTools)
+        .onCondition(responses -> responses.stream()
+            .anyMatch(msg -> msg instanceof Message.Tool.Call))
+        .transformed(responses -> responses.stream()
+            .filter(msg -> msg instanceof Message.Tool.Call)
+            .map(msg -> (Message.Tool.Call) msg)
+            .toList())
+        .build());
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava09.java -->
+
+### Multiple tool result follow-up node
+
+A node that adds multiple tool results to the prompt and gets multiple LLM responses. For details, see [nodeLLMSendMultipleToolResults](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults) (Kotlin) or [AIAgentNode.llmSendMultipleToolResults()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmSendMultipleToolResults) (Java).
 
 ```mermaid
 graph LR
     in:::hidden
     out:::hidden
     
-    subgraph node ["nodeLLMSendMultipleToolResults"]
+    subgraph node ["Multiple tool result follow-up node"]
         execute(Request LLM expecting multiple responses)
     end
     
@@ -522,6 +805,7 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-14.txt -->
 
 You can use this node for the following purposes:
 
@@ -531,30 +815,57 @@ You can use this node for the following purposes:
 
 Here is an example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
-import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
+=== "Kotlin"
 
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val executeMultipleTools by nodeExecuteMultipleTools()
-val sendMultipleToolResultsToLLM by nodeLLMSendMultipleToolResults()
-edge(executeMultipleTools forwardTo sendMultipleToolResultsToLLM)
-```
-<!--- KNIT example-nodes-and-component-10.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
+    import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val executeMultipleTools by nodeExecuteMultipleTools()
+    val sendMultipleToolResultsToLLM by nodeLLMSendMultipleToolResults()
+    edge(executeMultipleTools forwardTo sendMultipleToolResultsToLLM)
+    ```
+    <!--- KNIT example-nodes-and-component-10.kt -->
+
+=== "Java"
+    
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.message.Message;
+    class exampleNodesAndComponentsJava10 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var executeMultipleTools = AIAgentNode.executeMultipleTools(false, "executeMultipleTools");
+    var sendMultipleToolResultsToLLM = AIAgentNode.llmSendMultipleToolResults("sendMultipleToolResultsToLLM");
+
+    strategy.edge(executeMultipleTools, sendMultipleToolResultsToLLM);
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava10.java -->
 
 ## Node output transformation
 
-The framework provides the `transform` extension function that allows you to create transformed versions of nodes 
-that apply transformations to their output. This is useful when you need to convert the output of a node 
-to a different type or format while preserving the original node's functionality.
+The framework provides the `transform` extension function in Kotlin that allows you to create 
+transformed versions of nodes that apply transformations to their output. In Java, you achieve 
+the same result by creating intermediate nodes with explicit transformations. This is useful 
+when you need to convert the output of a node to a different type or format while preserving the
+original node's functionality.
 
 ```mermaid
 graph LR
@@ -572,78 +883,163 @@ graph LR
 
     classDef hidden display: none;
 ```
+<!--- KNIT example-nodes-and-component-15.txt -->
 
-### transform
+### Node transformation
 
-The [`transform()`](api:agents-core::ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate.transform) function creates a new `AIAgentNodeDelegate` that wraps the original node and applies a transformation function to its output.
+In Kotlin, the [transform()](api:agents-core::ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate.transform) function creates a new `AIAgentNodeDelegate` that wraps the original node and applies a transformation function to its output. In Java, you need to manually compose nodes with transformation logic using `AIAgentNode.builder()` and explicit type parameters.
 
-<!--- INCLUDE
-/**
--->
-<!--- SUFFIX
-**/
--->
-```kotlin
-inline fun <reified T> AIAgentNodeDelegate<Input, Output>.transform(
-    noinline transformation: suspend (Output) -> T
-): AIAgentNodeDelegate<Input, T>
-```
-<!--- KNIT example-nodes-and-component-11.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```kotlin
+    inline fun <reified T> AIAgentNodeDelegate<Input, Output>.transform(
+        noinline transformation: suspend (Output) -> T
+    ): AIAgentNodeDelegate<Input, T>
+    ```
+    <!--- KNIT example-nodes-and-component-11.kt -->
+
+=== "Java"
+
+    ```java
+    // In Java, you need to manually compose nodes
+    // with transformation logic using AIAgentNode.builder() and explicit type parameters.
+    // See the examples below for the Java approach to node transformations.
+    ```
+    <!--- KNIT example-nodes-and-component-java-01.java -->
 
 #### Custom node transformation
 
 Transform the output of a custom node to a different data type:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.nodeDoNothing
+=== "Kotlin"
 
-val strategy = strategy<String, Int>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val textNode by nodeDoNothing<String>("textNode").transform<Int> { text ->
-    text.split(" ").filter { it.isNotBlank() }.size
-}
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.nodeDoNothing
+    val strategy = strategy<String, Int>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val textNode by nodeDoNothing<String>("textNode").transform<Int> { text ->
+        text.split(" ").filter { it.isNotBlank() }.size
+    }
 
-edge(nodeStart forwardTo textNode)
-edge(textNode forwardTo nodeFinish)
-```
-<!--- KNIT example-nodes-and-component-12.kt -->
+    edge(nodeStart forwardTo textNode)
+    edge(textNode forwardTo nodeFinish)
+    ```
+    <!--- KNIT example-nodes-and-component-12.kt -->
+
+=== "Java"
+    
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    class exampleNodesAndComponentsJava11 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(Integer.class);
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var textNode = AIAgentNode.builder("textNode")
+        .withInput(String.class)
+        .withOutput(Integer.class)
+        .withAction((text, ctx) -> {
+            String[] words = text.split(" ");
+            int count = 0;
+            for (String word : words) {
+                if (!word.isBlank()) {
+                    count++;
+                }
+            }
+            return count;
+        })
+        .build();
+
+    strategy.edge(strategy.nodeStart, textNode);
+    strategy.edge(textNode, strategy.nodeFinish);
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava11.java -->
 
 #### Built-in node transformation
 
-Transform the output of built-in nodes like `nodeLLMRequest`:
+Transform the output of built-in nodes like `nodeLLMRequest` (Kotlin) or `AIAgentNode.llmRequest()` (Java):
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+=== "Kotlin"
 
-val strategy = strategy<String, Int>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val lengthNode by nodeLLMRequest("llmRequest").transform<Int> { assistantMessage ->
-    assistantMessage.content.length
-}
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+    val strategy = strategy<String, Int>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val lengthNode by nodeLLMRequest("llmRequest").transform<Int> { assistantMessage ->
+        assistantMessage.content.length
+    }
 
-edge(nodeStart forwardTo lengthNode)
-edge(lengthNode forwardTo nodeFinish)
-```
-<!--- KNIT example-nodes-and-component-13.kt -->
+    edge(nodeStart forwardTo lengthNode)
+    edge(lengthNode forwardTo nodeFinish)
+    ```
+    <!--- KNIT example-nodes-and-component-13.kt -->
+
+=== "Java"
+    
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.message.Message;
+    class exampleNodesAndComponentsJava12 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(Integer.class);
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var llmRequest = AIAgentNode.llmRequest(true, "llmRequest");
+    var lengthNode = AIAgentNode.builder("lengthNode")
+        .withInput(Message.Response.class)
+        .withOutput(Integer.class)
+        .withAction((assistantMessage, ctx) -> {
+            if (assistantMessage instanceof Message.Assistant) {
+                return ((Message.Assistant) assistantMessage).getContent().length();
+            }
+            return 0;
+        })
+        .build();
+
+    strategy.edge(strategy.nodeStart, llmRequest);
+    strategy.edge(llmRequest, lengthNode);
+    strategy.edge(lengthNode, strategy.nodeFinish);
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava12.java -->
 
 
 ## Predefined subgraphs
 
-The framework provides predefined subgraphs that encapsulate commonly used patterns and workflows. These subgraphs simplify the development of complex agent strategies by handling the creation of base nodes and edges automatically.
+The framework provides predefined subgraphs that encapsulate commonly used patterns and workflows. These subgraphs simplify the development of complex agent strategies by handling the creation of base nodes and edges automatically. The API is consistent between Kotlin and Java, with Kotlin using DSL functions and Java using builder methods.
 
 By using the predefined subgraphs, you can implement various popular pipelines. Here is an example:
 
@@ -651,9 +1047,9 @@ By using the predefined subgraphs, you can implement various popular pipelines. 
 2. Run the task.
 3. Validate the task results. If the results are incorrect, return to step 2 with a feedback message to make adjustments.
 
-### subgraphWithTask
+### Task execution subgraph
 
-A subgraph that performs a specific task using provided tools and returns a structured result. It supports multi-response LLM interactions (the assistant may produce several responses interleaved with tool calls) and lets you control how tool calls are executed. For details, see [API reference](api:agents-ext::ai.koog.agents.ext.agent.subgraphWithTask).
+A subgraph that performs a specific task using provided tools and returns a structured result. It supports multi-response LLM interactions (the assistant may produce several responses interleaved with tool calls) and lets you control how tool calls are executed. In Kotlin, use [subgraphWithTask()](api:agents-core::ai.koog.agents.ext.agent.subgraphWithTask), and in Java, use [AIAgentSubgraph.builder().withTask()](api:agents-core::ai.koog.agents.core.agent.entity.TypedAIAgentSubgraphBuilder.withTask).
 
 You can use this subgraph for the following purposes:
 
@@ -666,47 +1062,85 @@ You can use this subgraph for the following purposes:
 
 The API allows you to fine‑tune execution with optional parameters:
 
-- runMode: controls how tool calls are executed during the task (sequential by default). Use this to switch between different tool execution strategies when supported by the underlying model/executor.
-- assistantResponseRepeatMax: limits how many assistant responses are allowed before concluding the task cannot be completed (defaults to a safe internal limit if not provided).
+- [runMode](api:agents-core::ai.koog.agents.core.agent.entity.SubgraphWithTaskBuilder.runMode): controls how tool calls are executed during the task (sequential by default). Use this to switch between different tool execution strategies when supported by the underlying model/executor.
+- [assistantResponseRepeatMax](api:agents-core::ai.koog.agents.core.agent.entity.SubgraphWithTaskBuilder.assistantResponseRepeatMax
+  ): limits how many assistant responses are allowed before concluding the task cannot be completed (defaults to a safe internal limit if not provided).
 
 You can provide a task to the subgraph as text, configure the LLM if needed, and provide the necessary tools, and the subgraph will process and solve the task. Here is an example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.agents.ext.agent.subgraphWithTask
-import ai.koog.agents.core.agent.ToolCalls
+=== "Kotlin"
 
-val searchTool = SayToUser
-val calculatorTool = SayToUser
-val weatherTool = SayToUser
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.ext.tool.SayToUser
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.agents.ext.agent.subgraphWithTask
+    import ai.koog.agents.core.agent.ToolCalls
+    val searchTool = SayToUser
+    val calculatorTool = SayToUser
+    val weatherTool = SayToUser
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val processQuery by subgraphWithTask<String, String>(
+        tools = listOf(searchTool, calculatorTool, weatherTool),
+        llmModel = OpenAIModels.Chat.GPT4o,
+        runMode = ToolCalls.SEQUENTIAL,
+        assistantResponseRepeatMax = 3,
+    ) { userQuery ->
+        """
+        You are a helpful assistant that can answer questions about various topics.
+        Please help with the following query:
+        $userQuery
+        """
+    }
+    ```
+    <!--- KNIT example-nodes-and-component-14.kt -->
 
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val processQuery by subgraphWithTask<String, String>(
-    tools = listOf(searchTool, calculatorTool, weatherTool),
-    llmModel = OpenAIModels.Chat.GPT4o,
-    runMode = ToolCalls.SEQUENTIAL,
-    assistantResponseRepeatMax = 3,
-) { userQuery ->
-    """
-    You are a helpful assistant that can answer questions about various topics.
-    Please help with the following query:
-    $userQuery
-    """
-}
-```
-<!--- KNIT example-nodes-and-component-14.kt -->
+=== "Java"
+    
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.agent.ToolCalls;
+    import ai.koog.agents.ext.tool.SayToUser;
+    import java.util.List;
+    class exampleNodesAndComponentsJava13 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+            SayToUser searchTool = SayToUser.INSTANCE;
+            SayToUser calculatorTool = SayToUser.INSTANCE;
+            SayToUser weatherTool = SayToUser.INSTANCE;
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var processQuery = AIAgentSubgraph.builder("processQuery")
+        .limitedTools(List.of(searchTool, calculatorTool, weatherTool))
+        .withInput(String.class)
+        .withOutput(String.class)
+        .withTask(userQuery ->
+            "You are a helpful assistant that can answer questions about various topics.\n" +
+            "Please help with the following query:\n" +
+            userQuery)
+        .runMode(ToolCalls.SEQUENTIAL)
+        .assistantResponseRepeatMax(3)
+        .build();
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava13.java -->
 
-### subgraphWithVerification
+### Task execution subgraph with verification
 
-A special version of `subgraphWithTask` that verifies whether a task was performed correctly and provides details about any issues encountered. This subgraph is useful for workflows that require validation or quality checks. For details, see [API reference](api:agents-ext::ai.koog.agents.ext.agent.subgraphWithVerification).
+A special version of `subgraphWithTask` that verifies whether a task was performed correctly and provides details about any issues encountered. This subgraph is useful for workflows that require validation or quality checks. In Kotlin, use [subgraphWithVerification()](api:agents-core::ai.koog.agents.ext.agent.subgraphWithVerification
+), and in Java, use `AIAgentSubgraph.builder().withVerification()`.
 
 You can use this subgraph for the following purposes:
 
@@ -715,49 +1149,87 @@ You can use this subgraph for the following purposes:
 - Create self-validating components.
 - Generate structured verification results with success/failure status and detailed feedback.
 
-The subgraph ensures that the LLM calls a verification tool at the end of the workflow to check whether the task was successfully completed. It guarantees this verification is performed as the final step and returns a `CriticResult` that indicates whether a task was completed successfully and provides detailed feedback.
+The subgraph ensures that the LLM calls a verification tool at the end of the workflow to check whether the task was successfully completed. It guarantees this verification is performed as the final step and returns a [CriticResult](api:agents-core::ai.koog.agents.ext.agent.CriticResult) that indicates whether a task was completed successfully and provides detailed feedback.
 Here is an example:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.agents.ext.agent.subgraphWithVerification
-import ai.koog.agents.core.agent.ToolCalls
+=== "Kotlin"
 
-val runTestsTool = SayToUser
-val analyzeTool = SayToUser
-val readFileTool = SayToUser
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.ext.tool.SayToUser
+    import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+    import ai.koog.agents.ext.agent.subgraphWithVerification
+    import ai.koog.agents.core.agent.ToolCalls
+    val runTestsTool = SayToUser
+    val analyzeTool = SayToUser
+    val readFileTool = SayToUser
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val verifyCode by subgraphWithVerification<String>(
+        tools = listOf(runTestsTool, analyzeTool, readFileTool),
+        llmModel = AnthropicModels.Opus_4_6,
+        runMode = ToolCalls.SEQUENTIAL,
+        assistantResponseRepeatMax = 3,
+    ) { codeToVerify ->
+        """
+        You are a code reviewer. Please verify that the following code meets all requirements:
+        1. It compiles without errors
+        2. All tests pass
+        3. It follows the project's coding standards
 
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val verifyCode by subgraphWithVerification<String>(
-    tools = listOf(runTestsTool, analyzeTool, readFileTool),
-    llmModel = AnthropicModels.Opus_4_6,
-    runMode = ToolCalls.SEQUENTIAL,
-    assistantResponseRepeatMax = 3,
-) { codeToVerify ->
-    """
-    You are a code reviewer. Please verify that the following code meets all requirements:
-    1. It compiles without errors
-    2. All tests pass
-    3. It follows the project's coding standards
+        Code to verify:
+        $codeToVerify
+        """
+    }
+    ```
+    <!--- KNIT example-nodes-and-component-15.kt -->
 
-    Code to verify:
-    $codeToVerify
-    """
-}
-```
-<!--- KNIT example-nodes-and-component-15.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
+    import ai.koog.agents.core.agent.ToolCalls;
+    import ai.koog.agents.ext.tool.SayToUser;
+    import java.util.List;
+    class exampleNodesAndComponentsJava14 {
+        public static void main(String[] args) {
+            var strategy = AIAgentGraphStrategy.builder("strategy_name")
+                .withInput(String.class)
+                .withOutput(String.class);
+            SayToUser runTestsTool = SayToUser.INSTANCE;
+            SayToUser analyzeTool = SayToUser.INSTANCE;
+            SayToUser readFileTool = SayToUser.INSTANCE;
+    -->
+    <!--- SUFFIX
+        }
+    }
+    -->
+    ```java
+    var verifyCode = AIAgentSubgraph.builder("verifyCode")
+        .limitedTools(List.of(runTestsTool, analyzeTool, readFileTool))
+        .withInput(String.class)
+        .withVerification(codeToVerify ->
+            "You are a code reviewer. Please verify that the following code meets all requirements:\n" +
+            "1. It compiles without errors\n" +
+            "2. All tests pass\n" +
+            "3. It follows the project's coding standards\n\n" +
+            "Code to verify:\n" +
+            codeToVerify)
+        .runMode(ToolCalls.SEQUENTIAL)
+        .assistantResponseRepeatMax(3)
+        .build();
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava14.java -->
 
 ## Predefined strategies and common strategy patterns
 
-The framework provides predefined strategies that combine various nodes.
+Koog provides predefined strategies that combine various nodes.
 The nodes are connected using edges to define the flow of operations, with conditions that specify when to follow each edge.
 
 You can integrate these strategies into your agent workflows if needed.
@@ -769,85 +1241,211 @@ returns a result.
 
 You can use this strategy when you need to run straightforward processes that do not require complex logic.
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.*
+=== "Kotlin"
 
--->
-```kotlin
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.*
+    -->
+    ```kotlin
+    public fun singleRunStrategy(): AIAgentGraphStrategy<String, String> = strategy("single_run") {
+        val nodeCallLLM by nodeLLMRequest("sendInput")
+        val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
+        val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
 
-public fun singleRunStrategy(): AIAgentGraphStrategy<String, String> = strategy("single_run") {
-    val nodeCallLLM by nodeLLMRequest("sendInput")
-    val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
-    val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
+        edge(nodeStart forwardTo nodeCallLLM)
+        edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
+        edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
+        edge(nodeExecuteTool forwardTo nodeSendToolResult)
+        edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
+        edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+    }
+    ```
+    <!--- KNIT example-nodes-and-component-16.kt -->
 
-    edge(nodeStart forwardTo nodeCallLLM)
-    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
-    edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeExecuteTool forwardTo nodeSendToolResult)
-    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
-}
-```
-<!--- KNIT example-nodes-and-component-16.kt -->
+=== "Java"
+    
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentEdge;
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.message.Message;
+    class exampleNodesAndComponentsJava15 {
+    -->
+    <!--- SUFFIX
+        public static void main(String[] args) {
+        }
+    }
+    -->
+    ```java
+    public static AIAgentGraphStrategy<String, String> singleRunStrategy() {
+        var strategy = AIAgentGraphStrategy.builder("single_run")
+            .withInput(String.class)
+            .withOutput(String.class);
+
+        var nodeCallLLM = AIAgentNode.llmRequest(true, "sendInput");
+        var nodeExecuteTool = AIAgentNode.executeTool("nodeExecuteTool");
+        var nodeSendToolResult = AIAgentNode.llmSendToolResult("nodeSendToolResult");
+
+        strategy.edge(strategy.nodeStart, nodeCallLLM);
+
+        strategy.edge(AIAgentEdge.builder()
+            .from(nodeCallLLM)
+            .to(nodeExecuteTool)
+            .onIsInstance(Message.Tool.Call.class)
+            .build());
+
+        strategy.edge(AIAgentEdge.builder()
+            .from(nodeCallLLM)
+            .to(strategy.nodeFinish)
+            .onIsInstance(Message.Assistant.class)
+            .transformed(Message.Assistant::getContent)
+            .build());
+
+        strategy.edge(nodeExecuteTool, nodeSendToolResult);
+
+        strategy.edge(AIAgentEdge.builder()
+            .from(nodeSendToolResult)
+            .to(strategy.nodeFinish)
+            .onIsInstance(Message.Assistant.class)
+            .transformed(Message.Assistant::getContent)
+            .build());
+
+        strategy.edge(AIAgentEdge.builder()
+            .from(nodeSendToolResult)
+            .to(nodeExecuteTool)
+            .onIsInstance(Message.Tool.Call.class)
+            .build());
+
+        return strategy.build();
+    }
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava15.java -->
 
 ### Tool-based strategy
 
 A tool-based strategy is designed for workflows that heavily rely on tools to perform specific operations.
 It typically executes tools based on the LLM decisions and processes the results.
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.core.dsl.extension.*
-import ai.koog.agents.core.tools.ToolRegistry
+=== "Kotlin"
 
--->
-```kotlin
-fun toolBasedStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy<String, String> {
-    return strategy(name) {
-        val nodeSendInput by nodeLLMRequest()
-        val nodeExecuteTool by nodeExecuteTool()
-        val nodeSendToolResult by nodeLLMSendToolResult()
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.core.dsl.extension.*
+    import ai.koog.agents.core.tools.ToolRegistry
+    -->
+    ```kotlin
+    fun toolBasedStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy<String, String> {
+        return strategy(name) {
+            val nodeSendInput by nodeLLMRequest()
+            val nodeExecuteTool by nodeExecuteTool()
+            val nodeSendToolResult by nodeLLMSendToolResult()
+
+            // Define the flow of the agent
+            edge(nodeStart forwardTo nodeSendInput)
+
+            // If the LLM responds with a message, finish
+            edge(
+                (nodeSendInput forwardTo nodeFinish)
+                        onAssistantMessage { true }
+            )
+
+            // If the LLM calls a tool, execute it
+            edge(
+                (nodeSendInput forwardTo nodeExecuteTool)
+                        onToolCall { true }
+            )
+
+            // Send the tool result back to the LLM
+            edge(nodeExecuteTool forwardTo nodeSendToolResult)
+
+            // If the LLM calls another tool, execute it
+            edge(
+                (nodeSendToolResult forwardTo nodeExecuteTool)
+                        onToolCall { true }
+            )
+
+            // If the LLM responds with a message, finish
+            edge(
+                (nodeSendToolResult forwardTo nodeFinish)
+                        onAssistantMessage { true }
+            )
+        }
+    }
+    ```
+    <!--- KNIT example-nodes-and-component-17.kt -->
+
+=== "Java"
+    
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentEdge;
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.message.Message;
+    import ai.koog.agents.core.tools.ToolRegistry;
+    class exampleNodesAndComponentsJava16 {
+    -->
+    <!--- SUFFIX
+        public static void main(String[] args) {
+        }
+    }
+    -->
+    ```java
+    public static AIAgentGraphStrategy<String, String> toolBasedStrategy(String name, ToolRegistry toolRegistry) {
+        var strategy = AIAgentGraphStrategy.builder(name)
+            .withInput(String.class)
+            .withOutput(String.class);
+
+        var nodeSendInput = AIAgentNode.llmRequest(true, "nodeSendInput");
+        var nodeExecuteTool = AIAgentNode.executeTool("nodeExecuteTool");
+        var nodeSendToolResult = AIAgentNode.llmSendToolResult("nodeSendToolResult");
 
         // Define the flow of the agent
-        edge(nodeStart forwardTo nodeSendInput)
+        strategy.edge(strategy.nodeStart, nodeSendInput);
 
         // If the LLM responds with a message, finish
-        edge(
-            (nodeSendInput forwardTo nodeFinish)
-                    onAssistantMessage { true }
-        )
+        strategy.edge(AIAgentEdge.builder()
+            .from(nodeSendInput)
+            .to(strategy.nodeFinish)
+            .onIsInstance(Message.Assistant.class)
+            .transformed(Message.Assistant::getContent)
+            .build());
 
         // If the LLM calls a tool, execute it
-        edge(
-            (nodeSendInput forwardTo nodeExecuteTool)
-                    onToolCall { true }
-        )
+        strategy.edge(AIAgentEdge.builder()
+            .from(nodeSendInput)
+            .to(nodeExecuteTool)
+            .onIsInstance(Message.Tool.Call.class)
+            .build());
 
         // Send the tool result back to the LLM
-        edge(nodeExecuteTool forwardTo nodeSendToolResult)
+        strategy.edge(nodeExecuteTool, nodeSendToolResult);
 
         // If the LLM calls another tool, execute it
-        edge(
-            (nodeSendToolResult forwardTo nodeExecuteTool)
-                    onToolCall { true }
-        )
+        strategy.edge(AIAgentEdge.builder()
+            .from(nodeSendToolResult)
+            .to(nodeExecuteTool)
+            .onIsInstance(Message.Tool.Call.class)
+            .build());
 
         // If the LLM responds with a message, finish
-        edge(
-            (nodeSendToolResult forwardTo nodeFinish)
-                    onAssistantMessage { true }
-        )
+        strategy.edge(AIAgentEdge.builder()
+            .from(nodeSendToolResult)
+            .to(strategy.nodeFinish)
+            .onIsInstance(Message.Assistant.class)
+            .transformed(Message.Assistant::getContent)
+            .build());
+
+        return strategy.build();
     }
-}
-```
-<!--- KNIT example-nodes-and-component-17.kt -->
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava16.java -->
 
 ### Streaming data strategy
 
@@ -855,37 +1453,125 @@ A streaming data strategy is designed for processing streaming data from the LLM
 streaming data, processes it, and potentially calls tools with the processed data.
 
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.example.exampleStreamingApi03.Book
-import ai.koog.agents.example.exampleStreamingApi04.markdownBookDefinition
-import ai.koog.agents.example.exampleStreamingApi06.parseMarkdownStreamToBooks
--->
-```kotlin
-val agentStrategy = strategy<String, List<Book>>("library-assistant") {
-    // Describe the node containing the output stream parsing
-    val getMdOutput by node<String, List<Book>> { booksDescription ->
-        val books = mutableListOf<Book>()
-        val mdDefinition = markdownBookDefinition()
+=== "Kotlin"
 
-        llm.writeSession { 
-            appendPrompt { user(booksDescription) }
-            // Initiate the response stream in the form of the definition `mdDefinition`
-            val markdownStream = requestLLMStreaming(mdDefinition)
-            // Call the parser with the result of the response stream and perform actions with the result
-            parseMarkdownStreamToBooks(markdownStream).collect { book ->
-                books.add(book)
-                println("Parsed Book: ${book.title} by ${book.author}")
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.forwardTo
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.example.exampleStreamingApi05.Book
+    import ai.koog.agents.example.exampleStreamingApi06.markdownBookDefinition
+    import ai.koog.agents.example.exampleStreamingApi08.parseMarkdownStreamToBooks
+    -->
+    ```kotlin
+    val agentStrategy = strategy<String, List<Book>>("library-assistant") {
+        // Describe the node containing the output stream parsing
+        val getMdOutput by node<String, List<Book>> { booksDescription ->
+            val books = mutableListOf<Book>()
+            val mdDefinition = markdownBookDefinition()
+
+            llm.writeSession {
+                appendPrompt { user(booksDescription) }
+                // Initiate the response stream in the form of the definition `mdDefinition`
+                val markdownStream = requestLLMStreaming(mdDefinition)
+                // Call the parser with the result of the response stream and perform actions with the result
+                parseMarkdownStreamToBooks(markdownStream).collect { book ->
+                    books.add(book)
+                    println("Parsed Book: ${book.title} by ${book.author}")
+                }
+            }
+
+            books
+        }
+        // Describe the agent's graph making sure the node is accessible
+        edge(nodeStart forwardTo getMdOutput)
+        edge(getMdOutput forwardTo nodeFinish)
+    }
+    ```
+    <!--- KNIT example-nodes-and-component-18.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+    import ai.koog.agents.core.agent.entity.AIAgentNode;
+    import ai.koog.prompt.streaming.StreamFrame;
+    import ai.koog.prompt.structure.StructureDefinition;
+    import ai.koog.prompt.structure.markdown.MarkdownStructureDefinition;
+    import ai.koog.serialization.TypeCapture;
+    import ai.koog.serialization.TypeToken;
+    import java.util.ArrayList;
+    import java.util.List;
+    import java.util.concurrent.Flow;
+    class exampleNodesAndComponentsJava17 {
+        class Book {
+            String getTitle() {
+                return "";
+            }
+            String getAuthor() {
+                return "";
             }
         }
-
-        books
+        public static MarkdownStructureDefinition markdownBookDefinition() {
+            return null;
+        }
+        public static Flow.Publisher<Book> parseMarkdownStreamToBooks(Flow.Publisher<StreamFrame> markdownStream) {
+            return null;
+        }
+        public static void main(String[] args) {
+    -->
+    <!--- SUFFIX
+        }
     }
-    // Describe the agent's graph making sure the node is accessible
-    edge(nodeStart forwardTo getMdOutput)
-    edge(getMdOutput forwardTo nodeFinish)
-}
-```
-<!--- KNIT example-nodes-and-component-18.kt -->
+    -->
+    ```java
+    var strategy = AIAgentGraphStrategy.builder()
+        .withInput(String.class)
+        .withOutput(List.class);
+
+    var getMdOutput = AIAgentNode.builder()
+        .withInput(String.class)
+        .<List<Book>>withOutput(TypeToken.of(new TypeCapture<List<Book>>() {}))
+        .withAction((booksDescription, ctx) -> {
+            var books = new ArrayList<Book>();
+            StructureDefinition mdDefinition = markdownBookDefinition();
+
+            ctx.getLlm().writeSession(session -> {
+                session.appendPrompt(prompt -> {
+                    prompt.user(booksDescription);
+                });
+
+                // Initiate the response stream in the form of the definition `mdDefinition`
+                var markdownStream = session.requestLLMStreaming(mdDefinition);
+                // Call the parser with the result of the response stream and perform actions with the result
+                parseMarkdownStreamToBooks(markdownStream).subscribe(new Flow.Subscriber<>() {
+                    @Override
+                    public void onSubscribe(Flow.Subscription subscription) {
+                    }
+
+                    @Override
+                    public void onNext(Book book) {
+                        books.add(book);
+                        System.out.println("Parsed Book: " + book.getTitle() + " by " + book.getAuthor());
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                    }
+
+                    @Override
+                    public void onComplete() {
+                    }
+                });
+
+                return null;
+            });
+
+            return books;
+        })
+        .build();
+
+    strategy.edge(strategy.nodeStart, getMdOutput);
+    strategy.edge(getMdOutput, strategy.nodeFinish);
+    ```
+    <!--- KNIT exampleNodesAndComponentsJava17.java -->

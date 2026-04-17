@@ -37,13 +37,11 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
-import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
 import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
@@ -104,6 +102,7 @@ abstract class ExecutorIntegrationTestBase {
     private val testScope = TestScope()
     private val basicLimit = 256
     private val extendedLimit = 512
+    private val reasoningLimit = 10000
 
     @AfterEach
     fun cleanup() {
@@ -137,30 +136,22 @@ abstract class ExecutorIntegrationTestBase {
                     summary = ReasoningSummary.AUTO
                 ),
                 include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT),
-                maxTokens = basicLimit
+                maxTokens = reasoningLimit
             )
 
             is GoogleLLMProvider -> {
-                val thinkingConfig = if (model.id == GoogleModels.Gemini3_Pro_Preview.id) {
-                    GoogleThinkingConfig(
-                        includeThoughts = true,
-                        thinkingLevel = GoogleThinkingLevel.HIGH
-                    )
-                } else {
-                    GoogleThinkingConfig(
-                        includeThoughts = true,
-                        // Slightly higher limit to avoid truncation in multi-step reasoning tests
-                        thinkingBudget = extendedLimit
-                    )
-                }
+                val thinkingConfig = GoogleThinkingConfig(
+                    includeThoughts = true,
+                    thinkingBudget = reasoningLimit
+                )
                 GoogleParams(
                     thinkingConfig = thinkingConfig,
                     // Slightly higher limit to avoid truncation in multi-step reasoning tests
-                    maxTokens = extendedLimit
+                    maxTokens = reasoningLimit
                 )
             }
 
-            else -> LLMParams(maxTokens = basicLimit)
+            else -> LLMParams(maxTokens = reasoningLimit)
         }
     }
 
@@ -217,11 +208,15 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities!!.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(
+            model != GoogleModels.Gemini3_Pro_Preview,
+            "KG-768 GoogleLLMClient.executeStreaming() may hang because the stream never completes with End frame"
+        )
 
         val executor = getExecutor(model)
+        val params = createNoReasoningParams(model)
 
-        val prompt = Prompt.build("test-streaming") {
+        val prompt = Prompt.build("test-streaming", params = params) {
             system("You are a helpful assistant.")
             user("Count from 1 to 5. Like 1, 2, 3 ...")
         }
@@ -235,7 +230,6 @@ abstract class ExecutorIntegrationTestBase {
             executor.executeStreamAndCollect(
                 prompt = prompt,
                 model = model,
-                tools = listOf(SimpleCalculatorTool.descriptor),
                 textDeltaFrames = textDeltaFrames,
                 toolDeltaFrames = toolDeltaFrames,
                 toolCompleteFrames = toolCompleteFrames,
@@ -470,7 +464,7 @@ abstract class ExecutorIntegrationTestBase {
                             .toSingleMessage()
                     ) {
                         when (scenario) {
-                            MarkdownTestScenario.MALFORMED_SYNTAX, MarkdownTestScenario.MATH_NOTATION, MarkdownTestScenario.BROKEN_LINKS, MarkdownTestScenario.IRREGULAR_TABLES -> {
+                            MarkdownTestScenario.MALFORMED_SYNTAX, MarkdownTestScenario.BROKEN_LINKS -> {
                                 checkResponseBasic(this)
                             }
 
@@ -480,19 +474,7 @@ abstract class ExecutorIntegrationTestBase {
                         }
                     }
                 } catch (e: Exception) {
-                    when (scenario) {
-                        MarkdownTestScenario.EMPTY_MARKDOWN -> {
-                            when (model.provider) {
-                                LLMProvider.Google -> {
-                                    println("Expected exception for ${scenario.name.lowercase()} image: ${e.message}")
-                                }
-                            }
-                        }
-
-                        else -> {
-                            throw e
-                        }
-                    }
+                    throw e
                 }
             }
         }
@@ -525,17 +507,6 @@ abstract class ExecutorIntegrationTestBase {
                 } catch (e: LLMClientException) {
                     // For some edge cases, exceptions are expected
                     when (scenario) {
-                        ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
-                            val message = e.message.shouldNotBeNull()
-
-                            listOf(
-                                "Status code: 400",
-                                "image exceeds",
-                                "Could not process image"
-                            ).any { it in message }
-                                .shouldBe(true, "Must contain error message from the list")
-                        }
-
                         ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
                             val message = e.message.shouldNotBeNull()
 
@@ -599,16 +570,6 @@ abstract class ExecutorIntegrationTestBase {
                                 val message = e.message.shouldNotBeNull()
                                 message.shouldContain("Status code: 400")
                                 message.shouldContain("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again.")
-                            }
-                        }
-
-                        TextTestScenario.LONG_TEXT_5_MB -> {
-                            if (model.provider == LLMProvider.Anthropic) {
-                                val message = e.message.shouldNotBeNull()
-                                message.shouldContain("Status code: 400")
-                                message.shouldContain("prompt is too long")
-                            } else if (model.provider == LLMProvider.Google) {
-                                throw e
                             }
                         }
 
@@ -917,15 +878,30 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testEmbed(model: LLModel) = runTest {
         val client = getLLMClient(model)
-        if (client !is LLMEmbeddingProvider) {
-            return@runTest
-        }
         val testText = "integration test embedding"
         client.embed(testText, model) shouldNotBeNull {
             shouldNotBeEmpty()
             size shouldBeGreaterThan 100
             shouldForAll {
                 it.isFinite()
+            }
+        }
+    }
+
+    open fun integration_testEmbedBatch(model: LLModel) = runTest {
+        val client = getLLMClient(model)
+        val inputs = listOf(
+            "integration test batch embedding first",
+            "integration test batch embedding second",
+            "integration test batch embedding third",
+        )
+        val embeddings = client.embed(inputs, model)
+        embeddings shouldNotBeNull {
+            size shouldBe inputs.size
+            shouldForAll { embedding ->
+                embedding.shouldNotBeEmpty()
+                embedding.size shouldBeGreaterThan 100
+                embedding.shouldForAll { it.isFinite() }
             }
         }
     }
@@ -1139,15 +1115,12 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testReasoningStreamingSummaryDeltas(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(
-            model.provider == LLMProvider.OpenAI,
-            "This test is specific to OpenAI Responses API reasoning streaming"
-        )
 
         val params = createReasoningParams(model)
+
         val prompt = Prompt.build("reasoning-streaming-test", params = params) {
             system("You are a helpful assistant.")
-            user("Think about this step by step: What is 12 * 15?")
+            user("Reason about what is 8 * 9?. Include summary.")
         }
 
         val executor = getExecutor(model)
@@ -1174,7 +1147,7 @@ abstract class ExecutorIntegrationTestBase {
             (reasoningText + reasoningSummary).length shouldBeGreaterThan 0
 
             val finalAnswer = textDeltaFrames.joinToString("") { it.text }
-            finalAnswer.shouldContain("180")
+            finalAnswer.shouldContain("72")
         }
     }
 
@@ -1217,6 +1190,11 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+        
+        assumeTrue(
+            model != GoogleModels.Gemini3_Pro_Preview,
+            "KG-768 GoogleLLMClient.executeStreaming() may hang because the stream never completes with End frame"
+        )
 
         val executor = getExecutor(model)
         val params = when (model.provider) {

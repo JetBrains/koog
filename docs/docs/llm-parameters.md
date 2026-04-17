@@ -10,95 +10,151 @@ In Koog, the `LLMParams` class incorporates LLM parameters and provides a consis
 
 - When creating a prompt:
 
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.params.LLMParams
--->
-```kotlin
-val prompt = prompt(
-    id = "dev-assistant",
-    params = LLMParams(
-        temperature = 0.7,
-        maxTokens = 500
-    )
-) {
-    // Add a system message to set the context
-    system("You are a helpful assistant.")
+=== "Kotlin"
 
-    // Add a user message
-    user("Tell me about Kotlin")
-}
-```
-<!--- KNIT example-llm-parameters-01.kt -->
+    <!--- INCLUDE
+    import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.params.LLMParams
+    -->
+    ```kotlin
+    val prompt = prompt(
+        id = "dev-assistant",
+        params = LLMParams(
+            temperature = 0.7,
+            maxTokens = 500
+        )
+    ) {
+        // Add a system message to set the context
+        system("You are a helpful assistant.")
+
+        // Add a user message
+        user("Tell me about Kotlin")
+    }
+    ```
+    <!--- KNIT example-llm-parameters-01.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    Prompt prompt = Prompt.builder("dev-assistant")
+        .withParams(new LLMParams(
+            0.7,         // temperature
+            500,         // maxTokens
+            1,           // numberOfChoices
+            null,        // speculation
+            null,        // schema
+            LLMParams.ToolChoice.Auto.INSTANCE, // toolChoice
+            null,        // user
+            null         // additionalProperties
+        ))
+        .system("You are a helpful assistant.")
+        .user("Tell me about Kotlin")
+        .build();
+    ```
+    <!--- KNIT example-llm-parameters-java-01.java -->
+
 
 For more information about prompt creation, see [Prompts](prompts/prompt-creation/index.md).
 
 - When creating a subgraph:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.ToolCalls
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.agents.ext.agent.subgraphWithTask
-import ai.koog.prompt.params.LLMParams
+=== "Kotlin"
 
-val searchTool = SayToUser
-val calculatorTool = SayToUser
-val weatherTool = SayToUser
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.ToolCalls
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.agents.ext.tool.SayToUser
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.agents.ext.agent.subgraphWithTask
+    import ai.koog.prompt.params.LLMParams
+    val searchTool = SayToUser
+    val calculatorTool = SayToUser
+    val weatherTool = SayToUser
+    val strategy = strategy<String, String>("strategy_name") {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    val processQuery by subgraphWithTask<String, String>(
+        tools = listOf(searchTool, calculatorTool, weatherTool),
+        llmModel = OpenAIModels.Chat.GPT4o,
+        llmParams = LLMParams(
+            temperature = 0.7,
+            maxTokens = 500
+        ),
+        runMode = ToolCalls.SEQUENTIAL,
+        assistantResponseRepeatMax = 3,
+    ) { userQuery ->
+        """
+        You are a helpful assistant that can answer questions about various topics.
+        Please help with the following query:
+        $userQuery
+        """
+    }
+    ```
+    <!--- KNIT example-llm-parameters-02.kt -->
 
-val strategy = strategy<String, String>("strategy_name") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-val processQuery by subgraphWithTask<String, String>(
-    tools = listOf(searchTool, calculatorTool, weatherTool),
-    llmModel = OpenAIModels.Chat.GPT4o,
-    llmParams = LLMParams(
-        temperature = 0.7,
-        maxTokens = 500
-    ),
-    runMode = ToolCalls.SEQUENTIAL,
-    assistantResponseRepeatMax = 3,
-) { userQuery ->
-    """
-    You are a helpful assistant that can answer questions about various topics.
-    Please help with the following query:
-    $userQuery
-    """
-}
-```
-<!--- KNIT example-llm-parameters-02.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-llm-parameters-java-02.java -->
+
 
 For more information about existing subgraph types in Koog, see [Predefined subgraphs](nodes-and-components.md#predefined-subgraphs). To learn how to create and implement your own subgraphs, see [Custom subgraphs](custom-subgraphs.md).
 
 - When updating a prompt in an LLM write session:
 
-<!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.node
-import ai.koog.prompt.params.LLMParams
-val strategy = strategy<Unit, Unit>("strategy-name") {
-val node by node<Unit, Unit> {
--->
-<!--- SUFFIX
-   }
-}
--->
-```kotlin
-llm.writeSession {
-    changeLLMParams(
-        LLMParams(
-            temperature = 0.7,
-            maxTokens = 500
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.dsl.builder.strategy
+    import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.prompt.params.LLMParams
+    val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+    -->
+    <!--- SUFFIX
+       }
+    }
+    -->
+    ```kotlin
+    llm.writeSession {
+        changeLLMParams(
+            LLMParams(
+                temperature = 0.7,
+                maxTokens = 500
+            )
         )
-    )
-}
-```
-<!--- KNIT example-llm-parameters-03.kt -->
+    }
+    ```
+    <!--- KNIT example-llm-parameters-03.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-llm-parameters-java-03.java -->
 
 For more information about sessions, see [LLM sessions and manual history management](sessions.md).
 
@@ -140,79 +196,176 @@ JSON schemas let you request structured JSON data from language models. Koog sup
 
 1) **Basic JSON Schema** (`LLMParams.Schema.JSON.Basic`): Used for basic JSON processing capabilities. This format primarily focuses on nested data definitions without advanced JSON Schema functionalities.
 
-<!--- INCLUDE
-import ai.koog.prompt.params.LLMParams
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonPrimitive
--->
-```kotlin
-// Create parameters with a basic JSON schema
-val jsonParams = LLMParams(
-    temperature = 0.2,
-    schema = LLMParams.Schema.JSON.Basic(
-        name = "PersonInfo",
-        schema = JsonObject(mapOf(
-            "type" to JsonPrimitive("object"),
-            "properties" to JsonObject(
-                mapOf(
-                    "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
-                    "age" to JsonObject(mapOf("type" to JsonPrimitive("number"))),
-                    "skills" to JsonObject(
-                        mapOf(
-                            "type" to JsonPrimitive("array"),
-                            "items" to JsonObject(mapOf("type" to JsonPrimitive("string")))
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.params.LLMParams
+    import kotlinx.serialization.json.JsonObject
+    import kotlinx.serialization.json.JsonArray
+    import kotlinx.serialization.json.JsonPrimitive
+    -->
+    ```kotlin
+    // Create parameters with a basic JSON schema
+    val jsonParams = LLMParams(
+        temperature = 0.2,
+        schema = LLMParams.Schema.JSON.Basic(
+            name = "PersonInfo",
+            schema = JsonObject(mapOf(
+                "type" to JsonPrimitive("object"),
+                "properties" to JsonObject(
+                    mapOf(
+                        "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
+                        "age" to JsonObject(mapOf("type" to JsonPrimitive("number"))),
+                        "skills" to JsonObject(
+                            mapOf(
+                                "type" to JsonPrimitive("array"),
+                                "items" to JsonObject(mapOf("type" to JsonPrimitive("string")))
+                            )
                         )
                     )
-                )
-            ),
-            "additionalProperties" to JsonPrimitive(false),
-            "required" to JsonArray(listOf(JsonPrimitive("name"), JsonPrimitive("age"), JsonPrimitive("skills")))
-        ))
+                ),
+                "additionalProperties" to JsonPrimitive(false),
+                "required" to JsonArray(listOf(JsonPrimitive("name"), JsonPrimitive("age"), JsonPrimitive("skills")))
+            ))
+        )
     )
-)
-```
-<!--- KNIT example-llm-parameters-04.kt -->
+    ```
+    <!--- KNIT example-llm-parameters-04.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    // Create parameters with a basic JSON schema
+    LLMParams jsonParams = new LLMParams(
+        0.2,         // temperature
+        null,        // maxTokens
+        1,           // numberOfChoices
+        null,        // speculation
+        new LLMParams.Schema.JSON.Basic(
+            "PersonInfo",
+            new JsonObject(Map.of(
+                "type", new JsonPrimitive("object"),
+                "properties", new JsonObject(Map.of(
+                    "name", new JsonObject(Map.of("type", new JsonPrimitive("string"))),
+                    "age", new JsonObject(Map.of("type", new JsonPrimitive("number"))),
+                    "skills", new JsonObject(Map.of(
+                        "type", new JsonPrimitive("array"),
+                        "items", new JsonObject(Map.of("type", new JsonPrimitive("string")))
+                    ))
+                )),
+                "additionalProperties", new JsonPrimitive(false),
+                "required", new JsonArray(List.of(
+                    new JsonPrimitive("name"),
+                    new JsonPrimitive("age"),
+                    new JsonPrimitive("skills")
+                ))
+            ))
+        ),
+        LLMParams.ToolChoice.Auto.INSTANCE, // toolChoice
+        null,        // user
+        null         // additionalProperties
+    );
+    ```
+    <!--- KNIT example-llm-parameters-java-04.java -->
 
 2) **Standard JSON Schema** (`LLMParams.Schema.JSON.Standard`): Represents a standard JSON schema according to [json-schema.org](https://json-schema.org/). This format is a proper subset of the official JSON Schema specification. Note that the flavor across different LLM providers might vary, since not all of them support full JSON schemas.
 
-<!--- INCLUDE
-import ai.koog.prompt.params.LLMParams
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.JsonArray
--->
-```kotlin
-// Create parameters with a standard JSON schema
-val standardJsonParams = LLMParams(
-    temperature = 0.2,
-    schema = LLMParams.Schema.JSON.Standard(
-        name = "ProductCatalog",
-        schema = JsonObject(mapOf(
-            "type" to JsonPrimitive("object"),
-            "properties" to JsonObject(mapOf(
-                "products" to JsonObject(mapOf(
-                    "type" to JsonPrimitive("array"),
-                    "items" to JsonObject(mapOf(
-                        "type" to JsonPrimitive("object"),
-                        "properties" to JsonObject(mapOf(
-                            "id" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
-                            "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
-                            "price" to JsonObject(mapOf("type" to JsonPrimitive("number"))),
-                            "description" to JsonObject(mapOf("type" to JsonPrimitive("string")))
-                        )),
-                        "additionalProperties" to JsonPrimitive(false),
-                        "required" to JsonArray(listOf(JsonPrimitive("id"), JsonPrimitive("name"), JsonPrimitive("price"), JsonPrimitive("description")))
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.params.LLMParams
+    import kotlinx.serialization.json.JsonObject
+    import kotlinx.serialization.json.JsonPrimitive
+    import kotlinx.serialization.json.JsonArray
+    -->
+    ```kotlin
+    // Create parameters with a standard JSON schema
+    val standardJsonParams = LLMParams(
+        temperature = 0.2,
+        schema = LLMParams.Schema.JSON.Standard(
+            name = "ProductCatalog",
+            schema = JsonObject(mapOf(
+                "type" to JsonPrimitive("object"),
+                "properties" to JsonObject(mapOf(
+                    "products" to JsonObject(mapOf(
+                        "type" to JsonPrimitive("array"),
+                        "items" to JsonObject(mapOf(
+                            "type" to JsonPrimitive("object"),
+                            "properties" to JsonObject(mapOf(
+                                "id" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
+                                "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
+                                "price" to JsonObject(mapOf("type" to JsonPrimitive("number"))),
+                                "description" to JsonObject(mapOf("type" to JsonPrimitive("string")))
+                            )),
+                            "additionalProperties" to JsonPrimitive(false),
+                            "required" to JsonArray(listOf(JsonPrimitive("id"), JsonPrimitive("name"), JsonPrimitive("price"), JsonPrimitive("description")))
+                        ))
                     ))
-                ))
-            )),
-            "additionalProperties" to JsonPrimitive(false),
-            "required" to JsonArray(listOf(JsonPrimitive("products")))
-        ))
+                )),
+                "additionalProperties" to JsonPrimitive(false),
+                "required" to JsonArray(listOf(JsonPrimitive("products")))
+            ))
+        )
     )
-)
-```
-<!--- KNIT example-llm-parameters-05.kt -->
+    ```
+    <!--- KNIT example-llm-parameters-05.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    // Create parameters with a standard JSON schema
+    LLMParams standardJsonParams = new LLMParams(
+        0.2,         // temperature
+        null,        // maxTokens
+        1,           // numberOfChoices
+        null,        // speculation
+        new LLMParams.Schema.JSON.Standard(
+            "ProductCatalog",
+            new JsonObject(Map.of(
+                "type", new JsonPrimitive("object"),
+                "properties", new JsonObject(Map.of(
+                    "products", new JsonObject(Map.of(
+                        "type", new JsonPrimitive("array"),
+                        "items", new JsonObject(Map.of(
+                            "type", new JsonPrimitive("object"),
+                            "properties", new JsonObject(Map.of(
+                                "id", new JsonObject(Map.of("type", new JsonPrimitive("string"))),
+                                "name", new JsonObject(Map.of("type", new JsonPrimitive("string"))),
+                                "price", new JsonObject(Map.of("type", new JsonPrimitive("number"))),
+                                "description", new JsonObject(Map.of("type", new JsonPrimitive("string")))
+                            )),
+                            "additionalProperties", new JsonPrimitive(false),
+                            "required", new JsonArray(List.of(
+                                new JsonPrimitive("id"),
+                                new JsonPrimitive("name"),
+                                new JsonPrimitive("price"),
+                                new JsonPrimitive("description")
+                            ))
+                        ))
+                    ))
+                )),
+                "additionalProperties", new JsonPrimitive(false),
+                "required", new JsonArray(List.of(new JsonPrimitive("products")))
+            ))
+        ),
+        LLMParams.ToolChoice.Auto.INSTANCE, // toolChoice
+        null,        // user
+        null         // additionalProperties
+    );
+    ```
+    <!--- KNIT example-llm-parameters-java-05.java -->
 
 ## Tool choice
 
@@ -227,17 +380,39 @@ The `ToolChoice` class controls how the language model uses tools. It provides t
 
 Here is an example of using the `LLMParams.ToolChoice.Named` class to call a specific tool:
 
+=== "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.prompt.params.LLMParams
+    -->
+    ```kotlin
+    val specificToolParams = LLMParams(
+        toolChoice = LLMParams.ToolChoice.Named(name = "calculator")
+    )
+    ```
+    <!--- KNIT example-llm-parameters-06.kt -->
 
-<!--- INCLUDE
-import ai.koog.prompt.params.LLMParams
--->
-```kotlin
-val specificToolParams = LLMParams(
-    toolChoice = LLMParams.ToolChoice.Named(name = "calculator")
-)
-```
-<!--- KNIT example-llm-parameters-06.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    LLMParams specificToolParams = new LLMParams(
+        null,        // temperature
+        null,        // maxTokens
+        1,           // numberOfChoices
+        null,        // speculation
+        null,        // schema
+        new LLMParams.ToolChoice.Named("calculator"), // toolChoice
+        null,        // user
+        null         // additionalProperties
+    );
+    ```
+    <!--- KNIT example-llm-parameters-java-06.java -->
 
 ## Provider-specific parameters
 
@@ -379,40 +554,103 @@ Here is the complete reference of provider-specific parameters in Koog:
 
 The following example shows defined OpenRouter LLM parameters using the provider-specific `OpenRouterParams` class:
 
-<!--- INCLUDE
-import ai.koog.prompt.executor.clients.openrouter.OpenRouterParams
--->
-```kotlin
-val openRouterParams = OpenRouterParams(
-    temperature = 0.7,
-    maxTokens = 500,
-    frequencyPenalty = 0.5,
-    presencePenalty = 0.5,
-    topP = 0.9,
-    topK = 40,
-    repetitionPenalty = 1.1,
-    models = listOf("anthropic/claude-3-opus", "anthropic/claude-3-sonnet"),
-    transforms = listOf("middle-out")
-)
-```
-<!--- KNIT example-llm-parameters-07.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.executor.clients.openrouter.OpenRouterParams
+    -->
+    ```kotlin
+    val openRouterParams = OpenRouterParams(
+        temperature = 0.7,
+        maxTokens = 500,
+        frequencyPenalty = 0.5,
+        presencePenalty = 0.5,
+        topP = 0.9,
+        topK = 40,
+        repetitionPenalty = 1.1,
+        models = listOf("anthropic/claude-3-opus", "anthropic/claude-3-sonnet"),
+        transforms = listOf("middle-out")
+    )
+    ```
+    <!--- KNIT example-llm-parameters-07.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    OpenRouterParams openRouterParams = new OpenRouterParams(
+        0.7,         // temperature
+        500,         // maxTokens
+        1,           // numberOfChoices
+        null,        // speculation
+        null,        // schema
+        null,        // toolChoice
+        null,        // user
+        null,        // additionalProperties
+        0.5,         // frequencyPenalty
+        null,        // logprobs
+        null,        // minP
+        Arrays.asList("anthropic/claude-3-opus", "anthropic/claude-3-sonnet"), // models
+        0.5,         // presencePenalty
+        null,        // provider
+        1.1,         // repetitionPenalty
+        null,        // route
+        null,        // stop
+        null,        // topA
+        40,          // topK
+        null,        // topLogprobs
+        0.9,         // topP
+        Arrays.asList("middle-out") // transforms
+    );
+    ```
+    <!--- KNIT example-llm-parameters-java-07.java -->
 
 ## Usage examples
 
 ### Basic usage
 
-<!--- INCLUDE
-import ai.koog.prompt.params.LLMParams
--->
-```kotlin
-// A basic set of parameters with limited length 
-val basicParams = LLMParams(
-    temperature = 0.7,
-    maxTokens = 150,
-    toolChoice = LLMParams.ToolChoice.Auto
-)
-```
-<!--- KNIT example-llm-parameters-08.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.params.LLMParams
+    -->
+    ```kotlin
+    // A basic set of parameters with limited length
+    val basicParams = LLMParams(
+        temperature = 0.7,
+        maxTokens = 150,
+        toolChoice = LLMParams.ToolChoice.Auto
+    )
+    ```
+    <!--- KNIT example-llm-parameters-08.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    // A basic set of parameters with limited length
+    LLMParams basicParams = new LLMParams(
+        0.7,         // temperature
+        150,         // maxTokens
+        1,           // numberOfChoices
+        null,        // speculation
+        null,        // schema
+        LLMParams.ToolChoice.Auto.INSTANCE, // toolChoice
+        null,        // user
+        null         // additionalProperties
+    );
+    ```
+    <!--- KNIT example-llm-parameters-java-08.java -->
 
 ### Reasoning control
 
@@ -420,50 +658,154 @@ You implement reasoning control through provider-specific parameters that contro
 When using the OpenAI Chat API and models that support reasoning, use the `reasoningEffort` parameter
 to control how many reasoning tokens the model generates before providing a response:
 
-<!--- INCLUDE
-import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
-import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
--->
-```kotlin
-val openAIReasoningEffortParams = OpenAIChatParams(
-    reasoningEffort = ReasoningEffort.MEDIUM
-)
-```
-<!--- KNIT example-llm-parameters-09.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
+    import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
+    -->
+    ```kotlin
+    val openAIReasoningEffortParams = OpenAIChatParams(
+        reasoningEffort = ReasoningEffort.MEDIUM
+    )
+    ```
+    <!--- KNIT example-llm-parameters-09.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    OpenAIChatParams openAIReasoningEffortParams = new OpenAIChatParams(
+        null,        // temperature
+        null,        // maxTokens
+        1,           // numberOfChoices
+        null,        // speculation
+        null,        // schema
+        null,        // toolChoice
+        null,        // user
+        null,        // additionalProperties
+        null,        // audio
+        null,        // frequencyPenalty
+        null,        // logprobs
+        null,        // parallelToolCalls
+        null,        // presencePenalty
+        null,        // promptCacheKey
+        ReasoningEffort.MEDIUM, // reasoningEffort
+        null,        // safetyIdentifier
+        null,        // serviceTier
+        null,        // stop
+        null,        // store
+        null,        // topLogprobs
+        null,        // topP
+        null         // webSearchOptions
+    );
+    ```
+    <!--- KNIT example-llm-parameters-java-09.java -->
 
 In addition, when using the OpenAI Responses API in a stateless mode, you keep an encrypted history of reasoning items and send it to the model in every conversation turn. The encryption is done on the OpenAI side, and you need to request encrypted reasoning tokens by setting the `include` parameter in your requests to `reasoning.encrypted_content`.
 You can then pass the encrypted reasoning tokens back to the model in the next conversation turns.
 
-<!--- INCLUDE
-import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
-import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
--->
-```kotlin
-val openAIStatelessReasoningParams = OpenAIResponsesParams(
-    include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT)
-)
-```
-<!--- KNIT example-llm-parameters-10.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
+    import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
+    -->
+    ```kotlin
+    val openAIStatelessReasoningParams = OpenAIResponsesParams(
+        include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT)
+    )
+    ```
+    <!--- KNIT example-llm-parameters-10.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    OpenAIResponsesParams openAIStatelessReasoningParams = new OpenAIResponsesParams(
+        null,        // temperature
+        null,        // maxTokens
+        1,           // numberOfChoices
+        null,        // speculation
+        null,        // schema
+        null,        // toolChoice
+        null,        // user
+        null,        // additionalProperties
+        null,        // background
+        Arrays.asList(OpenAIInclude.REASONING_ENCRYPTED_CONTENT), // include
+        null,        // logprobs
+        null,        // maxToolCalls
+        null,        // parallelToolCalls
+        null,        // promptCacheKey
+        null,        // reasoning
+        null,        // safetyIdentifier
+        null,        // serviceTier
+        null,        // store
+        null,        // topLogprobs
+        null,        // topP
+        null         // truncation
+    );
+    ```
+    <!--- KNIT example-llm-parameters-java-10.java -->
 
 ### Custom parameters
 
 To add custom parameters that may be provider specific and not supported in Koog out of the box, use the `additionalProperties` property as shown in the example below.
 
-<!--- INCLUDE
-import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.params.additionalPropertiesOf
--->
-```kotlin
-// Add custom parameters for specific model providers
-val customParams = LLMParams(
-    additionalProperties = additionalPropertiesOf(
-        "top_p" to 0.95,
-        "frequency_penalty" to 0.5,
-        "presence_penalty" to 0.5
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.params.LLMParams
+    import ai.koog.prompt.params.additionalPropertiesOf
+    -->
+    ```kotlin
+    // Add custom parameters for specific model providers
+    val customParams = LLMParams(
+        additionalProperties = additionalPropertiesOf(
+            "top_p" to 0.95,
+            "frequency_penalty" to 0.5,
+            "presence_penalty" to 0.5
+        )
     )
-)
-```
-<!--- KNIT example-llm-parameters-11.kt -->
+    ```
+    <!--- KNIT example-llm-parameters-11.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    // Add custom parameters for specific model providers
+    LLMParams customParams = new LLMParams(
+        null,        // temperature
+        null,        // maxTokens
+        1,           // numberOfChoices
+        null,        // speculation
+        null,        // schema
+        null,        // toolChoice
+        null,        // user
+        AdditionalPropertiesKt.additionalPropertiesOf(
+            "top_p", 0.95,
+            "frequency_penalty", 0.5,
+            "presence_penalty", 0.5
+        )
+    );
+    ```
+    <!--- KNIT example-llm-parameters-java-11.java -->
 
 ### Setting and overriding parameters
 
@@ -471,36 +813,97 @@ The code sample below shows how you can define a set of LLM parameters that you 
 then create another set by partially overriding values from the original set and adding new values to it.
 This lets you define parameters that are common to most requests but also add more specific parameter combinations without having to repeat the common parameters.
 
-<!--- INCLUDE
-import ai.koog.prompt.params.LLMParams
--->
-```kotlin
-// Define default parameters
-val defaultParams = LLMParams(
-    temperature = 0.7,
-    maxTokens = 150,
-    toolChoice = LLMParams.ToolChoice.Auto
-)
+=== "Kotlin"
 
-// Create parameters with some overrides, using defaults for the rest
-val overrideParams = LLMParams(
-    temperature = 0.2,
-    numberOfChoices = 3
-).default(defaultParams)
-```
-<!--- KNIT example-llm-parameters-12.kt -->
+    <!--- INCLUDE
+    import ai.koog.prompt.params.LLMParams
+    -->
+    ```kotlin
+    // Define default parameters
+    val defaultParams = LLMParams(
+        temperature = 0.7,
+        maxTokens = 150,
+        toolChoice = LLMParams.ToolChoice.Auto
+    )
+
+    // Create parameters with some overrides, using defaults for the rest
+    val overrideParams = LLMParams(
+        temperature = 0.2,
+        numberOfChoices = 3
+    ).default(defaultParams)
+    ```
+    <!--- KNIT example-llm-parameters-12.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    // Define default parameters
+    LLMParams defaultParams = new LLMParams(
+        0.7,         // temperature
+        150,         // maxTokens
+        1,           // numberOfChoices
+        null,        // speculation
+        null,        // schema
+        LLMParams.ToolChoice.Auto.INSTANCE, // toolChoice
+        null,        // user
+        null         // additionalProperties
+    );
+
+    // Create parameters with some overrides, using defaults for the rest
+    LLMParams overrideParams = new LLMParams(
+        0.2,         // temperature
+        null,        // maxTokens
+        3,           // numberOfChoices
+        null,        // speculation
+        null,        // schema
+        null,        // toolChoice
+        null,        // user
+        null         // additionalProperties
+    ).applyDefaults(defaultParams);
+    ```
+    <!--- KNIT example-llm-parameters-java-12.java -->
 
 The values in the resulting `overrideParams` set are equivalent to the following:
 
-<!--- INCLUDE
-import ai.koog.prompt.params.LLMParams
--->
-```kotlin
-val overrideParams = LLMParams(
-    temperature = 0.2,
-    maxTokens = 150,
-    toolChoice = LLMParams.ToolChoice.Auto,
-    numberOfChoices = 3
-)
-```
-<!--- KNIT example-llm-parameters-13.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.params.LLMParams
+    -->
+    ```kotlin
+    val overrideParams = LLMParams(
+        temperature = 0.2,
+        maxTokens = 150,
+        toolChoice = LLMParams.ToolChoice.Auto,
+        numberOfChoices = 3
+    )
+    ```
+    <!--- KNIT example-llm-parameters-13.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    LLMParams overrideParams = new LLMParams(
+        0.2,         // temperature
+        150,         // maxTokens
+        3,           // numberOfChoices
+        null,        // speculation
+        null,        // schema
+        LLMParams.ToolChoice.Auto.INSTANCE, // toolChoice
+        null,        // user
+        null         // additionalProperties
+    );
+    ```
+    <!--- KNIT example-llm-parameters-java-13.java -->

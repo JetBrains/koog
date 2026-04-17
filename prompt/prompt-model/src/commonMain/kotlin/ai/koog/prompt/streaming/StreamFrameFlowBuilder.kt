@@ -4,6 +4,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlin.concurrent.atomics.AtomicReference
@@ -48,33 +49,36 @@ public suspend fun FlowCollector<StreamFrame>.emitTextComplete(text: String, ind
  * Emits a [StreamFrame.ReasoningDelta] with the given [text] and [summary].
  */
 public suspend fun FlowCollector<StreamFrame>.emitReasoningDelta(
+    id: String? = null,
     text: String? = null,
     summary: String? = null,
     index: Int? = null
 ): Unit =
-    emit(StreamFrame.ReasoningDelta(text, summary, index))
+    emit(StreamFrame.ReasoningDelta(id, text, summary, index))
 
 /**
  * Emits a [StreamFrame.ReasoningComplete] with the given [text].
  */
 public suspend fun FlowCollector<StreamFrame>.emitReasoningComplete(
+    id: String? = null,
     text: String,
     summary: String? = null,
     encrypted: String? = null,
     index: Int? = null
 ): Unit =
-    emitReasoningComplete(listOf(text), summary?.let { listOf(it) }, encrypted, index)
+    emitReasoningComplete(id, listOf(text), summary?.let { listOf(it) }, encrypted, index)
 
 /**
  * Emits a [StreamFrame.ReasoningComplete] with the given [text].
  */
 public suspend fun FlowCollector<StreamFrame>.emitReasoningComplete(
+    id: String? = null,
     text: List<String>,
     summary: List<String>? = null,
     encrypted: String? = null,
     index: Int? = null
 ): Unit =
-    emit(StreamFrame.ReasoningComplete(text, summary, encrypted, index))
+    emit(StreamFrame.ReasoningComplete(id, text, summary, encrypted, index))
 
 /**
  * Emits a [StreamFrame.End] with the given [finishReason].
@@ -112,8 +116,9 @@ public suspend fun FlowCollector<StreamFrame>.emitToolCallComplete(
  * Should be used only in case model does not produce completion events.
  */
 public fun buildStreamFrameFlow(block: suspend StreamFrameFlowBuilder.() -> Unit): Flow<StreamFrame> =
-    streamFrameFlow {
-        val builder = StreamFrameFlowBuilder(this)
+    channelFlow {
+        val collector = FlowCollector<StreamFrame> { frame -> send(frame) }
+        val builder = StreamFrameFlowBuilder(collector)
         block(builder)
     }
 
@@ -151,16 +156,19 @@ public class StreamFrameFlowBuilder(
     /**
      * Emits a [StreamFrame.ReasoningDelta] with the given [text].
      */
-    public suspend fun emitReasoningDelta(text: String? = null, summary: String? = null, index: Int? = null) {
+    public suspend fun emitReasoningDelta(id: String? = null, text: String? = null, summary: String? = null, index: Int? = null) {
         tryEmitPendingToolCall()
         tryEmitPendingText()
         val previous: PendingReasoning? = pendingReasoningRef.load()
         if (previous == null) {
-            pendingReasoningRef.store(PendingReasoning(textDelta = text, summaryDelta = summary, index = index))
+            pendingReasoningRef.store(PendingReasoning(id = id, textDelta = text, summaryDelta = summary, index = index))
+        } else if (id != previous.id) {
+            tryEmitPendingReasoning()
+            pendingReasoningRef.store(PendingReasoning(id = id, textDelta = text, summaryDelta = summary, index = index))
         } else {
-            pendingReasoningRef.store(previous.appendDelta(text, summary, index))
+            pendingReasoningRef.store(previous.appendDelta(id, text, summary, index))
         }
-        flowCollector.emitReasoningDelta(text, summary, index)
+        flowCollector.emitReasoningDelta(id, text, summary, index)
     }
 
     /**
@@ -227,8 +235,9 @@ public class StreamFrameFlowBuilder(
         val pendingReasoning = pendingReasoningRef.exchange(null)
         if (pendingReasoning != null) {
             flowCollector.emitReasoningComplete(
-                text = pendingReasoning.textDelta ?: "",
-                summary = pendingReasoning.summaryDelta,
+                id = pendingReasoning.id,
+                text = pendingReasoning.textDelta?.let { listOf(pendingReasoning.textDelta) } ?: emptyList(),
+                summary = pendingReasoning.summaryDelta?.let { listOf(pendingReasoning.summaryDelta) },
                 index = pendingReasoning.index
             )
         }
@@ -256,6 +265,7 @@ public class StreamFrameFlowBuilder(
         val index: Int?,
     ) {
         fun appendArgumentsDelta(argumentsDelta: String?): PendingToolCall {
+            require(this.index == index)
             val newArgs =
                 if (argumentsDelta == null) this.argumentsDelta else (this.argumentsDelta ?: "") + argumentsDelta
             return copy(argumentsDelta = newArgs)
@@ -274,15 +284,17 @@ public class StreamFrameFlowBuilder(
     }
 
     private data class PendingReasoning(
+        val id: String?,
         val textDelta: String?,
         val summaryDelta: String?,
         val index: Int?
     ) {
-        fun appendDelta(textDelta: String?, summaryDelta: String?, index: Int?): PendingReasoning {
+        fun appendDelta(id: String?, textDelta: String?, summaryDelta: String?, index: Int?): PendingReasoning {
             require(this.index == index)
-            val textDelta = if (textDelta == null) this.textDelta else (this.textDelta ?: "") + textDelta
-            val summaryDelta = if (summaryDelta == null) this.summaryDelta else (this.summaryDelta ?: "") + summaryDelta
-            return copy(textDelta = textDelta, summaryDelta = summaryDelta)
+            require(this.id == id)
+            val newTextDelta = if (textDelta == null) this.textDelta else (this.textDelta ?: "") + textDelta
+            val newSummaryDelta = if (summaryDelta == null) this.summaryDelta else (this.summaryDelta ?: "") + summaryDelta
+            return copy(textDelta = newTextDelta, summaryDelta = newSummaryDelta)
         }
     }
 }

@@ -1,141 +1,178 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.entity.AIAgentEdge
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.agent.entity.AIAgentNode
+import ai.koog.agents.core.agent.entity.AIAgentNodeBase
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
+import ai.koog.agents.core.agent.entity.FinishNode
+import ai.koog.agents.core.agent.entity.StartNode
 
 /**
- * Data class representing collected graph information for mermaid diagram generation.
+ * The type of a node in the diagram model.
+ */
+internal enum class NodeType { START, FINISH, REGULAR, SUBGRAPH }
+
+/**
+ * Lightweight representation of a graph node for diagram generation.
+ * Decoupled from framework types so the data model and rendering are independent.
+ */
+internal data class NodeInfo(
+    val id: String,
+    val name: String,
+    val type: NodeType,
+)
+
+/**
+ * Data class representing collected graph information for diagram generation.
  */
 internal data class GraphData(
     val title: String,
-    val nodes: Map<String, AIAgentNode<*, *>>,
+    val nodes: Map<String, NodeInfo>,
     val edges: List<EdgeInfo>,
+    val subgraphs: List<SubgraphGraphData> = emptyList(),
+)
+
+/**
+ * Data class representing a subgraph's collected graph information.
+ */
+internal data class SubgraphGraphData(
+    val name: String,
+    val id: String,
+    val innerData: GraphData,
 )
 
 /**
  * Data class representing edge information with condition.
  */
 internal data class EdgeInfo(
-    val fromNode: AIAgentNode<*, *>,
-    val toNode: AIAgentNode<*, *>,
+    val fromNode: NodeInfo,
+    val toNode: NodeInfo,
     val condition: String?,
 )
 
 /**
- * Data class representing raw edge information extracted from reflection.
+ * Converts a framework node to its lightweight diagram representation.
  */
-private data class RawEdgeInfo(
-    val toNode: AIAgentNode<*, *>?,
-    val condition: String?,
+private fun AIAgentNodeBase<*, *>.toNodeInfo(): NodeInfo = NodeInfo(
+    id = id,
+    name = name,
+    type = when (this) {
+        is StartNode -> NodeType.START
+        is FinishNode -> NodeType.FINISH
+        else -> NodeType.REGULAR
+    },
 )
 
 /**
  * Collects all graph data (nodes and edges) from the strategy.
  */
 internal fun AIAgentGraphStrategy<*, *>.collectGraphData(): GraphData {
-    val nodes = mutableMapOf<String, AIAgentNode<*, *>>()
+    return collectGraphLevel(this.name, this.nodeStart, this.nodeFinish)
+}
+
+/**
+ * Collects graph data for a single level (strategy or subgraph) by traversing from the start node.
+ * Subgraphs encountered during traversal are collected recursively.
+ */
+private fun collectGraphLevel(
+    title: String,
+    start: AIAgentNodeBase<*, *>,
+    finish: AIAgentNodeBase<*, *>,
+): GraphData {
+    val nodes = mutableMapOf<String, NodeInfo>()
     val edges = mutableListOf<EdgeInfo>()
+    val subgraphs = mutableListOf<SubgraphGraphData>()
 
-    // Add essential nodes
-    nodes[nodeStart.id] = nodeStart
-    nodes[nodeFinish.id] = nodeFinish
+    nodes[start.id] = start.toNodeInfo()
+    nodes[finish.id] = finish.toNodeInfo()
 
-    // Collect all nodes from metadata
-    metadata.nodesMap.forEach { (_, node) ->
-        if (node is AIAgentNode<*, *>) {
-            nodes[node.id] = node
+    // BFS traversal from start
+    val visited = mutableSetOf<String>()
+    val queue = ArrayDeque<AIAgentNodeBase<*, *>>()
+    queue.add(start)
+
+    while (queue.isNotEmpty()) {
+        val current = queue.removeFirst()
+        if (current.id in visited) continue
+        visited.add(current.id)
+
+        // Add node
+        var currentInfo = nodes.getOrPut(current.id) { current.toNodeInfo() }
+
+        // Collect inner structure for subgraph nodes. AIAgentGraphStrategy is excluded because
+        // it represents the top-level strategy itself (which we are already traversing), not a
+        // nested subgraph. Note: Planner strategies (AIAgentPlannerStrategy) are not graph-based
+        // and don't extend AIAgentSubgraphBase, so they are not encountered during traversal.
+        if (current is AIAgentSubgraphBase<*, *> && current !is AIAgentGraphStrategy<*, *>) {
+            currentInfo = currentInfo.copy(type = NodeType.SUBGRAPH)
+            nodes[current.id] = currentInfo
+            subgraphs.add(
+                SubgraphGraphData(
+                    name = current.name,
+                    id = current.id,
+                    innerData = collectGraphLevel(current.name, current.start, current.finish),
+                )
+            )
+        }
+
+        // Collect edges from current node
+        for (rawEdge in current.extractEdges()) {
+            val toInfo = nodes.getOrPut(rawEdge.toNode.id) { rawEdge.toNode.toNodeInfo() }
+            edges.add(EdgeInfo(currentInfo, toInfo, rawEdge.condition))
+            if (rawEdge.toNode.id !in visited) {
+                queue.add(rawEdge.toNode)
+            }
         }
     }
 
-    // Edges are extracted from individual nodes using their public API
-
-    // Collect edges from all nodes
-    val allNodes =
-        listOf(nodeStart as AIAgentNode<*, *>) +
-            metadata.nodesMap.values.filterIsInstance<AIAgentNode<*, *>>()
-
-    collectEdgesRecursively(allNodes, edges, nodes)
-
     return GraphData(
-        title = this.name,
+        title = title,
         nodes = nodes.toMap(),
         edges = edges.toList(),
+        subgraphs = subgraphs.toList(),
     )
 }
 
 /**
- * Recursively collect edges from nodes using tail recursion optimization.
+ * Raw edge info used internally during BFS collection.
  */
-private tailrec fun collectEdgesRecursively(
-    remainingNodes: List<AIAgentNode<*, *>>,
-    edges: MutableList<EdgeInfo>,
-    nodes: MutableMap<String, AIAgentNode<*, *>>,
-) {
-    if (remainingNodes.isEmpty()) return
-
-    val currentNode = remainingNodes.first()
-    val restNodes = remainingNodes.drop(1)
-
-    // Extract edges from current node
-    try {
-        val nodeEdges = currentNode.extractEdges()
-        nodeEdges.forEach { edge ->
-            edge.toNode?.let { toNode ->
-                nodes[currentNode.id] = currentNode
-                nodes[toNode.id] = toNode
-                edges.add(EdgeInfo(currentNode, toNode, edge.condition))
-            }
-        }
-    } catch (_: Exception) {
-        // Skip nodes that don't have edges or can't be processed
-    }
-
-    // Tail recursive call
-    collectEdgesRecursively(restNodes, edges, nodes)
-}
+private data class RawEdgeInfo(
+    val toNode: AIAgentNodeBase<*, *>,
+    val condition: String?,
+)
 
 /**
- * Extension function to extract edges from an AIAgentNode using public API only.
+ * Extension function to extract edges from a node using public API only.
  */
-private fun AIAgentNode<*, *>.extractEdges(): List<RawEdgeInfo> =
-    try {
-        // Use the public edges property to get edge information
-        this.edges.mapNotNull { edge ->
-            extractEdgeInfo(edge)
-        }
-    } catch (_: Exception) {
-        emptyList()
+private fun AIAgentNodeBase<*, *>.extractEdges(): List<RawEdgeInfo> =
+    this.edges.map { edge ->
+        extractEdgeInfo(edge)
     }
 
 /**
- * Extracts condition information from the ForwardOutput class name.
+ * Extracts a condition label from a string by checking for known edge DSL keywords.
  */
-private fun extractConditionFromClassName(className: String?): String? =
+private fun extractConditionLabel(str: String?): String? =
     when {
-        className == null -> null
-        className.contains("onCondition") -> "onCondition"
-        className.contains("onToolCall") -> "onToolCall"
-        className.contains("onAssistantMessage") -> "onAssistantMessage"
-        className.contains("transformed") -> "transformed"
-        className.contains("forwardTo") -> null // Simple forward, no condition
+        str == null -> null
+        str.contains("onCondition") -> "onCondition"
+        str.contains("onToolCall") -> "onToolCall"
+        str.contains("onAssistantMessage") -> "onAssistantMessage"
+        str.contains("transformed") -> "transformed"
+        str.contains("forwardTo") -> null
         else -> null
     }
 
 /**
- * Extracts edge information from an AIAgentEdge using public API only.
+ * Extracts edge information from an AIAgentEdge.
+ * Uses the public `toNode` property directly; reflection only for `forwardOutput` (internal).
  */
-private fun extractEdgeInfo(edge: Any): RawEdgeInfo? {
-    val toNode =
-        runCatching {
-            edge::class.java.getMethod("getToNode").invoke(edge) as? AIAgentNode<*, *>
-        }.getOrElse { return null }
+private fun extractEdgeInfo(edge: AIAgentEdge<*, *>): RawEdgeInfo {
+    val toNode = edge.toNode
 
-    val forwardOutput =
-        runCatching {
-            edge::class.java.methods
-                .firstOrNull { it.name == "getForwardOutput\$agents_core" || it.name == "getForwardOutput" }
-                ?.invoke(edge)
-        }.getOrNull()
+    val forwardOutput = edge::class.java.methods
+        .firstOrNull { it.name == $$"getForwardOutput$agents_core" || it.name == "getForwardOutput" }
+        ?.invoke(edge)
 
     return RawEdgeInfo(toNode, extractConditionFromForwardOutput(forwardOutput))
 }
@@ -144,28 +181,12 @@ private fun extractEdgeInfo(edge: Any): RawEdgeInfo? {
  * Extracts condition information from the ForwardOutput function.
  */
 private fun extractConditionFromForwardOutput(forwardOutput: Any?): String? {
-    return try {
-        if (forwardOutput == null) return null
+    if (forwardOutput == null) return null
 
-        // The ForwardOutput is a function, we need to examine its class name or toString
-        val className = forwardOutput::class.java.name
-        val toString = forwardOutput.toString()
+    // The ForwardOutput is a function, we need to examine its class name or toString
+    val className = forwardOutput::class.java.name
+    val toString = forwardOutput.toString()
 
-        // Try to extract condition from class name or string representation
-        extractConditionFromClassName(className) ?: extractConditionFromString(toString)
-    } catch (_: Exception) {
-        null
-    }
+    // Try to extract condition from class name or string representation
+    return extractConditionLabel(className) ?: extractConditionLabel(toString)
 }
-
-/**
- * Extracts condition information from string representation.
- */
-private fun extractConditionFromString(str: String): String? =
-    when {
-        str.contains("onCondition") -> "onCondition"
-        str.contains("onToolCall") -> "onToolCall"
-        str.contains("onAssistantMessage") -> "onAssistantMessage"
-        str.contains("transformed") -> "transformed"
-        else -> null
-    }

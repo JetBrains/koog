@@ -22,7 +22,7 @@ Useful links:
 
 ## Overview
 
-Koog is a Kotlin-based framework designed to build and run AI agents entirely in idiomatic Kotlin. It lets you create agents that can interact with tools, handle complex workflows, and communicate with users.
+Koog is a Kotlin-based framework designed to build and run AI agents entirely in idiomatic Kotlin and Java API. It lets you create agents that can interact with tools, handle complex workflows, and communicate with users.
 
 ### Key features
 
@@ -37,7 +37,7 @@ Key features of Koog include:
 - **Integration with JVM and Kotlin applications**: Build AI agents with an idiomatic, type-safe Kotlin DSL designed specifically for JVM and Kotlin developers.
 - **Model Context Protocol integration**: Use Model Context Protocol (MCP) tools in AI agents.
 - **Agent Client Protocol integration**: Build ACP-compliant agents that can communicate with standardized client applications using the Agent Client Protocol (ACP).
-- **Knowledge retrieval and memory**: Retain and retrieve knowledge across conversations using vector embeddings, ranked document storage, and shared agent memory.
+- **Knowledge retrieval and memory**: Retain and retrieve knowledge across conversations using vector embeddings, RAG, and shared agent memory.
 - **Powerful Streaming API**: Process responses in real-time with streaming support and parallel tool calls.
 - **Modular feature system**: Customize agent capabilities through a composable architecture.
 - **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
@@ -85,7 +85,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
 ### Requirements
 
 - JDK 17 or higher is required to use the framework on JVM.
-- kotlinx-coroutines 1.10.2 and kotlinx-serialization 1.8.1 versions should be set explicitly in existing projects. Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more about the Koog dependencies.
+- Kotlin 2.3.10 or higher should be set explicitly in existing projects. Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more about Kotlin dependencies (currently it uses kotlinx-coroutines 1.10.2, kotlinx-serialization 1.10.0 and kotlinx-datetime 0.7.1)
 
 ### Gradle (Kotlin DSL)
 
@@ -93,7 +93,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
 
     ```
     dependencies {
-        implementation("ai.koog:koog-agents:0.6.4")
+        implementation("ai.koog:koog-agents:0.7.3")
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -103,7 +103,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
 
     ```
     dependencies {
-        implementation 'ai.koog:koog-agents:0.6.4'
+        implementation 'ai.koog:koog-agents:0.7.3'
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -115,7 +115,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
     <dependency>
         <groupId>ai.koog</groupId>
         <artifactId>koog-agents-jvm</artifactId>
-        <version>0.6.4</version>
+        <version>0.7.3</version>
     </dependency>
     ```
 2. Make sure that you have `mavenCentral` in the list of repositories.

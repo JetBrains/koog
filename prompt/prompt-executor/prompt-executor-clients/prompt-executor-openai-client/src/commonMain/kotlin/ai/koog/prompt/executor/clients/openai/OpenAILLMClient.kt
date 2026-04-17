@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -8,7 +9,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
@@ -63,7 +63,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.withContext
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.jvm.JvmOverloads
@@ -94,28 +93,45 @@ public class OpenAIClientSettings(
 
 /**
  * Implementation of [LLMClient] for OpenAI API.
- * Uses Ktor HttpClient to communicate with the OpenAI API.
  *
- * @param apiKey The API key for the OpenAI API
  * @param settings The base URL and timeouts for the OpenAI API, defaults to "https://api.openai.com" and 900 s
+ * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
+ *   to create a Ktor-backed client configured with an API key.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 @OptIn(ExperimentalAtomicApi::class)
 public open class OpenAILLMClient @JvmOverloads constructor(
-    apiKey: String,
     private val settings: OpenAIClientSettings = OpenAIClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    httpClient: KoogHttpClient,
     clock: Clock = Clock.System,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
 ) : AbstractOpenAILLMClient<OpenAIChatCompletionResponse, OpenAIChatCompletionStreamResponse>(
-    apiKey,
-    settings,
-    baseClient,
-    clock,
-    staticLogger,
-    toolsConverter
-),
-    LLMEmbeddingProvider {
+    settings = settings,
+    httpClient = httpClient,
+    clock = clock,
+    logger = staticLogger,
+    toolsConverter = toolsConverter
+) {
+
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: OpenAIClientSettings = OpenAIClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(
+            apiKey = apiKey,
+            settings = settings,
+            logger = staticLogger,
+            baseClient = baseClient,
+            clientName = OPENAI_CLIENT_NAME
+        ),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
 
     /**
      * Returns the specific implementation of the `LLMProvider` associated with this client.
@@ -168,7 +184,8 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             prediction = chatParams.speculation?.let { OpenAIStaticContent(OpenAIContent.Text(it)) },
             presencePenalty = chatParams.presencePenalty,
             promptCacheKey = chatParams.promptCacheKey,
-            reasoningEffort = chatParams.reasoningEffort,
+            reasoningEffort = model.takeIf { it.supports(LLMCapability.Thinking) }
+                ?.let { chatParams.reasoningEffort },
             responseFormat = responseFormat,
             safetyIdentifier = chatParams.safetyIdentifier,
             serviceTier = chatParams.serviceTier,
@@ -221,7 +238,8 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             model = model.id,
             parallelToolCalls = params.parallelToolCalls,
             promptCacheKey = params.promptCacheKey,
-            reasoning = params.reasoning,
+            reasoning = model.takeIf { it.supports(LLMCapability.Thinking) }
+                ?.let { params.reasoning },
             safetyIdentifier = params.safetyIdentifier,
             serviceTier = params.serviceTier,
             store = params.store,
@@ -240,7 +258,10 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         return json.encodeToString(OpenAIResponsesAPIRequestSerializer, request)
     }
 
+    override val clientName: String = OPENAI_CLIENT_NAME
+
     private companion object {
+        private const val OPENAI_CLIENT_NAME = "OpenAILLMClient"
         private val staticLogger = KotlinLogging.logger { }
     }
 
@@ -291,11 +312,15 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         return selectExecutionStrategy(prompt, model) { params ->
             when (params) {
                 is OpenAIResponsesParams -> {
+                    model.requireCapability(LLMCapability.OpenAIEndpoint.Responses)
                     val response = getResponseWithResponsesAPI(prompt, params, model, tools)
                     processResponsesAPIResponse(response)
                 }
 
-                is OpenAIChatParams -> super.execute(prompt, model, tools)
+                is OpenAIChatParams -> {
+                    model.requireCapability(LLMCapability.OpenAIEndpoint.Completions)
+                    super.execute(prompt, model, tools)
+                }
             }
         }
     }
@@ -342,7 +367,9 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                 path = settings.responsesAPIPath,
                 request = request,
                 requestBodyType = String::class,
-                decodeStreamingResponse = { json.decodeFromString<OpenAIStreamEvent>(it) },
+                decodeStreamingResponse = {
+                    json.decodeFromString<OpenAIStreamEvent>(it)
+                },
                 processStreamingChunk = {
                     when (it) {
                         is OpenAIStreamEvent.ResponseOutputTextDelta -> {
@@ -350,35 +377,54 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                         }
 
                         is OpenAIStreamEvent.ResponseReasoningTextDelta -> {
-                            StreamFrame.ReasoningDelta(text = it.delta, index = it.outputIndex)
+                            // https://developers.openai.com/api/reference/resources/responses/streaming-events#response.reasoning_text.delta
+                            StreamFrame.ReasoningDelta(id = it.itemId, text = it.delta, index = it.outputIndex)
                         }
 
                         is OpenAIStreamEvent.ResponseReasoningSummaryTextDelta -> {
-                            StreamFrame.ReasoningDelta(summary = it.delta, index = it.outputIndex)
+                            // https://developers.openai.com/api/reference/resources/responses/streaming-events#response.reasoning_text.delta
+                            StreamFrame.ReasoningDelta(id = it.itemId, summary = it.delta, index = it.outputIndex)
                         }
 
                         is OpenAIStreamEvent.ResponseFunctionCallArgumentsDelta -> {
-                            StreamFrame.ToolCallDelta(id = it.itemId, name = null, content = it.delta, index = it.outputIndex)
+                            StreamFrame.ToolCallDelta(
+                                id = it.itemId,
+                                name = null,
+                                content = it.delta,
+                                index = it.outputIndex
+                            )
                         }
 
                         is OpenAIStreamEvent.ResponseOutputItemDone -> {
                             when (val item = it.item) {
-                                is Item.Text -> StreamFrame.TextComplete(item.value, it.outputIndex)
+                                is Item.Text -> {
+                                    StreamFrame.TextComplete(item.value, it.outputIndex)
+                                }
+
                                 is Item.Reasoning -> {
-                                    StreamFrame.ReasoningComplete(
-                                        text = item.content?.map { content -> content.text } ?: emptyList(),
-                                        summary = item.summary.map { content -> content.text },
-                                        encrypted = item.encryptedContent,
+                                    // https://developers.openai.com/api/reference/resources/responses/streaming-events#response.reasoning_text.done
+                                    if (item.summary.isEmpty() && item.content.isNullOrEmpty()) {
+                                        logger.debug { "Got and empty (hidden) reasoning from the model, ignoring it." }
+                                        null
+                                    } else {
+                                        StreamFrame.ReasoningComplete(
+                                            id = item.id,
+                                            text = item.content?.map { content -> content.text } ?: emptyList(),
+                                            summary = item.summary.map { content -> content.text },
+                                            encrypted = item.encryptedContent,
+                                            index = it.outputIndex
+                                        )
+                                    }
+                                }
+
+                                is Item.FunctionToolCall -> {
+                                    StreamFrame.ToolCallComplete(
+                                        id = item.callId,
+                                        name = item.name,
+                                        content = item.arguments,
                                         index = it.outputIndex
                                     )
                                 }
-
-                                is Item.FunctionToolCall -> StreamFrame.ToolCallComplete(
-                                    id = item.id,
-                                    name = item.name,
-                                    content = item.arguments,
-                                    index = it.outputIndex
-                                )
 
                                 else -> null
                             }
@@ -398,10 +444,12 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                             )
                         }
 
-                        else -> null
+                        else -> {
+                            null
+                        }
                     }
                 }
-            ).filterNotNull().requireEndFrame()
+            ).requireEndFrame()
         } catch (e: Exception) {
             throw LLMClientException(
                 clientName = clientName,
@@ -477,6 +525,16 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             throw exception
         }
         return openAIResponse.data.first().embedding
+    }
+
+    /**
+     * Batch embedding is not supported by the OpenAI API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
+    override suspend fun embed(inputs: List<String>, model: LLModel): List<List<Double>> {
+        logger.warn { "Batch embedding is not supported by OpenAI API" }
+        throw UnsupportedOperationException("Batch embedding is not supported by OpenAI API.")
     }
 
     /**
@@ -707,9 +765,11 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         val pendingCalls = mutableListOf<Item.FunctionToolCall>()
 
         fun flushPendingCalls() {
-            if (pendingCalls.isNotEmpty()) {
-                messages += pendingCalls
-                pendingCalls.clear()
+            if (model.supports(LLMCapability.Tools)) {
+                if (pendingCalls.isNotEmpty()) {
+                    messages += pendingCalls
+                    pendingCalls.clear()
+                }
             }
         }
 
@@ -728,7 +788,9 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
                     is Message.User -> {
                         flushPendingCalls()
-                        add(Item.InputMessage(role = "user", content = message.toInputMessage(model)))
+                        add(
+                            Item.InputMessage(role = "user", content = message.toInputMessage(model))
+                        )
                     }
 
                     is Message.Assistant -> {
@@ -744,31 +806,44 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
                     is Message.Reasoning -> {
                         flushPendingCalls()
-                        add(
-                            Item.Reasoning(
-                                id = message.id ?: Uuid.random().toString(),
-                                encryptedContent = message.encrypted,
-                                summary = listOf(Item.Reasoning.Summary(message.content))
+                        if (model.supports(LLMCapability.Thinking)) {
+                            add(
+                                Item.Reasoning(
+                                    id = message.id ?: Uuid.random().toString(),
+                                    content = message.parts.map { Item.Reasoning.Content(text = it.text) }.ifEmpty { null },
+                                    encryptedContent = message.encrypted,
+                                    summary = message.summary?.map { Item.Reasoning.Summary(text = it.text) } ?: emptyList(),
+                                )
                             )
-                        )
+                        } else {
+                            logger.debug { "Model does not support reasoning, ignoring reasoning message" }
+                        }
                     }
 
                     is Message.Tool.Result -> {
                         flushPendingCalls()
-                        add(
-                            Item.FunctionToolCallOutput(
-                                callId = message.id ?: Uuid.random().toString(),
-                                output = message.content
+                        if (model.supports(LLMCapability.Tools)) {
+                            add(
+                                Item.FunctionToolCallOutput(
+                                    callId = message.id ?: Uuid.random().toString(),
+                                    output = message.content
+                                )
                             )
-                        )
+                        } else {
+                            logger.debug { "Model does not support tools, ignoring tool result message" }
+                        }
                     }
 
                     is Message.Tool.Call -> {
-                        pendingCalls += Item.FunctionToolCall(
-                            callId = message.id ?: Uuid.random().toString(),
-                            name = message.tool,
-                            arguments = message.content
-                        )
+                        if (model.supports(LLMCapability.Tools)) {
+                            pendingCalls += Item.FunctionToolCall(
+                                callId = message.id ?: Uuid.random().toString(),
+                                name = message.tool,
+                                arguments = message.content
+                            )
+                        } else {
+                            logger.debug { "Model does not support tools, ignoring tool call message" }
+                        }
                     }
                 }
             }

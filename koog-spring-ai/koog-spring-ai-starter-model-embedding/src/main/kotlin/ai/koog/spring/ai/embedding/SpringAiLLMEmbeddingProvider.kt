@@ -26,7 +26,7 @@ import org.springframework.ai.embedding.EmbeddingRequest
 public class SpringAiLLMEmbeddingProvider(
     private val embeddingModel: EmbeddingModel,
     private val dispatcher: CoroutineDispatcher,
-) : LLMEmbeddingProvider {
+) : LLMEmbeddingProvider() {
 
     /**
      * Java-friendly builder access.
@@ -78,6 +78,17 @@ public class SpringAiLLMEmbeddingProvider(
         }
     }
 
+    /**
+     * Embeds the given text using the configured Spring AI [EmbeddingModel].
+     *
+     * The [LLModel.id] is forwarded to the underlying model via [EmbeddingOptions] so that
+     * backends supporting runtime model selection can honour it.
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding; its [LLModel.id] is passed as an embedding option.
+     * @return A list of floating-point values representing the embedding vector.
+     * @throws LLMClientException if the underlying Spring AI call fails.
+     */
     override suspend fun embed(
         text: String,
         model: LLModel
@@ -90,6 +101,36 @@ public class SpringAiLLMEmbeddingProvider(
         )
         try {
             embeddingModel.call(request).result.output.map { it.toDouble() }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException("spring-ai-embedding", "EmbeddingModel.call() failed: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Embeds the given inputs using the configured Spring AI [EmbeddingModel].
+     *
+     * The [LLModel.id] is forwarded to the underlying model via [EmbeddingOptions] so that
+     * backends supporting runtime model selection can honour it.
+     *
+     * @param inputs The list of texts to embed.
+     * @param model The model to use for embedding; its [LLModel.id] is passed as an embedding option.
+     * @return A list of embedding vectors, one per input string.
+     * @throws LLMClientException if the underlying Spring AI call fails.
+     */
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> = withContext(dispatcher) {
+        val request = EmbeddingRequest(
+            inputs,
+            EmbeddingOptions.builder()
+                .model(model.id)
+                .build()
+        )
+        try {
+            embeddingModel.call(request).results.map { result -> result.output.map { it.toDouble() } }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

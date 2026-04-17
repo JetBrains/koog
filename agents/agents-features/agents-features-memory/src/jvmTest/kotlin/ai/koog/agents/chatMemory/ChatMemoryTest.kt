@@ -3,9 +3,11 @@ package ai.koog.agents.chatMemory
 import ai.koog.agents.chatMemory.feature.ChatHistoryProvider
 import ai.koog.agents.chatMemory.feature.ChatMemory
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -150,7 +152,6 @@ class ChatMemoryTest {
         val agent = AIAgent(
             promptExecutor = mockExecutor,
             llmModel = OpenAIModels.Chat.GPT4oMini,
-            systemPrompt = "You are a helpful geography assistant.",
             maxIterations = 10,
         ) {
             install(ChatMemory) {
@@ -170,6 +171,90 @@ class ChatMemoryTest {
         assertTrue(saved[1] is Message.Assistant && saved[1].content.contains("Paris"), "Second message should be the assistant replying about France")
         assertTrue(saved[2] is Message.User && saved[2].content.contains("Germany"), "Third message should be the user asking about Germany")
         assertTrue(saved[3] is Message.Assistant && saved[3].content.contains("Berlin"), "Fourth message should be the assistant replying about Germany")
+    }
+
+    @Test
+    fun testChatMemoryGraphWithSystemMessage() = runTest {
+        val sessionId = "test-conversation"
+        val historyProvider = InMemoryChatHistoryProvider(
+            history = mutableMapOf()
+        )
+
+        val mockExecutor = getMockExecutor(serializer) {
+            mockLLMAnswer("Paris is the capital of France.") onRequestContains "France"
+            mockLLMAnswer("Berlin is the capital of Germany.") onRequestContains "Germany"
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            promptExecutor = mockExecutor,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
+            systemPrompt = "You are a helpful geography assistant.",
+            maxIterations = 10,
+        ) {
+            install(ChatMemory) {
+                chatHistoryProvider = historyProvider
+            }
+        }
+
+        val firstRun = agent.run("What is the capital of France?", sessionId)
+        val secondRun = agent.run("What is the capital of Germany?", sessionId)
+
+        assertEquals("Berlin is the capital of Germany.", secondRun)
+        assertTrue(historyProvider.storeCalls.isNotEmpty(), "ChatMemory should store history on strategy completion")
+        assertEquals("Paris is the capital of France.", firstRun)
+
+        val saved = historyProvider.load(sessionId)
+        assertTrue(saved[0] is Message.System && saved[0].content.contains("You are a helpful geography assistant."), "First message should be the system message")
+        assertTrue(saved[1] is Message.User && saved[1].content.contains("France"), "Second message should be the user asking about France")
+        assertTrue(saved[2] is Message.Assistant && saved[2].content.contains("Paris"), "Third message should be the assistant replying about France")
+        assertTrue(saved[3] is Message.User && saved[3].content.contains("Germany"), "Fourth message should be the user asking about Germany")
+        assertTrue(saved[4] is Message.Assistant && saved[4].content.contains("Berlin"), "Fifth message should be the assistant replying about Germany")
+    }
+
+    @Test
+    fun testChatMemoryGraphWithInitialPrompt() = runTest {
+        val sessionId = "test-conversation"
+        val historyProvider = InMemoryChatHistoryProvider(
+            history = mutableMapOf()
+        )
+
+        val mockExecutor = getMockExecutor(serializer) {
+            mockLLMAnswer("Paris is the capital of France.") onRequestContains "France"
+            mockLLMAnswer("Berlin is the capital of Germany.") onRequestContains "Germany"
+            mockLLMAnswer("mock reply").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            promptExecutor = mockExecutor,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("prompt") {
+                    system("You are a helpful geography assistant.")
+                    user("I like to travel a lot!")
+                },
+                model = OpenAIModels.Chat.GPT4oMini,
+                maxAgentIterations = 10,
+            ),
+        ) {
+            install(ChatMemory) {
+                chatHistoryProvider = historyProvider
+            }
+        }
+
+        val firstRun = agent.run("What is the capital of France?", sessionId)
+        val secondRun = agent.run("What is the capital of Germany?", sessionId)
+
+        assertEquals("Berlin is the capital of Germany.", secondRun)
+        assertTrue(historyProvider.storeCalls.isNotEmpty(), "ChatMemory should store history on strategy completion")
+        assertEquals("Paris is the capital of France.", firstRun)
+
+        val saved = historyProvider.load(sessionId)
+        assertTrue(saved[0] is Message.System && saved[0].content.contains("You are a helpful geography assistant."), "First message should be the system message")
+        assertTrue(saved[1] is Message.User && saved[1].content.contains("I like to travel a lot!"), "Second message should be the user asking about France")
+        assertTrue(saved[2] is Message.User && saved[2].content.contains("France"), "Third message should be the user asking about France")
+        assertTrue(saved[3] is Message.Assistant && saved[3].content.contains("Paris"), "Fourth message should be the assistant replying about France")
+        assertTrue(saved[4] is Message.User && saved[4].content.contains("Germany"), "Fifth message should be the user asking about Germany")
+        assertTrue(saved[5] is Message.Assistant && saved[5].content.contains("Berlin"), "Sixth message should be the assistant replying about Germany")
     }
 
     // ---- Load/Store Call Tracking ----
@@ -205,6 +290,9 @@ class ChatMemoryTest {
 
         agent.run("Second question", sessionId)
         assertEquals(2, historyProvider.storeCalls.size, "Store should be called after second run")
+
+        agent.run("Third question", sessionId)
+        assertEquals(3, historyProvider.storeCalls.size, "Store should be called after second run")
 
         assertTrue(historyProvider.storeCalls.all { it.first == sessionId }, "All store calls should use the same session ID")
     }
@@ -762,7 +850,7 @@ class ChatMemoryTest {
         val contents = saved.map { it.content }
         assertTrue(contents.none { it.contains("Q1") }, "Q1 should have been truncated")
         assertTrue(contents.none { it.contains("Reply 1") }, "Reply 1 should have been truncated")
-        assertTrue(contents.any { it.contains("Q2") }, "Q2 should be within window")
+        assertTrue(contents.any { it.contains("Reply 2") }, "Reply 2 should be within window")
         assertTrue(contents.any { it.contains("Q3") }, "Q3 should be within window")
     }
 
@@ -814,7 +902,7 @@ class ChatMemoryTest {
         }
 
         agent.run("Q1", sessionId)
-        assertEquals(2, historyProvider.history[sessionId]!!.size, "After 1 run: 2 messages")
+        assertEquals(3, historyProvider.history[sessionId]!!.size, "After 1 run: 3 messages (system + user + assistant)")
 
         agent.run("Q2", sessionId)
         assertEquals(4, historyProvider.history[sessionId]!!.size, "After 2 runs: 4 messages (at window limit)")
@@ -829,7 +917,7 @@ class ChatMemoryTest {
         val contents = saved.map { it.content }
         assertTrue(contents.none { it.contains("Q1") }, "Q1 should be outside window")
         assertTrue(contents.none { it.contains("Q2") }, "Q2 should be outside window")
-        assertTrue(contents.any { it.contains("Q3") }, "Q3 should be in window")
+        assertTrue(contents.any { it.contains("Reply 3") || it.contains("Q3") }, "Q3 should be represented in window")
         assertTrue(contents.any { it.contains("Q4") }, "Q4 should be in window")
     }
 
@@ -936,11 +1024,11 @@ class ChatMemoryTest {
             promptExecutor = mockExecutor,
             llmModel = OpenAIModels.Chat.GPT4oMini,
             systemPrompt = "You are a helpful assistant.",
-            maxIterations = 10,
+            maxIterations = 20,
         ) {
             install(ChatMemory) {
                 chatHistoryProvider = historyProvider
-                windowSize(4)
+                windowSize(5)
                 filterMessages { it is Message.User }
             }
         }

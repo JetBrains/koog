@@ -24,6 +24,7 @@ kotlin {
                 api(libs.junit.jupiter.params)
                 api(libs.testcontainers)
                 api(libs.awaitility)
+                implementation(project(":utils"))
                 runtimeOnly(libs.slf4j.simple)
             }
         }

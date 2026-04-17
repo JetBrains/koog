@@ -14,11 +14,13 @@ import kotlinx.serialization.json.jsonObject
  * On deserialization: collects unknown properties into `additionalProperties` field.
  *
  * @param knownProperties Set of known property names for the type
+ * @param additionalPropertiesField The name of the field to use for additional properties, defaults to "additionalProperties".
  */
-public abstract class AdditionalPropertiesFlatteningSerializer<T>(tSerializer: KSerializer<T>) :
+public abstract class AdditionalPropertiesFlatteningSerializer<T>(
+    tSerializer: KSerializer<T>,
+    private val additionalPropertiesField: String = "additionalProperties"
+) :
     JsonTransformingSerializer<T>(tSerializer) {
-
-    private val additionalPropertiesField = "additionalProperties"
 
     private val knownProperties = tSerializer.descriptor.elementNames
 

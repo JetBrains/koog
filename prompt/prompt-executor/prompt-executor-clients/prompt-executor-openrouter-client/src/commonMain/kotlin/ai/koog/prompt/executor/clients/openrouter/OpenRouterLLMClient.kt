@@ -1,11 +1,11 @@
 package ai.koog.prompt.executor.clients.openrouter
 
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.modelsById
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
@@ -58,27 +58,42 @@ public class OpenRouterClientSettings(
  * Implementation of [LLMClient] for OpenRouter API.
  * OpenRouter is an API that routes requests to multiple LLM providers.
  *
- * @param apiKey The API key for the OpenRouter API
  * @param settings The base URL and timeouts for the OpenRouter API, defaults to "https://openrouter.ai" and 900s
+ * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
+ *   to create a Ktor-backed client configured with an API key.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public class OpenRouterLLMClient @JvmOverloads constructor(
-    apiKey: String,
     private val settings: OpenRouterClientSettings = OpenRouterClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    httpClient: KoogHttpClient,
     clock: Clock = Clock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
 ) : AbstractOpenAILLMClient<OpenRouterChatCompletionResponse, OpenRouterChatCompletionStreamResponse>(
-    apiKey = apiKey,
     settings = settings,
-    baseClient = baseClient,
+    httpClient = httpClient,
     clock = clock,
     logger = staticLogger,
     toolsConverter = toolsConverter
-),
-    LLMEmbeddingProvider {
+) {
+
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: OpenRouterClientSettings = OpenRouterClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
+    ) : this(
+        settings = settings,
+        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = OPENROUTER_CLIENT_NAME),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    override val clientName: String = OPENROUTER_CLIENT_NAME
 
     private companion object {
+        private const val OPENROUTER_CLIENT_NAME = "OpenRouterLLMClient"
         private val staticLogger = KotlinLogging.logger { }
     }
 
@@ -209,6 +224,14 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         return models.data.map { modelsById[it.id] ?: LLModel(provider = llmProvider(), id = it.id) }
     }
 
+    /**
+     * Embeds the given text using the OpenRouter embeddings API.
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding. Must have the [LLMCapability.Embed] capability.
+     * @return A list of floating-point values representing the embedding vector.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
     override suspend fun embed(text: String, model: LLModel): List<Double> {
         model.requireCapability(LLMCapability.Embed)
         logger.debug { "Embedding text (${text.length} chars) with model: ${model.id}" }
@@ -242,5 +265,18 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         val embedding = response.data.first().embedding
         logger.debug { "Received embedding with ${embedding.size} dimensions" }
         return embedding
+    }
+
+    /**
+     * Batch embedding is not supported by the OpenRouter API.
+     *
+     * @throws UnsupportedOperationException Always thrown.
+     */
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
+        logger.warn { "Batch embedding is not supported by OpenRouter API" }
+        throw UnsupportedOperationException("Batch embedding is not supported by OpenRouter API.")
     }
 }

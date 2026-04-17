@@ -25,6 +25,7 @@ tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.add("-parameters")
 }
 dependencies {
+    api(project(":koog-spring-ai:koog-spring-ai-common"))
     api(project(":prompt:prompt-executor:prompt-executor-clients"))
     implementation(project.dependencies.platform(libs.spring.boot.bom))
     implementation(project.dependencies.platform(libs.spring.ai.bom))

@@ -1,9 +1,9 @@
 # Overview
 
-Koog is an open-source JetBrains framework for building AI agents with an idiomatic, type-safe Kotlin DSL designed specifically for JVM and Kotlin developers.
-It lets you create agents that interact with tools, handle complex workflows, and communicate with users.
+Koog is an open-source JetBrains framework for building AI agents designed specifically for the JVM ecosystem.
+It provides a first-class development experience for both Kotlin and Java developers, featuring an idiomatic, type-safe Kotlin DSL and fluent builder-style Java APIs.
 
-You can customize agent capabilities with a modular feature system and deploy your agents across JVM, JS, WasmJS, Android, and iOS targets using Kotlin Multiplatform.
+While Java developers can leverage the full power of Koog on the JVM using idiomatic APIs, Kotlin developers can also deploy agents across JS, WasmJS, Android, and iOS targets using Kotlin Multiplatform.
 
 <div class="grid cards" markdown>
 
@@ -37,7 +37,7 @@ Learn about [agents in general](agents/index.md) and how to create different typ
 
     ---
 
-    Define custom logic as a lambda function in plain Kotlin 
+    Define custom logic as a lambda function in plain Kotlin or Java
 
 -   :material-state-machine:{ .lg .middle } [**Graph-based agents**](agents/graph-based-agents.md)
 
@@ -77,7 +77,7 @@ Learn about the core components of Koog agents in detail:
 
     Enable the agent to interact with external data sources and services
 
--   :material-toy-brick-outline:{ .lg .middle } [**Features**](features-overview.md)
+-   :material-toy-brick-outline:{ .lg .middle } [**Features**](features/index.md)
 
     ---
 
@@ -96,7 +96,7 @@ Learn about the core components of Koog agents in detail:
 
     Optimize token usage while maintaining context in long-running conversations using advanced techniques
 
--   :material-floppy:{ .lg .middle } [**Agent persistence**](agent-persistence.md)
+-   :material-floppy:{ .lg .middle } [**Agent persistence**](features/agent-persistence.md)
 
     ---
 
@@ -119,15 +119,15 @@ Learn about the core components of Koog agents in detail:
 
     ---
 
-    Retain and retrieve knowledge across conversations using [vector embeddings](embeddings.md), [ranked document storage](ranked-document-storage.md), and [shared agent memory](agent-memory.md)
+    Retain and retrieve knowledge across conversations using [vector embeddings](embeddings.md), [RAG](retrieval-augmented-generation.md), and [shared agent memory](features/agent-memory.md)
 
--   :material-timeline-text:{ .lg .middle } [**Tracing**](tracing.md)
+-   :material-timeline-text:{ .lg .middle } [**Tracing**](features/tracing.md)
 
     ---
 
     Debug and monitor agent execution with detailed, configurable tracing
 
--   :material-timeline-text:{ .lg .middle } [**Long Term Memory**](long-term-memory.md)
+-   :material-timeline-text:{ .lg .middle } [**Long Term Memory**](features/long-term-memory.md)
 
     ---
 
@@ -157,7 +157,7 @@ Learn about the core components of Koog agents in detail:
 
     Integrate Koog with Ktor servers
 
--   :material-chart-timeline-variant:{ .lg .middle } [**OpenTelemetry**](opentelemetry-support.md)
+-   :material-chart-timeline-variant:{ .lg .middle } [**OpenTelemetry**](features/open-telemetry/index.md)
 
     ---
 

@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Properties
 
 group = rootProject.group
@@ -11,6 +12,31 @@ plugins {
 
 kotlin {
     compilerOptions.allWarningsAsErrors.set(true)
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.release.set(java.toolchain.languageVersion.get().asInt())
+    // never cache generated snippets compilation
+    outputs.cacheIf { false }
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    // never cache generated snippets compilation
+    outputs.cacheIf { false }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs("src/main/kotlin")
+        }
+    }
 }
 
 dependencies {

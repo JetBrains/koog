@@ -1,4 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
+import org.gradle.kotlin.dsl.implementation
+import org.gradle.kotlin.dsl.project
 
 group = rootProject.group
 version = rootProject.version
@@ -48,12 +50,14 @@ kotlin {
             dependencies {
                 implementation(project(":agents:agents-test"))
                 implementation(project(":test-utils"))
+                implementation(libs.kotest.assertions.json)
             }
         }
 
         jvmCommonMain {
             dependencies {
                 implementation(libs.kotlinx.coroutines.jdk9)
+                implementation(project(":serialization:serialization-jackson"))
             }
         }
 

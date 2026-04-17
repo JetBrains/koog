@@ -1,14 +1,18 @@
 package ai.koog.agents.longtermmemory.retrieval
 
+import ai.koog.rag.base.storage.search.SimilaritySearchRequest
+
 /**
  * Search strategy for creating search requests during prompt augmentation.
  *
  * This is a functional interface (SAM) that defines how a user query string
- * should be transformed into a [SearchRequest] for storage.
+ * should be transformed into a [SimilaritySearchRequest] for storage.
+ *
+ * **[SimilaritySearchStrategy] is the default and recommended implementation.**
+ * It uses vector embeddings for semantic search and works with all supported vector backends.
  *
  * Pre-built implementations are available for common search types:
- * - [SimilaritySearchStrategy] - Vector similarity search (semantic search)
- * - [KeywordSearchStrategy] - Full-text/keyword search
+ * - [SimilaritySearchStrategy] - Vector similarity search (semantic search) — **recommended**
  *
  * ### Usage Examples
  *
@@ -19,20 +23,20 @@ package ai.koog.agents.longtermmemory.retrieval
  * }
  * ```
  *
- * **Custom implementation as lambda (Java):
+ * **Custom implementation as lambda (Java):**
  * ```java
  * SearchStrategy customStrategy = (query) ->
- *     new SimilaritySearchRequest(query, 5, 0.8, null);
+ *     new SimilaritySearchRequest(query, 5, 0, 0.8, null);
  * ```
  */
 public fun interface SearchStrategy {
     /**
-     * Maps a query string into a [SearchRequest] for the storage.
+     * Maps a query string into a [SimilaritySearchRequest] for the storage.
      *
      * @param query The user's query string (typically the last user message content)
-     * @return The search request to be executed
+     * @return The similarity search request to be executed
      */
-    public fun create(query: String): SearchRequest
+    public fun create(query: String): SimilaritySearchRequest
 
     /**
      * Companion object with a builder method.
@@ -64,63 +68,6 @@ public class SearchStrategyBuilder {
      * Returns its [SimilaritySearchStrategy.Builder] for further configuration.
      */
     public fun similarity(): SimilaritySearchStrategy.Builder = SimilaritySearchStrategy.Builder()
-
-    /**
-     * Select the [KeywordSearchStrategy] implementation.
-     * Returns its [KeywordSearchStrategy.Builder] for further configuration.
-     */
-    public fun keyword(): KeywordSearchStrategy.Builder = KeywordSearchStrategy.Builder()
-}
-
-/**
- * Keyword search mode using full-text/lexical matching.
- *
- * This mode uses traditional text matching instead of vector similarity,
- * which can be useful for exact term matching or when semantic search
- * is not needed.
- *
- * @property topK Maximum number of results to return
- * @property similarityThreshold Minimum similarity score (0.0 to 1.0)
- * @property filterExpression Optional metadata filter expression for pre-filtering
- */
-public class KeywordSearchStrategy(
-    public val topK: Int = 10,
-    public val similarityThreshold: Double = 0.0,
-    public val filterExpression: String? = null
-) : SearchStrategy {
-    override fun create(query: String): SearchRequest =
-        KeywordSearchRequest(query, topK, similarityThreshold, filterExpression)
-
-    /**
-     * Builder for [KeywordSearchStrategy].
-     *
-     * @see KeywordSearchStrategy
-     */
-    public class Builder {
-        /** Maximum number of results to return. */
-        public var topK: Int = 10
-
-        /** Minimum similarity score (0.0 to 1.0). */
-        public var similarityThreshold: Double = 0.0
-
-        /** Optional metadata filter expression for pre-filtering. */
-        public var filterExpression: String? = null
-
-        /** Fluent setter for [topK]. */
-        public fun withTopK(topK: Int): Builder = apply { this.topK = topK }
-
-        /** Fluent setter for [similarityThreshold]. */
-        public fun withSimilarityThreshold(similarityThreshold: Double): Builder =
-            apply { this.similarityThreshold = similarityThreshold }
-
-        /** Fluent setter for [filterExpression]. */
-        public fun withFilterExpression(filterExpression: String?): Builder =
-            apply { this.filterExpression = filterExpression }
-
-        /** Builds a [KeywordSearchStrategy] from the current settings. */
-        public fun build(): KeywordSearchStrategy =
-            KeywordSearchStrategy(topK, similarityThreshold, filterExpression)
-    }
 }
 
 /**
@@ -138,8 +85,8 @@ public class SimilaritySearchStrategy(
     public val similarityThreshold: Double = 0.0,
     public val filterExpression: String? = null
 ) : SearchStrategy {
-    override fun create(query: String): SearchRequest =
-        SimilaritySearchRequest(query, topK, similarityThreshold, filterExpression)
+    override fun create(query: String): SimilaritySearchRequest =
+        SimilaritySearchRequest(query, topK, 0, similarityThreshold, filterExpression)
 
     /**
      * Builder for [SimilaritySearchStrategy].

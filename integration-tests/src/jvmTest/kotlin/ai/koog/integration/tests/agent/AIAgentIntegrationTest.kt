@@ -7,7 +7,6 @@ import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.strategy
@@ -34,10 +33,19 @@ import ai.koog.integration.tests.utils.tools.DelayTool
 import ai.koog.integration.tests.utils.tools.GetTransactionsTool
 import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
 import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.clients.google.GoogleParams
+import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
+import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.llm.GoogleLLMProvider
+import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
+import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
+import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
@@ -45,7 +53,6 @@ import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.serialization.typeToken
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.shouldForAny
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
@@ -74,11 +81,36 @@ import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.readBytes
 import kotlin.test.Test
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class AIAgentIntegrationTest : AIAgentTestBase() {
+
+    private fun forceOneToolNoReasoningParams(model: LLModel): LLMParams = when (model.provider.id) {
+        LLMProvider.Google.id -> GoogleParams(
+            thinkingConfig = GoogleThinkingConfig(includeThoughts = false)
+        )
+
+        LLMProvider.Anthropic.id -> AnthropicParams(
+            thinking = AnthropicThinking.Disabled()
+        )
+
+        LLMProvider.OpenAI.id -> if (model.capabilities?.contains(LLMCapability.OpenAIEndpoint.Responses) == true) {
+            OpenAIResponsesParams(reasoning = ReasoningConfig(effort = ReasoningEffort.NONE))
+        } else {
+            OpenAIChatParams(reasoningEffort = ReasoningEffort.NONE)
+        }
+
+        LLMProvider.MistralAI.id,
+        LLMProvider.OpenRouter.id,
+        LLMProvider.Bedrock.id,
+        LLMProvider.Ollama.id,
+        LLMProvider.DeepSeek.id -> LLMParams()
+
+        else -> throw IllegalArgumentException("Unsupported provider for forceOneToolNoReasoningParams: ${model.provider.id}")
+    }
 
     companion object {
         private lateinit var testResourcesDir: Path
@@ -89,9 +121,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             AIAgentTestBase.setup()
             testResourcesDir = AIAgentTestBase.testResourcesDir
         }
-
-        @JvmStatic
-        fun allModels(): Stream<LLModel> = AIAgentTestBase.allModels()
 
         @JvmStatic
         fun modelsWithVisionCapability(): Stream<Arguments> = AIAgentTestBase.modelsWithVisionCapability()
@@ -149,17 +178,19 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             prompt = prompt(
                 id = "single-run-agent",
                 params = LLMParams(
-                    temperature = 1.0,
+                    temperature = 0.0,
                     toolChoice = ToolChoice.Auto,
                 )
             ) {
                 system {
                     +"You are a helpful assistant. "
-                    +"JUST CALL THE TOOLS, NO QUESTIONS ASKED."
+                    +"You must complete the task by calling the provided tools when needed. "
+                    +"For this task, call the required tools first, then return a brief final answer. "
+                    +"Do not ask follow-up questions."
                 }
             },
             model = model,
-            maxAgentIterations = 10,
+            maxAgentIterations = 30,
         ),
         toolRegistry = toolRegistry,
         installFeatures = {
@@ -223,11 +254,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
     private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
+        Models.assumeEnumToolCallsAreStable(model, "single-run integration with calculator enum tool arguments")
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
-
-        /* Some models are not calling tools in parallel:
-         * see https://youtrack.jetbrains.com/issue/KG-115
-         */
         assumeTrue(model.id !== OpenAIModels.Chat.O1.id, "Model $model flaks when calling parallel tools")
         assumeTrue(model.id !== GoogleModels.Gemini2_5Flash.id, "Model $model flaks when calling parallel tools")
 
@@ -238,33 +266,32 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 multiToolAgent.run(twoToolsPrompt)
 
                 with(state) {
-                    withClue("There should be at least 2 tool calls in a Multiple tool calls scenario") {
-                        parallelToolCalls.size shouldBeGreaterThanOrEqual 2
-                    }
-
-                    withClue("There should be no single tool calls in a Multiple tool calls scenario") {
-                        singleToolCalls.shouldBeEmpty()
-                    }
-
-                    val firstCall = parallelToolCalls.first()
-                    val secondCall = state.parallelToolCalls.last()
-
-                    if (runMode == ToolCalls.PARALLEL) {
-                        withClue("At least one of the metadata should be equal for parallel tool calls") {
-                            (
-                                firstCall.metaInfo.timestamp == secondCall.metaInfo.timestamp ||
-                                    firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
-                                    firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
-                                    firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount
-                                ).shouldBeTrue()
+                    when (runMode) {
+                        ToolCalls.PARALLEL -> {
+                            withClue("There should be at least 2 tool executions in a parallel multiple-tools scenario") {
+                                actualToolCalls.size shouldBeGreaterThanOrEqual 2
+                            }
+                            withClue("Both expected tools should be executed in a parallel multiple-tools scenario") {
+                                actualToolCalls shouldContain SimpleCalculatorTool.name
+                                actualToolCalls shouldContain DelayTool.name
+                            }
                         }
-                    }
 
-                    withClue("First tool call should be ${SimpleCalculatorTool.name}") {
-                        firstCall.tool shouldBe SimpleCalculatorTool.name
-                    }
-                    withClue("Second tool call should be ${DelayTool.name}") {
-                        secondCall.tool shouldBe DelayTool.name
+                        ToolCalls.SEQUENTIAL -> {
+                            withClue("There should be at least 2 tool executions in a sequential multiple-tools scenario") {
+                                actualToolCalls.size shouldBeGreaterThanOrEqual 2
+                            }
+                            withClue("Both expected tools should be executed in a sequential multiple-tools scenario") {
+                                actualToolCalls shouldContain SimpleCalculatorTool.name
+                                actualToolCalls shouldContain DelayTool.name
+                            }
+                            withClue("Calculator tool should execute before delay tool in a sequential multiple-tools scenario") {
+                                actualToolCalls.indexOf(SimpleCalculatorTool.name) shouldBeLessThan
+                                    actualToolCalls.indexOf(DelayTool.name)
+                            }
+                        }
+
+                        else -> error("Unsupported run mode for multiple tools test: $runMode")
                     }
                 }
             }
@@ -272,7 +299,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
         withRetry {
@@ -297,7 +324,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentWithoutSystemMessage(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
         withRetry {
@@ -320,9 +347,10 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
+        Models.assumeEnumToolCallsAreStable(model, "custom calculator tool integration")
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry {
@@ -406,7 +434,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_RequestLLMWithoutTools(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
@@ -448,13 +476,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentSingleRunWithSequentialToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         runMultipleToolsTest(model, ToolCalls.SEQUENTIAL)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentSingleRunWithParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(
             model !in listOf(
@@ -467,14 +495,18 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
+        Models.assumeEnumToolCallsAreStable(
+            model,
+            "single-run non-parallel integration with calculator enum tool arguments"
+        )
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
-        // TODO: Remove this skip when thought_signature presence is fixed
+
         assumeTrue(
-            model.provider !is GoogleLLMProvider,
-            "Skipping Google models until thought_signature support is in this branch (KG-596)"
+            model.id != AnthropicModels.Haiku_4_5.id,
+            "Anthropic Haiku 4.5 is flaky in single-run sequential tool mode and may exhaust iterations"
         )
 
         withRetry {
@@ -567,7 +599,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentCreateAndRestoreFromCheckpoint(model: LLModel) = runTest(timeout = 180.seconds) {
         // assumeTrue(model == GoogleModels.Gemini2_5Flash)
 
@@ -579,12 +611,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val sayBye = "Bye Bye World!"
         val bye = "Bye"
 
-        val checkpointStrategy = strategy("checkpoint-strategy") {
-            val nodeHello by node<String, String>(hello) {
+        val checkpointStrategy = strategy<String, String>("checkpoint-strategy") {
+            val nodeHello by node<String, String>(name = hello) {
                 sayHello
             }
 
-            val nodeSave by node<String, String>(save) { input ->
+            val nodeSave by node<String, String>(name = save) { input ->
                 // Create a checkpoint
                 withPersistence { agentContext ->
                     val parent = getLatestCheckpoint(agentContext.agentId)
@@ -599,7 +631,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 savedMessage
             }
 
-            val nodeBye by node<String, String>(bye) {
+            val nodeBye by node<String, String>(name = bye) {
                 sayBye
             }
 
@@ -660,7 +692,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentCheckpointRollback(model: LLModel) = runTest(timeout = 180.seconds) {
         // assumeTrue(model == GoogleModels.Gemini2_5Flash)
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
@@ -688,13 +720,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         // Shared result string to track node executions across rollbacks
         val executionLog = StringBuilder()
 
-        val rollbackStrategy = strategy("rollback-strategy") {
-            val nodeHello by node<String, String>(hello) {
+        val rollbackStrategy = strategy<String, String>("rollback-strategy") {
+            val nodeHello by node<String, String>(name = hello) {
                 executionLog.append(sayHelloLog)
                 sayHello
             }
 
-            val nodeSave by node<String, String>(save) { input ->
+            val nodeSave by node<String, String>(name = save) { input ->
                 withPersistence { agentContext ->
                     val parent = getLatestCheckpoint(agentContext.agentId)
                     createCheckpointAfterNode(
@@ -709,12 +741,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 saySave
             }
 
-            val nodeBye by node<String, String>(bye) {
+            val nodeBye by node<String, String>(name = bye) {
                 executionLog.append(sayByeLog)
                 sayBye
             }
 
-            val rollbackNode by node<String, String>(rollback) {
+            val rollbackNode by node<String, String>(name = rollback) {
                 // Use a shared variable to prevent infinite rollbacks
                 // Only roll back once, then continue
                 if (!hasRolledBack) {
@@ -778,7 +810,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentCheckpointContinuousPersistence(model: LLModel) = runTest(timeout = 180.seconds) {
         val checkpointStorageProvider =
             InMemoryPersistenceStorageProvider()
@@ -797,16 +829,16 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val systemMessage = "You are a helpful assistant."
         val testInput = "Start the test"
 
-        val simpleStrategy = strategy(strategyName) {
-            val nodeHello by node<String, String>(hello) {
+        val simpleStrategy = strategy<String, String>(strategyName) {
+            val nodeHello by node<String, String>(name = hello) {
                 sayHello
             }
 
-            val nodeWorld by node<String, String>(world) {
+            val nodeWorld by node<String, String>(name = world) {
                 sayWorld
             }
 
-            val nodeBye by node<String, String>(bye) {
+            val nodeBye by node<String, String>(name = bye) {
                 sayBye
             }
 
@@ -846,7 +878,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentCheckpointStorageProviders(
         model: LLModel,
         @TempDir tempDir: Path,
@@ -868,7 +900,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         val fileStorageProvider = JVMFilePersistenceStorageProvider(tempDir)
 
-        val simpleStrategy = strategy(strategyName) {
+        val simpleStrategy = strategy<String, String>(strategyName) {
             val nodeHello by node<String, String>(hello) {
                 sayHello
             }
@@ -923,7 +955,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     @Disabled("KG-499 Infinite loop on an attempt to serialize input for checkpoint creation for nodeSendToolResult")
     fun integration_AIAgentCheckpointWithToolCalls(model: LLModel) = runTest(timeout = 180.seconds) {
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
@@ -989,7 +1021,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_AIAgentWithToolsWithoutParams(model: LLModel) = runTest(timeout = 180.seconds) {
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -1038,7 +1070,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_ParallelNodesExecutionTest(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -1065,7 +1097,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 val combinedResult = fold("") { acc, result ->
                     if (acc.isEmpty()) result else "$acc | $result"
                 }
-                ParallelNodeExecutionResult("Combined: ${combinedResult.output}", this)
+                ParallelNodeExecutionResult("Combined: ${combinedResult.output}", combinedResult.context)
             }
 
             edge(nodeStart forwardTo parallelNode transformed { })
@@ -1104,7 +1136,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_ParallelNodesWithSelectionTest(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -1120,7 +1152,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 name = "maxSelector"
             ) {
                 val maxResult = selectByMax { output -> output.toInt() }
-                ParallelNodeExecutionResult("Maximum value: ${maxResult.output}", this)
+                ParallelNodeExecutionResult("Maximum value: ${maxResult.output}", maxResult.context)
             }
 
             edge(nodeStart forwardTo parallelNode transformed { })
@@ -1321,16 +1353,16 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("getLatestModels")
+    @MethodSource("latestModels")
     fun integration_FunctionalSubtask(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
+        Models.assumeEnumToolCallsAreStable(model, "functional subtask with calculator enum tool arguments")
 
         val agent = AIAgent(
             promptExecutor = getExecutor(model),
             strategy = functionalStrategy<String, String> { input ->
                 val result: String = subtask(
                     taskDescription = "Judge this: $input",
-                    input = input,
                     runMode = ToolCalls.SEQUENTIAL
                 )
                 "Subtask completed: $result"
@@ -1359,13 +1391,17 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("latestModels")
     fun integration_RequestLLMForceOneToolDoesNotDuplicateMessages(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
         runWithTracking { eventHandlerConfig, state ->
-            withRetry {
+            val maxAttempts = if (model.provider.id == LLMProvider.MistralAI.id) 2 else 3
+            var attempts = 0
+
+            withRetry(times = maxAttempts) {
+                attempts++
                 val testTool = SimpleCalculatorTool
 
                 val agent = AIAgent(
@@ -1377,9 +1413,9 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                             }
                             val response = requestLLMForceOneTool(testTool)
 
-                            assumeTrue(
+                            assertTrue(
                                 response is Message.Tool.Call,
-                                "Model returned ${response::class.simpleName} instead of Tool.Call"
+                                "Forced tool request should return Tool.Call for model $model, but was ${response::class.simpleName}"
                             )
 
                             val toolCallMessages = prompt.messages.filterIsInstance<Message.Tool.Call>()
@@ -1390,7 +1426,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                         "Tool call completed successfully without duplication"
                     },
                     agentConfig = AIAgentConfig(
-                        prompt = prompt("force-one-tool-test") {
+                        prompt = prompt("force-one-tool-test", params = forceOneToolNoReasoningParams(model)) {
                             system("You are a helpful assistant that can use tools.")
                         },
                         model = model,

@@ -5,9 +5,10 @@ package ai.koog.agents.core.agent.session
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.entity.PromptBuilderAction
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
@@ -21,34 +22,48 @@ import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.jdk9.asPublisher
 import kotlinx.serialization.KSerializer
 import java.util.concurrent.ExecutorService
-import kotlin.reflect.KClass
+import java.util.concurrent.Flow.Publisher
 import kotlin.time.Clock
 
-@Suppress("DELEGATED_MEMBER_HIDES_SUPERTYPE_OVERRIDE")
-public actual class AIAgentLLMWriteSession internal constructor(
-    @PublishedApi internal actual val delegate: AIAgentLLMWriteSessionImpl
-) : AIAgentLLMWriteSessionAPI by delegate {
+/**
+ * JVM actual implementation of a mutable LLM session.
+ *
+ * In addition to common suspend APIs, this class exposes Java-friendly wrappers
+ * that run session operations on the strategy dispatcher.
+ */
+public actual class AIAgentLLMWriteSession actual constructor(
+    environment: AIAgentEnvironment,
+    executor: PromptExecutor,
+    tools: List<ToolDescriptor>,
+    toolRegistry: ToolRegistry,
+    prompt: Prompt,
+    model: LLModel,
+    responseProcessor: ResponseProcessor?,
+    config: AIAgentConfig,
+    clock: Clock
+) : AIAgentLLMWriteSessionCommon(environment, executor, tools, toolRegistry, prompt, model, responseProcessor, config, clock) {
 
-    public actual constructor(
-        environment: AIAgentEnvironment,
-        executor: PromptExecutor,
-        tools: List<ToolDescriptor>,
-        toolRegistry: ToolRegistry,
-        prompt: Prompt,
-        model: LLModel,
-        responseProcessor: ResponseProcessor?,
-        config: AIAgentConfig,
-        clock: Clock
-    ) : this(
-        delegate = AIAgentLLMWriteSessionImpl(
-            environment, executor, tools, toolRegistry, prompt, model, responseProcessor, config, clock
-        )
-    )
+    /**
+     * Appends a prompt using the provided prompt update action.
+     *
+     * @param promptUpdate A lambda expression defining the modifications to apply to the prompt.
+     */
+    @JavaAPI
+    @JvmName("appendPrompt")
+    public fun javaNonExtensionAppendPrompt(
+        promptUpdate: PromptBuilderAction
+    ) {
+        appendPrompt {
+            promptUpdate.build(this)
+        }
+    }
 
     /**
      * Sends a request to the language model without utilizing any tools and returns multiple responses.
@@ -176,8 +191,18 @@ public actual class AIAgentLLMWriteSession internal constructor(
     @JvmOverloads
     public fun requestLLMStreaming(
         executorService: ExecutorService? = null
-    ): Flow<StreamFrame> = config.runOnStrategyDispatcher(executorService) {
-        requestLLMStreaming()
+    ): Publisher<StreamFrame> = config.runOnStrategyDispatcher(executorService) {
+        requestLLMStreaming().asPublisher()
+    }
+
+    @JavaAPI
+    @JvmOverloads
+    @JvmName("requestLLMStreaming")
+    public fun javaRequestLLMStreaming(
+        structureDefinition: StructureDefinition,
+        executorService: ExecutorService? = null
+    ): Publisher<StreamFrame> = config.runOnStrategyDispatcher(executorService) {
+        requestLLMStreaming(structureDefinition).asPublisher()
     }
 
     /**
@@ -286,33 +311,21 @@ public actual class AIAgentLLMWriteSession internal constructor(
         requestLLMMultipleChoices()
     }
 
-    public actual inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCalls(
-        safeTool: SafeTool<TArgs, TResult>,
-        concurrency: Int
-    ): Flow<SafeTool.Result<TResult>> = with(delegate) { toParallelToolCallsImpl(safeTool, concurrency) }
-
-    public actual inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCalls(
-        tool: Tool<TArgs, TResult>,
-        concurrency: Int
-    ): Flow<SafeTool.Result<TResult>> = with(delegate) { toParallelToolCallsImpl(tool, concurrency) }
-
-    public actual inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCalls(
-        toolClass: KClass<out Tool<TArgs, TResult>>,
-        concurrency: Int
-    ): Flow<SafeTool.Result<TResult>> = with(delegate) { toParallelToolCallsImpl(toolClass, concurrency) }
-
-    public actual inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCallsRaw(
-        safeTool: SafeTool<TArgs, TResult>,
-        concurrency: Int
-    ): Flow<String> = with(delegate) { toParallelToolCallsRawImpl(safeTool, concurrency) }
-
-    public actual inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCallsRaw(
-        toolClass: KClass<out Tool<TArgs, TResult>>,
-        concurrency: Int
-    ): Flow<String> = with(delegate) { toParallelToolCallsRawImpl(toolClass, concurrency) }
-
-    public actual suspend inline fun <reified T> requestLLMStructured(
-        examples: List<T>,
-        fixingParser: StructureFixingParser?
-    ): Result<StructuredResponse<T>> = with(delegate) { requestLLMStructuredImpl(examples, fixingParser) }
+    /**
+     * Rewrites LLM message history, leaving only user message and resulting TLDR.
+     *
+     * Default is `null`, which means entire history will be used.
+     * @param preserveMemory Whether to preserve memory-related messages in the history.
+     */
+    @JavaAPI
+    @JvmOverloads
+    public fun replaceHistoryWithTLDR(
+        strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
+        preserveMemory: Boolean = true,
+        executorService: ExecutorService? = null
+    ) {
+        config.runOnStrategyDispatcher(executorService) {
+            replaceHistoryWithTLDR(strategy, preserveMemory)
+        }
+    }
 }

@@ -8,16 +8,17 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * Feature processors are used to encapsulate feature-related logic and provide a common interface
  * for handling feature messages and events, such as
- *   - node started
- *   - node finished
- *   - strategy started, etc.
+ *   - Node started
+ *   - Node finished
+ *   - Strategy started, etc.
  *
  * Implementations of this interface are designed to process feature messages,
  * which are encapsulated in the [FeatureMessage] type and presented as a model
  * for an event to be sent to a target stream. These messages carry
  * information about various events or updates related to features in the system.
  */
-public abstract class FeatureMessageProcessor : Closeable {
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+public expect abstract class FeatureMessageProcessor() : Closeable {
     /**
      * A filter for messages to be sent to message processors.
      *
@@ -26,7 +27,7 @@ public abstract class FeatureMessageProcessor : Closeable {
      *
      * By default, all messages are processed (the filter returns true for all messages).
      */
-    public var messageFilter: (FeatureMessage) -> Boolean = { true }
+    public var messageFilter: (FeatureMessage) -> Boolean
         private set
 
     /**
@@ -46,26 +47,24 @@ public abstract class FeatureMessageProcessor : Closeable {
      *   }
      * ```
      */
-    public fun setMessageFilter(filter: (FeatureMessage) -> Boolean) {
-        messageFilter = filter
-    }
+    public fun setMessageFilter(filter: (FeatureMessage) -> Boolean)
 
     /**
      * A [StateFlow] representing the current open state of the processor.
      */
-    public abstract val isOpen: StateFlow<Boolean>
+    public open val isOpen: StateFlow<Boolean>
 
     /**
      * Initializes the feature output stream provider to ensure it is ready for use.
      */
-    public open suspend fun initialize() {}
+    public open suspend fun initialize()
 
     /**
      * Handles an incoming feature message or event for processing.
      *
      * @param message the feature message to be handled.
      */
-    protected abstract suspend fun processMessage(message: FeatureMessage)
+    protected open suspend fun processMessage(message: FeatureMessage)
 
     /**
      * Receives and processes an incoming feature message.
@@ -75,9 +74,10 @@ public abstract class FeatureMessageProcessor : Closeable {
      *
      * @param message The incoming feature message to be evaluated and potentially processed.
      */
-    public suspend fun onMessage(message: FeatureMessage) {
-        if (messageFilter(message)) {
-            processMessage(message)
-        }
-    }
+    public suspend fun onMessage(message: FeatureMessage)
+
+    /**
+     * Releases resources held by this processor.
+     */
+    public open override suspend fun close()
 }

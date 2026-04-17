@@ -38,12 +38,12 @@ import ai.koog.agents.core.system.feature.DebuggerTestAPI.defaultClientServerTim
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.mockLLModel
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.testBaseClient
 import ai.koog.agents.core.system.mock.ClientEventsCollector
-import ai.koog.agents.core.system.mock.assistantMessage
-import ai.koog.agents.core.system.mock.createAgent
-import ai.koog.agents.core.system.mock.systemMessage
-import ai.koog.agents.core.system.mock.toolCallMessage
-import ai.koog.agents.core.system.mock.toolResultMessage
-import ai.koog.agents.core.system.mock.userMessage
+import ai.koog.agents.core.system.mock.TestAgentFactory.assistantMessage
+import ai.koog.agents.core.system.mock.TestAgentFactory.createGraphAgent
+import ai.koog.agents.core.system.mock.TestAgentFactory.systemMessage
+import ai.koog.agents.core.system.mock.TestAgentFactory.toolCallMessage
+import ai.koog.agents.core.system.mock.TestAgentFactory.toolResultMessage
+import ai.koog.agents.core.system.mock.TestAgentFactory.userMessage
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.agent.agentExecutionInfo
 import ai.koog.agents.testing.feature.message.findEvents
@@ -163,7 +163,7 @@ class DebuggerTest {
                 mockLLMAnswer(mockResponse) onRequestContains dummyTool.result
             }
 
-            createAgent(
+            createGraphAgent(
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,

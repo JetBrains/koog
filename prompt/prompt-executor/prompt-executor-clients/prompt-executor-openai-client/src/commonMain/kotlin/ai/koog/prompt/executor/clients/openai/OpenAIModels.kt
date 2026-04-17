@@ -38,6 +38,8 @@ import kotlin.jvm.JvmField
  * | [Chat.GPT5_2Codex]               | Medium    | $1.75-$14          | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5_3Codex]               | Medium    | $1.75-$14          | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5_4]                    | Medium    | $2.5-$15           | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5_4Mini]                | Fast      | $0.75-$4.5         | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5_4Nano]                | Fast      | $0.2-$1.25         | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5_4Pro]                 | Slowest   | $30-$180           | Text, Image, Tools, Document | Text, Tools                  |
  * | [Audio.GptAudio]                 | Fast      | $2.5-$10           | Text, Audio, Tools           | Text, Audio, Tools           |
  * | [Audio.GPT4oMiniAudio]           | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools           | Text, Audio, Tools           |
@@ -48,7 +50,10 @@ import kotlin.jvm.JvmField
  * | [Moderation.Omni]                | Medium    | $4.40              | Text                         | Moderation Result            |
  */
 public object OpenAIModels : LLModelDefinitions {
+    private val reasoningCapabilities: List<LLMCapability> = listOf(LLMCapability.Thinking)
+
     // TODO: support thinking tokens
+
     /**
      * Object containing moderation models designed to detect harmful content in text and images.
      * These models are free to use and can identify various categories of potentially harmful content.
@@ -273,7 +278,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 200_000,
             maxOutputTokens = 100_000,
         )
@@ -307,7 +312,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 200_000,
             maxOutputTokens = 100_000,
         )
@@ -339,7 +344,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 200_000,
             maxOutputTokens = 100_000,
         )
@@ -373,7 +378,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 200_000,
             maxOutputTokens = 100_000,
         )
@@ -404,7 +409,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
@@ -435,7 +440,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
@@ -467,7 +472,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
@@ -494,7 +499,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
@@ -526,7 +531,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 272_000,
         )
@@ -557,7 +562,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
@@ -588,7 +593,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Document,
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
@@ -619,7 +624,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Document,
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
@@ -651,7 +656,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
@@ -681,7 +686,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Document,
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
@@ -710,7 +715,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Document,
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
@@ -739,7 +744,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Document,
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+            ) + reasoningCapabilities,
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
@@ -769,9 +774,74 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
                 // ToDo add Batch endpoint as well, see KG-719
-            ),
+            ) + reasoningCapabilities,
             contextLength = 1_050_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5.4 mini brings the strengths of GPT-5.4 to a faster, more efficient model designed for high-volume workloads.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Aug 31, 2025 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.4-mini"\>Model page</a>
+         */
+        @JvmField
+        public val GPT5_4Mini: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.4-mini",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+            ) + reasoningCapabilities,
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5.4 nano is designed for tasks where speed and cost matter most like classification,
+         * data extraction, ranking, and sub-agents.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Aug 31, 2025 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.4-nano"\>Model page</a>
+         */
+        @JvmField
+        public val GPT5_4Nano: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.4-nano",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+            ) + reasoningCapabilities,
+            contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
 
@@ -803,7 +873,9 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Document,
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Responses,
-            ),
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+            ) + reasoningCapabilities,
             contextLength = 1_050_000,
             maxOutputTokens = 128_000,
         )
@@ -986,59 +1058,62 @@ public object OpenAIModels : LLModelDefinitions {
     /**
      * List of the supported models by the OpenAI provider.
      */
-    private val supportedModels: List<LLModel> = listOf(
-        // Chat Models - GPT-4 Series
-        Chat.GPT4o,
-        Chat.GPT4oMini,
+    private val supportedModels: List<LLModel>
+        get() = listOf(
+            // Chat Models - GPT-4 Series
+            Chat.GPT4o,
+            Chat.GPT4oMini,
 
-        // Chat Models - GPT-4.1 Series
-        Chat.GPT4_1,
-        Chat.GPT4_1Nano,
-        Chat.GPT4_1Mini,
+            // Chat Models - GPT-4.1 Series
+            Chat.GPT4_1,
+            Chat.GPT4_1Nano,
+            Chat.GPT4_1Mini,
 
-        // Chat Models - O Series (Reasoning)
-        Chat.O1,
-        Chat.O3,
-        Chat.O3Mini,
-        Chat.O4Mini,
+            // Chat Models - O Series (Reasoning)
+            Chat.O1,
+            Chat.O3,
+            Chat.O3Mini,
+            Chat.O4Mini,
 
-        // Chat Models - GPT-5 Series
-        Chat.GPT5,
-        Chat.GPT5Mini,
-        Chat.GPT5Nano,
-        Chat.GPT5Codex,
-        Chat.GPT5Pro,
+            // Chat Models - GPT-5 Series
+            Chat.GPT5,
+            Chat.GPT5Mini,
+            Chat.GPT5Nano,
+            Chat.GPT5Codex,
+            Chat.GPT5Pro,
 
-        // Chat Models - GPT-5.1 Series
-        Chat.GPT5_1,
-        Chat.GPT5_1Codex,
-        Chat.GPT5_1CodexMax,
+            // Chat Models - GPT-5.1 Series
+            Chat.GPT5_1,
+            Chat.GPT5_1Codex,
+            Chat.GPT5_1CodexMax,
 
-        // Chat Models - GPT-5.2 Series
-        Chat.GPT5_2,
-        Chat.GPT5_2Pro,
-        Chat.GPT5_2Codex,
+            // Chat Models - GPT-5.2 Series
+            Chat.GPT5_2,
+            Chat.GPT5_2Pro,
+            Chat.GPT5_2Codex,
 
-        // Chat Models - GPT-5.3 Series
-        Chat.GPT5_3Codex,
+            // Chat Models - GPT-5.3 Series
+            Chat.GPT5_3Codex,
 
-        // Chat Models - GPT-5.4 Series
-        Chat.GPT5_4,
-        Chat.GPT5_4Pro,
+            // Chat Models - GPT-5.4 Series
+            Chat.GPT5_4,
+            Chat.GPT5_4Mini,
+            Chat.GPT5_4Nano,
+            Chat.GPT5_4Pro,
 
-        // Audio Models
-        Audio.GptAudio,
-        Audio.GPT4oMiniAudio,
-        Audio.GPT4oAudio,
+            // Audio Models
+            Audio.GptAudio,
+            Audio.GPT4oMiniAudio,
+            Audio.GPT4oAudio,
 
-        // Embedding Models
-        Embeddings.TextEmbedding3Small,
-        Embeddings.TextEmbedding3Large,
-        Embeddings.TextEmbeddingAda002,
+            // Embedding Models
+            Embeddings.TextEmbedding3Small,
+            Embeddings.TextEmbedding3Large,
+            Embeddings.TextEmbeddingAda002,
 
-        // Moderation Models
-        Moderation.Omni,
-    )
+            // Moderation Models
+            Moderation.Omni,
+        )
 
     /**
      * List of custom models added to the OpenAI provider.

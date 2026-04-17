@@ -1,7 +1,7 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.AIAgentTool.AgentToolInput
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -10,9 +10,16 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.serialization.typeToken
+import io.kotest.matchers.should
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeTypeOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -64,7 +71,7 @@ class AIAgentToolTest {
             agentDescription = "Test agent description",
         )
 
-        val argsJson = tool.encodeArgs(SimpleData("Test input"), serializer)
+        val argsJson = tool.encodeArgs(AgentToolInput(SimpleData("Test input")), serializer)
     }
 
     @OptIn(InternalAgentToolsApi::class)
@@ -75,11 +82,19 @@ class AIAgentToolTest {
             agentDescription = "Test agent description",
         )
 
-        assertEquals("testAgent", tool.descriptor.name)
-        assertEquals("Test agent description", tool.descriptor.description)
-        assertEquals(1, tool.descriptor.requiredParameters.size)
-        assertEquals("Test request description", tool.descriptor.requiredParameters[0].description)
-        assertEquals(ToolParameterType.String, tool.descriptor.requiredParameters[0].type)
+        tool.descriptor should {
+            it.name shouldBe "testAgent"
+            it.description shouldBe "Test agent description"
+            it.requiredParameters.size shouldBe 1
+
+            it.requiredParameters[0].type.shouldBeTypeOf<ToolParameterType.Object> {
+                it.properties.size shouldBe 1
+                it.properties[0] should {
+                    it.description shouldBe "Test request description"
+                    it.type shouldBe ToolParameterType.String
+                }
+            }
+        }
     }
 
     @OptIn(InternalAgentToolsApi::class)
@@ -132,20 +147,19 @@ class AIAgentToolTest {
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testAsToolResultSerialization() = runTest {
-        val tool = agent.asTool(
-            agentName = "testAgent",
-            agentDescription = "Test agent description",
+        val result = AIAgentTool.AgentToolResult(
+            successful = true,
+            result = SimpleData("This is the agent's response"),
         )
 
-        val args = tool.decodeArgs(argsJson, serializer)
-        val result = tool.execute(args)
+        val resultSerialized = buildJsonObject {
+            put("successful", true)
+            putJsonObject("result") {
+                put("value", "This is the agent's response")
+            }
+        }.toKoogJSONObject()
 
-        assertEquals(
-            AIAgentTool.AgentToolResult(
-                successful = true,
-                result = SimpleData("This is the agent's response"),
-            ),
-            result
-        )
+        tool.encodeResult(result, serializer) shouldBe resultSerialized
+        tool.decodeResult(resultSerialized, serializer) shouldBe result
     }
 }

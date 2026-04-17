@@ -153,6 +153,18 @@ public sealed class LLMCapability(public val id: String) {
     public data object Moderation : LLMCapability("moderation")
 
     /**
+     * Represents the thinking/reasoning capability of a language model.
+     *
+     * This capability indicates that the model supports exposing its chain-of-thought reasoning
+     * and uses thought signatures to maintain reasoning context across multi-step interactions.
+     * Models with this capability may require thought_signature in function calls.
+     *
+     * Examples: Gemini 3.0 models, o1-series models.
+     */
+    @Serializable
+    public data object Thinking : LLMCapability("thinking")
+
+    /**
      * Represents a structured schema capability for a language model. The schema defines certain characteristics or
      * functionalities related to data interaction and encoding using specific formats.
      *

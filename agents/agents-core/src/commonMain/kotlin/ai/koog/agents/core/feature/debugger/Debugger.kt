@@ -26,6 +26,7 @@ import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
+import ai.koog.agents.core.feature.model.events.StrategyStartingEvent
 import ai.koog.agents.core.feature.model.events.SubgraphExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.SubgraphExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.SubgraphExecutionStartingEvent
@@ -229,18 +230,25 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
             //region Intercept Strategy Events
 
             pipeline.interceptStrategyStarting(this) intercept@{ eventContext ->
+                val strategy = eventContext.strategy
 
-                val strategy = eventContext.strategy as AIAgentGraphStrategy
+                val eventId = eventContext.eventId
+                val executionInfo = eventContext.executionInfo
+                val runId = eventContext.context.runId
+                val strategyName = eventContext.strategy.name
+                val timestamp = pipeline.clock.now().toEpochMilliseconds()
 
-                @OptIn(InternalAgentsApi::class)
-                val event = GraphStrategyStartingEvent(
-                    eventId = eventContext.eventId,
-                    executionInfo = eventContext.executionInfo,
-                    runId = eventContext.context.runId,
-                    strategyName = eventContext.strategy.name,
-                    graph = strategy.startNodeToGraph(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
-                )
+                val event = when (strategy) {
+                    is AIAgentGraphStrategy<*, *> -> {
+                        @OptIn(InternalAgentsApi::class)
+                        val graph = strategy.startNodeToGraph()
+                        GraphStrategyStartingEvent(eventId, executionInfo, runId, strategyName, graph, timestamp)
+                    }
+                    else -> {
+                        StrategyStartingEvent(eventId, executionInfo, runId, strategyName, timestamp)
+                    }
+                }
+
                 writer.onMessage(event)
             }
 

@@ -6,10 +6,13 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.streamFrameFlowOf
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmName
 import kotlin.time.Clock
 
@@ -97,6 +100,9 @@ public class MockExecutorDSLBuilder(
         isHarmful = false,
         categories = emptyMap()
     )
+    internal val streamPartialMatches = mutableMapOf<String, Flow<StreamFrame>>()
+    internal val streamExactMatches = mutableMapOf<String, Flow<StreamFrame>>()
+    private var defaultStreamResponse: Flow<StreamFrame> = streamFrameFlowOf()
 
     /**
      * Determines whether the last message handled in a sequence should focus specifically on
@@ -129,6 +135,18 @@ public class MockExecutorDSLBuilder(
     public fun mockLLMAnswer(response: String): DefaultResponseReceiver = DefaultResponseReceiver(response, this)
 
     /**
+     * Creates a mock LLM streaming response.
+     *
+     * This function is the entry point for configuring how the LLM should respond with stream frames
+     * when it receives specific inputs.
+     *
+     * @param stream The stream response to return
+     * @return A [StreamResponseReceiver] for further configuration
+     */
+    public fun mockLLMStream(stream: Flow<StreamFrame>): StreamResponseReceiver =
+        StreamResponseReceiver(stream, this)
+
+    /**
      * Sets the default response to be returned when no other response matches.
      */
     public fun setDefaultResponse(response: String) {
@@ -140,6 +158,13 @@ public class MockExecutorDSLBuilder(
      */
     public fun setDefaultModerationResponse(result: ModerationResult) {
         defaultModerationResponse = result
+    }
+
+    /**
+     * Sets the default stream response to be returned when no other stream response matches.
+     */
+    public fun setDefaultStreamResponse(stream: Flow<StreamFrame>) {
+        defaultStreamResponse = stream
     }
 
     /**
@@ -897,10 +922,18 @@ public class MockExecutorDSLBuilder(
             defaultResponse = defaultModerationResponse
         )
 
+        val streamResponseMatcher = ResponseMatcher(
+            partialMatches = streamPartialMatches,
+            exactMatches = streamExactMatches,
+            conditional = null,
+            defaultResponse = defaultStreamResponse
+        )
+
         return MockPromptExecutor(
             handleLastAssistantMessage,
             responseMatcher = responseMatcher,
             moderationResponseMatcher = moderationResponseMatcher,
+            streamResponseMatcher = streamResponseMatcher,
             toolActions = toolActions,
             clock = clock,
             tokenizer = tokenizer
@@ -973,6 +1006,56 @@ public open class DefaultResponseReceiver(
         return response
     }
 }
+
+/**
+ * Receiver class for configuring streaming responses from the LLM.
+ *
+ * This class is part of the fluent API for configuring how the LLM should respond
+ * with stream frames when it receives specific inputs.
+ *
+ * @property stream The stream response to return
+ */
+public class StreamResponseReceiver(
+    internal val stream: Flow<StreamFrame>,
+    internal val builder: MockExecutorDSLBuilder,
+) {
+    /**
+     * Sets this stream as the default response to be returned when no other response matches.
+     */
+    public val asDefaultResponse: Flow<StreamFrame>
+        get() {
+            builder.setDefaultStreamResponse(stream)
+            return stream
+        }
+
+    /**
+     * Configures the LLM to respond with this stream when the user request contains the specified pattern.
+     */
+    public infix fun onRequestContains(pattern: String): Flow<StreamFrame> {
+        builder.streamPartialMatches[pattern] = stream
+        return stream
+    }
+
+    /**
+     * Configures the LLM to respond with this stream when the user request exactly matches the specified pattern.
+     */
+    public infix fun onRequestEquals(pattern: String): Flow<StreamFrame> {
+        builder.streamExactMatches[pattern] = stream
+        return stream
+    }
+}
+
+/**
+ * Top-level wrapper for importing `mockLLMAnswer` into DSL-based tests.
+ */
+public fun MockExecutorDSLBuilder.mockLLMAnswer(response: String): DefaultResponseReceiver =
+    this.mockLLMAnswer(response)
+
+/**
+ * Top-level wrapper for importing `mockLLMStream` into DSL-based tests.
+ */
+public fun MockExecutorDSLBuilder.mockLLMStream(stream: Flow<StreamFrame>): StreamResponseReceiver =
+    this.mockLLMStream(stream)
 
 /**
  * Creates a mock LLM executor for testing.

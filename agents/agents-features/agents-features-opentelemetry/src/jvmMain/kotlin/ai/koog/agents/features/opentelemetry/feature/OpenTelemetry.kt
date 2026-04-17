@@ -424,6 +424,10 @@ public class OpenTelemetry {
                     logger.warn { "Found <${spanCollector.activeSpansCount}> active span(s) after agent closing. Stopping them." }
                     endUnfinishedSpans(spanCollector, config.isVerbose)
                 }
+
+                if (config.isShutdownOnAgentClose) {
+                    config.sdk.close()
+                }
             }
 
             //endregion Agent

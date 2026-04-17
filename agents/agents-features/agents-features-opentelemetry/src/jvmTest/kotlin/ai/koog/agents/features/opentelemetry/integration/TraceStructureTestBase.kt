@@ -15,7 +15,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.asTool
-import ai.koog.agents.core.tools.reflect.tool
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.assistantMessage
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent

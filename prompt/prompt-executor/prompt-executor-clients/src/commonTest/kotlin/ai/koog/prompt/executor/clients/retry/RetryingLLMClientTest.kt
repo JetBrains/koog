@@ -16,6 +16,8 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.emitTextDelta
 import ai.koog.prompt.streaming.streamFrameFlow
 import ai.koog.prompt.streaming.streamFrameFlowOf
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
@@ -386,6 +388,73 @@ class RetryingLLMClientTest {
     }
 
     @Test
+    fun testRetryEmbed() = runTest {
+        val expectedEmbedding = listOf(0.1, 0.2, 0.3)
+
+        val mockClient = MockLLMClient(
+            embedResponse = expectedEmbedding,
+            failuresBeforeSuccess = 1,
+            failureMessage = "Error: 503"
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(
+                maxAttempts = 2,
+                initialDelay = 10.milliseconds
+            )
+        )
+
+        val result = retryingClient.embed("hello", testModel)
+
+        assertEquals(expectedEmbedding, result)
+        assertEquals(2, mockClient.embedCalls)
+    }
+
+    @Test
+    fun testRetryBatchEmbed() = runTest {
+        val expectedEmbeddings = listOf(listOf(0.1, 0.2), listOf(0.3, 0.4))
+
+        val mockClient = MockLLMClient(
+            batchEmbedResponse = expectedEmbeddings,
+            failuresBeforeSuccess = 1,
+            failureMessage = "Error: 429"
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(
+                maxAttempts = 2,
+                initialDelay = 10.milliseconds
+            )
+        )
+
+        val result = retryingClient.embed(listOf("hello", "world"), testModel)
+
+        assertEquals(expectedEmbeddings, result)
+        assertEquals(2, mockClient.batchEmbedCalls)
+    }
+
+    @Test
+    fun testEmbedNoRetryOnUnsupportedOperation() = runTest {
+        val mockClient = MockLLMClient(
+            failuresBeforeSuccess = 1,
+            failureMessage = "Error: 400 Bad Request"
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 3)
+        )
+
+        assertFailsWith<RuntimeException> {
+            retryingClient.embed("hello", testModel)
+        }
+
+        assertEquals(1, mockClient.embedCalls) // No retry on non-retryable error
+    }
+
+    @Test
     fun testIncompleteStreamExceptionBeforeFirstFrameTriggersRetry() = runTest {
         var callCount = 0
         val mockClient = MockLLMClient(
@@ -440,12 +509,36 @@ class RetryingLLMClientTest {
         assertEquals(1, mockClient.streamCalls) // No retry after first frame
     }
 
+    @Test
+    fun testBasicJsonSchemaGeneratorDelegation() = runTest {
+        val mockClient = MockLLMClient()
+
+        val retryingClient = RetryingLLMClient(mockClient)
+
+        val result = retryingClient.getBasicJsonSchemaGenerator()
+
+        assertEquals(mockClient.basicJsonSchemaGeneratorDefault, result)
+    }
+
+    @Test
+    fun testStandardJsonSchemaGeneratorDelegation() = runTest {
+        val mockClient = MockLLMClient()
+
+        val retryingClient = RetryingLLMClient(mockClient)
+
+        val result = retryingClient.getStandardJsonSchemaGenerator()
+
+        assertEquals(mockClient.standardJsonSchemaGeneratorDefault, result)
+    }
+
     // Mock LLMClient for testing
     private class MockLLMClient(
         private val executeResponse: List<Message.Response> = emptyList(),
         private val streamResponse: Flow<StreamFrame> = flowOf(),
         private val multipleChoicesResponse: List<LLMChoice> = emptyList(),
         private val moderateResponse: ModerationResult = ModerationResult(false, emptyMap()),
+        private val embedResponse: List<Double> = emptyList(),
+        private val batchEmbedResponse: List<List<Double>> = emptyList(),
         private var failuresBeforeSuccess: Int = 0,
         private var streamFailuresBeforeSuccess: Int = 0,
         private val failureMessage: String = "Mock failure",
@@ -453,15 +546,22 @@ class RetryingLLMClientTest {
         private val llmProvider: LLMProvider = LLMProvider.OpenAI,
     ) : LLMClient() {
 
+        val basicJsonSchemaGeneratorDefault = object : BasicJsonSchemaGenerator() {}
+        val standardJsonSchemaGeneratorDefault = object : StandardJsonSchemaGenerator() {}
+
         var executeCalls = 0
         var streamCalls = 0
         var multipleChoicesCalls = 0
         var moderateCalls = 0
+        var embedCalls = 0
+        var batchEmbedCalls = 0
 
         private var executeFailures = 0
         private var streamFailures = 0
         private var multipleChoicesFailures = 0
         private var moderateFailures = 0
+        private var embedFailures = 0
+        private var batchEmbedFailures = 0
 
         override fun llmProvider(): LLMProvider = llmProvider
 
@@ -525,8 +625,44 @@ class RetryingLLMClientTest {
             return moderateResponse
         }
 
+        override suspend fun embed(
+            text: String,
+            model: LLModel
+        ): List<Double> {
+            embedCalls++
+
+            if (embedFailures < failuresBeforeSuccess) {
+                embedFailures++
+                throw RuntimeException(failureMessage)
+            }
+
+            return embedResponse
+        }
+
+        override suspend fun embed(
+            inputs: List<String>,
+            model: LLModel
+        ): List<List<Double>> {
+            batchEmbedCalls++
+
+            if (batchEmbedFailures < failuresBeforeSuccess) {
+                batchEmbedFailures++
+                throw RuntimeException(failureMessage)
+            }
+
+            return batchEmbedResponse
+        }
+
         override fun close() {
             // No resources to close
+        }
+
+        override fun getBasicJsonSchemaGenerator(): BasicJsonSchemaGenerator {
+            return basicJsonSchemaGeneratorDefault
+        }
+
+        override fun getStandardJsonSchemaGenerator(): StandardJsonSchemaGenerator {
+            return standardJsonSchemaGeneratorDefault
         }
     }
 }

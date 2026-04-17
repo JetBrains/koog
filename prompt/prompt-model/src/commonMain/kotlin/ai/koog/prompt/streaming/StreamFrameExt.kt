@@ -1,8 +1,11 @@
+@file:JvmName("StreamFrameExt")
+
 package ai.koog.prompt.streaming
 
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import kotlin.jvm.JvmName
 
 /**
  * Converts a list of [Message.Response] to a list of [StreamFrame].
@@ -25,10 +28,11 @@ public fun Message.Response.toStreamFrames(index: Int? = null): List<StreamFrame
             }
 
             is Message.Reasoning -> {
-                parts.forEach { add(StreamFrame.ReasoningDelta(it.text, null, index)) }
-                summary?.forEach { add(StreamFrame.ReasoningDelta(null, it.text, index)) }
+                parts.forEach { add(StreamFrame.ReasoningDelta(id = id, text = it.text, summary = null, index = index)) }
+                summary?.forEach { add(StreamFrame.ReasoningDelta(id = id, text = null, summary = it.text, index = index)) }
                 add(
                     StreamFrame.ReasoningComplete(
+                        id = id,
                         parts.map { it.text },
                         summary?.map { it.text },
                         encrypted,
@@ -53,6 +57,7 @@ public fun Message.Response.toStreamFrames(index: Int? = null): List<StreamFrame
  * @return A list of [Message.Response] objects.
  */
 public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
+    val textDeltasByIndex = linkedMapOf<Int?, StringBuilder>()
     val textMessagesCompleteFrames = mutableListOf<StreamFrame.TextComplete>()
     val reasoningCompleteFrames = mutableListOf<StreamFrame.ReasoningComplete>()
     val toolCallCompleteFrames = mutableListOf<StreamFrame.ToolCallComplete>()
@@ -60,6 +65,7 @@ public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
 
     forEach { frame ->
         when (frame) {
+            is StreamFrame.TextDelta -> textDeltasByIndex.getOrPut(frame.index) { StringBuilder() }.append(frame.text)
             is StreamFrame.TextComplete -> textMessagesCompleteFrames.add(frame)
             is StreamFrame.ReasoningComplete -> reasoningCompleteFrames.add(frame)
             is StreamFrame.ToolCallComplete -> toolCallCompleteFrames.add(frame)
@@ -68,13 +74,30 @@ public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
         }
     }
 
+    val completeTextIndexes = textMessagesCompleteFrames.mapTo(mutableSetOf()) { it.index }
+    val synthesizedTextMessages = textDeltasByIndex
+        .filterKeys { it !in completeTextIndexes }
+        .values
+        .map(StringBuilder::toString)
+        .filter(String::isNotEmpty)
+
     return buildList {
         reasoningCompleteFrames.forEach {
             add(
                 Message.Reasoning(
+                    id = it.id,
                     parts = it.text.map { textPart -> ContentPart.Text(textPart) },
                     summary = it.summary?.map { summaryPart -> ContentPart.Text(summaryPart) },
                     encrypted = it.encrypted,
+                    metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
+                )
+            )
+        }
+        synthesizedTextMessages.forEach {
+            add(
+                Message.Assistant(
+                    content = it,
+                    finishReason = end?.finishReason,
                     metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
                 )
             )

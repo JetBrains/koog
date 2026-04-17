@@ -4,7 +4,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.retry.RetryConfig
 import ai.koog.prompt.executor.clients.retry.toRetryingClient
 import ai.koog.spring.RetryConfigKoogProperties
-import kotlin.time.toKotlinDuration
+import ai.koog.utils.time.toKotlinDuration
 
 internal fun LLMClient.toRetryingClient(properties: RetryConfigKoogProperties?): LLMClient {
     val self = this

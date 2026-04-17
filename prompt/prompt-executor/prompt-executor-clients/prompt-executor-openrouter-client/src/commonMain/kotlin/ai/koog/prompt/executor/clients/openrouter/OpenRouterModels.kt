@@ -37,7 +37,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Phi4Reasoning: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "microsoft/phi-4-reasoning:free",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + LLMCapability.Thinking,
         contextLength = 32_768,
     )
 
@@ -107,7 +107,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Claude3_7Sonnet: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-3.7-sonnet",
-        capabilities = multimodalCapabilities,
+        capabilities = multimodalCapabilities + LLMCapability.Thinking,
         contextLength = 200_000,
         maxOutputTokens = 64_000,
     )
@@ -120,7 +120,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Claude4Sonnet: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-sonnet-4",
-        capabilities = multimodalCapabilities,
+        capabilities = multimodalCapabilities + LLMCapability.Thinking,
         contextLength = 200_000,
         maxOutputTokens = 64_000,
     )
@@ -133,7 +133,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Claude4_1Opus: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-opus-4.1",
-        capabilities = multimodalCapabilities,
+        capabilities = multimodalCapabilities + LLMCapability.Thinking,
         contextLength = 200_000,
         maxOutputTokens = 32_000,
     )
@@ -147,8 +147,10 @@ public object OpenRouterModels : LLModelDefinitions {
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-haiku-4.5",
         capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
-            LLMCapability.ToolChoice
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
         ),
         contextLength = 200_000,
         maxOutputTokens = 64_000,
@@ -163,8 +165,10 @@ public object OpenRouterModels : LLModelDefinitions {
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-sonnet-4.5",
         capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
-            LLMCapability.ToolChoice
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
         ),
         contextLength = 1_000_000,
         maxOutputTokens = 64_000,
@@ -179,11 +183,47 @@ public object OpenRouterModels : LLModelDefinitions {
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-opus-4.5",
         capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 32_000,
+    )
+
+    /**
+     * Claude Sonnet 4.6 delivers fast, efficient performance with strong reasoning capabilities
+     * for everyday tasks and agent workflows.
+     */
+    @JvmField
+    public val Claude4_6Sonnet: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "anthropic/claude-sonnet-4.6",
+        capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.ToolChoice
         ),
         contextLength = 200_000,
-        maxOutputTokens = 32_000,
+        maxOutputTokens = 64_000,
+    )
+
+    /**
+     * Claude Opus 4.6 is a frontier model with strong capabilities in software engineering,
+     * agentic tasks, and long context reasoning.
+     */
+    @JvmField
+    public val Claude4_6Opus: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "anthropic/claude-opus-4.6",
+        capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.ToolChoice
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 128_000,
     )
 
     /**
@@ -528,7 +568,8 @@ public object OpenRouterModels : LLModelDefinitions {
         id = "google/gemini-2.5-flash-lite",
         capabilities = multimodalCapabilities + listOf(
             LLMCapability.Schema.JSON.Standard,
-            LLMCapability.ToolChoice
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
         ),
         contextLength = 1_048_576,
         maxOutputTokens = 65_600,
@@ -544,7 +585,8 @@ public object OpenRouterModels : LLModelDefinitions {
         id = "google/gemini-2.5-flash",
         capabilities = multimodalCapabilities + listOf(
             LLMCapability.Schema.JSON.Standard,
-            LLMCapability.ToolChoice
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
         ),
         contextLength = 1_048_576,
         maxOutputTokens = 65_600,
@@ -560,7 +602,8 @@ public object OpenRouterModels : LLModelDefinitions {
         id = "google/gemini-2.5-pro",
         capabilities = multimodalCapabilities + listOf(
             LLMCapability.Schema.JSON.Standard,
-            LLMCapability.ToolChoice
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
         ),
         contextLength = 1_048_576,
         maxOutputTokens = 65_600,
@@ -591,7 +634,8 @@ public object OpenRouterModels : LLModelDefinitions {
         provider = LLMProvider.OpenRouter,
         id = "qwen/qwen3-vl-8b-instruct",
         capabilities = multimodalCapabilities + listOf(
-            LLMCapability.ToolChoice
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
         ),
         contextLength = 131_072,
         maxOutputTokens = 33_000,
@@ -615,6 +659,8 @@ public object OpenRouterModels : LLModelDefinitions {
         Claude4_5Haiku,
         Claude4_5Sonnet,
         Claude4_5Opus,
+        Claude4_6Sonnet,
+        Claude4_6Opus,
         Claude3VisionSonnet,
         Claude3VisionOpus,
         Claude3VisionHaiku,

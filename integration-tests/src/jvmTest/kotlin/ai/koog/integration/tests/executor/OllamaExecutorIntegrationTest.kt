@@ -6,7 +6,6 @@ import ai.koog.integration.tests.OllamaTestFixtureExtension
 import ai.koog.integration.tests.utils.MediaTestScenarios
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestUtils
-import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
@@ -24,6 +23,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.booleans.shouldNotBeTrue
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -64,6 +64,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         lateinit var fixture: OllamaTestFixture
         val executor get() = fixture.executor
         val model get() = fixture.model
+        val embeddingsModel get() = fixture.embeddingsModel
         val visionModel get() = fixture.visionModel
         val moderationModel get() = fixture.moderationModel
         val thinkingModel get() = fixture.thinkingModel
@@ -74,7 +75,6 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             return ImageTestScenario.entries
                 .minus(
                     setOf(
-                        ImageTestScenario.LARGE_IMAGE_ANTHROPIC,
                         ImageTestScenario.EMPTY_IMAGE,
                         ImageTestScenario.CORRUPTED_IMAGE,
                     )
@@ -273,6 +273,23 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         }
     }
 
+    // Ollama-specific embed text test
+    @Test
+    fun `ollama_test embed one string`() = runTest {
+        client.embed(text = "text", model = embeddingsModel)
+            .shouldNotBeNull()
+            .shouldNotBeEmpty()
+    }
+
+    // Ollama-specific embed text test
+    @Test
+    fun `ollama_test embed list of string`() = runTest {
+        client.embed(inputs = listOf("one", "two"), model = embeddingsModel)
+            .shouldNotBeNull()
+            .shouldNotBeEmpty()
+            .shouldHaveSize(2)
+    }
+
     // Ollama-specific image processing test
     @ParameterizedTest
     @MethodSource("imageScenarios")
@@ -300,16 +317,8 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
             when (scenario) {
                 ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG,
-                ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                    checkExecutorMediaResponse(response)
-                    response.content.shouldNotBeBlank()
-                }
 
                 ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                    response.content.shouldNotBeBlank()
-                }
-
-                ImageTestScenario.LARGE_IMAGE -> {
                     response.content.shouldNotBeBlank()
                 }
             }
@@ -360,7 +369,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         val reasoningCompleteFrames = mutableListOf<StreamFrame.ReasoningComplete>()
         val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
 
-        executor.executeStreaming(prompt, thinkingModel).collect { frame ->
+        executor.executeStreaming(prompt, thinkingModel, listOf()).collect { frame ->
             when (frame) {
                 is StreamFrame.ReasoningDelta -> reasoningDeltaFrames.add(frame)
                 is StreamFrame.ReasoningComplete -> reasoningCompleteFrames.add(frame)

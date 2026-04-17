@@ -1,6 +1,6 @@
 # Built-in tools
 
-The Koog framework provides built-in tools that handle common scenarios of agent-user interaction.
+The Koog framework provides built-in tools for Kotlin and Java that handle common scenarios of agent-user interaction.
 
 The following built-in tools are available:
 
@@ -57,5 +57,5 @@ val agent = AIAgent(
 ```
 <!--- KNIT example-built-in-tools-01.kt -->
 
-You can create a comprehensive set of capabilities for your agent by combining built-in tools and custom tools within the same registry.
+You can create a comprehensive set of capabilities for your agent by combining built-in tools and custom tools within the same registry in both Kotlin and Java.
 To learn more about custom tools, see [Annotation-based tools](annotation-based-tools.md) and [Class-based tools](class-based-tools.md).
