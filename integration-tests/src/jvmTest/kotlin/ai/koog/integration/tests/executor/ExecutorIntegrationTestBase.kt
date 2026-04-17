@@ -666,7 +666,7 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val imageUrl =
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/PNG_Test.png/200px-PNG_Test.png"
+            "https://raw.githubusercontent.com/JetBrains/koog/develop/integration-tests/src/jvmTest/resources/media/test.png"
 
         val prompt = prompt("url-based-attachments-test") {
             system("You are a helpful assistant that can analyze images.")

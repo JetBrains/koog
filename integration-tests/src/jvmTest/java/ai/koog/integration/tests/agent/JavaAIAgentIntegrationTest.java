@@ -427,11 +427,11 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
                 new ContentPart.Text("Please identify the image format."),
                 new ContentPart.Image(
                     new AttachmentContent.URL(
-                        "https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png"
+                        "https://raw.githubusercontent.com/JetBrains/koog/develop/integration-tests/src/jvmTest/resources/media/test.png"
                     ),
                     "png",
                     "image/png",
-                    "PNG_transparency_demonstration_1.png"
+                    "test.png"
                 )
             ))
             .build();

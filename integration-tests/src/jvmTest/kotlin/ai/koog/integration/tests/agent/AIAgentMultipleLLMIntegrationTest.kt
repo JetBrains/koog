@@ -51,7 +51,7 @@ import kotlin.time.Duration.Companion.minutes
 class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
     companion object {
         @JvmStatic
-        fun getLatestModels(): Stream<LLModel> = AIAgentTestBase.latestModels()
+        fun getLatestModels(): Stream<LLModel> = latestModels()
     }
 
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
@@ -308,7 +308,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                     br()
                     +"Please analyze this image and identify the image format if possible."
                 }
-                image("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg")
+                image("https://raw.githubusercontent.com/JetBrains/koog/develop/integration-tests/src/jvmTest/resources/media/test.png")
             }
         }
 
