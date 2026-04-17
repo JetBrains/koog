@@ -612,7 +612,7 @@ This type of export is useful for development and debugging purposes.
         // Add more exporters as needed
     }
     ```
-    <!--- KNIT example-opentelemetry-support-06.kt -->
+    <!--- KNIT example-opentelemetry-support-05.kt -->
 
 === "Java"
 
@@ -622,7 +622,7 @@ This type of export is useful for development and debugging purposes.
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.logging.LoggingSpanExporter;
-    public class exampleOpentelemetrySupportJava06 {
+    public class exampleOpentelemetrySupportJava05 {
         public static void main(String[] args) {
             var promptExecutor = PromptExecutor.builder()
                 .openAI("openai-api-key")
@@ -645,7 +645,7 @@ This type of export is useful for development and debugging purposes.
         // Add more exporters as needed
     })
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava06.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava05.java -->
 
 ### OpenTelemetry HTTP exporter
 
@@ -687,7 +687,7 @@ OpenTelemetry HTTP exporter (`OtlpHttpSpanExporter`) is a part of the `opentelem
         )
     }
     ```
-    <!--- KNIT example-opentelemetry-support-07.kt -->
+    <!--- KNIT example-opentelemetry-support-06.kt -->
 
 === "Java"
 
@@ -698,7 +698,7 @@ OpenTelemetry HTTP exporter (`OtlpHttpSpanExporter`) is a part of the `opentelem
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
     import java.util.concurrent.TimeUnit;
-    public class exampleOpentelemetrySupportJava07 {
+    public class exampleOpentelemetrySupportJava06 {
         public static void main(String[] args) {
             var promptExecutor = PromptExecutor.builder()
                 .openAI("openai-api-key")
@@ -730,7 +730,7 @@ OpenTelemetry HTTP exporter (`OtlpHttpSpanExporter`) is a part of the `opentelem
         );
     })
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava07.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava06.java -->
 
 ### OpenTelemetry gRPC exporter
 
@@ -768,7 +768,7 @@ lets you define the host and port of the backend, collector, or endpoint that re
         )
     }
     ```
-    <!--- KNIT example-opentelemetry-support-08.kt -->
+    <!--- KNIT example-opentelemetry-support-07.kt -->
 
 === "Java"
 
@@ -778,7 +778,7 @@ lets you define the host and port of the backend, collector, or endpoint that re
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
-    public class exampleOpentelemetrySupportJava08 {
+    public class exampleOpentelemetrySupportJava07 {
         public static void main(String[] args) {
             var promptExecutor = PromptExecutor.builder()
                 .openAI("openai-api-key")
@@ -805,7 +805,7 @@ lets you define the host and port of the backend, collector, or endpoint that re
         );
     })
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava08.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava07.java -->
 
 ## Integration with Langfuse
 
@@ -839,7 +839,7 @@ You can configure Koog to export OpenTelemetry traces directly to Langfuse using
         )
     }
     ```
-    <!--- KNIT example-opentelemetry-support-09.kt -->
+    <!--- KNIT example-opentelemetry-support-08.kt -->
 
 === "Java"
 
@@ -848,7 +848,7 @@ You can configure Koog to export OpenTelemetry traces directly to Langfuse using
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
-    public class exampleOpentelemetrySupportJava09 {
+    public class exampleOpentelemetrySupportJava08 {
         public static void main(String[] args) {
             var promptExecutor = PromptExecutor.builder()
                 .openAI("openai-api-key")
@@ -875,7 +875,7 @@ You can configure Koog to export OpenTelemetry traces directly to Langfuse using
         );
     })
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava09.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava08.java -->
 
 Please read the [full documentation](opentelemetry-langfuse-exporter.md) about integration with Langfuse.
 
@@ -910,7 +910,7 @@ W&B Weave provides trace visualization and analytics for LLM/agent workloads. In
         )
     }
     ```
-    <!--- KNIT example-opentelemetry-support-10.kt -->
+    <!--- KNIT example-opentelemetry-support-09.kt -->
 
 === "Java"
 
@@ -919,7 +919,7 @@ W&B Weave provides trace visualization and analytics for LLM/agent workloads. In
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
-    public class exampleOpentelemetrySupportJava10 {
+    public class exampleOpentelemetrySupportJava09 {
         public static void main(String[] args) {
             var promptExecutor = PromptExecutor.builder()
                 .openAI("openai-api-key")
@@ -945,7 +945,7 @@ W&B Weave provides trace visualization and analytics for LLM/agent workloads. In
         );
     })
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava10.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava09.java -->
 
 Please read the [full documentation](opentelemetry-weave-exporter.md) about integration with W&B Weave.
 
@@ -1035,7 +1035,7 @@ Here is the full code sample:
         }
     }
     ```
-    <!--- KNIT example-opentelemetry-support-11.kt -->
+    <!--- KNIT example-opentelemetry-support-10.kt -->
 
 === "Java"
 
@@ -1046,7 +1046,7 @@ Here is the full code sample:
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.logging.LoggingSpanExporter;
     import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
-    public class exampleOpentelemetrySupportJava11 {
+    public class exampleOpentelemetrySupportJava10 {
         static PromptExecutor promptExecutor = PromptExecutor.builder()
             .openAI("openai-api-key")
             .build();
@@ -1083,7 +1083,7 @@ Here is the full code sample:
         );
     }
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava11.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava10.java -->
 
 ## Troubleshooting
 
@@ -1193,6 +1193,6 @@ Where `{target}` is the tool name or prompt name when applicable. Examples:
         it.run("Use the search tool to find information")
     }
     ```
-    <!--- KNIT example-opentelemetry-support-12.kt -->
+    <!--- KNIT example-opentelemetry-support-11.kt -->
 
 This setup provides complete observability for MCP operations with minimal code changes, following OpenTelemetry best practices and semantic conventions.
