@@ -15,6 +15,7 @@ import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.clients.retry.RetryConfig
 import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.spring.prompt.executor.MultiLLMAutoConfiguration
@@ -196,8 +197,8 @@ class KoogAutoConfigurationTest {
                 "ai.koog.$provider.base-url=http://localhost:9876"
             )
             .run { context ->
-                val executor = context.getBean<MultiLLMPromptExecutor>()
-                val retryingClient = getLlmClient(executor, provider)
+                val executor = context.getBean<SingleLLMPromptExecutor>()
+                val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
                 val config = getPrivateFieldValue(retryingClient, "config") as RetryConfig
@@ -236,8 +237,8 @@ class KoogAutoConfigurationTest {
                 "ai.koog.$provider.retry.jitter-factor=$jitterFactor"
             )
             .run { context ->
-                val executor = context.getBean<MultiLLMPromptExecutor>()
-                val retryingClient = getLlmClient(executor, provider)
+                val executor = context.getBean<SingleLLMPromptExecutor>()
+                val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
                 val config = getPrivateFieldValue(retryingClient, "config") as RetryConfig
@@ -299,8 +300,8 @@ class KoogAutoConfigurationTest {
                 "ai.koog.$provider.retry.initial-delay=$initialDelay"
             )
             .run { context ->
-                val executor = context.getBean<MultiLLMPromptExecutor>()
-                val retryingClient = getLlmClient(executor, provider)
+                val executor = context.getBean<SingleLLMPromptExecutor>()
+                val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
                 val config = getPrivateFieldValue(retryingClient, "config") as RetryConfig
@@ -337,14 +338,14 @@ class KoogAutoConfigurationTest {
     @Test
     fun `should supply Anthropic executor bean with retry client and default config`() {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(AnthropicLLMAutoConfiguration::class.java, MultiLLMAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(AnthropicLLMAutoConfiguration::class.java))
             .withPropertyValues(
                 "ai.koog.anthropic.api-key=some_api_key",
                 "ai.koog.anthropic.retry.enabled=true"
             )
             .run { context ->
-                val executor = context.getBean<MultiLLMPromptExecutor>()
-                val retryingClient = getLlmClient(executor, "anthropic")
+                val executor = context.getBean<SingleLLMPromptExecutor>()
+                val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
                 val config = getPrivateFieldValue(retryingClient, "config")
@@ -420,8 +421,8 @@ class KoogAutoConfigurationTest {
                 "ai.koog.google.retry.enabled=true"
             )
             .run { context ->
-                val executor = context.getBean<MultiLLMPromptExecutor>()
-                val retryingClient = getLlmClient(executor, "google")
+                val executor = context.getBean<SingleLLMPromptExecutor>()
+                val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
                 val config = getPrivateFieldValue(retryingClient, "config")
@@ -481,8 +482,8 @@ class KoogAutoConfigurationTest {
                 "ai.koog.openrouter.retry.enabled=true"
             )
             .run { context ->
-                val executor = context.getBean<MultiLLMPromptExecutor>()
-                val retryingClient = getLlmClient(executor, "openrouter")
+                val executor = context.getBean<SingleLLMPromptExecutor>()
+                val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
                 val config = getPrivateFieldValue(retryingClient, "config")
@@ -538,8 +539,8 @@ class KoogAutoConfigurationTest {
                 "ai.koog.deepseek.retry.enabled=true"
             )
             .run { context ->
-                val executor = context.getBean<MultiLLMPromptExecutor>()
-                val retryingClient = getLlmClient(executor, "deepseek")
+                val executor = context.getBean<SingleLLMPromptExecutor>()
+                val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
                 val config = getPrivateFieldValue(retryingClient, "config")
@@ -559,7 +560,7 @@ class KoogAutoConfigurationTest {
             )
             .run { context ->
                 val executor = context.getBean<MultiLLMPromptExecutor>()
-                val llmClient = getLlmClient(executor, "mistral")
+                val llmClient = getLlmClient(executor, "mistralai")
                 assertInstanceOf<MistralAILLMClient>(llmClient)
 
                 val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
@@ -578,7 +579,7 @@ class KoogAutoConfigurationTest {
         )
             .run { context ->
                 val executor = context.getBean<MultiLLMPromptExecutor>()
-                val llmClient = getLlmClient(executor, "mistral") as MistralAILLMClient
+                val llmClient = getLlmClient(executor, "mistralai") as MistralAILLMClient
 
                 val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
@@ -595,8 +596,8 @@ class KoogAutoConfigurationTest {
                 "ai.koog.mistral.retry.enabled=true"
             )
             .run { context ->
-                val executor = context.getBean<MultiLLMPromptExecutor>()
-                val retryingClient = getLlmClient(executor, "mistral")
+                val executor = context.getBean<SingleLLMPromptExecutor>()
+                val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
                 val config = getPrivateFieldValue(retryingClient, "config")
@@ -628,15 +629,15 @@ class KoogAutoConfigurationTest {
     @Test
     fun `should supply Ollama executor bean with retry client and default config`() {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(OllamaLLMAutoConfiguration::class.java, MultiLLMAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(OllamaLLMAutoConfiguration::class.java))
             .withPropertyValues(
                 "ai.koog.ollama.enabled=true",
                 "ai.koog.ollama.base-url=https://some-url.com",
                 "ai.koog.ollama.retry.enabled=true"
             )
             .run { context ->
-                val executor = context.getBean<MultiLLMPromptExecutor>()
-                val retryingClient = getLlmClient(executor, "ollama")
+                val executor = context.getBean<SingleLLMPromptExecutor>()
+                val retryingClient = getPrivateFieldValue(executor, "llmClient")
                 assertInstanceOf<RetryingLLMClient>(retryingClient)
 
                 val config = getPrivateFieldValue(retryingClient, "config")
@@ -665,7 +666,7 @@ class KoogAutoConfigurationTest {
                 assertTrue(llmClients.keys.any { it.id == "openai" })
                 assertTrue(llmClients.keys.any { it.id == "anthropic" })
                 assertTrue(llmClients.keys.any { it.id == "google" })
-                assertTrue(llmClients.keys.any { it.id == "mistral" })
+                assertTrue(llmClients.keys.any { it.id == "mistralai" })
                 assertTrue(llmClients.keys.any { it.id == "deepseek" })
                 assertTrue(llmClients.keys.any { it.id == "ollama" })
             }
