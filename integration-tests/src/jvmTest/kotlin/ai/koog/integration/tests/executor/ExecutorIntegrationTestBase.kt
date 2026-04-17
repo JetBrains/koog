@@ -91,9 +91,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.Base64
 import kotlin.io.path.pathString
-import kotlin.io.path.readBytes
 import kotlin.io.path.readText
-import kotlin.io.path.writeBytes
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
@@ -629,11 +627,6 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val imageFile = MediaTestUtils.getImageFileForScenario(ImageTestScenario.BASIC_PNG, testResourcesDir)
-        val imageBytes = imageFile.readBytes()
-
-        val tempImageFile = testResourcesDir.resolve("small.png")
-
-        tempImageFile.writeBytes(imageBytes)
         val prompt = prompt("base64-encoded-attachments-test") {
             system("You are a helpful assistant that can analyze different types of media files.")
 
@@ -642,7 +635,7 @@ abstract class ExecutorIntegrationTestBase {
                     +"I'm sending you an image. Please analyze them and tell me about their content."
                 }
 
-                image(KtPath(tempImageFile.pathString))
+                image(KtPath(imageFile.pathString))
             }
         }
 

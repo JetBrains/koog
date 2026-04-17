@@ -45,7 +45,14 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
         @JvmStatic
         fun imageScenarioModelCombinations(): Stream<Arguments> {
-            return MediaTestScenarios.imageScenarioModelCombinations()
+            return listOf(
+                ImageTestScenario.BASIC_PNG,
+                ImageTestScenario.BASIC_JPG,
+            ).flatMap { scenario ->
+                MediaTestScenarios.models.map { model ->
+                    Arguments.of(scenario, model)
+                }
+            }.stream()
         }
 
         @JvmStatic
