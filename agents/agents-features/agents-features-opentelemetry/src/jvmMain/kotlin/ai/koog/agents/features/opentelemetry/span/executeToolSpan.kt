@@ -18,6 +18,7 @@ import kotlinx.serialization.json.JsonObject
  *
  * Span attributes:
  * - gen_ai.operation.name (required)
+ * - gen_ai.provider.name (required) — [KoogAttributes.PROVIDER_NAME]
  * - gen_ai.tool.call.arguments (recommended)
  * - gen_ai.tool.call.id (recommended)
  * - gen_ai.tool.description (recommended)
@@ -44,6 +45,8 @@ internal fun startExecuteToolSpan(
     )
         // gen_ai.operation.name
         .addAttribute(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
+        // gen_ai.provider.name
+        .addAttribute(GenAIAttributes.Provider.Name(KoogAttributes.PROVIDER_NAME))
 
     // gen_ai.tool.call.id
     toolCallId?.let { callId ->

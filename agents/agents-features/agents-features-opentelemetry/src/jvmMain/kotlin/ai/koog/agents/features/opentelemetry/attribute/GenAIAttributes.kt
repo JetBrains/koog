@@ -113,9 +113,10 @@ internal object GenAIAttributes {
         override val key: String
             get() = super.key.concatKey("provider")
 
-        data class Name(private val provider: LLMProvider) : Provider {
+        data class Name(override val value: String) : Provider {
             override val key: String = super.key.concatKey("name")
-            override val value: String = provider.id
+
+            constructor(provider: LLMProvider) : this(provider.id)
         }
     }
 

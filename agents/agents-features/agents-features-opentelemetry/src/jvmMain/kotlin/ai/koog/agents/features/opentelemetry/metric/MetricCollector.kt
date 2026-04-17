@@ -2,11 +2,13 @@ package ai.koog.agents.features.opentelemetry.metric
 
 import ai.koog.agents.features.opentelemetry.attribute.toSdkAttributes
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
+import ai.koog.agents.features.opentelemetry.metric.events.toFailedDurationHistogramMetricEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.metrics.DoubleHistogram
 import io.opentelemetry.api.metrics.LongCounter
 import io.opentelemetry.api.metrics.Meter
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Clock
 
 internal class MetricCollector(private val meter: Meter, private val config: OpenTelemetryConfig) {
 
@@ -60,6 +62,28 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
 
     internal fun getMetricEvent(id: String): MetricEvent<*>? {
         return metricEvents.remove(id)
+    }
+
+    /**
+     * Drains still-pending start events and records them as failed duration measurements.
+     * Called from agent-failure and agent-closing hooks to cover operations whose completion
+     * handler never ran — typically LLM calls cancelled or failed beneath the pipeline.
+     *
+     * Events without pre-populated attributes are dropped, since a single timestamp is not
+     * enough to build a semconv-compliant data point.
+     */
+    internal fun flushPendingAsErrors(error: Throwable?) {
+        val snapshot = metricEvents.keys.toList()
+        snapshot.forEach { id ->
+            val event = metricEvents.remove(id) ?: return@forEach
+            if (event !is BaseMetricEvent || event.attributes.isEmpty()) {
+                // No pre-populated attributes — cannot produce a semconv-compliant data point.
+                return@forEach
+            }
+            val duration = Clock.System.now() - event.timestamp
+            val failureEvent = event.toFailedDurationHistogramMetricEvent(error, duration)
+            recordHistogramMetricEvent(failureEvent)
+        }
     }
 
     internal fun addCounterMetricEvent(metricEvent: CounterMetricEvent) {

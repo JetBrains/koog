@@ -10,6 +10,12 @@ import ai.koog.agents.utils.HiddenString
  */
 internal object KoogAttributes {
 
+    /**
+     * Value set on `gen_ai.provider.name` for `execute_tool` metrics and spans. LLM operations
+     * use the actual LLM provider id instead.
+     */
+    const val PROVIDER_NAME: String = "koog"
+
     sealed interface Koog : Attribute {
         override val key: String
             get() = "koog"

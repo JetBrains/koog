@@ -60,6 +60,7 @@ internal fun createToolCallCounterMetricEvent(
 ): CounterMetricEvent {
     val attributes = listOf(
         GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL),
+        GenAIAttributes.Provider.Name(KoogAttributes.PROVIDER_NAME),
         GenAIAttributes.Tool.Name(toolName),
         KoogAttributes.Koog.Tool.Call.Status(toolCallStatus)
     )

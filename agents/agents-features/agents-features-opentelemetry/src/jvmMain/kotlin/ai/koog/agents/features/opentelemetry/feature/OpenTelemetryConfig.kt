@@ -165,9 +165,20 @@ public class OpenTelemetryConfig : FeatureConfig() {
      * This exporter will be used to export metrics collected during the application's execution.
      *
      * @param exporter The MetricExporter instance to be added to the list of custom metric exporters.
+     * @param meterInterval The interval between metric reads. Defaults to [DEFAULT_METER_INTERVAL].
      */
+    @JavaAPI
+    @JvmOverloads
     public fun addMetricExporter(exporter: MetricExporter, meterInterval: Duration = DEFAULT_METER_INTERVAL) {
         customMetricExporters.add(exporter to meterInterval)
+    }
+
+    /**
+     * Java-friendly overload of [addMetricExporter] that accepts a [JavaDuration] interval.
+     */
+    @JavaAPI
+    public fun addMetricExporter(exporter: MetricExporter, meterInterval: JavaDuration) {
+        customMetricExporters.add(exporter to meterInterval.toKotlinDuration())
     }
 
     /**
@@ -177,6 +188,7 @@ public class OpenTelemetryConfig : FeatureConfig() {
      * @param metricName The name of the metric to which the filter will be applied.
      * @param keysToRetain A set of attribute keys that should be retained for the specified metric.
      */
+    @JavaAPI
     public fun addMetricFilter(metricName: String, keysToRetain: Set<String>) {
         _metricFilters.add(MetricFilter(metricName, keysToRetain))
     }

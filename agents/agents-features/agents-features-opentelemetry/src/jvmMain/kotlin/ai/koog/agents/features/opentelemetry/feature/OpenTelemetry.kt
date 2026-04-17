@@ -30,6 +30,7 @@ import ai.koog.agents.features.opentelemetry.metric.events.createLLMCallDuration
 import ai.koog.agents.features.opentelemetry.metric.events.createLLMInputTokensMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.events.createLLMOutputTokensMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.events.createToolCallCounterMetricEvent
+import ai.koog.agents.features.opentelemetry.metric.events.toLLMCallStartMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.events.toTimestampedMetricEvent
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.SpanCollector
@@ -64,6 +65,20 @@ import kotlin.time.Clock
  * Represents the OpenTelemetry integration feature for tracking and managing spans and contexts
  * within the AI Agent framework. This class manages the lifecycle of spans for various operations,
  * including agent executions, node processing, LLM calls, and tool calls.
+ *
+ * Follows the [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics).
+ *
+ * ### `gen_ai.provider.name`
+ * - LLM calls: the LLM provider id (e.g. `openai`, `anthropic`).
+ * - `execute_tool` operations: [ai.koog.agents.features.opentelemetry.attribute.KoogAttributes.PROVIDER_NAME]
+ *   (`"koog"`), since tools run in-process.
+ *
+ * ### `error.type` values emitted by this instrumentation
+ * Set only on failed `gen_ai.client.operation.duration` data points. The value is the canonical Java class name of:
+ * - [ai.koog.agents.core.feature.model.AIAgentError] subclasses — for `execute_tool` failures and tool validation failures.
+ * - Any [Throwable] raised by the LLM client or agent runtime — for `text_completion` failures surfaced via the
+ *   agent-level failure hook.
+ * - `_OTHER` — fallback when an operation is flushed at agent close without an associated error.
  */
 public class OpenTelemetry {
 
@@ -370,6 +385,10 @@ public class OpenTelemetry {
             pipeline.interceptAgentExecutionFailed(this) intercept@{ eventContext ->
                 logger.debug { "Execute OpenTelemetry agent run error handler" }
 
+                // Record any pending operation-duration metric events (e.g., an LLM call that
+                // started but never completed) as failed measurements per GenAI semconv.
+                metricCollector.flushPendingAsErrors(eventContext.throwable)
+
                 // Stop all unfinished spans, except InvokeAgentSpan and AgentCreateSpan
                 endUnfinishedSpans(spanCollector, config.isVerbose) { span ->
                     span.type != SpanType.CREATE_AGENT &&
@@ -407,6 +426,10 @@ public class OpenTelemetry {
 
             pipeline.interceptAgentClosing(this) intercept@{ eventContext ->
                 logger.debug { "Execute OpenTelemetry before agent closed handler" }
+
+                // Flush any still-pending operation-duration start events as failures so we
+                // don't leak them and so their durations are still reported per semconv.
+                metricCollector.flushPendingAsErrors(error = null)
 
                 // Stop all unfinished spans, except the AgentCreateSpan
                 endUnfinishedSpans(spanCollector, config.isVerbose) { span ->
@@ -555,7 +578,7 @@ public class OpenTelemetry {
                 )
 
                 // Metrics
-                metricCollector.storeMetricEvent(eventContext.toTimestampedMetricEvent())
+                metricCollector.storeMetricEvent(eventContext.toLLMCallStartMetricEvent())
             }
 
             pipeline.interceptLLMCallCompleted(this) intercept@{ eventContext ->
@@ -772,7 +795,8 @@ public class OpenTelemetry {
                             id = eventContext.eventId,
                             duration = Clock.System.now() - storedMetricEvent.timestamp,
                             toolName = eventContext.toolName,
-                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.ERROR
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.ERROR,
+                            error = eventContext.error,
                         )
                     )
                 }
@@ -804,7 +828,8 @@ public class OpenTelemetry {
                             id = eventContext.eventId,
                             duration = Clock.System.now() - storedMetricEvent.timestamp,
                             toolName = eventContext.toolName,
-                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED
+                            toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED,
+                            error = eventContext.error,
                         )
                     )
                 }
