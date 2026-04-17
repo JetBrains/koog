@@ -28,7 +28,6 @@ import ai.koog.prompt.message.AttachmentContent;
 import ai.koog.prompt.message.ContentPart;
 import ai.koog.prompt.message.Message;
 import ai.koog.serialization.kotlinx.KotlinxSerializer;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -427,7 +426,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
                 new ContentPart.Text("Please identify the image format."),
                 new ContentPart.Image(
                     new AttachmentContent.URL(
-                        "https://raw.githubusercontent.com/JetBrains/koog/develop/integration-tests/src/jvmTest/resources/media/test.png"
+                        "https://cdn.jsdelivr.net/gh/JetBrains/koog@develop/integration-tests/src/jvmTest/resources/media/test.png"
                     ),
                     "png",
                     "image/png",

@@ -308,7 +308,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                     br()
                     +"Please analyze this image and identify the image format if possible."
                 }
-                image("https://raw.githubusercontent.com/JetBrains/koog/develop/integration-tests/src/jvmTest/resources/media/test.png")
+                image("https://cdn.jsdelivr.net/gh/JetBrains/koog@develop/integration-tests/src/jvmTest/resources/media/test.png")
             }
         }
 
