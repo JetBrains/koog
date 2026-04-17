@@ -15,6 +15,7 @@ kotlin {
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotest.assertions.json)
                 api(libs.kotest.assertions.core)
+                api(project(":http-client:http-client-core"))
             }
         }
 

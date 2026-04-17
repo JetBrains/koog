@@ -1,13 +1,10 @@
 package ai.koog.prompt.executor.clients.openai
 
-import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
+import ai.koog.test.utils.CapturingKoogHttpClient
 import kotlinx.coroutines.test.runTest
-import kotlin.reflect.KClass
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -35,7 +32,7 @@ class OpenAIPrimaryConstructorTest {
 
     @Test
     fun `primary constructor should execute through provided koog http client`() = runTest {
-        val transport = CapturingKoogHttpClient { responseType ->
+        val transport = CapturingKoogHttpClient(clientName = "CapturingOpenAIClient") { responseType ->
             when (responseType) {
                 String::class -> responseJson
                 else -> error("Unexpected response type: $responseType")
@@ -53,46 +50,12 @@ class OpenAIPrimaryConstructorTest {
 
         assertEquals("v1/chat/completions", transport.lastPath)
         assertEquals(LLMProvider.OpenAI, client.llmProvider())
-        assertEquals("""{"role":"user","content":"Hello?"}""", transport.lastRequest!!.substringAfter("\"messages\":[").substringBefore("]"))
+        assertEquals(
+            """{"role":"user","content":"Hello?"}""",
+            transport.lastRequest.toString().substringAfter("\"messages\":[").substringBefore("]")
+        )
         assertEquals(1, responses.size)
         val message = assertIs<Message.Assistant>(responses.single())
         assertEquals("Hello from KoogHttpClient", message.content)
-    }
-
-    private class CapturingKoogHttpClient(
-        private val responder: (KClass<*>) -> Any
-    ) : KoogHttpClient {
-        override val clientName: String = "CapturingOpenAIClient"
-        var lastPath: String? = null
-        var lastRequest: String? = null
-
-        override suspend fun <R : Any> get(path: String, responseType: KClass<R>, parameters: Map<String, String>): R {
-            error("GET is not expected in this test")
-        }
-
-        override suspend fun <T : Any, R : Any> post(
-            path: String,
-            request: T,
-            requestBodyType: KClass<T>,
-            responseType: KClass<R>,
-            parameters: Map<String, String>
-        ): R {
-            lastPath = path
-            lastRequest = request.toString()
-            @Suppress("UNCHECKED_CAST")
-            return responder(responseType) as R
-        }
-
-        override fun <T : Any, R : Any, O : Any> sse(
-            path: String,
-            request: T,
-            requestBodyType: KClass<T>,
-            dataFilter: (String?) -> Boolean,
-            decodeStreamingResponse: (String) -> R,
-            processStreamingChunk: (R) -> O?,
-            parameters: Map<String, String>
-        ): Flow<O> = emptyFlow()
-
-        override fun close() = Unit
     }
 }

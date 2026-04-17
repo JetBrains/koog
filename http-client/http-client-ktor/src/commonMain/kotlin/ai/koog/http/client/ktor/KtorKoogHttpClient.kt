@@ -25,9 +25,12 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.URLBuilder
 import io.ktor.http.contentType
+import io.ktor.http.encodedPath
 import io.ktor.http.headers
 import io.ktor.http.isSuccess
+import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.reflect.TypeInfo
 import io.ktor.utils.io.CancellationException
@@ -259,10 +262,14 @@ public fun KoogHttpClient.Companion.fromKtorClient(
     logger = logger,
     baseClient = baseClient
 ) {
-    val normalizedBaseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
+    val normalizedBaseUrl = URLBuilder(baseUrl).apply {
+        if (!encodedPath.endsWith("/")) {
+            encodedPath += "/"
+        }
+    }.buildString()
 
     defaultRequest {
-        url(normalizedBaseUrl)
+        url.takeFrom(normalizedBaseUrl)
         contentType(ContentType.Application.Json)
         headers.forEach { (name, value) -> header(name, value) }
         queryParameters.forEach { (name, value) -> url.parameters.append(name, value) }
