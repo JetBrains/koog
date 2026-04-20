@@ -81,7 +81,6 @@ fun registerRunExampleTask(
 }
 
 registerRunExampleTask("runExampleCalculator", "ai.koog.agents.example.calculator.CalculatorKt")
-registerRunExampleTask("runExampleCalculatorV2", "ai.koog.agents.example.calculator.v2.CalculatorKt")
 registerRunExampleTask(
     "runExampleCalculatorLocal",
     "ai.koog.agents.example.calculator.CalculatorKt",

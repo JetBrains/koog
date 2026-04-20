@@ -48,7 +48,6 @@ Welcome to the **Koog Framework Simple Examples** collection! This project showc
 | Example                     | Description                                                       | Gradle Task                         | Notebook                                             |
 |-----------------------------|-------------------------------------------------------------------|-------------------------------------|------------------------------------------------------|
 | **Calculator**              | Basic calculator agent with parallel tool calls and event logging | `runExampleCalculator`              | [📓 Calculator.ipynb](../notebooks/Calculator.ipynb) |
-| **Calculator V2**           | Enhanced calculator with improved functionality                   | `runExampleCalculatorV2`            | -                                                    |
 | **Calculator Local**        | Calculator using local LLM models                                 | `runExampleCalculatorLocal`         | -                                                    |
 | **Streaming with Tools**    | Agent demonstrating streaming responses while using tools         | `runExampleStreamingWithTools`      | -                                                    |
 | **Streaming Ktor Server**   | HTTP server streaming LLM responses in real-time via Ktor         | `runExampleStreamingKtorServer`     | -                                                    |
