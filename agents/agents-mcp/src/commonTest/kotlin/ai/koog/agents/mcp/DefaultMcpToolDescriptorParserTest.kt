@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import io.modelcontextprotocol.kotlin.sdk.types.Tool
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
@@ -13,7 +14,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -384,8 +384,6 @@ class DefaultMcpToolDescriptorParserTest {
         }
     }
 
-    // Ignore until https://github.com/JetBrains/koog/issues/307 is fixed
-    @Ignore
     @Test
     fun `test parsing enum parameter type with complex values`() {
         // Create an SDK Tool with an enum parameter that has complex values (JsonArray)
@@ -432,6 +430,127 @@ class DefaultMcpToolDescriptorParserTest {
         assertEquals("option1", enumType.entries[0])
         assertEquals("[\"nested1\",\"nested2\"]", enumType.entries[1])
         assertEquals("{\"key\":\"value\"}", enumType.entries[2])
+    }
+
+    @Test
+    fun `test parsing enum parameter with mixed primitive types`() {
+        // Covers the JSON Schema example from issue #307:
+        //   { "color": { "enum": ["red", "amber", "green", null, 42] } }
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with mixed enum values",
+            properties = buildJsonObject {
+                putJsonObject("color") {
+                    putJsonArray("enum") {
+                        add("red")
+                        add("amber")
+                        add("green")
+                        add(JsonNull)
+                        add(42)
+                    }
+                }
+            },
+            required = listOf("color")
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val param = toolDescriptor.requiredParameters.single()
+        val enumType = param.type as ToolParameterType.Enum
+
+        assertEquals(
+            listOf("red", "amber", "green", "null", "42"),
+            enumType.entries.toList()
+        )
+    }
+
+    @Test
+    fun `test parsing enum parameter with boolean values`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with boolean enum",
+            properties = buildJsonObject {
+                putJsonObject("flag") {
+                    putJsonArray("enum") {
+                        add(true)
+                        add(false)
+                    }
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val enumType = toolDescriptor.optionalParameters.single().type as ToolParameterType.Enum
+        assertEquals(listOf("true", "false"), enumType.entries.toList())
+    }
+
+    @Test
+    fun `test parsing object parameter with empty additionalProperties schema`() {
+        // Covers issue #1676: `"additionalProperties": {}` must not throw.
+        // An empty schema is equivalent to `true` — any additional property is allowed
+        // without a type constraint.
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool",
+            properties = buildJsonObject {
+                putJsonObject("payload") {
+                    put("type", "object")
+                    putJsonObject("properties") {
+                        putJsonObject("id") {
+                            put("type", "string")
+                        }
+                    }
+                    putJsonObject("additionalProperties") { }
+                }
+            },
+            required = listOf("payload")
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val param = toolDescriptor.requiredParameters.single()
+        val objType = param.type as ToolParameterType.Object
+        assertEquals(true, objType.additionalProperties)
+        assertEquals(null, objType.additionalPropertiesType)
+    }
+
+    @Test
+    fun `test parsing object parameter with additionalProperties true`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool",
+            properties = buildJsonObject {
+                putJsonObject("payload") {
+                    put("type", "object")
+                    put("additionalProperties", true)
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val objType = toolDescriptor.optionalParameters.single().type as ToolParameterType.Object
+        assertEquals(true, objType.additionalProperties)
+        assertEquals(null, objType.additionalPropertiesType)
+    }
+
+    @Test
+    fun `test parsing object parameter with additionalProperties false`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool",
+            properties = buildJsonObject {
+                putJsonObject("payload") {
+                    put("type", "object")
+                    put("additionalProperties", false)
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val objType = toolDescriptor.optionalParameters.single().type as ToolParameterType.Object
+        assertEquals(false, objType.additionalProperties)
+        assertEquals(null, objType.additionalPropertiesType)
     }
 
     @Test

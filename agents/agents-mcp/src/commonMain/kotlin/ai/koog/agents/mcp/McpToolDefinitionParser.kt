@@ -121,7 +121,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
              */
             val enum = element["enum"]?.jsonArray
             if (enum != null && enum.isNotEmpty()) {
-                return ToolParameterType.Enum(enum.map { it.jsonPrimitive.content }.toTypedArray())
+                return ToolParameterType.Enum(enum.map(::enumEntryToString).toTypedArray())
             }
 
             val title =
@@ -141,7 +141,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
             "boolean" -> ToolParameterType.Boolean
 
             "enum" -> ToolParameterType.Enum(
-                element.getValue("enum").jsonArray.map { it.jsonPrimitive.content }.toTypedArray()
+                element.getValue("enum").jsonArray.map(::enumEntryToString).toTypedArray()
             )
 
             // Array type
@@ -182,12 +182,10 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                 }
 
                 val additionalPropertiesType = if ("additionalProperties" in element) {
-                    when (element.getValue("additionalProperties")) {
-                        is JsonObject -> parseParameterType(
-                            element.getValue("additionalProperties").jsonObject,
-                            defs,
-                            depth + 1
-                        )
+                    when (val ap = element.getValue("additionalProperties")) {
+                        // Empty schema `{}` is equivalent to `true`: allow any additional property
+                        // without a type constraint. Recursing would fail on missing `type`.
+                        is JsonObject -> if (ap.isEmpty()) null else parseParameterType(ap, defs, depth + 1)
 
                         else -> null
                     }
@@ -244,6 +242,19 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
     }
 
     private data class TypeInfo(val typeStr: String?, val isNullableTypeArray: Boolean)
+
+    /**
+     * Converts an individual JSON Schema `enum` entry to its [String] representation.
+     *
+     * JSON Schema allows mixed value types in `enum` (strings, numbers, booleans, `null`, arrays, objects).
+     * Since [ToolParameterType.Enum] stores entries as strings, non-string primitives and composite
+     * values are serialized to their canonical JSON form (e.g. `42`, `null`, `["a","b"]`, `{"k":"v"}`),
+     * and string primitives are returned unquoted so they remain directly usable.
+     */
+    private fun enumEntryToString(element: JsonElement): String = when (element) {
+        is JsonPrimitive -> if (element.isString) element.content else element.toString()
+        else -> element.toString()
+    }
 
     /**
      * Resolves a JSON Schema `$ref` reference against the `$defs` (or `definitions`) block.
