@@ -83,8 +83,8 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Completion,
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
+            LLMCapability.Thinking,
             LLMCapability.PromptCaching,
-            LLMCapability.Thinking
         ),
         contextLength = 200_000,
         maxOutputTokens = 64_000,
@@ -314,7 +314,9 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Completion,
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
-        ) + thinkingCapabilities,
+            LLMCapability.Thinking,
+            LLMCapability.PromptCaching,
+        ),
         contextLength = 1_000_000,
         maxOutputTokens = 128_000,
     )

@@ -143,6 +143,28 @@ public class PromptBuilder internal constructor(
      * @param block Lambda to configure attachments using [ContentPartsBuilder]
      */
     @JavaAPI
+    public fun user(cacheControl: CacheControl? = null, block: ContentPartsBuilder.() -> Unit): PromptBuilder = apply {
+        user(ContentPartsBuilder().apply(block).build(), cacheControl)
+    }
+
+    /**
+     * Adds a user message to the prompt with attachments.
+     *
+     * User messages represent input from the user to the language model.
+     * This method allows adding parts of the message such as text content or attachments using a [ContentPartsBuilder].
+     *
+     * Example:```
+     * user {
+     *     test("Image 1:")
+     *     image("photo1.jpg")
+     *     test("Image 2:")
+     *     image("photo3.jpg")
+     * }
+     * ```
+     *
+     * @param block Lambda to configure attachments using [ContentPartsBuilder]
+     */
+    @JavaAPI
     public fun user(block: ContentPartsBuilder.() -> Unit): PromptBuilder = apply {
         user(ContentPartsBuilder().apply(block).build())
     }
