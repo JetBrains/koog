@@ -7,6 +7,7 @@ import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.TextTestScenario
 import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
+import ai.koog.integration.tests.utils.MediaTestUtils.checkImageAnalysisResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
@@ -644,7 +645,7 @@ abstract class ExecutorIntegrationTestBase {
                 getExecutor(model).execute(prompt, model)
                     .first { it is Message.Assistant && it.content.isNotBlank() }
             ) {
-                checkExecutorMediaResponse(this)
+                checkImageAnalysisResponse(this)
             }
         }
     }
@@ -659,7 +660,7 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val imageUrl =
-            "https://images.rawpixel.com/image_png_800/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvam9iNjgwLTE2Ni1wLWwxZGJ1cTN2LnBuZw.png"
+            "https://raw.githubusercontent.com/JetBrains/koog/1e7014eae7dca603cfceaece27c135ecdc45e2a2/integration-tests/src/jvmTest/resources/media/test.png"
 
         val prompt = prompt("url-based-attachments-test") {
             system("You are a helpful assistant that can analyze images.")
@@ -675,11 +676,7 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry {
             with(getExecutor(model).execute(prompt, model).single()) {
-                checkExecutorMediaResponse(this)
-                content.lowercase()
-                    .shouldContain("image")
-                    .shouldContain("test")
-                    .shouldContain("hat")
+                checkImageAnalysisResponse(this)
             }
         }
     }
