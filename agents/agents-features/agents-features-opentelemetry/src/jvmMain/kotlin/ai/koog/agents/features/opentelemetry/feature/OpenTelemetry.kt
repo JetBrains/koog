@@ -25,6 +25,7 @@ import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.integration.mcp.McpMethod
 import ai.koog.agents.features.opentelemetry.metric.MetricCollector
+import ai.koog.agents.features.opentelemetry.metric.duration
 import ai.koog.agents.features.opentelemetry.metric.events.createExecuteToolDurationHistogramMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.events.createLLMCallDurationHistogramMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.events.createLLMInputTokensMetricEvent
@@ -59,7 +60,6 @@ import ai.koog.serialization.TypeToken
 import ai.koog.serialization.kotlinx.toKotlinxJsonElement
 import ai.koog.serialization.kotlinx.toKotlinxJsonObject
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlin.time.Clock
 
 /**
  * Represents the OpenTelemetry integration feature for tracking and managing spans and contexts
@@ -665,7 +665,7 @@ public class OpenTelemetry {
                         metricEvent = createLLMCallDurationHistogramMetricEvent(
                             id = eventContext.eventId,
                             model = eventContext.model,
-                            duration = Clock.System.now() - storedMetricEvent.timestamp
+                            duration = storedMetricEvent.duration()
                         )
                     )
                 }
@@ -747,7 +747,7 @@ public class OpenTelemetry {
                     metricCollector.recordHistogramMetricEvent(
                         metricEvent = createExecuteToolDurationHistogramMetricEvent(
                             id = eventContext.eventId,
-                            duration = Clock.System.now() - storedMetricEvent.timestamp,
+                            duration = storedMetricEvent.duration(),
                             toolName = eventContext.toolName,
                             toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.SUCCESS
                         )
@@ -779,7 +779,7 @@ public class OpenTelemetry {
                     metricCollector.recordHistogramMetricEvent(
                         metricEvent = createExecuteToolDurationHistogramMetricEvent(
                             id = eventContext.eventId,
-                            duration = Clock.System.now() - storedMetricEvent.timestamp,
+                            duration = storedMetricEvent.duration(),
                             toolName = eventContext.toolName,
                             toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.ERROR,
                             error = eventContext.error,
@@ -812,7 +812,7 @@ public class OpenTelemetry {
                     metricCollector.recordHistogramMetricEvent(
                         metricEvent = createExecuteToolDurationHistogramMetricEvent(
                             id = eventContext.eventId,
-                            duration = Clock.System.now() - storedMetricEvent.timestamp,
+                            duration = storedMetricEvent.duration(),
                             toolName = eventContext.toolName,
                             toolCallStatus = KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED,
                             error = eventContext.error,

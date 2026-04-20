@@ -8,7 +8,6 @@ import io.opentelemetry.api.metrics.DoubleHistogram
 import io.opentelemetry.api.metrics.LongCounter
 import io.opentelemetry.api.metrics.Meter
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.time.Clock
 
 internal class MetricCollector(private val meter: Meter, private val config: OpenTelemetryConfig) {
 
@@ -80,8 +79,7 @@ internal class MetricCollector(private val meter: Meter, private val config: Ope
                 // No pre-populated attributes — cannot produce a semconv-compliant data point.
                 return@forEach
             }
-            val duration = Clock.System.now() - event.timestamp
-            val failureEvent = event.toFailedDurationHistogramMetricEvent(error, duration)
+            val failureEvent = event.toFailedDurationHistogramMetricEvent(error, event.duration())
             recordHistogramMetricEvent(failureEvent)
         }
     }
