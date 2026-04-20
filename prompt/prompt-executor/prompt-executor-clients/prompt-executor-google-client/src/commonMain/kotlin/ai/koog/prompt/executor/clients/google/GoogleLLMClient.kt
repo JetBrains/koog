@@ -210,17 +210,25 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                 response.candidates.firstOrNull()?.let { candidate ->
                     candidate.content?.parts?.forEachIndexed { index, part ->
                         when (part) {
+                            is GooglePart.Text -> {
+                                if (part.thought == true) {
+                                    emitReasoningDelta(
+                                        id = part.thoughtSignature,
+                                        text = part.text,
+                                        index = index,
+                                    )
+                                } else {
+                                    emitTextDelta(part.text, index)
+                                }
+                            }
+
                             is GooglePart.FunctionCall -> {
                                 emitToolCallDelta(
                                     id = part.functionCall.id,
                                     name = part.functionCall.name,
                                     args = part.functionCall.args?.toString() ?: "{}",
-                                    index = index
+                                    index = index,
                                 )
-                            }
-
-                            is GooglePart.Text -> {
-                                emitTextDelta(part.text, index)
                             }
 
                             else -> Unit
