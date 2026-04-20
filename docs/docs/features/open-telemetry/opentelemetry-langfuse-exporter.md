@@ -204,7 +204,7 @@ When enabled, the Langfuse exporter captures the same spans as Koog’s general 
 Koog also captures span attributes required by Langfuse to show [Agent Graphs](https://langfuse.com/docs/observability/features/agent-graphs).
 
 For security reasons, some content of OpenTelemetry spans is masked by default.
-To make the content available in Langfuse, use the [setVerbose](opentelemetry-support.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
+To make the content available in Langfuse, use the [setVerbose](index.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
 
 === "Kotlin"
 
@@ -266,8 +266,8 @@ To make the content available in Langfuse, use the [setVerbose](opentelemetry-su
     <!--- KNIT exampleLangfuseExporterJava03.java -->
 
 When visualized in Langfuse, the trace appears as follows:
-![Langfuse traces](img/opentelemetry-langfuse-exporter-light.png#only-light)
-![Langfuse traces](img/opentelemetry-langfuse-exporter-dark.png#only-dark)
+![Langfuse traces](../../img/opentelemetry-langfuse-exporter-light.png#only-light)
+![Langfuse traces](../../img/opentelemetry-langfuse-exporter-dark.png#only-dark)
 
 For more details on Langfuse OpenTelemetry tracing, see:  
 [Langfuse OpenTelemetry Docs](https://langfuse.com/integrations/native/opentelemetry#opentelemetry-endpoint).

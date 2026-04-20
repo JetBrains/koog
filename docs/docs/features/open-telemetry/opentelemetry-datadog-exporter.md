@@ -74,7 +74,7 @@ The exporter uses `OtlpHttpSpanExporter` under the hood to send traces directly 
         println("Result: $result\nSee traces in Datadog LLM Observability")
     }
     ```
-    <!--- TODO: Enable KNIT after PR #1591 is merged: KNIT example-datadog-exporter-01.kt -->
+    <!--- KNIT example-datadog-exporter-01.kt -->
 
 === "Java"
 
@@ -108,7 +108,7 @@ The exporter uses `OtlpHttpSpanExporter` under the hood to send traces directly 
         System.out.println("Result: " + result + "\nSee traces in Datadog LLM Observability");
     }
     ```
-    <!--- TODO: Enable KNIT after PR #1591 is merged: KNIT exampleDatadogExporterJava01.java -->
+    <!--- KNIT exampleDatadogExporterJava01.java -->
 
 ## Trace attributes
 
@@ -156,7 +156,7 @@ Common attributes:
         agent.run("What is Kotlin?")
     }
     ```
-    <!--- TODO: Enable KNIT after PR #1591 is merged: KNIT example-datadog-exporter-02.kt -->
+    <!--- KNIT example-datadog-exporter-02.kt -->
 
 === "Java"
 
@@ -198,7 +198,7 @@ Common attributes:
         agent.run("What is Kotlin?");
     }
     ```
-    <!--- TODO: Enable KNIT after PR #1591 is merged: KNIT exampleDatadogExporterJava02.java -->
+    <!--- KNIT exampleDatadogExporterJava02.java -->
 
 ## Custom exporter wrapping
 
@@ -209,6 +209,7 @@ The `buildDatadogExporter()` function is available if you need to wrap the expor
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+    import ai.koog.agents.features.opentelemetry.integration.datadog.buildDatadogExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import io.opentelemetry.sdk.trace.export.SpanExporter
@@ -233,7 +234,7 @@ The `buildDatadogExporter()` function is available if you need to wrap the expor
         addSpanExporter(wrapped)
     }
     ```
-    <!--- TODO: Enable KNIT after PR #1591 is merged: KNIT example-datadog-exporter-04.kt -->
+    <!--- KNIT example-datadog-exporter-03.kt -->
 
 ## What gets traced
 
@@ -247,7 +248,7 @@ When enabled, the Datadog exporter captures the same spans as Koog's general Ope
 The exporter includes the `dd-otlp-source: llmobs` header to route spans to Datadog's LLM Observability product.
 
 For security reasons, some content of OpenTelemetry spans is masked by default.
-To make the content available in Datadog, use the [setVerbose](opentelemetry-support.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
+To make the content available in Datadog, use the [setVerbose](index.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
 
 === "Kotlin"
 
@@ -272,7 +273,7 @@ To make the content available in Datadog, use the [setVerbose](opentelemetry-sup
         setVerbose(true)
     }
     ```
-    <!--- TODO: Enable KNIT after PR #1591 is merged: KNIT example-datadog-exporter-03.kt -->
+    <!--- KNIT example-datadog-exporter-04.kt -->
 
 === "Java"
 
@@ -303,7 +304,7 @@ To make the content available in Datadog, use the [setVerbose](opentelemetry-sup
         config.setVerbose(true);
     })
     ```
-    <!--- TODO: Enable KNIT after PR #1591 is merged: KNIT exampleDatadogExporterJava03.java -->
+    <!--- KNIT exampleDatadogExporterJava03.java -->
 
 For more details on Datadog's LLM Observability and OpenTelemetry support, see:
 

@@ -421,7 +421,7 @@ You can use it as follows:
         return null;
     });
     ```
-    <!--- KNIT exampleHistoryCompressionJava05.java -->
+    <!--- KNIT exampleHistoryCompressionJava04.java -->
 
 ### FromLastNMessages
 
@@ -484,7 +484,7 @@ You can use it as follows:
     // Note: This example only shows the node creation.
     // You would need to add edges and other nodes to complete the graph.
     ```
-    <!--- KNIT exampleHistoryCompressionJava04.java -->
+    <!--- KNIT exampleHistoryCompressionJava05.java -->
 
 * In a custom node:
 
@@ -540,7 +540,7 @@ You can use it as follows:
         return null;
     });
     ```
-    <!--- KNIT exampleHistoryCompressionJava07.java -->
+    <!--- KNIT exampleHistoryCompressionJava06.java -->
 
 ### Chunked
 
@@ -604,7 +604,7 @@ You can use it as follows:
     // Note: This example only shows the node creation.
     // You would need to add edges and other nodes to complete the graph.
     ```
-    <!--- KNIT exampleHistoryCompressionJava08.java -->
+    <!--- KNIT exampleHistoryCompressionJava07.java -->
 
 * In a custom node:
 
@@ -660,7 +660,7 @@ You can use it as follows:
         return null;
     });
     ```
-    <!--- KNIT exampleHistoryCompressionJava09.java -->
+    <!--- KNIT exampleHistoryCompressionJava08.java -->
 
 ### RetrieveFactsFromHistory
 
@@ -765,7 +765,7 @@ You can use it as follows:
         // Note: This example only shows the node creation.
         // You would need to add edges and other nodes to complete the graph.
     ```
-    <!--- KNIT exampleHistoryCompressionJava06.java -->
+    <!--- KNIT exampleHistoryCompressionJava09.java -->
 
 * In a custom node:
 
@@ -872,7 +872,7 @@ You can use it as follows:
         return null;
     });
     ```
-    <!--- KNIT exampleHistoryCompressionJava11.java -->
+    <!--- KNIT exampleHistoryCompressionJava10.java -->
 
 ## Custom history compression strategy implementation
 
@@ -1041,7 +1041,7 @@ To enable memory preservation:
     // Note: This example only shows the node creation.
     // You would need to add edges and other nodes to complete the graph.
     ```
-    <!--- KNIT exampleHistoryCompressionJava15.java -->
+    <!--- KNIT exampleHistoryCompressionJava11.java -->
 
 * In a custom node:
 
@@ -1103,4 +1103,4 @@ To enable memory preservation:
         return null;
     });
     ```
-    <!--- KNIT exampleHistoryCompressionJava16.java -->
+    <!--- KNIT exampleHistoryCompressionJava12.java -->
