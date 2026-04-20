@@ -12,6 +12,8 @@ import io.ktor.http.Url
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.client.SseClientTransport
 import io.modelcontextprotocol.kotlin.sdk.client.StdioClientTransport
+import io.modelcontextprotocol.kotlin.sdk.client.StreamableHttpClientTransport
+import io.modelcontextprotocol.kotlin.sdk.client.mcpStreamableHttpTransport
 import io.modelcontextprotocol.kotlin.sdk.shared.Transport
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.LATEST_PROTOCOL_VERSION
@@ -21,7 +23,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.Tool
  * A provider for creating tool registries that connect to Model Context Protocol (MCP) servers.
  *
  * This class facilitates the integration of MCP tools into the agent framework by:
- * 1. Connecting to MCP servers through various transport mechanisms (stdio, SSE)
+ * 1. Connecting to MCP servers through various transport mechanisms (Streamable HTTP, stdio, SSE)
  * 2. Retrieving available tools from the MCP server
  * 3. Transforming MCP tools into the agent framework's Tool interface
  * 4. Registering the transformed tools in a ToolRegistry
@@ -38,6 +40,62 @@ public object McpToolRegistryProvider {
      * Default version for the MCP client when connecting to an MCP server.
      */
     public const val DEFAULT_MCP_CLIENT_VERSION: String = "1.0.0"
+
+    /**
+     * Configuration for connecting to an MCP server via Streamable HTTP transport.
+     */
+    public class StreamableHttpConfig {
+        /** MCP server URL (required). */
+        public lateinit var url: String
+
+        /**
+         * HttpClient used for the MCP connection (required). Must have the Ktor `SSE` plugin installed
+         * (the Streamable HTTP transport relies on it). Lifecycle is managed by the caller — we do not
+         * close this client.
+         *
+         * Example:
+         * ```kotlin
+         * val httpClient = HttpClient { install(SSE) }
+         * ```
+         */
+        public lateinit var httpClient: HttpClient
+
+        /** Custom MCP tool descriptor parser. */
+        public var mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser
+
+        /** Client name reported to the server. */
+        public var name: String = DEFAULT_MCP_CLIENT_NAME
+
+        /** Client version reported to the server. */
+        public var version: String = DEFAULT_MCP_CLIENT_VERSION
+    }
+
+    /**
+     * Creates a ToolRegistry from a Streamable HTTP MCP server.
+     *
+     * This is the recommended way to connect to remote MCP servers. Streamable HTTP supports
+     * bidirectional communication, session management, and reconnection.
+     *
+     * The caller is responsible for providing an [HttpClient][io.ktor.client.HttpClient] with the
+     * Ktor `SSE` plugin installed and for closing it when no longer needed. The same client can be
+     * reused across multiple MCP connections.
+     *
+     * @param block Configuration block for the Streamable HTTP connection.
+     * @return A ToolRegistry containing all tools from the MCP server.
+     */
+    public suspend fun streamableHttp(
+        block: StreamableHttpConfig.() -> Unit
+    ): ToolRegistry {
+        val config = StreamableHttpConfig().apply(block)
+        val transport = config.httpClient.mcpStreamableHttpTransport(config.url)
+        val mcpClient = Client(clientInfo = Implementation(config.name, config.version))
+        mcpClient.connect(transport)
+        return fromClient(
+            mcpClient = mcpClient,
+            serverInfo = McpServerInfo(url = config.url),
+            mcpToolParser = config.mcpToolParser,
+        )
+    }
 
     /**
      * Creates a default server-sent events (SSE) transport from a provided URL.
@@ -105,6 +163,7 @@ public object McpToolRegistryProvider {
                     McpMetadataKeys.ToolId to sdkTool.name,
                     McpMetadataKeys.McpProtocolVersion to LATEST_PROTOCOL_VERSION,
                     McpMetadataKeys.McpTransportType to when (mcpClient.transport) {
+                        is StreamableHttpClientTransport -> McpTransportType.StreamableHttp
                         is SseClientTransport -> McpTransportType.Tcp
                         is StdioClientTransport -> McpTransportType.Stdio
                         else -> {

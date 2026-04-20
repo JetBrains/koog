@@ -9,6 +9,7 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import io.ktor.server.application.Application
 import io.ktor.server.engine.ApplicationEngineFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.EngineConnectorConfig
@@ -16,6 +17,7 @@ import io.ktor.server.engine.embeddedServer
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcp
+import io.modelcontextprotocol.kotlin.sdk.server.mcpStreamableHttp
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
@@ -35,50 +37,89 @@ import kotlin.coroutines.cancellation.CancellationException
 import io.modelcontextprotocol.kotlin.sdk.types.Tool as SdkTool
 
 /**
+ * Supported MCP server transport types for the Ktor-based [startMcpServer].
+ *
+ * For stdio transport use the platform-specific `startStdioMcpServer(tools)` entry point.
+ */
+public enum class McpServerTransportType {
+    /** Streamable HTTP transport. */
+    StreamableHttp,
+
+    /** SSE transport. */
+    SSE,
+}
+
+/**
+ * Starts a new MCP server with the given [tools] on the specified [port] and [host].
+ * Defaults to Streamable HTTP transport.
+ *
+ * @param factory The Ktor application engine factory to use (e.g., CIO, Netty).
+ * @param tools The tools to expose via the MCP server.
+ * @param port The port to listen on.
+ * @param host The host to bind to.
+ * @param transport The transport type to use.
+ * @return The MCP [Server].
+ */
+public suspend fun startMcpServer(
+    factory: ApplicationEngineFactory<*, *>,
+    tools: ToolRegistry,
+    port: Int = 3000,
+    host: String = "localhost",
+    transport: McpServerTransportType = McpServerTransportType.StreamableHttp,
+): Server = doStartMcpServer(factory, port, host, tools) { server ->
+    when (transport) {
+        McpServerTransportType.StreamableHttp -> mcpStreamableHttp { server }
+        McpServerTransportType.SSE -> mcp { server }
+    }
+}.first
+
+/**
  * Starts a new MCP server with the passed [tools] that listens to and writes
- * to the specified [port] on the passed [host].
+ * to the specified [port] on the passed [host] using SSE transport.
  * A port can be obtained from the returned list of [EngineConnectorConfig].
  */
+@Deprecated(
+    "SSE transport is deprecated. Use startMcpServer() which defaults to Streamable HTTP.",
+    ReplaceWith("startMcpServer(factory, tools, port, host)"),
+    level = DeprecationLevel.WARNING,
+)
 public suspend fun startSseMcpServer(
     factory: ApplicationEngineFactory<*, *>,
     port: Int = 3000,
     host: String = "localhost",
     tools: ToolRegistry,
-): Server = doStartSseMcpServer(factory, port, host, tools, true).first
+): Server = doStartMcpServer(factory, port, host, tools) { server -> mcp { server } }.first
 
 /**
  * Starts a new MCP server with the passed [tools] that listens to and writes
- * to the allocated port on the passed [host].
+ * to the allocated port on the passed [host] using SSE transport.
  * A port can be obtained from the returned list of [EngineConnectorConfig].
  */
+@Deprecated(
+    "SSE transport is deprecated. Use startMcpServer() which defaults to Streamable HTTP.",
+    level = DeprecationLevel.WARNING,
+)
 public suspend fun startSseMcpServer(
     factory: ApplicationEngineFactory<*, *>,
     host: String = "localhost",
     tools: ToolRegistry,
-): Pair<Server, List<EngineConnectorConfig>> = doStartSseMcpServer(factory, 0, host, tools, false)
+): Pair<Server, List<EngineConnectorConfig>> =
+    doStartMcpServer(factory, 0, host, tools) { server -> mcp { server } }
 
-private suspend fun doStartSseMcpServer(
+private suspend fun doStartMcpServer(
     factory: ApplicationEngineFactory<*, *>,
     port: Int,
     host: String,
     tools: ToolRegistry,
-    skipConnectors: Boolean,
+    install: Application.(Server) -> Unit,
 ): Pair<Server, List<EngineConnectorConfig>> {
     val server = configureMcpServer(tools)
 
-    val emb = embeddedServer(factory = factory, host = host, port = port) {
-        mcp { server }
-    }
+    val emb = embeddedServer(factory = factory, host = host, port = port) { install(server) }
         .also { emb -> server.onClose { emb.stop(1000, 1000) } }
         .startSuspend(wait = false)
 
-    val connectors = if (skipConnectors) {
-        emptyList()
-    } else {
-        emb.connectors()
-    }
-
-    return server to connectors
+    return server to emb.connectors()
 }
 
 private suspend fun EmbeddedServer<*, *>.connectors(): List<EngineConnectorConfig> = coroutineScope {

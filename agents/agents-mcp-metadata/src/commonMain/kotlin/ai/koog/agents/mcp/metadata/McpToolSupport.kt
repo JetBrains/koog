@@ -77,6 +77,15 @@ public enum class McpTransportType(public val value: String) {
     Tcp("tcp"),
 
     /**
+     * HTTP-based Streamable HTTP transport.
+     *
+     * This transport uses HTTP POST for sending messages and SSE for receiving,
+     * supporting bidirectional communication, session management, and reconnection.
+     * It is the recommended transport for remote MCP servers, replacing the legacy SSE transport.
+     */
+    StreamableHttp("http"),
+
+    /**
      * Represents an unknown or undefined transport protocol type.
      *
      * This value is used as a fallback or default when the transport type

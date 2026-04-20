@@ -9,10 +9,9 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.kotest.assertions.json.shouldEqualJson
-import io.modelcontextprotocol.kotlin.sdk.client.Client
-import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.sse.SSE
 import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
-import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
@@ -28,19 +27,22 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(InternalAgentsApi::class)
-class McpToolTest {
+class StreamableHttpMcpToolTest {
     companion object {
-        private val testServer = TestMcpServer()
+        private val testServer = TestMcpServer(transportMode = TestTransportMode.StreamableHttp)
+        private lateinit var httpClient: HttpClient
 
         @BeforeAll
         @JvmStatic
         fun setup() {
             testServer.start()
+            httpClient = HttpClient { install(SSE) }
         }
 
         @JvmStatic
         @AfterAll
         fun tearDown() {
+            httpClient.close()
             testServer.stop()
         }
     }
@@ -50,7 +52,10 @@ class McpToolTest {
     private suspend fun testMcpTools(action: suspend (toolRegistry: ToolRegistry) -> Unit) {
         val toolRegistry = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(1.minutes) {
-                McpToolRegistryProvider.fromSseUrl("http://localhost:${testServer.resolvedPort}")
+                McpToolRegistryProvider.streamableHttp {
+                    url = "http://localhost:${testServer.resolvedPort}/mcp"
+                    httpClient = StreamableHttpMcpToolTest.httpClient
+                }
             }
         }
 
@@ -58,7 +63,7 @@ class McpToolTest {
     }
 
     @Test
-    fun `test McpToolRegistry provides all tools`() = runTest(timeout = 30.seconds) {
+    fun `test McpToolRegistry provides all tools via Streamable HTTP`() = runTest(timeout = 30.seconds) {
         testMcpTools { toolRegistry ->
             val expectedToolDescriptors = listOf(
                 ToolDescriptor(
@@ -90,7 +95,6 @@ class McpToolTest {
                 )
             )
 
-            // Actual list of tools provided
             val actualToolDescriptor = toolRegistry.tools.map { it.descriptor }
             assertEquals(expectedToolDescriptors, actualToolDescriptor)
         }
@@ -98,7 +102,7 @@ class McpToolTest {
 
     @OptIn(InternalAgentToolsApi::class)
     @Test
-    fun `test greeting tool`() = runTest(timeout = 30.seconds) {
+    fun `test greeting tool via Streamable HTTP`() = runTest(timeout = 30.seconds) {
         testMcpTools { toolRegistry ->
             val greetingTool = toolRegistry.getTool("greeting") as McpTool
             val args = buildJsonObject { put("name", "Test") }
@@ -112,26 +116,13 @@ class McpToolTest {
             val content = result.content.single() as TextContent
             assertEquals("Hello, Test!", content.text)
 
-            val argsWithTitle = buildJsonObject {
-                put("name", "Test")
-                put("title", "Mr.")
-            }
-            val resultWithTitle = withContext(Dispatchers.Default.limitedParallelism(1)) {
-                withTimeout(1.minutes) {
-                    greetingTool.execute(argsWithTitle.toKoogJSONObject())
-                }
-            }
-
-            val contentWithTitle = resultWithTitle.content.single() as TextContent
-            assertEquals("Hello, Mr. Test!", contentWithTitle.text)
-
             val encodedResult = greetingTool.encodeResultToString(result, serializer)
             encodedResult shouldEqualJson """{"content":[{"text":"Hello, Test!","type":"text"}]}"""
         }
     }
 
     @Test
-    fun `test empty tool`() = runTest(timeout = 30.seconds) {
+    fun `test empty tool via Streamable HTTP`() = runTest(timeout = 30.seconds) {
         testMcpTools { toolRegistry ->
             val emptyTool = toolRegistry.getTool("empty") as McpTool
             val args = EmptyJsonObject
@@ -142,100 +133,6 @@ class McpToolTest {
                 }
             }
             assertEquals(emptyList(), result.content)
-
-            val encodedResult = emptyTool.encodeResultToString(result, serializer)
-            encodedResult shouldEqualJson """{"content":[]}"""
         }
-    }
-
-    @Test
-    fun `test encode result`() {
-        val result = CallToolResult(listOf(TextContent("Hello world")))
-        val toolDescriptor = ToolDescriptor(
-            name = "test-tool",
-            description = "A test tool",
-            requiredParameters = emptyList(),
-            optionalParameters = emptyList()
-        )
-        val mcpTool = McpTool(
-            mcpClient = Client(clientInfo = Implementation(name = "Test", version = "1.0")),
-            metadata = emptyMap(),
-            descriptor = toolDescriptor,
-        )
-        val encodedResult = mcpTool.encodeResultToString(result, serializer)
-
-        encodedResult shouldEqualJson """{"content":[{"text":"Hello world","type":"text"}]}"""
-    }
-
-    @Test
-    fun `test encode error result`() {
-        val result = CallToolResult(
-            content = listOf(TextContent("Something went wrong")),
-            isError = true,
-        )
-        val toolDescriptor = ToolDescriptor(
-            name = "test-tool",
-            description = "A test tool",
-            requiredParameters = emptyList(),
-            optionalParameters = emptyList()
-        )
-        val mcpTool = McpTool(
-            mcpClient = Client(clientInfo = Implementation(name = "Test", version = "1.0")),
-            metadata = emptyMap(),
-            descriptor = toolDescriptor,
-        )
-        val encodedResult = mcpTool.encodeResultToString(result, serializer)
-
-        assertEquals(
-            expected = "Error: Something went wrong",
-            actual = encodedResult
-        )
-    }
-
-    @Test
-    fun `test encode error result with multiple text contents`() {
-        val result = CallToolResult(
-            content = listOf(TextContent("Error line 1"), TextContent("Error line 2")),
-            isError = true,
-        )
-        val toolDescriptor = ToolDescriptor(
-            name = "test-tool",
-            description = "A test tool",
-            requiredParameters = emptyList(),
-            optionalParameters = emptyList()
-        )
-        val mcpTool = McpTool(
-            mcpClient = Client(clientInfo = Implementation(name = "Test", version = "1.0")),
-            metadata = emptyMap(),
-            descriptor = toolDescriptor,
-        )
-        val encodedResult = mcpTool.encodeResultToString(result, serializer)
-
-        assertEquals(
-            expected = "Error: Error line 1\nError line 2",
-            actual = encodedResult
-        )
-    }
-
-    @Test
-    fun `test encode null result`() {
-        val result: CallToolResult? = null
-        val toolDescriptor = ToolDescriptor(
-            name = "test-tool",
-            description = "A test tool",
-            requiredParameters = emptyList(),
-            optionalParameters = emptyList()
-        )
-        val mcpTool = McpTool(
-            mcpClient = Client(clientInfo = Implementation(name = "Test", version = "1.0")),
-            metadata = emptyMap(),
-            descriptor = toolDescriptor,
-        )
-        val encodedResult = mcpTool.encodeResultToString(result, serializer)
-
-        assertEquals(
-            expected = "null",
-            actual = encodedResult
-        )
     }
 }

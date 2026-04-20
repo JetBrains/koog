@@ -12,6 +12,7 @@ import ai.koog.serialization.kotlinx.toKotlinxJsonObject
 import ai.koog.serialization.typeToken
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
+import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -72,8 +73,14 @@ public class McpTool(
 
     /**
      * Postprocess result string representation for LLMs a bit, removing unnecessary meta fields.
+     * When the result indicates an error (isError == true), returns a clearly prefixed error string
+     * so the LLM can recognize the failure and adjust its strategy.
      */
     override fun encodeResultToString(result: CallToolResult?, serializer: JSONSerializer): String {
+        if (result?.isError == true) {
+            return "Error: ${result.content.filterIsInstance<TextContent>().joinToString("\n") { it.text }}"
+        }
+
         val preparedResultJson: JsonElement = result
             ?.let {
                 JsonObject(
