@@ -32,7 +32,7 @@ import ai.koog.prompt.streaming.toMessageResponses
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.WriteStorage
-import ai.koog.rag.base.storage.search.SimilaritySearchRequest
+import ai.koog.rag.base.storage.search.SearchRequest
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -142,7 +142,7 @@ public class LongTermMemory(
          * The retrieval storage to search for relevant memory records.
          * Must be set explicitly in the retrieval { } block.
          */
-        public var storage: SearchStorage<TextDocument, SimilaritySearchRequest>? = null
+        public var storage: SearchStorage<TextDocument, SearchRequest>? = null
 
         /**
          * The extractor that defines how to derive the search query from the prompt.
@@ -184,7 +184,7 @@ public class LongTermMemory(
         /**
          * Fluent setter for [storage].
          */
-        public fun withStorage(storage: SearchStorage<TextDocument, SimilaritySearchRequest>): RetrievalSettingsBuilder = apply { this.storage = storage }
+        public fun withStorage(storage: SearchStorage<TextDocument, SearchRequest>): RetrievalSettingsBuilder = apply { this.storage = storage }
 
         /**
          * Fluent setter for [queryExtractor].
@@ -565,7 +565,7 @@ public class LongTermMemory(
     /**
      * Property getter for [SearchStorage] for usage inside strategy nodes
      */
-    public val retrievalStorage: SearchStorage<TextDocument, SimilaritySearchRequest>?
+    public val retrievalStorage: SearchStorage<TextDocument, SearchRequest>?
         get() = retrievalSettings?.storage
 
     /**

@@ -11,7 +11,6 @@ import ai.koog.rag.base.storage.search.Score
 import ai.koog.rag.base.storage.search.ScoreMetric
 import ai.koog.rag.base.storage.search.SearchRequest
 import ai.koog.rag.base.storage.search.SearchResult
-import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.uuid.ExperimentalUuidApi
@@ -83,21 +82,14 @@ public open class InMemoryRecordStorage(
 
     override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<TextDocument>> {
         return when (request) {
-            is KeywordSearchRequest -> searchByText(
+            is KeywordSearchRequest -> searchByText( // TODO: use filterExpression after switching to Filter DSL
                 request.queryText,
                 request.limit,
                 request.minScore ?: 0.0,
                 namespace
             )
 
-            is SimilaritySearchRequest -> searchByText( // TODO: use filterExpression after switching to Filter DSL
-                request.queryText,
-                request.limit,
-                request.minScore ?: 0.0,
-                namespace
-            )
-
-            else -> throw UnsupportedOperationException("InMemoryRecordStorage supports only KeywordSearchRequest and SimilaritySearchRequest.")
+            else -> throw UnsupportedOperationException("InMemoryRecordStorage supports only KeywordSearchRequest.")
         }
     }
 

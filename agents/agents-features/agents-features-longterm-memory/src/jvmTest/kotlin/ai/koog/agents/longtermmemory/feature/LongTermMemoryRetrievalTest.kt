@@ -16,6 +16,7 @@ import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
+import ai.koog.agents.longtermmemory.storage.InMemorySimilaritySearchStorage
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -24,6 +25,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.rag.base.storage.search.KeywordSearchRequest
 import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -127,7 +129,7 @@ class LongTermMemoryRetrievalTest {
                     this.storage = storage
                     searchStrategy = SearchStrategy { _ ->
                         searchCalled = true
-                        SimilaritySearchRequest(queryText = "Kotlin")
+                        KeywordSearchRequest(queryText = "Kotlin")
                     }
                 }
             }
@@ -167,7 +169,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 retrieval {
                     this.storage = storage
-                    searchStrategy = SearchStrategy { _ -> SimilaritySearchRequest(queryText = "Kotlin") }
+                    searchStrategy = SearchStrategy { _ -> KeywordSearchRequest(queryText = "Kotlin") }
                 }
             }
         }
@@ -241,7 +243,7 @@ class LongTermMemoryRetrievalTest {
     fun `search request strategy receives the user query`() = runTest {
         var capturedQuery: String? = null
 
-        val storage = InMemoryRecordStorage()
+        val storage = InMemorySimilaritySearchStorage()
         storage.add(
             listOf(
                 MemoryRecord(content = "The weather in Paris is sunny today"),
@@ -281,7 +283,7 @@ class LongTermMemoryRetrievalTest {
     @Test
     @Timeout(5)
     fun `similaritySearch builder retrieves matching records`() = runTest {
-        val storage = InMemoryRecordStorage()
+        val storage = InMemorySimilaritySearchStorage()
         storage.add(
             listOf(
                 MemoryRecord(content = "Kotlin was developed by JetBrains"),
@@ -320,7 +322,7 @@ class LongTermMemoryRetrievalTest {
     @Test
     @Timeout(5)
     fun `similaritySearch builder returns no augmentation when query does not match`() = runTest {
-        val storage = InMemoryRecordStorage()
+        val storage = InMemorySimilaritySearchStorage()
         storage.add(
             listOf(
                 MemoryRecord(content = "Kotlin was developed by JetBrains"),
@@ -362,7 +364,7 @@ class LongTermMemoryRetrievalTest {
     @Test
     @Timeout(5)
     fun `empty storage produces no augmentation`() = runTest {
-        val storage = InMemoryRecordStorage()
+        val storage = InMemorySimilaritySearchStorage()
 
         var augmented = false
         val executor = promptCapturingExecutor { content ->
@@ -397,7 +399,7 @@ class LongTermMemoryRetrievalTest {
     @Test
     @Timeout(5)
     fun `ingested data is retrievable in subsequent agent run`() = runTest {
-        val storage = InMemoryRecordStorage()
+        val storage = InMemorySimilaritySearchStorage()
 
         // First agent run: ingest data
         val ingestExecutor = promptCapturingExecutor { "Kotlin supports coroutines for async programming" }
@@ -478,7 +480,7 @@ class LongTermMemoryRetrievalTest {
                 retrieval {
                     storage = retrievalStorage
                     searchStrategy = SearchStrategy { _ ->
-                        SimilaritySearchRequest(queryText = "Kotlin")
+                        KeywordSearchRequest(queryText = "Kotlin")
                     }
                     promptAugmenter = UserPromptAugmenter()
                 }
@@ -501,7 +503,7 @@ class LongTermMemoryRetrievalTest {
         )
 
         // Verify ingestion stored the ORIGINAL user message, not the augmented one
-        val ingestedRecords = ingestionStorage.search(SimilaritySearchRequest(queryText = "Kotlin"), defaultNamespace)
+        val ingestedRecords = ingestionStorage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
         assertEquals(1, ingestedRecords.size)
         assertEquals(originalUserMessage, ingestedRecords.first().document.content)
     }

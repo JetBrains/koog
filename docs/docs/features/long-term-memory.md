@@ -143,7 +143,7 @@ By default, the retrieval flow uses the last user message as the search query. Y
 
 | Strategy                                                  | Behavior                 |
 |-----------------------------------------------------------|--------------------------|
-| `SimilaritySearchStrategy()`                              | Vector similarity semantic search — **default and recommended** |
+| `SimilaritySearchStrategy()`                              | Vector similarity semantic search — **default** |
 | `query -> new SimilaritySearchRequest(query, 20, 0, 0.0, null)` | Custom search via lambda |
 
 ## Ingestion Only

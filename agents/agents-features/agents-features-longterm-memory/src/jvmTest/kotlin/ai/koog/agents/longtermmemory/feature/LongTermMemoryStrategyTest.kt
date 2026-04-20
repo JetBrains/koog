@@ -12,8 +12,8 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.rag.base.TextDocument
+import ai.koog.rag.base.storage.search.KeywordSearchRequest
 import ai.koog.rag.base.storage.search.SearchResult
-import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -62,7 +62,7 @@ class LongTermMemoryStrategyTest {
             val searchRecords by node<Unit, Unit> {
                 searchResults += withLongTermMemory {
                     this.retrievalStorage?.search(
-                        SimilaritySearchRequest(queryText = "Kotlin", limit = 10),
+                        KeywordSearchRequest(queryText = "Kotlin", limit = 10),
                         myNamespace
                     ) ?: emptyList()
                 }

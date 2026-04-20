@@ -2,7 +2,6 @@ package ai.koog.agents.longtermmemory.storage
 
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.rag.base.storage.search.KeywordSearchRequest
-import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -211,56 +210,5 @@ class InMemoryRecordStorageTest {
 
         assertEquals(1, ids.size)
         assertTrue(ids[0].isNotBlank())
-    }
-
-    @Test
-    fun testSearchBySimilarityRequest() = runTest {
-        val repository = InMemoryRecordStorage()
-        repository.add(
-            listOf(
-                MemoryRecord(id = "id-1", content = "Kotlin is a programming language"),
-                MemoryRecord(id = "id-2", content = "Java is also a programming language"),
-                MemoryRecord(id = "id-3", content = "Python is popular for data science")
-            ),
-            defaultNamespace,
-        )
-
-        val results = repository.search(SimilaritySearchRequest(queryText = "programming"), defaultNamespace)
-
-        assertEquals(2, results.size)
-        assertTrue(results.all { it.document.content.contains("programming") })
-    }
-
-    @Test
-    fun testSearchBySimilarityRequestWithLimit() = runTest {
-        val repository = InMemoryRecordStorage()
-        repository.add(
-            listOf(
-                MemoryRecord(id = "id-1", content = "Test content 1"),
-                MemoryRecord(id = "id-2", content = "Test content 2"),
-                MemoryRecord(id = "id-3", content = "Test content 3")
-            ),
-            defaultNamespace,
-        )
-
-        val results = repository.search(SimilaritySearchRequest(queryText = "Test", limit = 2), defaultNamespace)
-
-        assertEquals(2, results.size)
-    }
-
-    @Test
-    fun testSearchBySimilarityRequestCaseInsensitive() = runTest {
-        val repository = InMemoryRecordStorage()
-        repository.add(
-            listOf(
-                MemoryRecord(id = "id-1", content = "KOTLIN is great"),
-                MemoryRecord(id = "id-2", content = "kotlin is awesome")
-            ),
-            defaultNamespace,
-        )
-
-        val results = repository.search(SimilaritySearchRequest(queryText = "Kotlin"), defaultNamespace)
-
-        assertEquals(2, results.size)
     }
 }

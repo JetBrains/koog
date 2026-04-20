@@ -5,7 +5,7 @@ import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.SearchStorage
-import ai.koog.rag.base.storage.search.SimilaritySearchRequest
+import ai.koog.rag.base.storage.search.SearchRequest
 
 /**
  * Settings controlling how memory records are retrieved and injected into prompts (RAG).
@@ -22,7 +22,7 @@ import ai.koog.rag.base.storage.search.SimilaritySearchRequest
  */
 @ExperimentalAgentsApi
 public data class RetrievalSettings(
-    val storage: SearchStorage<TextDocument, SimilaritySearchRequest>,
+    val storage: SearchStorage<TextDocument, SearchRequest>,
     val queryExtractor: QueryExtractor = LastUserMessageQueryExtractor(),
     val searchStrategy: SearchStrategy = SimilaritySearchStrategy(),
     val promptAugmenter: PromptAugmenter = SystemPromptAugmenter(),

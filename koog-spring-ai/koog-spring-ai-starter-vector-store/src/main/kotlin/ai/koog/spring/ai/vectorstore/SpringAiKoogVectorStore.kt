@@ -3,6 +3,7 @@ package ai.koog.spring.ai.vectorstore
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.search.Score
 import ai.koog.rag.base.storage.search.ScoreMetric
+import ai.koog.rag.base.storage.search.SearchRequest
 import ai.koog.rag.base.storage.search.SearchResult
 import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import kotlinx.coroutines.CancellationException
@@ -124,13 +125,14 @@ public class SpringAiKoogVectorStore(
     /**
      * Does similarity search, because Spring AI VectorStore currently supports only similaritySearch.
      */
-    override suspend fun search(request: SimilaritySearchRequest, namespace: String?): List<SearchResult<TextDocument>> {
+    override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<TextDocument>> {
         require(namespace == null) { "Namespace scoping is not yet supported by SpringAiKoogVectorStore" }
         require(request.limit >= 0) { "limit must be non-negative, but was ${request.limit}" }
         require(request.offset >= 0) { "offset must be non-negative, but was ${request.offset}" }
         if (request.limit == 0) {
             return emptyList()
         }
+        require(request is SimilaritySearchRequest) { "Spring AI VectorStore supports only similarity search requests" }
         return withContext(dispatcher) {
             val textQuery = request.queryText
             val similarityThreshold = request.minScore ?: SpringAiSearchRequest.SIMILARITY_THRESHOLD_ACCEPT_ALL

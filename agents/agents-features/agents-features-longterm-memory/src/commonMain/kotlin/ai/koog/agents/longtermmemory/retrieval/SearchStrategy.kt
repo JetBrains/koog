@@ -1,5 +1,6 @@
 package ai.koog.agents.longtermmemory.retrieval
 
+import ai.koog.rag.base.storage.search.SearchRequest
 import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 
 /**
@@ -8,11 +9,11 @@ import ai.koog.rag.base.storage.search.SimilaritySearchRequest
  * This is a functional interface (SAM) that defines how a user query string
  * should be transformed into a [SimilaritySearchRequest] for storage.
  *
- * **[SimilaritySearchStrategy] is the default and recommended implementation.**
+ * **[SimilaritySearchStrategy] is the default implementation.**
  * It uses vector embeddings for semantic search and works with all supported vector backends.
  *
  * Pre-built implementations are available for common search types:
- * - [SimilaritySearchStrategy] - Vector similarity search (semantic search) — **recommended**
+ * - [SimilaritySearchStrategy] - Vector similarity search (semantic search)
  *
  * ### Usage Examples
  *
@@ -31,12 +32,12 @@ import ai.koog.rag.base.storage.search.SimilaritySearchRequest
  */
 public fun interface SearchStrategy {
     /**
-     * Maps a query string into a [SimilaritySearchRequest] for the storage.
+     * Maps a query string into a [SearchRequest] for the storage.
      *
      * @param query The user's query string (typically the last user message content)
      * @return The similarity search request to be executed
      */
-    public fun create(query: String): SimilaritySearchRequest
+    public fun create(query: String): SearchRequest
 
     /**
      * Companion object with a builder method.
