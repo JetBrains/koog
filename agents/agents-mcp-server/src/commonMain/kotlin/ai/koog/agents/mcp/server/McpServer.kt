@@ -67,11 +67,28 @@ public suspend fun startMcpServer(
     host: String = "localhost",
     transport: McpServerTransportType = McpServerTransportType.StreamableHttp,
 ): Server = doStartMcpServer(factory, port, host, tools) { server ->
-    when (transport) {
-        McpServerTransportType.StreamableHttp -> mcpStreamableHttp { server }
-        McpServerTransportType.SSE -> mcp { server }
-    }
+    installMcpTransport(server, transport)
 }.first
+
+/**
+ * Starts a new MCP server with the given [tools] on an OS-allocated port on the passed [host].
+ * The actual port can be obtained from the returned list of [EngineConnectorConfig].
+ * Defaults to Streamable HTTP transport.
+ *
+ * @param factory The Ktor application engine factory to use (e.g., CIO, Netty).
+ * @param tools The tools to expose via the MCP server.
+ * @param host The host to bind to.
+ * @param transport The transport type to use.
+ * @return A pair of the MCP [Server] and the list of connectors (used to discover the allocated port).
+ */
+public suspend fun startMcpServer(
+    factory: ApplicationEngineFactory<*, *>,
+    tools: ToolRegistry,
+    host: String = "localhost",
+    transport: McpServerTransportType = McpServerTransportType.StreamableHttp,
+): Pair<Server, List<EngineConnectorConfig>> = doStartMcpServer(factory, 0, host, tools) { server ->
+    installMcpTransport(server, transport)
+}
 
 /**
  * Starts a new MCP server with the passed [tools] that listens to and writes
@@ -97,6 +114,7 @@ public suspend fun startSseMcpServer(
  */
 @Deprecated(
     "SSE transport is deprecated. Use startMcpServer() which defaults to Streamable HTTP.",
+    ReplaceWith("startMcpServer(factory, tools, host)"),
     level = DeprecationLevel.WARNING,
 )
 public suspend fun startSseMcpServer(
@@ -105,6 +123,13 @@ public suspend fun startSseMcpServer(
     tools: ToolRegistry,
 ): Pair<Server, List<EngineConnectorConfig>> =
     doStartMcpServer(factory, 0, host, tools) { server -> mcp { server } }
+
+private fun Application.installMcpTransport(server: Server, transport: McpServerTransportType) {
+    when (transport) {
+        McpServerTransportType.StreamableHttp -> mcpStreamableHttp { server }
+        McpServerTransportType.SSE -> mcp { server }
+    }
+}
 
 private suspend fun doStartMcpServer(
     factory: ApplicationEngineFactory<*, *>,

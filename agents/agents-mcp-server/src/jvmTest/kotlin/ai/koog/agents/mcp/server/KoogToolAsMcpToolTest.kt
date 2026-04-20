@@ -222,14 +222,15 @@ class KoogToolAsMcpToolTest {
     ) = runTest(timeout = 30.seconds) {
         assertIsNot<McpTool>(tool)
 
-        val port = 3003
-        val server = startMcpServer(
+        val (server, connectors) = startMcpServer(
             factory = CIO,
             tools = ToolRegistry {
                 tool(tool)
             },
-            port = port,
         )
+
+        val port = connectors.firstOrNull()?.port ?: 0
+        assertNotEquals(0, port, "Port should not be 0")
 
         val httpClient = HttpClient { install(SSE) }
 

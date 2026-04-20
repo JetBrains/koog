@@ -42,7 +42,20 @@ public object McpToolRegistryProvider {
     public const val DEFAULT_MCP_CLIENT_VERSION: String = "1.0.0"
 
     /**
-     * Configuration for connecting to an MCP server via Streamable HTTP transport.
+     * Configuration for connecting to an MCP server over the Streamable HTTP transport.
+     *
+     * Used as the receiver of the configuration lambda passed to [streamableHttp]. The [url] and
+     * [httpClient] properties are required and must be set before the configuration block returns;
+     * the remaining properties have sensible defaults and are optional.
+     *
+     * Example:
+     * ```kotlin
+     * val httpClient = HttpClient { install(SSE) }
+     * val registry = McpToolRegistryProvider.streamableHttp {
+     *     url = "http://localhost:3000/mcp"
+     *     this.httpClient = httpClient
+     * }
+     * ```
      */
     public class StreamableHttpConfig {
         /** MCP server URL (required). */
