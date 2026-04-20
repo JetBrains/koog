@@ -1,5 +1,8 @@
 package ai.koog.agents.core.agent.entity
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+
 /**
  * API for [AIAgentStorage]
  */
@@ -58,4 +61,29 @@ public interface AIAgentStorageAPI {
      * Clears all data from the storage.
      */
     public suspend fun clear()
+
+    /**
+     * Serializes all entries whose key is a [SerializableStorageKey] to a [JsonObject].
+     * Entries with non-serializable keys are silently skipped.
+     *
+     * @param json The [Json] instance used for encoding. Defaults to [Json.Default].
+     * @return A [JsonObject] mapping each serializable key's name to its encoded value.
+     */
+    public suspend fun serializeToJson(json: Json = Json.Default): JsonObject
+
+    /**
+     * Restores storage entries from a [JsonObject] produced by [serializeToJson].
+     *
+     * Only entries whose key name appears in [keys] are restored; unknown names in the JSON
+     * are ignored. Existing entries with non-matching keys are left untouched.
+     *
+     * @param jsonObject The [JsonObject] to restore from.
+     * @param keys The [SerializableStorageKey] instances expected in [jsonObject].
+     * @param json The [Json] instance used for decoding. Defaults to [Json.Default].
+     */
+    public suspend fun restoreFromJson(
+        jsonObject: JsonObject,
+        keys: Collection<SerializableStorageKey<*>>,
+        json: Json = Json.Default,
+    )
 }

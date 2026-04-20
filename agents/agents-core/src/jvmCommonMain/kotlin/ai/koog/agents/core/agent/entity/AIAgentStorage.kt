@@ -5,6 +5,8 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.utils.runBlockingIfRequired
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Represents a storage key used for identifying and accessing data associated with an AI agent.
@@ -70,6 +72,24 @@ public actual class AIAgentStorage internal actual constructor(
     @OptIn(InternalAgentsApi::class)
     public fun clearBlocking(): Unit = runBlockingIfRequired {
         clear()
+    }
+
+    @JavaAPI
+    @JvmName("serializeToJson")
+    @OptIn(InternalAgentsApi::class)
+    public fun serializeToJsonBlocking(json: Json = Json.Default): JsonObject = runBlockingIfRequired {
+        serializeToJson(json)
+    }
+
+    @JavaAPI
+    @JvmName("restoreFromJson")
+    @OptIn(InternalAgentsApi::class)
+    public fun restoreFromJsonBlocking(
+        jsonObject: JsonObject,
+        keys: Collection<SerializableStorageKey<*>>,
+        json: Json = Json.Default,
+    ): Unit = runBlockingIfRequired {
+        restoreFromJson(jsonObject, keys, json)
     }
 
     public companion object {

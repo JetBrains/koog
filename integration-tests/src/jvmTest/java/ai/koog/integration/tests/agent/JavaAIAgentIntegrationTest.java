@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig;
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.agent.entity.AIAgentStorage;
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey;
+import ai.koog.agents.core.agent.entity.SerializableStorageKey;
 import ai.koog.agents.core.agent.session.AIAgentRunSession;
 import ai.koog.agents.core.agent.session.AdditionalInputs;
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
@@ -647,6 +648,78 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
 
         assertThat(Integer.parseInt(firstResult)).isEqualTo(1);
         assertThat(Integer.parseInt(secondResult)).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
+    public void integration_RoundTripSerializableStorageKeysBlocking(LLModel model) {
+        Models.assumeAvailable(model.getProvider());
+
+        SerializableStorageKey<Integer> intKey = JavaUtils.intSerializableStorageKey("count");
+        SerializableStorageKey<String> labelKey = JavaUtils.stringSerializableStorageKey("label");
+        AIAgentStorageKey<String> plainKey = new AIAgentStorageKey<>("plain");
+        AtomicReference<Integer> restoredInt = new AtomicReference<>();
+        AtomicReference<String> restoredLabel = new AtomicReference<>();
+        AtomicReference<String> restoredPlain = new AtomicReference<>("not-null");
+
+        AIAgent<String, String> agent = javaBuilder(model)
+            .systemPrompt("You are a helpful assistant.")
+            .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
+                JavaUtils.storageSet(context.getStorage(), intKey, 7);
+                JavaUtils.storageSet(context.getStorage(), labelKey, "persisted");
+                JavaUtils.storageSet(context.getStorage(), plainKey, "ephemeral");
+
+                var serialized = JavaUtils.storageSerializeToJson(context.getStorage());
+                var restoredStorage = new ai.koog.agents.core.agent.entity.AIAgentStorage();
+                JavaUtils.storageRestoreFromJson(restoredStorage, serialized, List.of(intKey, labelKey));
+
+                restoredInt.set(JavaUtils.storageGet(restoredStorage, intKey));
+                restoredLabel.set(JavaUtils.storageGet(restoredStorage, labelKey));
+                restoredPlain.set(JavaUtils.storageGet(restoredStorage, plainKey));
+
+                return context.requestLLM(input, true).getContent();
+            })
+            .build();
+
+        runBlocking(continuation -> agent.run("Hello", null, continuation));
+
+        assertThat(restoredInt.get()).isEqualTo(7);
+        assertThat(restoredLabel.get()).isEqualTo("persisted");
+        assertThat(restoredPlain.get()).isNull();
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
+    public void integration_RestoreSerializableStorageCustomConfig(LLModel model) {
+        Models.assumeAvailable(model.getProvider());
+
+        SerializableStorageKey<JavaUtils.StorageConfigWithDefault> configKey =
+            JavaUtils.configWithDefaultSerializableStorageKey("config");
+        AtomicReference<JavaUtils.StorageConfigWithDefault> restoredConfig = new AtomicReference<>();
+
+        AIAgent<String, String> agent = javaBuilder(model)
+            .systemPrompt("You are a helpful assistant.")
+            .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
+                var jsonObject = JavaUtils.parseJsonObject(
+                    "{"
+                        + "\"config\":{"
+                        + "\"host\":\"integration.example\","
+                        + "\"unknownField\":\"ignored\""
+                        + "}"
+                        + "}"
+                );
+
+                var restoredStorage = new ai.koog.agents.core.agent.entity.AIAgentStorage();
+                JavaUtils.storageRestoreFromJsonIgnoringUnknownKeys(restoredStorage, jsonObject, List.of(configKey));
+                restoredConfig.set(JavaUtils.storageGet(restoredStorage, configKey));
+
+                return context.requestLLM(input, true).getContent();
+            })
+            .build();
+
+        runBlocking(continuation -> agent.run("Hello", null, continuation));
+
+        assertThat(restoredConfig.get()).isEqualTo(new JavaUtils.StorageConfigWithDefault("integration.example", 80));
     }
 
     @ParameterizedTest

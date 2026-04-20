@@ -4,6 +4,9 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.entity.createSerializableStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
+import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.functionalStrategy
@@ -76,6 +79,10 @@ import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
@@ -95,6 +102,8 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class AIAgentIntegrationTest : AIAgentTestBase() {
+    @Serializable
+    private data class StorageConfigWithDefault(val host: String, val port: Int = 80)
 
     private fun forceOneToolNoReasoningParams(model: LLModel): LLMParams = when (model.provider.id) {
         LLMProvider.Google.id -> GoogleParams(
@@ -1182,6 +1191,71 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 }
             }
         }
+    }
+
+    @ParameterizedTest
+    @MethodSource("latestModels")
+    fun integration_AIAgentRoundTripSerializableStorage(model: LLModel) = runTest(timeout = 60.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val intKey = createSerializableStorageKey<Int>("count")
+        val configKey = createSerializableStorageKey<StorageConfigWithDefault>("config")
+        val plainKey = createStorageKey<String>("plain")
+
+        var restoredInt: Int? = null
+        var restoredConfig: StorageConfigWithDefault? = null
+        var restoredPlain: String? = "not-null"
+
+        val agent = AIAgent(
+            promptExecutor = getExecutor(model),
+            strategy = functionalStrategy<String, String>("storage-serialization-smoke") { input ->
+                storage.set(intKey, 7)
+                storage.set(configKey, StorageConfigWithDefault("persisted.example", 443))
+                storage.set(plainKey, "ephemeral")
+
+                val serialized = storage.serializeToJson()
+                val restoredStorage = AIAgentStorage()
+                restoredStorage.restoreFromJson(
+                    jsonObject = serialized,
+                    keys = listOf(intKey, configKey),
+                )
+
+                restoredInt = restoredStorage.get(intKey)
+                restoredPlain = restoredStorage.get(plainKey)
+
+                restoredStorage.restoreFromJson(
+                    jsonObject = buildJsonObject {
+                        put(
+                            "config",
+                            buildJsonObject {
+                                put("host", "custom.example")
+                                put("unknown-field", "ignored")
+                            }
+                        )
+                    },
+                    keys = listOf(configKey),
+                    json = Json { ignoreUnknownKeys = true },
+                )
+
+                restoredConfig = restoredStorage.get(configKey)
+                llm.writeSession { appendPrompt { user(input) } }
+                llm.readSession { prompt.messages.last().content }
+            },
+            agentConfig = AIAgentConfig(
+                prompt = prompt("storage-serialization-smoke") {
+                    system("You are a helpful assistant.")
+                },
+                model = model,
+                maxAgentIterations = 5,
+            ),
+        )
+
+        val result = agent.run("Hello")
+
+        result.shouldNotBeBlank()
+        restoredInt shouldBe 7
+        restoredConfig shouldBe StorageConfigWithDefault("custom.example", 80)
+        restoredPlain shouldBe null
     }
 
     @ParameterizedTest

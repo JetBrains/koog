@@ -2,6 +2,9 @@ package ai.koog.agents.core.agent.entity
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 
 internal class AIAgentStorageImpl : AIAgentStorageAPI {
     private val mutex = Mutex()
@@ -42,5 +45,31 @@ internal class AIAgentStorageImpl : AIAgentStorageAPI {
 
     override suspend fun clear(): Unit = mutex.withLock {
         storage.clear()
+    }
+
+    override suspend fun serializeToJson(json: Json): JsonObject {
+        val snapshot = mutex.withLock { storage.toList() }
+        return buildJsonObject {
+            for ((key, value) in snapshot) {
+                if (key is SerializableStorageKey<*>) {
+                    put(key.name, key.encodeValue(json, value))
+                }
+            }
+        }
+    }
+
+    override suspend fun restoreFromJson(
+        jsonObject: JsonObject,
+        keys: Collection<SerializableStorageKey<*>>,
+        json: Json,
+    ) {
+        val keysByName = keys.associateBy { it.name }
+        val decoded = buildMap {
+            for ((name, element) in jsonObject) {
+                val key = keysByName[name] ?: continue
+                put(key, key.decodeValue(json, element))
+            }
+        }
+        mutex.withLock { storage.putAll(decoded) }
     }
 }

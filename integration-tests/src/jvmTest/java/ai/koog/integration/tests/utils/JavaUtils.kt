@@ -3,6 +3,8 @@ package ai.koog.integration.tests.utils
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.SerializableStorageKey
+import ai.koog.agents.core.agent.entity.createSerializableStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.utils.runBlockingIfRequired
@@ -21,6 +23,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.util.concurrent.CopyOnWriteArrayList
@@ -34,6 +37,9 @@ import kotlin.time.Duration.Companion.seconds
 
 @OptIn(InternalAgentsApi::class)
 object JavaUtils {
+    @Serializable
+    data class StorageConfigWithDefault(val host: String, val port: Int = 80)
+
     @JvmStatic
     fun assumeAvailable(provider: LLMProvider) {
         Models.assumeAvailable(provider)
@@ -56,6 +62,44 @@ object JavaUtils {
     @JvmStatic
     fun <T : Any> storageGet(storage: AIAgentStorage, key: AIAgentStorageKey<T>): T? =
         storage.getBlocking(key)
+
+    @JvmStatic
+    fun stringSerializableStorageKey(name: String): SerializableStorageKey<String> =
+        createSerializableStorageKey(name)
+
+    @JvmStatic
+    fun intSerializableStorageKey(name: String): SerializableStorageKey<Int> =
+        createSerializableStorageKey(name)
+
+    @JvmStatic
+    fun configWithDefaultSerializableStorageKey(name: String): SerializableStorageKey<StorageConfigWithDefault> =
+        createSerializableStorageKey(name)
+
+    @JvmStatic
+    fun storageSerializeToJson(storage: AIAgentStorage): JsonObject =
+        storage.serializeToJsonBlocking()
+
+    @JvmStatic
+    fun storageRestoreFromJson(
+        storage: AIAgentStorage,
+        jsonObject: JsonObject,
+        keys: Collection<SerializableStorageKey<*>>
+    ) {
+        storage.restoreFromJsonBlocking(jsonObject, keys)
+    }
+
+    @JvmStatic
+    fun storageRestoreFromJsonIgnoringUnknownKeys(
+        storage: AIAgentStorage,
+        jsonObject: JsonObject,
+        keys: Collection<SerializableStorageKey<*>>
+    ) {
+        storage.restoreFromJsonBlocking(jsonObject, keys, Json { ignoreUnknownKeys = true })
+    }
+
+    @JvmStatic
+    fun parseJsonObject(json: String): JsonObject =
+        Json.parseToJsonElement(json).let { it as JsonObject }
 
     @JvmStatic
     fun historyCompressionStrategiesForJava(): List<HistoryCompressionStrategy> = listOf(
