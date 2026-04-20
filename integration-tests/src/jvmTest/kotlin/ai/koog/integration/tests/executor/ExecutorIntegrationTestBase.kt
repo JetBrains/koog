@@ -10,6 +10,7 @@ import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkImageAnalysisResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
 import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.RetryUtils
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsReasoning
 import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsReasoningWithEncryption
@@ -661,6 +662,8 @@ abstract class ExecutorIntegrationTestBase {
 
         val imageUrl =
             "https://raw.githubusercontent.com/JetBrains/koog/1e7014eae7dca603cfceaece27c135ecdc45e2a2/integration-tests/src/jvmTest/resources/media/test.png"
+
+        RetryUtils.ensureUrlAccessible(imageUrl, testName = "remote image preflight")
 
         val prompt = prompt("url-based-attachments-test") {
             system("You are a helpful assistant that can analyze images.")

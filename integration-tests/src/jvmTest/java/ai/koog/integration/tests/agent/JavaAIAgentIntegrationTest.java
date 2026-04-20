@@ -420,14 +420,15 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         assumeTrue(model.supports(LLMCapability.Vision.Image.INSTANCE), "Model must support vision capability");
 
         AtomicInteger errors = new AtomicInteger(0);
+        String imageUrl = "https://cdn.jsdelivr.net/gh/JetBrains/koog@develop/integration-tests/src/jvmTest/resources/media/test.png";
+        RetryUtils.ensureUrlAccessible(imageUrl, 3, 500, "remote image preflight");
+
         Prompt prompt = Prompt.builder("java-vision-url-image-part")
             .system("You analyze images. Keep answers short.")
             .user(List.of(
                 new ContentPart.Text("Please identify the image format."),
                 new ContentPart.Image(
-                    new AttachmentContent.URL(
-                        "https://cdn.jsdelivr.net/gh/JetBrains/koog@develop/integration-tests/src/jvmTest/resources/media/test.png"
-                    ),
+                    new AttachmentContent.URL(imageUrl),
                     "png",
                     "image/png",
                     "test.png"
