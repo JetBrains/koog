@@ -7,18 +7,22 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class ParallelNodesMergeContextTest {
+    private val serializer = KotlinxSerializer()
 
     private val testKey = AIAgentStorageKey<String>("testKey")
 
@@ -39,7 +43,7 @@ class ParallelNodesMergeContextTest {
             maxAgentIterations = 10
         )
 
-        val testExecutor = getMockExecutor {
+        val testExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Default test response").asDefaultResponse
         }
 
@@ -52,7 +56,7 @@ class ParallelNodesMergeContextTest {
             }
         )
 
-        return agent.run("")
+        return agent.run("", null)
     }
 
     @Test

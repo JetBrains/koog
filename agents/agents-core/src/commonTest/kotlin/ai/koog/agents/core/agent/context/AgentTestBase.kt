@@ -1,3 +1,5 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
@@ -6,25 +8,46 @@ import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
-import kotlin.reflect.typeOf
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.serialization.typeToken
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 open class AgentTestBase {
     protected val testAgentId = "test-agent"
     protected val testRunId = "test-run"
     protected val strategyName = "test-strategy"
 
-    protected fun createTestEnvironment(id: String = "test-environment"): AIAgentEnvironment {
+    private val serializer = KotlinxSerializer()
+
+    protected fun createTestEnvironment(
+        id: String = "test-environment",
+        toolResult: ReceivedToolResult = ReceivedToolResult(
+            id = "test-tool-id",
+            tool = "test-tool",
+            toolArgs = JsonObject(mapOf("result" to JsonPrimitive("test-result"))).toKoogJSONObject(),
+            toolDescription = null,
+            content = "Test tool result",
+            resultKind = ToolResultKind.Success,
+            result = JsonObject(mapOf("result" to JsonPrimitive("test-result"))).toKoogJSONObject(),
+        )
+    ): AIAgentEnvironment {
         return object : AIAgentEnvironment {
-            override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-                return emptyList()
+
+            override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+                return toolResult
             }
 
             override suspend fun reportProblem(exception: Throwable) {
@@ -49,7 +72,7 @@ open class AgentTestBase {
     }
 
     protected fun createTestLLMContext(id: String = "test-llm"): AIAgentLLMContext {
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             mockLLMAnswer("Test response").asDefaultResponse
         }
 
@@ -57,6 +80,7 @@ open class AgentTestBase {
             tools = emptyList(),
             prompt = createTestPrompt(),
             model = OllamaModels.Meta.LLAMA_3_2,
+            responseProcessor = null,
             promptExecutor = mockExecutor,
             environment = createTestEnvironment(),
             config = createTestConfig(),
@@ -80,13 +104,14 @@ open class AgentTestBase {
         storage: AIAgentStorage = createTestStorage(),
         runId: String = "test-run-id",
         strategyName: String = "test-strategy",
-        pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(testClock),
-        agentInput: String = "test-input"
+        pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(config, testClock),
+        agentInput: String = "test-input",
+        executionInfo: AgentExecutionInfo = AgentExecutionInfo(null, testAgentId)
     ): AIAgentGraphContext {
         return AIAgentGraphContext(
             environment = environment,
             agentId = testAgentId,
-            agentInputType = typeOf<String>(),
+            agentInputType = typeToken<String>(),
             agentInput = agentInput,
             config = config,
             llm = llmContext,
@@ -95,6 +120,8 @@ open class AgentTestBase {
             runId = runId,
             strategyName = strategyName,
             pipeline = pipeline,
+            executionInfo = executionInfo,
+            parentContext = null
         )
     }
 }

@@ -9,7 +9,7 @@ import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import kotlinx.coroutines.runBlocking
 import java.nio.file.Files
 import kotlin.io.path.exists
@@ -67,7 +67,6 @@ fun main() = runBlocking {
         ) {
             install(Persistence) {
                 storage = provider // Use the file-based checkpoint provider
-                enableAutomaticPersistence = true // Enable automatic checkpoint creation
             }
         }
 
@@ -84,7 +83,7 @@ fun main() = runBlocking {
             println("Checkpoint ${index + 1}:")
             println("  ID: ${checkpoint.checkpointId}")
             println("  Created at: ${checkpoint.createdAt}")
-            println("  Node ID: ${checkpoint.nodeId}")
+            println("  Node ID: ${checkpoint.nodePath}")
             println("  Message history size: ${checkpoint.messageHistory.size}")
         }
 
@@ -107,7 +106,6 @@ fun main() = runBlocking {
         ) {
             install(Persistence) {
                 storage = provider // Use the file-based checkpoint provider
-                enableAutomaticPersistence = true // Enable automatic checkpoint creation
             }
         }
 
@@ -121,7 +119,7 @@ fun main() = runBlocking {
         println("\nLatest checkpoint after restoration:")
         println("  ID: ${latestCheckpoint?.checkpointId}")
         println("  Created at: ${latestCheckpoint?.createdAt}")
-        println("  Node ID: ${latestCheckpoint?.nodeId}")
+        println("  Node ID: ${latestCheckpoint?.nodePath}")
         println("  Message history size: ${latestCheckpoint?.messageHistory?.size}")
     }
 }

@@ -4,11 +4,17 @@ import ai.koog.agents.core.utils.ActiveProperty
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+/**
+ * Represents the state of an AI agent.
+ */
 @OptIn(ExperimentalStdlibApi::class)
-internal class AIAgentState internal constructor(
+public class AIAgentState(
     iterations: Int = 0,
 ) : AutoCloseable {
-    var iterations: Int by ActiveProperty(iterations) { isActive }
+    /**
+     * The number of iterations that have been completed since the agent was created.
+     */
+    public var iterations: Int by ActiveProperty(iterations) { isActive }
 
     private var isActive = true
 
@@ -16,7 +22,10 @@ internal class AIAgentState internal constructor(
         isActive = false
     }
 
-    internal fun copy(): AIAgentState {
+    /**
+     * Creates a copy of the current state.
+     */
+    public fun copy(): AIAgentState {
         return AIAgentState(
             iterations = iterations
         )
@@ -33,12 +42,16 @@ internal class AIAgentState internal constructor(
  * @constructor Creates a new instance of AIAgentStateManager with the initial state,
  * defaulting to a new `AIAgentState` if not provided.
  */
-public class AIAgentStateManager internal constructor(
+public class AIAgentStateManager(
     private var state: AIAgentState = AIAgentState()
 ) {
     private val mutex = Mutex()
 
-    internal suspend fun <T> withStateLock(block: suspend (AIAgentState) -> T): T = mutex.withLock {
+    /**
+     * Executes the provided suspending [block] of code with exclusive access to the current state.
+     * @return The result of [block].
+     */
+    public suspend fun <T> withStateLock(block: suspend (AIAgentState) -> T): T = mutex.withLock {
         val result = block(state)
         val newState = AIAgentState(
             iterations = state.iterations

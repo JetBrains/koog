@@ -1,10 +1,10 @@
 package ai.koog.prompt.executor.clients.bedrock.modelfamilies
 
-import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponseContent
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicContent
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNames
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -22,6 +22,7 @@ public data class BedrockAnthropicInvokeModel(
     val messages: List<BedrockAnthropicInvokeModelMessage> = emptyList(),
     val tools: List<BedrockAnthropicInvokeModelTool>? = null,
     @SerialName("tool_choice") val toolChoice: BedrockAnthropicToolChoice? = null,
+    @SerialName("output_config") val outputConfig: JsonObject? = null,
 ) {
     /**
      * Provides shared logic and utility functions for managing and interacting with the
@@ -41,14 +42,33 @@ public data class BedrockAnthropicInvokeModel(
 /**
  * Data class representing a message used to invoke a model in the Bedrock Anthropic API.
  *
- * @property role The role of the message sender, such as "user", "assistant", or another predefined role.
  * @property content The content of the message, encapsulated in a `BedrockAnthropicInvokeModelTextContent` object.
  */
 @Serializable
-public data class BedrockAnthropicInvokeModelMessage(
-    val role: String,
-    val content: List<BedrockAnthropicInvokeModelContent>,
-)
+@JsonClassDiscriminator("role")
+public sealed interface BedrockAnthropicInvokeModelMessage {
+    /**
+     * A list of content elements that form the message, where each content
+     * can be of varying types like text, image, document, tool usage, or tool result.
+     */
+    public val content: List<BedrockAnthropicInvokeModelContent>
+
+    /**
+     * User BedrockAnthropic message.
+     */
+    @Serializable
+    @SerialName("user")
+    public data class User(override val content: List<BedrockAnthropicInvokeModelContent>) :
+        BedrockAnthropicInvokeModelMessage
+
+    /**
+     * Assistant BedrockAnthropic message.
+     */
+    @Serializable
+    @SerialName("assistant")
+    public data class Assistant(override val content: List<BedrockAnthropicInvokeModelContent>) :
+        BedrockAnthropicInvokeModelMessage
+}
 
 /**
  * Represents a tool used to interact with the Bedrock Anthropic model.
@@ -78,7 +98,7 @@ public data class BedrockAnthropicInvokeModelTool(
  * managing the diverse data types utilized in interactions with the Bedrock Anthropic API.
  */
 @Serializable
-public sealed class BedrockAnthropicInvokeModelContent {
+public sealed interface BedrockAnthropicInvokeModelContent {
     /**
      * Represents the text content in a model invocation for the Bedrock Anthropic API.
      *
@@ -89,7 +109,20 @@ public sealed class BedrockAnthropicInvokeModelContent {
      */
     @Serializable
     @SerialName("text")
-    public class Text(public val text: String) : BedrockAnthropicInvokeModelContent()
+    public class Text(public val text: String) : BedrockAnthropicInvokeModelContent
+
+    /**
+     * Represents a thinking process.
+     *
+     * This class captures the model's reasoning and thought process during its operation.
+     * It is serialized with the discriminator "thinking" for polymorphic serialization.
+     *
+     * @property signature An identifier or signature associated with this thought process.
+     * @property thinking The actual content of the model's internal reasoning or thought process.
+     */
+    @Serializable
+    @SerialName("thinking")
+    public data class Thinking(val signature: String, val thinking: String) : BedrockAnthropicInvokeModelContent
 
     /**
      * Represents the result of a tool invocation in the context of Bedrock's Anthropic API.
@@ -100,13 +133,15 @@ public sealed class BedrockAnthropicInvokeModelContent {
      *
      * @property toolUseId The unique identifier for the specific tool invocation. This can be used to trace or debug the usage of tools.
      * @property content The content or result returned by the tool after execution.
+     * @property isError Whether this tool result represents an error.
      */
     @Serializable
     @SerialName("tool_result")
     public class ToolResult(
         @SerialName("tool_use_id") public val toolUseId: String,
-        public val content: String
-    ) : BedrockAnthropicInvokeModelContent()
+        public val content: String,
+        @SerialName("is_error") public val isError: Boolean
+    ) : BedrockAnthropicInvokeModelContent
 
     /**
      * Represents a tool call instruction which is part of the model invocation content.
@@ -124,7 +159,7 @@ public sealed class BedrockAnthropicInvokeModelContent {
     @Serializable
     @SerialName("tool_use")
     public class ToolCall(public val id: String, public val name: String, public val input: JsonElement) :
-        BedrockAnthropicInvokeModelContent()
+        BedrockAnthropicInvokeModelContent
 }
 
 /**
@@ -170,9 +205,9 @@ public data class BedrockAnthropicResponse(
     val id: String,
     val type: String,
     val role: String,
-    val content: List<AnthropicResponseContent>,
+    val content: List<AnthropicContent>,
     val model: String,
-    @JsonNames("stop_reason") val stopReason: String? = null,
+    val stopReason: String? = null,
     val usage: BedrockAnthropicUsage? = null
 )
 
@@ -187,6 +222,6 @@ public data class BedrockAnthropicResponse(
  */
 @Serializable
 public data class BedrockAnthropicUsage(
-    @SerialName("input_tokens") @JsonNames("inputTokens", "input_tokens") val inputTokens: Int,
-    @SerialName("output_tokens") @JsonNames("outputTokens", "output_tokens") val outputTokens: Int
+    val inputTokens: Int,
+    val outputTokens: Int
 )

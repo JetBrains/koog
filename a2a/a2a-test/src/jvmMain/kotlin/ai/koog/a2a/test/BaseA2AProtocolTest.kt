@@ -5,6 +5,7 @@ import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentSkill
+import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.MessageSendConfiguration
 import ai.koog.a2a.model.MessageSendParams
@@ -21,6 +22,7 @@ import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.transport.Request
+import ai.koog.test.utils.untilAsserted
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.inspectors.shouldForAll
 import io.kotest.matchers.collections.shouldHaveSize
@@ -32,6 +34,7 @@ import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import org.awaitility.kotlin.await
 import kotlin.time.Duration
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -99,7 +102,7 @@ abstract class BaseA2AProtocolTest {
     }
 
     open fun `test get authenticated extended agent card`() = runTest(timeout = testTimeout) {
-        val request = Request<Nothing?>(data = null)
+        val request = Request(data = null)
 
         val response = client.getAuthenticatedExtendedAgentCard(request)
 
@@ -170,10 +173,10 @@ abstract class BaseA2AProtocolTest {
 
         val response = client.sendMessage(request)
 
-        response should {
-            it.id shouldBe request.id
+        response should { response ->
+            response.id shouldBe request.id
 
-            it.data.shouldBeInstanceOf<Message> {
+            response.data.shouldBeInstanceOf<Message> {
                 it.role shouldBe Role.Agent
                 it.parts shouldBe listOf(TextPart("Hello World"))
                 it.contextId shouldBe "test-context"
@@ -195,19 +198,23 @@ abstract class BaseA2AProtocolTest {
             ),
         )
 
-        val events = client
-            .sendMessageStreaming(createTaskRequest)
-            .toList()
-            .map { it.data }
+        val events: List<Event> = await.untilAsserted(this) {
+            val list = client
+                .sendMessageStreaming(createTaskRequest)
+                .toList()
+                .map { it.data }
 
-        events shouldHaveSize 3
-        events[0].shouldBeInstanceOf<Task> {
-            it.contextId shouldBe "test-context"
-            it.status should {
+            list shouldHaveSize 3
+            return@untilAsserted list
+        }!!
+
+        events[0].shouldBeInstanceOf<Task> { task ->
+            task.contextId shouldBe "test-context"
+            task.status should {
                 it.state shouldBe TaskState.Submitted
             }
 
-            it.history shouldNotBeNull {
+            task.history shouldNotBeNull {
                 this shouldHaveSize 1
 
                 this[0] should {
@@ -265,15 +272,19 @@ abstract class BaseA2AProtocolTest {
             )
         )
 
-        val response = client.getTask(getTaskRequest)
+        await
+            .ignoreExceptions()
+            .untilAsserted(this) {
+                val response = client.getTask(getTaskRequest)
 
-        response.data should {
-            it.id shouldBe taskId
-            it.contextId shouldBe "test-context"
-            it.status should {
-                it.state shouldBe TaskState.Completed
+                response.data should { task ->
+                    task.id shouldBe taskId
+                    task.contextId shouldBe "test-context"
+                    task.status should { status ->
+                        status.state shouldBe TaskState.Completed
+                    }
+                }
             }
-        }
     }
 
     open fun `test cancel task`() = runTest(timeout = testTimeout) {
@@ -338,12 +349,15 @@ abstract class BaseA2AProtocolTest {
             )
         )
 
-        val events = client
-            .resubscribeTask(resubscribeTaskRequest)
-            .toList()
-            .map { it.data }
-
-        events.shouldNotBeEmpty()
+        val events =
+            await.ignoreExceptions().untilAsserted(this) {
+                val list = client
+                    .resubscribeTask(resubscribeTaskRequest)
+                    .toList()
+                    .map { it.data }
+                list.shouldNotBeEmpty()
+                return@untilAsserted list
+            }!!
 
         events.shouldForAll {
             it.shouldBeInstanceOf<TaskStatusUpdateEvent> {
@@ -409,8 +423,10 @@ abstract class BaseA2AProtocolTest {
             )
         )
 
-        val getPushConfigResponse = client.getTaskPushNotificationConfig(getPushConfigRequest)
-        getPushConfigResponse.data shouldBe pushConfig
+        await.untilAsserted(this) {
+            val response = client.getTaskPushNotificationConfig(getPushConfigRequest)
+            response.data shouldBe pushConfig
+        }
 
         val listPushConfigRequest = Request(
             data = TaskIdParams(
@@ -418,8 +434,10 @@ abstract class BaseA2AProtocolTest {
             )
         )
 
-        val listPushConfigResponse = client.listTaskPushNotificationConfig(listPushConfigRequest)
-        listPushConfigResponse.data shouldBe listOf(pushConfig)
+        await.untilAsserted(this) {
+            val listPushConfigResponse = client.listTaskPushNotificationConfig(listPushConfigRequest)
+            listPushConfigResponse.data shouldBe listOf(pushConfig)
+        }
 
         val deletePushConfigRequest = Request(
             data = TaskPushNotificationConfigParams(
@@ -430,8 +448,10 @@ abstract class BaseA2AProtocolTest {
 
         client.deleteTaskPushNotificationConfig(deletePushConfigRequest)
 
-        shouldThrowExactly<A2AInternalErrorException> {
-            client.getTaskPushNotificationConfig(getPushConfigRequest)
+        await.untilAsserted(this) {
+            shouldThrowExactly<A2AInternalErrorException> {
+                client.getTaskPushNotificationConfig(getPushConfigRequest)
+            }
         }
     }
 }

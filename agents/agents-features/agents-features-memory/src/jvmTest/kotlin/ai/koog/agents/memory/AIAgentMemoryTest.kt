@@ -27,21 +27,24 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @OptIn(InternalAgentsApi::class)
 class AIAgentMemoryTest {
+    private val serializer = KotlinxSerializer()
+
     object MemorySubjects {
         /**
          * Information specific to the current user
@@ -93,7 +96,7 @@ class AIAgentMemoryTest {
         every { response.content } returns "Test fact"
 
         coEvery {
-            promptExecutor.execute(any(), any(), any())
+            promptExecutor.execute(any(), any())
         } returns listOf(response)
 
         coEvery {
@@ -104,8 +107,9 @@ class AIAgentMemoryTest {
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
-            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            environment = MockEnvironment(ToolRegistry.EMPTY, promptExecutor, serializer),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )
@@ -173,15 +177,16 @@ class AIAgentMemoryTest {
         every { response.content } returns "OK"
 
         coEvery {
-            promptExecutor.execute(any(), any(), any())
+            promptExecutor.execute(any(), any())
         } returns listOf(response)
 
         val llm = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
-            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            environment = MockEnvironment(ToolRegistry.EMPTY, promptExecutor, serializer),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )
@@ -256,7 +261,7 @@ class AIAgentMemoryTest {
 
         // Verify that writeSession was called and the prompt was updated with facts
         coVerify {
-            llm.writeSession(any())
+            llm.writeSession(any<suspend AIAgentLLMWriteSession.() -> Any?>())
         }
         assertTrue(promptUpdateSlot.isCaptured, "Prompt update should be captured")
 
@@ -283,7 +288,7 @@ class AIAgentMemoryTest {
         val response = mockk<Message.Response>()
         every { response.content } returns "Test fact"
         coEvery {
-            promptExecutor.execute(any(), any(), any())
+            promptExecutor.execute(any(), any())
         } returns listOf(response)
 
         // Mock memory feature to capture saved facts
@@ -296,7 +301,8 @@ class AIAgentMemoryTest {
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
-            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            responseProcessor = null,
+            environment = MockEnvironment(ToolRegistry.EMPTY, promptExecutor, serializer),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )
@@ -348,7 +354,7 @@ class AIAgentMemoryTest {
 
     @Test
     fun testSaveFactsFromHistoryWithCustomModel() = runTest {
-        val customModel = OpenAIModels.CostOptimized.O3Mini
+        val customModel = OpenAIModels.Chat.O3Mini
         val originalModel = testModel
 
         val memoryProvider = mockk<AgentMemoryProvider>()
@@ -363,7 +369,7 @@ class AIAgentMemoryTest {
 
         val capturedModels = mutableListOf<LLModel>()
         coEvery {
-            promptExecutor.execute(any(), capture(capturedModels), any())
+            promptExecutor.execute(any(), capture(capturedModels))
         } returns listOf(response)
 
         coEvery {
@@ -378,8 +384,9 @@ class AIAgentMemoryTest {
                 assistant("I'll remember your preference for Java in enterprise development")
             },
             model = originalModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
-            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            environment = MockEnvironment(ToolRegistry.EMPTY, promptExecutor, serializer),
             config = AIAgentConfig(Prompt.Empty, originalModel, 100),
             clock = testClock
         )
@@ -422,7 +429,7 @@ class AIAgentMemoryTest {
         }
 
         coVerify(exactly = 1) {
-            promptExecutor.execute(any(), customModel, any())
+            promptExecutor.execute(any(), customModel)
         }
     }
 
@@ -450,7 +457,7 @@ class AIAgentMemoryTest {
 
         val capturedModels = mutableListOf<LLModel>()
         coEvery {
-            promptExecutor.execute(any(), capture(capturedModels), any())
+            promptExecutor.execute(any(), capture(capturedModels))
         } returns listOf(response)
 
         coEvery {
@@ -465,8 +472,9 @@ class AIAgentMemoryTest {
                 assistant("I'll remember your language preferences for different domains")
             },
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
-            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            environment = MockEnvironment(ToolRegistry.EMPTY, promptExecutor, serializer),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )
@@ -536,15 +544,16 @@ class AIAgentMemoryTest {
         every { response.content } returns "OK"
 
         coEvery {
-            promptExecutor.execute(any(), any(), any())
+            promptExecutor.execute(any(), any())
         } returns listOf(response)
 
         val llm = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
-            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            environment = MockEnvironment(ToolRegistry.EMPTY, promptExecutor, serializer),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )

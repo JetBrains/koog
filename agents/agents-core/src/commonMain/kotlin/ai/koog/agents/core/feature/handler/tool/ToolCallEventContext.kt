@@ -1,25 +1,62 @@
 package ai.koog.agents.core.feature.handler.tool
 
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.feature.model.AIAgentError
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONObject
 
 /**
- * Represents the context for handling tool-specific events within the framework.
+ * Represents the context for handling tool call events.
  */
-public interface ToolCallEventContext : AgentLifecycleEventContext
+public interface ToolCallEventContext : AgentLifecycleEventContext {
+    /**
+     * [runId] The unique identifier for this tool call session;
+     */
+    public val runId: String
+
+    /**
+     * [toolCallId] The unique identifier for this tool call;
+     */
+    public val toolCallId: String?
+
+    /**
+     * [toolName] The tool name that is being executed;
+     */
+    public val toolName: String
+
+    /**
+     * [toolDescription] A description of the tool being executed;
+     */
+    public val toolDescription: String?
+
+    /**
+     * [toolArgs] The arguments provided for the tool execution, adhering to the tool's expected input structure.
+     */
+    public val toolArgs: JSONObject
+
+    /**
+     * [context] The agent context associated with the tool call;
+     */
+    public val context: AIAgentContext
+}
 
 /**
  * Represents the context for handling a tool call event.
  *
- * @property tool The tool instance that is being executed. It encapsulates the logic and metadata for the operation.
- * @property toolArgs The arguments provided for the tool execution, adhering to the tool's expected input structure.
+ * @property executionInfo The execution information containing parentId and current execution path;
  */
 public data class ToolCallStartingContext(
-    val runId: String,
-    val toolCallId: String?,
-    val tool: Tool<*, *>,
-    val toolArgs: Any?
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
+    override val runId: String,
+    override val toolCallId: String?,
+    override val toolName: String,
+    override val toolDescription: String?,
+    override val toolArgs: JSONObject,
+    override val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallStarting
 }
@@ -27,16 +64,21 @@ public data class ToolCallStartingContext(
 /**
  * Represents the context for handling validation errors that occur during the execution of a tool.
  *
- * @param tool The tool instance associated with the validation error.
- * @param toolArgs The arguments passed to the tool when the error occurred.
- * @param error The error message describing the validation issue.
+ * @property executionInfo The execution information containing parentId and current execution path;
+ * @property message A message describing the validation error.
+ * @property error The [AIAgentError] error describing the validation issue.
  */
 public data class ToolValidationFailedContext(
-    val runId: String,
-    val toolCallId: String?,
-    val tool: Tool<*, *>,
-    val toolArgs: Any?,
-    val error: String
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
+    override val runId: String,
+    override val toolCallId: String?,
+    override val toolName: String,
+    override val toolDescription: String?,
+    override val toolArgs: JSONObject,
+    val message: String,
+    val error: AIAgentError,
+    override val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolValidationFailed
 }
@@ -44,16 +86,21 @@ public data class ToolValidationFailedContext(
 /**
  * Represents the context provided to handle a failure during the execution of a tool.
  *
- * @param tool The tool that was being executed when the failure occurred.
- * @param toolArgs The arguments that were passed to the tool during execution.
- * @param throwable The exception or error that caused the failure.
+ * @property executionInfo The execution information containing parentId and current execution path;
+ * @property message A message describing the failure that occurred.
+ * @property error The [AIAgentError] instance describing the tool call failure.
  */
 public data class ToolCallFailedContext(
-    val runId: String,
-    val toolCallId: String?,
-    val tool: Tool<*, *>,
-    val toolArgs: Any?,
-    val throwable: Throwable
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
+    override val runId: String,
+    override val toolCallId: String?,
+    override val toolName: String,
+    override val toolDescription: String?,
+    override val toolArgs: JSONObject,
+    val message: String,
+    val error: AIAgentError?,
+    override val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallFailed
 }
@@ -61,16 +108,19 @@ public data class ToolCallFailedContext(
 /**
  * Represents the context used when handling the result of a tool call.
  *
- * @param tool The tool being executed, which defines the operation to be performed.
- * @param toolArgs The arguments required by the tool for execution.
- * @param result An optional result produced by the tool after execution can be null if not applicable.
+ * @property executionInfo The execution information containing parentId and current execution path;
+ * @property toolResult An optional result produced by the tool after execution can be null if not applicable.
  */
 public data class ToolCallCompletedContext(
-    val runId: String,
-    val toolCallId: String?,
-    val tool: Tool<*, *>,
-    val toolArgs: Any?,
-    val result: Any?
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
+    override val runId: String,
+    override val toolCallId: String?,
+    override val toolName: String,
+    override val toolDescription: String?,
+    override val toolArgs: JSONObject,
+    val toolResult: JSONElement?,
+    override val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallCompleted
 }

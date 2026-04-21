@@ -8,16 +8,19 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.toStreamFrame
+import ai.koog.prompt.streaming.toStreamFrames
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.datetime.Clock
+import kotlinx.coroutines.flow.flow
+import kotlin.time.Clock
+import kotlin.time.Instant
 
-class TestLLMExecutor : PromptExecutor {
+class TestLLMExecutor : PromptExecutor() {
     companion object {
         val testClock: Clock = object : Clock {
-            override fun now(): kotlinx.datetime.Instant = kotlinx.datetime.Instant.parse("2023-01-01T00:00:00Z")
+            override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
         }
+
+        const val DEFAULT_ASSISTANT_RESPONSE = "Default test response"
     }
 
     // Track the number of TLDR messages created
@@ -41,8 +44,9 @@ class TestLLMExecutor : PromptExecutor {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> =
-        flowOf(handlePrompt(prompt).toStreamFrame())
+    ): Flow<StreamFrame> = flow {
+        handlePrompt(prompt).toStreamFrames().forEach { emit(it) }
+    }
 
     override suspend fun moderate(
         prompt: Prompt,
@@ -68,7 +72,7 @@ class TestLLMExecutor : PromptExecutor {
             return tldrResponse
         }
 
-        val response = Message.Assistant("Default test response", metaInfo = ResponseMetaInfo.create(testClock))
+        val response = Message.Assistant(DEFAULT_ASSISTANT_RESPONSE, metaInfo = ResponseMetaInfo.create(testClock))
         messages.add(response)
         return response
     }

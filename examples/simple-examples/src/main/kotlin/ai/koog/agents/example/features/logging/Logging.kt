@@ -2,6 +2,7 @@ package ai.koog.agents.example.features.logging
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -36,7 +37,9 @@ class Logging(val logger: Logger) {
     companion object Feature : AIAgentGraphFeature<Config, Logging> {
         override val key: AIAgentStorageKey<Logging> = createStorageKey("logging-feature")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): Config = Config()
 
         /**
          * Installs the Logging Feature into the provided pipeline.
@@ -99,7 +102,7 @@ class Logging(val logger: Logger) {
 fun installLogging(coroutineScope: CoroutineScope, logName: String = "agent-logs") {
     val agent = AIAgent(
         promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+        llmModel = OpenAIModels.Chat.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
         install(Logging) {

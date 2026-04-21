@@ -54,7 +54,7 @@ public abstract class JsonSchemaGenerator {
             val typeDescriptionAnnotation = descriptor.annotations
                 .filterIsInstance<LLMDescription>()
                 .firstOrNull()
-                ?.description
+                ?.value
 
             return typeDescriptionOverride ?: typeDescriptionAnnotation
         }
@@ -76,7 +76,7 @@ public abstract class JsonSchemaGenerator {
             val elementDescriptionAnnotation = elementAnnotations
                 .filterIsInstance<LLMDescription>()
                 .firstOrNull()
-                ?.description
+                ?.value
 
             return elementDescriptionOverride ?: elementDescriptionAnnotation
         }
@@ -123,6 +123,7 @@ public abstract class JsonSchemaGenerator {
     protected abstract fun processObject(context: GenerationContext): JsonObject
     protected abstract fun processPolymorphic(context: GenerationContext): JsonObject
     protected abstract fun processClassDiscriminator(context: GenerationContext): JsonObject
+    protected abstract fun processJsonElement(context: GenerationContext): JsonObject
 }
 
 /**

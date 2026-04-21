@@ -3,9 +3,9 @@ package ai.koog.integration.tests.executor
 import ai.koog.integration.tests.InjectOllamaTestFixture
 import ai.koog.integration.tests.OllamaTestFixture
 import ai.koog.integration.tests.OllamaTestFixtureExtension
+import ai.koog.integration.tests.utils.MediaTestScenarios
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestUtils
-import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
@@ -19,9 +19,21 @@ import ai.koog.prompt.llm.LLMCapability.Tools
 import ai.koog.prompt.llm.LLMCapability.Vision
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
+import ai.koog.prompt.streaming.StreamFrame
+import io.kotest.assertions.withClue
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldNotBeTrue
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldNotBeBlank
+import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -31,10 +43,6 @@ import java.nio.file.Paths
 import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.pathString
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
 
@@ -56,8 +64,10 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         lateinit var fixture: OllamaTestFixture
         val executor get() = fixture.executor
         val model get() = fixture.model
+        val embeddingsModel get() = fixture.embeddingsModel
         val visionModel get() = fixture.visionModel
         val moderationModel get() = fixture.moderationModel
+        val thinkingModel get() = fixture.thinkingModel
         val client get() = fixture.client
 
         @JvmStatic
@@ -65,7 +75,6 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             return ImageTestScenario.entries
                 .minus(
                     setOf(
-                        ImageTestScenario.LARGE_IMAGE_ANTHROPIC,
                         ImageTestScenario.EMPTY_IMAGE,
                         ImageTestScenario.CORRUPTED_IMAGE,
                     )
@@ -99,7 +108,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolsWithRequiredParams(model: LLModel) {
-        super.integration_testToolsWithRequiredParams(model)
+        super.integration_testToolWithRequiredParams(model)
     }
 
     @ParameterizedTest
@@ -107,43 +116,37 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     fun ollama_testToolsWithRequiredOptionalParams(
         model: LLModel
     ) {
-        super.integration_testToolsWithRequiredOptionalParams(model)
+        super.integration_testToolWithNotRequiredOptionalParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolsWithOptionalParams(model: LLModel) {
-        super.integration_testToolsWithOptionalParams(model)
+        super.integration_testToolWithOptionalParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolsWithNoParams(model: LLModel) {
-        super.integration_testToolsWithNoParams(model)
+        super.integration_testToolWithNoParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolsWithListEnumParams(model: LLModel) {
-        super.integration_testToolsWithListEnumParams(model)
+        super.integration_testToolWithListEnumParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolsWithNestedListParams(model: LLModel) {
-        super.integration_testToolsWithNestedListParams(model)
-    }
-
-    @ParameterizedTest
-    @MethodSource("modelParams")
-    fun ollama_testRawStringStreaming(model: LLModel) {
-        integration_testRawStringStreaming(model)
+        super.integration_testToolWithNestedListParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testStructuredDataStreaming(model: LLModel) {
-        integration_testStructuredDataStreaming(model)
+        integration_testMarkdownStructuredDataStreaming(model)
     }
 
     @ParameterizedTest
@@ -177,7 +180,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
         val result = executor.moderate(prompt = prompt, model = moderationModel)
 
-        assertTrue(result.isHarmful, "Harmful content should be detected!")
+        result.isHarmful.shouldBeTrue()
         assert(
             result.violatesOneOf(
                 ModerationCategory.Illicit,
@@ -215,27 +218,29 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             assistant(unsafeAnswer)
         }
 
-        assert(
-            !executor.moderate(prompt = questionOnly, model = moderationModel).isHarmful
-        ) { "Question only should not be detected as harmful!" }
+        withClue("Question only should not be detected as harmful!") {
+            executor.moderate(prompt = questionOnly, model = moderationModel).isHarmful.shouldNotBeTrue()
+        }
 
-        assert(
-            executor.moderate(prompt = answerOnly, model = moderationModel).isHarmful
-        ) { "Answer alone should be detected as harmful!" }
+        withClue("Answer alone should be detected as harmful!") {
+            executor.moderate(prompt = answerOnly, model = moderationModel).isHarmful.shouldBeTrue()
+        }
 
         val multiMessageReply = executor.moderate(
             prompt = promptWithMultipleMessages,
             model = moderationModel,
         )
 
-        assert(multiMessageReply.isHarmful) { "Question together with answer must be detected as harmful!" }
+        withClue("Question together with answer must be detected as harmful!") {
+            multiMessageReply.isHarmful.shouldBeTrue()
+        }
 
-        assert(
+        withClue("Hate must be detected!") {
             multiMessageReply.violatesOneOf(
                 ModerationCategory.Hate,
                 ModerationCategory.HateThreatening,
-            )
-        ) { "Hate must be detected!" }
+            ).shouldBeTrue()
+        }
     }
 
     // Ollama-specific client tests
@@ -244,26 +249,45 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         val modelCards = client.getModels()
 
         val modelCard = modelCards.findByNameOrNull(model.id)
-        assertNotNull(modelCard)
+        modelCard shouldNotBe null
     }
 
     @Test
     fun `ollama_test get model`() = runTest(timeout = 600.seconds) {
-        val modelCard = client.getModelOrNull(model.id)
-        assertNotNull(modelCard)
+        client.getModelOrNull(model.id) shouldNotBeNull {
+            name shouldBe model.id
+            family shouldBe "llama"
+            families shouldBe listOf("llama")
+            size shouldBe 2019393189
+            parameterCount shouldBe 3212749888
+            contextLength shouldBe 131072
+            embeddingLength shouldBe 3072
+            quantizationLevel shouldBe "Q4_K_M"
+            capabilities shouldBe listOf(
+                Completion,
+                Tools,
+                Temperature,
+                Schema.JSON.Basic,
+                Schema.JSON.Standard
+            )
+        }
+    }
 
-        assertEquals(model.id, modelCard.name)
-        assertEquals("llama", modelCard.family)
-        assertEquals(listOf("llama"), modelCard.families)
-        assertEquals(2019393189, modelCard.size)
-        assertEquals(3212749888, modelCard.parameterCount)
-        assertEquals(131072, modelCard.contextLength)
-        assertEquals(3072, modelCard.embeddingLength)
-        assertEquals("Q4_K_M", modelCard.quantizationLevel)
-        assertEquals(
-            listOf(Completion, Tools, Temperature, Schema.JSON.Basic, Schema.JSON.Standard),
-            modelCard.capabilities
-        )
+    // Ollama-specific embed text test
+    @Test
+    fun `ollama_test embed one string`() = runTest {
+        client.embed(text = "text", model = embeddingsModel)
+            .shouldNotBeNull()
+            .shouldNotBeEmpty()
+    }
+
+    // Ollama-specific embed text test
+    @Test
+    fun `ollama_test embed list of string`() = runTest {
+        client.embed(inputs = listOf("one", "two"), model = embeddingsModel)
+            .shouldNotBeNull()
+            .shouldNotBeEmpty()
+            .shouldHaveSize(2)
     }
 
     // Ollama-specific image processing test
@@ -272,7 +296,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     fun `ollama_test image processing`(scenario: ImageTestScenario) = runTest(timeout = 600.seconds) {
         val ollamaException =
             "Ollama API error: Failed to create new sequence: failed to process inputs"
-        assumeTrue(visionModel.capabilities.contains(Vision.Image), "Model must support vision capability")
+        assumeTrue(visionModel.supports(Vision.Image), "Model must support vision capability")
 
         val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
 
@@ -293,27 +317,15 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
             when (scenario) {
                 ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG,
-                ImageTestScenario.SMALL_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                    checkExecutorMediaResponse(response)
-                    assertTrue(response.content.isNotEmpty(), "Response should not be empty")
-                }
 
                 ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                    assertTrue(response.content.isNotEmpty(), "Response should not be empty")
-                }
-
-                ImageTestScenario.LARGE_IMAGE -> {
-                    assertTrue(response.content.isNotEmpty(), "Response should not be empty")
+                    response.content.shouldNotBeBlank()
                 }
             }
         } catch (e: Exception) {
             when (scenario) {
                 ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                    assertEquals(
-                        true,
-                        e.message?.contains(ollamaException),
-                        "Expected exception for a corrupted image was not found, got [${e.message}] instead"
-                    )
+                    (e.message?.contains(ollamaException) == true).shouldBeTrue()
                 }
 
                 else -> {
@@ -321,5 +333,59 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
                 }
             }
         }
+    }
+
+    @Test
+    fun `ollama_test txt file processing`() = runTest(timeout = 600.seconds) {
+        val textFile = MediaTestUtils.createTextFileForScenario(
+            MediaTestScenarios.TextTestScenario.BASIC_TEXT,
+            testResourcesDir
+        )
+
+        val prompt = prompt("text-file-test") {
+            system("You are a helpful assistant that can analyze text files.")
+
+            user {
+                markdown {
+                    +"I'm sending you a text file. Please read its content and summarize it."
+                }
+
+                textFile(KtPath(textFile.pathString), "text/plain")
+            }
+        }
+
+        val response = executor.execute(prompt, model).single()
+        response.content.shouldNotBeBlank()
+    }
+
+    @Test
+    fun `ollama_test thinking feature in streaming mode`() = runTest(timeout = 600.seconds) {
+        val prompt = prompt("thinking-test") {
+            system("You are a helpful assistant. Think step by step.")
+            user("What is 15 * 23? Show your reasoning.")
+        }
+
+        val reasoningDeltaFrames = mutableListOf<StreamFrame.ReasoningDelta>()
+        val reasoningCompleteFrames = mutableListOf<StreamFrame.ReasoningComplete>()
+        val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+
+        executor.executeStreaming(prompt, thinkingModel, listOf()).collect { frame ->
+            when (frame) {
+                is StreamFrame.ReasoningDelta -> reasoningDeltaFrames.add(frame)
+                is StreamFrame.ReasoningComplete -> reasoningCompleteFrames.add(frame)
+                is StreamFrame.TextDelta -> textDeltaFrames.add(frame)
+                else -> {}
+            }
+        }
+
+        reasoningDeltaFrames.shouldNotBeEmpty()
+        reasoningCompleteFrames.shouldNotBeEmpty()
+
+        val allThinking = reasoningDeltaFrames.joinToString("") { it.text.orEmpty() }
+        allThinking.shouldNotBeBlank()
+
+        val allContent = textDeltaFrames.joinToString("") { it.text }
+        allContent.shouldNotBeBlank()
+        allContent.shouldNotContain(allThinking)
     }
 }

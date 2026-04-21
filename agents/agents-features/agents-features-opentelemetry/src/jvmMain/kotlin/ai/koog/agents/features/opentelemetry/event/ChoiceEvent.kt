@@ -1,7 +1,7 @@
 package ai.koog.agents.features.opentelemetry.event
 
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 import kotlinx.serialization.json.JsonObject
@@ -36,10 +36,14 @@ internal class ChoiceEvent(
                 arguments?.let { addBodyField(EventBodyFields.Arguments(it)) }
             }
 
+            is Message.Reasoning -> {
+                addBodyField(EventBodyFields.Message(message.role, message.content))
+            }
+
             is Message.Tool.Call -> {
                 addBodyField(EventBodyFields.Role(role = message.role))
                 addBodyField(EventBodyFields.ToolCalls(tools = listOf(message)))
-                addBodyField(EventBodyFields.FinishReason(SpanAttributes.Response.FinishReasonType.ToolCalls.id))
+                addBodyField(EventBodyFields.FinishReason(GenAIAttributes.Response.FinishReasonType.ToolCalls.id))
             }
         }
     }

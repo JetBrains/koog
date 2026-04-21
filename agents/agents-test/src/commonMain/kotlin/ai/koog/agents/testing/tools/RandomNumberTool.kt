@@ -3,7 +3,6 @@ package ai.koog.agents.testing.tools
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlin.random.Random
@@ -11,7 +10,12 @@ import kotlin.random.Random
 /**
  * A tool that provides a random number using the passed seed.
  */
-public class RandomNumberTool : Tool<RandomNumberTool.Args, Int>() {
+public class RandomNumberTool : Tool<RandomNumberTool.Args, Int>(
+    argsSerializer = Args.serializer(),
+    resultSerializer = Int.serializer(),
+    name = "random_number",
+    description = "Generates a random number"
+) {
 
     /**
      * The last generated random number.
@@ -30,10 +34,6 @@ public class RandomNumberTool : Tool<RandomNumberTool.Args, Int>() {
         @property:LLMDescription("The seed for the random number generator")
         val seed: Int? = null
     )
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<Int> = Int.serializer()
-    override val description: String = "Generates a random number"
 
     override suspend fun execute(args: Args): Int {
         val seed = args.seed

@@ -7,22 +7,27 @@ import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0FlashLite
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5Flash
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5FlashLite
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5Pro
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini3_Flash_Preview
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini3_Pro_Preview
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import kotlin.jvm.JvmField
 
 /**
  * Google Gemini models and their capabilities.
  * See https://ai.google.dev/gemini-api/docs for more information.
  *
- * | Name                        | Speed     | Price (per 1M tokens)        | Input                            | Output              |
- * |-----------------------------|-----------|------------------------------|----------------------------------|---------------------|
- * | [Gemini2_0Flash]            | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_0Flash001]         | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_0FlashLite]        | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5FlashLite]        | Fast      | $0.10-$0.30 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
+ * | Name                        | Speed     | Price (per 1M tokens)        | Input                                       | Output              |
+ * |-----------------------------|-----------|------------------------------|---------------------------------------------|---------------------|
+ * | [Gemini2_0Flash]            | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools            | Text, Tools         |
+ * | [Gemini2_0Flash001]         | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools            | Text, Tools         |
+ * | [Gemini2_0FlashLite]        | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Tools            | Text, Tools         |
+ * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
+ * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools            | Text, Tools         |
+ * | [Gemini2_5FlashLite]        | Fast      | $0.10-$0.30 / $0.40          | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
+ * | [Gemini3_Pro_Preview]       | Slow      | $2.00-$4.00 / $12.00-$18.00  | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
+ * | [Gemini3_Flash_Preview]     | Fast      | $0.50 / $3                   | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
  *
  * @see <a href="modelcards.withgoogle.com/model-cards">
  */
@@ -59,7 +64,7 @@ public object GoogleModels : LLModelDefinitions {
     )
 
     /**
-     * Full capabilities including standard, multimodal, tools and native structured output
+     * Full capabilities including standard, multimodal, tools, native structured output
      */
     private val fullCapabilities: List<LLMCapability> =
         standardCapabilities + multimodalCapabilities + toolCapabilities + structuredOutputCapabilities
@@ -73,6 +78,8 @@ public object GoogleModels : LLModelDefinitions {
      *
      * @see <a href="storage.googleapis.com/model-cards/documents/gemini-2-flash.pdf">
      */
+    @Deprecated("Use Gemini2_5Flash instead")
+    @JvmField
     public val Gemini2_0Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash",
@@ -84,6 +91,8 @@ public object GoogleModels : LLModelDefinitions {
     /**
      * Specific version of Gemini 2.0 Flash
      */
+    @Deprecated("Use Gemini2_5Flash instead")
+    @JvmField
     public val Gemini2_0Flash001: LLModel = Gemini2_0Flash.copy(
         id = "gemini-2.0-flash-001",
     )
@@ -97,6 +106,8 @@ public object GoogleModels : LLModelDefinitions {
      *
      * @see <a href="storage.googleapis.com/model-cards/documents/gemini-2-flash-lite.pdf">
      */
+    @Deprecated("Use Gemini2_5FlashLite instead")
+    @JvmField
     public val Gemini2_0FlashLite: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash-lite",
@@ -108,6 +119,7 @@ public object GoogleModels : LLModelDefinitions {
     /**
      * Specific version of Gemini 2.0 Flash-Lite
      */
+    @JvmField
     public val Gemini2_0FlashLite001: LLModel = Gemini2_0FlashLite.copy(
         id = "gemini-2.0-flash-lite-001",
     )
@@ -117,10 +129,11 @@ public object GoogleModels : LLModelDefinitions {
      *
      * @see <a href="storage.googleapis.com/model-cards/documents/gemini-2.5-pro.pdf">
      */
+    @JvmField
     public val Gemini2_5Pro: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-pro",
-        capabilities = fullCapabilities,
+        capabilities = fullCapabilities + LLMCapability.Thinking,
         contextLength = 1_048_576,
         maxOutputTokens = 65_536,
     )
@@ -130,10 +143,11 @@ public object GoogleModels : LLModelDefinitions {
      *
      * @see <a href="storage.googleapis.com/model-cards/documents/gemini-2.5-flash.pdf">
      */
+    @JvmField
     public val Gemini2_5Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-flash",
-        capabilities = fullCapabilities,
+        capabilities = fullCapabilities + LLMCapability.Thinking,
         contextLength = 1_048_576,
         maxOutputTokens = 65_536,
     )
@@ -143,6 +157,7 @@ public object GoogleModels : LLModelDefinitions {
      *
      * @see <a href="storage.googleapis.com/deepmind-media/Model-Cards/Gemini-2-5-Flash-Lite-Model-Card.pdf">
      */
+    @JvmField
     public val Gemini2_5FlashLite: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-flash-lite",
@@ -150,4 +165,91 @@ public object GoogleModels : LLModelDefinitions {
         contextLength = 1_048_576,
         maxOutputTokens = 65_536,
     )
+
+    /**
+     * Gemini 3 Flash Preview is the latest 3-series model,
+     * with Pro-level intelligence at the speed and pricing of Flash.
+     *
+     * Context window: 1 million tokens
+     * Knowledge cutoff: January 2025
+     * Input: Text, Image, Video, Audio, and PDF
+     * Output: Text
+     *
+     * @see <a href="https://ai.google.dev/gemini-api/docs/models/gemini-3-flash-preview">
+     */
+    @JvmField
+    public val Gemini3_Flash_Preview: LLModel = LLModel(
+        provider = LLMProvider.Google,
+        id = "gemini-3-flash-preview",
+        capabilities = fullCapabilities + LLMCapability.Thinking,
+        contextLength = 1_048_576,
+        maxOutputTokens = 65_536,
+    )
+
+    /**
+     * Gemini 3 Pro is the first model in the new series, featuring advanced reasoning capabilities.
+     * It uses `thinking_level` instead of `thinking_budget` for reasoning control.
+     *
+     * Context window: 1 million tokens
+     * Knowledge cutoff: January 2025
+     *
+     * @see <a href="ai.google.dev/gemini-api/docs/gemini-3">
+     */
+    @JvmField
+    public val Gemini3_Pro_Preview: LLModel = LLModel(
+        provider = LLMProvider.Google,
+        id = "gemini-3-pro-preview",
+        capabilities = fullCapabilities + LLMCapability.Thinking,
+        contextLength = 1_048_576,
+        maxOutputTokens = 65_536,
+    )
+
+    /**
+     * Models for generating text embeddings.
+     */
+    public object Embeddings {
+        /**
+         * Gemini embedding model for generating embeddings for words, phrases, and sentences.
+         *
+         * Input token limit: 2048
+         *
+         * @see <a href="https://ai.google.dev/gemini-api/docs/embeddings#model-versions">
+         */
+        @JvmField
+        public val GeminiEmbedding001: LLModel = LLModel(
+            provider = LLMProvider.Google,
+            id = "gemini-embedding-001",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 2048,
+        )
+    }
+
+    /**
+     * List of the supported models by the Google provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        Gemini2_0Flash,
+        Gemini2_0Flash001,
+        Gemini2_0FlashLite,
+        Gemini2_0FlashLite001,
+        Gemini2_5Pro,
+        Gemini2_5Flash,
+        Gemini2_5FlashLite,
+        Gemini3_Pro_Preview,
+        Gemini3_Flash_Preview,
+        Embeddings.GeminiEmbedding001,
+    )
+
+    /**
+     * List of custom models added to the Google provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.Google) { "Model provider must be Google" }
+        customModels.add(model)
+    }
 }

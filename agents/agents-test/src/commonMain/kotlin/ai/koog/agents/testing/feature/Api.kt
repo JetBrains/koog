@@ -12,8 +12,6 @@ import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
  * @param test A lambda with receiver that configures the testing environment with assertions.
  *
  * @see Testing.Config
- *
- * @sample graphUsageExample
  */
 public fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
     enableGraphTesting = true
@@ -21,6 +19,7 @@ public fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
     handleAssertion { assertionResult ->
         when (assertionResult) {
             is AssertionResult.False -> kotlin.test.assertTrue(false, assertionResult.message)
+
             is AssertionResult.NotEqual -> kotlin.test.assertEquals(
                 assertionResult.expected,
                 assertionResult.actual,
@@ -99,36 +98,3 @@ public fun <Input, Output> FeatureContext.testGraph(
             }
         }
     }
-
-/**
- * Sample code demonstrating the usage of the [graph] function.
- * This is for documentation purposes only and is not meant to be executed.
- */
-private fun graphUsageExample() {
-    // This is a sample and won't be executed
-    val config = Testing.Config()
-
-    config.graph {
-        verifyStrategy<String, String>("strategy-name") {
-            val start = startNode()
-            val finish = finishNode()
-
-            // Assert nodes exist by name with their input/output types
-            val processNode = assertNodeByName<String, String>("process")
-
-            // Assert node reachability
-            assertReachable(start, processNode)
-            assertReachable(processNode, finish)
-
-            // Test node behavior
-            assertNodes {
-                processNode withInput "test input" outputs "test output"
-            }
-
-            // Test edge connections
-            assertEdges {
-                processNode withOutput "test output" goesTo finish
-            }
-        }
-    }
-}

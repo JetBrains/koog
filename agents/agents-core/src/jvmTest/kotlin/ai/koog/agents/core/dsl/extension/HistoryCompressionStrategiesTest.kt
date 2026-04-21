@@ -3,28 +3,32 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 class HistoryCompressionStrategiesTest {
-    private fun createMockExecutor() = getMockExecutor {
+    private val serializer = KotlinxSerializer()
+
+    private fun createMockExecutor() = getMockExecutor(serializer) {
         mockLLMAnswer("TLDR").onRequestContains("Create a comprehensive summary")
     }
 
@@ -165,7 +169,8 @@ class HistoryCompressionStrategiesTest {
                 listOf(
                     Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
                     Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
+                    Message.Tool.Call("ID", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(3.minutes)))
                 )
             ),
             Arguments.of(
@@ -221,7 +226,8 @@ class HistoryCompressionStrategiesTest {
                 listOf(
                     Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
                     Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
+                    Message.Tool.Call("ID", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(3.minutes)))
                 )
             ),
             Arguments.of(
@@ -378,7 +384,7 @@ class HistoryCompressionStrategiesTest {
             toolRegistry = createToolRegistry()
         )
 
-        val resultMessages = agent.run("User input")
+        val resultMessages = agent.run("User input", null)
 
         assert(resultMessages.size == compressedMessages.size)
         resultMessages.forEachIndexed { index, message ->

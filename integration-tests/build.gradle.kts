@@ -17,7 +17,7 @@ kotlin {
                 implementation(libs.testcontainers)
                 implementation(libs.ktor.server.netty)
                 implementation(kotlin("test-junit5"))
-                runtimeOnly(libs.ktor.client.apache5)
+                runtimeOnly(libs.ktor.client.cio)
                 runtimeOnly(libs.slf4j.simple)
             }
         }
@@ -28,7 +28,9 @@ kotlin {
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
                 implementation(project(":agents:agents-features:agents-features-snapshot"))
+                implementation(project(":agents:agents-features:agents-features-acp"))
                 implementation(project(":agents:agents-mcp"))
+                implementation(project(":agents:agents-features:agents-features-opentelemetry"))
                 implementation(project(":agents:agents-mcp-server"))
                 implementation(project(":agents:agents-test"))
                 implementation(
@@ -39,13 +41,23 @@ kotlin {
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client")
                 )
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
+                implementation(
+                    project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client")
+                )
+                implementation(project(":agents:agents-features:agents-features-chat-history-aws"))
+
+                // External libraries
                 implementation(libs.junit.jupiter.params)
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotest.assertions.core)
+                implementation(libs.assertj.core)
                 implementation(libs.aws.sdk.kotlin.sts)
                 implementation(libs.aws.sdk.kotlin.bedrock)
                 implementation(libs.aws.sdk.kotlin.bedrockruntime)
+                implementation(libs.aws.sdk.kotlin.bedrockagentcore)
                 implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.opentelemetry.sdk.testing)
             }
         }
     }
@@ -61,9 +73,15 @@ val envs = credentialsResolver.resolve(
 )
 
 tasks.withType<Test> {
-    // Forward system properties to the test JVM
+    // Forward test-relevant system properties to the test JVM.
+    // Exclude JVM-internal properties (java.*, sun.*, jdk.*, etc.) to avoid conflicts
+    // when the Gradle daemon runs on a different JDK version than the test toolchain.
+    val jvmInternalPrefixes = setOf("java.", "sun.", "jdk.", "os.", "user.", "file.", "line.", "path.", "native.", "stderr.", "stdout.")
     System.getProperties().forEach { key, value ->
-        systemProperty(key.toString(), value)
+        val k = key.toString()
+        if (jvmInternalPrefixes.none { k.startsWith(it) }) {
+            systemProperty(k, value)
+        }
     }
 }
 

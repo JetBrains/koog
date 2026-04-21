@@ -2,13 +2,13 @@ package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.reflect.KClass
-import kotlin.test.assertEquals
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OpenAILLMClientTest {
@@ -50,6 +50,6 @@ class OpenAILLMClientTest {
             model = model,
         )
 
-        assertEquals(expectedClass, result::class)
+        result::class shouldBe expectedClass
     }
 }

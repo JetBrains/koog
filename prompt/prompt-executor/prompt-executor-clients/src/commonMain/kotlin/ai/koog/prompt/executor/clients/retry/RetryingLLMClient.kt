@@ -4,16 +4,20 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.IncompleteStreamException
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlin.jvm.JvmOverloads
 import kotlin.random.Random
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -33,10 +37,10 @@ import kotlin.time.Duration.Companion.milliseconds
  * @param delegate The LLMClient to wrap with retry logic
  * @param config Configuration for retry behavior
  */
-public class RetryingLLMClient(
+public class RetryingLLMClient @JvmOverloads constructor(
     private val delegate: LLMClient,
     internal val config: RetryConfig = RetryConfig()
-) : LLMClient {
+) : LLMClient() {
 
     /**
      * Retrieves the configured instance of the `LLMProvider` in use.
@@ -114,6 +118,38 @@ public class RetryingLLMClient(
         delegate.moderate(prompt, model)
     }
 
+    override suspend fun models(): List<LLModel> = withRetry("models") {
+        delegate.models()
+    }
+
+    /**
+     * Embeds the given text, retrying on transient failures according to [config].
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding.
+     * @return A list of floating-point values representing the embedding vector.
+     */
+    override suspend fun embed(
+        text: String,
+        model: LLModel
+    ): List<Double> = withRetry("embed") {
+        delegate.embed(text, model)
+    }
+
+    /**
+     * Embeds the given inputs, retrying on transient failures according to [config].
+     *
+     * @param inputs The list of texts to embed.
+     * @param model The model to use for embedding.
+     * @return A list of embedding vectors, one per input string.
+     */
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> = withRetry("embed") {
+        delegate.embed(inputs, model)
+    }
+
     private suspend fun <T> withRetry(
         operation: String,
         block: suspend () -> T
@@ -145,6 +181,8 @@ public class RetryingLLMClient(
     }
 
     private fun shouldRetry(error: Throwable): Boolean {
+        if (error is IncompleteStreamException) return true
+
         val message = error.message ?: return false
 
         // Check if error matches any retry pattern
@@ -177,6 +215,14 @@ public class RetryingLLMClient(
 
     override fun close() {
         delegate.close()
+    }
+
+    override fun getStandardJsonSchemaGenerator(): StandardJsonSchemaGenerator {
+        return delegate.getStandardJsonSchemaGenerator()
+    }
+
+    override fun getBasicJsonSchemaGenerator(): BasicJsonSchemaGenerator {
+        return delegate.getBasicJsonSchemaGenerator()
     }
 }
 

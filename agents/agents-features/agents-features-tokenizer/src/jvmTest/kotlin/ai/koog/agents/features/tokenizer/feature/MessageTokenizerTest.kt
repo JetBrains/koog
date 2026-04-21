@@ -3,6 +3,7 @@ package ai.koog.agents.features.tokenizer.feature
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -13,8 +14,9 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.feature.withTesting
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.tokenizer.Tokenizer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -25,6 +27,7 @@ import kotlin.test.assertEquals
  * This test verifies that the MessageTokenizer correctly tracks token usage.
  */
 class MessageTokenizerTest {
+    private val serializer = KotlinxSerializer()
 
     /**
      * A mock tokenizer that tracks the total tokens counted.
@@ -72,7 +75,7 @@ class MessageTokenizerTest {
             tool(TestTool2)
         }
 
-        val testPromptExecutor = getMockExecutor {
+        val testPromptExecutor = getMockExecutor(serializer) {
             mockLLMToolCall(TestTool1, TestTool.Args("What is the capital of France?")) onRequestEquals "France"
             mockTool(TestTool1) alwaysTells { "I don't know. And what is the capital of Spain?" }
 
@@ -140,7 +143,7 @@ class MessageTokenizerTest {
         }
 
         runBlocking {
-            val result = agent.run("France")
+            val result = agent.run("France", null)
 
             println(result)
 

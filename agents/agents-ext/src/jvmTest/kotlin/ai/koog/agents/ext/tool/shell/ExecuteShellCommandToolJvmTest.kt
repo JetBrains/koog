@@ -1,10 +1,12 @@
 package ai.koog.agents.ext.tool.shell
 
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnOs
@@ -16,6 +18,7 @@ import kotlin.io.path.createFile
 import kotlin.io.path.writeText
 import kotlin.system.measureTimeMillis
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -25,16 +28,17 @@ class ExecuteShellCommandToolJvmTest {
 
     private val executor = JvmShellCommandExecutor()
 
+    private val serializer = KotlinxSerializer()
+
     @TempDir
     lateinit var tempDir: Path
 
-    private suspend fun executeShellCommand(
+    private suspend fun ExecuteShellCommandTool.executeShellCommand(
         command: String,
         timeoutSeconds: Int = 60,
         workingDirectory: String? = null,
-        confirmationHandler: ShellCommandConfirmationHandler = BraveModeConfirmationHandler()
     ): ExecuteShellCommandTool.Result {
-        return ExecuteShellCommandTool(executor, confirmationHandler).execute(
+        return execute(
             ExecuteShellCommandTool.Args(command, timeoutSeconds, workingDirectory)
         )
     }
@@ -63,133 +67,133 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `reading file content and filtering with grep`() = runBlocking {
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
         val file = tempDir.resolve("fruits.txt").createFile()
         file.writeText("apple\nbanana\napricot\ncherry\navocado")
 
-        val result = executeShellCommand("grep ^a fruits.txt", workingDirectory = tempDir.toString())
+        val result = tool.executeShellCommand("grep ^a fruits.txt", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: grep ^a fruits.txt
             apple
             apricot
             avocado
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `reading file content and filtering with findstr`() = runBlocking {
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
         val file = tempDir.resolve("fruits.txt").createFile()
         file.writeText("apple\r\nbanana\r\napricot\r\ncherry\r\navocado")
 
-        val result = executeShellCommand("findstr /B a fruits.txt", workingDirectory = tempDir.toString())
+        val result = tool.executeShellCommand("findstr /B a fruits.txt", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: findstr /B a fruits.txt
             apple
             apricot
             avocado
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `finding files by pattern`() = runBlocking {
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
         tempDir.resolve("report.txt").createFile()
         tempDir.resolve("data.json").createFile()
         tempDir.resolve("config.txt").createFile()
         tempDir.resolve("readme.md").createFile()
 
-        val result = executeShellCommand("find . -name '*.txt' -type f | sort", workingDirectory = tempDir.toString())
+        val result = tool.executeShellCommand("find . -name '*.txt' -type f | sort", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: find . -name '*.txt' -type f | sort
             ./config.txt
             ./report.txt
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `finding files by pattern on Windows`() = runBlocking {
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
         tempDir.resolve("report.txt").createFile()
         tempDir.resolve("data.json").createFile()
         tempDir.resolve("config.txt").createFile()
         tempDir.resolve("readme.md").createFile()
 
-        val result = executeShellCommand("dir /b *.txt | sort", workingDirectory = tempDir.toString())
+        val result = tool.executeShellCommand("dir /b *.txt | sort", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: dir /b *.txt | sort
             config.txt
             report.txt
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `counting lines in file on Windows`() = runBlocking {
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
         tempDir.resolve("file.txt").writeText("line1\r\nline2\r\nline3\r\nline4")
 
-        val result = executeShellCommand("find /c /v \"\" file.txt", workingDirectory = tempDir.toString())
+        val result = tool.executeShellCommand("find /c /v \"\" file.txt", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: find /c /v "" file.txt
-            
+
             ---------- FILE.TXT: 4
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `listing directory structure`() = runBlocking {
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
         val subDir = tempDir.resolve("src/main").createDirectories()
         subDir.resolve("App.kt").createFile()
         subDir.resolve("Utils.kt").createFile()
         tempDir.resolve("README.md").createFile()
 
-        val result = executeShellCommand("find . -type f | sort", workingDirectory = tempDir.toString())
+        val result = tool.executeShellCommand("find . -type f | sort", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: find . -type f | sort
             ./README.md
             ./src/main/App.kt
             ./src/main/Utils.kt
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `listing directory structure on Windows`() = runBlocking {
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
         val subDir = tempDir.resolve("src\\main").createDirectories()
         subDir.resolve("App.kt").createFile()
         subDir.resolve("Utils.kt").createFile()
         tempDir.resolve("README.md").createFile()
 
-        val result = executeShellCommand("dir /s /b /o:n", workingDirectory = tempDir.toString())
+        val result = tool.executeShellCommand("dir /s /b /o:n", workingDirectory = tempDir.toString())
 
         val tempDirStr = tempDir.toAbsolutePath().toString()
 
         val expected = """
-            Command: dir /s /b /o:n
             $tempDirStr\README.md
             $tempDirStr\src
             $tempDirStr\src\main
@@ -198,23 +202,23 @@ class ExecuteShellCommandToolJvmTest {
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     // NO OUTPUT COMMAND EXECUTION TESTS
 
     @Test
     fun `command with no output shows placeholder`() = runBlocking {
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
         val testDir = tempDir.resolve("empty_test").createDirectories()
-        val result = executeShellCommand("mkdir newdir", workingDirectory = testDir.toString())
+        val result = tool.executeShellCommand("mkdir newdir", workingDirectory = testDir.toString())
 
         val expected = """
-            Command: mkdir newdir
             (no output)
             Exit code: 0
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
         assertEquals(0, result.exitCode)
     }
 
@@ -223,68 +227,68 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `command fails with error message`() = runBlocking {
-        val result = executeShellCommand("grep nonexistent /nonexistent/file.txt")
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
+        val result = tool.executeShellCommand("grep nonexistent /nonexistent/file.txt")
 
         val expected = """
-            Command: grep nonexistent /nonexistent/file.txt
             grep: /nonexistent/file.txt: No such file or directory
             Exit code: 2
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `command fails with error message on Windows`() = runBlocking {
-        val result = executeShellCommand("type C:\\nonexistent\\file.txt")
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
+        val result = tool.executeShellCommand("type C:\\nonexistent\\file.txt")
 
         val expected = """
-            Command: type C:\nonexistent\file.txt
             The system cannot find the path specified.
             Exit code: 1
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `stdout and stderr are both captured`() = runBlocking {
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
         tempDir.resolve("file1.txt").writeText("Hello from file1")
 
-        val result = executeShellCommand("cat file1.txt file2.txt", workingDirectory = tempDir.toString())
+        val result = tool.executeShellCommand("cat file1.txt file2.txt", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: cat file1.txt file2.txt
             Hello from file1
             cat: file2.txt: No such file or directory
             Exit code: 1
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `stdout and stderr are both captured on Windows`() = runBlocking {
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
         tempDir.resolve("file1.txt").writeText("Hello from file1")
 
-        val result = executeShellCommand("type file1.txt file2.txt", workingDirectory = tempDir.toString())
+        val result = tool.executeShellCommand("type file1.txt file2.txt", workingDirectory = tempDir.toString())
 
         val expected = """
-            Command: type file1.txt file2.txt
             Hello from file1
-            
+
             file1.txt
-            
-            
+
+
             The system cannot find the file specified.
             Error occurred while processing: file2.txt.
             Exit code: 1
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     // USER DENIAL TESTS
@@ -292,31 +296,30 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     fun `user denies command execution with simple No`() = runBlocking {
         val handler = ShellCommandConfirmationHandler { ShellCommandConfirmation.Denied("No") }
+        val tool = ExecuteShellCommandTool(executor, confirmationHandler = handler)
 
-        val result = executeShellCommand("rm important-file.txt", confirmationHandler = handler)
+        val result = tool.executeShellCommand("rm important-file.txt",)
 
         val expected = """
-            Command: rm important-file.txt
             Command execution denied with user response: No
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
         assertNull(result.exitCode)
     }
 
     @Test
     fun `user denies with reason`() = runBlocking {
-        val handler =
-            ShellCommandConfirmationHandler { ShellCommandConfirmation.Denied("Cannot delete important files") }
+        val handler = ShellCommandConfirmationHandler { ShellCommandConfirmation.Denied("Cannot delete important files") }
+        val tool = ExecuteShellCommandTool(executor, confirmationHandler = handler)
 
-        val result = executeShellCommand("rm important-file.txt", confirmationHandler = handler)
+        val result = tool.executeShellCommand("rm important-file.txt")
 
         val expected = """
-            Command: rm important-file.txt
             Command execution denied with user response: Cannot delete important files
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
         assertNull(result.exitCode)
     }
 
@@ -324,58 +327,69 @@ class ExecuteShellCommandToolJvmTest {
 
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
-    fun `long running command times out`() = runBlocking {
-        val command = "sleep 5"
-        val timeout = 1
-        val result = executeShellCommand(command, timeoutSeconds = timeout)
-
-        val expected = """
-            Command: $command
-            Command timed out after $timeout seconds
-        """.trimIndent()
-
-        assertEquals(expected, result.textForLLM())
-        assertNull(result.exitCode)
-    }
-
-    @Test
-    @EnabledOnOs(OS.WINDOWS)
-    fun `long running command times out on Windows`() = runBlocking {
-        val result = executeShellCommand("powershell -Command \"Start-Sleep -Milliseconds 1100\"", timeoutSeconds = 1)
-
-        val expected = """
-            Command: powershell -Command "Start-Sleep -Milliseconds 1100"
-            Command timed out after 1 seconds
-        """.trimIndent()
-
-        assertEquals(expected, result.textForLLM())
-        assertNull(result.exitCode)
-    }
-
-    @Test
-    @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `command with partial output times out`() = runBlocking {
-        val result = executeShellCommand("for i in {1..3}; do echo \$i; sleep 0.5; done", timeoutSeconds = 1)
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
 
-        assertTrue(result.textForLLM().contains("Command timed out after 1 seconds"))
-        assertTrue(result.textForLLM().startsWith("Command: for i in {1..3}; do echo \$i; sleep 0.5; done"))
-        assertNull(result.exitCode)
+        val result: ExecuteShellCommandTool.Result
+        val executionTimeMs = measureTimeMillis {
+            result = withTimeout(4000L) {
+                tool.executeShellCommand(
+                    "echo beforeSleep && sleep 10 && echo afterSleep",
+                    timeoutSeconds = 1
+                )
+            }
+        }
+
+        val partialExpected = """
+        beforeSleep
+        """.trimIndent()
+
+        val output = tool.encodeResultToString(result, serializer)
+        assertTrue(output.contains(partialExpected), "Partial output not found. Actual: $output")
+        assertTrue(output.contains("Command timed out after 1 seconds"), "Timeout message not found. Actual: $output")
+
+        // We have to remove the command because it DOES contain afterSleep
+        assertFalse(
+            output.replace(partialExpected, "").contains("afterSleep"),
+            "afterSleep should not appear since command timed out"
+        )
+
+        assertNull(result.exitCode, "Exit code should be null for timed out command")
+        assertTrue(executionTimeMs < 3000, "Should timeout at 1s, but took ${executionTimeMs}ms")
     }
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `command with partial output times out on Windows`() = runBlocking {
-        val result = executeShellCommand(
-            "powershell -Command \"1..3 | ForEach-Object { Write-Output \$_; Start-Sleep -Milliseconds 500 }\"",
-            timeoutSeconds = 1
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
+
+        val result: ExecuteShellCommandTool.Result
+        val executionTimeMs = measureTimeMillis {
+            result = withTimeout(5000L) {
+                tool.executeShellCommand(
+                    """
+                    powershell -Command "'beforeSleep'; Start-Sleep -Seconds 10; 'afterSleep'"
+                    """.trimIndent(),
+                    timeoutSeconds = 1
+                )
+            }
+        }
+
+        val partialExpected = """
+        """.trimIndent()
+
+        val output = tool.encodeResultToString(result, serializer)
+        assertTrue(output.contains(partialExpected), "Partial output not found. Actual: $output")
+        assertTrue(output.contains("Command timed out after 1 seconds"), "Timeout message not found. Actual: $output")
+
+        // We have to remove the command because it DOES contain afterSleep
+        assertFalse(
+            output.replace(partialExpected, "").contains("afterSleep"),
+            "afterSleep should not appear since command timed out"
         )
 
-        assertTrue(result.textForLLM().contains("Command timed out after 1 seconds"))
-        assertTrue(
-            result.textForLLM()
-                .startsWith("Command: powershell -Command \"1..3 | ForEach-Object { Write-Output \$_; Start-Sleep -Milliseconds 500 }\"")
-        )
-        assertNull(result.exitCode)
+        assertNull(result.exitCode, "Exit code should be null for timed out command")
+        assertTrue(executionTimeMs < 4000, "Should timeout at 1s, but took ${executionTimeMs}ms")
     }
 
     // CANCELLATION TESTS
@@ -383,10 +397,12 @@ class ExecuteShellCommandToolJvmTest {
     @RepeatedTest(10)
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `executor can be cancelled with timeout`() = runBlocking {
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
+
         val timeoutSeconds = 1
 
         val job = launch {
-            val result = executeShellCommand("sleep 1.1", timeoutSeconds = timeoutSeconds)
+            val result = tool.executeShellCommand("sleep 1.1", timeoutSeconds = timeoutSeconds)
             fail("Command should have been cancelled, but completed with: $result")
         }
 

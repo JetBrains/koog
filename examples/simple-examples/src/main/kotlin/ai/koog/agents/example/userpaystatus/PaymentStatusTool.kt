@@ -20,7 +20,11 @@ private val payments = listOf(
     Payment("T1005", "C001", 210.20, "2021-10-08", "Pending")
 )
 
-class PaymentStatusTool : SimpleTool<PaymentStatusTool.Args>() {
+class PaymentStatusTool : SimpleTool<PaymentStatusTool.Args>(
+    argsSerializer = Args.serializer(),
+    name = "payment_status",
+    description = "Get payment status of a transaction"
+) {
 
     @Serializable
     data class Args(
@@ -28,11 +32,7 @@ class PaymentStatusTool : SimpleTool<PaymentStatusTool.Args>() {
         val transactionId: String
     )
 
-    override val description: String = "Get payment status of a transaction"
-
-    override val argsSerializer = Args.serializer()
-
-    override suspend fun doExecute(args: Args): String {
+    override suspend fun execute(args: Args): String {
         val transaction = payments.firstOrNull { it.transactionId == args.transactionId }
         return when {
             transaction != null -> "Current state of the payment is :\n${transaction.paymentStatus}"

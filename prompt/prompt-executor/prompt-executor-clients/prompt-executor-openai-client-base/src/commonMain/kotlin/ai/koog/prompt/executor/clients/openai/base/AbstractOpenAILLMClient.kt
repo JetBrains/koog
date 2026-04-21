@@ -1,14 +1,13 @@
 package ai.koog.prompt.executor.clients.openai.base
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.ktor.fromKtorClient
 import ai.koog.http.client.post
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.openai.base.models.JsonSchemaObject
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMResponse
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMStreamResponse
@@ -23,43 +22,26 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolFunction
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
 import ai.koog.prompt.executor.clients.openai.base.structure.OpenAIBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.base.structure.OpenAIStandardJsonSchemaGenerator
-import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.StreamFrameFlowBuilder
-import ai.koog.prompt.streaming.buildStreamFrameFlow
-import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
-import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
-import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
+import ai.koog.prompt.streaming.requireEndFrame
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.request.header
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonObjectBuilder
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
-import kotlinx.serialization.json.putJsonObject
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.jvm.JvmOverloads
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIContent
@@ -71,7 +53,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIConte
  * @property chatCompletionsPath The path for chat completions API endpoints.
  * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
  */
-public abstract class OpenAIBasedSettings(
+public abstract class OpenAIBaseSettings(
     public val baseUrl: String,
     public val chatCompletionsPath: String,
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
@@ -81,61 +63,80 @@ public abstract class OpenAIBasedSettings(
  * Abstract base class for OpenAI-compatible LLM clients.
  * Provides common functionality for communicating with OpenAI and OpenAI-compatible APIs.
  *
- * @param apiKey The API key for authentication with the OpenAI-compatible API.
  * @param settings Configuration settings including base URL, API paths, and timeout configuration.
- * @param baseClient The HTTP client to use for API requests. Defaults to a new HttpClient instance.
+ * @param httpClient A fully configured [KoogHttpClient] for making API requests. Must have authentication
+ *   and other request defaults (base URL, timeouts, headers) already embedded. To use a Ktor-backed client
+ *   with standard OpenAI-compatible defaults, use the secondary constructor that accepts an [HttpClient] and an API key.
  * @param clock Clock instance used for tracking response metadata timestamps. Defaults to Clock.System.
  */
 public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse, TStreamResponse : OpenAIBaseLLMStreamResponse>(
-    private val apiKey: String,
-    settings: OpenAIBasedSettings,
-    private val baseClient: HttpClient = HttpClient(),
+    settings: OpenAIBaseSettings,
+    protected val httpClient: KoogHttpClient,
     protected val clock: Clock = Clock.System,
-    protected val logger: KLogger
-) : LLMClient {
+    protected val logger: KLogger,
+    private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
+) : LLMClient() {
 
-    protected companion object {
-
-        /**
-         * Register basic and standard openai json schema generator for given provider
-         */
-        @Suppress("RedundantVisibilityModifier") // it is required here due to explicitApi
-        @OptIn(InternalStructuredOutputApi::class)
-        public fun registerOpenAIJsonSchemaGenerators(llmProvider: LLMProvider) {
-            RegisteredBasicJsonSchemaGenerators[llmProvider] = OpenAIBasicJsonSchemaGenerator
-            RegisteredStandardJsonSchemaGenerators[llmProvider] = OpenAIStandardJsonSchemaGenerator
-        }
+    override fun getBasicJsonSchemaGenerator(): OpenAIBasicJsonSchemaGenerator {
+        return OpenAIBasicJsonSchemaGenerator
     }
 
-    protected open val clientName: String = this::class.simpleName ?: "UnknownClient"
+    override fun getStandardJsonSchemaGenerator(): OpenAIStandardJsonSchemaGenerator {
+        return OpenAIStandardJsonSchemaGenerator
+    }
 
     private val chatCompletionsPath: String = settings.chatCompletionsPath
 
-    protected val json: Json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        encodeDefaults = true
-        explicitNulls = false
-        namingStrategy = JsonNamingStrategy.SnakeCase
-    }
+    protected val json: Json = defaultJson
 
-    protected val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
-        clientName = clientName,
+    /**
+     * Secondary constructor for creating a client backed by a Ktor [HttpClient].
+     * Configures authentication, base URL, timeouts, and JSON serialization automatically from [apiKey] and [settings].
+     */
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: OpenAIBaseSettings,
+        baseClient: HttpClient = HttpClient(),
+        clientName: String = "OpenAICompatibleClient",
+        clock: Clock = Clock.System,
+        logger: KLogger,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(apiKey, settings, logger, baseClient, clientName),
+        clock = clock,
         logger = logger,
-        baseClient = baseClient
-    ) {
-        defaultRequest {
-            url(settings.baseUrl)
-            contentType(ContentType.Application.Json)
-            header("Authorization", "Bearer $apiKey")
+        toolsConverter = toolsConverter
+    )
+
+    public companion object {
+
+        private val defaultJson = Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+            encodeDefaults = true
+            explicitNulls = false
+            namingStrategy = JsonNamingStrategy.SnakeCase
         }
-        install(SSE)
-        install(ContentNegotiation) { json(json) }
-        install(HttpTimeout) {
-            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis // Increase timeout to 60 seconds
-            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis
-            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis
-        }
+
+        public fun createConfiguredHttpClient(
+            apiKey: String,
+            settings: OpenAIBaseSettings,
+            logger: KLogger,
+            baseClient: HttpClient = HttpClient(),
+            clientName: String
+        ): KoogHttpClient = KoogHttpClient.fromKtorClient(
+            clientName = clientName,
+            logger = logger,
+            baseClient = baseClient,
+            baseUrl = settings.baseUrl,
+            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis,
+            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
+            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
+            json = defaultJson,
+            headers = mapOf("Authorization" to "Bearer $apiKey"),
+        )
     }
 
     /**
@@ -171,10 +172,10 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     protected abstract fun decodeResponse(data: String): TResponse
 
     /**
-     * Processes a provider-specific streaming response chunk.
+     * Processes a provider-specific streaming response.
      * Must be implemented by concrete client classes.
      */
-    protected abstract suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: TStreamResponse)
+    protected abstract fun processStreamingResponse(response: Flow<TStreamResponse>): Flow<StreamFrame>
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val response = getResponse(prompt, model, tools)
@@ -199,17 +200,25 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             stream = true
         )
 
-        return buildStreamFrameFlow {
-            httpClient.sse(
-                path = chatCompletionsPath,
-                request = request,
-                requestBodyType = String::class,
-                dataFilter = { it != "[DONE]" },
-                decodeStreamingResponse = ::decodeStreamingResponse,
-                processStreamingChunk = { it }
-            ).collect {
-                processStreamingChunk(it)
-            }
+        return try {
+            channelFlow {
+                httpClient.sse(
+                    path = chatCompletionsPath,
+                    request = request,
+                    requestBodyType = String::class,
+                    dataFilter = { it != "[DONE]" },
+                    decodeStreamingResponse = ::decodeStreamingResponse,
+                    processStreamingChunk = { it }
+                ).collect { send(it) }
+            }.let { processStreamingResponse(it) }.requireEndFrame()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
         }
     }
 
@@ -246,10 +255,20 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             stream = false
         )
 
-        return httpClient.post<String, String>(
-            path = chatCompletionsPath,
-            request = request
-        ).let(::decodeResponse)
+        return try {
+            httpClient.post<String, String>(
+                path = chatCompletionsPath,
+                request = request
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }.let(::decodeResponse)
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -279,6 +298,14 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                 is Message.Assistant -> {
                     flushPendingCalls()
                     messages += OpenAIMessage.Assistant(content = OpenAIContent.Text(message.content))
+                }
+
+                is Message.Reasoning -> {
+                    flushPendingCalls()
+                    messages += OpenAIMessage.Assistant(
+                        content = OpenAIContent.Text(message.content),
+                        reasoningContent = message.content
+                    )
                 }
 
                 is Message.Tool.Result -> {
@@ -320,7 +347,10 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             val imageUrl = when (val attachmentContent = content) {
                 is AttachmentContent.URL -> attachmentContent.url
                 is AttachmentContent.Binary -> "data:$mimeType;base64,${attachmentContent.asBase64()}"
-                else -> throw IllegalArgumentException("Unsupported image attachment content: ${attachmentContent::class}")
+                else -> throw LLMClientException(
+                    clientName,
+                    "Unsupported image attachment content: ${attachmentContent::class}"
+                )
             }
             OpenAIContentPart.Image(OpenAIContentPart.ImageUrl(imageUrl))
         }
@@ -329,7 +359,10 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             model.requireCapability(LLMCapability.Audio)
             val inputAudio = when (val attachmentContent = content) {
                 is AttachmentContent.Binary -> OpenAIContentPart.InputAudio(attachmentContent.asBase64(), format)
-                else -> throw IllegalArgumentException("Unsupported audio attachment content: ${attachmentContent::class}")
+                else -> throw LLMClientException(
+                    clientName,
+                    "Unsupported audio attachment content: ${attachmentContent::class}"
+                )
             }
             OpenAIContentPart.Audio(inputAudio)
         }
@@ -349,33 +382,23 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     OpenAIContentPart.Text(attachmentContent.text)
                 }
 
-                else -> throw IllegalArgumentException("Unsupported file attachment content: ${attachmentContent::class}")
+                else -> throw LLMClientException(
+                    clientName,
+                    "Unsupported file attachment content: ${attachmentContent::class}"
+                )
             }
         }
 
-        else -> throw IllegalArgumentException("Unsupported attachment type: $this")
+        else -> throw LLMClientException(clientName, "Unsupported attachment type: $this")
     }
 
     protected fun ToolDescriptor.toOpenAIChatTool(): OpenAITool = OpenAITool(
         function = OpenAIToolFunction(
             name = name,
             description = description,
-            parameters = paramsToJsonObject()
+            parameters = toolsConverter.generate(this)
         )
     )
-
-    protected fun ToolDescriptor.paramsToJsonObject(): JsonObject =
-        buildJsonObject {
-            put("type", "object")
-            putJsonObject("properties") {
-                (requiredParameters + optionalParameters).forEach { param ->
-                    put(param.name, param.toJsonSchema())
-                }
-            }
-            putJsonArray("required") {
-                requiredParameters.forEach { param -> add(param.name) }
-            }
-        }
 
     protected fun LLMParams.ToolChoice.toOpenAIToolChoice(): OpenAIToolChoice = when (this) {
         LLMParams.ToolChoice.Auto -> OpenAIToolChoice.Auto
@@ -386,107 +409,89 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         )
     }
 
-    protected fun ToolParameterDescriptor.toJsonSchema(): JsonObject = buildJsonObject {
-        put("description", description)
-        fillJsonSchema(type)
-    }
-
-    private fun JsonObjectBuilder.fillJsonSchema(type: ToolParameterType) {
-        when (type) {
-            ToolParameterType.Boolean -> put("type", "boolean")
-            ToolParameterType.Float -> put("type", "number")
-            ToolParameterType.Integer -> put("type", "integer")
-            ToolParameterType.String -> put("type", "string")
-            ToolParameterType.Null -> put("type", "null")
-            is ToolParameterType.Enum -> {
-                put("type", "string")
-                putJsonArray("enum") {
-                    type.entries.forEach { entry -> add(entry) }
-                }
-            }
-
-            is ToolParameterType.List -> {
-                put("type", "array")
-                putJsonObject("items") { fillJsonSchema(type.itemsType) }
-            }
-
-            is ToolParameterType.Object -> {
-                put("type", "object")
-                type.additionalProperties?.let { put("additionalProperties", it) }
-                putJsonObject("properties") {
-                    type.properties.forEach { property ->
-                        putJsonObject(property.name) {
-                            fillJsonSchema(property.type)
-                            put("description", property.description)
-                        }
-                    }
-                }
-            }
-
-            is ToolParameterType.AnyOf -> {
-                putJsonArray("anyOf") {
-                    addAll(
-                        type.types.map { parameterType ->
-                            parameterType.toJsonSchema()
-                        }
-                    )
-                }
-            }
+    private fun OpenAIMessage.Assistant.reasoningMessageOrNull(metaInfo: ResponseMetaInfo): Message.Reasoning? =
+        if (reasoningContent != null) {
+            Message.Reasoning(
+                content = reasoningContent,
+                metaInfo = metaInfo
+            )
+        } else {
+            null
         }
-    }
+
+    private fun OpenAIMessage.Assistant.toolCallMessages(metaInfo: ResponseMetaInfo): List<Message.Tool.Call> =
+        toolCalls?.map { toolCall ->
+            Message.Tool.Call(
+                id = toolCall.id,
+                tool = toolCall.function.name,
+                /*
+                 If the tool has no arguments, OpenRouter puts an empty string in the arguments instead of an empty object
+                 But we always expect arguments to be a JSON object. Fixing this.
+                 */
+                content = toolCall.function.arguments
+                    .takeIf { it.isNotEmpty() }
+                    ?: "{}",
+                metaInfo = metaInfo
+            )
+        } ?: emptyList()
+
+    private fun OpenAIMessage.Assistant.assistantMessageOrNull(
+        finishReason: String?,
+        metaInfo: ResponseMetaInfo
+    ): Message.Assistant? =
+        if (content != null && content.text().isNotEmpty()) {
+            Message.Assistant(
+                content = this.content.text(),
+                finishReason = finishReason,
+                metaInfo = metaInfo
+            )
+        } else {
+            null
+        }
+
+    private fun OpenAIMessage.Assistant.audioMessageOrNull(
+        metaInfo: ResponseMetaInfo,
+        finishReason: String? = null,
+    ): Message.Assistant? =
+        if (audio?.data != null) {
+            Message.Assistant(
+                parts = buildList {
+                    audio.transcript?.let { add(ContentPart.Text(it)) }
+                    add(
+                        ContentPart.Audio(
+                            content = AttachmentContent.Binary.Base64(audio.data),
+                            format = "unknown", // FIXME: clarify format from response
+                        )
+                    )
+                },
+                finishReason = finishReason,
+                metaInfo = metaInfo
+            )
+        } else {
+            null
+        }
 
     @OptIn(ExperimentalEncodingApi::class)
     protected fun OpenAIMessage.toMessageResponses(
         finishReason: String?,
         metaInfo: ResponseMetaInfo
     ): List<Message.Response> {
-        return when {
-            this is OpenAIMessage.Assistant && !this.toolCalls.isNullOrEmpty() -> {
-                this.toolCalls.map { toolCall ->
-                    Message.Tool.Call(
-                        id = toolCall.id,
-                        tool = toolCall.function.name,
-                        /*
-                         If the tool has no arguments, OpenRouter puts an empty string in the arguments instead of an empty object
-                         But we always expect arguments to be a JSON object. Fixing this.
-                         */
-                        content = toolCall.function.arguments
-                            .takeIf { it.isNotEmpty() }
-                            ?: "{}",
-                        metaInfo = metaInfo
-                    )
-                }
+        check(this is OpenAIMessage.Assistant) { "Expected OpenAIMessage.Assistant, got $this" }
+        val messageResponses = sequence {
+            yield(reasoningMessageOrNull(metaInfo))
+            yieldAll(toolCallMessages(metaInfo))
+            yield(assistantMessageOrNull(finishReason, metaInfo))
+            yield(audioMessageOrNull(metaInfo, finishReason))
+        }.filterNotNull().toList()
+        if (messageResponses.isEmpty()) {
+            if (finishReason != null) {
+                return listOf(Message.Assistant("", metaInfo, finishReason))
             }
-
-            this.content != null -> listOf(
-                Message.Assistant(
-                    content = this.content!!.text(),
-                    finishReason = finishReason,
-                    metaInfo = metaInfo
-                )
-            )
-
-            this is OpenAIMessage.Assistant && this.audio?.data != null -> listOf(
-                Message.Assistant(
-                    parts = buildList {
-                        this@toMessageResponses.audio.transcript?.let { add(ContentPart.Text(it)) }
-                        add(
-                            ContentPart.Audio(
-                                content = AttachmentContent.Binary.Base64(this@toMessageResponses.audio.data),
-                                format = "unknown", // FIXME: clarify format from response
-                            )
-                        )
-                    },
-                    finishReason = finishReason,
-                    metaInfo = metaInfo
-                )
-            )
-
-            else -> {
-                logger.error { "Unexpected response from $clientName: no tool calls and no content" }
-                error("Unexpected response from $clientName: no tool calls and no content")
-            }
+            val exception = LLMClientException(clientName, "Unexpected response: no tool calls and no content")
+            logger.error(exception) { exception.message }
+            throw exception
         }
+        return messageResponses
     }
 
     protected fun LLModel.requireCapability(capability: LLMCapability, message: String? = null) {
@@ -506,9 +511,9 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         outputTokensCount = usage?.completionTokens
     )
 
-    protected fun createResponseFormat(schema: LLMParams.Schema?, model: LLModel): OpenAIResponseFormat? {
+    protected open fun createResponseFormat(schema: LLMParams.Schema?, model: LLModel): OpenAIResponseFormat? {
         return schema?.let {
-            require(it.capability in model.capabilities) {
+            require(model.supports(it.capability)) {
                 "Model ${model.id} does not support structured output schema ${it.name}"
             }
             when (it) {
@@ -524,6 +529,6 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     }
 
     override fun close() {
-        baseClient.close()
+        httpClient.close()
     }
 }

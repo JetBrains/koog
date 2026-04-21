@@ -10,10 +10,12 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.toStreamFrame
+import ai.koog.prompt.streaming.toStreamFrames
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * A CodePromptExecutor that caches responses from a nested executor.
@@ -25,7 +27,7 @@ public class CachedPromptExecutor(
     private val cache: PromptCache,
     private val nested: PromptExecutor,
     private val clock: Clock = Clock.System
-) : PromptExecutor {
+) : PromptExecutor() {
 
     override suspend fun execute(
         prompt: Prompt,
@@ -41,9 +43,7 @@ public class CachedPromptExecutor(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> =
         flow {
-            getOrPut(prompt, tools, model).forEach {
-                emit(it.toStreamFrame())
-            }
+            getOrPut(prompt, tools, model).toStreamFrames().forEach { emit(it) }
         }
 
     private suspend fun getOrPut(prompt: Prompt, model: LLModel): Message.Assistant {
@@ -61,6 +61,16 @@ public class CachedPromptExecutor(
     }
 
     override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = nested.moderate(prompt, model)
+
+    override suspend fun models(): List<LLModel> = nested.models()
+
+    override fun getStandardJsonSchemaGenerator(model: LLModel): StandardJsonSchemaGenerator {
+        return nested.getStandardJsonSchemaGenerator(model)
+    }
+
+    override fun getBasicJsonSchemaGenerator(model: LLModel): BasicJsonSchemaGenerator {
+        return nested.getBasicJsonSchemaGenerator(model)
+    }
 
     override fun close() {
         nested.close()

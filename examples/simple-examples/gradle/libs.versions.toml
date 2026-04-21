@@ -1,13 +1,14 @@
 [versions]
-kotlin = "2.2.20"
+kotlin = "2.3.10"
 kotlinx-coroutines = "1.10.2"
-kotlinx-datetime = "0.6.2"
-kotlinx-serialization = "1.8.1"
+kotlinx-datetime = "0.7.1"
 ktor3 = "3.2.2"
 logback = "1.5.13"
 mockk = "1.13.8"
 opentelemetry = "1.51.0"
+postgresql = "42.7.4"
 oshai-logging = "7.0.7"
+mcp = "0.8.1"
 
 [libraries]
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
@@ -15,14 +16,18 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor3" }
 ktor-server-cio = { module = "io.ktor:ktor-server-cio" }
+ktor-server-sse = { module = "io.ktor:ktor-server-sse" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
 opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-exporter-logging" }
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk" }
 oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
+mcp-client = { module = "io.modelcontextprotocol:kotlin-sdk-client", version.ref = "mcp" }
+mcp-server = { module = "io.modelcontextprotocol:kotlin-sdk-server", version.ref = "mcp" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

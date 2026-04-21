@@ -1,11 +1,13 @@
 package ai.koog.prompt.structure.json.generator
 
+import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.descriptors.elementNames
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
@@ -13,6 +15,7 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.serializer
 
 /**
  * Generic extensions of [JsonSchemaGenerator] that provides some common base implementations of visit methods.
@@ -51,8 +54,13 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
             StructureKind.CLASS, StructureKind.OBJECT ->
                 processObject(context)
 
-            is PolymorphicKind ->
-                processPolymorphic(context)
+            is PolymorphicKind -> {
+                if (context.descriptor.serialName in JSON_ELEMENT_SERIAL_NAMES) {
+                    processJsonElement(context)
+                } else {
+                    processPolymorphic(context)
+                }
+            }
 
             else ->
                 throw IllegalArgumentException("Encountered unsupported type while generating JSON schema: ${context.descriptor.kind}")
@@ -211,4 +219,16 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
     override fun processPolymorphic(context: GenerationContext): JsonObject {
         throw UnsupportedOperationException("Polymorphic types are not supported by ${this::class.simpleName} generator")
     }
+
+    override fun processJsonElement(context: GenerationContext): JsonObject {
+        throw UnsupportedOperationException("JsonElement is not supported by ${this::class.simpleName} generator")
+    }
+}
+
+private val JSON_ELEMENT_SERIAL_NAMES: Set<String> by lazy {
+    val elementSerializer = serializer<JsonElement>()
+    setOf(
+        elementSerializer.descriptor.serialName,
+        elementSerializer.nullable.descriptor.serialName
+    )
 }

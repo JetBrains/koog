@@ -1,0 +1,20 @@
+.js-logo {
+  font-size: 200px;
+  margin-bottom: 20px;
+  position: relative;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-color: #F7DF1E;
+}
+
+.js-logo::before {
+  content: "JS";
+  display: block;
+  position: absolute;
+  right: 0.1em;
+  bottom: 0.1em;
+  font-size: 0.6em;
+  font-weight: bold;
+  color: #000000;
+}

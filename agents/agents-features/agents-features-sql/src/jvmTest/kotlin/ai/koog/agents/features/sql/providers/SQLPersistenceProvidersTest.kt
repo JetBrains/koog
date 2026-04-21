@@ -4,10 +4,9 @@ import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONPrimitive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
-import kotlinx.serialization.json.JsonPrimitive
 import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -15,6 +14,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.time.Clock
 
 /**
  * Tests for SQL persistence providers.
@@ -42,7 +42,7 @@ class SQLPersistenceProvidersTest {
         val retrieved = provider.getLatestCheckpoint(agentId)
         assertNotNull(retrieved)
         assertEquals(checkpoint.checkpointId, retrieved.checkpointId)
-        assertEquals(checkpoint.nodeId, retrieved.nodeId)
+        assertEquals(checkpoint.nodePath, retrieved.nodePath)
         assertEquals(checkpoint.messageHistory.size, retrieved.messageHistory.size)
     }
 
@@ -162,8 +162,8 @@ class SQLPersistenceProvidersTest {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = Clock.System.now(),
-            nodeId = "test-node",
-            lastInput = JsonPrimitive("Test input"),
+            nodePath = "test-node",
+            lastOutput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),
                 Message.User("Hello", RequestMetaInfo.create(Clock.System)),

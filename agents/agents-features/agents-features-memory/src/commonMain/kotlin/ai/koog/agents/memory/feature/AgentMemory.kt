@@ -1,5 +1,6 @@
 package ai.koog.agents.memory.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.featureOrThrow
@@ -7,13 +8,14 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.extension.dropTrailingToolCalls
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
@@ -30,12 +32,12 @@ import ai.koog.agents.memory.providers.NoMemory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.StructuredRequest
+import ai.koog.prompt.structure.StructuredRequestConfig
+import ai.koog.prompt.structure.json.JsonStructure
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 /**
  * Memory implementation for AI agents that provides persistent storage and retrieval of facts.
@@ -179,11 +181,14 @@ public class AgentMemory(
      */
     public companion object Feature :
         AIAgentGraphFeature<Config, AgentMemory>,
-        AIAgentFunctionalFeature<Config, AgentMemory> {
+        AIAgentFunctionalFeature<Config, AgentMemory>,
+        AIAgentPlannerFeature<Config, AgentMemory> {
         override val key: AIAgentStorageKey<AgentMemory> =
             createStorageKey<AgentMemory>("local-ai-agent-memory-feature")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): Config = Config()
 
         /**
          * Create a feature implementation using the provided configuration.
@@ -215,6 +220,11 @@ public class AgentMemory(
         override fun install(
             config: Config,
             pipeline: AIAgentFunctionalPipeline,
+        ): AgentMemory = createFeature(config, pipeline)
+
+        override fun install(
+            config: Config,
+            pipeline: AIAgentPlannerPipeline,
         ): AgentMemory = createFeature(config, pipeline)
     }
 
@@ -485,9 +495,11 @@ public suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
                     is Message.System -> append("<system>\n${message.content}\n</system>\n")
                     is Message.User -> append("<user>\n${message.content}\n</user>\n")
                     is Message.Assistant -> append("<assistant>\n${message.content}\n</assistant>\n")
+                    is Message.Reasoning -> append("<thinking>\n${message.content}\n</thinking>\n")
                     is Message.Tool.Call -> append(
                         "<tool_call tool=${message.tool}>\n${message.content}\n</tool_call>\n"
                     )
+
                     is Message.Tool.Result -> append(
                         "<tool_result tool=${message.tool}>\n${message.content}\n</tool_result>\n"
                     )
@@ -510,21 +522,21 @@ public suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
     val facts = when (concept.factType) {
         FactType.SINGLE -> {
             val response = requestLLMStructured(
-                config = StructuredOutputConfig(default = StructuredOutput.Manual(JsonStructuredData.createJsonStructure<FactStructure>()))
+                config = StructuredRequestConfig(default = StructuredRequest.Manual(JsonStructure.create<FactStructure>()))
             )
 
             SingleFact(
                 concept = concept,
-                value = response.getOrNull()?.structure?.fact ?: "No facts extracted",
+                value = response.getOrNull()?.data?.fact ?: "No facts extracted",
                 timestamp = timestamp
             )
         }
 
         FactType.MULTIPLE -> {
             val response = requestLLMStructured(
-                config = StructuredOutputConfig(default = StructuredOutput.Manual(JsonStructuredData.createJsonStructure<FactListStructure>()))
+                config = StructuredRequestConfig(default = StructuredRequest.Manual(JsonStructure.create<FactListStructure>()))
             )
-            val factsList = response.getOrNull()?.structure?.facts ?: emptyList()
+            val factsList = response.getOrNull()?.data?.facts ?: emptyList()
             MultipleFacts(concept = concept, values = factsList.map { it.fact }, timestamp = timestamp)
         }
     }

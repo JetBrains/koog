@@ -6,12 +6,15 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import io.ktor.util.reflect.instanceOf
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Ignore
@@ -20,6 +23,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ParallelNodesTest {
+    private val serializer = KotlinxSerializer()
 
     companion object {
         private const val NODE_1 = "node1"
@@ -35,7 +39,7 @@ class ParallelNodesTest {
         )
     }
 
-    private fun createMockExecutor() = getMockExecutor {
+    private fun createMockExecutor() = getMockExecutor(serializer) {
         mockLLMAnswer("Default test response").asDefaultResponse
     }
 

@@ -1,7 +1,7 @@
 package ai.koog.agents.example.tone
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.ToolRegistryBuilder
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.dsl.prompt
@@ -15,19 +15,21 @@ object ToneTools {
      * Base class for tone analysis tools.
      */
     abstract class ToneTool(
-        override val name: String,
-        override val description: String,
+        name: String,
+        description: String,
         private val toneType: String
-    ) : SimpleTool<ToneTool.Args>() {
+    ) : SimpleTool<ToneTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = name,
+        description = description
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("The text to analyze for tone.")
             val text: String
         )
 
-        override val argsSerializer = Args.serializer()
-
-        override suspend fun doExecute(args: Args): String {
+        override suspend fun execute(args: Args): String {
             val executor: PromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
 
             // Create a prompt to analyze the tone
@@ -85,7 +87,7 @@ object ToneTools {
     /**
      * Helper function to add all tone tools to a ToolStage.Builder.
      */
-    fun ToolRegistry.Builder.tools() {
+    fun ToolRegistryBuilder.tools() {
         tool(PositiveToneTool)
         tool(NegativeToneTool)
         tool(NeutralToneTool)

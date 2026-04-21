@@ -1,3 +1,5 @@
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
@@ -15,11 +17,23 @@ import ai.koog.agents.core.utils.Option
  * before forwarding it to the destination node. This function can transform or filter the data
  * and returns an optional value to determine whether to propagate it further.
  */
-public class AIAgentEdge<IncomingOutput, OutgoingInput> internal constructor(
-    public val toNode: AIAgentNodeBase<OutgoingInput, *>,
-    internal val forwardOutput: suspend (context: AIAgentGraphContextBase, output: IncomingOutput) -> Option<OutgoingInput>,
+public expect class AIAgentEdge<IncomingOutput, OutgoingInput> internal constructor(
+    fromNode: AIAgentNodeBase<*, IncomingOutput>,
+    toNode: AIAgentNodeBase<OutgoingInput, *>,
+    forwardOutput: suspend (context: AIAgentGraphContextBase, output: IncomingOutput) -> Option<OutgoingInput>,
 ) {
+    /**
+     * The source node in the AI agent strategy graph which this edge connects.
+     */
+    public val fromNode: AIAgentNodeBase<*, IncomingOutput>
+
+    /**
+     * The destination node in the AI agent strategy graph to which this edge connects.
+     */
+    public val toNode: AIAgentNodeBase<OutgoingInput, *>
+
+    internal val forwardOutput: suspend (context: AIAgentGraphContextBase, output: IncomingOutput) -> Option<OutgoingInput>
+
     @Suppress("UNCHECKED_CAST")
-    internal suspend fun forwardOutputUnsafe(output: Any?, context: AIAgentGraphContextBase): Option<OutgoingInput> =
-        forwardOutput(context, output as IncomingOutput)
+    internal suspend fun forwardOutputUnsafe(output: Any?, context: AIAgentGraphContextBase): Option<OutgoingInput>
 }

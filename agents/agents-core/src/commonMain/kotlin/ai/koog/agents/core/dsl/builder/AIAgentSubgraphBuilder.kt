@@ -5,6 +5,7 @@ package ai.koog.agents.core.dsl.builder
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.getAgentContextData
+import ai.koog.agents.core.agent.entity.AIAgentEdge
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
@@ -12,10 +13,14 @@ import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.agent.entity.SubgraphMetadata
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
+import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -23,7 +28,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
-import kotlin.reflect.typeOf
 
 /**
  * Abstract base class for building AI agent subgraphs.
@@ -65,60 +69,17 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     public abstract val nodeFinish: FinishNode<Output>
 
     /**
-     * Defines a new node in the agent's stage, representing a unit of execution that takes an input and produces an output.
-     *
-     * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
-     * @param execute A suspendable function that defines the node's execution logic.
+     * Creates an edge between nodes.
+     * @param edgeIntermediate Intermediate edge builder
      */
-    public inline fun <reified Input, reified Output> node(
-        name: String? = null,
-        noinline execute: suspend AIAgentGraphContextBase.(input: Input) -> Output
-    ): AIAgentNodeDelegate<Input, Output> {
-        return AIAgentNodeDelegate(
-            name = name,
-            inputType = typeOf<Input>(),
-            outputType = typeOf<Output>(),
-            execute = execute
-        )
-    }
+    public fun <IncomingOutput, OutgoingInput, CompatibleOutput : OutgoingInput> edge(
+        edgeIntermediate: AIAgentEdgeBuilderIntermediate<IncomingOutput, CompatibleOutput, OutgoingInput>
+    ): Unit = edge(AIAgentEdgeBuilder(edgeIntermediate).build())
 
-    /**
-     * Creates a subgraph with a specified tool selection strategy.
-     * @param name Optional subgraph name
-     * @param toolSelectionStrategy Strategy for tool selection
-     * @param define Subgraph definition function
-     */
-    public inline fun <reified Input, reified Output> subgraph(
-        name: String? = null,
-        toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
-        llmModel: LLModel? = null,
-        llmParams: LLMParams? = null,
-        define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
-    ): AIAgentSubgraphDelegate<Input, Output> {
-        return AIAgentSubgraphBuilder<Input, Output>(
-            name,
-            inputType = typeOf<Input>(),
-            outputType = typeOf<Output>(),
-            toolSelectionStrategy = toolSelectionStrategy,
-            llmModel = llmModel,
-            llmParams = llmParams
-        ).also { it.define() }.build()
-    }
-
-    /**
-     * Creates a subgraph with specified tools.
-     * @param name Optional subgraph name
-     * @param tools List of tools available to the subgraph
-     * @param define Subgraph definition function
-     */
-    public inline fun <reified Input, reified Output> subgraph(
-        name: String? = null,
-        tools: List<Tool<*, *>>,
-        llmModel: LLModel? = null,
-        llmParams: LLMParams? = null,
-        define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
-    ): AIAgentSubgraphDelegate<Input, Output> {
-        return subgraph(name, ToolSelectionStrategy.Tools(tools.map { it.descriptor }), llmModel, llmParams, define)
+    internal fun <IncomingOutput, OutgoingInput> edge(
+        edge: AIAgentEdge<IncomingOutput, OutgoingInput>
+    ) {
+        edge.fromNode.addEdge(edge)
     }
 
     /**
@@ -131,66 +92,6 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     ): AIAgentNodeBase<OutgoingInput, OutgoingOutput> {
         edge(this forwardTo nextNode)
         return nextNode
-    }
-
-    /**
-     * Creates a node that executes multiple nodes in parallel.
-     * @param nodes List of nodes to execute in parallel
-     * @param dispatcher Coroutine dispatcher to use for parallel execution
-     * @param name Optional node name
-     * @param merge A suspendable lambda that defines how the outputs from the parallel nodes should be merged
-     */
-    public fun <Input, Output> parallel(
-        vararg nodes: AIAgentNodeBase<Input, Output>,
-        dispatcher: CoroutineDispatcher = Dispatchers.Default,
-        name: String? = null,
-        merge: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> ParallelNodeExecutionResult<Output>,
-    ): AIAgentNodeDelegate<Input, Output> {
-        return AIAgentNodeDelegate(
-            name,
-            inputType = nodes.first().inputType,
-            outputType = nodes.first().outputType,
-            execute = { input ->
-                val initialContext: AIAgentGraphContextBase = this
-
-                // Execute all nodes in parallel using the provided dispatcher
-                val nodeResults = supervisorScope {
-                    nodes.map { node ->
-                        async(dispatcher) {
-                            val nodeContext = initialContext.fork()
-                            val nodeOutput = node.execute(nodeContext, input)
-
-                            if (nodeOutput == null && nodeContext.getAgentContextData() != null) {
-                                throw IllegalStateException(
-                                    "Checkpoints are not supported in parallel execution. Node: ${node.name}, Context: ${nodeContext.getAgentContextData()}"
-                                )
-                            }
-
-                            @Suppress("UNCHECKED_CAST")
-                            val executionResult = ParallelNodeExecutionResult(nodeOutput as Output, nodeContext)
-                            ParallelResult(node.name, input, executionResult)
-                        }
-                    }.awaitAll()
-                }
-
-                // Merge parallel node results
-                val mergeContext = AIAgentParallelNodesMergeContext(this, nodeResults)
-                val result = with(mergeContext) { merge() }
-                this.replace(result.context)
-                result.output
-            }
-        )
-    }
-
-    /**
-     * Creates an edge between nodes.
-     * @param edgeIntermediate Intermediate edge builder
-     */
-    public fun <IncomingOutput, OutgoingInput, CompatibleOutput : OutgoingInput> edge(
-        edgeIntermediate: AIAgentEdgeBuilderIntermediate<IncomingOutput, CompatibleOutput, OutgoingInput>
-    ) {
-        val edge = AIAgentEdgeBuilder(edgeIntermediate).build()
-        edgeIntermediate.fromNode.addEdge(edge)
     }
 
     /**
@@ -212,7 +113,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     }
 
     private fun getNodePath(node: AIAgentNodeBase<*, *>, parentPath: String): String {
-        return "$parentPath:${node.id}"
+        return "$parentPath${DEFAULT_AGENT_PATH_SEPARATOR}${node.id}"
     }
 
     internal fun buildSubgraphMetadata(
@@ -231,12 +132,11 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         }
 
         // Validate that all nodes have unique names within the subgraph
-        val names = subgraphNodes.keys.map { it.split(":").last() }
-        val uniqueNames = names.toSet().size == names.size
+        val names = subgraphNodes.keys
 
         return SubgraphMetadata(
             nodesMap = subgraphNodes,
-            uniqueNames = uniqueNames
+            uniqueNames = names.toSet().size == names.size
         )
     }
 
@@ -283,25 +183,70 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
  * @property name Optional name of the subgraph for identification.
  * @property toolSelectionStrategy The strategy that defines how tools are selected and used
  * within the subgraph.
+ * @param llmModel Initial LLM model used in this subgraph
+ * @param llmParams Initial LLM prompt parameters used in this subgraph
+ * @param responseProcessor Initial optional processor defining the post-processing of messages returned from the LLM.
  */
 public class AIAgentSubgraphBuilder<Input, Output>(
     public val name: String? = null,
-    inputType: KType,
-    outputType: KType,
+    inputType: TypeToken,
+    outputType: TypeToken,
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel?,
     private val llmParams: LLMParams?,
+    private val responseProcessor: ResponseProcessor? = null,
 ) : AIAgentSubgraphBuilderBase<Input, Output>(),
     BaseBuilder<AIAgentSubgraphDelegate<Input, Output>> {
     override val nodeStart: StartNode<Input> = StartNode(subgraphName = name, type = inputType)
     override val nodeFinish: FinishNode<Output> = FinishNode(subgraphName = name, type = outputType)
+
+    /**
+     * Constructs an instance of AIAgentSubgraphBuilder with the provided parameters, using KTypes
+     * for input and output type representation.
+     *
+     * This constructor is deprecated. All [KType] parameters should be replaced by the use of [TypeToken] instead.
+     *
+     * @param name An optional name for the subgraph being built.
+     * @param inputType The type of the input data for the subgraph, represented as a [KType].
+     * @param outputType The type of the output data for the subgraph, represented as a [KType].
+     * @param toolSelectionStrategy The strategy used to select the tools for this subgraph.
+     * @param llmModel An optional Large Language Model ([LLModel]) to be used within the subgraph.
+     * @param llmParams An optional set of parameters ([LLMParams]) for configuring the LLM behavior.
+     * @param responseProcessor An optional [ResponseProcessor] for post-processing responses in the subgraph.
+     */
+    @Deprecated("KTypes usage in graphs and nodes is deprecated. Please, use TypeTokens instead.")
+    public constructor(
+        name: String? = null,
+        inputType: KType,
+        outputType: KType,
+        toolSelectionStrategy: ToolSelectionStrategy,
+        llmModel: LLModel?,
+        llmParams: LLMParams?,
+        responseProcessor: ResponseProcessor? = null,
+    ) : this(
+        name,
+        typeToken(inputType),
+        typeToken(outputType),
+        toolSelectionStrategy,
+        llmModel,
+        llmParams,
+        responseProcessor
+    )
 
     override fun build(): AIAgentSubgraphDelegate<Input, Output> {
         require(isFinishReachable(nodeStart)) {
             "FinishSubgraphNode can't be reached from the StartNode of the agent's graph. Please, review how it was defined."
         }
 
-        return AIAgentSubgraphDelegate(name, nodeStart, nodeFinish, toolSelectionStrategy, llmModel, llmParams)
+        return AIAgentSubgraphDelegate(
+            name,
+            nodeStart,
+            nodeFinish,
+            toolSelectionStrategy,
+            llmModel,
+            llmParams,
+            responseProcessor
+        )
     }
 }
 
@@ -322,6 +267,9 @@ public class AIAgentSubgraphBuilder<Input, Output>(
  * and produces the final output of the subgraph.
  * @property toolSelectionStrategy The strategy for selecting the set of tools available
  * to the subgraph during its execution.
+ * @property llmModel Initial LLM model used in this subgraph
+ * @property llmParams Initial LLM prompt parameters used in this subgraph
+ * @property responseProcessor Initial optional processor defining the post-processing of messages returned from the LLM.
  */
 public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
     private val name: String?,
@@ -329,7 +277,8 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
     public val nodeFinish: FinishNode<Output>,
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel?,
-    private val llmParams: LLMParams?
+    private val llmParams: LLMParams?,
+    private val responseProcessor: ResponseProcessor? = null,
 ) {
     private var subgraph: AIAgentSubgraph<Input, Output>? = null
 
@@ -355,6 +304,7 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
                 toolSelectionStrategy = toolSelectionStrategy,
                 llmModel = llmModel,
                 llmParams = llmParams,
+                responseProcessor = responseProcessor,
             )
         }
 
@@ -393,3 +343,171 @@ public data class ParallelResult<Input, Output>(
     val nodeInput: Input,
     val nodeResult: ParallelNodeExecutionResult<Output>
 )
+
+/**
+ * Defines a new node in the agent's stage, representing a unit of execution that takes an input and produces an output.
+ *
+ * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
+ * @param execute A suspendable function that defines the node's execution logic.
+ */
+public inline fun <reified Input, reified Output> node(
+    name: String? = null,
+    noinline execute: suspend AIAgentGraphContextBase.(input: Input) -> Output
+): AIAgentNodeDelegate<Input, Output> =
+    node(name, inputType = typeToken<Input>(), outputType = typeToken<Output>(), execute = execute)
+
+/**
+ * Defines a new node in the agent's stage, representing a unit of execution that takes an input and produces an output.
+ *
+ * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
+ * @param execute A suspendable function that defines the node's execution logic.
+ */
+@InternalAgentsApi
+public fun <Input, Output> node(
+    name: String? = null,
+    inputType: TypeToken,
+    outputType: TypeToken,
+    execute: suspend AIAgentGraphContextBase.(input: Input) -> Output
+): AIAgentNodeDelegate<Input, Output> {
+    return AIAgentNodeDelegate(
+        name = name,
+        inputType = inputType,
+        outputType = outputType,
+        execute = execute
+    )
+}
+
+/**
+ * Creates a subgraph with a specified tool selection strategy.
+ * @param name Optional subgraph name
+ * @param toolSelectionStrategy Strategy for tool selection
+ * @param llmModel Initial LLM model used in this subgraph
+ * @param llmParams Initial LLM prompt parameters used in this subgraph
+ * @param responseProcessor Initial optional processor defining the post-processing of messages returned from the LLM.
+ * @param define Subgraph definition function
+ */
+public inline fun <reified Input, reified Output> subgraph(
+    name: String? = null,
+    toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    responseProcessor: ResponseProcessor? = null,
+    define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
+): AIAgentSubgraphDelegate<Input, Output> {
+    return AIAgentSubgraphBuilder<Input, Output>(
+        name,
+        inputType = typeToken<Input>(),
+        outputType = typeToken<Output>(),
+        toolSelectionStrategy = toolSelectionStrategy,
+        llmModel = llmModel,
+        llmParams = llmParams,
+        responseProcessor = responseProcessor,
+    ).also { it.define() }.build()
+}
+
+/**
+ * Creates a subgraph with a specified tool selection strategy.
+ * @param name Optional subgraph name
+ * @param toolSelectionStrategy Strategy for tool selection
+ * @param llmModel Initial LLM model used in this subgraph
+ * @param llmParams Initial LLM prompt parameters used in this subgraph
+ * @param responseProcessor Initial optional processor defining the post-processing of messages returned from the LLM.
+ * @param define Subgraph definition function
+ */
+@InternalAgentsApi
+public fun <Input : Any, Output : Any> subgraph(
+    name: String? = null,
+    inputType: TypeToken,
+    outputType: TypeToken,
+    toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    responseProcessor: ResponseProcessor? = null,
+    define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
+): AIAgentSubgraphDelegate<Input, Output> {
+    return AIAgentSubgraphBuilder<Input, Output>(
+        name,
+        inputType = inputType,
+        outputType = outputType,
+        toolSelectionStrategy = toolSelectionStrategy,
+        llmModel = llmModel,
+        llmParams = llmParams,
+        responseProcessor = responseProcessor,
+    ).also { it.define() }.build()
+}
+
+/**
+ * Creates a subgraph with specified tools.
+ * @param name Optional subgraph name
+ * @param tools List of tools available to the subgraph
+ * @param llmModel Initial LLM model used in this subgraph
+ * @param llmParams Initial LLM prompt parameters used in this subgraph
+ * @param responseProcessor Initial optional processor defining the post-processing of messages returned from the LLM.
+ * @param define Subgraph definition function
+ */
+public inline fun <reified Input, reified Output> subgraph(
+    name: String? = null,
+    tools: List<Tool<*, *>>,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    responseProcessor: ResponseProcessor? = null,
+    define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
+): AIAgentSubgraphDelegate<Input, Output> {
+    return subgraph(
+        name = name,
+        toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
+        llmModel = llmModel,
+        llmParams = llmParams,
+        responseProcessor = responseProcessor,
+        define = define
+    )
+}
+
+/**
+ * Creates a node that executes multiple nodes in parallel.
+ * @param nodes List of nodes to execute in parallel
+ * @param dispatcher Coroutine dispatcher to use for parallel execution
+ * @param name Optional node name
+ * @param merge A suspendable lambda that defines how the outputs from the parallel nodes should be merged
+ */
+public fun <Input, Output> parallel(
+    vararg nodes: AIAgentNodeBase<Input, Output>,
+    dispatcher: CoroutineDispatcher = Dispatchers.Default,
+    name: String? = null,
+    merge: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> ParallelNodeExecutionResult<Output>,
+): AIAgentNodeDelegate<Input, Output> {
+    return AIAgentNodeDelegate(
+        name,
+        inputType = nodes.first().inputType,
+        outputType = nodes.first().outputType,
+        execute = { input ->
+            val initialContext: AIAgentGraphContextBase = this
+
+            // Execute all nodes in parallel using the provided dispatcher
+            val nodeResults = supervisorScope {
+                nodes.map { node ->
+                    async(dispatcher) {
+                        val nodeContext = initialContext.fork()
+                        val nodeOutput = node.execute(nodeContext, input)
+
+                        if (nodeOutput == null && nodeContext.getAgentContextData() != null) {
+                            throw IllegalStateException(
+                                "Checkpoints are not supported in parallel execution. Node: ${node.name}, Context: ${nodeContext.getAgentContextData()}"
+                            )
+                        }
+
+                        @Suppress("UNCHECKED_CAST")
+                        val executionResult = ParallelNodeExecutionResult(nodeOutput as Output, nodeContext)
+                        ParallelResult(node.name, input, executionResult)
+                    }
+                }.awaitAll()
+            }
+
+            // Merge parallel node results
+            val mergeContext = AIAgentParallelNodesMergeContext(this, nodeResults)
+            val result = with(mergeContext) { merge() }
+            this.replace(result.context)
+            result.output
+        }
+    )
+}

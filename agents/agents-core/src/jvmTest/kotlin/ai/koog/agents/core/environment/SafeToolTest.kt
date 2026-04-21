@@ -1,24 +1,28 @@
 package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
+import ai.koog.agents.core.feature.model.toAgentError
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.reflect.ToolFromCallable
+import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.JSONPrimitive
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.assertThrows
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.serializer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class SafeToolTest {
-    private fun testInvalidArguments(vararg args: Any?) = runTest {
-        val mockEnvironment = MockEnvironment(shouldSucceed = true)
-        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunction)
-
-        assertThrows<IllegalStateException> {
-            safeTool.execute(*args)
-        }
-    }
+    private val serializer = KotlinxSerializer()
 
     companion object {
         private const val TEST_RESULT = "Test result"
@@ -66,23 +70,28 @@ class SafeToolTest {
         private val shouldSucceed: Boolean = true,
         private val resultContent: String = "Success content",
     ) : AIAgentEnvironment {
-        override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-            return toolCalls.map { toolCall ->
-                if (shouldSucceed) {
-                    ReceivedToolResult(
-                        id = toolCall.id,
-                        tool = toolCall.tool,
-                        content = resultContent,
-                        result = TEST_RESULT
-                    )
-                } else {
-                    ReceivedToolResult(
-                        id = toolCall.id,
-                        tool = toolCall.tool,
-                        content = TEST_ERROR,
-                        result = null,
-                    )
-                }
+        @OptIn(InternalAgentToolsApi::class)
+        override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+            return if (shouldSucceed) {
+                ReceivedToolResult(
+                    id = toolCall.id,
+                    tool = toolCall.tool,
+                    toolArgs = toolCall.contentJson.toKoogJSONObject(),
+                    toolDescription = null,
+                    content = resultContent,
+                    resultKind = ToolResultKind.Success,
+                    result = JSONPrimitive(TEST_RESULT)
+                )
+            } else {
+                ReceivedToolResult(
+                    id = toolCall.id,
+                    tool = toolCall.tool,
+                    toolArgs = toolCall.contentJson.toKoogJSONObject(),
+                    toolDescription = null,
+                    content = TEST_ERROR,
+                    resultKind = ToolResultKind.Failure(Exception(TEST_ERROR).toAgentError()),
+                    result = null,
+                )
             }
         }
 
@@ -91,14 +100,24 @@ class SafeToolTest {
         }
     }
 
+    private object EchoTool : Tool<EchoTool.Echo, EchoTool.Echo>(
+        argsSerializer = Echo.serializer(),
+        resultSerializer = Echo.serializer(),
+        name = "string_echo",
+        description = "String echo tool"
+    ) {
+        @Serializable
+        data class Echo(val value: String)
+
+        override suspend fun execute(args: Echo): Echo = args
+    }
+
     @Test
     fun testExecuteSuccess() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true)
-        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunction)
+        val safeTool = SafeTool(::testFunction.asTool(), mockEnvironment, testClock)
 
-        val result = safeTool.execute("test", 123)
-
+        val result = safeTool.executeUnsafe(serializer, "test", 123)
         assertTrue(result.isSuccessful())
         assertEquals(TEST_RESULT, result.asSuccessful().result)
         assertEquals("Success content", result.content)
@@ -107,10 +126,9 @@ class SafeToolTest {
     @Test
     fun testExecuteFailure() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = false)
-        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunction)
+        val safeTool = SafeTool(::testFunction.asTool(), mockEnvironment, testClock)
 
-        val result = safeTool.execute("test", 123)
+        val result = safeTool.executeUnsafe(serializer, "test", 123)
 
         assertTrue(result.isFailure())
         assertEquals(TEST_ERROR, result.content)
@@ -118,112 +136,43 @@ class SafeToolTest {
     }
 
     @Test
-    fun testExecuteRaw() = runTest {
-        val mockEnvironment = MockEnvironment(shouldSucceed = true, resultContent = "Raw result content")
-        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunction)
+    fun testDecodeFailureReturnsFailure() {
+        val badResult = buildJsonObject {
+            put("not-a-value", "not-a-string-result")
+        }
 
-        val result = safeTool.executeRaw("test", 123)
+        val toolResult = ReceivedToolResult(
+            id = "1",
+            tool = EchoTool.name,
+            toolArgs = JSONObject(emptyMap()),
+            toolDescription = null,
+            content = "Bad result",
+            resultKind = ToolResultKind.Success,
+            result = badResult.toKoogJSONElement(),
+        )
 
-        assertEquals("Raw result content", result)
-    }
-
-    @Test
-    fun testResultSuccessHelpers() = runTest {
-        val success = SafeToolFromCallable.Result.Success(TEST_RESULT, "Success content")
-
-        assertTrue(success.isSuccessful())
-        assertEquals(TEST_RESULT, success.asSuccessful().result)
-        assertEquals("Success content", success.content)
-    }
-
-    @Test
-    fun testResultFailureHelpers() = runTest {
-        val failure = SafeToolFromCallable.Result.Failure<String>("Error message")
-
-        assertTrue(failure.isFailure())
-        assertEquals("Error message", failure.asFailure().message)
-        assertEquals("Error message", failure.content)
-    }
-
-    @Test
-    fun testInvalidArgumentCount() = testInvalidArguments("test")
-
-    @Test
-    fun testZeroArgumentCount() = testInvalidArguments()
-
-    @Test
-    fun testTooManyArguments() = testInvalidArguments("test", 123, "extra argument")
-
-    @Test
-    fun testWithNullArgumentInMockEnvironment() = runTest {
-        val mockEnvironment = MockEnvironment(shouldSucceed = true)
-        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunction)
-
-        val result = safeTool.execute("test", null)
-
-        assertTrue(result.isSuccessful())
-        assertEquals(TEST_RESULT, result.asSuccessful().result)
+        val safeResult = toolResult.toSafeResult(EchoTool, serializer)
+        assertTrue(safeResult.isFailure())
     }
 
     @Test
     fun testSafeToolParameters() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true)
-        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunction)
+        val safeTool = SafeTool(::testFunction.asTool(), mockEnvironment, testClock)
 
-        val safeToolParams = safeTool.toolFunction.parameters.joinToString(", ") { it.name.toString() }
+        val safeToolParams = (safeTool.tool as ToolFromCallable<String>)
+            .callable.parameters
+            .joinToString(", ") { it.name.toString() }
 
         assertEquals("param1, param2", safeToolParams)
     }
 
     @Test
-    fun testWithNullArgumentInDirectCallEnvironment() = runTest {
-        val directCallEnvironment = object : AIAgentEnvironment {
-            override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-                return toolCalls.map { toolCall ->
-                    try {
-                        val result = testFunction("test", null as Int)
-
-                        ReceivedToolResult(
-                            id = toolCall.id,
-                            tool = toolCall.tool,
-                            content = "Success: $result",
-                            result = result
-                        )
-                    } catch (e: Exception) {
-                        ReceivedToolResult(
-                            id = toolCall.id,
-                            tool = toolCall.tool,
-                            content = "Error: ${e.message}",
-                            result = null
-                        )
-                    }
-                }
-            }
-
-            override suspend fun reportProblem(exception: Throwable) {
-                throw exception
-            }
-        }
-
-        val safeTool = SafeToolFromCallable(::testFunction, directCallEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunction)
-
-        val result = safeTool.execute("test", null)
-
-        assertTrue(result.isFailure())
-        assertTrue(result.content.contains("null cannot be cast to non-null type kotlin.Int"))
-    }
-
-    @Test
     fun testWithDefaultParameter() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true, resultContent = "Default param result")
-        val safeTool = SafeToolFromCallable(::testFunctionWithDefaultParam, mockEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunctionWithDefaultParam)
+        val safeTool = SafeTool(::testFunctionWithDefaultParam.asTool(), mockEnvironment, testClock)
 
-        val result = safeTool.execute("test", 123)
+        val result = safeTool.executeUnsafe(serializer, "test", 123)
 
         assertTrue(result.isSuccessful())
         assertEquals(TEST_RESULT, result.asSuccessful().result)
@@ -232,14 +181,13 @@ class SafeToolTest {
     @Test
     fun testWithNullableArgument() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true, resultContent = "Nullable arg result")
-        val safeTool = SafeToolFromCallable(::testFunctionWithNullableArg, mockEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunctionWithNullableArg)
+        val safeTool = SafeTool(::testFunctionWithNullableArg.asTool(), mockEnvironment, testClock)
 
-        val resultWithValue = safeTool.execute("test", 123)
+        val resultWithValue = safeTool.executeUnsafe(serializer, "test", 123)
         assertTrue(resultWithValue.isSuccessful())
         assertEquals(TEST_RESULT, resultWithValue.asSuccessful().result)
 
-        val resultWithNull = safeTool.execute("test", null)
+        val resultWithNull = safeTool.executeUnsafe(serializer, "test", null)
         assertTrue(resultWithNull.isSuccessful())
         assertEquals(TEST_RESULT, resultWithNull.asSuccessful().result)
     }
@@ -247,8 +195,7 @@ class SafeToolTest {
     @Test
     fun testWithComplexArguments() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true, resultContent = "Complex args result")
-        val safeTool = SafeToolFromCallable(::testFunctionWithComplexArgs, mockEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunctionWithComplexArgs)
+        val safeTool = SafeTool(::testFunctionWithComplexArgs.asTool(), mockEnvironment, testClock)
 
         val complexData = ComplexDataClass(
             id = "test-id",
@@ -257,41 +204,47 @@ class SafeToolTest {
             enumValue = TestEnum.SECOND
         )
 
-        val result = safeTool.execute("test", listOf(4, 5, 6), complexData)
+        val result = safeTool.executeUnsafe(serializer, "test", listOf(4, 5, 6), complexData)
 
         assertTrue(result.isSuccessful())
         assertEquals(TEST_RESULT, result.asSuccessful().result)
     }
 
+    @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testWithComplexArgumentsInDirectCallEnvironment() = runTest {
         val directCallEnvironment = object : AIAgentEnvironment {
-            override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-                return toolCalls.map { toolCall ->
-                    try {
-                        val complexData = ComplexDataClass(
-                            id = "direct-call-id",
-                            numbers = listOf(7, 8, 9),
-                            nested = SimpleDataClass(name = "direct-nested", value = 100),
-                            enumValue = TestEnum.THIRD
-                        )
+            override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+                return try {
+                    val complexData = ComplexDataClass(
+                        id = "direct-call-id",
+                        numbers = listOf(7, 8, 9),
+                        nested = SimpleDataClass(name = "direct-nested", value = 100),
+                        enumValue = TestEnum.THIRD
+                    )
 
-                        val result = testFunctionWithComplexArgs("direct-test", listOf(10, 11, 12), complexData)
+                    val result = testFunctionWithComplexArgs("direct-test", listOf(10, 11, 12), complexData)
+                    val resultSerializer = serializer<String>()
 
-                        ReceivedToolResult(
-                            id = toolCall.id,
-                            tool = toolCall.tool,
-                            content = "Success: $result",
-                            result = result
-                        )
-                    } catch (e: Exception) {
-                        ReceivedToolResult(
-                            id = toolCall.id,
-                            tool = toolCall.tool,
-                            content = "Error: ${e.message}",
-                            result = null
-                        )
-                    }
+                    ReceivedToolResult(
+                        id = toolCall.id,
+                        tool = toolCall.tool,
+                        toolArgs = toolCall.contentJson.toKoogJSONObject(),
+                        toolDescription = null,
+                        content = "Success: $result",
+                        resultKind = ToolResultKind.Success,
+                        result = JSONPrimitive(result)
+                    )
+                } catch (e: Exception) {
+                    ReceivedToolResult(
+                        id = toolCall.id,
+                        tool = toolCall.tool,
+                        toolArgs = toolCall.contentJson.toKoogJSONObject(),
+                        toolDescription = null,
+                        content = "Error: ${e.message}",
+                        resultKind = ToolResultKind.Failure(e.toAgentError()),
+                        result = null
+                    )
                 }
             }
 
@@ -300,8 +253,7 @@ class SafeToolTest {
             }
         }
 
-        val safeTool = SafeToolFromCallable(::testFunctionWithComplexArgs, directCallEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunctionWithComplexArgs)
+        val safeTool = SafeTool(::testFunctionWithComplexArgs.asTool(), directCallEnvironment, testClock)
 
         val complexData = ComplexDataClass(
             id = "test-complex-id",
@@ -310,7 +262,7 @@ class SafeToolTest {
             enumValue = TestEnum.FIRST
         )
 
-        val result = safeTool.execute("test-param", listOf(4, 5, 6), complexData)
+        val result = safeTool.executeUnsafe(serializer, "test-param", listOf(4, 5, 6), complexData)
 
         assertTrue(result.isSuccessful())
         assertTrue(result.content.contains("direct-test"))

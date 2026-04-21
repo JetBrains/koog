@@ -48,8 +48,8 @@ class ToneAgentTest {
         // Create an event handler
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onToolCallStarting { eventContext ->
-                println("[DEBUG_LOG] Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
-                toolCalls.add(eventContext.tool.name)
+                println("[DEBUG_LOG] Tool called: tool ${eventContext.toolName}, args ${eventContext.toolArgs}")
+                toolCalls.add(eventContext.toolName)
             }
 
             onAgentExecutionFailed { eventContext ->
@@ -72,7 +72,7 @@ class ToneAgentTest {
         val negativeResponse = "The text has a negative tone."
         val neutralResponse = "The text has a neutral tone."
 
-        val mockLLMApi = getMockExecutor(toolRegistry) {
+        val mockLLMApi = getMockExecutor {
             // Set up LLM responses for different input texts
             mockLLMToolCall(NeutralToneTool, ToneTool.Args(defaultText)) onRequestEquals defaultText
             mockLLMToolCall(PositiveToneTool, ToneTool.Args(positiveText)) onRequestEquals positiveText

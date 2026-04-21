@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+val javaVersion = libs.versions.javaVersion.get().toInt()
+
 android {
     namespace = "com.jetbrains.example.koog.compose"
     compileSdk = 36
@@ -31,13 +33,14 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.valueOf(libs.versions.javaVersion.get())
-        targetCompatibility = JavaVersion.valueOf(libs.versions.javaVersion.get())
+        sourceCompatibility = JavaVersion.toVersion(javaVersion)
+        targetCompatibility = JavaVersion.toVersion(javaVersion)
     }
+    packaging.resources.excludes.add("META-INF/**")
 }
 
 kotlin {
-    jvmToolchain(libs.versions.jdkVersion.get().toInt())
+    jvmToolchain(javaVersion)
 }
 
 dependencies {

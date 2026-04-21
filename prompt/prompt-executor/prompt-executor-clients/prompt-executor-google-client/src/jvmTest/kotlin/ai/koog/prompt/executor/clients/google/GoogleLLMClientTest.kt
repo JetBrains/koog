@@ -3,20 +3,43 @@ package ai.koog.prompt.executor.clients.google
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
+import ai.koog.prompt.executor.clients.google.models.GoogleContent
+import ai.koog.prompt.executor.clients.google.models.GoogleData
+import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
+import ai.koog.prompt.executor.clients.google.models.GooglePart
+import ai.koog.prompt.executor.clients.google.models.GoogleRequest
+import ai.koog.prompt.executor.clients.google.models.GoogleResponse
+import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
+import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import kotlinx.serialization.json.Json
+import ai.koog.prompt.streaming.StreamFrame
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.reflect.KClass
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class GoogleLLMClientTest {
-
-    private val json = Json { prettyPrint = true }
 
     @Test
     fun `createGoogleRequest should use null maxTokens if unspecified`() {
@@ -30,7 +53,7 @@ class GoogleLLMClientTest {
             model = model,
             tools = emptyList()
         )
-        assertEquals(null, request.generationConfig!!.maxOutputTokens)
+        request.generationConfig!!.maxOutputTokens shouldBe null
     }
 
     @Test
@@ -46,7 +69,7 @@ class GoogleLLMClientTest {
             model = model,
             tools = emptyList()
         )
-        assertEquals(100, request.generationConfig!!.maxOutputTokens)
+        request.generationConfig!!.maxOutputTokens shouldBe 100
     }
 
     @Test
@@ -75,21 +98,19 @@ class GoogleLLMClientTest {
             tools = listOf(tool)
         )
 
-        assertNotNull(request.tools)
-        val tools = request.tools!!
-        assertEquals(1, tools.size)
+        val tools = request.tools
+        tools shouldNotBe null
+        tools!!.size shouldBe 1
         val functionDeclarations = tools.first().functionDeclarations!!
         val functionDeclaration = functionDeclarations.first()
-        assertEquals("test_tool", functionDeclaration.name)
+        functionDeclaration.name shouldBe "test_tool"
 
         val parameters = functionDeclaration.parameters!!
         val properties = parameters["properties"]?.jsonObject!!
-        assertNotNull(properties)
 
         val nullParam = properties["nullParam"]?.jsonObject!!
-        assertNotNull(nullParam)
-        assertEquals("null", nullParam["type"]?.jsonPrimitive?.content)
-        assertEquals("A null parameter", nullParam["description"]?.jsonPrimitive?.content)
+        nullParam["type"]?.jsonPrimitive?.content shouldBe "null"
+        nullParam["description"]?.jsonPrimitive?.content shouldBe "A null parameter"
     }
 
     @Test
@@ -106,8 +127,16 @@ class GoogleLLMClientTest {
                     description = "A value that can be string or number",
                     type = ToolParameterType.AnyOf(
                         types = arrayOf(
-                            ToolParameterDescriptor(name = "", description = "String option", type = ToolParameterType.String),
-                            ToolParameterDescriptor(name = "", description = "Number option", type = ToolParameterType.Float)
+                            ToolParameterDescriptor(
+                                name = "",
+                                description = "String option",
+                                type = ToolParameterType.String
+                            ),
+                            ToolParameterDescriptor(
+                                name = "",
+                                description = "Number option",
+                                type = ToolParameterType.Float
+                            )
                         )
                     )
                 )
@@ -123,34 +152,32 @@ class GoogleLLMClientTest {
             tools = listOf(tool)
         )
 
-        assertNotNull(request.tools)
-        val tools = request.tools!!
-        assertEquals(1, tools.size)
+        val tools = request.tools
+        tools shouldNotBe null
+        tools!!.size shouldBe 1
         val functionDeclarations = tools.first().functionDeclarations!!
         val functionDeclaration = functionDeclarations.first()
-        assertEquals("test_tool", functionDeclaration.name)
+        functionDeclaration.name shouldBe "test_tool"
 
         val parameters = functionDeclaration.parameters!!
         val properties = parameters["properties"]?.jsonObject!!
-        assertNotNull(properties)
 
         val valueParam = properties["value"]?.jsonObject!!
-        assertNotNull(valueParam)
-        assertEquals("A value that can be string or number", valueParam["description"]?.jsonPrimitive?.content)
+        valueParam["description"]?.jsonPrimitive?.content shouldBe "A value that can be string or number"
 
         val anyOf = valueParam["anyOf"]?.jsonArray
-        assertNotNull(anyOf, "anyOf array should exist")
-        assertEquals(2, anyOf.size, "anyOf should have 2 options")
+        anyOf shouldNotBe null
+        anyOf!!.size shouldBe 2
 
-        // Verify first option (String)
+        // Verify the first option (String)
         val stringOption = anyOf[0].jsonObject
-        assertEquals("string", stringOption["type"]?.jsonPrimitive?.content)
-        assertEquals("String option", stringOption["description"]?.jsonPrimitive?.content)
+        stringOption["type"]?.jsonPrimitive?.content shouldBe "string"
+        stringOption["description"]?.jsonPrimitive?.content shouldBe "String option"
 
-        // Verify second option (Number)
+        // Verify the second option (Number)
         val numberOption = anyOf[1].jsonObject
-        assertEquals("number", numberOption["type"]?.jsonPrimitive?.content)
-        assertEquals("Number option", numberOption["description"]?.jsonPrimitive?.content)
+        numberOption["type"]?.jsonPrimitive?.content shouldBe "number"
+        numberOption["description"]?.jsonPrimitive?.content shouldBe "Number option"
     }
 
     @Test
@@ -185,23 +212,456 @@ class GoogleLLMClientTest {
             tools = listOf(tool)
         )
 
-        assertNotNull(request.tools)
-        val tools = request.tools!!
-        val functionDeclarations = tools.first().functionDeclarations!!
+        val tools = request.tools
+        tools shouldNotBe null
+        val functionDeclarations = tools!!.first().functionDeclarations!!
         val parameters = functionDeclarations.first().parameters!!
         val properties = parameters["properties"]?.jsonObject!!
-        assertNotNull(properties)
         val complexValue = properties["complexValue"]?.jsonObject!!
-        assertNotNull(complexValue)
 
         val anyOf = complexValue["anyOf"]?.jsonArray
-        assertNotNull(anyOf)
-        assertEquals(3, anyOf.size, "anyOf should have 3 options")
+        anyOf shouldNotBe null
+        anyOf!!.size shouldBe 3
 
         // Verify the types
         val types = anyOf.map { it.jsonObject["type"]?.jsonPrimitive?.content }
-        assertTrue(types.contains("string"), "Should contain string type")
-        assertTrue(types.contains("number"), "Should contain number type")
-        assertTrue(types.contains("null"), "Should contain null type")
+        types shouldContain "string"
+        types shouldContain "number"
+        types shouldContain "null"
+    }
+
+    @Test
+    fun `createGoogleRequest should map GoogleParams to generationConfig`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+
+        val params = GoogleParams(
+            temperature = 0.4,
+            maxTokens = 1024,
+            numberOfChoices = 2,
+            topP = 0.8,
+            topK = 10,
+            thinkingConfig = GoogleThinkingConfig(
+                includeThoughts = true,
+                thinkingBudget = 99
+            ),
+            additionalProperties = mapOf("custom" to JsonPrimitive("v"))
+        )
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(messages = emptyList(), id = "id", params = params),
+            model = model,
+            tools = emptyList()
+        )
+
+        val gen = request.generationConfig!!
+        gen.maxOutputTokens shouldBe 1024
+        gen.temperature shouldBe 0.4
+        gen.candidateCount shouldBe 2
+        gen.topP shouldBe 0.8
+        gen.topK shouldBe 10
+        gen.thinkingConfig?.includeThoughts shouldBe true
+        gen.thinkingConfig?.thinkingBudget shouldBe 99
+        gen.additionalProperties shouldNotBe null
+        gen.additionalProperties!!["custom"]?.jsonPrimitive?.content shouldBe "v"
+    }
+
+    @Test
+    fun `createGoogleRequest should map JSON Basic schema to responseSchema`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+
+        val schema = LLMParams.Schema.JSON.Basic(
+            name = "out",
+            schema = JsonObject(mapOf("type" to JsonPrimitive("object")))
+        )
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams(schema = schema)),
+            model = model,
+            tools = emptyList()
+        )
+
+        val gen = request.generationConfig!!
+        gen.responseMimeType shouldBe "application/json"
+        gen.responseSchema shouldNotBe null
+        gen.responseJsonSchema shouldBe null
+    }
+
+    @Test
+    fun `createGoogleRequest should map JSON Standard schema to responseJsonSchema`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+
+        val schema = LLMParams.Schema.JSON.Standard(
+            name = "out",
+            schema = JsonObject(mapOf("type" to JsonPrimitive("object")))
+        )
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams(schema = schema)),
+            model = model,
+            tools = emptyList()
+        )
+
+        val gen = request.generationConfig!!
+        gen.responseMimeType shouldBe "application/json"
+        gen.responseJsonSchema shouldNotBe null
+        gen.responseSchema shouldBe null
+    }
+
+    @Test
+    fun `toolChoice Auto None Required should map to Google function calling modes`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+
+        fun getMode(tc: LLMParams.ToolChoice): GoogleFunctionCallingMode? {
+            val req = client.createGoogleRequest(
+                prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams(toolChoice = tc)),
+                model = model,
+                tools = emptyList()
+            )
+            return req.toolConfig?.functionCallingConfig?.mode
+        }
+
+        getMode(LLMParams.ToolChoice.Auto) shouldBe GoogleFunctionCallingMode.AUTO
+        getMode(LLMParams.ToolChoice.None) shouldBe GoogleFunctionCallingMode.NONE
+        getMode(LLMParams.ToolChoice.Required) shouldBe GoogleFunctionCallingMode.ANY
+    }
+
+    @Test
+    fun `toolChoice Named should set ANY with allowedFunctionNames`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+        val req = client.createGoogleRequest(
+            prompt = Prompt(
+                messages = emptyList(),
+                id = "id",
+                params = GoogleParams(toolChoice = LLMParams.ToolChoice.Named("weather"))
+            ),
+            model = model,
+            tools = emptyList()
+        )
+        val fc = req.toolConfig?.functionCallingConfig
+        fc shouldNotBe null
+        fc!!.mode shouldBe GoogleFunctionCallingMode.ANY
+        fc.allowedFunctionNames shouldBe listOf("weather")
+    }
+
+    @Test
+    fun `processGoogleCandidate should handle InlineData image part`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val imageData = "png-bytes".encodeToByteArray()
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.InlineData(
+                        inlineData = GoogleData.Blob("image/png", imageData)
+                    )
+                )
+            )
+        )
+
+        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        responses shouldHaveSize 1
+        val assistantMessage = responses.single() as Message.Assistant
+        assistantMessage.parts shouldHaveSize 1
+        val imagePart = assistantMessage.parts.single() as ContentPart.Image
+        imagePart.format shouldBe "png"
+        (imagePart.content as AttachmentContent.Binary.Bytes).asBytes() shouldBe imageData
+    }
+
+    @Test
+    fun `processGoogleCandidate should handle InlineData generic file part`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val fileData = "pdf-bytes".encodeToByteArray()
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.InlineData(
+                        inlineData = GoogleData.Blob("application/pdf", fileData)
+                    )
+                )
+            )
+        )
+
+        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        responses shouldHaveSize 1
+        val assistantMessage = responses.single() as Message.Assistant
+        assistantMessage.parts shouldHaveSize 1
+        val filePart = assistantMessage.parts.single() as ContentPart.File
+        filePart.mimeType shouldBe "application/pdf"
+        (filePart.content as AttachmentContent.Binary.Bytes).asBytes() shouldBe fileData
+    }
+
+    @Test
+    fun `createGoogleRequest groups parallel Tool Results into single content`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val request = client.createGoogleRequest(
+            Prompt(
+                messages = listOf(
+                    Message.User("query", RequestMetaInfo.Empty),
+                    Message.Reasoning(encrypted = "sig", content = "", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Call(id = "2", tool = "t2", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Result(id = "1", tool = "t1", content = "r1", metaInfo = RequestMetaInfo.Empty),
+                    Message.Tool.Result(id = "2", tool = "t2", content = "r2", metaInfo = RequestMetaInfo.Empty),
+                ),
+                id = "id"
+            ),
+            GoogleModels.Gemini3_Pro_Preview,
+            emptyList()
+        )
+
+        // Structure: User, FunctionCalls(grouped), FunctionResponses(grouped)
+        request.contents shouldHaveSize 3
+        request.contents[0].role shouldBe "user"
+        request.contents[1].role shouldBe "model"
+        request.contents[2].role shouldBe "user"
+
+        // FunctionResponses are grouped
+        val responsesParts = request.contents[2].parts!!
+        responsesParts shouldHaveSize 2
+        responsesParts.forEach { it.shouldBeInstanceOf<GooglePart.FunctionResponse>() }
+    }
+
+    @Test
+    fun `createGoogleRequest attaches signature from Reasoning and fallback to subsequent calls`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val request = client.createGoogleRequest(
+            Prompt(
+                messages = listOf(
+                    Message.User("query", RequestMetaInfo.Empty),
+                    Message.Reasoning(encrypted = "my-sig", content = "", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Call(id = "2", tool = "t2", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                ),
+                id = "id"
+            ),
+            GoogleModels.Gemini3_Pro_Preview,
+            emptyList()
+        )
+
+        val callsParts = request.contents[1].parts!!
+        callsParts shouldHaveSize 2
+
+        val fc1 = callsParts[0] as GooglePart.FunctionCall
+        val fc2 = callsParts[1] as GooglePart.FunctionCall
+
+        fc1.thoughtSignature shouldBe "my-sig"
+        fc2.thoughtSignature shouldBe "context_engineering_is_the_way_to_go"
+    }
+
+    @Test
+    fun `createGoogleRequest uses configurable fallback thought signature`() {
+        val client = GoogleLLMClient(
+            apiKey = "test",
+            settings = GoogleClientSettings(fallbackThoughtSignature = "custom-fallback")
+        )
+        val request = client.createGoogleRequest(
+            Prompt(
+                messages = listOf(
+                    Message.User("query", RequestMetaInfo.Empty),
+                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                ),
+                id = "id"
+            ),
+            GoogleModels.Gemini3_Pro_Preview,
+            emptyList()
+        )
+
+        val call = request.contents[1].parts!!.single() as GooglePart.FunctionCall
+        call.thoughtSignature shouldBe "custom-fallback"
+    }
+
+    @Test
+    fun `processGoogleCandidate creates Reasoning before FunctionCall with signature`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.FunctionCall(
+                        functionCall = GoogleData.FunctionCall(name = "tool", args = buildJsonObject {}),
+                        thoughtSignature = "sig-123"
+                    )
+                )
+            ),
+            finishReason = "STOP"
+        )
+
+        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        responses shouldHaveSize 2
+        responses[0].shouldBeInstanceOf<Message.Reasoning>()
+        responses[1].shouldBeInstanceOf<Message.Tool.Call>()
+        (responses[0] as Message.Reasoning).encrypted shouldBe "sig-123"
+        (responses[0] as Message.Reasoning).content shouldBe ""
+    }
+
+    @Test
+    fun `processGoogleCandidate creates Reasoning from Text with thought=true`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.Text(
+                        text = "I am thinking...",
+                        thought = true,
+                        thoughtSignature = "thought-sig"
+                    )
+                )
+            ),
+            finishReason = "STOP"
+        )
+
+        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        responses shouldHaveSize 1
+        responses[0].shouldBeInstanceOf<Message.Reasoning>()
+        val reasoning = responses[0] as Message.Reasoning
+        reasoning.content shouldBe "I am thinking..."
+        reasoning.encrypted shouldBe "thought-sig"
+    }
+
+    @Test
+    fun `executeStreaming emits reasoning delta for thought text parts`() = runTest {
+        val model = GoogleModels.Gemini2_5Pro
+        val thoughtSignature = "thought-signature-dummy"
+        val finalAnswer = "final answer"
+        val thoughtText = "internal thinking"
+        val finishReason = "STOP"
+
+        val transport = object : KoogHttpClient {
+            override val clientName: String = "GoogleStreamingTestClient"
+
+            override suspend fun <R : Any> get(
+                path: String,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+            ): R = error("GET is not expected in this test")
+
+            override suspend fun <T : Any, R : Any> post(
+                path: String,
+                request: T,
+                requestBodyType: KClass<T>,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+            ): R = error("POST is not expected in this test")
+
+            override fun <T : Any, R : Any, O : Any> sse(
+                path: String,
+                request: T,
+                requestBodyType: KClass<T>,
+                dataFilter: (String?) -> Boolean,
+                decodeStreamingResponse: (String) -> R,
+                processStreamingChunk: (R) -> O?,
+                parameters: Map<String, String>,
+            ): Flow<O> {
+                path shouldBe "v1beta/models/${model.id}:streamGenerateContent"
+                request.shouldBeInstanceOf<GoogleRequest>()
+
+                val response = GoogleResponse(
+                    candidates = listOf(
+                        GoogleCandidate(
+                            content = GoogleContent(
+                                role = "model",
+                                parts = listOf(
+                                    GooglePart.Text(
+                                        text = thoughtText,
+                                        thought = true,
+                                        thoughtSignature = thoughtSignature
+                                    ),
+                                    GooglePart.Text(text = finalAnswer)
+                                )
+                            ),
+                            finishReason = finishReason,
+                            index = 0
+                        )
+                    )
+                )
+
+                val chunk = processStreamingChunk(response as R)
+                return if (chunk != null) flowOf(chunk) else emptyFlow()
+            }
+
+            override fun close(): Unit = Unit
+        }
+
+        val client = GoogleLLMClient(httpClient = transport)
+
+        val frames = client.executeStreaming(
+            prompt = Prompt(messages = listOf(Message.User("Hi", RequestMetaInfo.Empty)), id = "id"),
+            model = model,
+        ).toList()
+
+        frames shouldBe listOf(
+            StreamFrame.ReasoningDelta(id = thoughtSignature, text = thoughtText, index = 0),
+            StreamFrame.ReasoningComplete(id = thoughtSignature, text = listOf(thoughtText), index = 0),
+            StreamFrame.TextDelta(finalAnswer, 1),
+            StreamFrame.TextComplete(finalAnswer, 1),
+            StreamFrame.End(finishReason, ResponseMetaInfo.Empty),
+        )
+    }
+
+    @Test
+    fun `createGoogleRequest includes Reasoning as Text part with thought=true`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val request = client.createGoogleRequest(
+            Prompt(
+                messages = listOf(
+                    Message.User("query", RequestMetaInfo.Empty),
+                    Message.Reasoning(
+                        content = "Previous thought",
+                        encrypted = "prev-sig",
+                        metaInfo = ResponseMetaInfo.Empty
+                    )
+                ),
+                id = "id"
+            ),
+            GoogleModels.Gemini3_Pro_Preview,
+            emptyList()
+        )
+
+        request.contents shouldHaveSize 2
+        val thoughtContent = request.contents[1]
+        thoughtContent.role shouldBe "model"
+        thoughtContent.parts!!.single().shouldBeInstanceOf<GooglePart.Text>()
+        val textPart = thoughtContent.parts.single() as GooglePart.Text
+        textPart.text shouldBe "Previous thought"
+        textPart.thought shouldBe true
+        textPart.thoughtSignature shouldBe "prev-sig"
+    }
+
+    @Test
+    fun `processGoogleCandidate creates Reasoning for InlineData with signature`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.InlineData(
+                        inlineData = GoogleData.Blob("image/png", "png-bytes".encodeToByteArray()),
+                        thoughtSignature = "image-sig"
+                    )
+                )
+            ),
+            finishReason = "STOP"
+        )
+
+        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        responses shouldHaveSize 2
+        responses[0].shouldBeInstanceOf<Message.Reasoning>()
+        (responses[0] as Message.Reasoning).encrypted shouldBe "image-sig"
+
+        responses[1].shouldBeInstanceOf<Message.Assistant>()
+        val filePart = (responses[1] as Message.Assistant).parts.single() as ContentPart.Image
+        filePart.format shouldBe "png"
     }
 }

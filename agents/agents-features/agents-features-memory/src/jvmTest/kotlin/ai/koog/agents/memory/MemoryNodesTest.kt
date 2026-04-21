@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.memory.config.MemoryScopeType
@@ -29,8 +30,9 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.io.TempDir
@@ -72,6 +74,8 @@ internal class TestMemoryProvider : AgentMemoryProvider {
 
 @OptIn(InternalAgentsApi::class)
 class MemoryNodesTest {
+    private val serializer = KotlinxSerializer()
+
     object MemorySubjects {
         /**
          * Information specific to the current user
@@ -98,7 +102,7 @@ class MemoryNodesTest {
         }
     }
 
-    private fun createMockExecutor() = getMockExecutor {
+    private fun createMockExecutor() = getMockExecutor(serializer) {
         mockLLMAnswer(
             "Here's a summary of the conversation: Test user asked questions and received responses."
         ) onRequestContains
@@ -197,7 +201,7 @@ class MemoryNodesTest {
             }
         }
 
-        agent.run("")
+        agent.run("", null)
 
         // Verify that the fact was saved and loaded correctly with timestamp
         assertEquals(1, result.size)
@@ -246,7 +250,7 @@ class MemoryNodesTest {
             }
         }
 
-        agent.run("")
+        agent.run("", null)
 
         // Verify that facts were detected and saved with timestamps
         assertEquals(2, memory.facts.size)
@@ -270,7 +274,7 @@ class MemoryNodesTest {
 
     @Test
     fun testNodeSaveToMemoryWithCustomModel() = runTest {
-        val customModel = OpenAIModels.CostOptimized.O3Mini
+        val customModel = OpenAIModels.Chat.O3Mini
         val originalModel = OllamaModels.Meta.LLAMA_3_2
 
         val concept = Concept(
@@ -281,7 +285,7 @@ class MemoryNodesTest {
 
         val memory = TestMemoryProvider()
 
-        val testExecutor = getMockExecutor {
+        val testExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Custom model extracted fact") onRequestContains "test-concept-custom"
             mockLLMAnswer("Default test response").asDefaultResponse
         }
@@ -321,7 +325,7 @@ class MemoryNodesTest {
             }
         }
 
-        val result = agent.run("Hi")
+        val result = agent.run("Hi", null)
 
         assertEquals("Done", result, "Agent should complete successfully")
         assertTrue(memory.facts.isNotEmpty(), "Facts should be saved to memory")
@@ -363,7 +367,7 @@ class MemoryNodesTest {
             maxAgentIterations = 10
         )
 
-        val testExecutor = getMockExecutor {
+        val testExecutor = getMockExecutor(serializer) {
             mockLLMAnswer(
                 """
                 [
@@ -398,7 +402,7 @@ class MemoryNodesTest {
             }
         }
 
-        agent.run("Hey")
+        agent.run("Hey", null)
         assertTrue(memory.facts.isNotEmpty(), "Auto-detected facts should be saved to memory")
 
         val savedFacts = memory.facts.values.flatten()
@@ -465,7 +469,7 @@ class MemoryNodesTest {
         }
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = strategy,
             agentConfig = AIAgentConfig(
                 prompt = prompt("memory-loading") {},
@@ -479,7 +483,7 @@ class MemoryNodesTest {
             }
         }
 
-        val resultPrompt = agent.run("Why")
+        val resultPrompt = agent.run("Why", null)
 
         assertEquals(1, resultPrompt.messages.size)
         assertTrue { factValue in resultPrompt.messages.first().content }

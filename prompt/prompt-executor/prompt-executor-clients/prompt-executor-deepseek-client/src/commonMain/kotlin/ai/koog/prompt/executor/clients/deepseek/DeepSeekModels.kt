@@ -1,9 +1,13 @@
 package ai.koog.prompt.executor.clients.deepseek
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekChat
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekReasoner
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import kotlin.collections.plus
+import kotlin.jvm.JvmField
 
 /**
  * Object containing a collection of predefined DeepSeek model configurations.
@@ -25,6 +29,7 @@ public object DeepSeekModels : LLModelDefinitions {
      *
      * @see <a href="https://platform.deepseek.com/api-docs/api/create-chat-completion">Chat Completion API</a>
      */
+    @JvmField
     public val DeepSeekChat: LLModel = LLModel(
         provider = LLMProvider.DeepSeek,
         id = "deepseek-chat",
@@ -46,6 +51,7 @@ public object DeepSeekModels : LLModelDefinitions {
      *
      * @see <a href="https://platform.deepseek.com/api-docs/api/create-chat-completion">Chat Completion API</a>
      */
+    @JvmField
     public val DeepSeekReasoner: LLModel = LLModel(
         provider = LLMProvider.DeepSeek,
         id = "deepseek-reasoner",
@@ -57,8 +63,27 @@ public object DeepSeekModels : LLModelDefinitions {
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.MultipleChoices,
+            LLMCapability.Thinking,
         ),
         contextLength = 64_000,
         maxOutputTokens = 64_000
     )
+
+    /**
+     * List of the supported models by the DeepSeek provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(DeepSeekChat, DeepSeekReasoner)
+
+    /**
+     * List of custom models added to the DeepSeek provider.
+     */
+    private val customModels: MutableList<LLModel> = mutableListOf()
+
+    override val models: List<LLModel>
+        get() = supportedModels + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        require(model.provider == LLMProvider.DeepSeek) { "Model provider must be DeepSeek" }
+        customModels.add(model)
+    }
 }

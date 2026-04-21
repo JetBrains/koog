@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.tool.file.render.norm
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -21,6 +22,8 @@ class ReadFileToolJvmTest {
 
     private val fs = JVMFileSystemProvider.ReadOnly
     private val tool = ReadFileTool(fs)
+
+    private val serializer = KotlinxSerializer()
 
     @TempDir
     lateinit var tempDir: Path
@@ -87,7 +90,7 @@ class ReadFileToolJvmTest {
             ```
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -113,7 +116,7 @@ class ReadFileToolJvmTest {
             ```
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -130,7 +133,7 @@ class ReadFileToolJvmTest {
             c
         """.trimIndent()
 
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -145,7 +148,7 @@ class ReadFileToolJvmTest {
             b: 2
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -159,7 +162,7 @@ class ReadFileToolJvmTest {
             print('hi')
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -173,7 +176,7 @@ class ReadFileToolJvmTest {
             Write-Host 'hello'
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -187,7 +190,7 @@ class ReadFileToolJvmTest {
             task hello { }
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -201,15 +204,21 @@ class ReadFileToolJvmTest {
             echo hello
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
-    fun `throws ValidationFailure when reading empty markdown file`() {
+    fun `reading empty markdown file renders empty fenced block`() = runBlocking {
         val f = createTestFile("empty.md", "")
-        assertThrows<ToolException.ValidationFailure> {
-            runBlocking { readFile(f) }
-        }
+        val result = readFile(f)
+        val expected = """
+            ${"${f.toAbsolutePath().toString().norm()} (0 bytes, 0 lines)"}
+            Content:
+            ```markdown
+            ```
+        """.trimIndent()
+
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -232,7 +241,7 @@ class ReadFileToolJvmTest {
             fun c() = 3
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -245,15 +254,21 @@ class ReadFileToolJvmTest {
             ```markdown
             ```
         """.trimIndent()
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
-    fun `throws ValidationFailure when reading empty kotlin file`() {
+    fun `reading empty kotlin file renders empty fenced block`() = runBlocking {
         val f = createTestFile("Empty.kt", "")
-        assertThrows<ToolException.ValidationFailure> {
-            runBlocking { readFile(f) }
-        }
+        val result = readFile(f)
+        val expected = """
+            ${"${f.toAbsolutePath().toString().norm()} (0 bytes, 0 lines)"}
+            Content:
+            ```kotlin
+            ```
+        """.trimIndent()
+
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 
     @Test
@@ -302,5 +317,22 @@ class ReadFileToolJvmTest {
         assertThrows<ToolException.ValidationFailure> {
             runBlocking { readFile(f, startLine = 0, endLine = -2) }
         }
+    }
+
+    @Test
+    fun `includes warning when endLine exceeds file length`() = runBlocking {
+        val f = createTestFile("short.txt", "line1\nline2\nline3")
+
+        val result = readFile(f, startLine = 0, endLine = 200)
+
+        val expected = """
+            Warning: endLine=200 exceeds file length (3 lines). Clamped to available lines 0-3.
+            ${"${f.toAbsolutePath().toString().norm()} (<0.1 KiB, 3 lines)"}
+            Content:
+            line1
+            line2
+            line3
+        """.trimIndent()
+        assertEquals(expected, tool.encodeResultToString(result, serializer))
     }
 }

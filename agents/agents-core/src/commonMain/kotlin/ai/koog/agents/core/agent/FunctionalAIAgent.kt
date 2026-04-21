@@ -5,17 +5,20 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.environment.AIAgentEnvironment
+import ai.koog.agents.core.environment.ContextualAgentEnvironment
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
-import ai.koog.agents.core.feature.PromptExecutorProxy
+import ai.koog.agents.core.feature.ContextualPromptExecutor
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Represents the core AI agent for processing input and generating output using
@@ -42,7 +45,7 @@ public class FunctionalAIAgent<Input, Output>(
     public val clock: Clock = Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
-) : StatefulSingleUseAIAgent<Input, Output, AIAgentFunctionalContext>(
+) : AIAgentBase<Input, Output, AIAgentFunctionalContext>(
     logger = logger,
     id = id,
 ) {
@@ -50,15 +53,7 @@ public class FunctionalAIAgent<Input, Output>(
         private val logger = KotlinLogging.logger {}
     }
 
-    override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(clock)
-
-    private val environment = GenericAgentEnvironment(
-        agentId = this.id,
-        strategyId = strategy.name,
-        logger = logger,
-        toolRegistry = toolRegistry,
-        pipeline = pipeline
-    )
+    override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(agentConfig, clock)
 
     /**
      * Represents a context for managing and configuring features in an AI agent.
@@ -83,33 +78,75 @@ public class FunctionalAIAgent<Input, Output>(
         FeatureContext(this).installFeatures()
     }
 
-    override suspend fun prepareContext(agentInput: Input, runId: String): AIAgentFunctionalContext {
-        val llm = AIAgentLLMContext(
+    override suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentFunctionalContext {
+        val environment = prepareEnvironment()
+        val executionInfo = AgentExecutionInfo(parent = null, partName = id)
+
+        val initialLLMContext = AIAgentLLMContext(
             tools = toolRegistry.tools.map { it.descriptor },
             toolRegistry = toolRegistry,
             prompt = agentConfig.prompt,
             model = agentConfig.model,
-            promptExecutor = PromptExecutorProxy(
-                executor = promptExecutor,
-                pipeline = pipeline,
-                runId = runId
-            ),
+            responseProcessor = agentConfig.responseProcessor,
+            promptExecutor = promptExecutor,
             environment = environment,
             config = agentConfig,
             clock = clock
         )
 
-        return AIAgentFunctionalContext(
+        // Context
+        val initialAgentContext = AIAgentFunctionalContext(
             environment = environment,
             agentId = id,
             runId = runId,
             agentInput = agentInput,
             config = agentConfig,
-            llm = llm,
+            llm = initialLLMContext,
             stateManager = AIAgentStateManager(),
             storage = AIAgentStorage(),
             strategyName = strategy.name,
-            pipeline = pipeline
+            pipeline = pipeline,
+            executionInfo = executionInfo,
+            parentContext = null
         )
+
+        // Updated environment
+        val contextualEnvironment = ContextualAgentEnvironment(
+            environment = environment,
+            context = initialAgentContext,
+        )
+
+        val contextualPromptExecutor = ContextualPromptExecutor(
+            executor = promptExecutor,
+            context = initialAgentContext,
+        )
+
+        val updatedLLMContext = initialAgentContext.llm.copy(
+            environment = contextualEnvironment,
+            promptExecutor = contextualPromptExecutor,
+        )
+
+        val updatedAgentContext = initialAgentContext.copy(
+            llm = updatedLLMContext,
+            environment = contextualEnvironment,
+            parentRootContext = initialAgentContext.parentContext, // Keep the original parent context
+        )
+
+        return updatedAgentContext
     }
+
+    //region Private Methods
+
+    private fun prepareEnvironment(): AIAgentEnvironment {
+        val baseEnvironment = GenericAgentEnvironment(
+            agentId = id,
+            logger = logger,
+            toolRegistry = toolRegistry,
+            serializer = agentConfig.serializer,
+        )
+
+        return baseEnvironment
+    }
+
+    //endregion Private Methods
 }

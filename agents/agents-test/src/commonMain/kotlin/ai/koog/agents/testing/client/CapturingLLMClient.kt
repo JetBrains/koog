@@ -4,13 +4,14 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlin.jvm.JvmOverloads
 
 /**
  * A test double implementation of [LLMClient] that captures the last inputs provided to each API
@@ -23,15 +24,19 @@ import kotlinx.coroutines.flow.flowOf
  * @property streamingChunks The sequence of chunks to emit from [executeStreaming].
  * @property choices The list of [LLMChoice] to return from [executeMultipleChoices].
  * @property moderationResult The [ModerationResult] to return from [moderate].
- * @property llmProvider [LLMPrivider] associated with the client or [LLMProvider.OpenAI], if not defined
+ * @property embedResult The embedding vector to return from [embed] for a single text input.
+ * @property batchEmbedResult The list of embedding vectors to return from [embed] for batch input.
+ * @property llmProvider [LLMProvider] associated with the client or [LLMProvider.OpenAI], if not defined
  */
-public class CapturingLLMClient(
+public class CapturingLLMClient @JvmOverloads constructor(
     private val executeResponses: List<Message.Response> = emptyList(),
     private val streamingChunks: List<StreamFrame> = emptyList(),
     private val choices: List<LLMChoice> = emptyList(),
     private val moderationResult: ModerationResult = ModerationResult(isHarmful = false, categories = emptyMap()),
+    private val embedResult: List<Double> = emptyList(),
+    private val batchEmbedResult: List<List<Double>> = emptyList(),
     private val llmProvider: LLMProvider = LLMProvider.OpenAI
-) : LLMClient {
+) : LLMClient() {
 
     /** The last [Prompt] passed to [execute], or null if it hasn't been called yet. */
     public var lastExecutedPrompt: Prompt? = null
@@ -62,6 +67,18 @@ public class CapturingLLMClient(
 
     /** The last [LLModel] passed to [moderate], or null if it hasn't been called yet. */
     public var lastModerationModel: LLModel? = null
+
+    /** The last text passed to [embed], or null if it hasn't been called yet. */
+    public var lastEmbeddingText: String? = null
+
+    /** The last [LLModel] passed to [embed], or null if it hasn't been called yet. */
+    public var lastEmbeddingModel: LLModel? = null
+
+    /** The last batched input passed to [embed], or null if it hasn't been called yet. */
+    public var lastBatchEmbeddingInput: List<String>? = null
+
+    /** The last [LLModel] passed to [embed], or null if it hasn't been called yet. */
+    public var lastBatchEmbeddingModel: LLModel? = null
 
     override fun llmProvider(): LLMProvider = llmProvider
 
@@ -117,6 +134,32 @@ public class CapturingLLMClient(
         lastModerationPrompt = prompt
         lastModerationModel = model
         return moderationResult
+    }
+
+    /**
+     * Simulates an embedding call.
+     * Captures input parameters and returns the predefined [embedResult].
+     */
+    override suspend fun embed(
+        text: String,
+        model: LLModel
+    ): List<Double> {
+        lastEmbeddingText = text
+        lastEmbeddingModel = model
+        return embedResult
+    }
+
+    /**
+     * Simulates a batch embedding call.
+     * Captures input parameters and returns the predefined [batchEmbedResult].
+     */
+    override suspend fun embed(
+        inputs: List<String>,
+        model: LLModel
+    ): List<List<Double>> {
+        lastBatchEmbeddingInput = inputs
+        lastBatchEmbeddingModel = model
+        return batchEmbedResult
     }
 
     override fun close() {

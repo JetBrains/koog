@@ -3,61 +3,57 @@ package ai.koog.agents.core.agent.context
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
-import ai.koog.prompt.message.Message
 
 /**
- * Represents the execution context for an AI agent operating in a loop.
- * It provides access to critical parts such as the environment, configuration, large language model (LLM) context,
- * state management, and storage. Additionally, it enables the agent to store, retrieve, and manage context-specific data
- * during its execution lifecycle.
+ * Represents the context for an AI agent of FunctionalAIAgent type,
+ * serving as the execution environment and state holder
+ * while an agent operates within a predefined pipeline. It extends [AIAgentFunctionalContextBase] and is
+ * designed to allow configuration, state management, and storage for an agent's functional operations.
  *
- * @property environment The environment interface allowing the agent to interact with the external world,
- * including executing tools and reporting problems.
- * @property agentId A unique identifier for the agent, differentiating it from other agents in the system.
- * @property runId A unique identifier for the current run or instance of the agent's operation.
- * @property agentInput The input data passed to the agent, which can be of any type, depending on the agent's context.
- * @property config The configuration settings for the agent, including its prompt and model details,
- * as well as operational constraints like iteration limits.
- * @property llm The context for interacting with the large language model used by the agent, enabling message history
- * retrieval and processing.
- * @property stateManager The state management component responsible for tracking and updating the agent's state during its execution.
- * @property storage A storage interface providing persistent storage capabilities for the agent's data.
- * @property strategyName The name of the agent's strategic approach or operational method, determining its behavior
- * during execution.
+ * @param environment The [AIAgentEnvironment] in which the AI agent operates, facilitating interaction
+ *        with the external environment for tool execution and error reporting.
+ * @param agentId A unique identifier for the agent, used to distinguish it from other agents.
+ * @param runId An identifier representing the execution run of the agent, useful for tracking and managing runs.
+ * @param agentInput The input data provided to the agent, which can guide its execution or decision-making process.
+ * @param config The [AIAgentConfig] object containing configuration information for the agent, such as behavior settings.
+ * @param llm The [AIAgentLLMContext] providing access to the large language model interactions for generating outputs.
+ * @param stateManager The [AIAgentStateManager] responsible for managing and persisting the state of the agent during its lifecycle.
+ * @param storage The [AIAgentStorage] interface facilitating storage and retrieval of data in the agent's environment.
+ * @param strategyName The name of the strategic approach or plan under which the agent is functioning.
+ * @param pipeline The [AIAgentFunctionalPipeline] defining the functional execution flow of the agent's operations.
+ * @param executionInfo The [AgentExecutionInfo] containing metadata and runtime information about the agent's current execution.
+ * @param parentContext An optional reference to the parent [AIAgentContext], enabling hierarchical context structure if needed.
  */
-@OptIn(InternalAgentsApi::class)
-@Suppress("UNCHECKED_CAST")
 public class AIAgentFunctionalContext(
-    override val environment: AIAgentEnvironment,
-    override val agentId: String,
-    override val runId: String,
-    override val agentInput: Any?,
-    override val config: AIAgentConfig,
-    override val llm: AIAgentLLMContext,
-    override val stateManager: AIAgentStateManager,
-    override val storage: AIAgentStorage,
-    override val strategyName: String,
-    override val pipeline: AIAgentFunctionalPipeline,
-    override val parentContext: AIAgentContext? = null
-) : AIAgentContext {
-
-    private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
-
-    override fun store(key: AIAgentStorageKey<*>, value: Any) {
-        storeMap[key] = value
-    }
-
-    override fun <T> get(key: AIAgentStorageKey<*>): T? = storeMap[key] as T?
-
-    override fun remove(key: AIAgentStorageKey<*>): Boolean = storeMap.remove(key) != null
-
-    override suspend fun getHistory(): List<Message> {
-        return llm.readSession { prompt.messages }
-    }
+    environment: AIAgentEnvironment,
+    agentId: String,
+    runId: String,
+    agentInput: Any?,
+    config: AIAgentConfig,
+    llm: AIAgentLLMContext,
+    stateManager: AIAgentStateManager,
+    storage: AIAgentStorage,
+    strategyName: String,
+    pipeline: AIAgentFunctionalPipeline,
+    executionInfo: AgentExecutionInfo,
+    parentContext: AIAgentContext? = null
+) : AIAgentFunctionalContextBase<AIAgentFunctionalPipeline>(
+    environment = environment,
+    agentId = agentId,
+    runId = runId,
+    agentInput = agentInput,
+    config = config,
+    llm = llm,
+    stateManager = stateManager,
+    storage = storage,
+    strategyName = strategyName,
+    pipeline = pipeline,
+    executionInfo = executionInfo,
+    parentContext = parentContext
+) {
 
     /**
      * Creates a copy of the current [AIAgentFunctionalContext], allowing for selective overriding of its properties.
@@ -74,9 +70,9 @@ public class AIAgentFunctionalContext(
      * @param stateManager The [AIAgentStateManager] to be used, or preserve the current state keeper.
      * @param storage The [AIAgentStorage] to be used, or stick with the current memory bank.
      * @param strategyName The strategy name, or maintain the current game plan.
-     * @param pipeline The [AIAgentFunctionalPipeline] to be used, or keep the current execution superhighway.
+     * @param pipeline The [AIAgentFunctionalPipeline] to be used, or keep the current pipeline.
      * @param parentRootContext The parent root context, or maintain the current family tree.
-     * @return A shiny new [AIAgentFunctionalContext] with your desired modifications applied!
+     * @return A new [AIAgentFunctionalContext] with your desired modifications applied!
      */
     public fun copy(
         environment: AIAgentEnvironment = this.environment,
@@ -89,25 +85,20 @@ public class AIAgentFunctionalContext(
         storage: AIAgentStorage = this.storage,
         strategyName: String = this.strategyName,
         pipeline: AIAgentFunctionalPipeline = this.pipeline,
+        executionInfo: AgentExecutionInfo = this.executionInfo,
         parentRootContext: AIAgentContext? = this.parentContext,
-    ): AIAgentFunctionalContext {
-        val freshContext = AIAgentFunctionalContext(
-            environment = environment,
-            agentId = agentId,
-            runId = runId,
-            agentInput = agentInput,
-            config = config,
-            llm = llm,
-            stateManager = stateManager,
-            storage = storage,
-            strategyName = strategyName,
-            pipeline = pipeline,
-            parentContext = parentRootContext
-        )
-
-        // Copy over the internal store map to preserve any stored values
-        freshContext.storeMap.putAll(this.storeMap)
-
-        return freshContext
-    }
+    ): AIAgentFunctionalContext = AIAgentFunctionalContext(
+        environment = environment,
+        agentId = agentId,
+        runId = runId,
+        agentInput = agentInput,
+        config = config,
+        llm = llm,
+        stateManager = stateManager,
+        storage = storage,
+        strategyName = strategyName,
+        pipeline = pipeline,
+        executionInfo = executionInfo,
+        parentContext = parentRootContext
+    )
 }

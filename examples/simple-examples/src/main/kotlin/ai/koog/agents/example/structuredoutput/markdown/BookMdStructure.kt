@@ -2,7 +2,7 @@ package ai.koog.agents.example.structuredoutput.markdown
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.structure.markdown.MarkdownStructuredDataDefinition
+import ai.koog.prompt.structure.markdown.MarkdownStructureDefinition
 import ai.koog.prompt.structure.markdown.markdownStreamingParser
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -19,21 +19,19 @@ data class Book(
     val description: String
 )
 
-class BookTool() : SimpleTool<Book>() {
+class BookTool() : SimpleTool<Book>(
+    argsSerializer = Book.serializer(),
+    name = "book",
+    description = "A tool to parse book information from markdown"
+) {
     companion object {
         const val NAME = "book"
     }
 
-    override val name: String = "book"
-    override val description: String = "A tool to parse book information from markdown"
-
-    override suspend fun doExecute(args: Book): String {
+    override suspend fun execute(args: Book): String {
         println("${args.bookName} by ${args.author}:\n ${args.description}")
         return "Done"
     }
-
-    override val argsSerializer: KSerializer<Book>
-        get() = Book.serializer()
 }
 
 /**
@@ -74,8 +72,8 @@ fun parseMarkdownStreamToBooks(markdownStream: Flow<String>): Flow<Book> {
     }
 }
 
-fun markdownBookDefinition(): MarkdownStructuredDataDefinition {
-    return MarkdownStructuredDataDefinition("bookList", schema = {
+fun markdownBookDefinition(): MarkdownStructureDefinition {
+    return MarkdownStructureDefinition("bookList", schema = {
         markdown {
             header(1, "bookName")
             bulleted {

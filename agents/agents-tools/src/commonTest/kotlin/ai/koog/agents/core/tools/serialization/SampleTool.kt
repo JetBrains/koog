@@ -2,9 +2,14 @@ package ai.koog.agents.core.tools.serialization
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
-internal class SampleTool(name: String) : SimpleTool<SampleTool.Args>() {
+internal class SampleTool(name: String) : SimpleTool<SampleTool.Args>(
+    argsType = typeToken<Args>(),
+    name = name,
+    description = "First tool description",
+) {
     @Serializable
     data class Args(
         @property:LLMDescription("First tool argument 1")
@@ -12,11 +17,5 @@ internal class SampleTool(name: String) : SimpleTool<SampleTool.Args>() {
         val arg2: Int
     )
 
-    override val argsSerializer = Args.serializer()
-
-    override val name = name
-
-    override val description: String = "First tool description"
-
-    override suspend fun doExecute(args: Args): String = "Do nothing $args"
+    override suspend fun execute(args: Args): String = "Do nothing $args"
 }

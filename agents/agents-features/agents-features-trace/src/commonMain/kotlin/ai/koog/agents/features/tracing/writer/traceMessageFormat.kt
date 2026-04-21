@@ -13,7 +13,7 @@ import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
-import ai.koog.agents.core.feature.model.events.StrategyStartingEvent
+import ai.koog.agents.core.feature.model.events.StrategyStartingEventBase
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallFailedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
@@ -38,12 +38,12 @@ internal val AgentCompletedEvent.agentFinishedEventFormat
     get() = "${this::class.simpleName} (agent id: $agentId, run id: $runId, result: $result)"
 
 internal val AgentExecutionFailedEvent.agentRunErrorEventFormat
-    get() = "${this::class.simpleName} (agent id: $agentId, run id: $runId, error: ${error.message})"
+    get() = "${this::class.simpleName} (agent id: $agentId, run id: $runId, error: ${error?.message})"
 
 internal val AgentClosingEvent.agentBeforeCloseFormat
     get() = "${this::class.simpleName} (agent id: $agentId)"
 
-internal val StrategyStartingEvent.strategyStartEventFormat
+internal val StrategyStartingEventBase.strategyStartEventFormat
     get() = "${this::class.simpleName} (run id: $runId, strategy: $strategyName)"
 
 internal val StrategyCompletedEvent.strategyFinishedEventFormat
@@ -71,10 +71,10 @@ internal val ToolValidationFailedEvent.toolValidationErrorEventFormat
     get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, validation error: $error)"
 
 internal val ToolCallFailedEvent.toolCallFailureEventFormat
-    get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, error: ${error.message})"
+    get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, error: ${error?.message})"
 
 internal val ToolCallCompletedEvent.toolCallResultEventFormat
-    get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, result: $result)"
+    get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, description: $toolDescription, result: $result)"
 
 internal val FeatureMessage.traceMessage: String
     get() {
@@ -83,7 +83,7 @@ internal val FeatureMessage.traceMessage: String
             is AgentCompletedEvent -> this.agentFinishedEventFormat
             is AgentExecutionFailedEvent -> this.agentRunErrorEventFormat
             is AgentClosingEvent -> this.agentBeforeCloseFormat
-            is StrategyStartingEvent -> this.strategyStartEventFormat
+            is StrategyStartingEventBase -> this.strategyStartEventFormat
             is StrategyCompletedEvent -> this.strategyFinishedEventFormat
             is NodeExecutionStartingEvent -> this.nodeExecutionStartEventFormat
             is NodeExecutionCompletedEvent -> this.nodeExecutionEndEventFormat

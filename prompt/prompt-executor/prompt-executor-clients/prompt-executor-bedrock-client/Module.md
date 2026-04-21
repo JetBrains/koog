@@ -63,6 +63,12 @@ across multiple model providers.
 | Mistral 7B    | Fast   | Text          | Text           | $0.15/$0.2 per 1M | Efficient, 7B params        |
 | Mistral Small | Fast   | Text          | Text           | $1/$3 per 1M      | Lightweight, cost-effective |
 
+### Moonshot Kimi Models
+
+| Model           | Speed  | Input Support | Output Support | Context | Pricing          | Notes                                |
+|-----------------|--------|---------------|----------------|---------|------------------|--------------------------------------|
+| Kimi K2 Thinking| Medium | Text, Tools   | Text, Tools    | 256K    | $0.6/$2.5 per 1M | Deep reasoning, thinking traces      |
+
 *Pricing shown as Input/Output per 1M tokens
 
 ## Media Content Support
@@ -78,8 +84,9 @@ across multiple model providers.
 
 - **Images**: Only Claude 3 models support image input
 - **Size limits**: AWS Bedrock enforces a 5MB limit for image data
-- **Tools**: Only Claude 3 models and Mistral Large support function calling
+- **Tools**: Claude 3, Mistral Large, and Kimi K2 Thinking models support function calling
 - **Streaming**: All models support token streaming
+- **Kimi K2 Thinking**: Requires Bedrock Converse API (`BedrockAPIMethod.Converse`), supports reasoning traces with up to 256K context
 
 ## Features
 
@@ -259,6 +266,36 @@ val mistralToolResponse = client.execute(
     model = BedrockModels.MistralLarge,
     tools = listOf(searchTool)
 )
+
+// Use Kimi K2 Thinking with deep reasoning (requires Converse API)
+val kimiClient = createBedrockLLMClient(
+    awsAccessKeyId = ApiKeyService.awsAccessKey,
+    awsSecretAccessKey = ApiKeyService.awsSecretAccessKey,
+    settings = BedrockClientSettings(
+        region = "us-east-1",
+        apiMethod = BedrockAPIMethod.Converse // Required for Kimi models
+    )
+)
+
+val kimiResponse = kimiClient.execute(
+    prompt = prompt {
+        user("Solve this complex problem step by step: What are the environmental impacts of quantum computing?")
+    },
+    model = BedrockModels.MoonshotKimiK2Thinking
+)
+
+// Kimi K2 Thinking supports reasoning traces
+kimiResponse.forEach { message ->
+    when (message) {
+        is Message.Reasoning -> {
+            // Access the model's chain-of-thought reasoning
+            println("Reasoning trace: ${message.content}")
+        }
+        is Message.Assistant -> {
+            println("Final answer: ${message.content}")
+        }
+    }
+}
 ```
 
 ## Testing

@@ -3,6 +3,8 @@ package ai.koog.agents.core.tools.reflect
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -103,7 +105,7 @@ class ComplexToolsImpl : ToolSet {
 
 @OptIn(InternalAgentToolsApi::class)
 class ToolSetAsToolsTest {
-    private val json = Json
+    private val serializer = KotlinxSerializer()
 
     @Test
     @OptIn(InternalAgentToolsApi::class)
@@ -119,7 +121,7 @@ class ToolSetAsToolsTest {
     @OptIn(InternalAgentToolsApi::class)
     fun testMathToolsExecution() = runTest {
         val mathTools = MathToolsImpl()
-        val tools = mathTools.asTools(json)
+        val tools = mathTools.asTools()
 
         val addTool = tools.find { it.descriptor.name == "add" }
         assertNotNull(addTool, "Add tool should be found")
@@ -127,10 +129,10 @@ class ToolSetAsToolsTest {
         val addArgs = buildJsonObject {
             put("a", JsonPrimitive(5))
             put("b", JsonPrimitive(3))
-        }
+        }.toKoogJSONObject()
 
-        val addResult = addTool.execute(addTool.decodeArgs(addArgs))
-        assertEquals("8", addTool.encodeResultToStringUnsafe(addResult), "Add tool should return 8")
+        val addResult = addTool.execute(addTool.decodeArgs(addArgs, serializer))
+        assertEquals("8", addTool.encodeResultToStringUnsafe(addResult, serializer), "Add tool should return 8")
 
         val multiplyTool = tools.find { it.descriptor.name == "multiply" }
         assertNotNull(multiplyTool, "Multiply tool should be found")
@@ -138,17 +140,17 @@ class ToolSetAsToolsTest {
         val multiplyArgs = buildJsonObject {
             put("a", JsonPrimitive(4))
             put("b", JsonPrimitive(7))
-        }
+        }.toKoogJSONObject()
 
-        val multiplyResult = multiplyTool.execute(multiplyTool.decodeArgs(multiplyArgs))
-        assertEquals("28", multiplyTool.encodeResultToStringUnsafe(multiplyResult), "Multiply tool should return 28")
+        val multiplyResult = multiplyTool.execute(multiplyTool.decodeArgs(multiplyArgs, serializer))
+        assertEquals("28", multiplyTool.encodeResultToStringUnsafe(multiplyResult, serializer), "Multiply tool should return 28")
     }
 
     @Test
     @OptIn(InternalAgentToolsApi::class)
     fun testCombinedMathToolsExecution() = runTest {
         val combinedMathTools = CombinedMathToolsImpl()
-        val tools = combinedMathTools.asTools(json)
+        val tools = combinedMathTools.asTools()
 
         assertEquals(3, tools.size, "Combined math tools should have 3 tools")
 
@@ -158,17 +160,17 @@ class ToolSetAsToolsTest {
         val powerArgs = buildJsonObject {
             put("base", JsonPrimitive(2))
             put("exponent", JsonPrimitive(3))
-        }
+        }.toKoogJSONObject()
 
-        val powerResult = powerTool.execute(powerTool.decodeArgs(powerArgs))
-        assertEquals("8", powerTool.encodeResultToStringUnsafe(powerResult), "Power tool should return 8")
+        val powerResult = powerTool.execute(powerTool.decodeArgs(powerArgs, serializer))
+        assertEquals("8", powerTool.encodeResultToStringUnsafe(powerResult, serializer), "Power tool should return 8")
     }
 
     @Test
     @OptIn(InternalAgentToolsApi::class)
     fun testAsToolsByInterface() = runTest {
         val mathTools = MathToolsImpl()
-        val tools = mathTools.asToolsByInterface<MathToolsInterface>(json)
+        val tools = mathTools.asToolsByClass<MathToolsInterface>()
 
         assertEquals(2, tools.size, "Should only have 2 tools from the interface")
 
@@ -178,17 +180,17 @@ class ToolSetAsToolsTest {
         val subtractArgs = buildJsonObject {
             put("a", JsonPrimitive(10))
             put("b", JsonPrimitive(4))
-        }
+        }.toKoogJSONObject()
 
-        val subtractResult = subtractTool.execute(subtractTool.decodeArgs(subtractArgs))
-        assertEquals("6", subtractTool.encodeResultToStringUnsafe(subtractResult), "Subtract tool should return 6")
+        val subtractResult = subtractTool.execute(subtractTool.decodeArgs(subtractArgs, serializer))
+        assertEquals("6", subtractTool.encodeResultToStringUnsafe(subtractResult, serializer), "Subtract tool should return 6")
     }
 
     @Test
     @OptIn(InternalAgentToolsApi::class)
     fun testStringToolsExecution() = runTest {
         val stringTools = StringToolsImpl()
-        val tools = stringTools.asTools(json)
+        val tools = stringTools.asTools()
 
         assertEquals(2, tools.size, "String tools should have 2 tools")
 
@@ -198,17 +200,17 @@ class ToolSetAsToolsTest {
         val concatArgs = buildJsonObject {
             put("a", JsonPrimitive("Hello, "))
             put("b", JsonPrimitive("World!"))
-        }
+        }.toKoogJSONObject()
 
-        val concatResult = concatTool.execute(concatTool.decodeArgs(concatArgs))
-        assertEquals("\"Hello, World!\"", concatTool.encodeResultToStringUnsafe(concatResult), "Concat tool should return \"Hello, World!\"")
+        val concatResult = concatTool.execute(concatTool.decodeArgs(concatArgs, serializer))
+        assertEquals("\"Hello, World!\"", concatTool.encodeResultToStringUnsafe(concatResult, serializer), "Concat tool should return \"Hello, World!\"")
     }
 
     @Test
     @OptIn(InternalAgentToolsApi::class)
     fun testComplexToolsExecution() = runTest {
         val complexTools = ComplexToolsImpl()
-        val tools = complexTools.asTools(json)
+        val tools = complexTools.asTools()
 
         val createPersonTool = tools.find { it.descriptor.name == "createPerson" }
         assertNotNull(createPersonTool, "CreatePerson tool should be found")
@@ -216,11 +218,11 @@ class ToolSetAsToolsTest {
         val createPersonArgs = buildJsonObject {
             put("name", JsonPrimitive("John"))
             put("age", JsonPrimitive(30))
-        }
+        }.toKoogJSONObject()
 
         val createPersonResult =
-            createPersonTool.execute(createPersonTool.decodeArgs(createPersonArgs))
-        val personJson = createPersonTool.encodeResultToStringUnsafe(createPersonResult)
+            createPersonTool.execute(createPersonTool.decodeArgs(createPersonArgs, serializer))
+        val personJson = createPersonTool.encodeResultToStringUnsafe(createPersonResult, serializer)
         assertTrue(personJson.contains("\"name\":\"John\""), "Person JSON should contain name")
         assertTrue(personJson.contains("\"age\":30"), "Person JSON should contain age")
 
@@ -229,13 +231,13 @@ class ToolSetAsToolsTest {
 
         val formatPersonArgs = buildJsonObject {
             put("person", Json.parseToJsonElement(personJson))
-        }
+        }.toKoogJSONObject()
 
         val formatPersonResult =
-            formatPersonTool.execute(formatPersonTool.decodeArgs(formatPersonArgs))
+            formatPersonTool.execute(formatPersonTool.decodeArgs(formatPersonArgs, serializer))
         assertEquals(
             "\"John is 30 years old\"",
-            formatPersonTool.encodeResultToStringUnsafe(formatPersonResult),
+            formatPersonTool.encodeResultToStringUnsafe(formatPersonResult, serializer),
             "Format tool should return formatted string"
         )
     }

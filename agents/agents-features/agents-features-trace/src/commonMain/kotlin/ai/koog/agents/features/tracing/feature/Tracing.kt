@@ -1,9 +1,9 @@
 package ai.koog.agents.features.tracing.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachCatching
@@ -22,6 +22,9 @@ import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
+import ai.koog.agents.core.feature.model.events.SubgraphExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.SubgraphExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.SubgraphExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallFailedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
@@ -29,13 +32,12 @@ import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
-import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.prompt.llm.toModelInfo
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONNull
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
-import kotlin.reflect.KType
 
 /**
  * Feature that collects comprehensive tracing data during agent execution and sends it to configured feature message processors.
@@ -102,7 +104,9 @@ public class Tracing {
         override val key: AIAgentStorageKey<Tracing> =
             AIAgentStorageKey("agents-features-tracing")
 
-        override fun createInitialConfig(): TraceFeatureConfig = TraceFeatureConfig()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): TraceFeatureConfig = TraceFeatureConfig()
 
         override fun install(
             config: TraceFeatureConfig,
@@ -122,6 +126,8 @@ public class Tracing {
 
             pipeline.interceptAgentStarting(this) intercept@{ eventContext ->
                 val event = AgentStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
@@ -131,6 +137,8 @@ public class Tracing {
 
             pipeline.interceptAgentCompleted(this) intercept@{ eventContext ->
                 val event = AgentCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
                     result = eventContext.result?.toString(),
@@ -141,6 +149,8 @@ public class Tracing {
 
             pipeline.interceptAgentExecutionFailed(this) intercept@{ eventContext ->
                 val event = AgentExecutionFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
                     error = eventContext.throwable.toAgentError(),
@@ -151,6 +161,8 @@ public class Tracing {
 
             pipeline.interceptAgentClosing(this) intercept@{ eventContext ->
                 val event = AgentClosingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     agentId = eventContext.agentId,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -166,7 +178,9 @@ public class Tracing {
 
                 @OptIn(InternalAgentsApi::class)
                 val event = GraphStrategyStartingEvent(
-                    runId = eventContext.runId,
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
+                    runId = eventContext.context.runId,
                     strategyName = eventContext.strategy.name,
                     graph = strategy.startNodeToGraph(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
@@ -176,7 +190,9 @@ public class Tracing {
 
             pipeline.interceptStrategyCompleted(this) intercept@{ eventContext ->
                 val event = StrategyCompletedEvent(
-                    runId = eventContext.runId,
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
+                    runId = eventContext.context.runId,
                     strategyName = eventContext.strategy.name,
                     result = eventContext.result?.toString(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
@@ -190,9 +206,15 @@ public class Tracing {
 
             pipeline.interceptNodeExecutionStarting(this) intercept@{ eventContext ->
                 val event = NodeExecutionStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = getNodeData(eventContext.input, eventContext.inputType),
+                    input = nodeDataToJsonElement(
+                        eventContext.input,
+                        eventContext.inputType,
+                        pipeline.config.serializer
+                    ),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -200,10 +222,20 @@ public class Tracing {
 
             pipeline.interceptNodeExecutionCompleted(this) intercept@{ eventContext ->
                 val event = NodeExecutionCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = getNodeData(eventContext.input, eventContext.inputType),
-                    output = getNodeData(eventContext.output, eventContext.outputType),
+                    input = nodeDataToJsonElement(
+                        eventContext.input,
+                        eventContext.inputType,
+                        pipeline.config.serializer
+                    ),
+                    output = nodeDataToJsonElement(
+                        eventContext.output,
+                        eventContext.outputType,
+                        pipeline.config.serializer
+                    ),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -211,9 +243,15 @@ public class Tracing {
 
             pipeline.interceptNodeExecutionFailed(this) intercept@{ eventContext ->
                 val event = NodeExecutionFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = getNodeData(eventContext.input, eventContext.inputType),
+                    input = nodeDataToJsonElement(
+                        eventContext.input,
+                        eventContext.inputType,
+                        pipeline.config.serializer
+                    ),
                     error = eventContext.throwable.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -222,10 +260,70 @@ public class Tracing {
 
             //endregion Intercept Node Events
 
+            //region Intercept Subgraph Events
+
+            pipeline.interceptSubgraphExecutionStarting(this) intercept@{ eventContext ->
+                val event = SubgraphExecutionStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
+                    runId = eventContext.context.runId,
+                    subgraphName = eventContext.subgraph.name,
+                    input = nodeDataToJsonElement(
+                        eventContext.input,
+                        eventContext.inputType,
+                        pipeline.config.serializer
+                    ),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                processMessage(config, event)
+            }
+
+            pipeline.interceptSubgraphExecutionCompleted(this) intercept@{ eventContext ->
+                val event = SubgraphExecutionCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
+                    runId = eventContext.context.runId,
+                    subgraphName = eventContext.subgraph.name,
+                    input = nodeDataToJsonElement(
+                        eventContext.input,
+                        eventContext.inputType,
+                        pipeline.config.serializer
+                    ),
+                    output = nodeDataToJsonElement(
+                        eventContext.output,
+                        eventContext.outputType,
+                        pipeline.config.serializer
+                    ),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                processMessage(config, event)
+            }
+
+            pipeline.interceptSubgraphExecutionFailed(this) intercept@{ eventContext ->
+                val event = SubgraphExecutionFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
+                    runId = eventContext.context.runId,
+                    subgraphName = eventContext.subgraph.name,
+                    input = nodeDataToJsonElement(
+                        eventContext.input,
+                        eventContext.inputType,
+                        pipeline.config.serializer
+                    ),
+                    error = eventContext.throwable.toAgentError(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                processMessage(config, event)
+            }
+
+            //endregion Intercept Subgraph Events
+
             //region Intercept LLM Call Events
 
             pipeline.interceptLLMCallStarting(this) intercept@{ eventContext ->
                 val event = LLMCallStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
@@ -237,6 +335,8 @@ public class Tracing {
 
             pipeline.interceptLLMCallCompleted(this) intercept@{ eventContext ->
                 val event = LLMCallCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
@@ -253,9 +353,11 @@ public class Tracing {
 
             pipeline.interceptLLMStreamingStarting(this) intercept@{ eventContext ->
                 val event = LLMStreamingStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.toModelInfo().modelIdentifierName,
+                    model = eventContext.model.toModelInfo(),
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -264,9 +366,11 @@ public class Tracing {
 
             pipeline.interceptLLMStreamingCompleted(this) intercept@{ eventContext ->
                 val event = LLMStreamingCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.toModelInfo().modelIdentifierName,
+                    model = eventContext.model.toModelInfo(),
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -275,7 +379,11 @@ public class Tracing {
 
             pipeline.interceptLLMStreamingFrameReceived(this) intercept@{ eventContext ->
                 val event = LLMStreamingFrameReceivedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
+                    prompt = eventContext.prompt,
+                    model = eventContext.model.toModelInfo(),
                     frame = eventContext.streamFrame,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -284,7 +392,11 @@ public class Tracing {
 
             pipeline.interceptLLMStreamingFailed(this) intercept@{ eventContext ->
                 val event = LLMStreamingFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
+                    prompt = eventContext.prompt,
+                    model = eventContext.model.toModelInfo(),
                     error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -296,30 +408,28 @@ public class Tracing {
             //region Intercept Tool Call Events
 
             pipeline.interceptToolCallStarting(this) intercept@{ eventContext ->
-
-                @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<Any?, Any?>
-
                 val event = ToolCallStartingEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = tool.name,
-                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
+                    toolName = eventContext.toolName,
+                    toolArgs = eventContext.toolArgs,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
 
             pipeline.interceptToolValidationFailed(this) intercept@{ eventContext ->
-
-                @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<Any?, Any?>
-
                 val event = ToolValidationFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = tool.name,
-                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
+                    toolName = eventContext.toolName,
+                    toolArgs = eventContext.toolArgs,
+                    toolDescription = eventContext.toolDescription,
+                    message = eventContext.message,
                     error = eventContext.error,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -327,32 +437,30 @@ public class Tracing {
             }
 
             pipeline.interceptToolCallFailed(this) intercept@{ eventContext ->
-
-                @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<Any?, Any?>
-
                 val event = ToolCallFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = tool.name,
-                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
-                    error = eventContext.throwable.toAgentError(),
+                    toolName = eventContext.toolName,
+                    toolArgs = eventContext.toolArgs,
+                    toolDescription = eventContext.toolDescription,
+                    error = eventContext.error,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
 
             pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
-
-                @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<Any?, Any?>
-
                 val event = ToolCallCompletedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = tool.name,
-                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
-                    result = eventContext.result?.let { result -> tool.encodeResultToString(result) },
+                    toolName = eventContext.toolName,
+                    toolArgs = eventContext.toolArgs,
+                    toolDescription = eventContext.toolDescription,
+                    result = eventContext.toolResult,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -370,20 +478,14 @@ public class Tracing {
         }
 
         /**
-         * Retrieves the JSON representation of the given data based on its type.
-         *
-         * Note: See [KG-485](https://youtrack.jetbrains.com/issue/KG-485)
-         *       Workaround for processing non-serializable [ReceivedToolResult] type in the node input/output.
+         * Retrieves the JSON representation of the given data based on its type, skips it if it's not serializable,
+         * returning [JSONNull]
          */
-        private fun getNodeData(data: Any?, dataType: KType): JsonElement? {
-            data ?: return null
-
-            @OptIn(InternalAgentsApi::class)
-            return SerializationUtils.encodeDataToJsonElementOrDefault(data, dataType) {
-                when (data) {
-                    is ReceivedToolResult -> SerializationUtils.parseDataToJsonElementOrDefault(data.content)
-                    else -> JsonPrimitive(data.toString())
-                }
+        private fun nodeDataToJsonElement(data: Any?, dataType: TypeToken, serializer: JSONSerializer): JSONElement {
+            return try {
+                serializer.encodeToJSONElement(data, dataType)
+            } catch (_: Exception) {
+                JSONNull
             }
         }
 

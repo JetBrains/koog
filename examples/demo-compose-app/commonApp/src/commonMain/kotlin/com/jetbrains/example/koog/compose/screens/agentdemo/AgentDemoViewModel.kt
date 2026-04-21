@@ -3,7 +3,6 @@ package com.jetbrains.example.koog.compose.screens.agentdemo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jetbrains.example.koog.compose.agents.common.AgentProvider
-import com.jetbrains.example.koog.compose.settings.AppSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,33 +12,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-// Define message types for the chat
-sealed class Message {
-    data class UserMessage(val text: String) : Message()
-    data class AgentMessage(val text: String) : Message()
-    data class SystemMessage(val text: String) : Message()
-    data class ErrorMessage(val text: String) : Message()
-    data class ToolCallMessage(val text: String) : Message()
-    data class ResultMessage(val text: String) : Message()
-}
-
-// Define UI state for the agent demo screen
-data class AgentDemoUiState(
-    val title: String = "Agent Demo",
-    val messages: List<Message> = listOf(Message.SystemMessage("Hi, I'm an agent that can help you")),
-    val inputText: String = "",
-    val isInputEnabled: Boolean = true,
-    val isLoading: Boolean = false,
-    val isChatEnded: Boolean = false,
-
-    // For handling user responses when agent asks a question
-    val userResponseRequested: Boolean = false,
-    val currentUserResponse: String? = null,
-)
-
 class AgentDemoViewModel(
+    private val navigationCallback: AgentDemoNavigationCallback,
     private val agentProvider: AgentProvider,
-    private val appSettings: AppSettings,
 ) : ViewModel() {
     // UI state
     private val _uiState = MutableStateFlow(
@@ -50,13 +25,24 @@ class AgentDemoViewModel(
     )
     val uiState: StateFlow<AgentDemoUiState> = _uiState.asStateFlow()
 
+    fun onEvent(event: AgentDemoUiEvents) {
+        viewModelScope.launch {
+            when (event) {
+                is AgentDemoUiEvents.UpdateInputText -> updateInputText(event.text)
+                AgentDemoUiEvents.SendMessage -> sendMessage()
+                AgentDemoUiEvents.RestartChat -> restartChat()
+                AgentDemoUiEvents.NavigateBack -> navigationCallback.goBack()
+            }
+        }
+    }
+
     // Update input text
-    fun updateInputText(text: String) {
+    private fun updateInputText(text: String) {
         _uiState.update { it.copy(inputText = text) }
     }
 
     // Send user message and start agent processing
-    fun sendMessage() {
+    private fun sendMessage() {
         val userInput = _uiState.value.inputText.trim()
         if (userInput.isEmpty()) return
 
@@ -95,7 +81,6 @@ class AgentDemoViewModel(
             try {
                 // Create and run the agent using the factory
                 val agent = agentProvider.provideAgent(
-                    appSettings = appSettings,
                     onToolCallEvent = { message ->
                         // Add tool call messages to the chat
                         viewModelScope.launch {
@@ -175,7 +160,7 @@ class AgentDemoViewModel(
     }
 
     // Restart the chat
-    fun restartChat() {
+    private fun restartChat() {
         _uiState.update {
             AgentDemoUiState(
                 title = agentProvider.title,

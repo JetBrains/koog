@@ -10,6 +10,11 @@ name: Heavy Tests
 on:
   workflow_dispatch:  # Manual trigger
   push:
+    paths-ignore:
+      - examples/**
+      - docs/**
+      - inspections/**
+      - "*.md"
     branches: [ main, develop ]
 
 env:
@@ -28,13 +33,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - job-name: "agent-tests"
-            test-group: "ai.koog.integration.tests.agent.*"
-            artifact-name: "agent-tests"
+          - job-name: "java-api-tests"
+            test-group: "ai.koog.integration.tests.agent.Java*"
+            artifact-name: "java-api-tests"
             os: ubuntu-latest
-          - job-name: "single-llm-executor-tests"
-            test-group: "ai.koog.integration.tests.executor.SingleLLMPromptExecutorIntegrationTest"
-            artifact-name: "single-llm-executor-tests"
+          - job-name: "agent-tests"
+            test-group: "ai.koog.integration.tests.agent.AIAgent*"
+            artifact-name: "agent-tests"
             os: ubuntu-latest
           - job-name: "multiple-llm-executor-tests"
             test-group: "ai.koog.integration.tests.executor.MultipleLLMPromptExecutorIntegrationTest"
@@ -45,7 +50,7 @@ jobs:
             artifact-name: "bedrock-tests"
             os: ubuntu-latest
           - job-name: "other-executor-tests"
-            test-group: "ai.koog.integration.tests.executor.* --exclude-tests ai.koog.integration.tests.executor.SingleLLMPromptExecutorIntegrationTest --exclude-tests ai.koog.integration.tests.executor.MultipleLLMPromptExecutorIntegrationTest --exclude-tests ai.koog.integration.tests.executor.BedrockExecutorIntegrationTest --exclude-tests ai.koog.integration.tests.executor.OllamaExecutorIntegrationTest"
+            test-group: '"ai.koog.integration.tests.executor.BedrockConverseApiIntegrationTest" --tests "ai.koog.integration.tests.executor.ToolDescriptorIntegrationTest" --tests "ai.koog.integration.tests.executor.ToolSchemaExecutorIntegrationTest"'
             artifact-name: "other-executor-tests"
             os: ubuntu-latest
           - job-name: "capabilities-tests"
@@ -55,10 +60,6 @@ jobs:
           - job-name: "embeddings-tests"
             test-group: "ai.koog.integration.tests.*Embeddings*"
             artifact-name: "embeddings-test"
-            os: ubuntu-latest
-          - job-name: "bedrock-credentials-tests"
-            test-group: "ai.koog.integration.tests.*BedrockCredentials*"
-            artifact-name: "bedrock-credentials-test"
             os: ubuntu-latest
           - job-name: "anthropic-schema-tests"
             test-group: "ai.koog.integration.tests.*AnthropicSchemaValidation*"
@@ -71,7 +72,7 @@ jobs:
         run: |
           git config --global core.autocrlf input
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -82,10 +83,10 @@ jobs:
       # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Configure AWS credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_KOOG }}
           aws-region: ${{ env.AWS_REGION }}
@@ -93,6 +94,7 @@ jobs:
           role-duration-seconds: 10800  # 3 hours (3 * 60 * 60)
 
       - name: Verify AWS Identity and Bedrock access
+        if: ${{ matrix.job-name == 'bedrock-tests' || matrix.job-name == 'other-executor-tests' }}
         run: |
           echo "Verifying AWS identity..."
           aws sts get-caller-identity
@@ -106,6 +108,7 @@ jobs:
           echo "Bedrock access verified!"
 
       - name: Run Bedrock Credentials Smoke Test
+        if: ${{ matrix.job-name == 'bedrock-tests' || matrix.job-name == 'other-executor-tests' }}
         run: |
           echo "Running Bedrock credentials smoke test..."
           ./gradlew :integration-tests:cleanJvmTest :integration-tests:jvmTest --tests "ai.koog.integration.tests.BedrockCredentialsSmokeTest"
@@ -115,22 +118,25 @@ jobs:
         env:
           JAVA_OPTS: "-Xms8g -Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
           ANTHROPIC_API_TEST_KEY: ${{ secrets.ANTHROPIC_API_TEST_KEY }}
+          AWS_BEDROCK_GUARDRAIL_ID: ${{ secrets.AWS_BEDROCK_GUARDRAIL_ID }}
+          AWS_BEDROCK_GUARDRAIL_VERSION: ${{ secrets.AWS_BEDROCK_GUARDRAIL_VERSION }}
           DEEPSEEK_API_TEST_KEY: ${{ secrets.DEEPSEEK_API_TEST_KEY }}
           GEMINI_API_TEST_KEY: ${{ secrets.GEMINI_API_TEST_KEY }}
+          MISTRAL_AI_API_TEST_KEY: ${{ secrets.MISTRAL_AI_API_TEST_KEY }}
           OPEN_AI_API_TEST_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}
           OPEN_ROUTER_API_TEST_KEY: ${{ secrets.OPEN_ROUTER_API_TEST_KEY }}
-        run: ./gradlew jvmIntegrationTest --tests "${{ matrix.test-group }}" --continue
+        run: ./gradlew jvmIntegrationTest --tests ${{ matrix.test-group }} --continue
 
       - name: Collect reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: reports-${{ matrix.os }}-${{ matrix.artifact-name }}
           path: |
             **/build/reports/
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@v6
         if: ${{ !cancelled() }} # always run even if the previous step fails
         with:
           report_paths: '**/test-results/**/TEST-*.xml'

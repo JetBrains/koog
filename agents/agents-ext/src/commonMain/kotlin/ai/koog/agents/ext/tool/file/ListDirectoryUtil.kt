@@ -1,12 +1,12 @@
 package ai.koog.agents.ext.tool.file
 
-import ai.koog.agents.ext.tool.file.filter.GlobPattern
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
-import ai.koog.agents.ext.tool.file.model.buildFileEntry
-import ai.koog.agents.ext.tool.file.model.buildFolderEntry
 import ai.koog.agents.ext.tool.file.render.norm
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
+import ai.koog.rag.base.files.filter.GlobPattern
+import ai.koog.rag.base.files.model.FileSystemEntry
+import ai.koog.rag.base.files.model.buildFileEntry
+import ai.koog.rag.base.files.model.buildFolderEntry
 import kotlin.collections.plusAssign
 
 /**
@@ -63,11 +63,6 @@ private suspend fun <Path> buildNode(
             matchesFilter(fs, rootPath, childPath, filter)
     }
 
-    // At max depth with multiple children: return folder entry without children (collapsed)
-    if (depth == 1 && visibleChildren.size > 1) {
-        return buildFolderEntry(fs, currentPath, metadata, entries = null)
-    }
-
     val entries = mutableListOf<FileSystemEntry>()
     for ((childPath, childMeta) in visibleChildren) {
         when (childMeta.type) {
@@ -82,6 +77,8 @@ private suspend fun <Path> buildNode(
                 if (nextDepth > 0) {
                     buildNode(fs, rootPath, childPath, childMeta, nextDepth, filter)
                         ?.let { entries += it }
+                } else if (matchesFilter(fs, rootPath, childPath, filter)) {
+                    entries += buildFolderEntry(fs, childPath, childMeta, entries = null)
                 }
             }
         }

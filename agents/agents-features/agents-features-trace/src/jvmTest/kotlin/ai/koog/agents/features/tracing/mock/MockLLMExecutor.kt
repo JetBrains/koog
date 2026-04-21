@@ -8,13 +8,13 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.toStreamFrame
+import ai.koog.prompt.streaming.toStreamFrames
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlin.time.Clock
+import kotlin.time.Instant
 
-class MockLLMExecutor : PromptExecutor {
+class MockLLMExecutor : PromptExecutor() {
 
     private val clock: Clock = object : Clock {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
@@ -29,7 +29,7 @@ class MockLLMExecutor : PromptExecutor {
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> =
-        flow { emit(handlePrompt(prompt).toStreamFrame()) }
+        flow { handlePrompt(prompt).toStreamFrames().forEach { emit(it) } }
 
     private fun handlePrompt(prompt: Prompt): Message.Response {
         val lastMessage = prompt.messages.last()

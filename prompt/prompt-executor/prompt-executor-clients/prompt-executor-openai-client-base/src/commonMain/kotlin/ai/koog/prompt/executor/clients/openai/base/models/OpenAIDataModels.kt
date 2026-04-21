@@ -129,6 +129,7 @@ public sealed interface OpenAIMessage {
     @SerialName("assistant")
     public class Assistant(
         override val content: Content? = null,
+        public val reasoningContent: String? = null,
         public val audio: OpenAIAudio? = null,
         public val name: String? = null,
         public val refusal: String? = null,
@@ -301,17 +302,15 @@ public class OpenAIToolCall(
  * @property id The unique identifier associated with the tool call. This value can be null.
  * @property function The function object containing the name and arguments of the function invoked.
  * This value can be null if no function call is associated.
- * @property type The type of the tool call. This is always set to "function" for denoting function-based calls.
+ * @property type The type of the tool call. Defaults to "function" for denoting function-based calls. Can be null.
  */
 @Serializable
 public class OpenAIStreamToolCall(
     public val index: Int,
     public val id: String?,
-    public val function: OpenAIStreamFunction?
-) {
-    /** The type of the tool. Currently, only `function` is supported. */
-    public val type: String = "function"
-}
+    public val function: OpenAIStreamFunction?,
+    public val type: String? = "function"
+)
 
 /**
  * Function call from an OpenAI model, containing the function name and arguments.
@@ -325,7 +324,7 @@ public class OpenAIStreamToolCall(
 @Serializable
 public class OpenAIFunction(
     public val name: String,
-    public val arguments: String
+    public val arguments: String = ""
 )
 
 /**
@@ -463,15 +462,22 @@ public class OpenAIStaticContent(public val content: Content) {
  * Exact effects are model-dependent.
  * If not set, the model/provider default applies.
  *
- * Serialized as `"minimal" | "low" | "medium" | "high"`.
+ * Serialized as `"none" | "minimal" | "low" | "medium" | "high"`.
  *
- * See [reasoning_effort](https://platform.openai.com/docs/api-reference/chat/create#chat-create-reasoning_effort)
+ * See [reasoning_effort](https://platform.openai.com/docs/api-reference/responses/create#responses_create-reasoning-effort)
  */
 @Serializable
 public enum class ReasoningEffort {
     /**
-     * Strongly limits internal reasoning to minimize latency and cost.
-     * Best for simple, well-specified tasks where extra deliberation is unnecessary.
+     * Disables reasoning.
+     * Is not supported by models before gpt-5.1!
+     * Serialized as `"none"`.
+     */
+    @SerialName("none")
+    NONE,
+
+    /**
+     * Allows very limited reasoning while strongly prioritizing speed and cost.
      * Serialized as `"minimal"`.
      */
     @SerialName("minimal")

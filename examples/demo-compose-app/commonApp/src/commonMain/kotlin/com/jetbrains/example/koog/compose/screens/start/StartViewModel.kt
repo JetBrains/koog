@@ -1,33 +1,22 @@
 package com.jetbrains.example.koog.compose.screens.start
 
 import androidx.lifecycle.ViewModel
-import com.jetbrains.example.koog.compose.NavRoute
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-data class StartUiState(
-    val demoCards: List<CardItem> = listOf(
-        CardItem(
-            title = "Calculator",
-            description = "A calculator agent that can solve math problems. Ask it any calculation and get the result.",
-            agentDemoRoute = NavRoute.AgentDemoRoute.CalculatorScreen
-        ),
-        CardItem(
-            title = "Weather Forecast",
-            description = "A weather agent that can provide forecasts for any location. Ask about weather conditions, dates, and more.",
-            agentDemoRoute = NavRoute.AgentDemoRoute.WeatherScreen
-        ),
-    )
-)
-
-data class CardItem(
-    val title: String,
-    val description: String,
-    val agentDemoRoute: NavRoute.AgentDemoRoute? = null,
-)
-
-class StartViewModel : ViewModel() {
+class StartViewModel(private val navigationCallback: StartNavigationCallback) : ViewModel() {
     private val _uiState = MutableStateFlow(StartUiState())
     val uiState: StateFlow<StartUiState> = _uiState.asStateFlow()
+
+    fun onEvent(event: StartUiEvents) {
+        viewModelScope.launch {
+            when (event) {
+                is StartUiEvents.AgentDemo -> navigationCallback.goAgentDemo(event.agentDemoRoute)
+                StartUiEvents.Settings -> navigationCallback.goSettings()
+            }
+        }
+    }
 }

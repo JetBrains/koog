@@ -1,5 +1,7 @@
 package ai.koog.prompt.executor.clients.retry
 
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmOverloads
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -15,7 +17,7 @@ import kotlin.time.Duration.Companion.seconds
  * @property retryablePatterns Patterns to identify retryable errors
  * @property retryAfterExtractor Optional extractor for retry-after hints
  */
-public data class RetryConfig(
+public data class RetryConfig @JvmOverloads constructor(
     val maxAttempts: Int = 3,
     val initialDelay: Duration = 1.seconds,
     val maxDelay: Duration = 30.seconds,
@@ -42,6 +44,7 @@ public data class RetryConfig(
         /**
          * Default retry patterns that work across all providers.
          */
+        @JvmField
         public val DEFAULT_PATTERNS: List<RetryablePattern> = listOf(
             // HTTP status codes
             RetryablePattern.Status(429), // Rate limit
@@ -68,6 +71,7 @@ public data class RetryConfig(
         /**
          * Conservative configuration - fewer retries, longer delays.
          */
+        @JvmField
         public val CONSERVATIVE: RetryConfig = RetryConfig(
             maxAttempts = 3,
             initialDelay = 2.seconds,
@@ -77,6 +81,7 @@ public data class RetryConfig(
         /**
          * Aggressive configuration - more retries, shorter delays.
          */
+        @JvmField
         public val AGGRESSIVE: RetryConfig = RetryConfig(
             maxAttempts = 5,
             initialDelay = 500.milliseconds,
@@ -87,6 +92,7 @@ public data class RetryConfig(
         /**
          * Production configuration - balanced for production use.
          */
+        @JvmField
         public val PRODUCTION: RetryConfig = RetryConfig(
             maxAttempts = 3,
             initialDelay = 1.seconds,
@@ -98,6 +104,7 @@ public data class RetryConfig(
         /**
          * No retry - effectively disables retry logic.
          */
+        @JvmField
         public val DISABLED: RetryConfig = RetryConfig(maxAttempts = 1)
 
         /**
@@ -105,6 +112,7 @@ public data class RetryConfig(
          *
          * Suitable for general-purpose use cases where standard retry behavior is required.
          */
+        @JvmField
         public val DEFAULT: RetryConfig = RetryConfig()
     }
 }

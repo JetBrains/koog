@@ -7,19 +7,23 @@ import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.environment.AIAgentEnvironment
+import ai.koog.agents.core.environment.ContextualAgentEnvironment
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.PromptExecutorProxy
+import ai.koog.agents.core.feature.ContextualPromptExecutor
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.utils.io.Closeable
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.Clock
 import kotlin.reflect.KType
+import kotlin.time.Clock
 
 /**
  * Represents an implementation of an AI agent that provides functionalities to execute prompts,
@@ -32,8 +36,8 @@ import kotlin.reflect.KType
  * @param Input Type of agent input.
  * @param Output Type of agent output.
  *
- * @property inputType [KType] representing [Input] - agent input.
- * @property outputType [KType] representing [Output] - agent output.
+ * @property inputType [TypeToken] representing [Input] - agent input.
+ * @property outputType [TypeToken] representing [Output] - agent output.
  * @property promptExecutor Executor used to manage and execute prompt strings.
  * @property strategy The execution strategy defining how the agent processes input and produces output.
  * @property agentConfig Configuration details for the local agent that define its operational parameters.
@@ -46,8 +50,8 @@ import kotlin.reflect.KType
 @Suppress("ktlint:standard:wrapping")
 @OptIn(InternalAgentsApi::class)
 public open class GraphAIAgent<Input, Output>(
-    public val inputType: KType,
-    public val outputType: KType,
+    public val inputType: TypeToken,
+    public val outputType: TypeToken,
     public val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
     override val strategy: AIAgentGraphStrategy<Input, Output>,
@@ -56,24 +60,51 @@ public open class GraphAIAgent<Input, Output>(
     public val clock: Clock = Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
-) : StatefulSingleUseAIAgent<Input, Output, AIAgentGraphContextBase>(
+) : AIAgentBase<Input, Output, AIAgentGraphContextBase>(
     logger = logger,
     id = id,
-), Closeable {
+) {
+    /**
+     * Secondary constructor for initializing a [GraphAIAgent] with [KType] parameters.
+     *
+     * @param inputType Represents the input type of the agent as a `KType`.
+     * @param outputType Represents the output type of the agent as a `KType`.
+     * @param promptExecutor The `PromptExecutor` responsible for processing LLM prompts within the agent.
+     * @param agentConfig The configuration settings for the AI agent, including prompts, models, and execution limits.
+     * @param strategy The graph strategy for handling input/output transformations during agent execution.
+     * @param toolRegistry A registry of tools available for use by the agent, defaulting to an empty registry.
+     * @param id An optional identifier for the agent, allowing for multiple agents with unique IDs.
+     * @param clock Clock instance used by the agent, defaulting to the system clock.
+     * @param installFeatures A lambda for installing custom features in the agent's feature context.
+     */
+    @Deprecated("Use constructor with `TypeToken` instead of `KType`.")
+    public constructor(
+        inputType: KType,
+        outputType: KType,
+        promptExecutor: PromptExecutor,
+        agentConfig: AIAgentConfig,
+        strategy: AIAgentGraphStrategy<Input, Output>,
+        toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+        id: String? = null,
+        clock: Clock = Clock.System,
+        installFeatures: FeatureContext.() -> Unit = {}
+    ) : this(
+        typeToken(inputType),
+        typeToken(outputType),
+        promptExecutor,
+        agentConfig,
+        strategy,
+        toolRegistry,
+        id,
+        clock,
+        installFeatures
+    )
 
     private companion object {
         private val logger = KotlinLogging.logger {}
     }
 
-    override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(clock)
-
-    private val environment = GenericAgentEnvironment(
-        agentId = this.id,
-        strategyId = strategy.name,
-        logger = logger,
-        toolRegistry = toolRegistry,
-        pipeline = pipeline
-    )
+    override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(agentConfig, clock)
 
     /**
      * The context for adding and configuring features in a Kotlin AI Agent instance.
@@ -101,44 +132,97 @@ public open class GraphAIAgent<Input, Output>(
         FeatureContext(this).installFeatures()
     }
 
-    override suspend fun prepareContext(agentInput: Input, runId: String): AIAgentGraphContextBase {
+    override suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentGraphContextBase {
         val stateManager = AIAgentStateManager()
         val storage = AIAgentStorage()
 
-        // Environment (initially equal to the current agent), transformed by some features
-        //   (ex: testing feature transforms it into a MockEnvironment with mocked tools)
-        val preparedEnvironment =
-            pipeline.onAgentEnvironmentTransforming(
-                strategy = strategy,
-                agent = this,
-                baseEnvironment = environment
-            )
+        val executionInfo = AgentExecutionInfo(parent = null, partName = id)
+        val initialEnvironment = prepareAgentEnvironment(eventId = eventId, executionInfo = executionInfo)
 
-        return AIAgentGraphContext(
-            environment = preparedEnvironment,
+        // Initial
+        val initialLLMContext = AIAgentLLMContext(
+            tools = toolRegistry.tools.map { it.descriptor },
+            toolRegistry = toolRegistry,
+            prompt = agentConfig.prompt,
+            model = agentConfig.model,
+            responseProcessor = agentConfig.responseProcessor,
+            promptExecutor = promptExecutor,
+            environment = initialEnvironment,
+            config = agentConfig,
+            clock = clock
+        )
+
+        val agentContext = AIAgentGraphContext(
+            environment = initialEnvironment,
             agentId = id,
             agentInput = agentInput,
             agentInputType = inputType,
             config = agentConfig,
-            llm = AIAgentLLMContext(
-                tools = toolRegistry.tools.map { it.descriptor },
-                toolRegistry = toolRegistry,
-                prompt = agentConfig.prompt,
-                model = agentConfig.model,
-                promptExecutor = PromptExecutorProxy(
-                    executor = promptExecutor,
-                    pipeline = pipeline,
-                    runId = runId
-                ),
-                environment = preparedEnvironment,
-                config = agentConfig,
-                clock = clock
-            ),
+            llm = initialLLMContext,
             stateManager = stateManager,
             storage = storage,
             runId = runId,
             strategyName = strategy.name,
             pipeline = pipeline,
+            executionInfo = executionInfo,
+            parentContext = null,
         )
+
+        val contextualEnvironment = ContextualAgentEnvironment(
+            environment = initialEnvironment,
+            context = agentContext,
+        )
+
+        val contextualPromptExecutor = ContextualPromptExecutor(
+            executor = promptExecutor,
+            context = agentContext,
+        )
+
+        val updatedLLMContext = agentContext.llm.copy(
+            environment = contextualEnvironment,
+            promptExecutor = contextualPromptExecutor,
+        )
+
+        agentContext.replace(
+            agentContext.copy(
+                executionInfo = executionInfo,
+                llm = updatedLLMContext,
+                environment = contextualEnvironment,
+            )
+        )
+
+        return agentContext
+    }
+
+    /**
+     * Prepares the environment for the AI agent by initializing a base environment
+     * and applying any registered environment transformations defined in the pipeline.
+     *
+     * Environment (initially equal to the current agent), transformed by some features
+     * (ex: testing feature transforms it into a MockEnvironment with mocked tools
+     *
+     * @return An instance of `AIAgentEnvironment` that represents the finalized environment
+     *         for the AI agent after applying all transformations.
+     */
+    private suspend fun prepareAgentEnvironment(
+        eventId: String,
+        executionInfo: AgentExecutionInfo
+    ): AIAgentEnvironment {
+        // Create a base environment implementation
+        val environment = GenericAgentEnvironment(
+            agentId = id,
+            logger = logger,
+            toolRegistry = toolRegistry,
+            serializer = agentConfig.serializer,
+        )
+
+        val preparedEnvironment = pipeline.onAgentEnvironmentTransforming(
+            eventId = eventId,
+            executionInfo = executionInfo,
+            agent = this,
+            baseEnvironment = environment,
+        )
+
+        return preparedEnvironment
     }
 }

@@ -7,8 +7,12 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.llm.LLModel
+import io.kotest.assertions.withClue
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -18,7 +22,7 @@ import kotlin.test.assertNull
 class ModelIdentifierParsingTest {
     // OpenAI model identifier tests
     @Test
-    fun testOpenAIChatModels() = runTest {
+    fun testOpenAIChatModels() {
         // Test GPT-4o
         val gpt4o = getModelFromIdentifier("openai.chat.gpt4o")
         assertNotNull(gpt4o)
@@ -49,59 +53,125 @@ class ModelIdentifierParsingTest {
         assertEquals(LLMProvider.OpenAI, gpt5nano.provider)
         assertEquals(OpenAIModels.Chat.GPT5Nano, gpt5nano)
 
+        // Test GPT-4o Mini
+        val gpt4oMini = getModelFromIdentifier("openai.chat.gpt4omini")
+        assertNotNull(gpt4oMini)
+        assertEquals(LLMProvider.OpenAI, gpt4oMini.provider)
+        assertEquals(OpenAIModels.Chat.GPT4oMini, gpt4oMini)
+
+        // Test O4 Mini
+        val o4Mini = getModelFromIdentifier("openai.chat.o4mini")
+        assertNotNull(o4Mini)
+        assertEquals(LLMProvider.OpenAI, o4Mini.provider)
+        assertEquals(OpenAIModels.Chat.O4Mini, o4Mini)
+
+        // Test GPT-4.1 Nano
+        val gpt4_1Nano = getModelFromIdentifier("openai.chat.gpt4_1nano")
+        assertNotNull(gpt4_1Nano)
+        assertEquals(LLMProvider.OpenAI, gpt4_1Nano.provider)
+        assertEquals(OpenAIModels.Chat.GPT4_1Nano, gpt4_1Nano)
+
+        // Test GPT-4.1 Mini
+        val gpt4_1Mini = getModelFromIdentifier("openai.chat.gpt4_1mini")
+        assertNotNull(gpt4_1Mini)
+        assertEquals(LLMProvider.OpenAI, gpt4_1Mini.provider)
+        assertEquals(OpenAIModels.Chat.GPT4_1Mini, gpt4_1Mini)
+
+        // Test O3 Mini
+        val o3Mini = getModelFromIdentifier("openai.chat.o3mini")
+        assertNotNull(o3Mini)
+        assertEquals(LLMProvider.OpenAI, o3Mini.provider)
+        assertEquals(OpenAIModels.Chat.O3Mini, o3Mini)
+
+        // Test O3
+        val o3 = getModelFromIdentifier("openai.chat.o3")
+        assertNotNull(o3)
+        assertEquals(LLMProvider.OpenAI, o3.provider)
+        assertEquals(OpenAIModels.Chat.O3, o3)
+
+        // Test O1
+        val o1 = getModelFromIdentifier("openai.chat.o1")
+        assertNotNull(o1)
+        assertEquals(LLMProvider.OpenAI, o1.provider)
+        assertEquals(OpenAIModels.Chat.O1, o1)
+
         // Test GPT-5 codex
         val gpt5codex = getModelFromIdentifier("openai.chat.gpt5codex")
         assertNotNull(gpt5codex)
         assertEquals(LLMProvider.OpenAI, gpt5codex.provider)
         assertEquals(OpenAIModels.Chat.GPT5Codex, gpt5codex)
-    }
 
-    @Test
-    fun testOpenAIReasoningModels() = runTest {
-        // Test GPT-4o Mini
-        val o4Mini = getModelFromIdentifier("openai.reasoning.o4mini")
-        assertNotNull(o4Mini)
-        assertEquals(LLMProvider.OpenAI, o4Mini.provider)
-        assertEquals(OpenAIModels.Reasoning.O4Mini, o4Mini)
+        // Test GPT-5 Pro
+        val gpt5pro = getModelFromIdentifier("openai.chat.gpt5pro")
+        assertNotNull(gpt5pro)
+        assertEquals(LLMProvider.OpenAI, gpt5pro.provider)
+        assertEquals(OpenAIModels.Chat.GPT5Pro, gpt5pro)
 
-        // Test O3 Mini
-        val o3Mini = getModelFromIdentifier("openai.reasoning.o3mini")
-        assertNotNull(o3Mini)
-        assertEquals(LLMProvider.OpenAI, o3Mini.provider)
-        assertEquals(OpenAIModels.Reasoning.O3Mini, o3Mini)
+        // Test GPT-5.1
+        val gpt5_1 = getModelFromIdentifier("openai.chat.gpt5_1")
+        assertNotNull(gpt5_1)
+        assertEquals(LLMProvider.OpenAI, gpt5_1.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_1, gpt5_1)
 
-        // Test O3
-        val o3 = getModelFromIdentifier("openai.reasoning.o3")
-        assertNotNull(o3)
-        assertEquals(LLMProvider.OpenAI, o3.provider)
-        assertEquals(OpenAIModels.Reasoning.O3, o3)
+        // Test GPT-5.1-Codex
+        val gpt5_1codex = getModelFromIdentifier("openai.chat.gpt5_1codex")
+        assertNotNull(gpt5_1codex)
+        assertEquals(LLMProvider.OpenAI, gpt5_1codex.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_1Codex, gpt5_1codex)
 
-        // Test O1
-        val o1 = getModelFromIdentifier("openai.reasoning.o1")
-        assertNotNull(o1)
-        assertEquals(LLMProvider.OpenAI, o1.provider)
-        assertEquals(OpenAIModels.Reasoning.O1, o1)
-    }
+        // Test GPT-5.1-Codex-Max
+        val gpt5_1codexmax = getModelFromIdentifier("openai.chat.gpt5_1codexmax")
+        assertNotNull(gpt5_1codexmax)
+        assertEquals(LLMProvider.OpenAI, gpt5_1codexmax.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_1CodexMax, gpt5_1codexmax)
 
-    @Test
-    fun testOpenAICostOptimizedModels() = runTest {
-        // Test O4 Mini
-        val o4Mini = getModelFromIdentifier("openai.costoptimized.o4mini")
-        assertNotNull(o4Mini)
-        assertEquals(LLMProvider.OpenAI, o4Mini.provider)
-        assertEquals(OpenAIModels.CostOptimized.O4Mini, o4Mini)
+        // Test GPT-5.2
+        val gpt5_2 = getModelFromIdentifier("openai.chat.gpt5_2")
+        assertNotNull(gpt5_2)
+        assertEquals(LLMProvider.OpenAI, gpt5_2.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_2, gpt5_2)
 
-        // Test GPT-4.1 Nano
-        val gpt4_1Nano = getModelFromIdentifier("openai.costoptimized.gpt4_1nano")
-        assertNotNull(gpt4_1Nano)
-        assertEquals(LLMProvider.OpenAI, gpt4_1Nano.provider)
-        assertEquals(OpenAIModels.CostOptimized.GPT4_1Nano, gpt4_1Nano)
+        // Test GPT-5.2-Pro
+        val gpt5_2pro = getModelFromIdentifier("openai.chat.gpt5_2pro")
+        assertNotNull(gpt5_2pro)
+        assertEquals(LLMProvider.OpenAI, gpt5_2pro.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_2Pro, gpt5_2pro)
 
-        // Test GPT-4.1 Mini
-        val gpt4_1Mini = getModelFromIdentifier("openai.costoptimized.gpt4_1mini")
-        assertNotNull(gpt4_1Mini)
-        assertEquals(LLMProvider.OpenAI, gpt4_1Mini.provider)
-        assertEquals(OpenAIModels.CostOptimized.GPT4_1Mini, gpt4_1Mini)
+        // Test GPT-5.2-Codex
+        val gpt5_2codex = getModelFromIdentifier("openai.chat.gpt5_2codex")
+        assertNotNull(gpt5_2codex)
+        assertEquals(LLMProvider.OpenAI, gpt5_2codex.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_2Codex, gpt5_2codex)
+
+        // Test GPT-5.3-Codex
+        val gpt5_3codex = getModelFromIdentifier("openai.chat.gpt5_3codex")
+        assertNotNull(gpt5_3codex)
+        assertEquals(LLMProvider.OpenAI, gpt5_3codex.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_3Codex, gpt5_3codex)
+
+        // Test GPT-5.4Mini
+        val gpt5_4mini = getModelFromIdentifier("openai.chat.gpt5_4mini")
+        assertNotNull(gpt5_4mini)
+        assertEquals(LLMProvider.OpenAI, gpt5_4mini.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_4Mini, gpt5_4mini)
+
+        // Test GPT-5.4Nano
+        val gpt5_4nano = getModelFromIdentifier("openai.chat.gpt5_4nano")
+        assertNotNull(gpt5_4nano)
+        assertEquals(LLMProvider.OpenAI, gpt5_4nano.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_4Nano, gpt5_4nano)
+
+        // Test GPT-5.4
+        val gpt5_4 = getModelFromIdentifier("openai.chat.gpt5_4")
+        assertNotNull(gpt5_4)
+        assertEquals(LLMProvider.OpenAI, gpt5_4.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_4, gpt5_4)
+
+        // Test GPT-5.4-Pro
+        val gpt5_4pro = getModelFromIdentifier("openai.chat.gpt5_4pro")
+        assertNotNull(gpt5_4pro)
+        assertEquals(LLMProvider.OpenAI, gpt5_4pro.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_4Pro, gpt5_4pro)
     }
 
     @Test
@@ -151,86 +221,45 @@ class ModelIdentifierParsingTest {
 
     // Anthropic model identifier tests
     @Test
-    fun testAnthropicModels() = runTest {
-        // Test Opus 3
-        val opus3 = getModelFromIdentifier("anthropic.opus_3")
-        assertNotNull(opus3)
-        assertEquals(LLMProvider.Anthropic, opus3.provider)
-        assertEquals(AnthropicModels.Opus_3, opus3)
-
-        // Test Opus 4
-        val opus4 = getModelFromIdentifier("anthropic.opus_4")
-        assertNotNull(opus4)
-        assertEquals(LLMProvider.Anthropic, opus4.provider)
-        assertEquals(AnthropicModels.Opus_4, opus4)
-
-        // Test Opus 4.1
-        val opus4_1 = getModelFromIdentifier("anthropic.opus_4_1")
-        assertNotNull(opus4_1)
-        assertEquals(LLMProvider.Anthropic, opus4_1.provider)
-        assertEquals(AnthropicModels.Opus_4_1, opus4_1)
-
-        // Test Haiku 3
-        val haiku3 = getModelFromIdentifier("anthropic.haiku_3")
-        assertNotNull(haiku3)
-        assertEquals(LLMProvider.Anthropic, haiku3.provider)
-        assertEquals(AnthropicModels.Haiku_3, haiku3)
-
-        // Test Haiku 3.5
-        val haiku3_5 = getModelFromIdentifier("anthropic.haiku_3_5")
-        assertNotNull(haiku3_5)
-        assertEquals(LLMProvider.Anthropic, haiku3_5.provider)
-        assertEquals(AnthropicModels.Haiku_3_5, haiku3_5)
-
-        // Test Haiku 4.5
-        val haiku4_5 = getModelFromIdentifier("anthropic.haiku_4_5")
-        assertNotNull(haiku4_5)
-        assertEquals(LLMProvider.Anthropic, haiku4_5.provider)
-        assertEquals(AnthropicModels.Haiku_4_5, haiku4_5)
-
-        // Test Sonnet 3.5
-        val sonnet3_5 = getModelFromIdentifier("anthropic.sonnet_3_5")
-        assertNotNull(sonnet3_5)
-        assertEquals(LLMProvider.Anthropic, sonnet3_5.provider)
-        assertEquals(AnthropicModels.Sonnet_3_5, sonnet3_5)
-
-        // Test Sonnet 3.7
-        val sonnet3_7 = getModelFromIdentifier("anthropic.sonnet_3_7")
-        assertNotNull(sonnet3_7)
-        assertEquals(LLMProvider.Anthropic, sonnet3_7.provider)
-        assertEquals(AnthropicModels.Sonnet_3_7, sonnet3_7)
-
-        // Test Sonnet 4
-        val sonnet4 = getModelFromIdentifier("anthropic.sonnet_4")
-        assertNotNull(sonnet4)
-        assertEquals(LLMProvider.Anthropic, sonnet4.provider)
-        assertEquals(AnthropicModels.Sonnet_4, sonnet4)
-
-        // Test Sonnet 4.5
-        val sonnet4_5 = getModelFromIdentifier("anthropic.sonnet_4_5")
-        assertNotNull(sonnet4_5)
-        assertEquals(LLMProvider.Anthropic, sonnet4_5.provider)
-        assertEquals(AnthropicModels.Sonnet_4_5, sonnet4_5)
-    }
+    fun testAnthropicModels() = verifyModels(
+        LLMProvider.Anthropic,
+        mapOf(
+            "anthropic.opus_4" to AnthropicModels.Opus_4,
+            "anthropic.opus_4_1" to AnthropicModels.Opus_4_1,
+            "anthropic.opus_4_5" to AnthropicModels.Opus_4_5,
+            "anthropic.opus_4_6" to AnthropicModels.Opus_4_6,
+            "anthropic.opus_4_7" to AnthropicModels.Opus_4_7,
+            "anthropic.haiku_3" to AnthropicModels.Haiku_3,
+            "anthropic.haiku_4_5" to AnthropicModels.Haiku_4_5,
+            "anthropic.sonnet_4" to AnthropicModels.Sonnet_4,
+            "anthropic.sonnet_4_5" to AnthropicModels.Sonnet_4_5,
+            "anthropic.sonnet_4_6" to AnthropicModels.Sonnet_4_6,
+        )
+    )
 
     // Google model identifier tests
     @Test
-    fun testGoogleModels() = runTest {
-        // Test Gemini 2.0 Flash
-        val gemini20Flash = getModelFromIdentifier("google.gemini2_0flash")
-        assertNotNull(gemini20Flash)
-        assertEquals(LLMProvider.Google, gemini20Flash.provider)
-        assertEquals(GoogleModels.Gemini2_0Flash, gemini20Flash)
+    fun testGoogleModels() = verifyModels(
+        LLMProvider.Google,
+        mapOf(
+            "google.gemini2_0flash" to GoogleModels.Gemini2_0Flash,
+            "google.gemini2_5flashlite" to GoogleModels.Gemini2_5FlashLite,
+            "google.gemini2_5pro" to GoogleModels.Gemini2_5Pro,
+            "google.gemini3flashpreview" to GoogleModels.Gemini3_Flash_Preview,
+            "google.gemini3propreview" to GoogleModels.Gemini3_Pro_Preview,
+            "google.gemini_embedding001" to GoogleModels.Embeddings.GeminiEmbedding001,
+        )
+    )
 
-        val gemini25Pro = getModelFromIdentifier("google.gemini2_5pro")
-        assertNotNull(gemini25Pro)
-        assertEquals(LLMProvider.Google, gemini25Pro.provider)
-        assertEquals(GoogleModels.Gemini2_5Pro, gemini25Pro)
-
-        val gemini25FlashLite = getModelFromIdentifier("google.gemini2_5flashlite")
-        assertNotNull(gemini25FlashLite)
-        assertEquals(LLMProvider.Google, gemini25FlashLite.provider)
-        assertEquals(GoogleModels.Gemini2_5FlashLite, gemini25FlashLite)
+    private fun verifyModels(provider: LLMProvider, models: Map<String, LLModel>) {
+        models.forEach { (id, expectedModel) ->
+            withClue("model: $id should be $expectedModel ($provider)") {
+                getModelFromIdentifier(id) shouldNotBeNull {
+                    this.provider shouldBe provider
+                    this shouldBe expectedModel
+                }
+            }
+        }
     }
 
     // MistralAI model identifier tests
@@ -290,6 +319,18 @@ class ModelIdentifierParsingTest {
         assertNotNull(gpt35Turbo)
         assertEquals(LLMProvider.OpenRouter, gpt35Turbo.provider)
         assertEquals(OpenRouterModels.GPT35Turbo, gpt35Turbo)
+
+        // Test GPT-5.2
+        val gpt5_2 = getModelFromIdentifier("openrouter.gpt52")
+        assertNotNull(gpt5_2)
+        assertEquals(LLMProvider.OpenRouter, gpt5_2.provider)
+        assertEquals(OpenRouterModels.GPT5_2, gpt5_2)
+
+        // Test GPT-5.2 Pro
+        val gpt5_2pro = getModelFromIdentifier("openrouter.gpt52pro")
+        assertNotNull(gpt5_2pro)
+        assertEquals(LLMProvider.OpenRouter, gpt5_2pro.provider)
+        assertEquals(OpenRouterModels.GPT5_2Pro, gpt5_2pro)
     }
 
     // DeepSeek model identifier tests

@@ -2,7 +2,7 @@ package ai.koog.agents.example.structuredoutput.markdown
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor

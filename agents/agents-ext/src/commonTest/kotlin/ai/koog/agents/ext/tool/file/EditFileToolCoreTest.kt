@@ -1,17 +1,22 @@
 package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.ext.tool.file.patch.isSuccess
 import ai.koog.agents.ext.utils.InMemoryFS
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @OptIn(InternalAgentToolsApi::class)
 class EditFileToolCoreTest {
+
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun test_simple_edit_via_tool() = runTest {
@@ -53,7 +58,7 @@ class EditFileToolCoreTest {
         val result = tool.execute(args)
 
         // Then
-        val markdownReport = result.textForLLM()
+        val markdownReport = tool.encodeResultToString(result, serializer)
         assertContains(markdownReport, "Success")
         assertContains(markdownReport, "edit")
     }
@@ -277,10 +282,10 @@ class EditFileToolCoreTest {
         val result = tool.execute(args)
 
         // Then
-        val markdownReport = result.textForLLM()
+        val markdownReport = tool.encodeResultToString(result, serializer)
         assertFalse(markdownReport.contains("Successfully"), "Markdown should not indicate a successful edit")
 
-        assertEquals(false, result.applied, "Patch should not be applied when original is not found")
+        assertTrue(!result.patchApplyResult.isSuccess(), "Patch should not be applied when original is not found")
 
         assertContains(
             markdownReport,

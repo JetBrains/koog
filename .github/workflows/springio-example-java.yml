@@ -1,0 +1,40 @@
+name: Spring I/O Java Example
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'examples/spring-io-2026/java/**'
+  pull_request:
+    paths:
+      - 'examples/spring-io-2026/java/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Cancel only when the run is not on main or develop
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' || github.ref != 'refs/heads/develop' }}
+
+jobs:
+  springio-java-example:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+      - uses: actions/checkout@v6
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run the Maven verify phase
+        working-directory: ./examples/spring-io-2026/java/
+        run: mvn --batch-mode verify
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}

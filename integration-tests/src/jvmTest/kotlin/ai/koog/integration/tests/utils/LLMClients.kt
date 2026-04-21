@@ -1,17 +1,23 @@
 package ai.koog.integration.tests.utils
 
-import ai.koog.integration.tests.utils.TestUtils.readAwsAccessKeyIdFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readAwsSecretAccessKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readAwsSessionTokenFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenRouterKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readAwsAccessKeyIdFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readAwsBedrockGuardrailIdFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readAwsBedrockGuardrailVersionFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readAwsSecretAccessKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readAwsSessionTokenFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestMistralAiKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestOpenRouterKeyFromEnv
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.bedrock.BedrockAPIMethod
 import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
+import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.llm.LLMProvider
@@ -40,11 +46,21 @@ fun getLLMClientForProvider(provider: LLMProvider): LLMClient {
                 this.secretAccessKey = readAwsSecretAccessKeyFromEnv()
                 readAwsSessionTokenFromEnv()?.let { this.sessionToken = it }
             },
-            settings = BedrockClientSettings()
+            settings = BedrockClientSettings(
+                moderationGuardrailsSettings = BedrockGuardrailsSettings(
+                    guardrailIdentifier = readAwsBedrockGuardrailIdFromEnv(),
+                    guardrailVersion = readAwsBedrockGuardrailVersionFromEnv()
+                ),
+                apiMethod = BedrockAPIMethod.InvokeModel,
+            )
         )
 
         LLMProvider.Google -> GoogleLLMClient(
             readTestGoogleAIKeyFromEnv()
+        )
+
+        LLMProvider.MistralAI -> MistralAILLMClient(
+            readTestMistralAiKeyFromEnv()
         )
 
         else -> throw IllegalArgumentException("Unsupported provider: $provider")

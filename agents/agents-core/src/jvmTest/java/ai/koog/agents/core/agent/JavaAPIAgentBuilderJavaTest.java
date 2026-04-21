@@ -1,0 +1,172 @@
+package ai.koog.agents.core.agent;
+
+import ai.koog.agents.core.agent.config.AIAgentConfig;
+import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
+import ai.koog.agents.features.eventHandler.feature.EventHandler;
+import ai.koog.agents.testing.tools.MockExecutorBuilder;
+import ai.koog.prompt.dsl.Prompt;
+import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+import ai.koog.prompt.message.Message;
+import ai.koog.serialization.JSONSerializer;
+import ai.koog.serialization.jackson.JacksonSerializer;
+import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.Executors;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Java tests for AIAgent builder API and functional strategies (lambda and custom class).
+ */
+public class JavaAPIAgentBuilderJavaTest {
+    private static final JSONSerializer serializer = new JacksonSerializer();
+
+    private static AIAgentConfig baseConfig() {
+        return AIAgentConfig.builder()
+            .model(OpenAIModels.Chat.GPT4_1)
+            .prompt(
+                Prompt.builder("id")
+                    .system("system")
+                    .user("user")
+                    .assistant("assistant")
+                    .user("user")
+                    .assistant("assistant")
+                    .toolCall("id-1", "tool-1", "args-1")
+                    .toolResult("id-1", "tool-1", "result-1")
+                    .toolCall("id-2", "tool-2", "args-2")
+                    .toolResult("id-2", "tool-2", "result-2")
+                    .build()
+            )
+            .maxAgentIterations(100)
+            .llmRequestExecutorService(Executors.newSingleThreadExecutor())
+            .strategyExecutorService(Executors.newSingleThreadExecutor())
+            .build();
+    }
+
+    @Test
+    public void testBuilderWithAgentConfigAndEventInstall() {
+        var agent = AIAgent.builder()
+            .promptExecutor(
+                new MockExecutorBuilder(serializer)
+                    .mockLLMAnswer("ok").asDefaultResponse()
+                    .build()
+            )
+            .agentConfig(baseConfig())
+            .install(EventHandler.Feature, config -> {
+                config.onToolCallStarting(ctx -> {
+                });
+                config.onAgentClosing(ctx -> {
+                });
+            })
+            .build();
+
+        assertNotNull(agent);
+        assertEquals(OpenAIModels.Chat.GPT4_1, agent.getAgentConfig().getModel());
+        assertEquals(100, agent.getAgentConfig().getMaxAgentIterations());
+        assertEquals("id", agent.getAgentConfig().getPrompt().getId());
+    }
+
+    @Test
+    public void testFunctionalStrategyWithLambda() {
+        var executor = new MockExecutorBuilder(serializer)
+            .mockLLMAnswer("assistant-reply").asDefaultResponse()
+            .build();
+
+        var agent = AIAgent.builder()
+            .promptExecutor(executor)
+            .agentConfig(
+                AIAgentConfig.builder()
+                    .model(OpenAIModels.Chat.GPT4o)
+                    .prompt(Prompt.builder("p").user("hi").build())
+                    .maxAgentIterations(3)
+                    .build()
+            )
+            .functionalStrategy("myStrategy", (AIAgentFunctionalContext context, String userInput) -> {
+                // just echo last LLM answer to ensure the pipeline works
+                Message.Response resp = context.requestLLM(userInput);
+                if (resp instanceof Message.Assistant) {
+                    return ((Message.Assistant) resp).getContent();
+                }
+                return "";
+            })
+            .build();
+
+        String out = agent.run("input");
+        assertEquals("assistant-reply", out);
+    }
+
+    static class MyJavaStrategy extends NonSuspendAIAgentFunctionalStrategy<String, String> {
+        public MyJavaStrategy() {
+            super("my");
+        }
+
+        @Override
+        public String executeStrategy(AIAgentFunctionalContext context, String input) {
+            // Use a writeSession to temporarily change prompt, then restore
+            String content = context.llm().writeSession(session -> {
+                var original = session.getPrompt();
+                session.setPrompt(Prompt.builder("tmp").user("q").build());
+                Message.Response r = session.requestLLM();
+                // restore and return assistant content
+                session.setPrompt(original);
+                if (r instanceof Message.Assistant) return ((Message.Assistant) r).getContent();
+                return "";
+            });
+            return content + ":" + input;
+        }
+    }
+
+    @Test
+    public void testFunctionalStrategyWithClass() {
+        var executor = new MockExecutorBuilder(serializer)
+            .mockLLMAnswer("class-reply").asDefaultResponse()
+            .build();
+
+        var agent = AIAgent.builder()
+            .promptExecutor(executor)
+            .agentConfig(
+                AIAgentConfig.builder()
+                    .model(OpenAIModels.Chat.GPT4o)
+                    .prompt(Prompt.builder("p").user("hi").build())
+                    .maxAgentIterations(3)
+                    .build()
+            )
+            .functionalStrategy(new MyJavaStrategy())
+            .build();
+
+        String out = agent.run("u");
+        assertEquals("class-reply:u", out);
+    }
+
+    @Test
+    public void testServiceBuilderMaxIterationsIsRespected() {
+        var mockExecutor = new MockExecutorBuilder(new JacksonSerializer())
+            .mockLLMAnswer("ok").asDefaultResponse()
+            .build();
+
+        var service = AIAgentService.builder()
+            .promptExecutor(mockExecutor)
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .maxIterations(73)
+            .build();
+
+        assertEquals(73, service.getAgentConfig().getMaxAgentIterations(),
+            "maxIterations set via AIAgentService.builder() should be propagated to agentConfig");
+    }
+
+    @Test
+    public void testAgentBuilderMaxIterationsIsRespected() {
+        var mockExecutor = new MockExecutorBuilder(new JacksonSerializer())
+            .mockLLMAnswer("ok").asDefaultResponse()
+            .build();
+
+        var agent = AIAgent.builder()
+            .promptExecutor(mockExecutor)
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .maxIterations(41)
+            .build();
+
+        assertEquals(41, agent.getAgentConfig().getMaxAgentIterations(),
+            "maxIterations set via AIAgent.builder() should be propagated to agentConfig");
+    }
+}

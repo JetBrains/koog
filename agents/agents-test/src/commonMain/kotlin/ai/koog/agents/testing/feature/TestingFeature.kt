@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalUuidApi::class, InternalAgentsApi::class)
+@file:OptIn(InternalAgentsApi::class)
 
 package ai.koog.agents.testing.feature
 
@@ -9,18 +9,22 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategyBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.createStorageKey
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.PromptExecutorProxy
+import ai.koog.agents.core.feature.ContextualPromptExecutor
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
@@ -33,10 +37,10 @@ import ai.koog.agents.testing.tools.MockEnvironment
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
-import kotlinx.datetime.Clock
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.TypeToken
 import org.jetbrains.annotations.TestOnly
-import kotlin.reflect.KType
-import kotlin.uuid.ExperimentalUuidApi
+import kotlin.time.Clock
 
 /**
  * Represents a reference to a specific type of node within an AI agent subgraph. This sealed class
@@ -56,7 +60,7 @@ public sealed class NodeReference<Input, Output> {
      * @return An instance of [AIAgentNodeBase], representing the resolved node within the subgraph that corresponds
      *         to the current node reference.
      */
-    public abstract fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output>
+    public abstract fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Input, Output>
 
     /**
      * The `Start` class is a specialized type of `NodeReference` that serves as a reference to
@@ -73,7 +77,7 @@ public sealed class NodeReference<Input, Output> {
          * @return The starting node of the subgraph cast to AIAgentNodeBase<Input, Input>.
          */
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Input> =
+        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Input, Input> =
             subgraph.start as AIAgentNodeBase<Input, Input>
     }
 
@@ -92,7 +96,7 @@ public sealed class NodeReference<Input, Output> {
          * @return The finishing node of the subgraph, cast to the expected type `AIAgentNodeBase<Output, Output>`.
          */
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Output, Output> =
+        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Output, Output> =
             subgraph.finish as AIAgentNodeBase<Output, Output>
     }
 
@@ -114,7 +118,7 @@ public sealed class NodeReference<Input, Output> {
          * @throws IllegalArgumentException If no node with the specified name is found within the subgraph.
          */
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output> {
+        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentNodeBase<Input, Output> {
             val visited = mutableSetOf<String>()
             fun visit(node: AIAgentNodeBase<*, *>): AIAgentNodeBase<Input, Output>? {
                 if (node is FinishNode) return null
@@ -151,7 +155,7 @@ public sealed class NodeReference<Input, Output> {
          * @return The resolved subgraph of type `AIAgentSubgraph<Input, Output>`.
          * @throws IllegalArgumentException If the resolved subgraph does not match the expected type constraints.
          */
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentSubgraph<Input, Output> {
+        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentSubgraphBase<Input, Output> {
             val result = super.resolve(subgraph)
 
             if (result !is AIAgentSubgraph<Input, Output>) {
@@ -184,12 +188,12 @@ public sealed class NodeReference<Input, Output> {
          * @throws IllegalStateException If the subgraph is not of type `AIAgentStrategy`.
          */
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentGraphStrategy<Input, Output> {
+        override fun resolve(subgraph: AIAgentSubgraphBase<*, *>): AIAgentGraphStrategyBase<Input, Output> {
             if (subgraph.name != name) {
                 throw IllegalArgumentException("Strategy with name '$name' was expected")
             }
 
-            if (subgraph !is AIAgentGraphStrategy) {
+            if (subgraph !is AIAgentGraphStrategy<*, *>) {
                 throw IllegalStateException("Resolving a strategy is not possible from a subgraph")
             }
 
@@ -409,8 +413,12 @@ public class Testing {
      * Represents a configuration class responsible for managing assertion handlers and stage configurations.
      * It includes methods for registering custom assertion handling, managing stages and their order,
      * and defining stage-specific assertions.
+     *
+     * @param serializer JSON serializer configured in the [AIAgentConfig] for this agent instance
      */
-    public class Config : FeatureConfig() {
+    public class Config(
+        private val serializer: JSONSerializer,
+    ) : FeatureConfig() {
         /**
          * A clock instance used for managing timestamps within the configuration,
          * primarily for mock message timestamping purposes.
@@ -517,9 +525,10 @@ public class Testing {
         ) {
             assertions =
                 SubgraphAssertionsBuilder(
-                    NodeReference.Strategy<Input, Output>(name),
-                    clock,
-                    tokenizer
+                    subgraphRef = NodeReference.Strategy<Input, Output>(name),
+                    clock = clock,
+                    tokenizer = tokenizer,
+                    serializer = serializer
                 ).apply(buildAssertions).build()
         }
 
@@ -529,17 +538,19 @@ public class Testing {
          *
          * @param subgraphRef: A [NodeReference.SubgraphNode] reference to a subgraph of the agent's graph strategy
          * @param clock: A clock that is used for mock message timestamps
-         * @param tokenizer: Tokenizer that will be used to estimate token counts in mock messages
+         * @param tokenizer Tokenizer that will be used to estimate token counts in mock messages
+         * @param serializer JSON serializer
          */
         public class SubgraphAssertionsBuilder<Input, Output>(
             private val subgraphRef: NodeReference.SubgraphNode<Input, Output>,
             internal val clock: Clock,
             internal val tokenizer: Tokenizer?,
+            internal val serializer: JSONSerializer,
         ) {
 
-            private val start: NodeReference.Start<Input> = NodeReference.Start<Input>()
+            private val start: NodeReference.Start<Input> = NodeReference.Start()
 
-            private val finish: NodeReference.Finish<Output> = NodeReference.Finish<Output>()
+            private val finish: NodeReference.Finish<Output> = NodeReference.Finish()
 
             /**
              * Stores a mapping of node names to their corresponding references.
@@ -671,7 +682,7 @@ public class Testing {
                 subgraph: NodeReference.SubgraphNode<I, O>,
                 checkSubgraph: SubgraphAssertionsBuilder<I, O>.() -> Unit = {}
             ) {
-                val assertions = SubgraphAssertionsBuilder(subgraph, clock, tokenizer).apply(checkSubgraph).build()
+                val assertions = SubgraphAssertionsBuilder(subgraph, clock, tokenizer, serializer).apply(checkSubgraph).build()
                 subgraphAssertions.add(SubGraphAssertions(subgraph, assertions))
             }
 
@@ -751,13 +762,14 @@ public class Testing {
                 override fun copy(
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
-                    agentInputType: KType?,
+                    agentInputType: TypeToken?,
                     config: AIAgentConfig?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
                     runId: String?,
                     strategyName: String?,
+                    executionInfo: AgentExecutionInfo?,
                 ): NodeOutputAssertionsBuilder =
                     NodeOutputAssertionsBuilder(stageBuilder, context.copy())
 
@@ -859,13 +871,14 @@ public class Testing {
                 override fun copy(
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
-                    agentInputType: KType?,
+                    agentInputType: TypeToken?,
                     config: AIAgentConfig?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
                     runId: String?,
                     strategyName: String?,
+                    executionInfo: AgentExecutionInfo?,
                 ): EdgeAssertionsBuilder = EdgeAssertionsBuilder(stageBuilder, context.copy())
 
                 /**
@@ -923,19 +936,20 @@ public class Testing {
     /**
      * Companion object implementing agent feature, handling [Testing] creation and installation.
      */
-    @TestOnly
     public companion object Feature : AIAgentGraphFeature<Config, Testing> {
         override val key: AIAgentStorageKey<Testing> = createStorageKey("graph-testing-feature")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): Config = Config(agentConfig.serializer)
 
         override fun install(
             config: Config,
             pipeline: AIAgentGraphPipeline,
         ): Testing {
             val testing = Testing()
-            pipeline.interceptEnvironmentCreated(this) { agentEnvironment ->
-                MockEnvironment(agent.toolRegistry, agent.promptExecutor, agentEnvironment)
+            pipeline.interceptEnvironmentCreated(this) { eventContext, environment ->
+                MockEnvironment(eventContext.agent.toolRegistry, eventContext.agent.promptExecutor, pipeline.config.serializer, environment)
             }
 
             if (config.enableGraphTesting) {
@@ -974,7 +988,7 @@ public class Testing {
         private suspend fun <Input, Output> verifyGraph(
             agent: GraphAIAgent<Input, Output>,
             graphAssertions: GraphAssertions,
-            graph: AIAgentSubgraph<*, *>,
+            graph: AIAgentSubgraphBase<*, *>,
             pipeline: AIAgentPipeline,
             config: Config
         ) {
@@ -1007,7 +1021,7 @@ public class Testing {
                 val environment = if (assertion.context.isEnvironmentDefined) {
                     assertion.context.environment
                 } else {
-                    MockEnvironment(agent.toolRegistry, agent.promptExecutor)
+                    MockEnvironment(agent.toolRegistry, agent.promptExecutor, pipeline.config.serializer)
                 }
 
                 val llm = if (assertion.context.isLLMDefined) {
@@ -1017,10 +1031,10 @@ public class Testing {
                         tools = agent.toolRegistry.tools.map { it.descriptor },
                         prompt = agent.agentConfig.prompt,
                         model = agent.agentConfig.model,
-                        promptExecutor = PromptExecutorProxy(
-                            agent.promptExecutor,
-                            pipeline,
-                            assertion.context.runId,
+                        responseProcessor = agent.agentConfig.responseProcessor,
+                        promptExecutor = ContextualPromptExecutor(
+                            executor = agent.promptExecutor,
+                            context = assertion.context,
                         ),
                         environment = environment,
                         config = agent.agentConfig,
@@ -1125,33 +1139,6 @@ public class Testing {
                 throw AssertionError(message)
             }
         }
-
-        /**
-         * Compares two lists and throws an AssertionError if they are not equal, with a specified error message.
-         *
-         * @param expected The expected list of elements.
-         * @param actual The actual list of elements to compare against the expected list.
-         * @param message The message to include in the assertion error if the lists are not equal.
-         */
-        private fun assertListEquals(expected: List<*>, actual: List<*>, message: String) {
-            if (expected != actual) {
-                throw AssertionError(message)
-            }
-        }
-
-        /**
-         * Asserts that the given two values are equal. If they are not equal, it throws an AssertionError
-         * with the provided message.
-         *
-         * @param expected the expected value to compare
-         * @param actual the actual value to compare against the expected value
-         * @param message the assertion failure message to include in the exception if the values are not equal
-         */
-        private fun assertValueEquals(expected: Any?, actual: Any?, message: String) {
-            if (expected != actual) {
-                throw AssertionError(message)
-            }
-        }
     }
 }
 
@@ -1181,7 +1168,7 @@ public fun <Args> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolCallMessage
     tool: Tool<Args, *>,
     args: Args
 ): Message.Tool.Call {
-    val toolContent = tool.encodeArgsToString(args)
+    val toolContent = tool.encodeArgsToString(args, serializer)
     val tokenCount = tokenizer?.countTokens(toolContent)
 
     return Message.Tool.Call(
@@ -1233,8 +1220,20 @@ public fun Testing.Config.SubgraphAssertionsBuilder<*, *>.assistantMessage(
  * }
  * ```
  */
-public fun <Result> toolResult(tool: Tool<*, Result>, result: Result): ReceivedToolResult =
-    ReceivedToolResult(null, tool.name, tool.encodeResultToString(result), result)
+public fun <TArgs, TResult> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolResult(
+    tool: Tool<TArgs, TResult>,
+    args: TArgs,
+    result: TResult
+): ReceivedToolResult =
+    ReceivedToolResult(
+        id = null,
+        tool = tool.name,
+        toolArgs = tool.encodeArgs(args, serializer),
+        toolDescription = tool.descriptor.description,
+        content = tool.encodeResultToString(result, serializer),
+        resultKind = ToolResultKind.Success,
+        result = tool.encodeResult(result, serializer)
+    )
 
 /**
  * Constructs a `ReceivedToolResult` object using the provided tool and result string.
@@ -1257,8 +1256,20 @@ public fun <Result> toolResult(tool: Tool<*, Result>, result: Result): ReceivedT
  * }
  * ```
  */
-public fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult =
-    ReceivedToolResult(null, tool.name, result, result)
+public fun <TArgs> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolResult(
+    tool: SimpleTool<TArgs>,
+    args: TArgs,
+    result: String
+): ReceivedToolResult =
+    ReceivedToolResult(
+        id = null,
+        tool = tool.name,
+        toolArgs = tool.encodeArgs(args, serializer),
+        toolDescription = tool.descriptor.description,
+        content = tool.encodeResultToString(result, serializer),
+        resultKind = ToolResultKind.Success,
+        result = tool.encodeResult(result, serializer)
+    )
 
 /**
  * Enables and configures the Testing feature for a Kotlin AI Agent instance.

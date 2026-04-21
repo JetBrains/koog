@@ -60,7 +60,6 @@ The exporter sends OTLP spans to Weave using your environment configuration:
 ```kotlin
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-import ai.koog.agents.features.opentelemetry.integration.weave.addWeaveExporter
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 
@@ -69,7 +68,7 @@ val projectName = System.getenv()["WEAVE_PROJECT_NAME"] ?: "koog-tracing"
 
 val agent = AIAgent(
     executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    llmModel = OpenAIModels.Reasoning.GPT4oMini,
+    llmModel = OpenAIModels.Chat.GPT4oMini,
     systemPrompt = "You are a code assistant. Provide concise code examples."
 ) {
     install(OpenTelemetry) {

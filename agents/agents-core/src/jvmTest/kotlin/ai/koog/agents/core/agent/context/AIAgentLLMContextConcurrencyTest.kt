@@ -1,11 +1,15 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.CalculatorChatExecutor
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
@@ -13,14 +17,18 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.serialization.kotlinx.toKoogJSONPrimitive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Timeout
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
@@ -29,6 +37,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class AIAgentLLMContextConcurrencyTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     @Timeout(30)
@@ -143,21 +152,28 @@ class AIAgentLLMContextConcurrencyTest {
         val input: String
     )
 
-    private class TestTool : SimpleTool<TestToolArgs>() {
-        override val argsSerializer = TestToolArgs.serializer()
-
-        override val name: String = "test-tool"
-        override val description: String = "A test tool for testing"
-
-        override suspend fun doExecute(args: TestToolArgs): String {
+    private class TestTool : SimpleTool<TestToolArgs>(
+        argsSerializer = TestToolArgs.serializer(),
+        name = "test-tool",
+        description = "A test tool for testing"
+    ) {
+        override suspend fun execute(args: TestToolArgs): String {
             return "Processed: ${args.input}"
         }
     }
 
     private fun createTestEnvironment(): AIAgentEnvironment {
         return object : AIAgentEnvironment {
-            override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-                return emptyList()
+            override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+                return ReceivedToolResult(
+                    id = toolCall.id,
+                    tool = toolCall.tool,
+                    toolArgs = toolCall.contentJson.toKoogJSONObject(),
+                    toolDescription = null,
+                    content = "",
+                    resultKind = ToolResultKind.Success,
+                    result = JsonPrimitive("").toKoogJSONPrimitive()
+                )
             }
 
             override suspend fun reportProblem(exception: Throwable) {
@@ -187,7 +203,7 @@ class AIAgentLLMContextConcurrencyTest {
             tool(testTool)
         }
 
-        val mockExecutor = getMockExecutor(clock = CalculatorChatExecutor.testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = CalculatorChatExecutor.testClock) {
             mockLLMAnswer("Test response").asDefaultResponse
         }
 
@@ -196,6 +212,7 @@ class AIAgentLLMContextConcurrencyTest {
             toolRegistry = toolRegistry,
             prompt = createTestPrompt(),
             model = OllamaModels.Meta.LLAMA_3_2,
+            responseProcessor = null,
             promptExecutor = mockExecutor,
             environment = createTestEnvironment(),
             config = createTestConfig(),

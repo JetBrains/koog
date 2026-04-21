@@ -87,6 +87,8 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
             } != null
 
             if (!isCompleted) {
+                // descendants need to be deleted for windows
+                process.descendants().forEach { it.destroyForcibly() }
                 process.destroyForcibly()
             }
 
@@ -112,6 +114,8 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
         } finally {
             // Kill the process even when canceled, otherwise it keeps running
             if (process.isAlive) {
+                // descendants need to be deleted for windows
+                process.descendants().forEach { it.destroyForcibly() }
                 process.destroyForcibly()
             }
         }

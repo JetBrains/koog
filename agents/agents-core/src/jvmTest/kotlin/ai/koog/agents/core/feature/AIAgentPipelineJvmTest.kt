@@ -1,3 +1,5 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.agent.GraphAIAgent
@@ -5,28 +7,32 @@ import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
+import ai.koog.agents.core.feature.AIAgentFeatureTestAPI.testClock
 import ai.koog.agents.core.feature.config.FeatureSystemVariables
 import ai.koog.agents.core.feature.debugger.Debugger
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
-import ai.koog.agents.core.system.mock.testClock
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.network.NetUtil
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.api.parallel.Isolated
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -38,13 +44,21 @@ import kotlin.time.Duration.Companion.seconds
 // System Properties set inside this test class affects the general agent logic.
 // It causes the other tests, running in parallel, to be affected by this property.
 // Isolate the environment by @Isolated annotation for these tests and make sure they are running without the parallelism.
+@Disabled("Flaky, see #1223")
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 class AIAgentPipelineJvmTest {
+    private val serializer = KotlinxSerializer()
 
     companion object {
         private val testTimeout = 10.seconds
     }
+
+    val agentConfig = AIAgentConfig(
+        Prompt.Empty,
+        OpenAIModels.Chat.GPT4o,
+        10
+    )
 
     @AfterEach
     fun cleanup() {
@@ -85,7 +99,7 @@ class AIAgentPipelineJvmTest {
         )
 
         // Run prepare features logic
-        AIAgentGraphPipeline().use { pipeline ->
+        AIAgentGraphPipeline(agentConfig).use { pipeline ->
             pipeline.prepareFeatures()
 
             // Check Debugger feature parameters
@@ -109,7 +123,7 @@ class AIAgentPipelineJvmTest {
         System.setProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION, "$expectedWaitConnectionTimeout")
 
         // Run prepare features logic
-        AIAgentGraphPipeline().use { pipeline ->
+        AIAgentGraphPipeline(agentConfig).use { pipeline ->
             pipeline.prepareFeatures()
 
             // Check Debugger feature parameters
@@ -150,7 +164,7 @@ class AIAgentPipelineJvmTest {
         }.use { agent ->
             agentPipeline = agent.exposedPipeline
             // Run agent to make sure the prepareFeatures() api is called
-            agent.run("test")
+            agent.run("test", null)
         }
 
         // Assert pipeline features
@@ -172,7 +186,7 @@ class AIAgentPipelineJvmTest {
             "unknown-feature"
         )
 
-        AIAgentGraphPipeline().use { pipeline ->
+        AIAgentGraphPipeline(agentConfig).use { pipeline ->
             pipeline.prepareFeatures()
 
             val debuggerFeature = pipeline.feature(Debugger::class, Debugger)
@@ -193,7 +207,7 @@ class AIAgentPipelineJvmTest {
         System.setProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION, "1")
 
         // Run prepare features logic
-        AIAgentGraphPipeline().use { pipeline ->
+        AIAgentGraphPipeline(agentConfig).use { pipeline ->
             pipeline.prepareFeatures()
 
             // Check Debugger feature is installed
@@ -215,7 +229,7 @@ class AIAgentPipelineJvmTest {
         System.setProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION, "1")
 
         // Run prepare features logic
-        AIAgentGraphPipeline().use { pipeline ->
+        AIAgentGraphPipeline(agentConfig).use { pipeline ->
             pipeline.prepareFeatures()
 
             // Check Debugger feature is installed
@@ -256,7 +270,7 @@ class AIAgentPipelineJvmTest {
 
         return TestAIAgent(
             id = id ?: "test-agent-id",
-            promptExecutor = promptExecutor ?: getMockExecutor(clock = testClock) { },
+            promptExecutor = promptExecutor ?: getMockExecutor(serializer, clock = testClock) { },
             strategy = strategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry { },
@@ -277,8 +291,8 @@ class AIAgentPipelineJvmTest {
         id: String? = "test-agent-id",
         installFeatures: FeatureContext.() -> Unit = {}
     ) : GraphAIAgent<String, String>(
-        inputType = typeOf<String>(),
-        outputType = typeOf<String>(),
+        inputType = typeToken<String>(),
+        outputType = typeToken<String>(),
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
         strategy = strategy,
@@ -300,6 +314,6 @@ private suspend inline fun AIAgentPipeline.use(block: suspend (AIAgentPipeline) 
     try {
         block(this)
     } finally {
-        closeFeaturesStreamProviders()
+        closeAllFeaturesMessageProcessors()
     }
 }

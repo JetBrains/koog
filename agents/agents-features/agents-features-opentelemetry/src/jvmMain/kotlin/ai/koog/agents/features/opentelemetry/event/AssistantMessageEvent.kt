@@ -19,7 +19,7 @@ internal class AssistantMessageEvent(
         addBodyField(EventBodyFields.Role(role = message.role))
 
         when (message) {
-            is Message.Assistant -> {
+            is Message.Assistant, is Message.Reasoning -> {
                 addBodyField(EventBodyFields.Content(content = message.content))
                 arguments?.let { addBodyField(EventBodyFields.Arguments(it)) }
             }

@@ -1,9 +1,14 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
@@ -12,6 +17,9 @@ import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
@@ -19,6 +27,7 @@ import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
@@ -32,7 +41,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  * ```
  * handleEvents {
  *     onToolCallStarting { eventContext ->
- *         println("Tool called: ${eventContext.tool.name} with args ${eventContext.toolArgs}")
+ *         println("Tool called: ${eventContext.toolName} with args ${eventContext.toolArgs}")
  *     }
  *
  *     onAgentCompleted { eventContext ->
@@ -47,14 +56,17 @@ public class EventHandler {
      */
     public companion object Feature :
         AIAgentGraphFeature<EventHandlerConfig, EventHandler>,
-        AIAgentFunctionalFeature<EventHandlerConfig, EventHandler> {
+        AIAgentFunctionalFeature<EventHandlerConfig, EventHandler>,
+        AIAgentPlannerFeature<EventHandlerConfig, EventHandler> {
 
         private val logger = KotlinLogging.logger { }
 
         override val key: AIAgentStorageKey<EventHandler> =
             AIAgentStorageKey("agents-features-event-handler")
 
-        override fun createInitialConfig(): EventHandlerConfig = EventHandlerConfig()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig
+        ): EventHandlerConfig = EventHandlerConfig()
 
         override fun install(
             config: EventHandlerConfig,
@@ -81,6 +93,17 @@ public class EventHandler {
             return eventHandler
         }
 
+        override fun install(
+            config: EventHandlerConfig,
+            pipeline: AIAgentPlannerPipeline
+        ): EventHandler {
+            val eventHandler = EventHandler()
+
+            registerCommonPipelineHandlers(config, pipeline)
+
+            return eventHandler
+        }
+
         private fun registerGraphPipelineHandlers(
             config: EventHandlerConfig,
             pipeline: AIAgentGraphPipeline,
@@ -99,6 +122,18 @@ public class EventHandler {
 
             pipeline.interceptNodeExecutionFailed(this) intercept@{ eventContext: NodeExecutionFailedContext ->
                 config.invokeOnNodeExecutionFailed(eventContext)
+            }
+
+            pipeline.interceptSubgraphExecutionStarting(this) intercept@{ eventContext: SubgraphExecutionStartingContext ->
+                config.invokeOnSubgraphExecutionStarting(eventContext)
+            }
+
+            pipeline.interceptSubgraphExecutionCompleted(this) intercept@{ eventContext: SubgraphExecutionCompletedContext ->
+                config.invokeOnSubgraphExecutionCompleted(eventContext)
+            }
+
+            pipeline.interceptSubgraphExecutionFailed(this) intercept@{ eventContext: SubgraphExecutionFailedContext ->
+                config.invokeOnSubgraphExecutionFailed(eventContext)
             }
         }
 
@@ -186,7 +221,7 @@ public class EventHandler {
  * handleEvents {
  *     // Log when tools are called
  *     onToolCallStarting { eventContext ->
- *         println("Tool called: ${eventContext.tool.name} with args: ${eventContext.toolArgs}")
+ *         println("Tool called: ${eventContext.toolName} with args: ${eventContext.toolArgs}")
  *     }
  *
  *     // Handle errors

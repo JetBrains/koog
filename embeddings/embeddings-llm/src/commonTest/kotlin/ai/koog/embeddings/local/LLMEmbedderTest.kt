@@ -2,7 +2,9 @@ package ai.koog.embeddings.local
 
 import ai.koog.embeddings.base.Vector
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -13,7 +15,8 @@ class LLMEmbedderTest {
     //  Discussable, though.
     val modelsList = listOf(
         OpenAIModels.Embeddings.TextEmbedding3Small,
-        OllamaEmbeddingModels.NOMIC_EMBED_TEXT,
+        OllamaModels.Embeddings.NOMIC_EMBED_TEXT,
+        GoogleModels.Embeddings.GeminiEmbedding001,
     )
 
     @Test
@@ -73,7 +76,7 @@ class LLMEmbedderTest {
         }
     }
 
-    class MockEmbedderClient : LLMEmbeddingProvider {
+    class MockEmbedderClient : LLMEmbeddingProvider() {
         private val embeddings = mutableMapOf<String, Vector>()
 
         fun mockEmbedding(text: String, vector: Vector) {
@@ -82,6 +85,13 @@ class LLMEmbedderTest {
 
         override suspend fun embed(text: String, model: LLModel): List<Double> {
             return embeddings[text]?.values ?: throw IllegalArgumentException("No mock embedding for text: $text")
+        }
+
+        override suspend fun embed(
+            inputs: List<String>,
+            model: LLModel
+        ): List<List<Double>> {
+            return inputs.map { embed(it, model) }
         }
     }
 }

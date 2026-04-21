@@ -1,5 +1,6 @@
 package ai.koog.agents.mcp.server
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -7,9 +8,12 @@ import ai.koog.agents.mcp.McpTool
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.testing.network.NetUtil.isPortAvailable
 import ai.koog.agents.testing.tools.RandomNumberTool
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.cio.CIO
-import io.modelcontextprotocol.kotlin.sdk.TextContent
+import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
+import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
@@ -19,78 +23,79 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertIsNot
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(InternalAgentsApi::class)
 class KoogToolAsMcpToolTest {
 
     private val logger = KotlinLogging.logger {}
+    private val serializer = KotlinxSerializer()
 
-    @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testKoogToolAsMcpTool() = testMcpTool(RandomNumberTool()) { mcpTool, origin ->
-        val args = McpTool.Args(buildJsonObject { put("seed", "42") })
+        val args = buildJsonObject { put("seed", "42") }
 
         val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(20.seconds) {
-                mcpTool.execute(args)
+                mcpTool.execute(args.toKoogJSONObject())
             }
         }
 
-        logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
+        logger.info { "Result: ${mcpTool.encodeResultToString(result, serializer)}" }
 
-        val content = result.promptMessageContents.first() as TextContent
+        val content = result?.content?.first() as TextContent
         assertEquals("${origin.last}", content.text)
     }
 
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testKoogToolAsMcpToolWithoutOptionalArguments() = testMcpTool(RandomNumberTool()) { mcpTool, origin ->
-        val args = McpTool.Args(buildJsonObject { })
+        val args = EmptyJsonObject
 
         val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(20.seconds) {
-                mcpTool.execute(args)
+                mcpTool.execute(args.toKoogJSONObject())
             }
         }
 
-        logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
+        logger.info { "Result: ${mcpTool.encodeResultToString(result, serializer)}" }
 
-        val content = result.promptMessageContents.first() as TextContent
+        val content = result?.content?.first() as TextContent
         assertEquals("${origin.last}", content.text)
     }
 
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testKoogToolAsMcpToolWithInvalidArguments() = testMcpTool(RandomNumberTool()) { mcpTool, origin ->
-        assertFailsWith<IllegalStateException> {
-            val args = McpTool.Args(buildJsonObject { put("seed", "forty-two") })
+        run {
+            val errorArgs = buildJsonObject { put("seed", "forty-two") }
 
-            withContext(Dispatchers.Default.limitedParallelism(1)) {
+            val errorResult = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
-                    mcpTool.execute(args)
+                    mcpTool.execute(errorArgs.toKoogJSONObject())
                 }
             }
+
+            assertTrue(errorResult?.isError ?: false)
         }
 
+        // check that the server is still working
         run {
-            // check that the server is still working
-
-            val args = McpTool.Args(buildJsonObject { put("seed", "42") })
+            val args = buildJsonObject { put("seed", "42") }
 
             val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
-                    mcpTool.execute(args)
+                    mcpTool.execute(args.toKoogJSONObject())
                 }
             }
 
-            logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
+            logger.info { "Result: ${mcpTool.encodeResultToString(result, serializer)}" }
 
-            val content = result.promptMessageContents.first() as TextContent
+            val content = result?.content?.first() as TextContent
             assertEquals("${origin.last}", content.text)
         }
     }
@@ -101,16 +106,18 @@ class KoogToolAsMcpToolTest {
         val tool = ThrowingExceptionTool()
 
         testMcpTool(tool) { mcpTool, origin ->
-            tool.throwing = true
+            run {
+                tool.throwing = true
 
-            assertFailsWith<IllegalStateException> {
-                val args = McpTool.Args(buildJsonObject { })
+                val args = EmptyJsonObject
 
-                withContext(Dispatchers.Default.limitedParallelism(1)) {
+                val errorResult = withContext(Dispatchers.Default.limitedParallelism(1)) {
                     withTimeout(20.seconds) {
-                        mcpTool.execute(args)
+                        mcpTool.execute(args.toKoogJSONObject())
                     }
                 }
+
+                assertTrue(errorResult?.isError ?: false)
 
                 val last = origin.last
                 assertNotNull(last)
@@ -121,17 +128,17 @@ class KoogToolAsMcpToolTest {
                 // check that the server is still working
                 tool.throwing = false
 
-                val args = McpTool.Args(buildJsonObject { })
+                val args = EmptyJsonObject
 
                 val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                     withTimeout(20.seconds) {
-                        mcpTool.execute(args)
+                        mcpTool.execute(args.toKoogJSONObject())
                     }
                 }
 
-                logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
+                logger.info { "Result: ${mcpTool.encodeResultToString(result, serializer)}" }
 
-                val content = result.promptMessageContents.first() as TextContent
+                val content = result.content.first() as TextContent
                 assertEquals("${origin.last?.getOrNull()}", content.text)
             }
         }
@@ -156,9 +163,7 @@ class KoogToolAsMcpToolTest {
         try {
             val toolRegistry = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
-                    McpToolRegistryProvider.fromTransport(
-                        transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:$port/sse")
-                    )
+                    McpToolRegistryProvider.fromSseUrl("http://localhost:$port")
                 }
             }
 

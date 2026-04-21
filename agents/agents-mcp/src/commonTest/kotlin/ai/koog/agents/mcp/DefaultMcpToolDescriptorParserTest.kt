@@ -3,7 +3,8 @@ package ai.koog.agents.mcp
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import io.modelcontextprotocol.kotlin.sdk.Tool
+import io.modelcontextprotocol.kotlin.sdk.types.Tool
+import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
@@ -220,7 +221,12 @@ class DefaultMcpToolDescriptorParserTest {
                 ToolParameterDescriptor(
                     name = "nullableStringParam",
                     description = "Nullable string parameter",
-                    type = ToolParameterType.String
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
+                            ToolParameterDescriptor(type = ToolParameterType.String, name = "", description = "")
+                        )
+                    )
                 ),
                 ToolParameterDescriptor(
                     name = "integerParam",
@@ -230,7 +236,12 @@ class DefaultMcpToolDescriptorParserTest {
                 ToolParameterDescriptor(
                     name = "nullableIntegerParam",
                     description = "Nullable integer parameter",
-                    type = ToolParameterType.Integer
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
+                            ToolParameterDescriptor(type = ToolParameterType.Integer, name = "", description = "")
+                        )
+                    )
                 ),
                 ToolParameterDescriptor(
                     name = "numberParam",
@@ -240,7 +251,12 @@ class DefaultMcpToolDescriptorParserTest {
                 ToolParameterDescriptor(
                     name = "nullableNumberParam",
                     description = "Nullable number parameter",
-                    type = ToolParameterType.Float
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
+                            ToolParameterDescriptor(type = ToolParameterType.Float, name = "", description = "")
+                        )
+                    )
                 ),
                 ToolParameterDescriptor(
                     name = "booleanParam",
@@ -250,7 +266,12 @@ class DefaultMcpToolDescriptorParserTest {
                 ToolParameterDescriptor(
                     name = "nullableBooleanParam",
                     description = "Nullable boolean parameter",
-                    type = ToolParameterType.Boolean
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
+                            ToolParameterDescriptor(type = ToolParameterType.Boolean, name = "", description = "")
+                        )
+                    )
                 ),
 
                 // Array type
@@ -262,7 +283,12 @@ class DefaultMcpToolDescriptorParserTest {
                 ToolParameterDescriptor(
                     name = "nullableArrayParam",
                     description = "Nullable array parameter",
-                    type = ToolParameterType.List(ToolParameterType.String)
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
+                            ToolParameterDescriptor(type = ToolParameterType.List(ToolParameterType.String), name = "", description = "Array parameter")
+                        )
+                    )
                 ),
 
                 // Object type
@@ -625,8 +651,16 @@ class DefaultMcpToolDescriptorParserTest {
                     description = "String or number parameter",
                     type = ToolParameterType.AnyOf(
                         types = arrayOf(
-                            ToolParameterDescriptor(name = "", description = "String option", type = ToolParameterType.String),
-                            ToolParameterDescriptor(name = "", description = "Number option", type = ToolParameterType.Float)
+                            ToolParameterDescriptor(
+                                name = "",
+                                description = "String option",
+                                type = ToolParameterType.String
+                            ),
+                            ToolParameterDescriptor(
+                                name = "",
+                                description = "Number option",
+                                type = ToolParameterType.Float
+                            )
                         )
                     )
                 )
@@ -654,7 +688,10 @@ class DefaultMcpToolDescriptorParserTest {
                             }
                             putJsonObject("operator") {
                                 put("type", "string")
-                                put("description", "The operator to use for the filter. Supported operators: '==', 'IN'")
+                                put(
+                                    "description",
+                                    "The operator to use for the filter. Supported operators: '==', 'IN'"
+                                )
                             }
                             putJsonObject("value") {
                                 put("description", "The value(s) to filter by")
@@ -731,23 +768,51 @@ class DefaultMcpToolDescriptorParserTest {
                                     description = "The value(s) to filter by",
                                     type = ToolParameterType.AnyOf(
                                         types = listOf(
-                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Boolean),
-                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Float),
+                                            ToolParameterDescriptor(
+                                                name = "",
+                                                description = "",
+                                                type = ToolParameterType.Boolean
+                                            ),
+                                            ToolParameterDescriptor(
+                                                name = "",
+                                                description = "",
+                                                type = ToolParameterType.Float
+                                            ),
                                             ToolParameterDescriptor(
                                                 name = "",
                                                 description = "",
                                                 type = ToolParameterType.List(
                                                     itemsType = ToolParameterType.AnyOf(
                                                         types = listOf(
-                                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.String),
-                                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Float),
-                                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Boolean),
-                                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Null)
+                                                            ToolParameterDescriptor(
+                                                                name = "",
+                                                                description = "",
+                                                                type = ToolParameterType.String
+                                                            ),
+                                                            ToolParameterDescriptor(
+                                                                name = "",
+                                                                description = "",
+                                                                type = ToolParameterType.Float
+                                                            ),
+                                                            ToolParameterDescriptor(
+                                                                name = "",
+                                                                description = "",
+                                                                type = ToolParameterType.Boolean
+                                                            ),
+                                                            ToolParameterDescriptor(
+                                                                name = "",
+                                                                description = "",
+                                                                type = ToolParameterType.Null
+                                                            )
                                                         ).toTypedArray()
                                                     )
                                                 )
                                             ),
-                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.String),
+                                            ToolParameterDescriptor(
+                                                name = "",
+                                                description = "",
+                                                type = ToolParameterType.String
+                                            ),
                                         ).toTypedArray()
                                     )
                                 )
@@ -771,7 +836,7 @@ class DefaultMcpToolDescriptorParserTest {
         return Tool(
             name = name,
             description = description,
-            inputSchema = Tool.Input(
+            inputSchema = ToolSchema(
                 properties = properties,
                 required = required
             ),

@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -58,22 +59,20 @@ data class ComplexNestedToolArgs(
     val profile: UserProfile
 )
 
-object ComplexNestedTool : SimpleTool<ComplexNestedToolArgs>() {
-    override val argsSerializer = ComplexNestedToolArgs.serializer()
-
-    override val name = "complex_nested_tool"
-
-    override val description = "A tool that processes user profiles with complex nested structures."
-
-    override suspend fun doExecute(args: ComplexNestedToolArgs): String {
+object ComplexNestedTool : SimpleTool<ComplexNestedToolArgs>(
+    argsType = typeToken<ComplexNestedToolArgs>(),
+    name = "complex_nested_tool",
+    description = "A tool that processes user profiles with complex nested structures.",
+) {
+    override suspend fun execute(args: ComplexNestedToolArgs): String {
         return ""
     }
 }
 
 class ToolDescriptorGenerationTest {
     @Test
-    fun tetComplexToolDescriptorGeneration() {
-        val extectedDescriptor = ToolDescriptor(
+    fun testComplexToolDescriptorGeneration() {
+        val expectedDescriptor = ToolDescriptor(
             name = "complex_nested_tool",
             description = "A tool that processes user profiles with complex nested structures.",
             requiredParameters = listOf(
@@ -141,6 +140,6 @@ class ToolDescriptorGenerationTest {
             )
         )
 
-        assertEquals(extectedDescriptor, ComplexNestedTool.descriptor)
+        assertEquals(expectedDescriptor, ComplexNestedTool.descriptor)
     }
 }

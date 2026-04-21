@@ -2,6 +2,7 @@
 
 import ai.koog.gradle.publish.maven.configureJvmJarManifest
 import ai.koog.gradle.tests.configureTests
+import ai.koog.gradle.xcframework.XCFrameworkConfig.configureXCFrameworkIfRequested
 import jetbrains.sign.GpgSignSignatoryProvider
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
@@ -18,12 +19,15 @@ kotlin {
     // Tiers are in accordance with <https://kotlinlang.org/docs/native-target-support.html>
     // Tier 1
     iosSimulatorArm64()
-    iosX64()
-
-    // Tier 2
     iosArm64()
 
+    // Tier 2
+
     // Tier 3
+    iosX64()
+
+    // Configure XCFramework for iOS targets (opt-in via -Pkoog.build.xcframework=true)
+    configureXCFrameworkIfRequested(project)
 
     // Android
     androidTarget()
@@ -47,17 +51,76 @@ kotlin {
         binaries.library()
     }
 
+    applyDefaultHierarchyTemplate()
+
     sourceSets {
+        /*
+         Source set to share the code that is common to all non-JVM targets.
+         */
+        val nonJvmCommonMain by creating {
+            dependsOn(commonMain.get())
+        }
+
+        val nonJvmCommonTest by creating {
+            dependsOn(commonTest.get())
+        }
+
+        /*
+          Source set to share the code between JVM and Android targets, since they both support certain JVM features.
+         */
+        val jvmCommonMain by creating {
+            dependsOn(commonMain.get())
+        }
+
+        val jvmCommonTest by creating {
+            dependsOn(commonTest.get())
+        }
+
+        appleMain {
+            dependsOn(nonJvmCommonMain)
+        }
+
+        appleTest {
+            dependsOn(nonJvmCommonTest)
+        }
+
+        jsMain {
+            dependsOn(nonJvmCommonMain)
+        }
+
+        jsTest {
+            dependsOn(nonJvmCommonTest)
+        }
+
+        wasmJsMain {
+            dependsOn(nonJvmCommonMain)
+        }
+
+        wasmJsTest {
+            dependsOn(nonJvmCommonTest)
+        }
+
+        jvmMain {
+            dependsOn(jvmCommonMain)
+        }
+
+        jvmTest {
+            dependsOn(jvmCommonTest)
+        }
+
+        androidMain {
+            dependsOn(jvmCommonMain)
+        }
+
         androidUnitTest {
+            dependsOn(jvmCommonTest)
+
             dependencies {
                 implementation(kotlin("test-junit"))
             }
         }
     }
 
-    compilerOptions {
-        coreLibrariesVersion = "2.1.21"
-    }
 }
 
 android {

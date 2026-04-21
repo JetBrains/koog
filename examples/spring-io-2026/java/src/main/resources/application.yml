@@ -1,0 +1,39 @@
+spring:
+    application:
+        name: banking-backend
+    docker:
+        compose:
+            file: docker-compose.yml
+            enabled: true
+    datasource:
+        url: jdbc:postgresql://localhost:5434/mydb
+        username: postgres
+        password: postgres
+        driver-class-name: org.postgresql.Driver
+    ai:
+        openai:
+            api-key: YOUR_OPENAI_API_KEY
+            embedding:
+                options:
+                    model: text-embedding-3-small
+                    dimensions: 768
+        anthropic:
+            api-key: ${ANTHROPIC_API_KEY}
+        google:
+            genai:
+                api-key: ${ANTHROPIC_API_KEY}
+        model:
+            chat: openai
+            embedding: openai
+        chat:
+            memory:
+                repository:
+                    jdbc:
+                        initialize-schema: always
+        vectorstore:
+            pgvector:
+                initialize-schema: true
+                dimensions: 768
+                index-type: hnsw
+    jpa:
+        database-platform: org.hibernate.dialect.PostgreSQLDialect

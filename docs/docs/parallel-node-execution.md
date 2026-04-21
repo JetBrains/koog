@@ -27,6 +27,8 @@ To initiate parallel execution of nodes, use the `parallel` method in the follow
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 
 typealias Input = Unit
 typealias Output = String
@@ -53,6 +55,8 @@ Here is an actual example of running three nodes in parallel and selecting the r
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 
 typealias Input = String
 typealias Output = Int
@@ -92,6 +96,8 @@ Selects a result based on a predicate function:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 
 typealias Input = String
 typealias Output = String
@@ -121,6 +127,8 @@ Selects the result with the maximum value based on a comparison function:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 
 typealias Input = String
 typealias Output = String
@@ -150,8 +158,10 @@ Selects a result based on an index returned by a selection function:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.json.JsonStructure
 
 typealias Input = String
 typealias Output = String
@@ -181,7 +191,7 @@ val nodeBestJoke by parallel<String, String>(
             user("Here are three jokes: ${jokes.joinToString("\n\n")}")
          }
          val response = requestLLMStructured<JokeRating>()
-         response.getOrNull()!!.structure.bestJokeIndex
+         response.getOrNull()!!.data.bestJokeIndex
       }
    }
 }
@@ -196,6 +206,8 @@ Folds the results into a single value using an operation function:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 
 typealias Input = String
 typealias Output = String
@@ -225,6 +237,8 @@ Here is a complete example that uses parallel execution to generate jokes from d
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -253,7 +267,7 @@ val strategy = strategy("best-joke") {
 
    val nodeAnthropicSonnet by node<String, String> { topic ->
       llm.writeSession {
-         model = AnthropicModels.Sonnet_3_5
+         model = AnthropicModels.Sonnet_4_5
          appendPrompt {
             system("You are a comedian. Generate a funny joke about the given topic.")
             user("Tell me a joke about $topic.")
@@ -265,7 +279,7 @@ val strategy = strategy("best-joke") {
 
    val nodeAnthropicOpus by node<String, String> { topic ->
       llm.writeSession {
-         model = AnthropicModels.Opus_3
+         model = AnthropicModels.Opus_4_6
          appendPrompt {
             system("You are a comedian. Generate a funny joke about the given topic.")
             user("Tell me a joke about $topic.")
@@ -299,7 +313,7 @@ val strategy = strategy("best-joke") {
             }
 
             val response = requestLLMStructured<JokeRating>()
-            val bestJoke = response.getOrNull()!!.structure
+            val bestJoke = response.getOrNull()!!.data
             bestJoke.bestJokeIndex
          }
       }

@@ -1,17 +1,21 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.core.agent.session
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.AgentTestBase
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.StructuredRequest
+import ai.koog.prompt.structure.StructuredRequestConfig
+import ai.koog.prompt.structure.json.JsonStructure
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -19,6 +23,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
+    private val serializer = KotlinxSerializer()
 
     @Serializable
     data class TestStructure(
@@ -32,12 +37,12 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
 
     @Test
     fun testParseResponseToStructuredResponse() = runTest {
-        val structure = JsonStructuredData.createJsonStructure<TestStructure>()
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<TestStructure>()
+        val config = StructuredRequestConfig(
+            default = StructuredRequest.Manual(structure)
         )
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Test response").asDefaultResponse
         }
 
@@ -48,7 +53,8 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
         val llmContext = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt,
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
+            responseProcessor = null,
             promptExecutor = mockExecutor,
             environment = createTestEnvironment(),
             config = createTestConfig(),
@@ -77,20 +83,20 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
         }
 
         assertNotNull(result)
-        assertEquals("John Doe", result.structure.name)
-        assertEquals(30, result.structure.age)
-        assertEquals("A test person", result.structure.description)
+        assertEquals("John Doe", result.data.name)
+        assertEquals(30, result.data.age)
+        assertEquals("A test person", result.data.description)
         assertEquals(assistantMessage, result.message)
     }
 
     @Test
     fun testParseResponseToStructuredResponseWithNullableField() = runTest {
-        val structure = JsonStructuredData.createJsonStructure<TestStructure>()
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<TestStructure>()
+        val config = StructuredRequestConfig(
+            default = StructuredRequest.Manual(structure)
         )
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Test response").asDefaultResponse
         }
 
@@ -101,7 +107,8 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
         val llmContext = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt,
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
+            responseProcessor = null,
             promptExecutor = mockExecutor,
             environment = createTestEnvironment(),
             config = createTestConfig(),
@@ -129,9 +136,9 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
         }
 
         assertNotNull(result)
-        assertEquals("Jane Doe", result.structure.name)
-        assertEquals(25, result.structure.age)
-        assertEquals(null, result.structure.description)
+        assertEquals("Jane Doe", result.data.name)
+        assertEquals(25, result.data.age)
+        assertEquals(null, result.data.description)
         assertEquals(assistantMessage, result.message)
     }
 
@@ -155,12 +162,12 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
             val tags: Set<String>
         )
 
-        val structure = JsonStructuredData.createJsonStructure<ComplexStructure>()
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<ComplexStructure>()
+        val config = StructuredRequestConfig(
+            default = StructuredRequest.Manual(structure)
         )
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer("Test response").asDefaultResponse
         }
 
@@ -171,7 +178,8 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
         val llmContext = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt,
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
+            responseProcessor = null,
             promptExecutor = mockExecutor,
             environment = createTestEnvironment(),
             config = createTestConfig(),
@@ -209,13 +217,13 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
         }
 
         assertNotNull(result)
-        assertEquals(123, result.structure.id)
-        assertEquals(2, result.structure.addresses.size)
-        assertEquals("123 Main St", result.structure.addresses[0].street)
-        assertEquals("New York", result.structure.addresses[0].city)
-        assertEquals("456 Oak Ave", result.structure.addresses[1].street)
-        assertEquals("Los Angeles", result.structure.addresses[1].city)
-        assertEquals(setOf("vip", "premium", "verified"), result.structure.tags)
+        assertEquals(123, result.data.id)
+        assertEquals(2, result.data.addresses.size)
+        assertEquals("123 Main St", result.data.addresses[0].street)
+        assertEquals("New York", result.data.addresses[0].city)
+        assertEquals("456 Oak Ave", result.data.addresses[1].street)
+        assertEquals("Los Angeles", result.data.addresses[1].city)
+        assertEquals(setOf("vip", "premium", "verified"), result.data.tags)
         assertEquals(assistantMessage, result.message)
     }
 }

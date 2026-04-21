@@ -6,6 +6,7 @@ import ai.koog.agents.memory.model.MemoryScope
 import ai.koog.agents.memory.model.MemorySubject
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmOverloads
 
 /**
  * Core interface for managing an agent's persistent memory system.
@@ -148,7 +149,7 @@ public sealed interface MemoryProviderConfig {
  */
 @Serializable
 @SerialName("local")
-public data class LocalMemoryConfig(
+public data class LocalMemoryConfig @JvmOverloads constructor(
     val storageDirectory: String,
     override val defaultScope: MemoryScope = MemoryScope.CrossProduct,
 ) : MemoryProviderConfig

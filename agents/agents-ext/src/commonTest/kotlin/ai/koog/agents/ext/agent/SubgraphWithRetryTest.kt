@@ -3,14 +3,16 @@ package ai.koog.agents.ext.agent
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -36,6 +38,7 @@ private fun getBasicResult(
     )
 
 class SubgraphWithRetryTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun testRetrySubgraphResult() = runTest {
@@ -121,7 +124,7 @@ class SubgraphWithRetryTest {
         )
 
         AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -132,7 +135,7 @@ class SubgraphWithRetryTest {
                 onAgentCompleted { eventContext -> results += eventContext.result }
             }
         }.use { agent ->
-            agent.run("test input")
+            agent.run("test input", null)
         }
 
         assertEquals(1, results.size)
@@ -178,7 +181,7 @@ class SubgraphWithRetryTest {
         )
 
         AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -189,7 +192,7 @@ class SubgraphWithRetryTest {
                 onAgentCompleted { eventContext -> results += eventContext.result }
             }
         }.use { agent ->
-            agent.run("test input")
+            agent.run("test input", null)
         }
 
         assertEquals(1, results.size)
@@ -231,7 +234,7 @@ class SubgraphWithRetryTest {
         )
 
         AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -243,7 +246,7 @@ class SubgraphWithRetryTest {
             }
         }.use { agent ->
 
-            agent.run("test input")
+            agent.run("test input", null)
 
             assertEquals(1, results.size)
 
@@ -297,7 +300,7 @@ class SubgraphWithRetryTest {
         )
 
         AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -308,7 +311,7 @@ class SubgraphWithRetryTest {
                 onAgentCompleted { eventContext -> results += eventContext.result }
             }
         }.use { agent ->
-            agent.run("test input")
+            agent.run("test input", null)
         }
 
         assertEquals(1, results.size)
@@ -347,7 +350,7 @@ class SubgraphWithRetryTest {
         )
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -360,7 +363,7 @@ class SubgraphWithRetryTest {
         }
 
         assertFailsWith<IllegalStateException> {
-            agent.run("test input")
+            agent.run("test input", null)
         }
 
         assertEquals(maxAttempts, attemptCount.size)
@@ -398,7 +401,7 @@ class SubgraphWithRetryTest {
         )
 
         AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -410,7 +413,7 @@ class SubgraphWithRetryTest {
             }
         }.use { agent ->
 
-            agent.run("test input")
+            agent.run("test input", null)
 
             assertEquals(1, results.size)
             assertEquals("failure", results.first())
@@ -471,7 +474,7 @@ class SubgraphWithRetryTest {
         )
 
         val agent = AIAgent(
-            promptExecutor = getMockExecutor {},
+            promptExecutor = getMockExecutor(serializer) {},
             strategy = testStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -479,7 +482,7 @@ class SubgraphWithRetryTest {
             },
         )
 
-        agent.run("test input")
+        agent.run("test input", null)
 
         val actualConditionDescriptionMessage = lastMessagesInThePrompt[0]
         assertIs<Message.User>(actualConditionDescriptionMessage)

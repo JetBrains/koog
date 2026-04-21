@@ -4,25 +4,25 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.Serializable
 
-object CalculatorTools {
-    abstract class CalculatorTool(
-        override val name: String,
-        override val description: String,
-    ) : Tool<CalculatorTool.Args, CalculatorTool.Result>() {
-        @Serializable
-        data class Args(
-            @property:LLMDescription("First number")
-            val a: Float,
-            @property:LLMDescription("Second number")
-            val b: Float
-        )
+sealed class CalculatorTool(
+    name: String,
+    description: String,
+) : Tool<CalculatorTool.Args, CalculatorTool.Result>(
+    argsSerializer = Args.serializer(),
+    resultSerializer = Result.serializer(),
+    name = name,
+    description = description
+) {
+    @Serializable
+    data class Args(
+        @property:LLMDescription("First number")
+        val a: Float,
+        @property:LLMDescription("Second number")
+        val b: Float
+    )
 
-        @Serializable
-        class Result(val result: Float)
-
-        final override val argsSerializer = Args.serializer()
-        final override val resultSerializer = Result.serializer()
-    }
+    @Serializable
+    class Result(val result: Float)
 
     /**
      * 2. Implement the tool (tools).

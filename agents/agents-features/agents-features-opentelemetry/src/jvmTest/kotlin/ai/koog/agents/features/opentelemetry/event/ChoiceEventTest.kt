@@ -1,16 +1,16 @@
 package ai.koog.agents.features.opentelemetry.event
 
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.time.Clock
 
 class ChoiceEventTest {
 
@@ -76,7 +76,7 @@ class ChoiceEventTest {
             EventBodyFields.Index(0),
             EventBodyFields.Role(role = Message.Role.Tool),
             EventBodyFields.ToolCalls(tools = listOf(expectedMessage)),
-            EventBodyFields.FinishReason(reason = SpanAttributes.Response.FinishReasonType.ToolCalls.id)
+            EventBodyFields.FinishReason(reason = GenAIAttributes.Response.FinishReasonType.ToolCalls.id)
         )
 
         assertEquals(expectedBodyFields.size, choiceEvent.bodyFields.size)
@@ -153,7 +153,7 @@ class ChoiceEventTest {
             EventBodyFields.Index(0),
             EventBodyFields.Role(role = Message.Role.Tool),
             EventBodyFields.ToolCalls(tools = listOf(expectedMessage)),
-            EventBodyFields.FinishReason(reason = SpanAttributes.Response.FinishReasonType.ToolCalls.id)
+            EventBodyFields.FinishReason(reason = GenAIAttributes.Response.FinishReasonType.ToolCalls.id)
         )
 
         assertEquals(expectedBodyFields.size, choiceEvent.bodyFields.size)

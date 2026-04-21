@@ -207,7 +207,7 @@ import kotlinx.coroutines.runBlocking
 
 val transferAgentService = AIAgentService(
     executor = openAIExecutor,
-    llmModel = OpenAIModels.Reasoning.GPT4oMini,
+    llmModel = OpenAIModels.Chat.GPT4oMini,
     systemPrompt = bankingAssistantSystemPrompt,
     temperature = 0.0,  // Use deterministic responses for financial operations
     toolRegistry = ToolRegistry {
@@ -436,7 +436,7 @@ class TransactionAnalysisTools : ToolSet {
 ```kotlin
 val analysisAgentService = AIAgentService(
     executor = openAIExecutor,
-    llmModel = OpenAIModels.Reasoning.GPT4oMini,
+    llmModel = OpenAIModels.Chat.GPT4oMini,
     systemPrompt = "$bankingAssistantSystemPrompt\n$transactionAnalysisPrompt",
     temperature = 0.0,
     toolRegistry = ToolRegistry {
@@ -543,7 +543,7 @@ val strategy = strategy<String, String>("banking assistant") {
                 )
             ),
             fixingParser = StructureFixingParser(
-                fixingModel = OpenAIModels.CostOptimized.GPT4oMini,
+                model = OpenAIModels.Chat.GPT4oMini,
                 retries = 2,
             )
         )
@@ -557,7 +557,7 @@ val strategy = strategy<String, String>("banking assistant") {
         edge(
             requestClassification forwardTo nodeFinish
                 onCondition { it.isSuccess }
-                transformed { it.getOrThrow().structure }
+                transformed { it.getOrThrow().data }
         )
 
         edge(
@@ -689,7 +689,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 
 val classifierAgent = AIAgent(
     executor = openAIExecutor,
-    llmModel = OpenAIModels.Reasoning.GPT4oMini,
+    llmModel = OpenAIModels.Chat.GPT4oMini,
     toolRegistry = ToolRegistry {
         tool(AskUser)
 

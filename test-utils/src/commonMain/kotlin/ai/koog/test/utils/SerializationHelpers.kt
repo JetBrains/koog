@@ -78,3 +78,46 @@ public inline fun <reified T : Any> verifyDeserialization(
     deserializationStrategy = serializer,
     json = json
 )
+
+/**
+ * Shared JSON configuration for extended serialization tests that need to encode defaults.
+ * Useful for tests that verify all fields are properly serialized.
+ */
+public val testJson: Json = Json {
+    ignoreUnknownKeys = false
+    explicitNulls = false
+    encodeDefaults = true
+}
+
+/**
+ * Shared JSON configuration with ignoreUnknownKeys = true.
+ * Used for parameterized tests that need to handle unknown properties.
+ */
+public val testJsonIgnoreUnknown: Json = Json {
+    ignoreUnknownKeys = true
+    explicitNulls = false
+    encodeDefaults = true
+}
+
+/**
+ * Provides both strict and lenient JSON configurations for parameterized testing.
+ * Returns a list of [Json, String] pairs where the string describes the configuration.
+ */
+public fun testJsonConfigurations(): List<Pair<Json, String>> = listOf(
+    testJson to "strict (ignoreUnknownKeys=false)",
+    testJsonIgnoreUnknown to "lenient (ignoreUnknownKeys=true)"
+)
+
+/**
+ * Runs a test with both JSON configurations (ignoreUnknownKeys = true/false).
+ * This is a helper for parameterized testing that ensures each test runs with both configurations.
+ */
+public fun runWithBothJsonConfigurations(testName: String, test: (Json) -> Unit) {
+    testJsonConfigurations().forEach { (json, description) ->
+        try {
+            test(json)
+        } catch (e: Exception) {
+            throw AssertionError("Test '$testName' failed with configuration '$description': ${e.message}", e)
+        }
+    }
+}

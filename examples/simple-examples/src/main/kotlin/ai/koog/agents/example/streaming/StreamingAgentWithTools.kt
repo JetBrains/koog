@@ -2,20 +2,24 @@ package ai.koog.agents.example.streaming
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.simpleapi.Switch
 import ai.koog.agents.example.simpleapi.SwitchTools
 import ai.koog.agents.features.eventHandler.feature.handleEvents
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
+import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
+import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
+import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
@@ -33,11 +37,17 @@ suspend fun main() {
         val agent = openAiAgent(toolRegistry, executor) {
             handleEvents {
                 onToolCallStarting { context ->
-                    println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
+                    println("\n🔧 Using ${context.toolName} with ${context.toolArgs}... ")
                 }
                 onLLMStreamingFrameReceived { context ->
-                    (context.streamFrame as? StreamFrame.Append)?.let { frame ->
-                        print(frame.text)
+                    when (val frame = context.streamFrame) {
+                        is StreamFrame.ReasoningComplete -> println("Reasoning complete:id=${frame.id}\ntext=${frame.text}\nsummary=${frame.summary}")
+                        is StreamFrame.TextComplete -> println("Text complete")
+                        is StreamFrame.ToolCallComplete -> println("Tool call complete")
+                        is StreamFrame.ReasoningDelta -> println("Reasoning delta:id=${frame.id}\ntext=${frame.text}\nsummary=${frame.summary}")
+                        is StreamFrame.TextDelta -> println("Text delta:\n${frame.text}")
+                        is StreamFrame.ToolCallDelta -> println("Tool call delta:\n${frame.content}")
+                        is StreamFrame.End -> println("End")
                     }
                 }
                 onLLMStreamingFailed {
@@ -69,15 +79,20 @@ private fun openAiAgent(
     toolRegistry: ToolRegistry,
     executor: PromptExecutor,
     installFeatures: FeatureContext.() -> Unit = {}
-) = AIAgent(
-    promptExecutor = executor,
-    strategy = streamingWithToolsStrategy(),
-    llmModel = OpenAIModels.CostOptimized.GPT4oMini,
-    systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
-    temperature = 0.0,
-    toolRegistry = toolRegistry,
-    installFeatures = installFeatures
-)
+) = AIAgent.builder()
+    .graphStrategy { streamingWithToolsStrategy() }
+    .promptExecutor(executor)
+    .prompt(prompt("agent", OpenAIResponsesParams(
+        temperature = 1.0,
+        reasoning = ReasoningConfig(effort = ReasoningEffort.MEDIUM, summary = ReasoningSummary.AUTO)
+    ))
+    {
+        system("You're responsible for running a Switch and perform operations on it by request")
+    })
+    .llmModel(OpenAIModels.Chat.GPT5_1)
+    .toolRegistry(toolRegistry)
+    .install(installFeatures)
+    .build()
 
 @Suppress("unused")
 private fun anthropicAgent(
@@ -87,7 +102,7 @@ private fun anthropicAgent(
 ) = AIAgent(
     promptExecutor = executor,
     strategy = streamingWithToolsStrategy(),
-    llmModel = AnthropicModels.Sonnet_3_7,
+    llmModel = AnthropicModels.Opus_4_6,
     systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
     temperature = 0.0,
     toolRegistry = toolRegistry,

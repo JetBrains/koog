@@ -31,7 +31,4 @@ Enterprise provider with JSON column support (MySQL 5.7+).
 ### H2PersistenceStorageProvider
 Perfect for testing and embedded applications.
 
-### SQLitePersistenceStorageProvider
-Zero-configuration provider for desktop and mobile applications.
-
 All providers implement `AutoCloseable` for proper resource management and support configurable TTL cleanup.

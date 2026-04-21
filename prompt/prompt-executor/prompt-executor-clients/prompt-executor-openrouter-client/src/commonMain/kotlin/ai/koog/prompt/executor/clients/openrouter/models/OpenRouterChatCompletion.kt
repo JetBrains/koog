@@ -127,12 +127,17 @@ public class OpenRouterStreamChoice(
  * @property content The contents of the chunk message.
  * @property role The role of the author of this message.
  * @property toolCalls The tool calls requested by the model.
+ * @property reasoning The reasoning content for models that support it.
+ * @property reasoningDetails Additional reasoning details in structured format.
  */
 @Serializable
 public class OpenRouterStreamDelta(
     public val content: String? = null,
     public val role: String? = null,
-    public val toolCalls: List<OpenAIToolCall>? = null
+    public val toolCalls: List<OpenAIToolCall>? = null,
+    public val reasoning: String? = null,
+    @SerialName("reasoning_details")
+    public val reasoningDetails: List<JsonElement>? = null
 )
 
 /**
@@ -155,14 +160,15 @@ public class ErrorResponse(
  */
 @Serializable
 public class OpenRouterChatCompletionResponse(
-    public val choices: List<OpenRouterChoice>,
-    override val created: Long,
-    override val id: String,
-    override val model: String,
+    public val choices: List<OpenRouterChoice> = emptyList(),
+    override val created: Long = 0L,
+    override val id: String = "",
+    override val model: String = "",
     public val systemFingerprint: String? = null,
     @SerialName("object")
     public val objectType: String = "chat.completion",
     public val usage: OpenAIUsage? = null,
+    public val error: OpenRouterError? = null,
 ) : OpenAIBaseLLMResponse
 
 /**
@@ -181,5 +187,19 @@ public class OpenRouterChatCompletionStreamResponse(
     public val usage: OpenAIUsage? = null,
 ) : OpenAIBaseLLMStreamResponse
 
+/**
+ * OpenRouter API Error Response
+ */
+@Serializable
+public class OpenRouterError(
+    public val message: String,
+    public val type: String? = null,
+    public val code: String? = null,
+)
+
 internal object OpenRouterChatCompletionRequestSerializer :
-    AdditionalPropertiesFlatteningSerializer<OpenRouterChatCompletionRequest>(OpenRouterChatCompletionRequest.serializer())
+    AdditionalPropertiesFlatteningSerializer<OpenRouterChatCompletionRequest>(
+        OpenRouterChatCompletionRequest.serializer(),
+        // OpenRouter uses snake case
+        additionalPropertiesField = "additional_properties"
+    )

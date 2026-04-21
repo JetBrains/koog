@@ -1,6 +1,8 @@
 package ai.koog.agents.core.feature.debugger
 
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
+import ai.koog.serialization.JSONSerializer
 import kotlin.time.Duration
 
 /**
@@ -10,7 +12,9 @@ import kotlin.time.Duration
  * debugger-related parameters. It allows setting and retrieving the port
  * number used by the debugger.
  */
-public class DebuggerConfig : FeatureConfig() {
+public class DebuggerConfig(
+    internal val serializer: JSONSerializer
+) : FeatureConfig() {
 
     private var _port: Int? = null
 
@@ -45,5 +49,11 @@ public class DebuggerConfig : FeatureConfig() {
      */
     public fun setAwaitInitialConnectionTimeout(timeout: Duration) {
         _awaitInitialConnectionTimeout = timeout
+    }
+
+    override fun setEventFilter(filter: (AgentLifecycleEventContext) -> Boolean) {
+        // Do not allow events filtering for the Debugger feature.
+        // Debugger relays on the execution sequence. Filtering events can break the feature logic.
+        throw UnsupportedOperationException("Events filtering is not allowed for the Debugger feature.")
     }
 }

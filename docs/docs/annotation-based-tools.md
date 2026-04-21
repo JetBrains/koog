@@ -1,9 +1,9 @@
 # Annotation-based tools
 
-Annotation-based tools provide a declarative way to expose functions as tools for large language models (LLMs).
-By using annotations, you can transform any function into a tool that LLMs can understand and use.
+Annotation-based tools provide a declarative way to expose functions and methods as tools for large language models (LLMs) in both Kotlin and Java.
+By using annotations, you can transform any function or method into a tool that LLMs can understand and use.
 
-This approach is useful when you need to expose existing functionality to LLMs without implementing tool descriptions manually.
+This approach is useful when you need to expose existing functionality to LLMs in Kotlin or Java without implementing tool descriptions manually.
 
 !!! note
     Annotation-based tools are JVM-only and not available for other platforms. For multiplatform support, use the [class-based tool API](class-based-tools.md).
@@ -20,18 +20,16 @@ To start using annotation-based tools in your project, you need to understand th
 
 ## @Tool annotation
 
-The `@Tool` annotation is used to mark functions that should be exposed as tools to LLMs.
-The functions annotated with `@Tool` are collected by reflection from objects that implement the `ToolSet` interface. For details, see [Implement the ToolSet interface](#implement-the-toolset-interface).
+The `@Tool` annotation is used to mark functions (Kotlin) or methods (Java) that should be exposed as tools to LLMs.
+The functions and methods annotated with `@Tool` are collected by reflection from objects that implement the `ToolSet` interface. For details, see [Implement the ToolSet interface](#1-implement-the-toolset-interface).
 
 ### Definition
 
-<!--- INCLUDE
--->
 ```kotlin
 @Target(AnnotationTarget.FUNCTION)
 public annotation class Tool(val customName: String = "")
 ```
-<!--- KNIT example-annotation-based-tools-01.kt -->
+<!--- KNIT example-annotation-based-tools-01.txt -->
 
 ### Parameters
 
@@ -41,49 +39,74 @@ public annotation class Tool(val customName: String = "")
 
 ### Usage
 
-To mark a function as a tool, apply the `@Tool` annotation to this function in a class that implements the `ToolSet` interface:
-<!--- INCLUDE
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.ToolSet
--->
-```kotlin
-class MyToolSet : ToolSet {
-    @Tool
-    fun myTool(): String {
-        // Tool implementation
-        return "Result"
-    }
+To mark a function or method as a tool, apply the `@Tool` annotation to this function or method in a class that implements the `ToolSet` interface:
 
-    @Tool(customName = "customToolName")
-    fun anotherTool(): String {
-        // Tool implementation
-        return "Result"
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.annotations.Tool
+    import ai.koog.agents.core.tools.reflect.ToolSet
+    -->
+    ```kotlin
+    class MyToolSet : ToolSet {
+        @Tool
+        fun myTool(): String {
+            // Tool implementation
+            return "Result"
+        }
+    
+        @Tool(customName = "customToolName")
+        fun anotherTool(): String {
+            // Tool implementation
+            return "Result"
+        }
     }
-}
-```
-<!--- KNIT example-annotation-based-tools-02.kt -->
+    ```
+    <!--- KNIT example-annotation-based-tools-01.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    public class MyToolSet implements ToolSet {
+        @Tool
+        public String myTool() {
+            // Tool implementation
+            return "Result";
+        }
+    
+        @Tool(customName = "customToolName")
+        public String anotherTool() {
+            // Tool implementation
+            return "Result";
+        }
+    }
+    ```
+    <!--- KNIT example-annotation-based-tools-java-01.java -->
 
 ## @LLMDescription annotation
 
-The `@LLMDescription` annotation provides descriptive information about code elements (classes, functions, parameters, and so on) to LLMs.
+The `@LLMDescription` annotation provides descriptive information about code elements (classes, functions, methods, parameters, and so on) to LLMs.
 This helps LLMs understand the purpose and usage of these elements.
 
 ### Definition
 
-<!--- INCLUDE
--->
 ```kotlin
 @Target(
     AnnotationTarget.PROPERTY,
     AnnotationTarget.CLASS,
-    AnnotationTarget.PROPERTY,
     AnnotationTarget.TYPE,
     AnnotationTarget.VALUE_PARAMETER,
     AnnotationTarget.FUNCTION
 )
 public annotation class LLMDescription(val description: String)
 ```
-<!--- KNIT example-annotation-based-tools-03.kt -->
+<!--- KNIT example-annotation-based-tools-02.txt -->
 
 ### Parameters
 
@@ -91,145 +114,288 @@ public annotation class LLMDescription(val description: String)
 |---------------|----------|------------------------------------------------|
 | `description` | Yes      | A string that describes the annotated element. |
 
-
 ### Usage
 
 The `@LLMDescription` annotation can be applied at various levels. For example:
 
 * Function level:
-<!--- INCLUDE
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
--->
-```kotlin
-@Tool
-@LLMDescription("Performs a specific operation and returns the result")
-fun myTool(): String {
-    // Function implementation
-    return "Result"
-}
-```
-<!--- KNIT example-annotation-based-tools-04.kt -->
 
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.agents.core.tools.annotations.Tool
+    -->
+    ```kotlin
+    @Tool
+    @LLMDescription("Performs a specific operation and returns the result")
+    fun myTool(): String {
+        // Function implementation
+        return "Result"
+    }
+    ```
+    <!--- KNIT example-annotation-based-tools-02.kt -->
+
+=== "Java"
+
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    @Tool
+    @LLMDescription(description = "Performs a specific operation and returns the result")
+    public String myTool() {
+        // Function implementation
+        return "Result";
+    }
+    ```
+    <!--- KNIT example-annotation-based-tools-java-02.java -->
+
+    
 * Parameter level:
 
-<!--- INCLUDE
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
--->
-```kotlin
-@Tool
-@LLMDescription("Processes input data")
-fun processTool(
-    @LLMDescription("The input data to process")
-    input: String,
+=== "Kotlin"
 
-    @LLMDescription("Optional configuration parameters")
-    config: String = ""
-): String {
-    // Function implementation
-    return "Processed: $input with config: $config"
-}
-```
-<!--- KNIT example-annotation-based-tools-05.kt -->
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.agents.core.tools.annotations.Tool
+    -->
+    ```kotlin
+    @Tool
+    @LLMDescription("Processes input data")
+    fun processTool(
+        @LLMDescription("The input data to process")
+        input: String,
+    
+        @LLMDescription("Optional configuration parameters")
+        config: String = ""
+    ): String {
+        // Function implementation
+        return "Processed: $input with config: $config"
+    }
+    ```
+    <!--- KNIT example-annotation-based-tools-03.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    @Tool
+    @LLMDescription(description = "Processes input data")
+    public String processTool(
+            @LLMDescription(description = "The input data to process") String input,
+            @LLMDescription(description = "Optional configuration parameters") String config
+    ) {
+        // Function implementation
+        return "Processed: " + input + " with config: " + config;
+    }
+    ```
+    <!--- KNIT example-annotation-based-tools-java-03.java -->
+
 
 ## Creating a tool
 
 ### 1. Implement the ToolSet interface
 
-Create a class that implements the [`ToolSet`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools.reflect/-tool-set/index.html) interface.
+Create a class that implements the [`ToolSet`](api:agents-tools::ai.koog.agents.core.tools.reflect.ToolSet) interface.
 This interface marks your class as a container for tools.
 
-<!--- INCLUDE
-import ai.koog.agents.core.tools.reflect.ToolSet
--->
-```kotlin
-class MyFirstToolSet : ToolSet {
-    // Tools will go here
-}
-```
-<!--- KNIT example-annotation-based-tools-06.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.reflect.ToolSet
+    -->
+    ```kotlin
+    class MyFirstToolSet : ToolSet {
+        // Tools will go here
+    }
+    ```
+    <!--- KNIT example-annotation-based-tools-04.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    public class MyFirstToolSet implements ToolSet {
+        // Tools will go here
+    }
+    ```
+    <!--- KNIT example-annotation-based-tools-java-04.java -->
 
 ### 2. Add tool functions
 
-Add functions to your class and annotate them with `@Tool` to expose them as tools:
+Add functions or methods to your class and annotate them with `@Tool` to expose them as tools:
 
-<!--- INCLUDE
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.reflect.ToolSet
--->
-```kotlin
-class MyFirstToolSet : ToolSet {
-    @Tool
-    fun getWeather(location: String): String {
-        // In a real implementation, you would call a weather API
-        return "The weather in $location is sunny and 72°F"
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.annotations.Tool
+    import ai.koog.agents.core.tools.reflect.ToolSet
+    -->
+    ```kotlin
+    class MyFirstToolSet : ToolSet {
+        @Tool
+        fun getWeather(location: String): String {
+            // In a real implementation, you would call a weather API
+            return "The weather in $location is sunny and 72°F"
+        }
     }
-}
-```
-<!--- KNIT example-annotation-based-tools-07.kt -->
+    ```
+    <!--- KNIT example-annotation-based-tools-05.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    public class MyFirstToolSet implements ToolSet {
+        @Tool
+        public String getWeather(String location) {
+            // In a real implementation, you would call a weather API
+            return "The weather in " + location + " is sunny and 72°F";
+        }
+    }
+    ```
+    <!--- KNIT example-annotation-based-tools-java-05.java -->
 
 ### 3. Add descriptions
 
 Add `@LLMDescription` annotations to provide context for the LLM:
-<!--- INCLUDE
-import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
--->
-```kotlin
-@LLMDescription("Tools for getting weather information")
-class MyFirstToolSet : ToolSet {
-    @Tool
-    @LLMDescription("Get the current weather for a location")
-    fun getWeather(
-        @LLMDescription("The city and state/country")
-        location: String
-    ): String {
-        // In a real implementation, you would call a weather API
-        return "The weather in $location is sunny and 72°F"
+
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.reflect.ToolSet
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.agents.core.tools.annotations.Tool
+    -->
+    ```kotlin
+    @LLMDescription("Tools for getting weather information")
+    class MyFirstToolSet : ToolSet {
+        @Tool
+        @LLMDescription("Get the current weather for a location")
+        fun getWeather(
+            @LLMDescription("The city and state/country")
+            location: String
+        ): String {
+            // In a real implementation, you would call a weather API
+            return "The weather in $location is sunny and 72°F"
+        }
     }
-}
-```
-<!--- KNIT example-annotation-based-tools-08.kt -->
+    ```
+    <!--- KNIT example-annotation-based-tools-06.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    @LLMDescription(description = "Tools for getting weather information")
+    public class MyFirstToolSet implements ToolSet {
+        @Tool
+        @LLMDescription(description = "Get the current weather for a location")
+        public String getWeather(
+                @LLMDescription(description = "The city and state/country") String location
+        ) {
+            // In a real implementation, you would call a weather API
+            return "The weather in " + location + " is sunny and 72°F";
+        }
+    }
+    ```
+    <!--- KNIT example-annotation-based-tools-java-06.java -->
 
 ### 4. Use your tools with an agent
 
 Now you can use your tools with an agent:
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.tools
-import ai.koog.agents.example.exampleAnnotationBasedTools06.MyFirstToolSet
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import kotlinx.coroutines.runBlocking
 
-const val apiToken = ""
--->
-```kotlin
-fun main() {
-    runBlocking {
-        // Create your tool set
-        val weatherTools = MyFirstToolSet()
-
-        // Create an agent with your tools
-
-        val agent = AIAgent(
-            promptExecutor = simpleOpenAIExecutor(apiToken),
-            systemPrompt = "Provide weather information for a given location.",
-            llmModel = OpenAIModels.Chat.GPT4o,
-            toolRegistry = ToolRegistry {
-                tools(weatherTools)
-            }
-        )
-
-        // The agent can now use your weather tools
-        agent.run("What's the weather like in New York?")
+=== "Kotlin"
+    
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.agents.example.exampleAnnotationBasedTools06.MyFirstToolSet
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import kotlinx.coroutines.runBlocking
+    const val apiToken = ""
+    -->
+    ```kotlin
+    fun main() {
+        runBlocking {
+            // Create your tool set
+            val weatherTools = MyFirstToolSet()
+    
+            // Create an agent with your tools
+    
+            val agent = AIAgent(
+                promptExecutor = simpleOpenAIExecutor(apiToken),
+                systemPrompt = "Provide weather information for a given location.",
+                llmModel = OpenAIModels.Chat.GPT4o,
+                toolRegistry = ToolRegistry {
+                    tools(weatherTools)
+                }
+            )
+    
+            // The agent can now use your weather tools
+            agent.run("What's the weather like in New York?")
+        }
     }
-}
-```
-<!--- KNIT example-annotation-based-tools-09.kt -->
+    ```
+    <!--- KNIT example-annotation-based-tools-07.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    String apiToken = System.getenv("OPENAI_API_KEY");
+
+    // Create your tool set
+     MyFirstToolSet weatherTools = new MyFirstToolSet();
+
+    ToolRegistry toolRegistry = ToolRegistry.builder()
+        .tools(weatherTools)
+        .build();
+
+    // Create an agent with your tools
+    AIAgent<String, String> agent = AIAgent.builder()
+        .promptExecutor(simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")))
+        .systemPrompt("Provide weather information for a given location.")
+        .llmModel(OpenAIModels.Chat.GPT4o)
+        .toolRegistry(toolRegistry)
+        .build();
+
+    // The agent can now use your weather tools
+    String result = agent.run("What's the weather like in New York?");
+    System.out.println(result);
+    ```
+    <!--- KNIT example-annotation-based-tools-java-07.java -->
 
 ## Usage examples
 
@@ -238,42 +404,95 @@ Here are some real-world examples of tool annotations.
 ### Basic example: Switch controller
 
 This example shows a simple tool set for controlling a switch:
-<!--- INCLUDE
-import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
 
-class Switch(private var state: Boolean) {
-    fun switch(state: Boolean) {
-        this.state = state
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.reflect.ToolSet
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.agents.core.tools.annotations.Tool
+    class Switch(private var state: Boolean) {
+        fun switch(state: Boolean) {
+            this.state = state
+        }
+        fun isOn(): Boolean {
+            return state
+        }
+    }
+    -->
+    ```kotlin
+    @LLMDescription("Tools for controlling a switch")
+    class SwitchTools(val switch: Switch) : ToolSet {
+        @Tool
+        @LLMDescription("Switches the state of the switch")
+        fun switch(
+            @LLMDescription("The state to set (true for on, false for off)")
+            state: Boolean
+        ): String {
+            switch.switch(state)
+            return "Switched to ${if (state) "on" else "off"}"
+        }
+    
+        @Tool
+        @LLMDescription("Returns the current state of the switch")
+        fun switchState(): String {
+            return "Switch is ${if (switch.isOn()) "on" else "off"}"
+        }
+    }
+    ```
+    <!--- KNIT example-annotation-based-tools-08.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    public class Switch {
+        private boolean state;
+
+        public Switch(boolean state) {
+            this.state = state;
+        }
+
+        // "switch" is a reserved keyword in Java, so we use a different method name
+        public void setState(boolean state) {
+            this.state = state;
+        }
+
+        public boolean isOn() {
+            return state;
+        }
     }
     
-    fun isOn(): Boolean {
-        return state
-    }
-}
--->
-```kotlin
-@LLMDescription("Tools for controlling a switch")
-class SwitchTools(val switch: Switch) : ToolSet {
-    @Tool
-    @LLMDescription("Switches the state of the switch")
-    fun switch(
-        @LLMDescription("The state to set (true for on, false for off)")
-        state: Boolean
-    ): String {
-        switch.switch(state)
-        return "Switched to ${if (state) "on" else "off"}"
-    }
+    @LLMDescription(description = "Tools for controlling a switch")
+    public class SwitchTools implements ToolSet {
+        private final Switch sw;
 
-    @Tool
-    @LLMDescription("Returns the current state of the switch")
-    fun switchState(): String {
-        return "Switch is ${if (switch.isOn()) "on" else "off"}"
+        public SwitchTools(Switch sw) {
+            this.sw = sw;
+        }
+
+        @Tool
+        @LLMDescription(description = "Switches the state of the switch")
+        public String switchStateTo(
+                @LLMDescription(description = "The state to set (true for on, false for off)") boolean state
+        ) {
+            sw.setState(state);
+            return "Switched to " + (state ? "on" : "off");
+        }
+
+        @Tool
+        @LLMDescription(description = "Returns the current state of the switch")
+        public String switchState() {
+            return "Switch is " + (sw.isOn() ? "on" : "off");
+        }
     }
-}
-```
-<!--- KNIT example-annotation-based-tools-10.kt -->
+    ```
+    <!--- KNIT example-annotation-based-tools-java-08.java -->
 
 When an LLM needs to control a switch, it can understand the following information from the provided description:
 
@@ -285,39 +504,81 @@ When an LLM needs to control a switch, it can understand the following informati
 ### Advanced example: Diagnostic tools
 
 This example shows a more complex tool set for device diagnostics:
-<!--- INCLUDE
-import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.core.tools.annotations.Tool
--->
-```kotlin
-@LLMDescription("Tools for performing diagnostics and troubleshooting on devices")
-class DiagnosticToolSet : ToolSet {
-    @Tool
-    @LLMDescription("Run diagnostic on a device to check its status and identify any issues")
-    fun runDiagnostic(
-        @LLMDescription("The ID of the device to diagnose")
-        deviceId: String,
 
-        @LLMDescription("Additional information for the diagnostic (optional)")
-        additionalInfo: String = ""
-    ): String {
-        // Implementation
-        return "Diagnostic results for device $deviceId"
-    }
+=== "Kotlin"
 
-    @Tool
-    @LLMDescription("Analyze an error code to determine its meaning and possible solutions")
-    fun analyzeError(
-        @LLMDescription("The error code to analyze (e.g., 'E1001')")
-        errorCode: String
-    ): String {
-        // Implementation
-        return "Analysis of error code $errorCode"
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.reflect.ToolSet
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.agents.core.tools.annotations.Tool
+    -->
+    ```kotlin
+    @LLMDescription("Tools for performing diagnostics and troubleshooting on devices")
+    class DiagnosticToolSet : ToolSet {
+        @Tool
+        @LLMDescription("Run diagnostic on a device to check its status and identify any issues")
+        fun runDiagnostic(
+            @LLMDescription("The ID of the device to diagnose")
+            deviceId: String,
+    
+            @LLMDescription("Additional information for the diagnostic (optional)")
+            additionalInfo: String = ""
+        ): String {
+            // Implementation
+            return "Diagnostic results for device $deviceId"
+        }
+    
+        @Tool
+        @LLMDescription("Analyze an error code to determine its meaning and possible solutions")
+        fun analyzeError(
+            @LLMDescription("The error code to analyze (e.g., 'E1001')")
+            errorCode: String
+        ): String {
+            // Implementation
+            return "Analysis of error code $errorCode"
+        }
     }
-}
-```
-<!--- KNIT example-annotation-based-tools-11.kt -->
+    ```
+    <!--- KNIT example-annotation-based-tools-09.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    @LLMDescription(description = "Tools for performing diagnostics and troubleshooting on devices")
+    public class DiagnosticToolSet implements ToolSet {
+        // Convenience overload (not exposed as a tool)
+        public String runDiagnostic(String deviceId) {
+            return runDiagnostic(deviceId, "");
+        }
+    
+        @Tool
+        @LLMDescription(description = "Run diagnostic on a device to check its status and identify any issues")
+        public String runDiagnostic(
+                @LLMDescription(description = "The ID of the device to diagnose") String deviceId,
+                @LLMDescription(description = "Additional information for the diagnostic (optional)") String additionalInfo
+        ) {
+            // Implementation
+            return "Diagnostic results for device " + deviceId;
+        }
+    
+        @Tool
+        @LLMDescription(description = "Analyze an error code to determine its meaning and possible solutions")
+        public String analyzeError(
+                @LLMDescription(description = "The error code to analyze (e.g., 'E1001')") String errorCode
+        ) {
+            // Implementation
+            return "Analysis of error code " + errorCode;
+        }
+    }
+    ```
+    <!--- KNIT example-annotation-based-tools-java-09.java -->
+
 
 ## Best practices
 
@@ -327,7 +588,7 @@ class DiagnosticToolSet : ToolSet {
 * **Group related tools**: group related tools in the same `ToolSet` implementation and provide a class-level description.
 * **Return informative results**: make sure tool return values provide clear information about the result of the operation.
 * **Handle errors gracefully**: include error handling in your tools and return informative error messages.
-* **Document default values**: when parameters have default values, document this in the description.
+* **Document default values**: when parameters have default values (Kotlin) or overloads (Java), document this in the description.
 * **Keep tools focused**: Each tool should perform a specific, well-defined task rather than trying to do too many things.
 
 ## Troubleshooting common issues
@@ -339,18 +600,19 @@ When working with tool annotations, you might encounter some common issues.
 If the agent does not recognize your tools, check the following:
 
 - Your class implements the `ToolSet` interface.
-- All tool functions are annotated with `@Tool`.
-- Tool functions have appropriate return types (`String` is recommended for simplicity).
+- All tool functions or methods are annotated with `@Tool`.
+- Tool functions or methods have appropriate return types (`String` is recommended for simplicity).
 - Your tools are properly registered with the agent.
 
 ### Unclear tool descriptions
 
 If the LLM does not use your tools correctly or misunderstands their purpose, try the following:
 
-- Improve your `@LLMDescription` annotations to be more specific and clear.
-- Include examples in your descriptions if appropriate.
-- Specify parameter constraints in the descriptions (for example, `"Must be a positive number"`).
-- Use consistent terminology throughout your descriptions.
+- Use primitive parameter types when possible (`String`, `Boolean`, `Int` in Kotlin, or `String`, `boolean`, `int` in Java).
+- Clearly describe the expected format in the parameter description.
+- For complex types, consider using `String` parameters with a specific format and parse them in your tool.
+- Include examples of valid inputs in your parameter descriptions.
+- Note that Java doesn't support default parameters. Use method overloading instead.
 
 ### Parameter type issues
 

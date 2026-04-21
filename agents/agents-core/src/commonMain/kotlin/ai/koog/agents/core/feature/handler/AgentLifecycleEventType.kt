@@ -70,6 +70,25 @@ public sealed interface AgentLifecycleEventType {
 
     //endregion Node
 
+    //region Subgraph
+
+    /**
+     * Represents an event triggered before a subgraph is executed.
+     */
+    public object SubgraphExecutionStarting : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered after a subgraph has been executed.
+     */
+    public object SubgraphExecutionCompleted : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered when an error occurs during subgraph execution.
+     */
+    public object SubgraphExecutionFailed : AgentLifecycleEventType
+
+    //endregion Subgraph
+
     //region LLM
 
     /**
@@ -131,4 +150,38 @@ public sealed interface AgentLifecycleEventType {
     public object LLMStreamingCompleted : AgentLifecycleEventType
 
     //endregion LLM Streaming
+
+    //region Planner
+
+    /**
+     * Represents an event triggered when building a plan starts.
+     */
+    public object BuildPlanStarting : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered when building a plan completes.
+     */
+    public object BuildPlanCompleted : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered when executing a plan step starts.
+     */
+    public object ExecuteStepStarting : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered when executing a plan step completes.
+     */
+    public object ExecuteStepCompleted : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered when checking plan completion starts.
+     */
+    public object IsPlanCompletedStarting : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered when checking plan completion completes.
+     */
+    public object IsPlanCompletedCompleted : AgentLifecycleEventType
+
+    //endregion Planner
 }

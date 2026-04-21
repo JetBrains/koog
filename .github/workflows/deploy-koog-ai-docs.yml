@@ -24,7 +24,7 @@ jobs:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       # Using setup-python on CI to install Python might be faster than with uv (official uv recommendation)
       - name: Set up Python
@@ -33,7 +33,7 @@ jobs:
           python-version-file: "./docs/.python-version"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           version: "0.8.15"
           enable-cache: true

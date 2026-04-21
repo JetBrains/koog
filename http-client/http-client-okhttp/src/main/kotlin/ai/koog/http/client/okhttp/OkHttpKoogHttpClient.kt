@@ -1,6 +1,7 @@
 package ai.koog.http.client.okhttp
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.coroutines.Dispatchers
@@ -10,6 +11,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -24,7 +27,7 @@ import kotlin.reflect.KClass
 
 /**
  * OkHttpKoogHttpClient is an implementation of the KoogHttpClient interface, utilizing OkHttp's client
- * to perform HTTP operations, including POST requests and Server-Sent Events (SSE) streaming.
+ * to perform HTTP operations, including GET, POST requests and Server-Sent Events (SSE) streaming.
  *
  * This client provides enhanced logging, flexible request and response handling, and supports
  * configurability for underlying OkHttp client instances.
@@ -35,45 +38,80 @@ import kotlin.reflect.KClass
  */
 @Experimental
 public class OkHttpKoogHttpClient internal constructor(
-    private val clientName: String,
+    override val clientName: String,
     private val logger: KLogger,
     private val okHttpClient: OkHttpClient,
     private val json: Json
 ) : KoogHttpClient {
 
+    private fun <R : Any> processResponse(response: Response, responseType: KClass<R>): R {
+        if (response.isSuccessful) {
+            val responseBody = response.body.string()
+            if (responseType == String::class) {
+                @Suppress("UNCHECKED_CAST")
+                return responseBody as R
+            } else {
+                val serializer = serializer(responseType.java)
+                @Suppress("UNCHECKED_CAST")
+                return json.decodeFromString(serializer, responseBody) as R
+            }
+        }
+        throw KoogHttpClientException(
+            clientName = clientName,
+            statusCode = response.code,
+            errorBody = response.body.string(),
+        )
+    }
+
+    /**
+     * Builds a complete URL with the specified base path and optional query parameters.
+     *
+     * @param path The base path to which the URL will be built. It must be a valid URL string.
+     * @param parameters A map containing query parameter key-value pairs to be appended to the URL.
+     * @return An [HttpUrl] object representing the constructed URL with any specified query parameters.
+     */
+    private fun buildUrl(path: String, parameters: Map<String, String>?): HttpUrl {
+        return path.toHttpUrl().newBuilder().apply {
+            parameters?.forEach { (key, value) ->
+                addQueryParameter(key, value)
+            }
+        }.build()
+    }
+
+    override suspend fun <R : Any> get(
+        path: String,
+        responseType: KClass<R>,
+        parameters: Map<String, String>
+    ): R = withContext(Dispatchers.SuitableForIO) {
+        val httpRequest = Request.Builder()
+            .url(buildUrl(path, parameters))
+            .get()
+            .build()
+
+        val response: Response = okHttpClient.newCall(httpRequest).execute()
+        response.use {
+            processResponse(response, responseType)
+        }
+    }
+
     override suspend fun <T : Any, R : Any> post(
         path: String,
         request: T,
         requestBodyType: KClass<T>,
-        responseType: KClass<R>
+        responseType: KClass<R>,
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val requestBody = prepareRequestBody(request, requestBodyType)
 
         val httpRequest = Request.Builder()
-            .url(path)
+            .url(buildUrl(path, parameters))
             .post(requestBody)
             .build()
 
         val response: Response = okHttpClient.newCall(httpRequest).execute()
 
         response.use {
-            if (response.isSuccessful) {
-                val responseBody = response.body.string()
-                if (responseType == String::class) {
-                    @Suppress("UNCHECKED_CAST")
-                    responseBody as R
-                } else {
-                    val serializer = serializer(responseType.java)
-                    @Suppress("UNCHECKED_CAST")
-                    json.decodeFromString(serializer, responseBody) as R
-                }
-            } else {
-                val errorBody = response.body.string()
-                val errorMessage = "Error from $clientName API: ${response.code}\nBody:\n$errorBody"
-
-                logger.error { errorMessage }
-                error(errorMessage)
-            }
+            processResponse(response, responseType)
         }
     }
 
@@ -83,12 +121,13 @@ public class OkHttpKoogHttpClient internal constructor(
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
-        processStreamingChunk: (R) -> O?
+        processStreamingChunk: (R) -> O?,
+        parameters: Map<String, String>
     ): Flow<O> = callbackFlow {
         val requestBody = prepareRequestBody(request, requestBodyType)
 
         val httpRequest = Request.Builder()
-            .url(path)
+            .url(buildUrl(path, parameters))
             .post(requestBody)
             .header("Accept", "text/event-stream")
             .header("Cache-Control", "no-cache")
@@ -109,8 +148,12 @@ public class OkHttpKoogHttpClient internal constructor(
                             ?.let { trySend(it) }
                     }
                 } catch (e: Exception) {
-                    logger.error(e) { "Error processing SSE event from $clientName: ${e.message}" }
-                    close(e)
+                    val exception = KoogHttpClientException(
+                        clientName = clientName,
+                        message = "Error processing SSE event: ${e.message}"
+                    )
+                    logger.error(exception) { exception.message }
+                    close(exception)
                 }
             }
 
@@ -120,16 +163,15 @@ public class OkHttpKoogHttpClient internal constructor(
             }
 
             override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
-                val errorMessage = if (response != null) {
-                    val body = response.body.string()
-                    "Error from $clientName API: ${response.code}: ${t?.message}\nBody:\n$body"
-                } else {
-                    "Exception during streaming from $clientName: ${t?.message ?: "Unknown error"}"
-                }
-
-                logger.error(t) { errorMessage }
-
-                close(IllegalStateException(errorMessage, t))
+                val exception = KoogHttpClientException(
+                    clientName = clientName,
+                    statusCode = response?.code,
+                    errorBody = response?.body?.string(),
+                    message = t?.message,
+                    cause = t
+                )
+                logger.error(exception) { exception.message }
+                close(exception)
             }
         }
 
@@ -156,6 +198,11 @@ public class OkHttpKoogHttpClient internal constructor(
             val jsonString = json.encodeToString(serializer, request)
             jsonString.toRequestBody("application/json".toMediaType())
         }
+    }
+
+    override fun close() {
+        logger.debug { "Closing $clientName" }
+        okHttpClient.dispatcher.executorService.shutdown()
     }
 }
 

@@ -43,8 +43,7 @@ import kotlin.uuid.Uuid
  */
 @OptIn(ExperimentalUuidApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Execution(ExecutionMode.SAME_THREAD, reason = "Working with the same instance of test server.")
-@Disabled("Flaky - https://github.com/JetBrains/koog/issues/979")
+@Execution(ExecutionMode.SAME_THREAD)
 class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
     override val testTimeout = 10.seconds
 
@@ -80,6 +79,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
         super.`test send message streaming`()
 
     @Test
+    @Disabled("Flaky test, needs investigation")
     override fun `test get task`() =
         super.`test get task`()
 

@@ -2,15 +2,14 @@ package ai.koog.agents.example.banking.routing
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.banking.tools.MoneyTransferTools
 import ai.koog.agents.example.banking.tools.TransactionAnalysisTools
@@ -21,8 +20,7 @@ import ai.koog.agents.ext.tool.AskUser
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.prompt.structure.StructureFixingParser
-import kotlinx.coroutines.runBlocking
+import ai.koog.prompt.executor.model.StructureFixingParser
 
 suspend fun main() {
     val toolRegistry = ToolRegistry {
@@ -47,7 +45,7 @@ suspend fun main() {
                     )
                 ),
                 fixingParser = StructureFixingParser(
-                    fixingModel = OpenAIModels.CostOptimized.GPT4oMini,
+                    model = OpenAIModels.Chat.GPT4oMini,
                     retries = 2,
                 )
             )
@@ -59,7 +57,7 @@ suspend fun main() {
             edge(
                 requestClassification forwardTo nodeFinish
                     onCondition { it.isSuccess }
-                    transformed { it.getOrThrow().structure }
+                    transformed { it.getOrThrow().data }
             )
             edge(
                 requestClassification forwardTo callLLM

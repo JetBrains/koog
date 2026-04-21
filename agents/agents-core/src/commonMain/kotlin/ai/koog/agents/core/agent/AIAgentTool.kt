@@ -1,23 +1,30 @@
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.agent.AIAgentTool.AgentToolArgs
+import ai.koog.agents.core.agent.AIAgentTool.AgentToolInput
 import ai.koog.agents.core.agent.AIAgentTool.AgentToolResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.core.tools.asToolDescriptor
+import ai.koog.agents.core.tools.schema.getJsonSchema
+import ai.koog.agents.core.tools.schema.toToolParameter
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.KSerializerTypeToken
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.annotations.InternalKoogSerializationApi
+import ai.koog.serialization.kotlinx.KotlinxDelegateSerializer
+import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.kotlinx.toKotlinxJsonElement
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.serializer
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.fetchAndIncrement
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Converts the current AI agent into a tool to allow using it in other agents as a tool.
@@ -47,20 +54,20 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
     inputSerializer: KSerializer<Input> = serializer(),
     outputSerializer: KSerializer<Output> = serializer(),
     json: Json = Json.Default,
-): Tool<AgentToolArgs, AgentToolResult> {
+): Tool<AgentToolInput<Input>, AgentToolResult<Output>> {
     val service = when (this) {
         is GraphAIAgent -> AIAgentService.fromAgent(this)
         is FunctionalAIAgent -> AIAgentService.fromAgent(this)
         else -> throw UnsupportedOperationException("`asTool` can only be used for `GraphAIAgent` or `FunctionalAIAgent`")
     }
 
+    @Suppress("DEPRECATION")
     return service.createAgentTool(
         agentName = agentName,
         agentDescription = agentDescription,
         inputDescription = inputDescription,
         inputSerializer = inputSerializer,
         outputSerializer = outputSerializer,
-        json = json,
         parentAgentId = this.id
     )
 }
@@ -72,41 +79,72 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
  *
  * @param Input The type of input expected by the AI agent.
  * @param Output The type of output produced by the AI agent.
- * @property agent The AI agent to be executed.
- * @property agentName A unique name for the agent.
- * @property agentDescription A brief description of the agent's functionality.
- * @property inputDescription An optional description of the agent's input. Required for primitive types only!
+ * @param agentService The AI agent service to create the agent.
+ * @param agentName A unique name for the agent.
+ * @param agentDescription A brief description of the agent's functionality.
  * If not specified for a primitive input type (ex: String, Int, ...), an empty input description will be sent to LLM.
  * Does not have any effect for non-primitive [Input] type with @LLMDescription annotations.
- * @property inputSerializer A serializer for converting the input type to/from JSON.
- * @property outputSerializer A serializer for converting the output type to/from JSON.
- * @property json The JSON configuration used for serialization and deserialization.
+ * @param inputType Type token representing input type.
+ * @param outputType Type token representing output type.
  * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
  */
-public class AIAgentTool<Input, Output>(
+public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) constructor(
     private val agentService: AIAgentService<Input, Output, *>,
     private val agentName: String,
     private val agentDescription: String,
     private val inputDescription: String? = null,
-    private val inputSerializer: KSerializer<Input>,
-    private val outputSerializer: KSerializer<Output>,
-    private val json: Json = Json.Default,
+    private val inputType: TypeToken,
+    private val outputType: TypeToken,
     private val parentAgentId: String? = null
-) : Tool<AgentToolArgs, AgentToolResult>() {
+) : Tool<AgentToolInput<Input>, AgentToolResult<Output>>(
+    argsType = typeToken(AgentToolInput::class, listOf(inputType)),
+    resultType = typeToken(AgentToolResult::class, listOf(outputType)),
+    descriptor = run {
+        val inputSchema = getJsonSchema(inputType)
+        val inputToolParameter = inputSchema.toToolParameter(inputSchema.defs)
+
+        ToolDescriptor(
+            name = agentName,
+            description = agentDescription,
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "input",
+                    description = inputDescription ?: "input",
+                    type = inputToolParameter.type,
+                )
+            )
+        )
+    }
+) {
+    private companion object {
+        private val json = Json.Default
+    }
+
+    @Deprecated("Use constructor with TypeToken instead of KSerializer")
+    @OptIn(InternalKoogSerializationApi::class)
+    public constructor(
+        agentService: AIAgentService<Input, Output, *>,
+        agentName: String,
+        agentDescription: String,
+        inputDescription: String,
+        inputSerializer: KSerializer<Input>,
+        outputSerializer: KSerializer<Output>,
+        parentAgentId: String? = null
+    ) : this(
+        agentService = agentService,
+        agentName = agentName,
+        agentDescription = agentDescription,
+        inputDescription = inputDescription,
+        inputType = KSerializerTypeToken(inputSerializer),
+        outputType = KSerializerTypeToken(outputSerializer),
+        parentAgentId = parentAgentId
+    )
+
     @OptIn(ExperimentalAtomicApi::class)
     private val toolCallNumber: AtomicInt = AtomicInt(0)
 
     @OptIn(ExperimentalAtomicApi::class)
     private fun nextToolAgentID(): String = "$parentAgentId.${toolCallNumber.fetchAndIncrement()}"
-
-    /**
-     * Represents the arguments required for the execution of an agent tool.
-     * Wraps raw arguments.
-     *
-     * @property args The input the agent tool.
-     */
-    @Serializable
-    public data class AgentToolArgs(val args: JsonObject)
 
     /**
      * Represents the result of executing an agent tool operation.
@@ -116,49 +154,57 @@ public class AIAgentTool<Input, Output>(
      * @property result An optional agent tool result.
      */
     @Serializable
-    public data class AgentToolResult(
+    public data class AgentToolResult<Output>(
         val successful: Boolean,
         val errorMessage: String? = null,
-        val result: JsonElement? = null
+        val result: Output? = null
     )
 
-    override val resultSerializer: KSerializer<AgentToolResult> = AgentToolResult.serializer()
+    /**
+     * Represents the input for [AIAgent] used as [Tool] (see [AIAgent.asTool])
+     *
+     * @param Input The type of the input data expected by the tool.
+     * @property input The input data provided to the agent tool for processing.
+     */
+    @Serializable
+    public data class AgentToolInput<Input>(
+        val input: Input
+    )
 
-    override val argsSerializer: KSerializer<AgentToolArgs> = object : KSerializer<AgentToolArgs> {
-        private val innerSerializer = JsonObject.serializer()
-
-        override val descriptor: SerialDescriptor = innerSerializer.descriptor
-
-        override fun deserialize(decoder: Decoder): AgentToolArgs {
-            return AgentToolArgs(innerSerializer.deserialize(decoder))
-        }
-
-        override fun serialize(encoder: Encoder, value: AgentToolArgs) {
-            innerSerializer.serialize(encoder, value.args)
-        }
+    @OptIn(InternalKoogSerializationApi::class)
+    override fun decodeResult(rawResult: JSONElement, serializer: JSONSerializer): AgentToolResult<Output> {
+        return json.decodeFromJsonElement(
+            deserializer = AgentToolResult.serializer(
+                KotlinxDelegateSerializer(serializer, outputType)
+            ),
+            element = rawResult.toKotlinxJsonElement(),
+        )
     }
 
-    override val name: String = agentName
-    override val description: String = agentDescription
+    @OptIn(InternalKoogSerializationApi::class)
+    override fun encodeResult(result: AgentToolResult<Output>, serializer: JSONSerializer): JSONElement {
+        return json.encodeToJsonElement(
+            serializer = AgentToolResult.serializer(
+                KotlinxDelegateSerializer(serializer, outputType)
+            ),
+            value = result,
+        ).toKoogJSONElement()
+    }
 
     @OptIn(InternalAgentToolsApi::class)
-    override val descriptor: ToolDescriptor =
-        inputSerializer.descriptor.asToolDescriptor(name, description, inputDescription)
+    override suspend fun execute(args: AgentToolInput<Input>): AgentToolResult<Output> {
+        val input = args.input
 
-    @OptIn(InternalAgentToolsApi::class)
-    override suspend fun execute(args: AgentToolArgs): AgentToolResult {
         return try {
-            val input = json.decodeFromJsonElement(
-                inputSerializer,
-                args.args.getValue(descriptor.requiredParameters.first().name)
-            )
             val result = agentService.createAgentAndRun(input, id = nextToolAgentID())
 
             AgentToolResult(
                 successful = true,
-                result = json.encodeToJsonElement(outputSerializer, result)
+                result = result,
             )
-        } catch (e: Throwable) {
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
             AgentToolResult(
                 successful = false,
                 errorMessage = "Error happened: ${e::class.simpleName}(${e.message})\n${e.stackTraceToString().take(100)}"

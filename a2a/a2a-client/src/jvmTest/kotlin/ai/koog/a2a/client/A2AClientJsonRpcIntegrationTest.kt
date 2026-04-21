@@ -6,17 +6,13 @@ import ai.koog.test.utils.DockerAvailableCondition
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.wait.strategy.Wait
-import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
 
@@ -26,17 +22,10 @@ import kotlin.time.Duration.Companion.seconds
  * using the JSON-RPC standard.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Testcontainers
 @ExtendWith(DockerAvailableCondition::class)
 @Execution(ExecutionMode.SAME_THREAD, reason = "Working with the same instance of test server.")
 class A2AClientJsonRpcIntegrationTest : BaseA2AProtocolTest() {
-    companion object {
-        @Container
-        val testA2AServer: GenericContainer<*> =
-            GenericContainer("test-python-a2a-server")
-                .withExposedPorts(9999)
-                .waitingFor(Wait.forListeningPort())
-    }
+    val testA2AServer = TestA2AServerContainer
 
     override val testTimeout = 10.seconds
 
@@ -47,14 +36,14 @@ class A2AClientJsonRpcIntegrationTest : BaseA2AProtocolTest() {
     }
 
     @Suppress("HttpUrlsUsage")
-    private val agentUrl by lazy { "http://${testA2AServer.host}:${testA2AServer.getMappedPort(9999)}" }
+    private val agentUrl by lazy { "http://${testA2AServer.host}:${testA2AServer.port}" }
 
     private lateinit var transport: HttpJSONRPCClientTransport
 
     override lateinit var client: A2AClient
 
     @BeforeAll
-    fun setUp() = runTest {
+    fun setUp() = runBlocking {
         transport = HttpJSONRPCClientTransport(
             url = agentUrl,
             baseHttpClient = httpClient
@@ -72,8 +61,9 @@ class A2AClientJsonRpcIntegrationTest : BaseA2AProtocolTest() {
     }
 
     @AfterAll
-    fun tearDown() = runTest {
+    fun tearDown() {
         transport.close()
+        testA2AServer.shutdown()
     }
 
     @Test

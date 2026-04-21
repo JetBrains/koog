@@ -14,7 +14,7 @@ import ai.koog.a2a.transport.Request
 import ai.koog.a2a.transport.Response
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+import ai.koog.agents.core.dsl.builder.node
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 
@@ -50,7 +50,7 @@ public data class A2AClientAgentInfo(
  * @return A node that returns a list of all registered agents with their cached agent cards
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientGetAllAgents(
+public fun nodeA2AClientGetAllAgents(
     name: String? = null,
 ): AIAgentNodeDelegate<Unit, List<A2AClientAgentInfo>> =
     node(name) {
@@ -71,7 +71,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientGetAllAgents(
  * @see ai.koog.a2a.client.A2AClient.getAgentCard
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientGetAgentCard(
+public fun nodeA2AClientGetAgentCard(
     name: String? = null,
 ): AIAgentNodeDelegate<String, AgentCard> =
     node(name) { agentId ->
@@ -87,7 +87,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientGetAgentCard(
  * @see ai.koog.a2a.client.A2AClient.cachedAgentCard
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientCachedAgentCard(
+public fun nodeA2AClientCachedAgentCard(
     name: String? = null,
 ): AIAgentNodeDelegate<String, AgentCard> =
     node(name) { agentId ->
@@ -102,7 +102,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientCachedAgentCard(
  * @see ai.koog.a2a.client.A2AClient.getAuthenticatedExtendedAgentCard
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientGetAuthenticatedExtendedAgentCard(
+public fun nodeA2AClientGetAuthenticatedExtendedAgentCard(
     name: String? = null,
 ): AIAgentNodeDelegate<A2AClientRequest<Nothing?>, Response<AgentCard>> =
     node(name) { request ->
@@ -121,7 +121,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientGetAuthenticatedExtende
  * @see ai.koog.a2a.client.A2AClient.sendMessage
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientSendMessage(
+public fun nodeA2AClientSendMessage(
     name: String? = null,
 ): AIAgentNodeDelegate<A2AClientRequest<MessageSendParams>, CommunicationEvent> =
     node(name) { request ->
@@ -141,7 +141,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientSendMessage(
  * @see ai.koog.a2a.client.A2AClient.sendMessageStreaming
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientSendMessageStreaming(
+public fun nodeA2AClientSendMessageStreaming(
     name: String? = null,
 ): AIAgentNodeDelegate<A2AClientRequest<MessageSendParams>, Flow<Response<Event>>> =
     node(name) { request ->
@@ -160,7 +160,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientSendMessageStreaming(
  * @see ai.koog.a2a.client.A2AClient.getTask
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientGetTask(
+public fun nodeA2AClientGetTask(
     name: String? = null,
 ): AIAgentNodeDelegate<A2AClientRequest<TaskQueryParams>, Task> =
     node(name) { request ->
@@ -180,7 +180,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientGetTask(
  * @see ai.koog.a2a.client.A2AClient.cancelTask
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientCancelTask(
+public fun nodeA2AClientCancelTask(
     name: String? = null,
 ): AIAgentNodeDelegate<A2AClientRequest<TaskIdParams>, Task> =
     node(name) { request ->
@@ -200,7 +200,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientCancelTask(
  * @see ai.koog.a2a.client.A2AClient.resubscribeTask
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientResubscribeTask(
+public fun nodeA2AClientResubscribeTask(
     name: String? = null,
 ): AIAgentNodeDelegate<A2AClientRequest<TaskIdParams>, Flow<Response<Event>>> =
     node(name) { request ->
@@ -219,7 +219,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientResubscribeTask(
  * @see ai.koog.a2a.client.A2AClient.setTaskPushNotificationConfig
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientSetTaskPushNotificationConfig(
+public fun nodeA2AClientSetTaskPushNotificationConfig(
     name: String? = null,
 ): AIAgentNodeDelegate<A2AClientRequest<TaskPushNotificationConfig>, TaskPushNotificationConfig> =
     node(name) { request ->
@@ -239,7 +239,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientSetTaskPushNotification
  * @see ai.koog.a2a.client.A2AClient.getTaskPushNotificationConfig
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientGetTaskPushNotificationConfig(
+public fun nodeA2AClientGetTaskPushNotificationConfig(
     name: String? = null,
 ): AIAgentNodeDelegate<A2AClientRequest<TaskPushNotificationConfigParams>, TaskPushNotificationConfig> =
     node(name) { request ->
@@ -259,7 +259,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientGetTaskPushNotification
  * @see ai.koog.a2a.client.A2AClient.listTaskPushNotificationConfig
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientListTaskPushNotificationConfig(
+public fun nodeA2AClientListTaskPushNotificationConfig(
     name: String? = null,
 ): AIAgentNodeDelegate<A2AClientRequest<TaskIdParams>, List<TaskPushNotificationConfig>> =
     node(name) { request ->
@@ -279,7 +279,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientListTaskPushNotificatio
  * @see ai.koog.a2a.client.A2AClient.deleteTaskPushNotificationConfig
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AClientDeleteTaskPushNotificationConfig(
+public fun nodeA2AClientDeleteTaskPushNotificationConfig(
     name: String? = null,
 ): AIAgentNodeDelegate<A2AClientRequest<TaskPushNotificationConfigParams>, Unit> =
     node(name) { request ->

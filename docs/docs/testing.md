@@ -21,6 +21,7 @@ The primary purpose of this feature is to facilitate testing of agent-based AI f
 ### Setting up test dependencies
 
 Before setting up a test environment, make sure that you have added the following dependencies:
+
 <!--- INCLUDE
 /*
 -->
@@ -35,140 +36,168 @@ dependencies {
 }
 ```
 <!--- KNIT example-testing-01.kt -->
+
 ### Mocking LLM responses
 
 The basic form of testing involves mocking LLM responses to ensure deterministic behavior. You can do this using  `MockLLMBuilder` and related utilities.
 
-<!--- INCLUDE
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.testing.tools.getMockExecutor
+=== "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.ToolRegistry
+    import ai.koog.agents.testing.tools.getMockExecutor
+    val toolRegistry = ToolRegistry {}
+    -->
+    ```kotlin
+    // Create a mock LLM executor
+    val mockLLMApi = getMockExecutor {
+      // Mock a simple text response
+      mockLLMAnswer("Hello!") onRequestContains "Hello"
 
-val toolRegistry = ToolRegistry {}
+      // Mock a default response
+      mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
+    }
+    ```
+    <!--- KNIT example-testing-02.kt -->
 
--->
-```kotlin
-// Create a mock LLM executor
-val mockLLMApi = getMockExecutor(toolRegistry) {
-  // Mock a simple text response
-  mockLLMAnswer("Hello!") onRequestContains "Hello"
+=== "Java"
 
-  // Mock a default response
-  mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
-}
-```
-<!--- KNIT example-testing-02.kt -->
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    import ai.koog.agents.core.tools.ToolRegistry;
+    import ai.koog.agents.testing.tools.MockExecutor;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+
+    // Create a tool registry (empty)
+    ToolRegistry toolRegistry = ToolRegistry.builder().build();
+
+    // Create a mock LLM executor
+    PromptExecutor mockLLMApi = MockExecutor.builder()
+        .toolRegistry(toolRegistry)
+        .mockLLMAnswer("Hello!").onRequestContains("Hello")
+        .mockLLMAnswer("I don't know how to answer that.").asDefaultResponse()
+        .build();
+    ```
+    <!--- KNIT example-testing-java-01.java -->
 
 ### Mocking tool calls
 
 You can mock the LLM to call specific tools based on input patterns:
-<!--- INCLUDE
-import ai.koog.agents.core.tools.*
-import ai.koog.agents.ext.tool.AskUser
-import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.agents.testing.tools.getMockExecutor
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
-import ai.koog.agents.core.tools.annotations.LLMDescription
 
-public object CreateTool : Tool<CreateTool.Args, String>() {
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.*
+    import ai.koog.agents.ext.tool.AskUser
+    import ai.koog.agents.ext.tool.SayToUser
+    import ai.koog.agents.testing.tools.getMockExecutor
+    import ai.koog.serialization.typeToken
+    import kotlinx.serialization.Serializable
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    public object CreateTool : Tool<CreateTool.Args, String>(
+        argsType = typeToken<Args>(),
+        resultType = typeToken<String>(),
+        name = "message",
+        description = "Service tool, used by the agent to talk with user"
+    ) {
+        /**
+        * Represents the arguments for the [AskUser] tool
+        *
+        * @property message The message to be used as an argument for the tool's execution.
+        */
+        @Serializable
+        public data class Args(
+            @property:LLMDescription("Message from the agent")
+            val message: String
+        )
+        override suspend fun execute(args: Args): String = args.message
+    }
+    public object SearchTool : Tool<SearchTool.Args, String>(
+        argsType = typeToken<Args>(),
+        resultType = typeToken<String>(),
+        name = "message",
+        description = "Service tool, used by the agent to talk with user"
+    ) {
+        /**
+        * Represents the arguments for the [AskUser] tool
+        *
+        * @property message The message to be used as an argument for the tool's execution.
+        */
+        @Serializable
+        public data class Args(
+            @property:LLMDescription("Message from the agent")
+            val query: String
+        )
+        override suspend fun execute(args: Args): String = args.query
+    }
+    public object AnalyzeTool : Tool<AnalyzeTool.Args, String>(
+        argsType = typeToken<Args>(),
+        resultType = typeToken<String>(),
+        name = "message",
+        description = "Service tool, used by the agent to talk with user"
+    ) {
+        /**
+        * Represents the arguments for the [AskUser] tool
+        *
+        * @property message The message to be used as an argument for the tool's execution.
+        */
+        @Serializable
+        public data class Args(
+            @property:LLMDescription("Message from the agent")
+            val query: String
+        )
+        override suspend fun execute(args: Args): String = args.query
+    }
+    typealias PositiveToneTool = SayToUser
+    typealias NegativeToneTool = SayToUser
+    val mockLLMApi = getMockExecutor {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    // Mock a tool call response
+    mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
+
+    // Mock tool behavior - simplest form without lambda
+    mockTool(PositiveToneTool) alwaysReturns "The text has a positive tone."
+
+    // Using lambda when you need to perform extra actions
+    mockTool(NegativeToneTool) alwaysTells {
+      // Perform some extra action
+      println("Negative tone tool called")
+
+      // Return the result
+      "The text has a negative tone."
+    }
+
+    // Mock tool behavior based on specific arguments
+    mockTool(AnalyzeTool) returns "Detailed analysis" onArguments AnalyzeTool.Args("analyze deeply")
+
+    // Mock tool behavior with conditional argument matching
+    mockTool(SearchTool) returns "Found results" onArgumentsMatching { args ->
+      args.query.contains("important")
+    }
+    ```
+    <!--- KNIT example-testing-03.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
     /**
-    * Represents the arguments for the [AskUser] tool
-    *
-    * @property message The message to be used as an argument for the tool's execution.
-    */
-    @Serializable
-    public data class Args(
-        @property:LLMDescription("Message from the agent")
-        val message: String
-    )
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-02.java -->
 
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<String> = String.serializer()
-
-    override val name = "message"
-    override val description = "Service tool, used by the agent to talk with user"
-
-    override suspend fun execute(args: Args): String = args.message
-}
-
-public object SearchTool : Tool<SearchTool.Args, String>() {
-    /**
-    * Represents the arguments for the [AskUser] tool
-    *
-    * @property message The message to be used as an argument for the tool's execution.
-    */
-    @Serializable
-    public data class Args(
-        @property:LLMDescription("Message from the agent")
-        val query: String
-    )
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<String> = String.serializer()
-
-    override val name = "message"
-    override val description = "Service tool, used by the agent to talk with user"
-
-    override suspend fun execute(args: Args): String = args.query
-}
-
-
-public object AnalyzeTool : Tool<AnalyzeTool.Args, String>() {
-    /**
-    * Represents the arguments for the [AskUser] tool
-    *
-    * @property message The message to be used as an argument for the tool's execution.
-    */
-    @Serializable
-    public data class Args(
-        @property:LLMDescription("Message from the agent")
-        val query: String
-    )
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<String> = String.serializer()
-
-    override val name = "message"
-    override val description = "Service tool, used by the agent to talk with user"
-
-    override suspend fun execute(args: Args): String = args.query
-}
-
-typealias PositiveToneTool = SayToUser
-typealias NegativeToneTool = SayToUser
-
-val mockLLMApi = getMockExecutor {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-// Mock a tool call response
-mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
-
-// Mock tool behavior - simplest form without lambda
-mockTool(PositiveToneTool) alwaysReturns "The text has a positive tone."
-
-// Using lambda when you need to perform extra actions
-mockTool(NegativeToneTool) alwaysTells {
-  // Perform some extra action
-  println("Negative tone tool called")
-
-  // Return the result
-  "The text has a negative tone."
-}
-
-// Mock tool behavior based on specific arguments
-mockTool(AnalyzeTool) returns "Detailed analysis" onArguments AnalyzeTool.Args("analyze deeply")
-
-// Mock tool behavior with conditional argument matching
-mockTool(SearchTool) returns "Found results" onArgumentsMatching { args ->
-  args.query.contains("important")
-}
-```
-<!--- KNIT example-testing-03.kt -->
 
 The examples above demonstrate different ways to mock tools, from simple to more complex ones:
 
@@ -181,33 +210,46 @@ The examples above demonstrate different ways to mock tools, from simple to more
 
 To enable the testing mode on an agent, use the `withTesting()` function within the AIAgent constructor block:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.example.exampleTesting02.mockLLMApi
-import ai.koog.agents.example.exampleTesting02.toolRegistry
-import ai.koog.agents.testing.feature.withTesting
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
+=== "Kotlin"
 
-val llmModel = OpenAIModels.Chat.GPT4o
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
+    import ai.koog.agents.example.exampleTesting02.toolRegistry
+    import ai.koog.agents.testing.feature.withTesting
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    val llmModel = OpenAIModels.Chat.GPT4o
+    // Create the agent with testing enabled
+    fun main() {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    // Create the agent with testing enabled
+    AIAgent(
+        promptExecutor = mockLLMApi,
+        toolRegistry = toolRegistry,
+        llmModel = llmModel
+    ) {
+        // Enable testing mode
+        withTesting()
+    }
+    ```
+    <!--- KNIT example-testing-04.kt -->
 
-// Create the agent with testing enabled
-fun main() {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-// Create the agent with testing enabled
-AIAgent(
-    promptExecutor = mockLLMApi,
-    toolRegistry = toolRegistry,
-    llmModel = llmModel
-) {
-    // Enable testing mode
-    withTesting()
-}
-```
-<!--- KNIT example-testing-04.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-03.java -->
+
 
 ## Advanced testing
 
@@ -221,60 +263,70 @@ The Testing feature provides a comprehensive way to test your agent's graph stru
 
 Start by validating the fundamental structure of your agent's graph:
 
-<!--- INCLUDE
+=== "Kotlin"
 
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.example.exampleTesting02.mockLLMApi
-import ai.koog.agents.example.exampleTesting02.toolRegistry
-import ai.koog.agents.testing.feature.testGraph
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.environment.ReceivedToolResult
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
+    import ai.koog.agents.example.exampleTesting02.toolRegistry
+    import ai.koog.agents.testing.feature.testGraph
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.message.Message
+    val llmModel = OpenAIModels.Chat.GPT4o
+    fun main() {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    AIAgent(
+        // Constructor arguments
+        promptExecutor = mockLLMApi,
+        toolRegistry = toolRegistry,
+        llmModel = llmModel
+    ) {
+        testGraph<String, String>("test") {
+            val firstSubgraph = assertSubgraphByName<String, String>("first")
+            val secondSubgraph = assertSubgraphByName<String, String>("second")
 
+            // Assert subgraph connections
+            assertEdges {
+                startNode() alwaysGoesTo firstSubgraph
+                firstSubgraph alwaysGoesTo secondSubgraph
+                secondSubgraph alwaysGoesTo finishNode()
+            }
 
-val llmModel = OpenAIModels.Chat.GPT4o
+            // Verify the first subgraph
+            verifySubgraph(firstSubgraph) {
+                val start = startNode()
+                val finish = finishNode()
 
-fun main() {
+                // Assert nodes by name
+                val askLLM = assertNodeByName<String, Message.Response>("callLLM")
+                val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
 
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-AIAgent(
-    // Constructor arguments
-    promptExecutor = mockLLMApi,
-    toolRegistry = toolRegistry,
-    llmModel = llmModel
-) {
-    testGraph<String, String>("test") {
-        val firstSubgraph = assertSubgraphByName<String, String>("first")
-        val secondSubgraph = assertSubgraphByName<String, String>("second")
-
-        // Assert subgraph connections
-        assertEdges {
-            startNode() alwaysGoesTo firstSubgraph
-            firstSubgraph alwaysGoesTo secondSubgraph
-            secondSubgraph alwaysGoesTo finishNode()
-        }
-
-        // Verify the first subgraph
-        verifySubgraph(firstSubgraph) {
-            val start = startNode()
-            val finish = finishNode()
-
-            // Assert nodes by name
-            val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-            val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
-
-            // Assert node reachability
-            assertReachable(start, askLLM)
-            assertReachable(askLLM, callTool)
+                // Assert node reachability
+                assertReachable(start, askLLM)
+                assertReachable(askLLM, callTool)
+            }
         }
     }
-}
-```
-<!--- KNIT example-testing-05.kt -->
+    ```
+    <!--- KNIT example-testing-05.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-04.java -->
+
 
 ### Testing node behavior
 
@@ -285,50 +337,60 @@ This is crucial for ensuring that your agent's logic works correctly under diffe
 
 Start with simple input and output validations for individual nodes:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.example.exampleTesting02.mockLLMApi
-import ai.koog.agents.example.exampleTesting02.toolRegistry
-import ai.koog.agents.example.exampleTesting03.CreateTool
-import ai.koog.agents.testing.feature.assistantMessage
-import ai.koog.agents.testing.feature.testGraph
-import ai.koog.agents.testing.feature.toolCallMessage
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
+=== "Kotlin"
 
-
-val llmModel = OpenAIModels.Chat.GPT4o
-
-fun main() {
-
-    AIAgent(
-        // Constructor arguments
-        promptExecutor = mockLLMApi,
-        toolRegistry = toolRegistry,
-        llmModel = llmModel
-    ) {
-        testGraph<String, String>("test") {
-            assertNodes {
-                val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-    
--->
-<!--- SUFFIX
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
+    import ai.koog.agents.example.exampleTesting02.toolRegistry
+    import ai.koog.agents.example.exampleTesting03.CreateTool
+    import ai.koog.agents.testing.feature.assistantMessage
+    import ai.koog.agents.testing.feature.testGraph
+    import ai.koog.agents.testing.feature.toolCallMessage
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.message.Message
+    val llmModel = OpenAIModels.Chat.GPT4o
+    fun main() {
+        AIAgent(
+            // Constructor arguments
+            promptExecutor = mockLLMApi,
+            toolRegistry = toolRegistry,
+            llmModel = llmModel
+        ) {
+            testGraph<String, String>("test") {
+                assertNodes {
+                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
+    -->
+    <!--- SUFFIX
+                }
             }
         }
     }
-}
--->
-```kotlin
-assertNodes {
+    -->
+    ```kotlin
+    assertNodes {
 
-    // Test basic text responses
-    askLLM withInput "Hello" outputs assistantMessage("Hello!")
+        // Test basic text responses
+        askLLM withInput "Hello" outputs assistantMessage("Hello!")
 
-    // Test tool call responses
-    askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
-}
-```
-<!--- KNIT example-testing-06.kt -->
+        // Test tool call responses
+        askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
+    }
+    ```
+    <!--- KNIT example-testing-06.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-05.java -->
+
 
 The example above shows how to test the following behavior:
 1. When the LLM node receives `Hello` as the input, it responds with a simple text message.
@@ -338,223 +400,244 @@ The example above shows how to test the following behavior:
 
 You can also test nodes that run tools:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.tools.*
-import ai.koog.agents.example.exampleTesting02.mockLLMApi
-import ai.koog.agents.example.exampleTesting02.toolRegistry
-import ai.koog.agents.ext.tool.AskUser
-import ai.koog.agents.testing.feature.testGraph
-import ai.koog.agents.testing.feature.toolCallMessage
-import ai.koog.agents.testing.feature.toolResult
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import ai.koog.agents.core.tools.annotations.LLMDescription
+=== "Kotlin"
 
-object SolveTool : SimpleTool<SolveTool.Args>() {
-    @Serializable
-    data class Args(
-        @property:LLMDescription("Message from the agent")
-        val message: String
-    )
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
- 
-    override val name = "message"
-    override val description = "Service tool, used by the agent to talk with user"
-
-    override suspend fun doExecute(args: Args): String {
-        return args.message
-    }
-}
-
-val llmModel = OpenAIModels.Chat.GPT4o
-
-fun main() {
-
-    AIAgent(
-        // Constructor arguments
-        promptExecutor = mockLLMApi,
-        toolRegistry = toolRegistry,
-        llmModel = llmModel
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.environment.ReceivedToolResult
+    import ai.koog.agents.core.tools.*
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
+    import ai.koog.agents.example.exampleTesting02.toolRegistry
+    import ai.koog.agents.ext.tool.AskUser
+    import ai.koog.agents.testing.feature.testGraph
+    import ai.koog.agents.testing.feature.toolCallMessage
+    import ai.koog.agents.testing.feature.toolResult
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.message.Message
+    import ai.koog.serialization.typeToken
+    import kotlinx.serialization.Serializable
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    object SolveTool : SimpleTool<SolveTool.Args>(
+        argsType = typeToken<Args>(),
+        name = "message",
+        description = "Service tool, used by the agent to talk with user"
     ) {
-        testGraph<String, String>("test") {
-            assertNodes {
-                val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
-    
--->
-<!--- SUFFIX
+        @Serializable
+        data class Args(
+            @property:LLMDescription("Message from the agent")
+            val message: String
+        )
+        override suspend fun execute(args: Args): String {
+            return args.message
+        }
+    }
+    val llmModel = OpenAIModels.Chat.GPT4o
+    fun main() {
+        AIAgent(
+            // Constructor arguments
+            promptExecutor = mockLLMApi,
+            toolRegistry = toolRegistry,
+            llmModel = llmModel
+        ) {
+            testGraph<String, String>("test") {
+                assertNodes {
+                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
+    -->
+    <!--- SUFFIX
+                }
             }
         }
     }
-}
--->
-```kotlin
-assertNodes {
-    // Test tool runs with specific arguments
-    callTool withInput toolCallMessage(
-        SolveTool,
-        SolveTool.Args("solve")
-    ) outputs toolResult(SolveTool, "solved")
-}
-```
-<!--- KNIT example-testing-07.kt -->
+    -->
+    ```kotlin
+    assertNodes {
+        // Test tool runs with specific arguments
+        callTool withInput toolCallMessage(
+            SolveTool,
+            SolveTool.Args("solve")
+        ) outputs toolResult(SolveTool, SolveTool.Args("solve"), "solved")
+    }
+    ```
+    <!--- KNIT example-testing-07.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-06.java -->
+
 
 This verifies that when the tool execution node receives a specific tool call signature, it produces the expected tool result.
 
 #### Advanced node testing
 
 For more complex scenarios, you can test nodes with structured inputs and outputs:
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.tools.*
-import ai.koog.agents.example.exampleTesting02.mockLLMApi
-import ai.koog.agents.example.exampleTesting02.toolRegistry
-import ai.koog.agents.ext.tool.AskUser
-import ai.koog.agents.testing.feature.assistantMessage
-import ai.koog.agents.testing.feature.testGraph
-import ai.koog.agents.testing.feature.toolCallMessage
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
-import ai.koog.agents.core.tools.annotations.LLMDescription
 
-object AnalyzeTool : Tool<AnalyzeTool.Args, String>() {
+=== "Kotlin"
 
-    @Serializable
-    data class Args(
-        @property:LLMDescription("Message from the agent")
-        val query: String,
-        val depth: Int
-    )
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<String> = String.serializer()
- 
-    override val name = "message"
-    override val description = "Service tool, used by the agent to talk with user"
-
-    override suspend fun execute(args: Args): String = args.query
-}
-
-
-val llmModel = OpenAIModels.Chat.GPT4o
-
-fun main() {
-
-    AIAgent(
-        // Constructor arguments
-        promptExecutor = mockLLMApi,
-        toolRegistry = toolRegistry,
-        llmModel = llmModel
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.tools.*
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
+    import ai.koog.agents.example.exampleTesting02.toolRegistry
+    import ai.koog.agents.ext.tool.AskUser
+    import ai.koog.agents.testing.feature.assistantMessage
+    import ai.koog.agents.testing.feature.testGraph
+    import ai.koog.agents.testing.feature.toolCallMessage
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.message.Message
+    import ai.koog.serialization.typeToken
+    import kotlinx.serialization.Serializable
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    object AnalyzeTool : Tool<AnalyzeTool.Args, String>(
+        argsType = typeToken<Args>(),
+        resultType = typeToken<String>(),
+        name = "message",
+        description = "Service tool, used by the agent to talk with user"
     ) {
-        testGraph<String, String>("test") {
-            assertNodes {
-                val askLLM = assertNodeByName<String, Message.Response>("callLLM")
--->
-<!--- SUFFIX
+        @Serializable
+        data class Args(
+            @property:LLMDescription("Message from the agent")
+            val query: String,
+            val depth: Int
+        )
+        override suspend fun execute(args: Args): String = args.query
+    }
+    val llmModel = OpenAIModels.Chat.GPT4o
+    fun main() {
+        AIAgent(
+            // Constructor arguments
+            promptExecutor = mockLLMApi,
+            toolRegistry = toolRegistry,
+            llmModel = llmModel
+        ) {
+            testGraph<String, String>("test") {
+                assertNodes {
+                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
+    -->
+    <!--- SUFFIX
+                }
             }
         }
     }
-}
--->
-```kotlin
-assertNodes {
-    // Test with different inputs to the same node
-    askLLM withInput "Simple query" outputs assistantMessage("Simple response")
+    -->
+    ```kotlin
+    assertNodes {
+        // Test with different inputs to the same node
+        askLLM withInput "Simple query" outputs assistantMessage("Simple response")
 
-    // Test with complex parameters
-    askLLM withInput "Complex query with parameters" outputs toolCallMessage(
-        AnalyzeTool,
-        AnalyzeTool.Args(query = "parameters", depth = 3)
-    )
-}
-```
-<!--- KNIT example-testing-08.kt -->
+        // Test with complex parameters
+        askLLM withInput "Complex query with parameters" outputs toolCallMessage(
+            AnalyzeTool,
+            AnalyzeTool.Args(query = "parameters", depth = 3)
+        )
+    }
+    ```
+    <!--- KNIT example-testing-08.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-07.java -->
 
 You can also test complex tool call scenarios with detailed result structures:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.tools.*
-import ai.koog.agents.example.exampleTesting02.mockLLMApi
-import ai.koog.agents.example.exampleTesting02.toolRegistry
-import ai.koog.agents.testing.feature.testGraph
-import ai.koog.agents.testing.feature.toolCallMessage
-import ai.koog.agents.testing.feature.toolResult
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
+=== "Kotlin"
 
-object AnalyzeTool : Tool<AnalyzeTool.Args, AnalyzeTool.Result>() {
-    @Serializable
-    data class Args(
-        val query: String,
-        val depth: Int
-    )
-
-    @Serializable
-    data class Result(
-        val analysis: String,
-        val confidence: Double,
-        val metadata: Map<String, String> = mapOf()
-    )
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<Result> = Result.serializer()
- 
-    override val name = "message"
-    override val description = "Service tool, used by the agent to talk with user"
-
-    override suspend fun execute(args: Args): Result {
-        return Result(
-            args.query, 0.95,
-            mapOf("source" to "mock", "timestamp" to "2023-06-15")
-        )
-    }
-}
-
-val llmModel = OpenAIModels.Chat.GPT4o
-
-fun main() {
-
-    AIAgent(
-        // Constructor arguments
-        promptExecutor = mockLLMApi,
-        toolRegistry = toolRegistry,
-        llmModel = llmModel
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.environment.ReceivedToolResult
+    import ai.koog.agents.core.tools.*
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
+    import ai.koog.agents.example.exampleTesting02.toolRegistry
+    import ai.koog.agents.testing.feature.testGraph
+    import ai.koog.agents.testing.feature.toolCallMessage
+    import ai.koog.agents.testing.feature.toolResult
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.message.Message
+    import ai.koog.serialization.typeToken
+    import kotlinx.serialization.Serializable
+    object AnalyzeTool : Tool<AnalyzeTool.Args, AnalyzeTool.Result>(
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
+        name = "message",
+        description = "Service tool, used by the agent to talk with user"
     ) {
-        testGraph<String, String>("test") {
-            assertNodes {
-                val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
--->
-<!--- SUFFIX
+        @Serializable
+        data class Args(
+            val query: String,
+            val depth: Int
+        )
+        @Serializable
+        data class Result(
+            val analysis: String,
+            val confidence: Double,
+            val metadata: Map<String, String> = mapOf()
+        )
+        override suspend fun execute(args: Args): Result {
+            return Result(
+                args.query, 0.95,
+                mapOf("source" to "mock", "timestamp" to "2023-06-15")
+            )
+        }
+    }
+    val llmModel = OpenAIModels.Chat.GPT4o
+    fun main() {
+        AIAgent(
+            // Constructor arguments
+            promptExecutor = mockLLMApi,
+            toolRegistry = toolRegistry,
+            llmModel = llmModel
+        ) {
+            testGraph<String, String>("test") {
+                assertNodes {
+                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
+    -->
+    <!--- SUFFIX
+                }
             }
         }
     }
-}
--->
-```kotlin
-assertNodes {
-    // Test a complex tool call with a structured result
-    callTool withInput toolCallMessage(
-        AnalyzeTool,
-        AnalyzeTool.Args(query = "complex", depth = 5)
-    ) outputs toolResult(AnalyzeTool, AnalyzeTool.Result(
-        analysis = "Detailed analysis",
-        confidence = 0.95,
-        metadata = mapOf("source" to "database", "timestamp" to "2023-06-15")
-    ))
-}
-```
-<!--- KNIT example-testing-09.kt -->
+    -->
+    ```kotlin
+    assertNodes {
+        // Test a complex tool call with a structured result
+        callTool withInput toolCallMessage(
+            AnalyzeTool,
+            AnalyzeTool.Args(query = "complex", depth = 5)
+        ) outputs toolResult(AnalyzeTool, AnalyzeTool.Args(query = "complex", depth = 5), AnalyzeTool.Result(
+            analysis = "Detailed analysis",
+            confidence = 0.95,
+            metadata = mapOf("source" to "database", "timestamp" to "2023-06-15")
+        ))
+    }
+    ```
+    <!--- KNIT example-testing-09.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-08.java -->
 
 These advanced tests help ensure that your nodes handle complex data structures correctly, which is essential for sophisticated agent behaviors.
 
@@ -566,53 +649,64 @@ Edge connections testing allows you to verify that your agent's graph correctly 
 
 Start with simple edge connection tests:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.tools.*
-import ai.koog.agents.example.exampleTesting02.mockLLMApi
-import ai.koog.agents.example.exampleTesting02.toolRegistry
-import ai.koog.agents.example.exampleTesting03.CreateTool
-import ai.koog.agents.testing.feature.assistantMessage
-import ai.koog.agents.testing.feature.testGraph
-import ai.koog.agents.testing.feature.toolCallMessage
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
+=== "Kotlin"
 
-val llmModel = OpenAIModels.Chat.GPT4o
-
-fun main() {
-
-    AIAgent(
-        // Constructor arguments
-        promptExecutor = mockLLMApi,
-        toolRegistry = toolRegistry,
-        llmModel = llmModel
-    ) {
-        testGraph<String, String>("test") {
-            assertNodes {
-                val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
-                val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-                val giveFeedback = assertNodeByName<String, Message.Response>("giveFeedback")
--->
-<!--- SUFFIX
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.environment.ReceivedToolResult
+    import ai.koog.agents.core.tools.*
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
+    import ai.koog.agents.example.exampleTesting02.toolRegistry
+    import ai.koog.agents.example.exampleTesting03.CreateTool
+    import ai.koog.agents.testing.feature.assistantMessage
+    import ai.koog.agents.testing.feature.testGraph
+    import ai.koog.agents.testing.feature.toolCallMessage
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.message.Message
+    import kotlinx.serialization.KSerializer
+    import kotlinx.serialization.Serializable
+    val llmModel = OpenAIModels.Chat.GPT4o
+    fun main() {
+        AIAgent(
+            // Constructor arguments
+            promptExecutor = mockLLMApi,
+            toolRegistry = toolRegistry,
+            llmModel = llmModel
+        ) {
+            testGraph<String, String>("test") {
+                assertNodes {
+                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
+                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
+                    val giveFeedback = assertNodeByName<String, Message.Response>("giveFeedback")
+    -->
+    <!--- SUFFIX
+                }
             }
         }
     }
-}
--->
-```kotlin
-assertEdges {
-    // Test text message routing
-    askLLM withOutput assistantMessage("Hello!") goesTo giveFeedback
+    -->
+    ```kotlin
+    assertEdges {
+        // Test text message routing
+        askLLM withOutput assistantMessage("Hello!") goesTo giveFeedback
 
-    // Test tool call routing
-    askLLM withOutput toolCallMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
-}
-```
-<!--- KNIT example-testing-10.kt -->
+        // Test tool call routing
+        askLLM withOutput toolCallMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
+    }
+    ```
+    <!--- KNIT example-testing-10.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-09.java -->
 
 This example verifies the following behavior:
 1. When the LLM node outputs a simple text message, the flow is directed to the `giveFeedback` node.
@@ -622,146 +716,180 @@ This example verifies the following behavior:
 
 You can test a more complex routing logic based on the content of outputs:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.example.exampleTesting02.mockLLMApi
-import ai.koog.agents.example.exampleTesting02.toolRegistry
-import ai.koog.agents.testing.feature.assistantMessage
-import ai.koog.agents.testing.feature.testGraph
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
+=== "Kotlin"
 
-val llmModel = OpenAIModels.Chat.GPT4o
-
-fun main() {
-
-    AIAgent(
-        // Constructor arguments
-        promptExecutor = mockLLMApi,
-        toolRegistry = toolRegistry,
-        llmModel = llmModel
-    ) {
-        testGraph<String, String>("test") {
-            assertNodes {
-                val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-                val askForInfo = assertNodeByName<String, ReceivedToolResult>("askForInfo")
-                val processRequest = assertNodeByName<String, Message.Response>("processRequest")
--->
-<!--- SUFFIX
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.environment.ReceivedToolResult
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
+    import ai.koog.agents.example.exampleTesting02.toolRegistry
+    import ai.koog.agents.testing.feature.assistantMessage
+    import ai.koog.agents.testing.feature.testGraph
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.message.Message
+    val llmModel = OpenAIModels.Chat.GPT4o
+    fun main() {
+        AIAgent(
+            // Constructor arguments
+            promptExecutor = mockLLMApi,
+            toolRegistry = toolRegistry,
+            llmModel = llmModel
+        ) {
+            testGraph<String, String>("test") {
+                assertNodes {
+                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
+                    val askForInfo = assertNodeByName<String, ReceivedToolResult>("askForInfo")
+                    val processRequest = assertNodeByName<String, Message.Response>("processRequest")
+    -->
+    <!--- SUFFIX
+                }
             }
         }
     }
-}
--->
-```kotlin
-assertEdges {
-    // Different text responses can route to different nodes
-    askLLM withOutput assistantMessage("Need more information") goesTo askForInfo
-    askLLM withOutput assistantMessage("Ready to proceed") goesTo processRequest
-}
-```
-<!--- KNIT example-testing-11.kt -->
+    -->
+    ```kotlin
+    assertEdges {
+        // Different text responses can route to different nodes
+        askLLM withOutput assistantMessage("Need more information") goesTo askForInfo
+        askLLM withOutput assistantMessage("Ready to proceed") goesTo processRequest
+    }
+    ```
+    <!--- KNIT example-testing-11.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-10.java -->
 
 #### Advanced edge testing
 
 For sophisticated agents, you can test conditional routing based on structured data in tool results:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.example.exampleTesting02.mockLLMApi
-import ai.koog.agents.example.exampleTesting02.toolRegistry
-import ai.koog.agents.example.exampleTesting09.AnalyzeTool
-import ai.koog.agents.testing.feature.testGraph
-import ai.koog.agents.testing.feature.toolResult
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
+=== "Kotlin"
 
-
-val llmModel = OpenAIModels.Chat.GPT4o
-
-fun main() {
-
-    AIAgent(
-        // Constructor arguments
-        promptExecutor = mockLLMApi,
-        toolRegistry = toolRegistry,
-        llmModel = llmModel
-    ) {
-        testGraph<String, String>("test") {
-            assertNodes {
-                val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
-                val processResult = assertNodeByName<String, Message.Response>("processResult")
--->
-<!--- SUFFIX
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.environment.ReceivedToolResult
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
+    import ai.koog.agents.example.exampleTesting02.toolRegistry
+    import ai.koog.agents.example.exampleTesting09.AnalyzeTool
+    import ai.koog.agents.testing.feature.testGraph
+    import ai.koog.agents.testing.feature.toolResult
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.message.Message
+    val llmModel = OpenAIModels.Chat.GPT4o
+    fun main() {
+        AIAgent(
+            // Constructor arguments
+            promptExecutor = mockLLMApi,
+            toolRegistry = toolRegistry,
+            llmModel = llmModel
+        ) {
+            testGraph<String, String>("test") {
+                assertNodes {
+                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
+                    val processResult = assertNodeByName<String, Message.Response>("processResult")
+    -->
+    <!--- SUFFIX
+                }
             }
         }
     }
-}
--->
-```kotlin
-assertEdges {
-    // Test routing based on tool result content
-    callTool withOutput toolResult(
-        AnalyzeTool, 
-        AnalyzeTool.Result(analysis = "Needs more processing", confidence = 0.5)
-    ) goesTo processResult
-}
-```
-<!--- KNIT example-testing-12.kt -->
+    -->
+    ```kotlin
+    assertEdges {
+        // Test routing based on tool result content
+        callTool withOutput toolResult(
+            AnalyzeTool,
+            AnalyzeTool.Args(query = "parameters", depth = 3),
+            AnalyzeTool.Result(analysis = "Needs more processing", confidence = 0.5)
+        ) goesTo processResult
+    }
+    ```
+    <!--- KNIT example-testing-12.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-11.java -->
 
 You can also test complex decision paths based on different result properties:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.example.exampleTesting02.mockLLMApi
-import ai.koog.agents.example.exampleTesting02.toolRegistry
-import ai.koog.agents.example.exampleTesting09.AnalyzeTool
-import ai.koog.agents.testing.feature.testGraph
-import ai.koog.agents.testing.feature.toolResult
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
+=== "Kotlin"
 
-
-val llmModel = OpenAIModels.Chat.GPT4o
-
-fun main() {
-
-    AIAgent(
-        // Constructor arguments
-        promptExecutor = mockLLMApi,
-        toolRegistry = toolRegistry,
-        llmModel = llmModel
-    ) {
-        testGraph<String, String>("test") {
-            assertNodes {
-                val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
-                val finish = assertNodeByName<String, Message.Response>("finish")
-                val verifyResult = assertNodeByName<String, Message.Response>("verifyResult")
--->
-<!--- SUFFIX
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.core.environment.ReceivedToolResult
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
+    import ai.koog.agents.example.exampleTesting02.toolRegistry
+    import ai.koog.agents.example.exampleTesting09.AnalyzeTool
+    import ai.koog.agents.testing.feature.testGraph
+    import ai.koog.agents.testing.feature.toolResult
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.message.Message
+    val llmModel = OpenAIModels.Chat.GPT4o
+    fun main() {
+        AIAgent(
+            // Constructor arguments
+            promptExecutor = mockLLMApi,
+            toolRegistry = toolRegistry,
+            llmModel = llmModel
+        ) {
+            testGraph<String, String>("test") {
+                assertNodes {
+                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
+                    val finish = assertNodeByName<String, Message.Response>("finish")
+                    val verifyResult = assertNodeByName<String, Message.Response>("verifyResult")
+    -->
+    <!--- SUFFIX
+                }
             }
         }
     }
-}
--->
-```kotlin
-assertEdges {
-    // Route to different nodes based on confidence level
-    callTool withOutput toolResult(
-        AnalyzeTool, 
-        AnalyzeTool.Result(analysis = "Complete", confidence = 0.9)
-    ) goesTo finish
+    -->
+    ```kotlin
+    assertEdges {
+        // Route to different nodes based on confidence level
+        callTool withOutput toolResult(
+            AnalyzeTool,
+            AnalyzeTool.Args(query = "parameters", depth = 3),
+            AnalyzeTool.Result(analysis = "Complete", confidence = 0.9)
+        ) goesTo finish
 
-    callTool withOutput toolResult(
-        AnalyzeTool, 
-        AnalyzeTool.Result(analysis = "Uncertain", confidence = 0.3)
-    ) goesTo verifyResult
-}
-```
-<!--- KNIT example-testing-13.kt -->
+        callTool withOutput toolResult(
+            AnalyzeTool,
+            AnalyzeTool.Args(query = "parameters", depth = 3),
+            AnalyzeTool.Result(analysis = "Uncertain", confidence = 0.3)
+        ) goesTo verifyResult
+    }
+    ```
+    <!--- KNIT example-testing-13.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-12.java -->
 
 These advanced edge tests help ensure that your agent makes the correct decisions based on the content and structure of node outputs, which is essential for creating intelligent, context-aware workflows.
 
@@ -773,335 +901,406 @@ You are developing a tone analysis agent that analyzes the tone of the text and 
 
 Here is how you can test this agent:
 
-<!--- INCLUDE
-/*
--->
-<!--- SUFFIX
-*/
--->
-```kotlin
-@Test
-fun testToneAgent() = runTest {
-    // Create a list to track tool calls
-    var toolCalls = mutableListOf<String>()
-    var result: String? = null
+=== "Kotlin"
 
-    // Create a tool registry
-    val toolRegistry = ToolRegistry {
-        // A special tool, required with this type of agent
-        tool(SayToUser)
+    <!--- INCLUDE
+    /*
+    -->
+    <!--- SUFFIX
+    */
+    -->
+    ```kotlin
+    @Test
+    fun testToneAgent() = runTest {
+        // Create a list to track tool calls
+        var toolCalls = mutableListOf<String>()
+        var result: String? = null
 
-        with(ToneTools) {
-            tools()
+        // Create a tool registry
+        val toolRegistry = ToolRegistry {
+            // A special tool, required with this type of agent
+            tool(SayToUser)
+
+            with(ToneTools) {
+                tools()
+            }
         }
+
+        // Create an event handler
+        val eventHandler = EventHandler {
+            onToolCallStarting { tool, args ->
+                println("[DEBUG_LOG] Tool called: tool ${tool.name}, args $args")
+                toolCalls.add(tool.name)
+            }
+
+            handleError {
+                println("[DEBUG_LOG] An error occurred: ${it.message}\n${it.stackTraceToString()}")
+                true
+            }
+
+            handleResult {
+                println("[DEBUG_LOG] Result: $it")
+                result = it
+            }
+        }
+
+        val positiveText = "I love this product!"
+        val negativeText = "Awful service, hate the app."
+        val defaultText = "I don't know how to answer this question."
+
+        val positiveResponse = "The text has a positive tone."
+        val negativeResponse = "The text has a negative tone."
+        val neutralResponse = "The text has a neutral tone."
+
+        val mockLLMApi = getMockExecutor(toolRegistry, eventHandler) {
+            // Set up LLM responses for different input texts
+            mockLLMToolCall(NeutralToneTool, ToneTool.Args(defaultText)) onRequestEquals defaultText
+            mockLLMToolCall(PositiveToneTool, ToneTool.Args(positiveText)) onRequestEquals positiveText
+            mockLLMToolCall(NegativeToneTool, ToneTool.Args(negativeText)) onRequestEquals negativeText
+
+            // Mock the behavior where the LLM responds with just tool responses when the tools return results
+            mockLLMAnswer(positiveResponse) onRequestContains positiveResponse
+            mockLLMAnswer(negativeResponse) onRequestContains negativeResponse
+            mockLLMAnswer(neutralResponse) onRequestContains neutralResponse
+
+            mockLLMAnswer(defaultText).asDefaultResponse
+
+            // Tool mocks
+            mockTool(PositiveToneTool) alwaysTells {
+                toolCalls += "Positive tone tool called"
+                positiveResponse
+            }
+            mockTool(NegativeToneTool) alwaysTells {
+                toolCalls += "Negative tone tool called"
+                negativeResponse
+            }
+            mockTool(NeutralToneTool) alwaysTells {
+                toolCalls += "Neutral tone tool called"
+                neutralResponse
+            }
+        }
+
+        // Create a strategy
+        val strategy = toneStrategy("tone_analysis")
+
+        // Create an agent configuration
+        val agentConfig = AIAgentConfig(
+            prompt = prompt("test-agent") {
+                system(
+                    """
+                    You are an question answering agent with access to the tone analysis tools.
+                    You need to answer 1 question with the best of your ability.
+                    Be as concise as possible in your answers.
+                    DO NOT ANSWER ANY QUESTIONS THAT ARE BESIDES PERFORMING TONE ANALYSIS!
+                    DO NOT HALLUCINATE!
+                """.trimIndent()
+                )
+            },
+            model = mockk<LLModel>(relaxed = true),
+            maxAgentIterations = 10
+        )
+
+        // Create an agent with testing enabled
+        val agent = AIAgent(
+            promptExecutor = mockLLMApi,
+            toolRegistry = toolRegistry,
+            strategy = strategy,
+            eventHandler = eventHandler,
+            agentConfig = agentConfig,
+        ) {
+            withTesting()
+        }
+
+        // Test the positive text
+        agent.run(positiveText)
+        assertEquals("The text has a positive tone.", result, "Positive tone result should match")
+        assertEquals(1, toolCalls.size, "One tool is expected to be called")
+
+        // Test the negative text
+        agent.run(negativeText)
+        assertEquals("The text has a negative tone.", result, "Negative tone result should match")
+        assertEquals(2, toolCalls.size, "Two tools are expected to be called")
+
+        //Test the neutral text
+        agent.run(defaultText)
+        assertEquals("The text has a neutral tone.", result, "Neutral tone result should match")
+        assertEquals(3, toolCalls.size, "Three tools are expected to be called")
     }
+    ```
+    <!--- KNIT example-testing-14.kt -->
 
-    // Create an event handler
-    val eventHandler = EventHandler {
-        onToolCallStarting { tool, args ->
-            println("[DEBUG_LOG] Tool called: tool ${tool.name}, args $args")
-            toolCalls.add(tool.name)
-        }
+=== "Java"
 
-        handleError {
-            println("[DEBUG_LOG] An error occurred: ${it.message}\n${it.stackTraceToString()}")
-            true
-        }
-
-        handleResult {
-            println("[DEBUG_LOG] Result: $it")
-            result = it
-        }
-    }
-
-    val positiveText = "I love this product!"
-    val negativeText = "Awful service, hate the app."
-    val defaultText = "I don't know how to answer this question."
-
-    val positiveResponse = "The text has a positive tone."
-    val negativeResponse = "The text has a negative tone."
-    val neutralResponse = "The text has a neutral tone."
-
-    val mockLLMApi = getMockExecutor(toolRegistry, eventHandler) {
-        // Set up LLM responses for different input texts
-        mockLLMToolCall(NeutralToneTool, ToneTool.Args(defaultText)) onRequestEquals defaultText
-        mockLLMToolCall(PositiveToneTool, ToneTool.Args(positiveText)) onRequestEquals positiveText
-        mockLLMToolCall(NegativeToneTool, ToneTool.Args(negativeText)) onRequestEquals negativeText
-
-        // Mock the behavior where the LLM responds with just tool responses when the tools return results
-        mockLLMAnswer(positiveResponse) onRequestContains positiveResponse
-        mockLLMAnswer(negativeResponse) onRequestContains negativeResponse
-        mockLLMAnswer(neutralResponse) onRequestContains neutralResponse
-
-        mockLLMAnswer(defaultText).asDefaultResponse
-
-        // Tool mocks
-        mockTool(PositiveToneTool) alwaysTells {
-            toolCalls += "Positive tone tool called"
-            positiveResponse
-        }
-        mockTool(NegativeToneTool) alwaysTells {
-            toolCalls += "Negative tone tool called"
-            negativeResponse
-        }
-        mockTool(NeutralToneTool) alwaysTells {
-            toolCalls += "Neutral tone tool called"
-            neutralResponse
-        }
-    }
-
-    // Create a strategy
-    val strategy = toneStrategy("tone_analysis")
-
-    // Create an agent configuration
-    val agentConfig = AIAgentConfig(
-        prompt = prompt("test-agent") {
-            system(
-                """
-                You are an question answering agent with access to the tone analysis tools.
-                You need to answer 1 question with the best of your ability.
-                Be as concise as possible in your answers.
-                DO NOT ANSWER ANY QUESTIONS THAT ARE BESIDES PERFORMING TONE ANALYSIS!
-                DO NOT HALLUCINATE!
-            """.trimIndent()
-            )
-        },
-        model = mockk<LLModel>(relaxed = true),
-        maxAgentIterations = 10
-    )
-
-    // Create an agent with testing enabled
-    val agent = AIAgent(
-        promptExecutor = mockLLMApi,
-        toolRegistry = toolRegistry,
-        strategy = strategy,
-        eventHandler = eventHandler,
-        agentConfig = agentConfig,
-    ) {
-        withTesting()
-    }
-
-    // Test the positive text
-    agent.run(positiveText)
-    assertEquals("The text has a positive tone.", result, "Positive tone result should match")
-    assertEquals(1, toolCalls.size, "One tool is expected to be called")
-
-    // Test the negative text
-    agent.run(negativeText)
-    assertEquals("The text has a negative tone.", result, "Negative tone result should match")
-    assertEquals(2, toolCalls.size, "Two tools are expected to be called")
-
-    //Test the neutral text
-    agent.run(defaultText)
-    assertEquals("The text has a neutral tone.", result, "Neutral tone result should match")
-    assertEquals(3, toolCalls.size, "Three tools are expected to be called")
-}
-```
-<!--- KNIT example-testing-14.kt -->
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-13.java -->
 
 For more complex agents with multiple subgraphs, you can also test the graph structure:
 
-<!--- INCLUDE
-/*
--->
-<!--- SUFFIX
-*/
--->
-```kotlin
-@Test
-fun testMultiSubgraphAgentStructure() = runTest {
-    val strategy = strategy("test") {
-        val firstSubgraph by subgraph(
-            "first",
-            tools = listOf(DummyTool, CreateTool, SolveTool)
-        ) {
-            val callLLM by nodeLLMRequest(allowToolCalls = false)
-            val executeTool by nodeExecuteTool()
-            val sendToolResult by nodeLLMSendToolResult()
-            val giveFeedback by node<String, String> { input ->
-                llm.writeSession {
-                    appendPrompt {
-                        user("Call tools! Don't chat!")
+=== "Kotlin"
+
+    <!--- INCLUDE
+    /*
+    -->
+    <!--- SUFFIX
+    */
+    -->
+    ```kotlin
+    @Test
+    fun testMultiSubgraphAgentStructure() = runTest {
+        val strategy = strategy("test") {
+            val firstSubgraph by subgraph(
+                "first",
+                tools = listOf(DummyTool, CreateTool, SolveTool)
+            ) {
+                val callLLM by nodeLLMRequest(allowToolCalls = false)
+                val executeTool by nodeExecuteTool()
+                val sendToolResult by nodeLLMSendToolResult()
+                val giveFeedback by node<String, String> { input ->
+                    llm.writeSession {
+                        appendPrompt {
+                            user("Call tools! Don't chat!")
+                        }
                     }
+                    input
                 }
-                input
+
+                edge(nodeStart forwardTo callLLM)
+                edge(callLLM forwardTo executeTool onToolCall { true })
+                edge(callLLM forwardTo giveFeedback onAssistantMessage { true })
+                edge(giveFeedback forwardTo giveFeedback onAssistantMessage { true })
+                edge(giveFeedback forwardTo executeTool onToolCall { true })
+                edge(executeTool forwardTo nodeFinish transformed { it.content })
             }
 
-            edge(nodeStart forwardTo callLLM)
-            edge(callLLM forwardTo executeTool onToolCall { true })
-            edge(callLLM forwardTo giveFeedback onAssistantMessage { true })
-            edge(giveFeedback forwardTo giveFeedback onAssistantMessage { true })
-            edge(giveFeedback forwardTo executeTool onToolCall { true })
-            edge(executeTool forwardTo nodeFinish transformed { it.content })
-        }
-
-        val secondSubgraph by subgraph<String, String>("second") {
-            edge(nodeStart forwardTo nodeFinish)
-        }
-
-        edge(nodeStart forwardTo firstSubgraph)
-        edge(firstSubgraph forwardTo secondSubgraph)
-        edge(secondSubgraph forwardTo nodeFinish)
-    }
-
-    val toolRegistry = ToolRegistry {
-        tool(DummyTool)
-        tool(CreateTool)
-        tool(SolveTool)
-    }
-
-    val mockLLMApi = getMockExecutor(toolRegistry) {
-        mockLLMAnswer("Hello!") onRequestContains "Hello"
-        mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
-    }
-
-    val basePrompt = prompt("test") {}
-
-    AIAgent(
-        toolRegistry = toolRegistry,
-        strategy = strategy,
-        eventHandler = EventHandler {},
-        agentConfig = AIAgentConfig(prompt = basePrompt, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 100),
-        promptExecutor = mockLLMApi,
-    ) {
-        testGraph("test") {
-            val firstSubgraph = assertSubgraphByName<String, String>("first")
-            val secondSubgraph = assertSubgraphByName<String, String>("second")
-
-            assertEdges {
-                startNode() alwaysGoesTo firstSubgraph
-                firstSubgraph alwaysGoesTo secondSubgraph
-                secondSubgraph alwaysGoesTo finishNode()
+            val secondSubgraph by subgraph<String, String>("second") {
+                edge(nodeStart forwardTo nodeFinish)
             }
 
-            verifySubgraph(firstSubgraph) {
-                val start = startNode()
-                val finish = finishNode()
+            edge(nodeStart forwardTo firstSubgraph)
+            edge(firstSubgraph forwardTo secondSubgraph)
+            edge(secondSubgraph forwardTo nodeFinish)
+        }
 
-                val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-                val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
-                val giveFeedback = assertNodeByName<Any?, Any?>("giveFeedback")
+        val toolRegistry = ToolRegistry {
+            tool(DummyTool)
+            tool(CreateTool)
+            tool(SolveTool)
+        }
 
-                assertReachable(start, askLLM)
-                assertReachable(askLLM, callTool)
+        val mockLLMApi = getMockExecutor(toolRegistry) {
+            mockLLMAnswer("Hello!") onRequestContains "Hello"
+            mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
+        }
 
-                assertNodes {
-                    askLLM withInput "Hello" outputs Message.Assistant("Hello!")
-                    askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
+        val basePrompt = prompt("test") {}
 
-                    callTool withInput toolCallSignature(
-                        SolveTool,
-                        SolveTool.Args("solve")
-                    ) outputs toolResult(SolveTool, "solved")
-
-                    callTool withInput toolCallSignature(
-                        CreateTool,
-                        CreateTool.Args("solve")
-                    ) outputs toolResult(CreateTool, "created")
-                }
+        AIAgent(
+            toolRegistry = toolRegistry,
+            strategy = strategy,
+            eventHandler = EventHandler {},
+            agentConfig = AIAgentConfig(prompt = basePrompt, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 100),
+            promptExecutor = mockLLMApi,
+        ) {
+            testGraph("test") {
+                val firstSubgraph = assertSubgraphByName<String, String>("first")
+                val secondSubgraph = assertSubgraphByName<String, String>("second")
 
                 assertEdges {
-                    askLLM withOutput Message.Assistant("Hello!") goesTo giveFeedback
-                    askLLM withOutput toolCallMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
+                    startNode() alwaysGoesTo firstSubgraph
+                    firstSubgraph alwaysGoesTo secondSubgraph
+                    secondSubgraph alwaysGoesTo finishNode()
+                }
+
+                verifySubgraph(firstSubgraph) {
+                    val start = startNode()
+                    val finish = finishNode()
+
+                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
+                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
+                    val giveFeedback = assertNodeByName<Any?, Any?>("giveFeedback")
+
+                    assertReachable(start, askLLM)
+                    assertReachable(askLLM, callTool)
+
+                    assertNodes {
+                        askLLM withInput "Hello" outputs Message.Assistant("Hello!")
+                        askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
+
+                        callTool withInput toolCallSignature(
+                            SolveTool,
+                            SolveTool.Args("solve")
+                        ) outputs toolResult(SolveTool, "solved")
+
+                        callTool withInput toolCallSignature(
+                            CreateTool,
+                            CreateTool.Args("solve")
+                        ) outputs toolResult(CreateTool, "created")
+                    }
+
+                    assertEdges {
+                        askLLM withOutput Message.Assistant("Hello!") goesTo giveFeedback
+                        askLLM withOutput toolCallMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
+                    }
                 }
             }
         }
     }
-}
-```
-<!--- KNIT example-testing-15.kt -->
+    ```
+    <!--- KNIT example-testing-15.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-14.java -->
 
 ## API reference
 
-For a complete API reference related to the Testing feature, see the reference documentation for the [agents-test](https://api.koog.ai/agents/agents-test/index.html) module.
+For a complete API reference related to the Testing feature, see the reference documentation for the [agents-test](api:agents-test::) module.
 
 ## FAQ and troubleshooting
 
 #### How do I mock a specific tool response?
 
 Use the `mockTool` method in `MockLLMBuilder`:
-<!--- INCLUDE
-/*
--->
-<!--- SUFFIX
-*/
--->
-```kotlin
-val mockExecutor = getMockExecutor {
-    mockTool(myTool) alwaysReturns myResult
 
-    // Or with conditions
-    mockTool(myTool) returns myResult onArguments myArgs
-}
-```
-<!--- KNIT example-testing-16.kt -->
+=== "Kotlin"
+
+    <!--- INCLUDE
+    /*
+    -->
+    <!--- SUFFIX
+    */
+    -->
+    ```kotlin
+    val mockExecutor = getMockExecutor {
+        mockTool(myTool) alwaysReturns myResult
+
+        // Or with conditions
+        mockTool(myTool) returns myResult onArguments myArgs
+    }
+    ```
+    <!--- KNIT example-testing-16.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-15.java -->
 
 #### How can I test complex graph structures?
 
 Use the subgraph assertions, `verifySubgraph`, and node references:
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.example.exampleTesting02.mockLLMApi
-import ai.koog.agents.example.exampleTesting02.toolRegistry
-import ai.koog.agents.testing.feature.testGraph
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
+=== "Kotlin"
 
-
-val llmModel = OpenAIModels.Chat.GPT4o
-
-fun main() {
-    AIAgent(
-        // Constructor arguments
-        promptExecutor = mockLLMApi,
-        toolRegistry = toolRegistry,
-        llmModel = llmModel
-    ) {
--->
-<!--- SUFFIX
-    }
-}
--->
-```kotlin
-testGraph<Unit, String>("test") {
-    val mySubgraph = assertSubgraphByName<Unit, String>("mySubgraph")
-
-    verifySubgraph(mySubgraph) {
-        // Get references to nodes
-        val nodeA = assertNodeByName<Unit, String>("nodeA")
-        val nodeB = assertNodeByName<String, String>("nodeB")
-
-        // Assert reachability
-        assertReachable(nodeA, nodeB)
-
-        // Assert edge connections
-        assertEdges {
-            nodeA.withOutput("result") goesTo nodeB
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.example.exampleTesting03.mockLLMApi
+    import ai.koog.agents.example.exampleTesting02.toolRegistry
+    import ai.koog.agents.testing.feature.testGraph
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    val llmModel = OpenAIModels.Chat.GPT4o
+    fun main() {
+        AIAgent(
+            // Constructor arguments
+            promptExecutor = mockLLMApi,
+            toolRegistry = toolRegistry,
+            llmModel = llmModel
+        ) {
+    -->
+    <!--- SUFFIX
         }
     }
-}
-```
-<!--- KNIT example-testing-17.kt -->
+    -->
+    ```kotlin
+    testGraph<Unit, String>("test") {
+        val mySubgraph = assertSubgraphByName<Unit, String>("mySubgraph")
+
+        verifySubgraph(mySubgraph) {
+            // Get references to nodes
+            val nodeA = assertNodeByName<Unit, String>("nodeA")
+            val nodeB = assertNodeByName<String, String>("nodeB")
+
+            // Assert reachability
+            assertReachable(nodeA, nodeB)
+
+            // Assert edge connections
+            assertEdges {
+                nodeA.withOutput("result") goesTo nodeB
+            }
+        }
+    }
+    ```
+    <!--- KNIT example-testing-17.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    ```
+    <!--- KNIT example-testing-java-16.java -->
 
 #### How do I simulate different LLM responses based on input?
 
 Use pattern matching methods:
 
-<!--- INCLUDE
-import ai.koog.agents.testing.tools.getMockExecutor
+=== "Kotlin"
 
+    <!--- INCLUDE
+    import ai.koog.agents.testing.tools.getMockExecutor
+    val promptExecutor = 
+    -->
+    ```kotlin
+    getMockExecutor {
+        mockLLMAnswer("Response A") onRequestContains "topic A"
+        mockLLMAnswer("Response B") onRequestContains "topic B"
+        mockLLMAnswer("Exact response") onRequestEquals "exact question"
+        mockLLMAnswer("Conditional response") onCondition { it.contains("keyword") && it.length > 10 }
+    }
+    ```
+    <!--- KNIT example-testing-18.kt -->
 
-val promptExecutor = 
--->
-```kotlin
-getMockExecutor {
-    mockLLMAnswer("Response A") onRequestContains "topic A"
-    mockLLMAnswer("Response B") onRequestContains "topic B"
-    mockLLMAnswer("Exact response") onRequestEquals "exact question"
-    mockLLMAnswer("Conditional response") onCondition { it.contains("keyword") && it.length > 10 }
-}
-```
-<!--- KNIT example-testing-18.kt -->
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    import ai.koog.agents.testing.tools.MockExecutor;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+
+    PromptExecutor promptExecutor = MockExecutor.builder()
+        .mockLLMAnswer("Response A").onRequestContains("topic A")
+        .mockLLMAnswer("Response B").onRequestContains("topic B")
+        .mockLLMAnswer("Exact response").onRequestEquals("exact question")
+        .mockLLMAnswer("Conditional response").onCondition(s -> s.contains("keyword") && s.length() > 10)
+        .build();
+    ```
+    <!--- KNIT example-testing-java-17.java -->
 
 ### Troubleshooting
 

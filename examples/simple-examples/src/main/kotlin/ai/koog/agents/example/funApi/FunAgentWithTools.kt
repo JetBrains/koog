@@ -1,20 +1,11 @@
 package ai.koog.agents.example.funApi
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.dsl.extension.asAssistantMessage
-import ai.koog.agents.core.dsl.extension.compressHistory
-import ai.koog.agents.core.dsl.extension.containsToolCalls
-import ai.koog.agents.core.dsl.extension.executeMultipleTools
-import ai.koog.agents.core.dsl.extension.extractToolCalls
 import ai.koog.agents.core.agent.functionalStrategy
-import ai.koog.agents.core.dsl.extension.latestTokenUsage
-import ai.koog.agents.core.dsl.extension.requestLLMMultiple
-import ai.koog.agents.core.dsl.extension.sendMultipleToolResults
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import kotlinx.coroutines.runBlocking
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -51,7 +42,7 @@ fun main(): Unit = runBlocking {
     ) {
         install(EventHandler) {
             onToolCallStarting { eventContext ->
-                println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
+                println("Tool called: tool ${eventContext.toolName}, args ${eventContext.toolArgs}")
             }
         }
     }

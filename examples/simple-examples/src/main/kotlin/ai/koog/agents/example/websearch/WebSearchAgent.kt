@@ -7,7 +7,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.reflect.tools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
@@ -199,7 +198,7 @@ suspend fun main() {
             ) {
                 handleEvents {
                     onToolCallStarting { ctx ->
-                        println("Tool called: tool ${ctx.tool.name}, args ${ctx.toolArgs}")
+                        println("Tool called: tool ${ctx.toolName}, args ${ctx.toolArgs}")
                     }
                 }
             }

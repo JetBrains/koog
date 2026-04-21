@@ -9,9 +9,13 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.agents.testing.tools.mockLLMStream
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.streaming.streamFrameFlowOf
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -22,6 +26,7 @@ import kotlin.test.assertTrue
  * Verifies that the node correctly streams responses, collects them, and updates the prompt.
  */
 class NodeLLMRequestStreamingAndSendResultsTest {
+    private val serializer = KotlinxSerializer()
 
     // Helper function to create agent without assistant message in initial prompt
     private fun createStreamingTestAgent(
@@ -67,9 +72,9 @@ class NodeLLMRequestStreamingAndSendResultsTest {
             )
         }
 
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             // Match on the test user message from createAgent
-            mockLLMAnswer(assistantResponse) onRequestContains "Test user message"
+            mockLLMStream(streamFrameFlowOf(assistantResponse)) onRequestContains "Test user message"
         }
 
         val agent = createStreamingTestAgent(
@@ -80,7 +85,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
             }
         )
 
-        val result = agent.run("input")
+        val result = agent.run("input", null)
         agent.close()
 
         // Verify the result contains the assistant response
@@ -112,7 +117,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
         }
 
         val mockExecutor = getMockExecutor(clock = testClock) {
-            mockLLMAnswer(assistantResponse) onRequestContains "Test user message"
+            mockLLMStream(streamFrameFlowOf(assistantResponse)) onRequestContains "Test user message"
         }
 
         val agent = createStreamingTestAgent(
@@ -123,7 +128,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
             }
         )
 
-        val result = agent.run("input")
+        val result = agent.run("input", null)
         agent.close()
 
         // Verify the response was collected correctly
@@ -151,7 +156,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
             )
         }
 
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             // Return empty response for test user message
             mockLLMAnswer("") onRequestContains "Test user message"
         }
@@ -160,7 +165,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
         }
 
-        val result = agent.run("input")
+        val result = agent.run("input", null)
         agent.close()
 
         // Should return empty content
@@ -194,14 +199,14 @@ class NodeLLMRequestStreamingAndSendResultsTest {
         }
 
         val mockExecutor = getMockExecutor(clock = testClock) {
-            mockLLMAnswer(assistantResponse) onRequestContains "Test user message"
+            mockLLMStream(streamFrameFlowOf(assistantResponse)) onRequestContains "Test user message"
         }
 
         val agent = createStreamingTestAgent(strategy, promptExecutor = mockExecutor) {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
         }
 
-        val result = agent.run("trigger")
+        val result = agent.run("trigger", null)
         agent.close()
 
         // Verify the result

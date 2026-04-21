@@ -2,9 +2,10 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.Persistence
@@ -12,20 +13,21 @@ import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Test
-import kotlin.test.assertFailsWith
+import kotlin.test.Test
 
 /**
  * Tests for verifying node uniqueness requirements with the AgentCheckpoint feature.
  */
 class NodeUniquenessCheckpointTest {
+    private val serializer = KotlinxSerializer()
 
     /**
      * Creates a simple node that appends the output to the input.
      */
-    private fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
+    private fun simpleNode(
         name: String? = null,
         output: String,
     ): AIAgentNodeDelegate<String, String> = node(name) {
@@ -39,7 +41,7 @@ class NodeUniquenessCheckpointTest {
      * Creates a strategy with non-unique node names.
      * This is achieved by creating two nodes with the same name at the same level in the graph.
      */
-    private fun createNonUniqueNodesStrategy(): AIAgentGraphStrategy<String, String> = strategy("non-unique-nodes-test") {
+    private fun nonUniqueNodesStrategy(): AIAgentGraphStrategy<String, String> = strategy("non-unique-nodes-test") {
         // Create two nodes with the same name
         val node1 by simpleNode(
             "DuplicateNode",
@@ -74,13 +76,13 @@ class NodeUniquenessCheckpointTest {
     }
 
     /**
-     * Test that verifies an error is produced when the AgentCheckpoint feature is present
+     * Test that verifies an NO error is produced when the AgentCheckpoint feature is present
      * and the graph's nodes are non-unique.
      */
     @Test
-    fun `test error when AgentCheckpoint feature is present and nodes are non-unique`() = runTest {
+    fun `test no error when Persistence feature is present and nodes are non-unique`() = runTest {
         // Create a mock executor
-        val mockExecutor: PromptExecutor = getMockExecutor {}
+        val mockExecutor: PromptExecutor = getMockExecutor(serializer) {}
 
         // Create a tool registry
         val toolRegistry = ToolRegistry {
@@ -99,7 +101,7 @@ class NodeUniquenessCheckpointTest {
         // Create an agent with non-unique node names and AgentCheckpoint feature
         val agent = AIAgent(
             promptExecutor = mockExecutor,
-            strategy = createNonUniqueNodesStrategy(),
+            strategy = nonUniqueNodesStrategy(),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -109,10 +111,7 @@ class NodeUniquenessCheckpointTest {
             }
         }
 
-        // The exception should be thrown when the agent is started, not when the feature is installed
-        assertFailsWith<IllegalArgumentException> {
-            agent.run("Start the test")
-        }
+        agent.run("Start the test", null)
     }
 
     /**
@@ -120,9 +119,9 @@ class NodeUniquenessCheckpointTest {
      * and graph's nodes are non-unique.
      */
     @Test
-    fun `test no error when AgentCheckpoint feature is not present and nodes are non-unique`() = runTest {
+    fun `test no error when Persistence feature is not present and nodes are non-unique`() = runTest {
         // Create a mock executor
-        val mockExecutor: PromptExecutor = getMockExecutor {}
+        val mockExecutor: PromptExecutor = getMockExecutor(serializer) {}
 
         // Create a tool registry
         val toolRegistry = ToolRegistry {
@@ -142,12 +141,12 @@ class NodeUniquenessCheckpointTest {
         // This should not throw an exception
         val agent = AIAgent(
             promptExecutor = mockExecutor,
-            strategy = createNonUniqueNodesStrategy(),
+            strategy = nonUniqueNodesStrategy(),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         )
 
         // Run the agent to verify it works without the AgentCheckpoint feature
-        agent.run("Start the test")
+        agent.run("Start the test", null)
     }
 }

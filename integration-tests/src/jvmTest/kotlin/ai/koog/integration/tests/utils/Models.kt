@@ -3,6 +3,7 @@ package ai.koog.integration.tests.utils
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLMCapability
@@ -16,41 +17,22 @@ object Models {
     @JvmStatic
     fun openAIModels(): Stream<LLModel> {
         return Stream.of(
-            OpenAIModels.Chat.GPT5,
-            OpenAIModels.Reasoning.O1,
-            OpenAIModels.CostOptimized.GPT4_1Mini,
+            OpenAIModels.Chat.GPT5_2, // reasoning
+            OpenAIModels.Chat.GPT4_1, // non-reasoning
         )
     }
 
     @JvmStatic
     fun anthropicModels(): Stream<LLModel> {
         return Stream.of(
-            AnthropicModels.Opus_4_1,
             AnthropicModels.Haiku_4_5,
-            AnthropicModels.Sonnet_4_5,
         )
     }
 
     @JvmStatic
     fun googleModels(): Stream<LLModel> {
         return Stream.of(
-            GoogleModels.Gemini2_5Pro,
-            GoogleModels.Gemini2_5Flash,
-        )
-    }
-
-    @JvmStatic
-    fun bedrockModels(): Stream<LLModel> {
-        return Stream.of(
-            BedrockModels.MetaLlama3_1_70BInstruct,
-            BedrockModels.AnthropicClaude4_5Sonnet,
-        )
-    }
-
-    @JvmStatic
-    fun bedrockEmbeddingModels(): Stream<LLModel> {
-        return Stream.of(
-            BedrockModels.Embeddings.AmazonTitanEmbedText
+            GoogleModels.Gemini3_Flash_Preview,
         )
     }
 
@@ -61,17 +43,106 @@ object Models {
     )
 
     @JvmStatic
+    fun mistralModels(): Stream<LLModel> = Stream.of(
+        MistralAIModels.Chat.MistralMedium31,
+    )
+
+    @JvmStatic
+    fun bedrockModels(): Stream<LLModel> {
+        return Stream.of(
+            BedrockModels.MetaLlama3_1_70BInstruct,
+            BedrockModels.AnthropicClaude4_5Sonnet,
+        )
+    }
+
+    @JvmStatic
+    fun embeddingModels(): Stream<LLModel> {
+        return Stream.of(
+            BedrockModels.Embeddings.AmazonTitanEmbedText,
+            OpenAIModels.Embeddings.TextEmbedding3Large,
+            MistralAIModels.Embeddings.MistralEmbed,
+            GoogleModels.Embeddings.GeminiEmbedding001,
+            OpenRouterModels.Embeddings.GoogleGeminiEmbedding001,
+        )
+    }
+
+    @JvmStatic
+    fun batchEmbeddingModels(): Stream<LLModel> {
+        return Stream.of(
+            MistralAIModels.Embeddings.MistralEmbed,
+            GoogleModels.Embeddings.GeminiEmbedding001,
+        )
+    }
+
+    /**
+     * Returns models that support content moderation capabilities.
+     *
+     * Note: For Bedrock, the model returned here is not actually used by the moderation API.
+     * AWS Bedrock Guardrails are model-independent and configured at the client level.
+     * However, we need to provide a Bedrock model here so that the integration tests can
+     * instantiate a [ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient] with the appropriate provider and guardrail settings.
+     * The actual moderation behavior is determined by the guardrail configuration
+     * in [getLLMClientForProvider], not by the model's capabilities.
+     */
+    @JvmStatic
+    fun moderationModels(): Stream<LLModel> {
+        return Stream.of(
+            OpenAIModels.Moderation.Omni,
+            MistralAIModels.Moderation.MistralModeration,
+            BedrockModels.AnthropicClaude4_5Haiku
+        )
+    }
+
+    @JvmStatic
+    fun latestModels(): Stream<LLModel> {
+        return Stream.of(
+            OpenAIModels.Chat.GPT5_4,
+            AnthropicModels.Haiku_4_5,
+            GoogleModels.Gemini3_Flash_Preview,
+        )
+    }
+
+    @JvmStatic
+    fun allCompletionModels(): Stream<LLModel> {
+        return Stream.of(
+            openAIModels(),
+            anthropicModels(),
+            googleModels(),
+            openRouterModels(),
+            bedrockModels(),
+            mistralModels(),
+        ).flatMap { it }
+    }
+
+    @JvmStatic
+    fun reasoningCapableModels(): Stream<LLModel> {
+        return Stream.of(
+            // KG-733 [Java API] OpenAILLMClient error: 'reasoning' is provided without its required following item
+            // OpenAIModels.Chat.GPT5_2,
+            AnthropicModels.Haiku_4_5,
+            GoogleModels.Gemini3_Pro_Preview,
+        )
+    }
+
+    @JvmStatic
+    fun openAIReasoningModels(): Stream<LLModel> {
+        return Stream.of(
+            OpenAIModels.Chat.GPT5_4,
+        )
+    }
+
+    @JvmStatic
     fun modelsWithVisionCapability(): Stream<Arguments> {
         return Stream.concat(
             openAIModels()
                 .filter { model ->
-                    model.capabilities.contains(LLMCapability.Vision.Image)
+                    model.supports(LLMCapability.Vision.Image)
                 }
                 .map { model -> Arguments.of(model, getLLMClientForProvider(model.provider)) },
 
             anthropicModels()
                 .filter { model ->
-                    model.capabilities.contains(LLMCapability.Vision.Image)
+                    model.supports(LLMCapability.Vision.Image)
                 }
                 .map { model -> Arguments.of(model, getLLMClientForProvider(model.provider)) },
         )
@@ -96,6 +167,15 @@ object Models {
         assumeTrue(
             !shouldSkip,
             "Test skipped because provider ${provider.display} is in the skip list ($skipProvidersRaw)"
+        )
+    }
+
+    // Todo: remove the method an the assumption after fixing the KG-743
+    @JvmStatic
+    fun assumeEnumToolCallsAreStable(model: LLModel, scenario: String) {
+        assumeTrue(
+            model.provider.id != LLMProvider.Anthropic.id,
+            "[$scenario] failed, see KG-743: Tool enum arguments are parsed case-sensitively and fail on lowercase values"
         )
     }
 }

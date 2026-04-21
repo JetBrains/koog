@@ -9,15 +9,16 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.StructuredRequest
+import ai.koog.prompt.structure.StructuredRequestConfig
+import ai.koog.prompt.structure.json.JsonStructure
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.time.Clock
 
 class StructuredOutputWithToolsIntegrationTest {
 
@@ -39,7 +40,11 @@ class StructuredOutputWithToolsIntegrationTest {
         val humidity: Int
     )
 
-    object GetTemperatureTool : SimpleTool<GetTemperatureTool.Args>() {
+    object GetTemperatureTool : SimpleTool<GetTemperatureTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = "get_temperature",
+        description = "Get current temperature for a city"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("City name")
@@ -48,16 +53,15 @@ class StructuredOutputWithToolsIntegrationTest {
             val country: String
         )
 
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val name: String = "get_temperature"
-        override val description: String = "Get current temperature for a city"
-
-        override suspend fun doExecute(args: Args): String =
+        override suspend fun execute(args: Args): String =
             "Temperature in ${args.city}, ${args.country}: 22°C"
     }
 
-    object GetWeatherConditionsTool : SimpleTool<GetWeatherConditionsTool.Args>() {
+    object GetWeatherConditionsTool : SimpleTool<GetWeatherConditionsTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = "get_weather_conditions",
+        description = "Get current weather conditions for a city"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("City name")
@@ -66,16 +70,15 @@ class StructuredOutputWithToolsIntegrationTest {
             val country: String
         )
 
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val name: String = "get_weather_conditions"
-        override val description: String = "Get current weather conditions for a city"
-
-        override suspend fun doExecute(args: Args): String =
+        override suspend fun execute(args: Args): String =
             "Weather conditions in ${args.city}, ${args.country}: Partly Cloudy"
     }
 
-    object GetWindSpeedTool : SimpleTool<GetWindSpeedTool.Args>() {
+    object GetWindSpeedTool : SimpleTool<GetWindSpeedTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = "get_wind_speed",
+        description = "Get current wind speed for a city"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("City name")
@@ -84,16 +87,15 @@ class StructuredOutputWithToolsIntegrationTest {
             val country: String
         )
 
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val name: String = "get_wind_speed"
-        override val description: String = "Get current wind speed for a city"
-
-        override suspend fun doExecute(args: Args): String =
+        override suspend fun execute(args: Args): String =
             "Wind speed in ${args.city}, ${args.country}: 15.5 km/h"
     }
 
-    object GetHumidityTool : SimpleTool<GetHumidityTool.Args>() {
+    object GetHumidityTool : SimpleTool<GetHumidityTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = "get_humidity",
+        description = "Get current humidity for a city"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("City name")
@@ -102,20 +104,17 @@ class StructuredOutputWithToolsIntegrationTest {
             val country: String
         )
 
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val name: String = "get_humidity"
-        override val description: String = "Get current humidity for a city"
-
-        override suspend fun doExecute(args: Args): String =
+        override suspend fun execute(args: Args): String =
             "Humidity in ${args.city}, ${args.country}: 65%"
     }
 
+    private val serializer = KotlinxSerializer()
+
     @Test
     fun testStructuredOutputWithToolsIntegration() = runTest {
-        val structure = JsonStructuredData.createJsonStructure<WeatherResponse>()
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<WeatherResponse>()
+        val config = StructuredRequestConfig(
+            default = StructuredRequest.Manual(structure)
         )
 
         val strategy = structuredOutputWithToolsStrategy<WeatherRequest, WeatherResponse>(
@@ -129,7 +128,7 @@ class StructuredOutputWithToolsIntegrationTest {
         val results = mutableListOf<WeatherResponse>()
 
         // For common tests, we need to use a simpler mock setup
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             // Simply return the structured output directly
             mockLLMAnswer(
                 """
@@ -152,7 +151,7 @@ class StructuredOutputWithToolsIntegrationTest {
                     """.trimIndent()
                 )
             },
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
             maxAgentIterations = 10
         )
 
@@ -169,7 +168,7 @@ class StructuredOutputWithToolsIntegrationTest {
         ) {
             install(EventHandler) {
                 onToolCallStarting { eventContext ->
-                    toolCallEvents.add(eventContext.tool.name)
+                    toolCallEvents.add(eventContext.toolName)
                 }
                 onAgentCompleted { eventContext ->
                     eventContext.result?.let { results.add(it as WeatherResponse) }
@@ -178,7 +177,7 @@ class StructuredOutputWithToolsIntegrationTest {
         }
 
         val request = WeatherRequest(city = "New York", country = "USA")
-        val result = agent.run(request)
+        val result = agent.run(request, null)
 
         assertNotNull(result)
         assertEquals(22, result.temperature)
@@ -189,9 +188,9 @@ class StructuredOutputWithToolsIntegrationTest {
 
     @Test
     fun testStructuredOutputWithToolsParallelExecution() = runTest {
-        val structure = JsonStructuredData.createJsonStructure<WeatherResponse>()
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<WeatherResponse>()
+        val config = StructuredRequestConfig(
+            default = StructuredRequest.Manual(structure)
         )
 
         val strategy = structuredOutputWithToolsStrategy<WeatherRequest, WeatherResponse>(
@@ -202,9 +201,9 @@ class StructuredOutputWithToolsIntegrationTest {
         }
 
         val toolCallTimestamps = mutableMapOf<String, Long>()
-        val currentTime = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+        val currentTime = Clock.System.now().toEpochMilliseconds()
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             // Return structured output
             mockLLMAnswer(
                 """
@@ -227,7 +226,7 @@ class StructuredOutputWithToolsIntegrationTest {
                     """.trimIndent()
                 )
             },
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
             maxAgentIterations = 10
         )
 
@@ -244,13 +243,13 @@ class StructuredOutputWithToolsIntegrationTest {
         ) {
             install(EventHandler) {
                 onToolCallStarting { eventContext ->
-                    toolCallTimestamps[eventContext.tool.name] = currentTime
+                    toolCallTimestamps[eventContext.toolName] = currentTime
                 }
             }
         }
 
         val request = WeatherRequest(city = "London", country = "UK")
-        val result = agent.run(request)
+        val result = agent.run(request, null)
 
         assertNotNull(result)
         assertEquals(18, result.temperature)
@@ -261,9 +260,9 @@ class StructuredOutputWithToolsIntegrationTest {
 
     @Test
     fun testStructuredOutputWithNoTools() = runTest {
-        val structure = JsonStructuredData.createJsonStructure<WeatherResponse>()
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<WeatherResponse>()
+        val config = StructuredRequestConfig(
+            default = StructuredRequest.Manual(structure)
         )
 
         val strategy = structuredOutputWithToolsStrategy<WeatherRequest, WeatherResponse>(
@@ -272,7 +271,7 @@ class StructuredOutputWithToolsIntegrationTest {
             "Generate mock weather data for ${request.city}, ${request.country}"
         }
 
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             // LLM directly returns structured output without calling tools
             // Set as default response to match any request
             mockLLMAnswer(
@@ -291,7 +290,7 @@ class StructuredOutputWithToolsIntegrationTest {
             prompt = prompt("weather-agent-no-tools") {
                 system("Generate weather data without using tools.")
             },
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
             maxAgentIterations = 10
         )
 
@@ -303,7 +302,7 @@ class StructuredOutputWithToolsIntegrationTest {
         )
 
         val request = WeatherRequest(city = "Paris", country = "France")
-        val result = agent.run(request)
+        val result = agent.run(request, null)
 
         assertNotNull(result)
         assertEquals(25, result.temperature)

@@ -72,3 +72,4 @@ See each feature’s Module/README in its submodule for concrete examples and ad
 - Memory
 - OpenTelemetry
 - Snapshot
+- LongTermMemory

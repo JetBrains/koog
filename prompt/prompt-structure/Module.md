@@ -10,11 +10,11 @@ The prompt-structure module provides a framework for handling structured data wi
 
 ```kotlin
 // Define a structured data type for a person
-class PersonData(
+class PersonStructure(
     id: String,
     examples: List<Person>,
     schema: LLMParams.Schema
-) : StructuredData<Person>(id, examples, schema) {
+) : Structure<Person>(id, examples, schema) {
     override fun parse(text: String): Person {
         // Parse JSON text into a Person object
         val json = Json.parseToJsonElement(text).jsonObject
@@ -40,7 +40,7 @@ class PersonData(
 }
 
 // Create an instance with examples
-val personData = PersonData(
+val personStructure = PersonStructure(
     id = "person",
     examples = listOf(
         Person("John Doe", 30, listOf("Programming", "Design")),
@@ -64,8 +64,8 @@ val personData = PersonData(
 
 // Parse text into a Person object
 val personText = """{"name":"Alice","age":25,"skills":["Writing","Research"]}"""
-val person = personData.parse(personText)
+val person = personStructure.parse(personText)
 
 // Format a Person object as a pretty string
-val prettyOutput = personData.pretty(person)
+val prettyOutput = personStructure.pretty(person)
 ```

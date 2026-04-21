@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.createAgentTool
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.banking.tools.MoneyTransferTools
 import ai.koog.agents.example.banking.tools.TransactionAnalysisTools
@@ -19,7 +18,7 @@ fun main() = runBlocking {
     simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->
         val transferAgentService = AIAgentService(
             promptExecutor = executor,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             systemPrompt = bankingAssistantSystemPrompt,
             temperature = 0.0,
             toolRegistry = ToolRegistry { tools(MoneyTransferTools().asTools()) }
@@ -27,7 +26,7 @@ fun main() = runBlocking {
 
         val analysisAgentService = AIAgentService(
             promptExecutor = executor,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
             temperature = 0.0,
             toolRegistry = ToolRegistry { tools(TransactionAnalysisTools().asTools()) }
@@ -35,7 +34,7 @@ fun main() = runBlocking {
 
         val classifierAgent = AIAgent(
             promptExecutor = executor,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             toolRegistry = ToolRegistry {
                 tool(AskUser)
                 tool(

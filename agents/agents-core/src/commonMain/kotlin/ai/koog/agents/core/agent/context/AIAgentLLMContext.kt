@@ -1,18 +1,18 @@
-@file:OptIn(DetachedPromptExecutorAPI::class)
+@file:OptIn(DetachedPromptExecutorAPI::class, InternalAgentsApi::class)
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.session.AIAgentLLMReadSession
-import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import kotlinx.datetime.Clock
+import ai.koog.prompt.processor.ResponseProcessor
+import kotlin.time.Clock
 
 /**
  * Annotation for marking APIs as detached prompt executors within the `AIAgentLLMContext`.
@@ -40,137 +40,29 @@ public annotation class DetachedPromptExecutorAPI
  * environment and execution layers. It provides mechanisms for concurrent read and write operations
  * through sessions, ensuring thread safety.
  *
- * @property tools A list of tool descriptors available for the context.
- * @property toolRegistry A registry that contains metadata about available tools.
- * @property prompt The current LLM prompt being used or updated in write sessions.
- * @property model The current LLM model being used or updated in write sessions.
- * @property promptExecutor The [PromptExecutor] responsible for performing operations on the current prompt.
- * @property environment The environment that manages tool execution and interaction with external dependencies.
- * @property clock The clock used for timestamps of messages
+ * It inherits all shared behavior from [AIAgentLLMContextCommon].
  */
-public class AIAgentLLMContext(
+/**
+ * Constructs a new instance of `AIAgentLLMContext` with the provided parameters.
+ *
+ * @param tools A list of tools described by [ToolDescriptor] that the agent can interact with.
+ * @param toolRegistry A registry of available tools, defaulting to an empty [ToolRegistry].
+ * @param prompt The initial prompt used in the context, represented by a [Prompt] instance.
+ * @param model The language model used for processing prompts and generating responses.
+ * @param responseProcessor An optional [ResponseProcessor] for handling and processing model responses.
+ * @param promptExecutor Responsible for executing the logic for prompt processing in the context.
+ * @param environment The operational environment of the AI agent, represented by an [AIAgentEnvironment].
+ * @param config Configuration settings for the AI agent, encapsulated in an [AIAgentConfig].
+ * @param clock A clock instance for managing time-related operations within the context.
+ */
+public expect open class AIAgentLLMContext(
     tools: List<ToolDescriptor>,
-    public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     prompt: Prompt,
     model: LLModel,
-    @property:DetachedPromptExecutorAPI
-    public val promptExecutor: PromptExecutor,
-    private val environment: AIAgentEnvironment,
-    private val config: AIAgentConfig,
-    private val clock: Clock
-) {
-    /**
-     * List of current tools associated with this agent context.
-     */
-    @DetachedPromptExecutorAPI
-    public var tools: List<ToolDescriptor> = tools
-        private set
-
-    /**
-     * LLM currently associated with this context.
-     */
-    @DetachedPromptExecutorAPI
-    public var model: LLModel = model
-        private set
-
-    /**
-     * The current prompt used within the `AIAgentLLMContext`.
-     *
-     * This property defines the main [Prompt] instance used by the context and is updated as needed to reflect
-     * modifications or new inputs for the language model operations. It is thread-safe, ensuring that updates
-     * and access are managed correctly within concurrent environments.
-     *
-     * This variable can only be modified internally via specific methods, maintaining control over state changes.
-     */
-    public var prompt: Prompt = prompt
-        private set
-
-    /**
-     * Updates the current `AIAgentLLMContext` with a new prompt and ensures thread-safe access using a read lock.
-     *
-     * @param prompt The new [Prompt] to be set for the context.
-     * @return The current instance of [AIAgentLLMContext] with the updated prompt.
-     */
-    public suspend fun withPrompt(block: Prompt.() -> Prompt): AIAgentLLMContext = rwLock.withReadLock {
-        this.prompt = prompt.block()
-        this
-    }
-
-    /**
-     * Creates a deep copy of this LLM context.
-     *
-     * @return A new instance of [AIAgentLLMContext] with deep copies of mutable properties.
-     */
-    public suspend fun copy(
-        tools: List<ToolDescriptor> = this.tools,
-        toolRegistry: ToolRegistry = this.toolRegistry,
-        prompt: Prompt = this.prompt,
-        model: LLModel = this.model,
-        promptExecutor: PromptExecutor = this.promptExecutor,
-        environment: AIAgentEnvironment = this.environment,
-        config: AIAgentConfig = this.config,
-        clock: Clock = this.clock,
-    ): AIAgentLLMContext = rwLock.withReadLock {
-        AIAgentLLMContext(
-            tools = tools,
-            toolRegistry = toolRegistry,
-            prompt = prompt,
-            model = model,
-            promptExecutor = promptExecutor,
-            environment = environment,
-            config = config,
-            clock = clock
-        )
-    }
-
-    private val rwLock = RWLock()
-
-    /**
-     * Executes a write session on the [AIAgentLLMContext], ensuring that all active write and read sessions
-     * are completed before initiating the write session.
-     */
-    @OptIn(ExperimentalStdlibApi::class)
-    public suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T = rwLock.withWriteLock {
-        val session =
-            AIAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config, clock)
-
-        session.use {
-            val result = it.block()
-
-            // update tools and prompt after session execution
-            this.prompt = it.prompt
-            this.tools = it.tools
-            this.model = it.model
-
-            result
-        }
-    }
-
-    /**
-     * Executes a read session within the [AIAgentLLMContext], ensuring concurrent safety
-     * with active write session and other read sessions.
-     */
-    @OptIn(ExperimentalStdlibApi::class)
-    public suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T = rwLock.withReadLock {
-        val session = AIAgentLLMReadSession(tools, promptExecutor, prompt, model, config)
-
-        session.use { block(it) }
-    }
-
-    /**
-     * Returns the current prompt used in the LLM context.
-     *
-     * @return The current [Prompt] instance.
-     */
-    public fun copy(
-        tools: List<ToolDescriptor> = this.tools,
-        prompt: Prompt = this.prompt,
-        model: LLModel = this.model,
-        promptExecutor: PromptExecutor = this.promptExecutor,
-        environment: AIAgentEnvironment = this.environment,
-        config: AIAgentConfig = this.config,
-        clock: Clock = this.clock
-    ): AIAgentLLMContext {
-        return AIAgentLLMContext(tools, toolRegistry, prompt, model, promptExecutor, environment, config, clock)
-    }
-}
+    responseProcessor: ResponseProcessor?,
+    promptExecutor: PromptExecutor,
+    environment: AIAgentEnvironment,
+    config: AIAgentConfig,
+    clock: Clock
+) : AIAgentLLMContextCommon

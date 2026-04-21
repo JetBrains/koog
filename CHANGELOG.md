@@ -1,3 +1,381 @@
+# 0.8.0
+> Published 10 April 2026
+
+## Major Features
+
+- **Spring AI Integration**: Added comprehensive Spring AI support with `ChatMemoryRepository` and `VectorStore` integration for seamless persistence and retrieval (#1719, #1763)
+- **Amazon Bedrock AgentCore Memory**: Introduced `ChatHistoryProvider` backed by Amazon Bedrock AgentCore Memory for managed conversation state (#1758)
+- **DataDog LLM Observability**: Added DataDog LLM Observability exporter with response metadata forwarding to inference spans (#1591)
+
+## Improvements
+
+- **Native structured output for Claude 4.5+**: Added JSON Schema support for Claude 4.5+ series models across Anthropic, Bedrock, and Vertex AI providers (#1593)
+- **Mermaid diagram support for nested subgraphs**: Enhanced Mermaid diagram generator to visualize subgraphs and nested subgraphs (#1745)
+- **RAG-based abstractions**:`LongTermMemory` feature now uses cleaner abstractions from `rag-base` for better modularity (#1785)
+- **LLMClient constructor decoupling**: Decoupled `LLMClient` constructors from Ktor for improved flexibility (#1742)
+- **Customizable field names**: Added support for customized field names in `AdditionalPropertiesFlatteningSerializer` (#1626)
+- **GPT-5.4 models**: Added support for GPT-5.4Mini and GPT-5.4Nano models (#1837)
+- **Google models update**: Updated Google models capabilities and deprecated older model versions (#1827)
+- **Environment creation abstraction**: Extracted environment creation into `prepareEnvironment` method in agent implementations for better extensibility (#1790)
+- **Reasoning prompt refactoring**: Moved reasoning prompt configuration to strategy parameters for better encapsulation (#1789)
+- **JSON schema capabilities**: Added JSON schema capabilities to OpenAI models (#1822)
+- **Add missing JavaAPI for history compression inside write session**: Added `replaceHistoryWithTLDR` as non-suspend method of AIAgentWriteSession (#1839)
+
+## Bug Fixes
+
+- **Agent message handling**: Corrected description of Koog agent message handling (#1010)
+- **History compression with chat memory**: Fixed missed prompt messages when chat memory feature is enabled (#1835)
+- **Reasoning messages**: Added IDs for reasoning messages and improved reasoning process to fix status 400 errors from OpenAI (#1779)
+- **Ollama embedding**: Check HTTP status before deserializing Ollama embedding response to prevent parsing errors (#1702)
+- **Ktor parameter shadowing**: Renamed `registerTools` parameter in `koog-ktor` to avoid `Builder.build()` shadowing (#1705, #1721)
+- **Opus 4.6 token limit**: Corrected `maxOutputTokens` from 1M to 128K for Claude Opus 4.6 (#1825)
+- **Java AIAgentLLMWriteSession**: Added Java support for `AIAgentLLMWriteSession` compress history functionality
+
+## Breaking Changes
+
+- **LLMProvider singletons restored**: Restored `LLMProvider` singletons and fixed reified type inference (potentially breaking for custom provider implementations) (#1800)
+
+## Examples
+- **Spring AI Examples** Add comprehensive examples of Koog + Spring AI integration
+
+
+## Documentation
+
+- **Java API documentation**: Add Java code snippets for Agent Events documentation (#1833)
+- **DataDog documentation**: add DataDog exporter documentation (#1801)
+- **Java API documentation**: Add Java code snippets for tracing feature (#1821)
+- **Java API documentation**: Add missing Java snippets for Persistence (#1818)
+- **Java API documentation**: Add java snippets for model capabilities docs (#1815)
+- **Java API documentation**: Add java snippets for content moderation docs (#1814)
+- **Java API documentation**: Add missing Java snippets for read/write LLM sessions (#1808)
+- **Java API documentation**: Predefined strategies Java snippets (#1796)
+- **Java API documentation**: Update streaming docs with Java snippets (#1792)
+- **Fixed broken formatting**: fix code snippets to remove leaking includes (#1759)
+- **Improve wording**: Update wording in History compression and Predefined nodes and components (#1699)
+
+# 0.7.3
+> Published 26 March 2026
+
+## New Features
+
+- **Bedrock prompt caching**: Added `CacheControl` property on Assistant, User, and System messages within the Prompt and integrated explicit cache blocks in the Bedrock Converse API (#1583)
+
+## Bug Fixes
+
+- **Agent deadlock fix**: Fixed deadlock when `agent.run()` is called from within `executor.submit` — when the agent was invoked from a worker thread of the configured `ExecutorService`, `runBlocking(context)` would dispatch the coroutine back onto that executor and park the calling thread ([KG-750](https://youtrack.jetbrains.com/issue/KG-750), #1716)
+- **AIAgentTool for simple agents**: Fixed `AIAgentTool` to support simple agents that accept primitives as input by introducing `AIAgentToolInput` wrapper (#1729)
+- **MCP custom transport**: Fixed runtime crash when using non-default custom MCP transports in `MCPToolRegistryProvider` (#1740)
+- **Anthropic tool error reporting**: Added `is_error` flag for failed tool calls in the Anthropic client so the model is properly informed of tool execution failures (#1700)
+- **DeepSeek reasoning with tool calls**: Ensured `reasoningContent` is preserved and merged with tool calls to satisfy DeepSeek API requirements (#1614)
+
+## Breaking Changes
+
+- **ToolRegistry.Builder removed**: Unified everything under `expect`/`actual` `ToolRegistryBuilder`. Removed `tools(Any)` overload that was interfering with `tools(List)` and causing unexpected bugs (#1746)
+
+## Build
+
+- **Removed stale `coreLibrariesVersion` override**: The convention plugins were setting `coreLibrariesVersion = "2.1.21"` which made published POMs declare kotlin-stdlib 2.1.21, mismatching the actual 2.3.x compiler version. Removed the override so the POM picks up the real compiler version (#1697, #1722)
+
+## Documentation
+
+- Updated serialization documentation with Java snippets (#1732)
+- Added Java implementation for custom subgraphs documentation ([KG-770](https://youtrack.jetbrains.com/issue/KG-770), #1730)
+- Added Java implementation for OpenTelemetry, Langfuse, and Weave integration documentation ([KG-760](https://youtrack.jetbrains.com/issue/KG-760), #1696)
+- Moved "Chat agent with memory" tutorial under "Chat memory" feature section (#1686)
+
+# 0.7.2
+> Published 19 March 2026
+
+## Bug Fixes
+
+- **Java API for OpenTelemetry extensions**: Fixed Java API inside `OpenTelemetryConfig` class annotated with `@JavaOverride`
+  that relied on Kotlin `Duration` class, causing all further attributes to be skipped by the compiler in Langfuse and Weave extensions ([KG-754](https://youtrack.jetbrains.com/issue/KG-754), #1682)
+- **System prompt preservation in agent builder**: Fixed `systemPrompt` method in agent builders to preserve previously configured messages, id, and params in the prompt ([KG-747](https://youtrack.jetbrains.com/issue/KG-747), #1671)
+- **LLMParams copy overloads**: Added correct `override fun copy()` to all `LLMParams` subclasses (`GoogleParams`, `AnthropicParams`, `OpenAIChatParams`, etc.) so that `Prompt.withUpdatedParams` preserves provider-specific fields instead of silently dropping them. Also fixed `BedrockConverseParams.copy()` missing parameters and `DashscopeParams` incorrect `super.copy()` call (KG-742, #1668)
+
+## Breaking Changes
+
+- **Removed `input` parameter from `AIAgentFunctionalContext.subtask`**: The `input` parameter was not actually used; `taskDescription` is the right way to specify the task. Related methods and builders updated accordingly (#1667)
+
+## Documentation
+
+- Started porting rest of the documentation to Java (#1669)
+
+# 0.7.1
+> Published 17 March 2026
+
+## Major Features
+
+- **Java API**: Introduced comprehensive Java interoperability across the framework:
+    - Java API for creating and running agents from pure Java projects (#1185)
+    - Builder-based Java API for graph strategies (#1581, #1617, #1366)
+    - Java-friendly API for `AIAgentStorage` with JVM-specific methods (#1600)
+    - Blocking API builders for `PromptExecutor` and `LLMClient` for Java (#1555, #1604)
+    - Jackson as the default serializer for Java API (#1630)
+    - Weave and Langfuse integrations now available from Java (#1616)
+    - Centralized Java/Kotlin time conversion utilities (`TimeUtils`, `toKotlinDuration`, etc.) (#1620)
+- **Spring AI Integration**: Added two new Spring Boot starters (`koog-spring-ai-starter-model-chat` and `koog-spring-ai-starter-model-embedding`) to integrate Spring AI `ChatModel` and `EmbeddingModel` implementations as Koog LLM backends, enabling support for the wide range of providers available in Spring AI ([KG-109](https://youtrack.jetbrains.com/issue/KG-109), #1587)
+- **Chat Memory**: Introduced persistent chat memory with multiple storage backend options:
+    - Core `ChatMemory` feature and `ChatHistoryProvider` abstraction (#1511)
+    - Exposed-ORM based providers for PostgreSQL, MySQL, and H2 (#1584)
+    - Pure JDBC `ChatHistoryProvider` for PostgreSQL, MySQL, and H2 with no ORM dependency (#1597)
+    - JDBC-based `PersistenceStorageProvider` (#1612)
+- **Long-term Memory**: Added `LongTermMemory` feature that augments prompts with relevant memory records from storage and extracts/ingests new memories from agent conversations (#1490)
+- **Library-Agnostic Serialization API**: Introduced a `JSONSerializer` abstraction to support pluggable serialization libraries. Two implementations provided: `KotlinxSerializer` (default) and the new `JacksonSerializer` in a separate `serialization-jackson` module. Tools API migrated to this new abstraction (#1588)
+
+## Improvements
+
+- **OpenTelemetry**:
+    - Added OpenTelemetry support for functional agent pipelines ([KG-677](https://youtrack.jetbrains.com/issue/KG-677), #1447)
+    - Added OpenTelemetry spans for MCP tool calls (#1421)
+- **Planner improvements**:
+    - Added `AIAgentPlannerContext` and `AIAgentFunctionalContextBase` for better context hierarchy and planner-specific APIs (#1480)
+    - Added planner-specific pipeline interceptors: `onPlanCreationStarting/Completed`, `onStepExecutionStarting/Completed`, `onPlanCompletionEvaluationStarting/Completed` ([KG-672](https://youtrack.jetbrains.com/issue/KG-672), #1550)
+    - GOAP strategies now have typed input/output and a dedicated `GoapAgentState` (#1498)
+- **OpenRouter embedding support**: Implemented `LLMEmbeddingProvider` for OpenRouter, enabling access to 21+ embedding models ([KG-659](https://youtrack.jetbrains.com/issue/KG-659), #1398)
+- **Swift Package Manager support**: Added XCFramework build and distribution infrastructure for iOS/macOS development via SPM ([KG-682](https://youtrack.jetbrains.com/issue/KG-682), #1485)
+
+## New LLM Models
+
+- **Anthropic Claude Opus 4.6**: Added support via Anthropic and Bedrock executors (#1513)
+- **Google Gemini 3 Flash Preview**: New model with extended capabilities and high-speed processing (#1621)
+- **OpenAI GPT-5.x series**: Added GPT-5.1-Codex-Max, GPT-5.2-Codex, GPT-5.3-Codex, GPT-5.4, and GPT-5.4-Pro (#1595)
+- **Moonshot Kimi K2 Thinking**: Added support via the Bedrock Converse API (#1436)
+- **Ollama thinking support**: Added `think=true` request parameter and streaming reasoning delta support for Ollama models (#1532)
+
+## Bug Fixes
+
+- **Persistence checkpoints**: Fixed last successful node being re-executed when restoring from a checkpoint; changed `lastInput` to `lastOutput` in checkpoint structure (#1308)
+- **Ollama streaming**: Fixed Ollama client to use `preparePost(...).execute` for proper streaming instead of buffering the full response (#1497)
+- **OpenRouter streaming**: Fixed missing `reasoning` and `reasoningDetails` fields in `OpenRouterStreamDelta` causing deserialization errors (#1504)
+- **Dashscope streaming**: Fixed tool call argument merging for streaming responses in `DashscopeLLMClient` ([KG-658](https://youtrack.jetbrains.com/issue/KG-658), #1590)
+- **`agents-ext` dependency leak**: Moved `agents-ext` from `commonMain api` to `jvmTest implementation` in `agents-test` to prevent transitive compile-time dependency leakage (#1506)
+- **Streaming exception handling**: `executeStreaming` now properly propagates exceptions from LLM clients and requires `StreamFrame.End` to signal stream completion ([KG-550](https://youtrack.jetbrains.com/issue/KG-550), #1580)
+- **Debugger feature**: Extended to support functional agents in addition to graph-based agents by dispatching appropriate strategy starting events ([KG-741](https://youtrack.jetbrains.com/issue/KG-741), #1637)
+
+## Breaking Changes
+
+- **Serialization API**: All `encode`/`decode` methods in `Tool` now accept a second `JSONSerializer` parameter. Automatic `ToolDescriptor` generation for primitive argument types (`Tool<String, String>`) is no longer supported without a custom descriptor. `AIAgentFeature.createInitialConfig` now takes an `agentConfig: AIAgentConfig` parameter. JSON types in pipeline events changed from `kotlinx.serialization` to `ai.koog.serialization` (#1588)
+- **`TypeToken` replaces `KType`**: Nodes and agent features now work with `ai.koog.serialization.TypeToken` instead of `kotlin.reflect.KType`. All `typeOf<Foo>()` usages should be replaced with `typeToken<Foo>()` (#1581)
+- **Global JSON schema registries removed**: `RegisteredStandardJsonSchemaGenerators` and `RegisteredBasicJsonSchemaGenerators` removed. `getStructuredRequest` and `StructureFixingParser` moved to `ai.koog.prompt.executor.model` package ([KG-698](https://youtrack.jetbrains.com/issue/KG-698), #1517)
+- **`LLMDescription.description` renamed to `value`**: The `description` field of `LLMDescription` has been renamed to `value` for Java compatibility (#1607)
+- Deprecated `kotlinx.datetime` imports replaced with `kotlin.time` equivalents (`Clock`, `Instant`) (#1533)
+- **Retired Anthropic/Bedrock models**: Removed `Sonnet_3_7`, `Haiku_3_5`, `Sonnet_3_5`, and `Opus_3` from Anthropic models; removed several AI21, Bedrock, and legacy Anthropic models. `Haiku_3` marked as deprecated (#1526)
+
+## Documentation
+
+- Added documentation for Java API and Java examples (#1610)
+- Added documentation for Spring AI integration ([KG-109](https://youtrack.jetbrains.com/issue/KG-109), #1627)
+- Added documentation for custom feature creation (#1295)
+- Reworked Getting Started, agent types, and Chat Memory tutorials (#1349, #1552)
+- Improved Prompts and Planner agent documentation (#1302, #1301)
+- Added nightly builds documentation (#1433)
+
+## Documentation
+
+- Added Java code snippets for Agent Events documentation (#1833)
+- Added Java code snippets for tracing feature (#1821)
+- Added Java snippets for Persistence (#1818)
+- Added Java snippets for model capabilities documentation (#1815)
+- Added Java snippets for content moderation documentation (#1814)
+- Added Java snippets for sessions (#1808)
+- Added Java snippets for predefined strategies (#1796)
+- Updated streaming documentation with Java snippets (#1792)
+- Added DataDog exporter documentation (#1801)
+- Restored Koog on Slack page (#1823)
+- Fixed link to Slack channel in documentation (#1816)
+- Updated wording in History compression and Predefined nodes and components documentation (#1699)
+- Added hook to remove blank lines from HTML comments to avoid breaking tab groups (#1760)
+- Fixed code snippets to remove leaking includes (#1759)
+
+## Examples
+
+- Added Spring AI examples (#1799)
+
+## Examples
+
+- Added Java example for JavaOne 2026 (#1641)
+- Added full Spring Boot Java API example (#1350)
+- Added example for calling a Koog agent from JavaScript code, including browser (TypeScript webapp) and Node.js usage with `AbortSignal` support (#1500)
+
+# 0.6.4
+> Published 4 March 2026
+
+## Major Features
+- **LLM Client Router**: Added support for routing requests across multiple LLM clients with pluggable load balancing strategies. Includes a built-in round-robin router and fallback handling when a provider is unavailable (#1503)
+
+## Improvements
+- **Anthropic models list**: Implemented `models()` for the Anthropic LLM client, consistent with other supported providers ([KG-527](https://youtrack.jetbrains.com/issue/KG-527), #1460)
+- **Dependency updates**: Updated `io.lettuce:lettuce-core` from `6.5.5.RELEASE` to `7.2.1.RELEASE` (#1304)
+
+## Breaking Changes
+- **OllamaModels relocation**: `OllamaModels` and `OllamaEmbeddingModels` moved from `prompt-llm` to `prompt-executor-ollama-client` module ([KG-121](https://youtrack.jetbrains.com/issue/KG-121), #1470)
+ 
+# 0.6.3
+> Published 24 February 2026
+
+## Improvements
+- **Streaming reasoning support**: Models with reasoning capabilities (like Claude Sonnet 4.5 or GPT-o1) now stream their reasoning process in real-time, allowing you to see how the model thinks through problems as it generates responses ([KG-592](https://youtrack.jetbrains.com/issue/KG-592), #1264)
+- **LLModel API enhancement**: LLM clients now return `List<LLModel>` instead of `List<String>` for improved type safety and direct access to model metadata (#1452)
+- **Multiple event handlers per feature**: Features can register multiple handlers for the same event type, enabling more flexible event processing ([KG-678](https://youtrack.jetbrains.com/issue/KG-678), #1446)
+- **Dependency updates**: Updated Kotlin libraries ([KG-544](https://youtrack.jetbrains.com/issue/KG-544), #1475):
+  - `Kotlin` from `2.2.21` to `2.3.10`
+  - `kotlinx-serialization` from `1.8.1` to `1.10.0`
+  - `kotlinx-datetime` from `0.6.2` to `0.7.1`
+
+## Bug Fixes
+- **OpenRouter streaming**: Fixed parsing errors when receiving reasoning content from models with reasoning capabilities by adding missing `reasoning` and `reasoningDetails` fields to the streaming response (#854)
+- **ReadFileTool**: Fixed incorrect binary file detection for empty files ([KG-533](https://youtrack.jetbrains.com/issue/KG-533), #1340)
+- **DevstralMedium model**: Added missing `LLMCapability.Document` capability (#1482)
+- **Ktor integration**: Fixed custom timeout values being ignored when configuring LLM providers in `application.yaml` ([KTOR-8881](https://youtrack.jetbrains.com/issue/KTOR-8881), #807)
+
+## Breaking Changes
+- **Streaming API redesign**: Restructured `StreamFrame` types to distinguish between delta frames (incremental content like `TextDelta`, `ReasoningDelta`) and complete frames (full content like `TextComplete`, `ReasoningComplete`). Added `End` frame type to signal stream completion (#1264)
+- **Kotlin version update**: Migrated from Kotlin `2.2.21` to `2.3.10`; replaced `kotlinx.datetime.Clock`/`Instant` with `kotlin.time.Clock`/`Instant` (#1475)
+- **LLModel API changes**: `LLMClient.models()` now returns `List<LLModel>` instead of `List<String>`; `LLModel.capabilities` and `LLModel.contextLength` are now nullable (#1452)
+
+## Documentation
+- Updated documentation for the `singleRunStrategy` API and `AIAgentService` class.
+
+## Refactoring
+- **Module restructuring**: Moved file-system abstractions (`GlobPattern`, `FileSize`, `FileSystemEntry`, `FileSystemEntryBuilders`) from `agents-ext` to `rag-base` module to reduce transitive dependencies (#1278)
+
+## Examples
+- Added the ACP (Agent Communication Protocol) agent example project (#1438)
+
+# 0.6.2
+> Published 10 February 2026
+
+## Improvements
+- **Structured output with examples**: Include examples in the prompt with `StructuredRequest.Native` to help LLMs better understand desired data format (#1328, #1396)
+
+## Bug fixes
+- **Kotlin/Wasm support**: Applied workaround for Kotlin/Wasm compiler bug which produced invalid Wasm files ([KT-83728](https://youtrack.jetbrains.com/issue/KT-83728), #1365)
+
+# 0.6.1
+> Published 28 January 2026
+
+## Major Features
+**Block of changes**:
+- **Converse API support in Bedrock LLM client**: Added support for the Converse API in the Bedrock LLM client, enabling richer prompt-based interactions ([KG-543](https://youtrack.jetbrains.com/issue/KG-543), #1384)
+- **Tool choice heuristics**: Introduced heuristic-based required tool selection via `LLMBasedToolCallFixProcessor` for models that do not support explicit tool choice ([KG-200](https://youtrack.jetbrains.com/issue/KG-200), #1389)
+
+## Improvements
+- **Prompt parameter preservation**: Ensured that `LLMParams` fields are preserved after calling `Prompt.withUpdatedParams` (#1194)
+- **Error handling for tools**: Improved error handling for tool argument parsing, result serialization, and subgraph tool execution failures ([KG-597](https://youtrack.jetbrains.com/issue/KG-597), #1329)
+- **OpenTelemetry**:
+    - Updated span attributes and names to better align with semantic conventions ([KG-646](https://youtrack.jetbrains.com/issue/KG-646), #1351; [KG-647](https://youtrack.jetbrains.com/issue/KG-647), #1359)
+    - Replaced agent data propagation through the coroutine context with the `AIAgentContext` instance for agent events ([KG-178](https://youtrack.jetbrains.com/issue/KG-178), #1336)
+- **ACP SDK update**: Updated the ACP SDK to version 0.13.1 to enable connections from IntelliJ-based IDE clients ([KG-671](https://youtrack.jetbrains.com/issue/KG-671), #1363)
+
+## Bug fixes
+- **OpenAI client**:
+    - Restored the `minimal` option in `ReasonEffort` within `OpenAIDataModels` (#1412)
+    - Fixed missing token usage information in streaming mode (#1072, #1404)
+- **Bedrock client**:
+    - Fixed JSON schema generation for Bedrock tools to correctly handle nested objects (#1259, #1361)
+    - Fixed parsing of tool usage in Bedrock Anthropic streaming responses ([KG-627](https://youtrack.jetbrains.com/issue/KG-627), #1310)
+- **DeepSeek structured output**: Fixed structured output handling for DeepSeek ([KG-537](https://youtrack.jetbrains.com/issue/KG-537), #1385)
+- **Gemini 3.0 tool calls**: Fixed thought signature handling for tool calls ([KG-596](https://youtrack.jetbrains.com/issue/KG-596), #1317)
+- **Subtask completion flow**: Ensured that subtasks return after a tool call finishes, before issuing a new LLM request (#1322, #1362)
+
+## Examples
+- Updated the ACP example to use the latest ACP SDK version (#1363)
+- Updated the Compose Demo App to use the latest Koog version (#1227)
+
+# 0.6.0
+> Published 22 December 2025
+
+## Major Features
+
+- **ACP Integration**: Introduce initial ACP (Agent Communication Protocol) integration to create ACP-compatible agents in Koog (#1253)
+- **Planner Agent Type**: Introduce new "planner" agent type with iterative planning capabilities. Provide two out-of-the box strategies: simple LLM planner and GOAP (Goal-Oriented Action Planning) (#1232)
+- **Response Processor**: Introduce `ResponseProcessor` to fix tool call messages from weak models that fail to properly generate tool calls ([KG-212](https://youtrack.jetbrains.com/issue/KG-212), #871)
+
+## Improvements
+
+- **Event ID Propagation**: Integrate event ID and execution info propagation across all pipeline events, agent execution flow, and features including Debugger and Tracing ([KG-178](https://youtrack.jetbrains.com/issue/KG-178))
+- **Bedrock Enhancements**:
+  - Add fallback model support and warning mechanism for unsupported Bedrock models with custom families ([KG-595](https://youtrack.jetbrains.com/issue/KG-595), #1224)
+  - Add global inference profile prefix support to Bedrock models for improved availability and latency (#1139)
+  - Add Bedrock support in Ktor integration for configuring and initializing Bedrock LLM clients (#1141)
+  - Improve Bedrock moderation implementation with conditional guardrails API calls (#1105)
+- **Ollama**: Add support for file attachments in Ollama client (#1221)
+- **Tool Schema**: Add extension point for custom tool schemas to allow clients to provide custom schemas or modify existing ones (#1158)
+- **Google Client**:
+  - Add support for `/models` request in Google LLM Client (#1181)
+  - Add text embedding support for Google's **Gemini models** via `gemini-embedding-001` ([KG-314](https://youtrack.jetbrains.com/issue/KG-314), #1235)
+- **HTTP Client**: Make `KoogHttpClient` auto-closable and add `clientName` parameter (#1184)
+- Update MCP SDK version to 0.7.7 (#1154)
+- Use SEQUENTIAL mode as default for `singleRunStrategy` (#1195)
+
+## Bug Fixes
+
+- **Streaming**: Fix streaming + tool call issues for Google and OpenRouter clients - Google client now passes tools parameter, OpenRouter uses CIO engine for SSE, improved SSE error handling ([KG-616](https://youtrack.jetbrains.com/issue/KG-616), #1262)
+- **Tool Calling**: Fix `requestLLMOnlyCallingTools` ignoring tool calls after reasoning messages from models with Chain of Thought ([KG-545](https://youtrack.jetbrains.com/issue/KG-545), #1198)
+- **File Tools**:
+  - Handle empty filters in `ListDirectoryTool` ([KG-628](https://youtrack.jetbrains.com/issue/KG-628), #1285)
+  - Fix directory collapse in `ListDirectoryUtil` ([KG-583](https://youtrack.jetbrains.com/issue/KG-583), #1260)
+  - Clamp `endLine` to file length and add warnings for overflow in `ReadFileTool` ([KG-534](https://youtrack.jetbrains.com/issue/KG-534), #1182)
+- **Model-Specific Fixes**:
+  - Pass `jsonObject` as `responseFormat` for DeepSeek to fix JSON mode ([KG-537](https://youtrack.jetbrains.com/issue/KG-537), #1258)
+  - Remove `LLMCapability.Temperature` from GPT-5 model capabilities (#1277)
+  - Fix OpenAI streaming with tools in Responses API ([KG-584](https://youtrack.jetbrains.com/issue/KG-584), #1255)
+  - Fix Bedrock timeout setting propagation to `BedrockRuntimeClient.HttpClient` (#1190)
+  - Add handler for `GooglePart.InlineData` to support binary content responses ([KG-487](https://youtrack.jetbrains.com/issue/KG-487), #1094)
+- **Other Fixes**:
+  - Fix reasoning message handling in provided simple strategies (#1166)
+  - Fix empty list condition check in `onMultipleToolResults` and `onMultipleAssistantMessages` (#1192)
+  - Fix timeout not respected in executor because `join()` was called before timeout check (#1005)
+  - Fix `ContentPartsBuilder` to flush whenever `textBuilder` is not empty ([KG-504](https://youtrack.jetbrains.com/issue/KG-504), #1123)
+  - Fix and simplify `McpTool` to properly support updated Tool serialization (#1128)
+  - Fix `OpenAIConfig.moderationsPath` to be mutable (`var` instead of `val`) (#1097)
+  - Finalize pipeline feature processors after agent run for `StatefulSingleUseAIAgent` ([KG-576](https://youtrack.jetbrains.com/issue/KG-576))
+
+## Breaking Changes
+
+- **Persistence**: Remove requirement for unique graph node names in Persistence feature, migrate to node path usage (#1288)
+- **Tool API**: Update Tool API to fix name and descriptor discrepancy - moved configurable tool properties to constructors, removed `doExecute` in favor of `execute` ([KG-508](https://youtrack.jetbrains.com/issue/KG-508), #1226)
+- **OpenAI Models**: GPT-5-Codex and GPT-5.1 reasoning models moved from Chat section to Reasoning section ([KG-562](https://youtrack.jetbrains.com/issue/KG-562), #1146)
+- **Structured Output**: Rename structured output classes - `StructuredOutput` → `StructuredRequest`, `StructuredData` → `Structure`, `JsonStructuredData` → `JsonStructure` (#1107)
+- **Module Organization**: Move `LLMChoice` from `prompt-llm` to `prompt-executor-model` module (#1109)
+
+# 0.5.4
+> Published 03 December 2025
+
+## Improvements
+- LLM clients: better error reporting (#1149). Potential **breaking change**: LLM clients now throw `LLMClientException` instead of `IllegalStateException` ([KG-552](https://youtrack.jetbrains.com/issue/KG-552))
+- Add support for **OpenAI** **GPT-5.1** and **GPT-5 pro** (#1121) and (#1113) and **Anthropic** **Claude Opus 4.5** (#1199)
+- Add Bedrock support in Ktor for configuring and initializing Bedrock LLM clients. (#1141)
+- Improve Bedrock moderation implementation (#1105)
+- Add handler for `GooglePart.InlineData` in `GoogleLLMClient` (#1094) ([KG-487](https://youtrack.jetbrains.com/issue/KG-487))
+- Improvements in `ReadFileTool` (#1182) and (#1213)
+
+## Bug Fixes
+- Fix and simplify `McpTool` to properly support updated Tool serialization (#1128)
+- Fix file tools to properly use newer API to provide textual tool result representation (#1201)
+- Fix empty list condition check in `onMultipleToolResults` and `onMultipleAssistantMessages` (#1192)
+- Fix reasoning message handling in strategy (#1166)
+- Fix timeout in `JvmShellCommandExecutor` (#1005)
+
+# 0.5.3
+> Published 12 November 2025
+
+## New Features
+- Reasoning messages support (#943)
+- Add get models list request to `OpenAI`-based `LLMClient`s (#1074)
+
+## Improvements
+- Support subgraph execution events in an agent pipeline and features, including `OpenTelemetry` (#1052)
+- Make `systemPrompt` and `temperature` optional, set default temperature to null in `AIAgent` factory functions (#1078)
+- Improve compatibility with kotlinx-coroutines 1.8 in runtime by removing `featurePrepareDispatcher` from `AIAgentPipeline` (#1083)
+
+## Bug Fixes
+- Fix persistence feature by making `ReceivedToolResult` serializable (#1049)
+- Make clients properly rethrow cancellations and remove exception wrapping (#1057)
+- Fix `StructureFixingParser` to do the right number of retires (#1084)
+
+
 # 0.5.2
 > Published 29 Oct 2025
 
@@ -409,3 +787,4 @@ Kotlin.
 
 - JVM (requires JDK 17 or higher)
 - JavaScript
+

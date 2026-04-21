@@ -2251,6 +2251,12 @@ internal sealed interface OpenAIStreamEvent {
     ) : OpenAIStreamEvent
 
     @Serializable
+    @SerialName("keepalive")
+    class ResponseKeepalive(
+        val sequenceNumber: Int,
+    ) : OpenAIStreamEvent
+
+    @Serializable
     class LogProbWithTop(val logprob: Double, val token: String, val topLogprobs: List<LogProb>)
 
     @Serializable

@@ -10,8 +10,8 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 val ts: Instant = Instant.parse("2023-01-01T00:00:00Z")
 
@@ -22,7 +22,7 @@ val testClock: Clock = object : Clock {
 fun createAgent(
     strategy: AIAgentGraphStrategy<String, String>,
     agentId: String = "test-agent-id",
-    promptExecutor: PromptExecutor? = null,
+    executor: PromptExecutor? = null,
     promptId: String? = null,
     systemPrompt: String? = null,
     userPrompt: String? = null,
@@ -48,7 +48,7 @@ fun createAgent(
 
     return AIAgent(
         id = agentId,
-        promptExecutor = promptExecutor ?: TestLLMExecutor(testClock),
+        promptExecutor = executor ?: TestLLMExecutor(testClock),
         strategy = strategy,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry ?: ToolRegistry { },

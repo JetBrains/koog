@@ -1,15 +1,20 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionEventContext
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.eventString
 import ai.koog.agents.testing.tools.DummyTool
@@ -19,38 +24,41 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
+import kotlin.time.Instant
 
 class EventHandlerTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
-    fun `test event handler for agent without nodes and tools`() = runBlocking {
+    fun `test event handler for agent without nodes and tools`() = runTest {
         val eventsCollector = TestEventsCollector()
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
+        val agentInput = "Hello, world!!!"
 
         val strategy = strategy<String, String>(strategyName) {
             edge(nodeStart forwardTo nodeFinish transformed { agentResult })
         }
 
-        val agent = createAgent(
+        createAgent(
             strategy = strategy,
             installFeatures = {
                 install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
             }
-        )
-
-        val agentInput = "Hello, world!!!"
-        agent.run(agentInput)
-        agent.close()
+        ).use { agent ->
+            agent.run(agentInput, null)
+        }
 
         val runId = eventsCollector.runId
 
@@ -71,7 +79,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test event handler single node without tools`() = runBlocking {
+    fun `test event handler single node without tools`() = runTest {
         val eventsCollector = TestEventsCollector()
         val agentId = "test-agent-id"
 
@@ -109,7 +117,7 @@ class EventHandlerTest {
         )
 
         val agentInput = "Hello, world!!!"
-        agent.run(agentInput)
+        agent.run(agentInput, null)
         agent.close()
 
         val runId = eventsCollector.runId
@@ -133,7 +141,7 @@ class EventHandlerTest {
                 "role: ${Message.Role.User}, message: $testLLMResponse" +
                 "}], temperature: $temperature, model: ${model.eventString}, tools: [], responses: [role: ${Message.Role.Assistant}, message: Default test response])",
             "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: $testLLMResponse, output: " +
-                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null))",
+                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null, cacheControl=null))",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
@@ -146,7 +154,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test event handler single node with tools`() = runBlocking {
+    fun `test event handler single node with tools`() = runTest {
         val eventsCollector = TestEventsCollector()
 
         val promptId = "Test prompt Id"
@@ -180,7 +188,7 @@ class EventHandlerTest {
             tool(dummyTool)
         }
 
-        val mockExecutor = getMockExecutor(clock = testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             mockLLMToolCall(dummyTool, DummyTool.Args("test")) onRequestEquals userPrompt
             mockLLMAnswer(mockResponse) onRequestContains dummyTool.result
         }
@@ -194,15 +202,29 @@ class EventHandlerTest {
             assistantPrompt = assistantPrompt,
             temperature = temperature,
             toolRegistry = toolRegistry,
-            promptExecutor = mockExecutor,
+            executor = mockExecutor,
             model = model,
         ) {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
         }.use { agent ->
-            agent.run(userPrompt)
+            agent.run(userPrompt, null)
         }
 
         val runId = eventsCollector.runId
+        val dummyToolName = dummyTool.name
+        val dummyToolDescription = dummyTool.descriptor.description
+        val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
+        val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result, serializer)
+
+        val dummyToolReceivedToolResult = ReceivedToolResult(
+            id = null,
+            tool = dummyToolName,
+            toolArgs = dummyToolArgsEncoded,
+            toolDescription = dummyToolDescription,
+            content = dummyTool.result,
+            resultKind = ToolResultKind.Success,
+            result = dummyToolResultEncoded
+        )
 
         val expectedEvents = listOf(
             "OnAgentStarting (agent id: $agentId, run id: $runId)",
@@ -221,34 +243,36 @@ class EventHandlerTest {
                 "role: ${Message.Role.User}, message: $userPrompt, " +
                 "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt" +
-                "}], temperature: $temperature, model: ${model.eventString}, tools: [${dummyTool.name}], responses: [role: ${Message.Role.Tool}, message: {\"dummy\":\"test\"}])",
+                "}], temperature: $temperature, model: ${model.eventString}, tools: [$dummyToolName], responses: [role: ${Message.Role.Tool}, message: {\"dummy\":\"test\"}])",
             "OnNodeExecutionCompleted (run id: $runId, node: test-llm-call, input: $userPrompt, output: " +
-                "Call(id=null, tool=${dummyTool.name}, parts=[Text(text={\"dummy\":\"test\"})], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
+                "Call(id=null, tool=$dummyToolName, parts=[Text(text=$dummyToolArgsEncoded)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
             "OnNodeExecutionStarting (run id: $runId, node: test-tool-call, input: " +
-                "Call(id=null, tool=${dummyTool.name}, parts=[Text(text={\"dummy\":\"test\"})], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
-            "OnToolCallStarting (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test))",
-            "OnToolCallCompleted (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test), result: ${dummyTool.result})",
+                "Call(id=null, tool=$dummyToolName, parts=[Text(text=$dummyToolArgsEncoded)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
+            "OnToolCallStarting (run id: $runId, tool: $dummyToolName, args: $dummyToolArgsEncoded)",
+            "OnToolCallCompleted (run id: $runId, tool: $dummyToolName, args: $dummyToolArgsEncoded, result: $dummyToolResultEncoded)",
             "OnNodeExecutionCompleted (run id: $runId, node: test-tool-call, input: " +
-                "Call(id=null, tool=${dummyTool.name}, parts=[Text(text={\"dummy\":\"test\"})], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)), output: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}))",
-            "OnNodeExecutionStarting (run id: $runId, node: test-node-llm-send-tool-result, input: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}))",
+                "Call(id=null, tool=$dummyToolName, parts=[Text(text=$dummyToolArgsEncoded)], " +
+                "metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)), output: $dummyToolReceivedToolResult)",
+            "OnNodeExecutionStarting (run id: $runId, node: test-node-llm-send-tool-result, input: $dummyToolReceivedToolResult)",
             "OnLLMCallStarting (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
                 "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Tool}, message: {\"dummy\":\"test\"}, " +
+                "role: ${Message.Role.Tool}, message: $dummyToolArgsEncoded, " +
                 "role: ${Message.Role.Tool}, message: ${dummyTool.result}" +
-                "}], temperature: $temperature, tools: [${dummyTool.name}])",
+                "}], temperature: $temperature, tools: [$dummyToolName])",
             "OnLLMCallCompleted (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
                 "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Tool}, message: {\"dummy\":\"test\"}, " +
+                "role: ${Message.Role.Tool}, message: $dummyToolArgsEncoded, " +
                 "role: ${Message.Role.Tool}, message: ${dummyTool.result}" +
-                "}], temperature: $temperature, model: openai:gpt-4o, tools: [${dummyTool.name}], responses: [role: ${Message.Role.Assistant}, message: Return test result])",
-            "OnNodeExecutionCompleted (run id: $runId, node: test-node-llm-send-tool-result, input: " +
-                "ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}), output: Assistant(parts=[Text(text=Return test result)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null))",
+                "}], temperature: $temperature, model: openai:gpt-4o, tools: [$dummyToolName], responses: [role: ${Message.Role.Assistant}, message: Return test result])",
+            "OnNodeExecutionCompleted (run id: $runId, node: test-node-llm-send-tool-result, " +
+                "input: $dummyToolReceivedToolResult, " +
+                "output: Assistant(parts=[Text(text=$mockResponse)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null, cacheControl=null))",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $mockResponse)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $mockResponse, output: $mockResponse)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $mockResponse)",
@@ -261,7 +285,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test event handler several nodes`() = runBlocking {
+    fun `test event handler several nodes`() = runTest {
         val eventsCollector = TestEventsCollector()
 
         val promptId = "Test prompt Id"
@@ -302,7 +326,7 @@ class EventHandlerTest {
         )
 
         val agentInput = "Hello, world!!!"
-        agent.run(agentInput)
+        agent.run(agentInput, null)
         agent.close()
 
         val runId = eventsCollector.runId
@@ -326,7 +350,7 @@ class EventHandlerTest {
                 "role: ${Message.Role.User}, message: $testLLMResponse" +
                 "}], temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}], responses: [role: ${Message.Role.Assistant}, message: Default test response])",
             "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: $testLLMResponse, output: " +
-                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null))",
+                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null, cacheControl=null))",
             "OnNodeExecutionStarting (run id: $runId, node: test LLM call with tools, input: $llmCallWithToolsResponse)",
             "OnLLMCallStarting (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
@@ -345,7 +369,7 @@ class EventHandlerTest {
                 "role: ${Message.Role.User}, message: $llmCallWithToolsResponse" +
                 "}], temperature: $temperature, model: openai:gpt-4o, tools: [${toolRegistry.tools.joinToString { it.name }}], responses: [role: ${Message.Role.Assistant}, message: Default test response])",
             "OnNodeExecutionCompleted (run id: $runId, node: test LLM call with tools, input: $llmCallWithToolsResponse, output: " +
-                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null))",
+                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null, cacheControl=null))",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
@@ -358,7 +382,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test event handler for agent with node execution error`() = runBlocking {
+    fun `test event handler for agent with node execution error`() = runTest {
         val eventsCollector = TestEventsCollector()
 
         val agentId = "test-agent-id"
@@ -385,7 +409,7 @@ class EventHandlerTest {
                 install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
             }
         ).use { agent ->
-            val throwable = assertThrows<IllegalStateException> { agent.run(agentInput) }
+            val throwable = assertThrows<IllegalStateException> { agent.run(agentInput, null) }
             assertEquals(testErrorMessage, throwable.message)
         }
 
@@ -397,7 +421,7 @@ class EventHandlerTest {
             "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $agentInput)",
             "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
             "OnNodeExecutionStarting (run id: $runId, node: $errorNodeName, input: $agentInput)",
-            "OnNodeExecutionFailed (run id: $runId, node: $errorNodeName, error: $testErrorMessage)",
+            "OnNodeExecutionFailed (run id: $runId, node: $errorNodeName, input: $agentInput, error: $testErrorMessage)",
             "OnAgentExecutionFailed (agent id: $agentId, run id: $runId, error: $testErrorMessage)",
             "OnAgentClosing (agent id: $agentId)",
         )
@@ -407,7 +431,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test event handler with multiple handlers`() = runBlocking {
+    fun `test event handler with multiple handlers`() = runTest {
         val collectedEvents = mutableListOf<String>()
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
@@ -446,7 +470,7 @@ class EventHandlerTest {
         )
 
         val agentInput = "Hello, world!!!"
-        agent.run(agentInput)
+        agent.run(agentInput, null)
 
         val expectedEvents = listOf(
             "OnAgentStarting first (agent id: ${agent.id})",
@@ -460,7 +484,7 @@ class EventHandlerTest {
 
     @Disabled
     @Test
-    fun testEventHandlerWithErrors() = runBlocking {
+    fun testEventHandlerWithErrors() = runTest {
         val eventsCollector = TestEventsCollector()
         val strategyName = "tracing-test-strategy"
 
@@ -486,7 +510,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test llm streaming events success`() = runBlocking {
+    fun `test llm streaming events success`() = runTest {
         val eventsCollector = TestEventsCollector()
 
         val model = OpenAIModels.Chat.GPT4o
@@ -507,14 +531,14 @@ class EventHandlerTest {
         val toolRegistry = ToolRegistry { tool(DummyTool()) }
 
         val testLLMResponse = "Default test response"
-        val executor = getMockExecutor {
+        val executor = getMockExecutor(serializer) {
             mockLLMAnswer(testLLMResponse).asDefaultResponse onUserRequestEquals "Test user message"
         }
 
         createAgent(
             agentId = "test-agent-id",
             strategy = strategy,
-            promptExecutor = executor,
+            executor = executor,
             promptId = promptId,
             systemPrompt = systemPrompt,
             userPrompt = userPrompt,
@@ -525,7 +549,7 @@ class EventHandlerTest {
         ) {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
         }.use { agent ->
-            agent.run("")
+            agent.run("", null)
         }
 
         val runId = eventsCollector.runId
@@ -540,7 +564,9 @@ class EventHandlerTest {
 
         val expectedEvents = listOf(
             "OnLLMStreamingStarting (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
-            "OnLLMStreamingFrameReceived (run id: $runId, frame: Append(text=$testLLMResponse))",
+            "OnLLMStreamingFrameReceived (run id: $runId, frame: TextDelta(text=$testLLMResponse, index=0))",
+            "OnLLMStreamingFrameReceived (run id: $runId, frame: TextComplete(text=$testLLMResponse, index=0))",
+            "OnLLMStreamingFrameReceived (run id: $runId, frame: End(finishReason=null, metaInfo=ResponseMetaInfo(timestamp=${Instant.DISTANT_PAST}, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
             "OnLLMStreamingCompleted (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
         )
 
@@ -549,7 +575,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test llm streaming events failure`() = runBlocking {
+    fun `test llm streaming events failure`() = runTest {
         val eventsCollector = TestEventsCollector()
 
         val promptId = "Test prompt Id"
@@ -572,17 +598,17 @@ class EventHandlerTest {
 
         val testStreamingErrorMessage = "Test streaming error"
 
-        val testStreamingExecutor = object : PromptExecutor {
+        val testStreamingExecutor = object : PromptExecutor() {
             override suspend fun execute(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
-                tools: List<ai.koog.agents.core.tools.ToolDescriptor>
+                tools: List<ToolDescriptor>
             ): List<Message.Response> = emptyList()
 
             override fun executeStreaming(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
-                tools: List<ai.koog.agents.core.tools.ToolDescriptor>
+                tools: List<ToolDescriptor>
             ): Flow<StreamFrame> = flow {
                 throw IllegalStateException(testStreamingErrorMessage)
             }
@@ -599,7 +625,7 @@ class EventHandlerTest {
 
         createAgent(
             strategy = strategy,
-            promptExecutor = testStreamingExecutor,
+            executor = testStreamingExecutor,
             promptId = promptId,
             systemPrompt = systemPrompt,
             userPrompt = userPrompt,
@@ -610,7 +636,7 @@ class EventHandlerTest {
         ) {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
         }.use { agent ->
-            val throwable = assertThrows<IllegalStateException> { agent.run("") }
+            val throwable = assertThrows<IllegalStateException> { agent.run("", null) }
             assertEquals(testStreamingErrorMessage, throwable.message)
         }
 
@@ -634,6 +660,100 @@ class EventHandlerTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    fun AIAgentSubgraphBuilderBase<*, *>.nodeException(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
+    @Test
+    fun `test subgraph execution events success`() = runTest {
+        val eventsCollector = TestEventsCollector()
+
+        val strategyName = "test-strategy"
+        val subgraphName = "test-subgraph"
+        val subgraphNodeName = "test-subgraph-node"
+        val subgraphOutput = "test-subgraph-output"
+        val inputRequest = "Test input"
+
+        val strategy = strategy<String, String>(strategyName) {
+            val subgraph by subgraph<String, String>(subgraphName) {
+                val subgraphNode by node<String, String>(subgraphNodeName) { subgraphOutput }
+                nodeStart then subgraphNode then nodeFinish
+            }
+            nodeStart then subgraph then nodeFinish
+        }
+
+        createAgent(
+            strategy = strategy,
+            installFeatures = {
+                install(EventHandler) eventHandlerConfig@{
+                    setEventFilter { context ->
+                        context is SubgraphExecutionEventContext
+                    }
+                    eventsCollector.eventHandlerFeatureConfig.invoke(this@eventHandlerConfig)
+                }
+            }
+        ).use { agent ->
+            agent.run(inputRequest, null)
+        }
+
+        val runId = eventsCollector.runId
+
+        val expectedEvents = listOf(
+            "OnSubgraphExecutionStarting (run id: $runId, subgraph: $subgraphName, input: $inputRequest)",
+            "OnSubgraphExecutionCompleted (run id: $runId, subgraph: $subgraphName, input: $inputRequest, output: $subgraphOutput)",
+        )
+
+        assertEquals(expectedEvents.size, eventsCollector.collectedEvents.size)
+        assertContentEquals(expectedEvents, eventsCollector.collectedEvents)
+    }
+
+    @Test
+    fun `test subgraph execution events failure`() = runTest {
+        val eventsCollector = TestEventsCollector()
+
+        val strategyName = "test-strategy"
+        val subgraphName = "test-subgraph"
+        val subgraphErrorNodeName = "test-subgraph-error-node"
+        val subgraphNodeErrorMessage = "Test subgraph error"
+        val inputRequest = "Test input"
+
+        val strategy = strategy<String, String>(strategyName) {
+            val subgraph by subgraph<String, String>(subgraphName) {
+                val nodeWithError by node<String, String>(subgraphErrorNodeName) {
+                    throw IllegalStateException(subgraphNodeErrorMessage)
+                }
+                nodeStart then nodeWithError then nodeFinish
+            }
+            nodeStart then subgraph then nodeFinish
+        }
+
+        val agentThrowable = createAgent(
+            strategy = strategy,
+            installFeatures = {
+                install(EventHandler) eventHandlerConfig@{
+                    setEventFilter { context ->
+                        context is SubgraphExecutionEventContext
+                    }
+                    eventsCollector.eventHandlerFeatureConfig.invoke(this@eventHandlerConfig)
+                }
+            }
+        ).use { agent ->
+            assertFails { agent.run(inputRequest, null) }
+        }
+
+        assertEquals(subgraphNodeErrorMessage, agentThrowable.message)
+
+        // Check captured events
+        val runId = eventsCollector.runId
+        val expectedEvents = listOf(
+            "OnSubgraphExecutionStarting (run id: $runId, subgraph: $subgraphName, input: $inputRequest)",
+            "OnSubgraphExecutionFailed (run id: $runId, subgraph: $subgraphName, input: $inputRequest, error: $subgraphNodeErrorMessage)",
+        )
+
+        assertEquals(expectedEvents.size, eventsCollector.collectedEvents.size)
+        assertContentEquals(expectedEvents, eventsCollector.collectedEvents)
+    }
+
+    //region Private Methods
+
+    private fun nodeException(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
         node(name) { throw IllegalStateException("Test exception") }
+
+    //endregion Private Methods
 }

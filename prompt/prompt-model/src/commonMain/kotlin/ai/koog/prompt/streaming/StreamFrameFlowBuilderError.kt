@@ -21,6 +21,6 @@ public sealed class StreamFrameFlowBuilderError(message: String) : Throwable(mes
      * @property expectedIndex The expected index of the partial tool call.
      * @property actualIndex The actual index of the partial tool call.
      */
-    public class UnexpectedPartialToolCallIndex(expectedIndex: Int, actualIndex: Int) :
+    public class UnexpectedPartialToolCallIndex(expectedIndex: Int?, actualIndex: Int?) :
         StreamFrameFlowBuilderError("Error constructing tool call, expected index $expectedIndex but was $actualIndex")
 }

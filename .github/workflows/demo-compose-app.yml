@@ -23,20 +23,20 @@ jobs:
       fail-fast: false
       matrix:
         gradle-tasks: [
-          "lint :androidApp:assembleDebug :androidApp:assembleRelease",
+          "ktlintCheck lint :androidApp:assembleDebug :androidApp:assembleRelease",
           ":desktopApp:jar",
-          ":webApp:composeCompatibilityBrowserDistribution"
+          ":webApp:jsBrowserDevelopmentWebpack"
         ]
         os: [ ubuntu-latest ]
         include:
           - gradle-tasks: ":commonApp:iosSimulatorArm64Binaries"
-            os: macos-latest-xlarge
+            os: macos-latest
 
     steps:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
@@ -47,7 +47,7 @@ jobs:
       # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
         with:
           # Cache downloaded JDKs/konan in addition to the default directories.
           gradle-home-cache-includes: |
@@ -61,5 +61,3 @@ jobs:
       - name: Assemble target
         working-directory: ./examples/demo-compose-app
         run: ./gradlew ${{ matrix.gradle-tasks }} --stacktrace
-        env:
-          JAVA_OPTS: "-Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"

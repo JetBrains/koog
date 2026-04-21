@@ -42,6 +42,10 @@ internal fun LLMParams.toAnthropicParams(): AnthropicParams {
  * @property mcpServers MCP servers to be used in this request
  * @property serviceTier Determines whether to use priority capacity (if available) or standard capacity for this request.
  * @property thinking Configuration for enabling Claude's extended thinking.
+ * @property cacheControl when automatic cache control provided, [AnthropicCacheControl] is added at the **request
+ *   top level** and the API automatically applies the cache breakpoint to the last cacheable block.
+ *   This is the recommended approach for multi-turn conversations where you don't need fine-grained
+ *   control over breakpoint positions.
  */
 @Suppress("LongParameterList")
 public class AnthropicParams(
@@ -60,6 +64,7 @@ public class AnthropicParams(
     public val mcpServers: List<AnthropicMCPServerURLDefinition>? = null,
     public val serviceTier: AnthropicServiceTier? = null,
     public val thinking: AnthropicThinking? = null,
+    public val cacheControl: AnthropicCacheControl? = null,
 ) : LLMParams(
     temperature,
     maxTokens,
@@ -101,6 +106,34 @@ public class AnthropicParams(
         }
     }
 
+    override fun copy(
+        temperature: Double?,
+        maxTokens: Int?,
+        numberOfChoices: Int?,
+        speculation: String?,
+        schema: Schema?,
+        toolChoice: ToolChoice?,
+        user: String?,
+        additionalProperties: Map<String, JsonElement>?,
+    ): AnthropicParams = copy(
+        temperature = temperature,
+        maxTokens = maxTokens,
+        numberOfChoices = numberOfChoices,
+        speculation = speculation,
+        schema = schema,
+        toolChoice = toolChoice,
+        user = user,
+        additionalProperties = additionalProperties,
+        topP = topP,
+        topK = topK,
+        stopSequences = stopSequences,
+        container = container,
+        mcpServers = mcpServers,
+        serviceTier = serviceTier,
+        thinking = thinking,
+        cacheControl = cacheControl,
+    )
+
     /**
      * Creates a copy of this instance with the ability to modify any of its properties.
      */
@@ -120,6 +153,7 @@ public class AnthropicParams(
         mcpServers: List<AnthropicMCPServerURLDefinition>? = this.mcpServers,
         serviceTier: AnthropicServiceTier? = this.serviceTier,
         thinking: AnthropicThinking? = this.thinking,
+        cacheControl: AnthropicCacheControl? = this.cacheControl,
     ): AnthropicParams = AnthropicParams(
         temperature = temperature,
         maxTokens = maxTokens,
@@ -136,6 +170,7 @@ public class AnthropicParams(
         mcpServers = mcpServers,
         serviceTier = serviceTier,
         thinking = thinking,
+        cacheControl = cacheControl,
     )
 
     override fun equals(other: Any?): Boolean = when {
@@ -156,7 +191,8 @@ public class AnthropicParams(
                 container == other.container &&
                 mcpServers == other.mcpServers &&
                 serviceTier == other.serviceTier &&
-                thinking == other.thinking
+                thinking == other.thinking &&
+                cacheControl == other.cacheControl
     }
 
     override fun hashCode(): Int = listOf(
@@ -164,7 +200,7 @@ public class AnthropicParams(
         speculation, schema, toolChoice, user,
         additionalProperties, topP, topK,
         stopSequences, container, mcpServers,
-        serviceTier, thinking
+        serviceTier, thinking, cacheControl
     ).fold(0) { acc, element ->
         31 * acc + (element?.hashCode() ?: 0)
     }
@@ -186,6 +222,7 @@ public class AnthropicParams(
         append(", mcpServers=$mcpServers")
         append(", serviceTier=$serviceTier")
         append(", thinking=$thinking")
+        append(", automaticCacheControl=$cacheControl")
         append(")")
     }
 }

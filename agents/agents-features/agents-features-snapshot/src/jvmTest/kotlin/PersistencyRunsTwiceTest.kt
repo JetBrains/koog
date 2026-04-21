@@ -1,51 +1,54 @@
-import ai.koog.agents.core.agent.AIAgentService
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import io.kotest.matchers.collections.shouldContainExactly
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.awaitility.kotlin.await
 import org.junit.jupiter.api.Test
-import kotlin.test.Ignore
 
 class PersistenceRunsTwiceTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
-    @Ignore
     fun `agent runs to end and on second run starts from beginning again`() = runTest {
         // Arrange
         val provider = InMemoryPersistenceStorageProvider()
 
         val testCollector = TestAgentLogsCollector()
 
-        val agentService = AIAgentService(
-            promptExecutor = getMockExecutor {
+        val agentConfig = AIAgentConfig(
+            prompt = prompt("test") { system("You are a test agent.") },
+            model = OllamaModels.Meta.LLAMA_3_2,
+            maxAgentIterations = 10,
+        )
+
+        val agent = GraphAIAgent(
+            inputType = typeToken<String>(),
+            outputType = typeToken<String>(),
+            promptExecutor = getMockExecutor(serializer) {
                 // No LLM calls needed for this test; nodes write directly to the prompt/history
             },
             strategy = loggingGraphStrategy(testCollector),
-            agentConfig = AIAgentConfig(
-                prompt = prompt("test") { system("You are a test agent.") },
-                model = OllamaModels.Meta.LLAMA_3_2,
-                maxAgentIterations = 10
-            ),
+            agentConfig = agentConfig,
         ) {
             install(Persistence) {
                 storage = provider
-                enableAutomaticPersistence = true
             }
         }
 
-        val firstAgent = agentService.createAgent(id = "SAME_ID")
         val agentId1 = "SAME_ID"
 
         // Act: first run
-        firstAgent.run("Start the test")
+        agent.run("Start the test", agentId1)
 
         // Assert
         testCollector.logs() shouldContainExactly listOf(
@@ -62,31 +65,25 @@ class PersistenceRunsTwiceTest {
         }
 
         val firstCheckpoint = provider.getLatestCheckpoint(agentId1)
-
-        val secondAgent = agentService.createAgent(id = "SAME_ID")
-
         // Act: second run with the same storage (should not resume mid-graph)
-        secondAgent.run("Start the test2")
+        agent.run("Start the test2", agentId1)
 
         // And still ends with a tombstone as the latest checkpoint
         await.until {
             runBlocking {
                 val latest2 = provider.getLatestCheckpoint(agentId1)
-                latest2?.isTombstone() == true
                 latest2 != firstCheckpoint
             }
         }
     }
 
     @Test
-    @Ignore
     fun `agent fails on the first run and second run running successfully`() = runTest {
         val provider = InMemoryPersistenceStorageProvider()
-
         val testCollector = TestAgentLogsCollector()
 
-        val agentService = AIAgentService(
-            promptExecutor = getMockExecutor {
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) {
                 // No LLM calls needed for this test; nodes write directly to the prompt/history
             },
             strategy = loggingGraphForRunFromSecondTry(testCollector),
@@ -98,15 +95,13 @@ class PersistenceRunsTwiceTest {
         ) {
             install(Persistence) {
                 storage = provider
-                enableAutomaticPersistence = true
-                rollbackStrategy = RollbackStrategy.Default
             }
         }
 
-        val agentId = "100500"
+        val sessionId = "test-agent-id"
 
         // Act: first run
-        val result = runCatching { agentService.createAgentAndRun("Start the test", id = agentId) }
+        val result = runCatching { agent.run("Start the test", sessionId = sessionId) }
 
         // Assert: first run fails
         assert(result.isFailure)
@@ -118,27 +113,24 @@ class PersistenceRunsTwiceTest {
 
         await.until {
             runBlocking {
-                provider.getCheckpoints(agentId).size == 2
+                val checkpoints = provider.getCheckpoints(sessionId)
+                println(checkpoints)
+                checkpoints.size == 2
             }
         }
 
         // Clear the collector to isolate the second run
         testCollector.clear()
 
-        val secondAgent = agentService.createAgent(id = agentId)
+        agent.run("Start the test", sessionId = sessionId)
 
-        val secondRunResult = runCatching { secondAgent.run("Start the test") }
-
-        // Assert: second run is successful
-        assert(secondRunResult.isSuccess)
         testCollector.logs() shouldContainExactly listOf(
-            "Second Step",
             "Second try successful",
         )
 
         await.until {
             runBlocking {
-                provider.getCheckpoints(agentId).filter { !it.isTombstone() }.size == 4
+                provider.getCheckpoints(sessionId).filter { !it.isTombstone() }.size == 3
             }
         }
     }

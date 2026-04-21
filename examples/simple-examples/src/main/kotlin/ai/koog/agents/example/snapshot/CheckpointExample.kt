@@ -4,13 +4,12 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.calculator.CalculatorTools
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
@@ -39,7 +38,6 @@ suspend fun main() {
         ) {
             install(Persistence) {
                 storage = snapshotProvider
-                enableAutomaticPersistence = true
             }
 
             install(EventHandler) {
@@ -70,7 +68,6 @@ suspend fun main() {
         ) {
             install(Persistence) {
                 storage = snapshotProvider
-                enableAutomaticPersistence = true
             }
         }
 

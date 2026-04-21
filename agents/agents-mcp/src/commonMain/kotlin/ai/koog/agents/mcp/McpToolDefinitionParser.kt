@@ -3,13 +3,14 @@ package ai.koog.agents.mcp
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import io.modelcontextprotocol.kotlin.sdk.Tool as SDKTool
+import io.modelcontextprotocol.kotlin.sdk.types.Tool as SDKTool
 
 /**
  * Parsers tool definition from MCP SDK to our tool descriptor format.
@@ -42,7 +43,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
      */
     override fun parse(sdkTool: SDKTool): ToolDescriptor {
         // Parse all parameters from the input schema
-        val parameters = parseParameters(sdkTool.inputSchema.properties)
+        val parameters = parseParameters(sdkTool.inputSchema.properties ?: EmptyJsonObject)
 
         // Get the list of required parameters
         val requiredParameters = sdkTool.inputSchema.required ?: emptyList()
@@ -70,49 +71,28 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         if (typeStr == null) {
             val anyOf = element["anyOf"]?.jsonArray
             if (anyOf != null) {
-                val types = anyOf.map { it.jsonObject["type"]?.jsonPrimitive?.content }
                 /**
-                 * Special case for nullable types.
+                 * anyOf with multiple types.
                  * Schema example:
                  * {
-                 *   "nullableParam": {
+                 *   "anyOfParam": {
                  *     "anyOf": [
                  *       { "type": "string" },
-                 *       { "type": "null" }
+                 *       { "type": "number" }
                  *     ],
-                 *     "title": "Nullable string parameter"
+                 *     "title": "string or number parameter"
                  *   }
                  * }
                  */
-                if (anyOf.size == 2 && types.contains("null")) {
-                    val nonNullType = anyOf.first {
-                        it.jsonObject["type"]?.jsonPrimitive?.content != "null"
-                    }.jsonObject
-                    return parseParameterType(nonNullType, depth + 1)
-                } else {
-                    /**
-                     * anyOf with multiple types.
-                     * Schema example:
-                     * {
-                     *   "anyOfParam": {
-                     *     "anyOf": [
-                     *       { "type": "string" },
-                     *       { "type": "number" }
-                     *     ],
-                     *     "title": "string or number parameter"
-                     *   }
-                     * }
-                     */
-                    return ToolParameterType.AnyOf(
-                        types = anyOf.map { it.jsonObject }.map {
-                            ToolParameterDescriptor(
-                                name = "",
-                                description = it["description"]?.jsonPrimitive?.content.orEmpty(),
-                                type = parseParameterType(it.jsonObject)
-                            )
-                        }.toTypedArray()
-                    )
-                }
+                return ToolParameterType.AnyOf(
+                    types = anyOf.map { it.jsonObject }.map {
+                        ToolParameterDescriptor(
+                            name = "",
+                            description = it["description"]?.jsonPrimitive?.content.orEmpty(),
+                            type = parseParameterType(it.jsonObject)
+                        )
+                    }.toTypedArray()
+                )
             }
 
             /**
@@ -142,9 +122,13 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         return when (typeStr.lowercase()) {
             // Primitive types
             "string" -> ToolParameterType.String
+
             "integer" -> ToolParameterType.Integer
+
             "number" -> ToolParameterType.Float
+
             "boolean" -> ToolParameterType.Boolean
+
             "enum" -> ToolParameterType.Enum(
                 element.getValue("enum").jsonArray.map { it.jsonPrimitive.content }.toTypedArray()
             )
@@ -188,6 +172,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                             element.getValue("additionalProperties").jsonObject,
                             depth + 1
                         )
+
                         else -> null
                     }
                 } else {

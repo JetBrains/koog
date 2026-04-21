@@ -22,7 +22,7 @@ kotlin {
             }
         }
 
-        jvmMain {
+        jvmCommonMain {
             dependencies {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
             }

@@ -1,0 +1,24 @@
+flowchart TD
+    Start([nodeStart])
+    Classify[classifyRequest]
+    Check[checkRequest]
+    Order[orderStatusFlow]
+    Change[changeAddressFlow]
+    Refund[refundFlow]
+    MaybeCompress[maybeCompressHistory]
+    Compress[compressLLMHistory]
+    Finish([nodeFinish])
+
+    Start --> Classify
+
+    Classify -- "isSuccess" --> Check
+    Classify -- "isFailure" --> Finish
+
+    Check -- "needsMoreInfo" --> Finish
+    Check -- "intent = ORDER_STATUS" --> Order
+    Check -- "intent = CHANGE_ADDRESS" --> Change
+    Check -- "intent = REFUND" --> Refund
+
+    Order --> Finish
+    Change --> Finish
+    Refund --> Finish

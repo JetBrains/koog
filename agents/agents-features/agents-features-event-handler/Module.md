@@ -58,7 +58,7 @@ val testAgent = AIAgent(
     handleEvents {
         onToolCallStarting { eventContext ->
             toolCalled = true
-            println("[DEBUG_LOG] Tool called: ${eventContext.tool.name}")
+            println("[DEBUG_LOG] Tool called: ${eventContext.toolName}")
         }
 
         onAgentCompleted { eventContext ->
@@ -96,7 +96,7 @@ val agent = AIAgent(
 
         // Monitor tool usage
         onToolCallStarting { eventContext ->
-            println("Tool called: ${eventContext.tool.name} with args: ${eventContext.toolArgs}")
+            println("Tool called: ${eventContext.toolName} with args: ${eventContext.toolArgs}")
         }
 
         onToolCallCompleted { eventContext ->

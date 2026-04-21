@@ -1,15 +1,18 @@
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.snapshot.feature.withPersistence
-import kotlinx.serialization.json.JsonPrimitive
-import kotlin.reflect.typeOf
+import ai.koog.serialization.JSONPrimitive
+import ai.koog.serialization.typeToken
 
 /**
  * Creates a simple node that appends the output to the input.
  */
-fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
+fun simpleNode(
     name: String? = null,
     output: String,
 ): AIAgentNodeDelegate<String, String> = node(name) {
@@ -19,7 +22,7 @@ fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
     return@node it + "\n" + output
 }
 
-fun AIAgentSubgraphBuilderBase<*, *>.inputLogNode(
+fun inputLogNode(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     llm.writeSession {
@@ -28,7 +31,7 @@ fun AIAgentSubgraphBuilderBase<*, *>.inputLogNode(
     return@node it
 }
 
-internal fun AIAgentSubgraphBuilderBase<*, *>.loggingNode(
+internal fun loggingNode(
     name: String? = null,
     message: String,
     collector: TestAgentLogsCollector
@@ -38,7 +41,7 @@ internal fun AIAgentSubgraphBuilderBase<*, *>.loggingNode(
         return@node it
     }
 
-fun AIAgentSubgraphBuilderBase<*, *>.collectHistoryNode(
+fun collectHistoryNode(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     return@node llm.readSession {
@@ -50,7 +53,7 @@ fun AIAgentSubgraphBuilderBase<*, *>.collectHistoryNode(
 /**
  * Creates a strategy with a teleport node that jumps to a specific execution point.
  */
-fun createTeleportStrategy() = strategy("teleport-test") {
+fun createTeleportStrategy(strategyName: String = "teleport-test") = strategy(strategyName) {
     val node1 by simpleNode(
         "Node1",
         output = "Node 1 output"
@@ -60,7 +63,8 @@ fun createTeleportStrategy() = strategy("teleport-test") {
         "Node2",
         output = "Node 2 output"
     )
-    val teleportNode by teleportOnceNode("teleport", teleportState = TeleportState(false))
+
+    val teleportNode by teleportOnceNode("teleport", teleportToPath = path(strategyName, node1.name), teleportState = TeleportState(false))
 
     edge(nodeStart forwardTo node1)
     edge(node1 forwardTo teleportNode)
@@ -71,14 +75,12 @@ fun createTeleportStrategy() = strategy("teleport-test") {
 /**
  * Creates a strategy with a checkpoint node that creates and saves a checkpoint.
  */
-fun createCheckpointStrategy() = strategy("checkpoint-test") {
+fun createCheckpointStrategy(checkpointStrategyName: String, checkpointNodeId: String) = strategy(checkpointStrategyName) {
     val node1 by simpleNode(
         "Node1",
         output = "Node 1 output"
     )
-    val checkpointNode by nodeCreateCheckpoint(
-        "checkpointNode"
-    )
+    val checkpointNode by nodeCreateCheckpoint(checkpointNodeId)
     val node2 by simpleNode(
         "Node2",
         output = "Node 2 output"
@@ -96,16 +98,16 @@ private data class TeleportState(var teleported: Boolean = false)
  * Creates a teleport node that jumps to a specific execution point.
  * Only teleports once to avoid infinite loops.
  */
-private fun AIAgentSubgraphBuilderBase<*, *>.teleportOnceNode(
+private fun teleportOnceNode(
     name: String? = null,
-    teleportToId: String = "Node1",
+    teleportToPath: String = "Node1",
     teleportState: TeleportState
 ): AIAgentNodeDelegate<String, String> = node(name) {
     if (!teleportState.teleported) {
         teleportState.teleported = true
         withPersistence { ctx ->
             val history = llm.readSession { this.prompt.messages }
-            setExecutionPoint(ctx, teleportToId, history, JsonPrimitive("$it\nTeleported"))
+            setExecutionPoint(ctx, teleportToPath, history, input = JSONPrimitive("$it\nTeleported"))
             return@withPersistence "Teleported"
         }
     } else {
@@ -114,7 +116,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.teleportOnceNode(
     }
 }
 
-private fun AIAgentSubgraphBuilderBase<*, *>.nodeForSecondTry(
+private fun nodeForSecondTry(
     name: String? = null,
     teleportState: TeleportState,
     collector: TestAgentLogsCollector,
@@ -128,11 +130,11 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeForSecondTry(
     }
 }
 
-private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? = null, checkpointId: String) =
-    node<String, String>(name) {
-        val input = it
+@Suppress("DEPRECATION")
+private fun createCheckpointNode(name: String? = null, checkpointId: String) =
+    node<String, String>(name) { input ->
         withPersistence { ctx ->
-            createCheckpoint(ctx, name!!, input, typeOf<String>(), 0L, checkpointId)
+            createCheckpoint(ctx, name!!, input, typeToken<String>(), 0L, checkpointId)
             llm.writeSession {
                 appendPrompt {
                     user {
@@ -144,7 +146,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? 
         return@node "$input\nCheckpoint Created"
     }
 
-private fun AIAgentSubgraphBuilderBase<*, *>.nodeRollbackToCheckpoint(
+private fun nodeRollbackToCheckpoint(
     name: String? = null,
     checkpointId: String,
     teleportState: TeleportState
@@ -161,7 +163,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeRollbackToCheckpoint(
             val checkpoint = rollbackToCheckpoint(checkpointId, it)!!
             teleportState.teleported = true
             llm.writeSession {
-                appendPrompt { user { text("Rolling back to node ${checkpoint.nodeId}") } }
+                appendPrompt { user { text("Rolling back to node ${checkpoint.nodePath}") } }
             }
         }
         return@node "$it\nrolled back"
@@ -170,16 +172,16 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeRollbackToCheckpoint(
 /**
  * Creates a checkpoint node that creates and saves a checkpoint.
  */
-private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
+private fun nodeCreateCheckpoint(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     val input = it
     withPersistence { ctx ->
-        val checkpoint = createCheckpoint(
+        val checkpoint = createCheckpointAfterNode(
             ctx,
-            currentNodeId ?: error("currentNodeId not set"),
+            ctx.executionInfo.path(),
             input,
-            typeOf<String>(),
+            typeToken<String>(),
             0L
         )
 
@@ -189,7 +191,8 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
     }
 }
 
-fun createSimpleTeleportSubgraphStrategy(teleportToId: String) = strategy("teleport-test") {
+fun createSimpleTeleportSubgraphStrategy(teleportToId: String = "Node2", strategyName: String = "teleport-test", path: String? = null) = strategy(strategyName) {
+    val sg1Name = "sg1"
     val node1 by simpleNode(
         "Node1",
         output = "Node 1 output"
@@ -200,9 +203,9 @@ fun createSimpleTeleportSubgraphStrategy(teleportToId: String) = strategy("telep
         output = "Node 2 output"
     )
 
-    val sg by subgraph("sg1") {
+    val sg by subgraph(sg1Name) {
         val sgNode1 by simpleNode(output = "sg1 node output")
-        val teleportNode by teleportOnceNode("teleport", teleportToId = teleportToId, teleportState = TeleportState())
+        val teleportNode by teleportOnceNode("teleport", teleportToPath = path ?: path(strategyName, sg1Name, teleportToId), teleportState = TeleportState())
         val sgNode2 by simpleNode(output = "sg2 node output")
 
         nodeStart then sgNode1 then teleportNode then sgNode2 then nodeFinish
@@ -308,47 +311,49 @@ internal fun loggingGraphForRunFromSecondTry(collector: TestAgentLogsCollector) 
         collector = collector,
     )
 
-    edge(nodeStart forwardTo node1)
-    edge(node1 forwardTo node2)
-    edge(node2 forwardTo nodeForSecondTry)
-    edge(nodeForSecondTry forwardTo nodeFinish)
+    nodeStart then node1 then node2 then nodeForSecondTry then nodeFinish
 }
 
-fun createSimpleTeleportSubgraphWithInnerSubgraph(teleportToId: String) = strategy("teleport-test") {
-    val node1 by simpleNode(
-        "Node1",
-        output = "Node 1 output"
-    )
+fun simpleTeleportSubgraphWithInnerSubgraph(teleportToId: String): AIAgentGraphStrategy<String, String> {
+    val strategyName = "teleport-test"
+    val sg1Name = "sg1"
+    val sg2Name = "sg2"
+    return strategy(strategyName) {
+        val node1 by simpleNode(
+            "Node1",
+            output = "Node 1 output"
+        )
 
-    val node2 by simpleNode(
-        "Node2",
-        output = "Node 2 output"
-    )
+        val node2 by simpleNode(
+            "Node2",
+            output = "Node 2 output"
+        )
 
-    val sg by subgraph("sg1") {
-        val sgNode1 by simpleNode(output = "sgNode1 node output")
-        val sgNode2 by simpleNode(output = "sgNode2 node output")
+        val sg by subgraph(sg1Name) {
+            val sgNode1 by simpleNode(output = "sgNode1 node output")
+            val sgNode2 by simpleNode(name = teleportToId, output = "sgNode2 node output")
 
-        val sg2 by subgraph {
-            val sg2Node1 by simpleNode(output = "sg2Node1 node output")
-            val sg2Node2 by simpleNode(output = "sg2Node2 node output")
-            val teleportNode by teleportOnceNode(teleportToId = teleportToId, teleportState = TeleportState())
-            nodeStart then sg2Node1 then sg2Node2 then teleportNode then nodeFinish
+            val sg2 by subgraph(sg2Name) {
+                val sg2Node1 by simpleNode(output = "sg2Node1 node output")
+                val sg2Node2 by simpleNode(output = "sg2Node2 node output")
+                val teleportNode by teleportOnceNode(teleportToPath = path(strategyName, sg1Name, teleportToId), teleportState = TeleportState())
+                nodeStart then sg2Node1 then sg2Node2 then teleportNode then nodeFinish
+            }
+
+            nodeStart then sgNode1 then sg2 then sgNode2 then nodeFinish
         }
 
-        nodeStart then sgNode1 then sg2 then sgNode2 then nodeFinish
+        edge(nodeStart forwardTo node1)
+        edge(node1 forwardTo sg)
+        edge(sg forwardTo node2)
+        edge(node2 forwardTo nodeFinish)
     }
-
-    edge(nodeStart forwardTo node1)
-    edge(node1 forwardTo sg)
-    edge(sg forwardTo node2)
-    edge(node2 forwardTo nodeFinish)
 }
 
 /**
  * Creates a strategy with a subgraph that contains a checkpoint node.
  */
-fun createCheckpointSubgraphStrategy(checkpointId: String) = strategy("checkpoint-subgraph-test") {
+fun checkpointSubgraphStrategy(checkpointId: String) = strategy("checkpoint-subgraph-test") {
     val node1 by simpleNode(
         "Node1",
         output = "Node 1 output"
@@ -376,7 +381,7 @@ fun createCheckpointSubgraphStrategy(checkpointId: String) = strategy("checkpoin
 /**
  * Creates a strategy with a subgraph that contains a checkpoint node and a rollback node.
  */
-fun createCheckpointSubgraphWithRollbackStrategy(checkpointId: String) = strategy("checkpoint-rollback-subgraph-test") {
+fun checkpointSubgraphWithRollbackStrategy(checkpointId: String) = strategy("checkpoint-rollback-subgraph-test") {
     val node1 by simpleNode(
         "Node1",
         output = "Node 1 output"
@@ -408,7 +413,7 @@ fun createCheckpointSubgraphWithRollbackStrategy(checkpointId: String) = strateg
 /**
  * Creates a strategy with nested subgraphs that contain checkpoint and rollback nodes.
  */
-fun createNestedSubgraphCheckpointStrategy(checkpointId: String) = strategy("nested-checkpoint-subgraph-test") {
+fun nestedSubgraphCheckpointStrategy(checkpointId: String) = strategy("nested-checkpoint-subgraph-test") {
     val node1 by simpleNode(
         "Node1",
         output = "Node 1 output"
@@ -442,7 +447,7 @@ fun createNestedSubgraphCheckpointStrategy(checkpointId: String) = strategy("nes
 /**
  * Creates a strategy with nested subgraphs that contain checkpoint and rollback nodes.
  */
-fun createNestedSubgraphCheckpointWithRollbackStrategy(
+fun nestedSubgraphCheckpointWithRollbackStrategy(
     checkpointId: String
 ) = strategy("nested-checkpoint-rollback-subgraph-test") {
     val node1 by simpleNode(
@@ -478,4 +483,23 @@ fun createNestedSubgraphCheckpointWithRollbackStrategy(
     edge(node1 forwardTo sg)
     edge(sg forwardTo node2)
     edge(node2 forwardTo nodeFinish)
+}
+
+fun strategyWithRepeatedSubgraphs() = strategy("repeated-subgraphs-test") {
+    val node1 by simpleNode(
+        "Node1",
+        output = "Node 1 output"
+    )
+
+    fun createSimpleSubgraph(name: String) = subgraph(name) {
+        val sgNode1 by simpleNode(name = "sgNode1", output = "sg1 node output")
+        val sgNode2 by simpleNode(name = "sgNode2", output = "sg2 node output")
+
+        nodeStart then sgNode1 then sgNode2 then nodeFinish
+    }
+
+    val simpleSubgraph by createSimpleSubgraph("sg1")
+    val simpleSubgraph2 by createSimpleSubgraph("sg2")
+
+    nodeStart then node1 then simpleSubgraph then simpleSubgraph2 then nodeFinish
 }

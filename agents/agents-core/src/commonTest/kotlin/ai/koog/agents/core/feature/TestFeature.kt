@@ -1,78 +1,213 @@
 package ai.koog.agents.core.feature
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
+import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.prompt.message.Message
 
-class TestFeature(val events: MutableList<String>, val runIds: MutableList<String>) {
+class TestFeature(val events: MutableList<String>) {
 
-    class Config : FeatureConfig() {
-        var events: MutableList<String>? = null
-        var runIds: MutableList<String>? = null
+    class TestConfig : FeatureConfig() {
+        var events: MutableList<String> = mutableListOf()
+        var runIds: MutableList<String> = mutableListOf()
+
+        fun addEvent(eventContext: AgentLifecycleEventContext, parameters: Map<String, Any?>) {
+            val eventStringBuilder = StringBuilder("${eventContext.eventType::class.simpleName} ")
+                .append("(")
+                .append("path: ").append(eventContext.executionInfo.path())
+
+            if (parameters.isNotEmpty()) {
+                eventStringBuilder
+                    .append(", ")
+                    .append(parameters.entries.joinToString(", ") { "${it.key}: ${it.value}" })
+            }
+
+            eventStringBuilder.append(")")
+            events += eventStringBuilder.toString()
+        }
     }
 
-    companion object Feature : AIAgentGraphFeature<Config, TestFeature> {
+    companion object Feature : AIAgentGraphFeature<TestConfig, TestFeature>, AIAgentFunctionalFeature<TestConfig, TestFeature> {
         override val key: AIAgentStorageKey<TestFeature> = createStorageKey("test-feature")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(
+            agentConfig: AIAgentConfig,
+        ): TestConfig = TestConfig()
 
         override fun install(
-            config: Config,
+            config: TestConfig,
             pipeline: AIAgentGraphPipeline,
         ): TestFeature {
             val testFeature = TestFeature(
-                events = config.events ?: mutableListOf(),
-                runIds = config.runIds ?: mutableListOf()
+                events = config.events
             )
 
-            pipeline.interceptAgentStarting(this) { eventContext ->
-                testFeature.runIds += eventContext.runId
-                testFeature.events += "Agent: before agent started (id: ${eventContext.agent.id}, run id: ${eventContext.runId})"
-            }
-
-            pipeline.interceptStrategyStarting(this) { eventContext ->
-                testFeature.events += "Agent: strategy started (strategy name: ${eventContext.strategy.name})"
-            }
-
-            pipeline.interceptLLMCallStarting(this) { event ->
-                testFeature.events +=
-                    "LLM: start LLM call (prompt: ${event.prompt.messages.firstOrNull {
-                        it.role == Message.Role.User
-                    }?.content}, tools: [${event.tools.joinToString { it.name }}])"
-            }
-
-            pipeline.interceptLLMCallCompleted(this) { event ->
-                testFeature.events +=
-                    "LLM: finish LLM call (responses: [${event.responses.joinToString(", ") {
-                        "${it.role.name}: ${it.content}"
-                    }}])"
-            }
+            installCommon(pipeline, config)
 
             pipeline.interceptNodeExecutionStarting(this) { event ->
-                testFeature.events += "Node: start node (name: ${event.node.name}, input: ${event.input})"
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "name" to event.node.name,
+                        "input" to event.input
+                    )
+                )
             }
 
             pipeline.interceptNodeExecutionCompleted(this) { event ->
-                testFeature.events +=
-                    "Node: finish node (name: ${event.node.name}, input: ${event.input}, output: ${event.output})"
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "name" to event.node.name,
+                        "input" to event.input,
+                        "output" to event.output
+                    )
+                )
             }
 
             pipeline.interceptNodeExecutionFailed(this) { event ->
-                testFeature.events += "Node: execution error (name: ${event.node.name}, error: ${event.throwable.message})"
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "name" to event.node.name,
+                        "error" to event.throwable.message
+                    )
+                )
             }
 
-            pipeline.interceptToolCallStarting(this) { event ->
-                testFeature.events += "Tool: call tool (tool: ${event.tool.name}, args: ${event.toolArgs})"
+            pipeline.interceptSubgraphExecutionStarting(this) { event ->
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "name" to event.subgraph.name,
+                        "input" to event.input
+                    )
+                )
             }
 
-            pipeline.interceptToolCallCompleted(this) { event ->
-                testFeature.events +=
-                    "Tool: finish tool call with result (tool: ${event.tool.name}, result: ${event.result?.let(event.tool::encodeResultToStringUnsafe) ?: "null"})"
+            pipeline.interceptSubgraphExecutionCompleted(this) { event ->
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "name" to event.subgraph.name,
+                        "input" to event.input,
+                        "output" to event.output
+                    )
+                )
+            }
+
+            pipeline.interceptSubgraphExecutionFailed(this) { event ->
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "name" to event.subgraph.name,
+                        "error" to event.throwable.message
+                    )
+                )
             }
 
             return testFeature
         }
+
+        override fun install(
+            config: TestConfig,
+            pipeline: AIAgentFunctionalPipeline
+        ): TestFeature {
+            val testFeature = TestFeature(
+                events = config.events
+            )
+
+            installCommon(pipeline, config)
+            return testFeature
+        }
+
+        //region Private Methods
+
+        private fun installCommon(
+            pipeline: AIAgentPipeline,
+            config: TestConfig,
+        ) {
+            pipeline.interceptAgentStarting(this) { event ->
+                config.runIds += event.runId
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "id" to event.agent.id,
+                        "run id" to event.runId
+                    )
+                )
+            }
+
+            pipeline.interceptAgentCompleted(this) { event ->
+                config.runIds += event.runId
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "id" to event.agentId,
+                        "run id" to event.runId,
+                        "result" to event.result
+                    )
+                )
+            }
+
+            pipeline.interceptAgentClosing(this) { event ->
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "id" to event.agentId
+                    )
+                )
+            }
+
+            pipeline.interceptStrategyStarting(this) { event ->
+                config.addEvent(event, mapOf("strategy" to event.strategy.name))
+            }
+
+            pipeline.interceptLLMCallStarting(this) { event ->
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "prompt" to event.prompt.messages.lastOrNull { it.role == Message.Role.User }?.content,
+                        "tools" to "[${event.tools.joinToString { it.name }}]"
+                    )
+                )
+            }
+
+            pipeline.interceptLLMCallCompleted(this) { event ->
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "responses" to "[${event.responses.joinToString(", ") { "${it.role.name}: ${it.content}" }}]"
+                    )
+                )
+            }
+
+            pipeline.interceptToolCallStarting(this) { event ->
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "tool" to event.toolName,
+                        "args" to event.toolArgs
+                    )
+                )
+            }
+
+            pipeline.interceptToolCallCompleted(this) { event ->
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "tool" to event.toolName,
+                        "result" to (event.toolResult ?: "null")
+                    )
+                )
+            }
+        }
+
+        //endregion Private Methods
     }
 }

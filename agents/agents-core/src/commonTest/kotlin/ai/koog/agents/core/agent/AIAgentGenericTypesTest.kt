@@ -6,14 +6,17 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class AIAgentGenericTypesTest {
+    private val serializer = KotlinxSerializer()
 
     @Test
     fun testGenericInputOutputTypes() = runTest {
@@ -21,7 +24,7 @@ class AIAgentGenericTypesTest {
         data class CustomOutput(val result: String, val confidence: Double)
 
         val mockResponse = "This is a mock response"
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(serializer) {
             mockLLMAnswer(mockResponse).asDefaultResponse
         }
 
@@ -47,7 +50,7 @@ class AIAgentGenericTypesTest {
             )
         )
 
-        val result = agent.run(CustomInput(query = "What is the capital of France?"))
+        val result = agent.run(CustomInput(query = "What is the capital of France?"), null)
 
         assertEquals(mockResponse, result.result)
         assertEquals(0.95, result.confidence)
@@ -69,11 +72,11 @@ class AIAgentGenericTypesTest {
             edge(callLLM forwardTo nodeFinish transformed { output -> parseResponse(output) })
         }
 
-        val mockExecutorForEven = getMockExecutor {
+        val mockExecutorForEven = getMockExecutor(serializer) {
             mockLLMAnswer("Yes, 42 is an even number.").asDefaultResponse
         }
 
-        val mockExecutorForOdd = getMockExecutor {
+        val mockExecutorForOdd = getMockExecutor(serializer) {
             mockLLMAnswer("No, 43 is an odd number.").asDefaultResponse
         }
 
@@ -101,10 +104,10 @@ class AIAgentGenericTypesTest {
             )
         )
 
-        val resultEven = evenAgent.run(42)
-        val resultOdd = oddAgent.run(43)
+        val resultEven = evenAgent.run(42, null)
+        val resultOdd = oddAgent.run(43, null)
 
         assertTrue(resultEven)
-        assertTrue(!resultOdd)
+        assertFalse(resultOdd)
     }
 }

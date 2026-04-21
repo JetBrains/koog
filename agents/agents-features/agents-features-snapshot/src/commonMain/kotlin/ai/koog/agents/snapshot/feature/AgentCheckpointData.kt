@@ -8,11 +8,16 @@ import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.prompt.message.Message
-import kotlinx.datetime.Instant
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONNull
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.JSONPrimitive
+import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonObject
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -21,20 +26,83 @@ import kotlin.uuid.Uuid
  *
  * @property checkpointId The unique identifier of the checkpoint. This allows tracking and restoring the agent's session to a specific state.
  * @property messageHistory A list of messages exchanged in the session up to the checkpoint. Messages include interactions between the user, system, assistant, and tools.
- * @property nodeId The identifier of the node where the checkpoint was created.
- * @property lastInput Serialized input received for node with [nodeId]
+ * @property nodePath The identifier of the node where the checkpoint was created.
+ * @property lastInput Serialized input received for node with [nodePath]
+ * @property lastOutput Serialized output received from node with [nodePath]
  * @property properties Additional data associated with the checkpoint. This can be used to store additional information about the agent's state.
+ * @property createdAt The timestamp when the checkpoint was created.
+ * @property version The version of the checkpoint data structure
  */
 @Serializable
 public data class AgentCheckpointData(
     val checkpointId: String,
     val createdAt: Instant,
-    val nodeId: String,
-    val lastInput: JsonElement,
+    val nodePath: String,
+    @Deprecated("Use lastOutput instead, lastOutput will be removed in future versions")
+    val lastInput: JSONElement? = null,
+    val lastOutput: JSONElement? = null,
     val messageHistory: List<Message>,
     val version: Long,
-    val properties: Map<String, JsonElement>? = null
-)
+    val properties: JSONObject? = null
+) {
+    /**
+     * Constructs an instance of the class with the specified parameters.
+     * This constructor is marked as deprecated and may be removed in the future.
+     *
+     * @param checkpointId A unique identifier for the checkpoint.
+     * @param createdAt The timestamp indicating when the checkpoint was created.
+     * @param nodePath The path of the node associated with this checkpoint.
+     * @param lastInput The last input state, represented as a JSON element.
+     *                  This parameter is deprecated. Use `lastOutput` instead.
+     * @param lastOutput The last output state, represented as a JSON element.
+     * @param messageHistory The history of messages associated with this checkpoint.
+     * @param version The version number of the checkpoint data.
+     * @param properties Additional properties associated with the checkpoint, represented as a JSON object.
+     */
+    @Deprecated("Use AgentCheckpointData constructor that accepts koog.JSONElement instead of kotlinx.JsonElement")
+    public constructor(
+        checkpointId: String,
+        createdAt: Instant,
+        nodePath: String,
+        lastInput: JsonElement? = null,
+        lastOutput: JsonElement? = null,
+        messageHistory: List<Message>,
+        version: Long,
+        properties: JsonObject? = null
+    ) : this(
+        checkpointId,
+        createdAt,
+        nodePath,
+        lastInput?.toKoogJSONElement(),
+        lastOutput?.toKoogJSONElement(),
+        messageHistory,
+        version,
+        properties?.toKoogJSONObject()
+    )
+
+    init {
+        if (nodePath != PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME) {
+            require(lastInput == null || lastOutput == null) { "`lastInput` and `lastOutput` cannot be both set" }
+            require(lastInput != null || lastOutput != null) { "`lastInput` (until 0.6.0) or `lastOutput` (since 0.6.1) must be set" }
+        }
+    }
+
+    private fun eq(json1: JSONElement?, json2: JSONElement?): Boolean =
+        json1 == json2 || ((json1 == null || json1 == JSONNull) && (json2 == null || json2 == JSONNull))
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AgentCheckpointData) return false
+        return checkpointId == other.checkpointId &&
+            nodePath == other.nodePath &&
+            createdAt == other.createdAt &&
+            eq(lastInput, other.lastInput) &&
+            eq(lastOutput, other.lastOutput) &&
+            messageHistory == other.messageHistory &&
+            version == other.version &&
+            properties == other.properties
+    }
+}
 
 /**
  * Creates a tombstone checkpoint for an agent's session.
@@ -48,10 +116,14 @@ public fun tombstoneCheckpoint(time: Instant, version: Long): AgentCheckpointDat
     return AgentCheckpointData(
         checkpointId = Uuid.random().toString(),
         createdAt = time,
-        nodeId = PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME,
-        lastInput = JsonNull,
+        nodePath = PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME,
+        lastOutput = JSONNull,
         messageHistory = emptyList(),
-        properties = mapOf(PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME to JsonPrimitive(true)),
+        properties = JSONObject(
+            mapOf(
+                PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME to JSONPrimitive(true)
+            )
+        ),
         version = version
     )
 }
@@ -59,7 +131,7 @@ public fun tombstoneCheckpoint(time: Instant, version: Long): AgentCheckpointDat
 /**
  * Converts an instance of [AgentCheckpointData] to [AgentContextData].
  *
- * The conversion maps the `messageHistory`, `nodeId`, and `lastInput` properties of
+ * The conversion maps the `messageHistory`, `nodeId`, and `lastOutput` properties of
  * [AgentCheckpointData] directly to a new [AgentContextData] instance.
  *
  * @return A new [AgentContextData] instance containing the message history, node ID,
@@ -69,10 +141,12 @@ public fun AgentCheckpointData.toAgentContextData(
     rollbackStrategy: RollbackStrategy,
     additionalRollbackAction: suspend (AIAgentContext) -> Unit = {}
 ): AgentContextData {
+    @Suppress("DEPRECATION")
     return AgentContextData(
         messageHistory = messageHistory,
-        nodeId = nodeId,
+        nodePath = nodePath,
         lastInput = lastInput,
+        lastOutput = lastOutput,
         rollbackStrategy,
         additionalRollbackAction
     )
@@ -87,4 +161,4 @@ public fun AgentCheckpointData.toAgentContextData(
  *         and the value is a JSON primitive set to `true`, otherwise `false`.
  */
 public fun AgentCheckpointData.isTombstone(): Boolean =
-    properties?.get(PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME) == JsonPrimitive(true)
+    properties?.entries?.get(PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME) == JSONPrimitive(true)

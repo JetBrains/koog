@@ -2,7 +2,8 @@ package ai.koog.agents.ext.tool.shell
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import kotlinx.serialization.KSerializer
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -18,7 +19,17 @@ import kotlin.coroutines.cancellation.CancellationException
 public class ExecuteShellCommandTool(
     private val executor: ShellCommandExecutor,
     private val confirmationHandler: ShellCommandConfirmationHandler
-) : Tool<ExecuteShellCommandTool.Args, ExecuteShellCommandTool.Result>() {
+) : Tool<ExecuteShellCommandTool.Args, ExecuteShellCommandTool.Result>(
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Result>(),
+    name = "__execute_shell_command__",
+    description = """
+        Executes a shell command.
+        Depending on configuration, the command may run immediately or ask the user before running.
+        A working directory and timeout can be provided. If a timeout is reached, any available output is included.
+        Returns everything the command printed and the exit code, or a message if it was not run or did not finish.
+    """.trimIndent()
+) {
 
     /**
      * Parameters for running a shell command.
@@ -53,48 +64,14 @@ public class ExecuteShellCommandTool(
     /**
      * Result of attempting to run a command.
      *
-     * @property command The command string that was run (or denied)
      * @property exitCode The exit code returned by the process, or null if the command never started
      * @property output Everything the command printed to the screen, or an explanation if it didn't run (e.g., "Command timed out", "denied by user")
      */
     @Serializable
     public data class Result(
-        val command: String,
         val exitCode: Int?,
         val output: String
-    ) {
-        /**
-         * Formats this result like a terminal session.
-         *
-         * Returns a multi-line string showing:
-         * - The command that was run
-         * - Everything it printed, or "(no output)" if the command succeeded but printed nothing
-         * - The exit code (omitted if the command was denied or timed out)
-         *
-         * @return Formatted string ready for display or logging
-         */
-        public fun textForLLM(): String = buildString {
-            appendLine("Command: $command")
-            if (output.isNotEmpty()) {
-                appendLine(output)
-            } else if (exitCode != null) {
-                appendLine("(no output)")
-            }
-            exitCode?.let {
-                appendLine("Exit code: $it")
-            }
-        }.trimEnd()
-    }
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<Result> = Result.serializer()
-    override val name: String = "__execute_shell_command__"
-    override val description: String = """
-        Executes a shell command.  
-        Depending on configuration, the command may run immediately or ask the user before running.  
-        A working directory and timeout can be provided. If a timeout is reached, any available output is included.  
-        Returns everything the command printed and the exit code, or a message if it was not run or did not finish.
-    """.trimIndent()
+    )
 
     /**
      * Runs a command after asking the user for permission.
@@ -112,14 +89,27 @@ public class ExecuteShellCommandTool(
     ) {
         is ShellCommandConfirmation.Approved -> try {
             val result = executor.execute(args.command, args.workingDirectory, args.timeoutSeconds)
-            Result(args.command, result.exitCode, result.output)
+            Result(result.exitCode, result.output)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result(args.command, null, "Failed to execute command: ${e.message}")
+            Result(null, "Failed to execute command: ${e.message}")
         }
 
         is ShellCommandConfirmation.Denied ->
-            Result(args.command, null, "Command execution denied with user response: ${confirmation.userResponse}")
+            Result(null, "Command execution denied with user response: ${confirmation.userResponse}")
+    }
+
+    override fun encodeResultToString(result: Result, serializer: JSONSerializer): String = with(result) {
+        buildString {
+            if (output.isNotEmpty()) {
+                appendLine(output)
+            } else if (exitCode != null) {
+                appendLine("(no output)")
+            }
+            exitCode?.let {
+                appendLine("Exit code: $it")
+            }
+        }.trimEnd()
     }
 }

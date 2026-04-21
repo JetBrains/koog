@@ -4,8 +4,8 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 
 /**
  * A builder class responsible for constructing an instance of [AIAgentGraphStrategy].
@@ -17,8 +17,8 @@ import kotlin.reflect.typeOf
  */
 public class AIAgentGraphStrategyBuilder<TInput, TOutput>(
     private val name: String,
-    inputType: KType,
-    outputType: KType,
+    inputType: TypeToken,
+    outputType: TypeToken,
     private val toolSelectionStrategy: ToolSelectionStrategy,
 ) : AIAgentSubgraphBuilderBase<TInput, TOutput>(), BaseBuilder<AIAgentGraphStrategy<TInput, TOutput>> {
     public override val nodeStart: StartNode<TInput> = StartNode(type = inputType)
@@ -52,8 +52,8 @@ public inline fun <reified Input, reified Output> strategy(
 ): AIAgentGraphStrategy<Input, Output> {
     return AIAgentGraphStrategyBuilder<Input, Output>(
         name = name,
-        inputType = typeOf<Input>(),
-        outputType = typeOf<Output>(),
+        inputType = typeToken<Input>(),
+        outputType = typeToken<Output>(),
         toolSelectionStrategy = toolSelectionStrategy
     ).apply(init).build()
 }

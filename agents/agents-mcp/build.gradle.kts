@@ -15,10 +15,11 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-tools"))
                 api(project(":agents:agents-core"))
+                api(project(":agents:agents-mcp-metadata"))
                 api(project(":utils"))
                 api(project(":prompt:prompt-model"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-llms"))
+                api(project(":prompt:prompt-executor:prompt-executor-model"))
                 api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
                 api(libs.mcp.client)

@@ -5,7 +5,7 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 internal data class FilePatch(
     @property:LLMDescription("The original text to be modified or removed. If empty, the file patch represents a rewrite of whole file")
     val original: String,
-    @property:LLMDescription(description = "The replacement text. If empty, the file patch represents a deletion.")
+    @property:LLMDescription("The replacement text. If empty, the file patch represents a deletion.")
     val replacement: String
 ) {
     val isDelete: Boolean

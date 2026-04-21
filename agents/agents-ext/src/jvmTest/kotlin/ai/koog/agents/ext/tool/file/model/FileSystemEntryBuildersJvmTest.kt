@@ -2,6 +2,12 @@ package ai.koog.agents.ext.tool.file.model
 
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.rag.base.files.model.FileSize
+import ai.koog.rag.base.files.model.FileSystemEntry
+import ai.koog.rag.base.files.model.buildFileEntry
+import ai.koog.rag.base.files.model.buildFileSize
+import ai.koog.rag.base.files.model.buildFileSystemEntry
+import ai.koog.rag.base.files.model.buildFolderEntry
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir

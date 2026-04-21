@@ -1,24 +1,26 @@
 # Module prompt-executor-anthropic-client
 
-A client implementation for executing prompts using Anthropic's Claude models with support for images and documents.
+A client implementation for executing prompts using Anthropic's Claude models with support for images, documents, and structured output.
 
 ### Overview
 
 This module provides a client implementation for the Anthropic API, allowing you to execute prompts using Claude models.
-It handles authentication, request formatting, response parsing, and multimodal content encoding specific to Anthropic's
-API requirements.
+It handles authentication, request formatting, response parsing, multimodal content encoding, and native structured output
+(JSON Schema) specific to Anthropic's API requirements.
 
 ### Supported Models
 
-| Model             | Speed           | Context | Input Support     | Output Support | Pricing (per 1M tokens) |
-|-------------------|-----------------|---------|-------------------|----------------|-------------------------| 
-| Claude 3 Opus     | Moderately fast | 200K    | Text, Images, PDF | Text, Tools    | $15.00 / $75.00         |
-| Claude 3 Haiku    | Fast            | 200K    | Text, Images, PDF | Text, Tools    | $0.25 / $1.25           |
-| Claude 3.5 Haiku  | Fastest         | 200K    | Text, Images, PDF | Text, Tools    | $0.8 / $4.0             |
-| Claude 3.5 Sonnet | Fast            | 200K    | Text, Images, PDF | Text, Tools    | $3.00 / $15.00          |
-| Claude 3.7 Sonnet | Fast            | 200K    | Text, Images, PDF | Text, Tools    | $3.00 / $15.00          |
-| Claude Sonnet 4   | Fast            | 200K    | Text, Images, PDF | Text, Tools    | $3.00 / $15.00          |
-| Claude Opus 4     | Moderately fast | 200K    | Text, Images, PDF | Text, Tools    | $15.00 / $75.00         |
+| Model              | Speed           | Context | Input Support     | Output Support                | Pricing (per 1M tokens) |
+|--------------------|-----------------|---------|-------------------|-------------------------------|-------------------------|
+| Claude 3 Haiku     | Fast            | 200K    | Text, Images, PDF | Text, Tools                   | $0.25 / $1.25           |
+| Claude Haiku 4.5   | Fastest         | 200K    | Text, Images, PDF | Text, Tools, Structured (JSON)| $1.00 / $5.00           |
+| Claude Sonnet 4    | Fast            | 200K    | Text, Images, PDF | Text, Tools                   | $3.00 / $15.00          |
+| Claude Sonnet 4.5  | Fast            | 200K    | Text, Images, PDF | Text, Tools, Structured (JSON)| $3.00 / $15.00          |
+| Claude Sonnet 4.6  | Fast            | 200K    | Text, Images, PDF | Text, Tools, Structured (JSON)| $3.00 / $15.00          |
+| Claude Opus 4      | Moderately fast | 200K    | Text, Images, PDF | Text, Tools                   | $15.00 / $75.00         |
+| Claude Opus 4.1    | Moderately fast | 200K    | Text, Images, PDF | Text, Tools                   | $15.00 / $75.00         |
+| Claude Opus 4.5    | Moderately fast | 200K    | Text, Images, PDF | Text, Tools, Structured (JSON)| $5.00 / $25.00          |
+| Claude Opus 4.6    | Moderately fast | 200K    | Text, Images, PDF | Text, Tools, Structured (JSON)| $5.00 / $25.00          |
 
 ### Media Content Support
 
@@ -77,7 +79,7 @@ suspend fun main() {
             system("You are helpful assistant")
             user("What time is it now?")
         },
-        model = AnthropicModels.Sonnet_3_5
+        model = AnthropicModels.Opus_4_6
     )
 
     println(response)
@@ -95,7 +97,7 @@ val imageResponse = client.execute(
             image("/path/to/image.jpg")
         }
     },
-    model = AnthropicModels.Sonnet_3_5
+    model = AnthropicModels.Opus_4_6
 )
 
 // PDF document processing
@@ -106,7 +108,7 @@ val pdfResponse = client.execute(
             document("/path/to/document.pdf")
         }
     },
-    model = AnthropicModels.Sonnet_3_5
+    model = AnthropicModels.Opus_4_6
 )
 
 // PDF from URL
@@ -117,7 +119,7 @@ val pdfUrlResponse = client.execute(
             document("https://example.com/paper.pdf")
         }
     },
-    model = AnthropicModels.Sonnet_3_5
+    model = AnthropicModels.Opus_4_6
 )
 
 // Text file processing
@@ -128,7 +130,7 @@ val textResponse = client.execute(
             document("/path/to/readme.md")
         }
     },
-    model = AnthropicModels.Sonnet_3_5
+    model = AnthropicModels.Opus_4_6
 )
 
 // Mixed content
@@ -141,6 +143,6 @@ val mixedResponse = client.execute(
             text("What insights can you provide?")
         }
     },
-    model = AnthropicModels.Sonnet_3_5
+    model = AnthropicModels.Opus_4_6
 )
 ```

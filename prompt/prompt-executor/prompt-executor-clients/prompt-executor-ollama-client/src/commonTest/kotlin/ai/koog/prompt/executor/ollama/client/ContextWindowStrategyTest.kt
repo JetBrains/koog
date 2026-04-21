@@ -5,25 +5,16 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatMessageDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
-import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.PromptTokenizer
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.respond
-import io.ktor.client.request.HttpRequestData
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.TextContent
-import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.time.Clock
 
 class ContextWindowStrategyTest {
     @Test
@@ -205,27 +196,3 @@ private fun makeDummyResponse(
     promptEvalCount = promptEvalCount,
     evalCount = evalCount,
 )
-
-private class MockOllamaChatServer(
-    private val handler: (OllamaChatRequestDTO) -> OllamaChatResponseDTO,
-) {
-    val mockEngine = MockEngine { requestData ->
-        val request = requestData.extractChatRequest()
-        val response = handler(request)
-        respond(
-            content = Json.encodeToString<OllamaChatResponseDTO>(response),
-            status = HttpStatusCode.OK,
-            headers = headersOf(HttpHeaders.ContentType to listOf("application/json")),
-        )
-    }
-
-    val requestHistory: List<OllamaChatRequestDTO>
-        get() = mockEngine.requestHistory.map { it.extractChatRequest() }
-
-    private fun HttpRequestData.extractChatRequest(): OllamaChatRequestDTO {
-        val requestContent = body as TextContent
-        val requestBody = requestContent.text
-        val request = Json.decodeFromString<OllamaChatRequestDTO>(requestBody)
-        return request
-    }
-}

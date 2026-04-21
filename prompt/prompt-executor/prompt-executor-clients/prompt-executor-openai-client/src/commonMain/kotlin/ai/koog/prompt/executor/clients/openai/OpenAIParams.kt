@@ -145,6 +145,40 @@ public class OpenAIChatParams(
         }
     }
 
+    override fun copy(
+        temperature: Double?,
+        maxTokens: Int?,
+        numberOfChoices: Int?,
+        speculation: String?,
+        schema: Schema?,
+        toolChoice: ToolChoice?,
+        user: String?,
+        additionalProperties: Map<String, JsonElement>?,
+    ): OpenAIChatParams = copy(
+        temperature = temperature,
+        maxTokens = maxTokens,
+        numberOfChoices = numberOfChoices,
+        speculation = speculation,
+        schema = schema,
+        toolChoice = toolChoice,
+        user = user,
+        additionalProperties = additionalProperties,
+        frequencyPenalty = frequencyPenalty,
+        presencePenalty = presencePenalty,
+        parallelToolCalls = parallelToolCalls,
+        promptCacheKey = promptCacheKey,
+        safetyIdentifier = safetyIdentifier,
+        serviceTier = serviceTier,
+        store = store,
+        audio = audio,
+        logprobs = logprobs,
+        reasoningEffort = reasoningEffort,
+        stop = stop,
+        topLogprobs = topLogprobs,
+        topP = topP,
+        webSearchOptions = webSearchOptions,
+    )
+
     /**
      * Creates a copy of this instance with the ability to modify any of its properties.
      */
@@ -366,6 +400,39 @@ public class OpenAIResponsesParams(
             require(maxToolCalls >= 0) { "maxToolCalls must be >= 0" }
         }
     }
+
+    override fun copy(
+        temperature: Double?,
+        maxTokens: Int?,
+        numberOfChoices: Int?,
+        speculation: String?,
+        schema: Schema?,
+        toolChoice: ToolChoice?,
+        user: String?,
+        additionalProperties: Map<String, JsonElement>?,
+    ): OpenAIResponsesParams = copy(
+        temperature = temperature,
+        maxTokens = maxTokens,
+        numberOfChoices = numberOfChoices,
+        speculation = speculation,
+        schema = schema,
+        toolChoice = toolChoice,
+        user = user,
+        additionalProperties = additionalProperties,
+        background = background,
+        include = include,
+        maxToolCalls = maxToolCalls,
+        parallelToolCalls = parallelToolCalls,
+        reasoning = reasoning,
+        truncation = truncation,
+        promptCacheKey = promptCacheKey,
+        safetyIdentifier = safetyIdentifier,
+        serviceTier = serviceTier,
+        store = store,
+        logprobs = logprobs,
+        topLogprobs = topLogprobs,
+        topP = topP,
+    )
 
     /**
      * Creates a copy of this instance with the ability to modify any of its properties.

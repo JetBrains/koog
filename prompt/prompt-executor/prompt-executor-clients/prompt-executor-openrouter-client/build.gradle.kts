@@ -23,6 +23,12 @@ kotlin {
                 implementation(libs.kotlinx.serialization.core)
             }
         }
+
+        jvmTest {
+            dependencies {
+                implementation(libs.ktor.client.mock)
+            }
+        }
     }
 
     explicitApi()

@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.ToolRegistryBuilder
 import ai.koog.ktor.KoogAgentsConfig.TimeoutConfiguration.Companion.DEFAULT_TIMEOUT
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
@@ -31,8 +32,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -382,11 +383,11 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          * `ToolRegistry.Builder`. The tools are applied to the internal `toolRegistry` of the
          * `AgentConfig` class instance by merging existing tools with the newly registered tools.
          *
-         * @param build A lambda function for configuring the tool registry using the `ToolRegistry.Builder`.
+         * @param block A lambda function for configuring the tool registry using the `ToolRegistry.Builder`.
          */
-        public fun registerTools(build: ToolRegistry.Builder.() -> Unit) {
+        public fun registerTools(block: ToolRegistryBuilder.() -> Unit) {
             toolRegistry += ToolRegistry {
-                build()
+                block()
             }
         }
 
@@ -496,7 +497,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          *
          * By default, it is set to [OpenAIClientSettings.moderationsPath].
          */
-        public val moderationsPath: String? = null
+        public var moderationsPath: String? = null
 
         /**
          * Represents the HTTP client used for making network requests to the OpenAI API.

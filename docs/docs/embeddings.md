@@ -23,7 +23,7 @@ For installation and running instructions, refer to the [official Ollama GitHub 
 
 <!--- INCLUDE
 import ai.koog.embeddings.local.LLMEmbedder
-import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import kotlinx.coroutines.runBlocking
 -->
@@ -33,7 +33,7 @@ fun main() {
         // Create an OllamaClient instance
         val client = OllamaClient()
         // Create an embedder
-        val embedder = LLMEmbedder(client, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+        val embedder = LLMEmbedder(client, OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
         // Create embeddings
         val embedding = embedder.embed("This is the text to embed")
         // Print embeddings to the output
@@ -50,6 +50,8 @@ To use an Ollama embedding model, make sure to have the following prerequisites:
     ```bash
     ollama pull <ollama-model-id>
     ```
+    <!--- KNIT example-embeddings-01.txt -->
+
     Replace `<ollama-model-id>` with the Ollama identifier of the specific model. For more information about available
 embedding models and their identifiers, see [Ollama models overview](#ollama-models-overview).
 
@@ -264,6 +266,6 @@ suspend fun compareCodeToCode(embedder: Embedder) { // Embedder type
 
 For a complete API reference related to embeddings, see the reference documentation for the following modules:
 
-- [embeddings-base](https://api.koog.ai/embeddings/embeddings-base/ai.koog.embeddings.base/index.html): Provides core interfaces and data structures for representing and comparing text 
+- [embeddings-base](api:embeddings-base::ai.koog.embeddings.base): Provides core interfaces and data structures for representing and comparing text 
 and code embeddings.
-- [embeddings-llm](https://api.koog.ai/embeddings/embeddings-llm/index.html): Includes implementations for working with local embedding models.
+- [embeddings-llm](api:embeddings-llm::): Includes implementations for working with local embedding models.

@@ -1,0 +1,12 @@
+[versions]
+kotlin = "2.1.10"
+koog-agents = "0.6.1"
+logback = "1.5.13"
+
+[libraries]
+koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog-agents" }
+koog-agents-acp = { module = "ai.koog:agents-features-acp", version.ref = "koog-agents" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+[plugins]
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

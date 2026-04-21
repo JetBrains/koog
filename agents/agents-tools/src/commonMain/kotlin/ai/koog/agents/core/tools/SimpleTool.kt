@@ -1,30 +1,38 @@
 package ai.koog.agents.core.tools
 
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.KSerializerTypeToken
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.annotations.InternalKoogSerializationApi
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.serializer
 
 /**
  * Represents a simplified tool base class that processes specific arguments and produces a textual result.
  *
  * @param TArgs The type of arguments the tool accepts.
  */
-public abstract class SimpleTool<TArgs> : Tool<TArgs, String>() {
-    override fun encodeResultToString(result: String): String = result
+public abstract class SimpleTool<TArgs>(
+    argsType: TypeToken,
+    name: String,
+    description: String,
+) : Tool<TArgs, String>(
+    argsType = argsType,
+    resultType = typeToken<String>(),
+    name = name,
+    description = description,
+) {
+    @OptIn(InternalKoogSerializationApi::class)
+    @Deprecated("Use TypeToken constructor instead")
+    public constructor(
+        argsSerializer: KSerializer<TArgs>,
+        name: String,
+        description: String,
+    ) : this(
+        argsType = KSerializerTypeToken(argsSerializer),
+        name = name,
+        description = description
+    )
 
-    /**
-     * Deprecated in favor of `String`.
-     */
-    @Deprecated("Please use the `encodeResultToString(result: String): String` API instead")
-    public fun encodeResultToString(result: ToolResult.Text): String = result.text
-    override val resultSerializer: KSerializer<String> = String.serializer()
-
-    final override suspend fun execute(args: TArgs): String = doExecute(args)
-
-    /**
-     * Executes the tool's main functionality using the provided arguments and produces a textual result.
-     *
-     * @param args The arguments of type [TArgs] required to perform the execution.
-     * @return A string representing the result of the execution.
-     */
-    public abstract suspend fun doExecute(args: TArgs): String
+    override fun encodeResultToString(result: String, serializer: JSONSerializer): String = result
 }

@@ -1,17 +1,69 @@
 # LLM providers
 
-Koog integrates with major LLM providers and supports local models through integration with [Ollama](https://ollama.com/).
+Koog works with major LLM providers and also supports local models using [Ollama](https://ollama.com/).
+The following providers are currently supported:
 
-- OpenAI
-- Anthropic
-- Google
-- DeepSeek
-- OpenRouter
-- Bedrock
-- Mistral
-- Ollama
+| <div style="width:115px">LLM provider</div>                                                                                                                 | Choose for                                                                                                                       |
+|-------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| [OpenAI](https://platform.openai.com/docs/overview) (including [Azure OpenAI Service](https://azure.microsoft.com/en-us/products/ai-foundry/models/openai)) | Advanced models with a wide range of capabilities.                                                                               |
+| [Anthropic](https://www.anthropic.com/)                                                                                                                     | Long contexts and prompt caching.                                                                                                |
+| [Google](https://ai.google.dev/)                                                                                                                            | Multimodal processing (audio, video), large contexts.                                                                            |
+| [DeepSeek](https://www.deepseek.com/)                                                                                                                       | Cost-effective reasoning and coding.                                                                                             |
+| [OpenRouter](https://openrouter.ai/)                                                                                                                        | One integration with an access to multiple models from multiple providers for flexibility, provider comparison, and unified API. |
+| [Amazon Bedrock](https://aws.amazon.com/bedrock/)                                                                                                           | AWS-native environment, enterprise security and compliance, multi-provider access.                                               |
+| [Mistral](https://mistral.ai/)                                                                                                                              | European data hosting, GDPR compliance.                                                                                          |
+| [Alibaba](https://www.alibabacloud.com/en?_p_lc=1) ([DashScope](https://dashscope.aliyun.com/) OpenAI-compatible client)                                    | Large contexts and cost-efficient Qwen models.                                                                                   |
+| [Ollama](https://ollama.com/)                                                                                                                               | Privacy, local development, offline operation, and no API costs.                                                                 |
+
+The table below shows the LLM capabilities that Koog supports and which providers offer these capabilities in their models.
+
+| <div style="width:115px">LLM capability</div> | OpenAI                       | Anthropic                 | Google                                  | DeepSeek | OpenRouter       | Amazon Bedrock   | Mistral                   | Alibaba (DashScope OpenAI-compatible client) | Ollama (local models) |
+|-----------------------------------------------|------------------------------|---------------------------|-----------------------------------------|----------|------------------|------------------|---------------------------|----------------------------------------------|-----------------------|
+| Supported input                               | Text, image, audio, document | Text, image, document[^1] | Text, image, audio, video, document[^1] | Text     | Differs by model | Differs by model | Text, image, document[^1] | Text, image, audio, video[^1]                | Text, image[^1]       |
+| Response streaming                            | ✓                            | ✓                         | ✓                                       | ✓        | ✓                | ✓                | ✓                         | ✓                                            | ✓                     |
+| Tools                                         | ✓                            | ✓                         | ✓                                       | ✓        | ✓                | ✓[^1]            | ✓                         | ✓                                            | ✓                     |
+| Tool choice                                   | ✓                            | ✓                         | ✓                                       | ✓        | ✓                | ✓[^1]            | ✓                         | ✓                                            | –                     |
+| Structured output (JSON Schema)               | ✓                            | ✓[^1]                     | ✓                                       | ✓        | ✓[^1]            | –                | ✓                         | ✓[^1]                                        | ✓                     |
+| Multiple choices                              | ✓                            | –                         | ✓                                       | –        | ✓[^1]            | ✓[^1]            | ✓                         | ✓[^1]                                        | –                     |
+| Temperature                                   | ✓                            | ✓                         | ✓                                       | ✓        | ✓                | ✓                | ✓                         | ✓                                            | ✓                     |
+| Speculation                                   | ✓[^1]                        | –                         | –                                       | –        | ✓[^1]            | –                | ✓[^1]                     | ✓[^1]                                        | –                     |
+| Content moderation                            | ✓                            | –                         | –                                       | –        | –                | ✓                | ✓                         | –                                            | ✓                     |
+| Embeddings                                    | ✓                            | –                         | –                                       | –        | –                | ✓                | ✓                         | –                                            | ✓                     |
+| Prompt caching                                | ✓[^1]                        | ✓                         | –                                       | –        | –                | –                | –                         | –                                            | –                     |
+| Completion                                    | ✓                            | ✓                         | ✓                                       | ✓        | ✓                | ✓                | ✓                         | ✓                                            | ✓                     |
+| Local execution                               | –                            | –                         | –                                       | –        | –                | –                | –                         | –                                            | ✓                     |
 
 !!! note
-    For more information on using LLMs from these providers to run prompts and create AI agents, refer to [Prompt API](prompt-api.md#choosing-between-llm-clients-and-prompt-executors).
+    Koog supports the most commonly used capabilities for creating AI agents.
+    LLMs from each provider may have additional features that Koog does not currently support.
+    To learn more, refer to [Model capabilities](model-capabilities.md).
+
+## Working with providers
+
+Koog lets you work with LLM providers on two levels:
+
+* Using an **LLM client** for direct interaction with a specific provider.
+  Each client implements the `LLMClient` interface, handling authentication, 
+  request formatting, and response parsing for the provider.
+  For details, see [LLM clients](prompts/llm-clients.md).
+
+  * Using a **prompt executor** for a higher-level abstraction that wraps one or multiple LLM clients,
+    manages their lifecycles, and unifies an interface across providers.
+    It can switch between providers
+    and optionally fall back to a configured provider and LLM using the corresponding client.
+    You can either create your own executor or use a pre-defined prompt executor for a specific provider.
+    For details, see [Prompt executors](prompts/prompt-executors.md).
 
 
+Using a prompt executor offers a higher‑level layer over one or more LLMClients. 
+It manages client lifecycles and exposes a unified interface across providers. 
+In multi‑provider setups, it can route requests between providers and optionally fall back to a designated
+client when needed for core requests. You can create your own executor or use pre‑defined ones—both single‑provider
+and multi‑provider options are available.
+
+## Next steps
+
+- [Create and run an agent](quickstart.md) with a specific LLM provider.
+- Learn more about [prompts](prompts/index.md).
+
+[^1]: Capability is supported only by some models of the provider.

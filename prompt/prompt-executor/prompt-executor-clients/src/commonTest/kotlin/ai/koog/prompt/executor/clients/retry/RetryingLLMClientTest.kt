@@ -5,16 +5,19 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.IncompleteStreamException
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.emitAppend
+import ai.koog.prompt.streaming.emitTextDelta
 import ai.koog.prompt.streaming.streamFrameFlow
 import ai.koog.prompt.streaming.streamFrameFlowOf
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
@@ -22,11 +25,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
 class RetryingLLMClientTest {
@@ -278,7 +281,7 @@ class RetryingLLMClientTest {
 
         val result = retryingClient.executeStreaming(testPrompt, testModel).toList()
 
-        assertEquals(listOf("chunk1", "chunk2").map(StreamFrame::Append), result)
+        assertEquals(listOf("chunk1", "chunk2").map(StreamFrame::TextDelta), result)
         assertEquals(1, mockClient.streamCalls)
     }
 
@@ -300,7 +303,7 @@ class RetryingLLMClientTest {
 
         val result = retryingClient.executeStreaming(testPrompt, testModel).toList()
 
-        assertEquals(listOf("chunk1", "chunk2").map(StreamFrame::Append), result)
+        assertEquals(listOf("chunk1", "chunk2").map(StreamFrame::TextDelta), result)
         assertEquals(2, mockClient.streamCalls)
     }
 
@@ -309,7 +312,7 @@ class RetryingLLMClientTest {
         // Mock that emits one token then fails
         val mockClient = MockLLMClient(
             streamResponse = streamFrameFlow {
-                emitAppend("first-token")
+                emitTextDelta("first-token")
                 throw RuntimeException("Connection lost after first token")
             }
         )
@@ -384,28 +387,181 @@ class RetryingLLMClientTest {
         assertEquals(2, mockClient.moderateCalls)
     }
 
+    @Test
+    fun testRetryEmbed() = runTest {
+        val expectedEmbedding = listOf(0.1, 0.2, 0.3)
+
+        val mockClient = MockLLMClient(
+            embedResponse = expectedEmbedding,
+            failuresBeforeSuccess = 1,
+            failureMessage = "Error: 503"
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(
+                maxAttempts = 2,
+                initialDelay = 10.milliseconds
+            )
+        )
+
+        val result = retryingClient.embed("hello", testModel)
+
+        assertEquals(expectedEmbedding, result)
+        assertEquals(2, mockClient.embedCalls)
+    }
+
+    @Test
+    fun testRetryBatchEmbed() = runTest {
+        val expectedEmbeddings = listOf(listOf(0.1, 0.2), listOf(0.3, 0.4))
+
+        val mockClient = MockLLMClient(
+            batchEmbedResponse = expectedEmbeddings,
+            failuresBeforeSuccess = 1,
+            failureMessage = "Error: 429"
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(
+                maxAttempts = 2,
+                initialDelay = 10.milliseconds
+            )
+        )
+
+        val result = retryingClient.embed(listOf("hello", "world"), testModel)
+
+        assertEquals(expectedEmbeddings, result)
+        assertEquals(2, mockClient.batchEmbedCalls)
+    }
+
+    @Test
+    fun testEmbedNoRetryOnUnsupportedOperation() = runTest {
+        val mockClient = MockLLMClient(
+            failuresBeforeSuccess = 1,
+            failureMessage = "Error: 400 Bad Request"
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 3)
+        )
+
+        assertFailsWith<RuntimeException> {
+            retryingClient.embed("hello", testModel)
+        }
+
+        assertEquals(1, mockClient.embedCalls) // No retry on non-retryable error
+    }
+
+    @Test
+    fun testIncompleteStreamExceptionBeforeFirstFrameTriggersRetry() = runTest {
+        var callCount = 0
+        val mockClient = MockLLMClient(
+            streamResponse = flow {
+                callCount++
+                if (callCount == 1) {
+                    throw IncompleteStreamException()
+                }
+                emit(StreamFrame.TextDelta("success"))
+                emit(StreamFrame.End(finishReason = "stop"))
+            }
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(
+                maxAttempts = 3,
+                initialDelay = 10.milliseconds
+            )
+        )
+
+        val result = retryingClient.executeStreaming(testPrompt, testModel).toList()
+
+        assertEquals(
+            listOf(StreamFrame.TextDelta("success"), StreamFrame.End(finishReason = "stop")),
+            result
+        )
+        assertEquals(2, mockClient.streamCalls)
+    }
+
+    @Test
+    fun testIncompleteStreamExceptionAfterFirstFramePropagates() = runTest {
+        val mockClient = MockLLMClient(
+            streamResponse = streamFrameFlow {
+                emitTextDelta("first-token")
+                throw IncompleteStreamException()
+            }
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(
+                maxAttempts = 3,
+                initialDelay = 10.milliseconds
+            )
+        )
+
+        assertFailsWith<IncompleteStreamException> {
+            retryingClient.executeStreaming(testPrompt, testModel).collect()
+        }
+
+        assertEquals(1, mockClient.streamCalls) // No retry after first frame
+    }
+
+    @Test
+    fun testBasicJsonSchemaGeneratorDelegation() = runTest {
+        val mockClient = MockLLMClient()
+
+        val retryingClient = RetryingLLMClient(mockClient)
+
+        val result = retryingClient.getBasicJsonSchemaGenerator()
+
+        assertEquals(mockClient.basicJsonSchemaGeneratorDefault, result)
+    }
+
+    @Test
+    fun testStandardJsonSchemaGeneratorDelegation() = runTest {
+        val mockClient = MockLLMClient()
+
+        val retryingClient = RetryingLLMClient(mockClient)
+
+        val result = retryingClient.getStandardJsonSchemaGenerator()
+
+        assertEquals(mockClient.standardJsonSchemaGeneratorDefault, result)
+    }
+
     // Mock LLMClient for testing
     private class MockLLMClient(
         private val executeResponse: List<Message.Response> = emptyList(),
         private val streamResponse: Flow<StreamFrame> = flowOf(),
         private val multipleChoicesResponse: List<LLMChoice> = emptyList(),
         private val moderateResponse: ModerationResult = ModerationResult(false, emptyMap()),
+        private val embedResponse: List<Double> = emptyList(),
+        private val batchEmbedResponse: List<List<Double>> = emptyList(),
         private var failuresBeforeSuccess: Int = 0,
         private var streamFailuresBeforeSuccess: Int = 0,
         private val failureMessage: String = "Mock failure",
         private val throwCancellation: Boolean = false,
         private val llmProvider: LLMProvider = LLMProvider.OpenAI,
-    ) : LLMClient {
+    ) : LLMClient() {
+
+        val basicJsonSchemaGeneratorDefault = object : BasicJsonSchemaGenerator() {}
+        val standardJsonSchemaGeneratorDefault = object : StandardJsonSchemaGenerator() {}
 
         var executeCalls = 0
         var streamCalls = 0
         var multipleChoicesCalls = 0
         var moderateCalls = 0
+        var embedCalls = 0
+        var batchEmbedCalls = 0
 
         private var executeFailures = 0
         private var streamFailures = 0
         private var multipleChoicesFailures = 0
         private var moderateFailures = 0
+        private var embedFailures = 0
+        private var batchEmbedFailures = 0
 
         override fun llmProvider(): LLMProvider = llmProvider
 
@@ -469,8 +625,44 @@ class RetryingLLMClientTest {
             return moderateResponse
         }
 
+        override suspend fun embed(
+            text: String,
+            model: LLModel
+        ): List<Double> {
+            embedCalls++
+
+            if (embedFailures < failuresBeforeSuccess) {
+                embedFailures++
+                throw RuntimeException(failureMessage)
+            }
+
+            return embedResponse
+        }
+
+        override suspend fun embed(
+            inputs: List<String>,
+            model: LLModel
+        ): List<List<Double>> {
+            batchEmbedCalls++
+
+            if (batchEmbedFailures < failuresBeforeSuccess) {
+                batchEmbedFailures++
+                throw RuntimeException(failureMessage)
+            }
+
+            return batchEmbedResponse
+        }
+
         override fun close() {
             // No resources to close
+        }
+
+        override fun getBasicJsonSchemaGenerator(): BasicJsonSchemaGenerator {
+            return basicJsonSchemaGeneratorDefault
+        }
+
+        override fun getStandardJsonSchemaGenerator(): StandardJsonSchemaGenerator {
+            return standardJsonSchemaGeneratorDefault
         }
     }
 }

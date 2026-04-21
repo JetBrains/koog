@@ -1,0 +1,22 @@
+{
+  "name": "webApp",
+  "version": "1.0.0",
+  "description": "Web application that uses Kotlin Multiplatform Library",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && vite build",
+    "start": "vite"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "koogelis": "0.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "typescript": "^5.0.2",
+    "vite": "^7.1.6"
+  }
+}

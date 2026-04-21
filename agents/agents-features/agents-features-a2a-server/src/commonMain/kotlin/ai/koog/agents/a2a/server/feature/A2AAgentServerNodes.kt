@@ -5,7 +5,7 @@ import ai.koog.a2a.model.TaskEvent
 import ai.koog.agents.a2a.core.A2AMessage
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+import ai.koog.agents.core.dsl.builder.node
 import kotlinx.serialization.Serializable
 
 /**
@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
  * @see ai.koog.a2a.server.messages.MessageStorage.save
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2ARespondMessage(
+public fun nodeA2ARespondMessage(
     name: String? = null,
     saveToStorage: Boolean = false,
 ): AIAgentNodeDelegate<A2AMessage, A2AMessage> =
@@ -41,7 +41,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2ARespondMessage(
  * @see ai.koog.a2a.server.session.SessionEventProcessor.sendTaskEvent
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2ARespondTaskEvent(
+public fun nodeA2ARespondTaskEvent(
     name: String? = null,
 ): AIAgentNodeDelegate<TaskEvent, TaskEvent> =
     node(name) { event ->
@@ -60,7 +60,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2ARespondTaskEvent(
  * @see ai.koog.a2a.server.messages.MessageStorage.save
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AMessageStorageSave(
+public fun nodeA2AMessageStorageSave(
     name: String? = null,
 ): AIAgentNodeDelegate<A2AMessage, A2AMessage> =
     node(name) { event ->
@@ -79,7 +79,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AMessageStorageSave(
  * @see ai.koog.a2a.server.messages.MessageStorage.getByContext
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AMessageStorageLoad(
+public fun nodeA2AMessageStorageLoad(
     name: String? = null,
 ): AIAgentNodeDelegate<Unit, List<A2AMessage>> =
     node(name) {
@@ -96,7 +96,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AMessageStorageLoad(
  * @see ai.koog.a2a.server.messages.MessageStorage.replaceByContext
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AMessageStorageReplace(
+public fun nodeA2AMessageStorageReplace(
     name: String? = null,
 ): AIAgentNodeDelegate<List<A2AMessage>, Unit> =
     node(name) {
@@ -127,7 +127,7 @@ public data class A2ATaskGetParams(
  * @see ai.koog.a2a.server.tasks.TaskStorage.get
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2ATaskGet(
+public fun nodeA2ATaskGet(
     name: String? = null,
 ): AIAgentNodeDelegate<A2ATaskGetParams, Task?> =
     node(name) { params ->
@@ -162,7 +162,7 @@ public data class A2ATaskGetAllParams(
  * @see ai.koog.a2a.server.tasks.TaskStorage.getAll
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2ATaskGetAll(
+public fun nodeA2ATaskGetAll(
     name: String? = null,
 ): AIAgentNodeDelegate<A2ATaskGetAllParams, List<Task>> =
     node(name) { params ->

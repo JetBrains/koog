@@ -7,11 +7,12 @@ import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.prompt.message.Message
-import kotlin.reflect.KType
+import ai.koog.serialization.TypeToken
 
 /**
  * Context for merging parallel node execution results.
@@ -30,12 +31,13 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     public val results: List<ParallelResult<Input, Output>>,
 ) : AIAgentGraphContextBase {
     override val parentContext: AIAgentGraphContextBase = underlyingContextBase
+    override var executionInfo: AgentExecutionInfo = underlyingContextBase.executionInfo
 
     // Delegate all properties to the underlying context
     override val environment: AIAgentEnvironment get() = underlyingContextBase.environment
     override val agentId: String get() = underlyingContextBase.agentId
     override val agentInput: Any? get() = underlyingContextBase.agentInput
-    override val agentInputType: KType get() = underlyingContextBase.agentInputType
+    override val agentInputType: TypeToken get() = underlyingContextBase.agentInputType
 
     override val config: AIAgentConfig get() = underlyingContextBase.config
     override val llm: AIAgentLLMContext get() = underlyingContextBase.llm
@@ -66,7 +68,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         environment: AIAgentEnvironment,
         agentId: String,
         agentInput: Any?,
-        agentInputType: KType,
+        agentInputType: TypeToken,
         config: AIAgentConfig,
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,
@@ -74,6 +76,8 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         runId: String,
         strategyName: String,
         pipeline: AIAgentGraphPipeline,
+        executionInfo: AgentExecutionInfo,
+        parentContext: AIAgentGraphContextBase?,
     ): AIAgentGraphContextBase = underlyingContextBase.copy(
         environment = environment,
         agentInput = agentInput,
@@ -84,7 +88,9 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         storage = storage,
         runId = runId,
         strategyName = strategyName,
-        pipeline = pipeline
+        pipeline = pipeline,
+        executionInfo = executionInfo,
+        parentContext = parentContext,
     )
 
     /**

@@ -12,9 +12,8 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":prompt:prompt-executor:prompt-executor-model"))
-
                 api(project(":prompt:prompt-markdown"))
+                api(project(":agents:agents-tools"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 implementation(libs.oshai.kotlin.logging)
@@ -25,6 +24,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":agents:agents-test"))
             }
         }
 

@@ -9,7 +9,7 @@ import ai.koog.rag.base.files.DocumentProvider.Position
  * @param content The multi-line text content in which the position is calculated.
  * @return A `Position` object that represents the line and column corresponding to the given offset.
  */
-internal fun Int.toPosition(content: CharSequence): Position {
+public fun Int.toPosition(content: CharSequence): Position {
     val lineRanges = content.lineRanges(true)
     var offset = 0L
 
@@ -211,4 +211,27 @@ internal suspend fun <Path, Document> DocumentProvider<Path, Document>.charsByPa
  */
 internal suspend fun <Path, Document> DocumentProvider<Path, Document>.textByPath(path: Path): String? {
     return charsByPath(path)?.toString()
+}
+
+/**
+ * Expands a DocumentRange by a number of full lines before and after.
+ * Returns a new range clamped to the content bounds.
+ */
+public fun extendRangeByLines(
+    content: CharSequence,
+    range: DocumentProvider.DocumentRange,
+    linesBefore: Int = 2,
+    linesAfter: Int = 2,
+): DocumentProvider.DocumentRange {
+    val all = content.lineRanges(includeLineSeparators = false).toList()
+    if (all.isEmpty()) return range
+    val startLine = maxOf(range.start.line - linesBefore, 0)
+    val endLine = minOf(range.end.line + linesAfter, all.lastIndex)
+    // Compute end column as the line length (without line separators)
+    val endRange = all[endLine]
+    val endCol = (endRange.length).coerceAtLeast(0)
+    return DocumentProvider.DocumentRange(
+        Position(startLine, 0),
+        Position(endLine, endCol)
+    )
 }

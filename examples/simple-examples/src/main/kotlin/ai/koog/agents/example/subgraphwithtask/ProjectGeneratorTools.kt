@@ -10,7 +10,12 @@ import java.util.concurrent.TimeUnit
 import kotlin.io.path.pathString
 
 object ProjectGeneratorTools {
-    class CreateFileTool(val rootProjectPath: Path) : Tool<CreateFileTool.Args, CreateFileTool.Result>() {
+    class CreateFileTool(val rootProjectPath: Path) : Tool<CreateFileTool.Args, CreateFileTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "create_file",
+        description = "Creates a file under the provided relative path, with the specified content"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("Path to the file")
@@ -21,13 +26,6 @@ object ProjectGeneratorTools {
 
         @Serializable
         data class Result(val successful: Boolean, val comment: String? = null)
-
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name: String = "create_file"
-        override val description: String =
-            "Creates a file under the provided relative path, with the specified content"
 
         override suspend fun execute(args: Args): Result {
             val path = rootProjectPath.resolve(args.path).normalize()
@@ -45,7 +43,12 @@ object ProjectGeneratorTools {
         }
     }
 
-    class ReadFileTool(val rootProjectPath: Path) : Tool<ReadFileTool.Args, ReadFileTool.Result>() {
+    class ReadFileTool(val rootProjectPath: Path) : Tool<ReadFileTool.Args, ReadFileTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "read_file",
+        description = "Reads a file under the provided RELATIVE path, with the specified content"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("Path to the file")
@@ -58,13 +61,6 @@ object ProjectGeneratorTools {
             val fileContent: String? = null,
             val comment: String? = null
         )
-
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name: String = "read_file"
-        override val description: String =
-            "Reads a file under the provided RELATIVE path, with the specified content"
 
         override suspend fun execute(args: Args): Result {
             val path = rootProjectPath.resolve(args.path).normalize()
@@ -95,7 +91,12 @@ object ProjectGeneratorTools {
         }
     }
 
-    class LSDirectoriesTool(val rootProjectPath: Path) : Tool<LSDirectoriesTool.Args, LSDirectoriesTool.Result>() {
+    class LSDirectoriesTool(val rootProjectPath: Path) : Tool<LSDirectoriesTool.Args, LSDirectoriesTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "ls_directory",
+        description = "Lists all the files and directories under the provided RELATIVE path"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("Path to the directory")
@@ -108,12 +109,6 @@ object ProjectGeneratorTools {
             val comment: String? = null,
             val content: List<String>? = null,
         )
-
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name: String = "ls_directory"
-        override val description: String = "Lists all the files and directories under the provided RELATIVE path"
 
         override suspend fun execute(args: Args): Result {
             val path = rootProjectPath.resolve(args.path).normalize()
@@ -145,7 +140,12 @@ object ProjectGeneratorTools {
     }
 
     class CreateDirectoryTool(val rootProjectPath: Path) :
-        Tool<CreateDirectoryTool.Args, CreateDirectoryTool.Result>() {
+        Tool<CreateDirectoryTool.Args, CreateDirectoryTool.Result>(
+            argsSerializer = Args.serializer(),
+            resultSerializer = Result.serializer(),
+            name = "create_directory",
+            description = "Creates a directory under the provided relative path"
+        ) {
         @Serializable
         data class Args(
             @property:LLMDescription("Path to the file")
@@ -154,12 +154,6 @@ object ProjectGeneratorTools {
 
         @Serializable
         data class Result(val successful: Boolean, val comment: String? = null)
-
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name: String = "create_directory"
-        override val description: String = "Creates a directory under the provided relative path"
 
         override suspend fun execute(args: Args): Result {
             val path = rootProjectPath.resolve(args.path).normalize()
@@ -176,7 +170,12 @@ object ProjectGeneratorTools {
     }
 
     class DeleteDirectoryTool(val rootProjectPath: Path) :
-        Tool<DeleteDirectoryTool.Args, DeleteDirectoryTool.Result>() {
+        Tool<DeleteDirectoryTool.Args, DeleteDirectoryTool.Result>(
+            argsSerializer = Args.serializer(),
+            resultSerializer = Result.serializer(),
+            name = "delete_directory",
+            description = "Removes a directory under the provided relative path"
+        ) {
         @Serializable
         data class Args(
             @property:LLMDescription("Path to the directory to remove")
@@ -185,12 +184,6 @@ object ProjectGeneratorTools {
 
         @Serializable
         data class Result(val successful: Boolean, val comment: String? = null)
-
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name: String = "delete_directory"
-        override val description: String = "Removes a directory under the provided relative path"
 
         override suspend fun execute(args: Args): Result {
             val path = rootProjectPath.resolve(args.path).normalize()
@@ -212,7 +205,12 @@ object ProjectGeneratorTools {
         }
     }
 
-    class DeleteFileTool(val rootProjectPath: Path) : Tool<DeleteFileTool.Args, DeleteFileTool.Result>() {
+    class DeleteFileTool(val rootProjectPath: Path) : Tool<DeleteFileTool.Args, DeleteFileTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "delete_file",
+        description = "Deletes a file under the provided relative path"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("Path to the file to delete")
@@ -221,12 +219,6 @@ object ProjectGeneratorTools {
 
         @Serializable
         data class Result(val successful: Boolean, val comment: String? = null)
-
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name: String = "delete_file"
-        override val description: String = "Deletes a file under the provided relative path"
 
         override suspend fun execute(args: Args): Result {
             val path = rootProjectPath.resolve(args.path).normalize()
@@ -246,7 +238,12 @@ object ProjectGeneratorTools {
         }
     }
 
-    class RunCommand(val rootProjectPath: Path) : Tool<RunCommand.Args, RunCommand.Result>() {
+    class RunCommand(val rootProjectPath: Path) : Tool<RunCommand.Args, RunCommand.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "run_bash_command",
+        description = "Runs the provided bash command in the project root directory"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("Command to run\"")
@@ -255,12 +252,6 @@ object ProjectGeneratorTools {
 
         @Serializable
         data class Result(val successful: Boolean, val comment: String? = null)
-
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val name: String = "run_bash_command"
-        override val description: String = "Runs the provided bash command in the project root directory"
 
         override suspend fun execute(args: Args): Result {
             if (args.bashCommand.isBlank()) {

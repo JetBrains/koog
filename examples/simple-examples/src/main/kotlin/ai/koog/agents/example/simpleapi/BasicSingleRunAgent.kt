@@ -21,7 +21,7 @@ suspend fun main() {
         // Create a single-run agent with a system prompt
         val agent = AIAgent(
             promptExecutor = executor,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             systemPrompt = "You are a code assistant. Provide concise code examples.",
         ) {
             install(EventHandler, eventHandlerConfig)

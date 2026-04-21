@@ -36,7 +36,7 @@ fun customWizardStrategy(
 
     val fix by subgraphWithTask<CriticResult<String>, String>(
         tools = fixTools,
-        llmModel = AnthropicModels.Sonnet_3_7,
+        llmModel = AnthropicModels.Opus_4_6,
     ) { verificationResult ->
         """
             You are an AI agent that can create files, delete files, create folders, and delete folders.

@@ -6,6 +6,8 @@ plugins {
 
 dependencies {
     implementation(platform(libs.kotlin.bom))
+    implementation(libs.mcp.server)
+    implementation(libs.mcp.client)
 
     /*
      Koog dependencies from composite build.
@@ -14,9 +16,13 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("ai.koog:koog-agents")
     //noinspection UseTomlInstead
+    implementation("ai.koog:agents-mcp-server")
+    //noinspection UseTomlInstead
     implementation("ai.koog:koog-ktor")
     //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-sql")
+    //noinspection UseTomlInstead
+    implementation("ai.koog:agents-features-chat-memory-sql")
     //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-a2a-server")
     //noinspection UseTomlInstead
@@ -25,7 +31,8 @@ dependencies {
     implementation("ai.koog:a2a-transport-server-jsonrpc-http")
     //noinspection UseTomlInstead
     implementation("ai.koog:a2a-transport-client-jsonrpc-http")
-
+    //noinspection UseTomlInstead
+    implementation("ai.koog:agents-features-acp")
     //noinspection UseTomlInstead
     testImplementation("ai.koog:agents-test")
 
@@ -40,6 +47,9 @@ dependencies {
 
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.server.cio)
+    implementation(libs.ktor.server.sse)
+
+    runtimeOnly(libs.postgresql)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)
@@ -54,7 +64,11 @@ val envs = credentialsResolver.resolve(
     layout.projectDirectory.file(provider { "env.properties" })
 )
 
-fun registerRunExampleTask(name: String, mainClassName: String) = tasks.register<JavaExec>(name) {
+fun registerRunExampleTask(
+    name: String,
+    mainClassName: String,
+    appArgs: List<String> = emptyList()
+) = tasks.register<JavaExec>(name) {
     doFirst {
         standardInput = System.`in`
         standardOutput = System.out
@@ -63,11 +77,17 @@ fun registerRunExampleTask(name: String, mainClassName: String) = tasks.register
 
     mainClass.set(mainClassName)
     classpath = sourceSets["main"].runtimeClasspath
+    args = appArgs
 }
 
 registerRunExampleTask("runExampleCalculator", "ai.koog.agents.example.calculator.CalculatorKt")
 registerRunExampleTask("runExampleCalculatorV2", "ai.koog.agents.example.calculator.v2.CalculatorKt")
-registerRunExampleTask("runExampleCalculatorLocal", "ai.koog.agents.example.calculator.local.CalculatorKt")
+registerRunExampleTask(
+    "runExampleCalculatorLocal",
+    "ai.koog.agents.example.calculator.CalculatorKt",
+    listOf("local")
+)
+registerRunExampleTask("runExampleFunctionalAgentChat", "ai.koog.agents.example.chat.FunctionalAgentChatKt")
 registerRunExampleTask("runExampleErrorFixing", "ai.koog.agents.example.errors.ErrorFixingAgentKt")
 registerRunExampleTask("runExampleErrorFixingLocal", "ai.koog.agents.example.errors.local.ErrorFixingLocalAgentKt")
 registerRunExampleTask("runExampleGuesser", "ai.koog.agents.example.guesser.GuesserKt")
@@ -110,14 +130,18 @@ registerRunExampleTask(
     "runExampleRoutingViaAgentsAsTools",
     "ai.koog.agents.example.banking.routing.RoutingViaAgentsAsToolsKt"
 )
-registerRunExampleTask("runExampleFeatureOpenTelemetry", "ai.koog.agents.example.feature.OpenTelemetryKt")
 registerRunExampleTask("runExampleBedrockAgent", "ai.koog.agents.example.client.BedrockAgentKt")
 registerRunExampleTask("runExampleJokesWithModeration", "ai.koog.agents.example.moderation.JokesWithModerationKt")
 registerRunExampleTask("runExampleFilePersistentAgent", "ai.koog.agents.example.snapshot.FilePersistentAgentExampleKt")
 registerRunExampleTask("runExampleSQLPersistentAgent", "ai.koog.agents.example.snapshot.sql.SQLPersistentAgentExample")
 registerRunExampleTask("runExampleWebSearchAgent", "ai.koog.agents.example.websearch.WebSearchAgentKt")
 registerRunExampleTask("runExampleStreamingWithTools", "ai.koog.agents.example.streaming.StreamingAgentWithToolsKt")
+registerRunExampleTask("runExampleStreamingKtorServer", "ai.koog.agents.example.streaming.StreamingKtorServerKt")
 
+registerRunExampleTask("runExampleGOAPGrouper", "ai.koog.agents.example.goap.GrouperAgentKt")
+registerRunExampleTask("runExampleChatMemory", "ai.koog.agents.example.chatmemory.ChatMemoryExampleKt")
+registerRunExampleTask("runExampleChatMemoryWindowed", "ai.koog.agents.example.chatmemory.ChatMemoryWindowedExampleKt")
+registerRunExampleTask("runExampleChatMemoryPostgres", "ai.koog.agents.example.chatmemory.ChatMemoryPostgresExampleKt")
 /*
  A2A examples
 */
@@ -129,3 +153,16 @@ registerRunExampleTask("runExampleSimpleJokeAgentClient", "ai.koog.agents.exampl
 // Advanced joke generation
 registerRunExampleTask("runExampleAdvancedJokeAgentServer", "ai.koog.agents.example.a2a.advancedjoke.ServerKt")
 registerRunExampleTask("runExampleAdvancedJokeAgentClient", "ai.koog.agents.example.a2a.advancedjoke.ClientKt")
+
+
+/*
+ ACP examples
+*/
+registerRunExampleTask("runExampleAcpApp", "ai.koog.agents.example.acp.KoogAcpAppKt")
+
+/*
+ Open Telemetry examples
+*/
+registerRunExampleTask("runExampleOpenTelemetryApp", "ai.koog.agents.example.features.opentelemetry.OpenTelemetryExampleKt")
+registerRunExampleTask("runExampleLangfuseApp", "ai.koog.agents.example.features.opentelemetry.langfuse.LangfuseExampleKt")
+registerRunExampleTask("runExampleWeaveApp", "ai.koog.agents.example.features.opentelemetry.weave.WeaveExampleKt")
