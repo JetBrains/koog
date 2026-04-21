@@ -1,33 +1,29 @@
 # Datadog exporter
 
-Koog provides built-in support for exporting agent traces to [Datadog](https://www.datadoghq.com/), a monitoring and analytics platform with dedicated LLM Observability capabilities.
-With Datadog integration, you can visualize, analyze, and debug how your Koog agents interact with LLMs, APIs, and other components.
+Koog emits agent traces using [OpenTelemetry](https://opentelemetry.io/), an open standard for observability data.
+To ship those traces to [Datadog](https://www.datadoghq.com/), Koog includes a built-in OpenTelemetry exporter —
+no manual instrumentation required.
 
-For background on Koog's OpenTelemetry support, see the [OpenTelemetry support](https://docs.koog.ai/opentelemetry-support/).
+Once connected, Datadog's [OpenTelemetry support](https://docs.datadoghq.com/opentelemetry/) lets you visualize,
+analyze, and debug how your agents interact with LLMs, tools, and external APIs.
 
 ---
 
 ## Setup instructions
 
-1) Create a Datadog account at [https://www.datadoghq.com/](https://www.datadoghq.com/)
+1. Create a Datadog account at [https://www.datadoghq.com/](https://www.datadoghq.com/)
 
-2) Get your API key from [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys)
+2. Get your API key from [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys)
 
-3) Pass the Datadog API key to the Datadog exporter.
-This can be done by providing it as a parameter to the `addDatadogExporter()` function, or by setting an environment variable:
-
+3. Provide your API key — either as a parameter to [`addDatadogExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.datadog/add-datadog-exporter.html), or via an environment variable:
 ```bash
 export DD_API_KEY="<your-api-key>"
 ```
-
-4) (Optional) Configure the Datadog site. Datadog operates in multiple regions. By default, the exporter sends traces to `datadoghq.com` (US1 region).
-To use a different region, set the `DD_SITE` environment variable or pass the `datadogSite` parameter to `addDatadogExporter()`:
-
+4. (Optional) To use a Datadog region other than US1 (`datadoghq.com`), pass the site as a parameter to [`addDatadogExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.datadog/add-datadog-exporter.html), or set an environment variable:
 ```bash
 export DD_SITE="datadoghq.eu"
 ```
-
-Common site values:
+Supported sites:
 
 | Site | Region |
 |------|--------|
@@ -41,10 +37,9 @@ Common site values:
 
 ## Configuration
 
-To enable Datadog export, install the **OpenTelemetry feature** and add the `DatadogExporter`.
-The exporter uses `OtlpHttpSpanExporter` under the hood to send traces directly to Datadog's OTLP intake endpoint.
+To enable Datadog export, install the **OpenTelemetry feature** and call [`addDatadogExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.datadog/add-datadog-exporter.html).
 
-### Example: agent with Datadog tracing
+### Basic example
 
 === "Kotlin"
 
@@ -112,13 +107,19 @@ The exporter uses `OtlpHttpSpanExporter` under the hood to send traces directly 
 
 ## Trace attributes
 
-The `addDatadogExporter` function supports a `traceAttributes` parameter that accepts a map of resource-level attributes.
-These attributes are added to all exported spans and are useful for tagging traces with application-specific metadata.
+When Koog sends agent activity to Datadog, it does so as a series of *spans* — individual records of work, such as
+an LLM call or a tool execution. Related spans are grouped into a *trace*, which represents a complete agent run
+from start to finish.
 
-Common attributes:
-- **env**: Environment name (e.g., `production`, `staging`, `development`)
+[`addDatadogExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.datadog/add-datadog-exporter.html) accepts a `traceAttributes` parameter — a map of key-value pairs describing
+the application emitting the traces. These are attached to every span, making it easy to filter and group traces in
+Datadog by properties such as environment or version.
+
+Common attributes to include:
+
+- **env**: Environment name (for example, `production`, `staging`, or `development`)
 - **service.name**: Name of your service or application
-- **version**: Application version for tracking deployments
+- **version**: Application version, useful for comparing behavior across deployments
 
 ### Example with trace attributes
 
@@ -202,7 +203,8 @@ Common attributes:
 
 ## Custom exporter wrapping
 
-The `buildDatadogExporter()` function is available if you need to wrap the exporter with custom decorators before registering it:
+Use [`buildDatadogExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.datadog/build-datadog-exporter.html) when you need direct access to the exporter object to wrap it with additional processing logic before registering it.
+For example, use `SpanExporter.composite()` to send traces to multiple backends at once:
 
 === "Kotlin"
 
@@ -212,10 +214,10 @@ The `buildDatadogExporter()` function is available if you need to wrap the expor
     import ai.koog.agents.features.opentelemetry.integration.datadog.buildDatadogExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
     import io.opentelemetry.sdk.trace.export.SpanExporter
     import kotlinx.coroutines.runBlocking
     val promptExecutor = simpleOpenAIExecutor("openai-api-key")
-    class MyCustomSpanExporter(private val delegate: SpanExporter) : SpanExporter by delegate
     fun main() = runBlocking {
         val agent = AIAgent(
             promptExecutor = promptExecutor,
@@ -229,9 +231,11 @@ The `buildDatadogExporter()` function is available if you need to wrap the expor
     -->
     ```kotlin
     install(OpenTelemetry) {
-        val exporter = buildDatadogExporter()
-        val wrapped = MyCustomSpanExporter(exporter) // e.g. attribute post-processing
-        addSpanExporter(wrapped)
+        val datadogExporter = buildDatadogExporter()
+        val localExporter = OtlpHttpSpanExporter.builder()
+            .setEndpoint("http://localhost:4318/v1/traces")
+            .build()
+        addSpanExporter(SpanExporter.composite(datadogExporter, localExporter))
     }
     ```
     <!--- KNIT example-datadog-exporter-03.kt -->
@@ -245,10 +249,8 @@ When enabled, the Datadog exporter captures the same spans as Koog's general Ope
 - **Tool calls**: execution traces for tool invocations
 - **System context**: metadata such as model name, environment, Koog version
 
-The exporter includes the `dd-otlp-source: llmobs` header to route spans to Datadog's LLM Observability product.
-
-For security reasons, some content of OpenTelemetry spans is masked by default.
-To make the content available in Datadog, use the [setVerbose](index.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
+By default, the contents of LLM prompts and responses are masked in exported spans to avoid exposing sensitive data.
+To include the full content in Datadog, call [`setVerbose(true)`](index.md#setverbose):
 
 === "Kotlin"
 
@@ -316,14 +318,14 @@ For more details on Datadog's LLM Observability and OpenTelemetry support, see:
 ## Troubleshooting
 
 ### No traces appear in Datadog
-- Double-check that `DD_API_KEY` is set in your environment.
-- Verify that you're using the correct `DD_SITE` for your Datadog region (`datadoghq.com` for US, `datadoghq.eu` for EU).
-- Ensure that your API key has the necessary permissions to send traces.
+- Confirm that `DD_API_KEY` is set and exported in your environment.
+- Confirm that `DD_SITE` matches your Datadog region — for example, `datadoghq.com` for US1 or `datadoghq.eu` for EU1.
+- Verify that your API key has permission to send traces in [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys).
 
 ### Authentication errors
-- Check that your `DD_API_KEY` is valid and active.
-- API keys can be verified in [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys).
+- Verify that `DD_API_KEY` is valid and has not been revoked.
+- To check or rotate keys, go to [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys).
 
 ### Connection issues
-- Make sure your environment has network access to the Datadog OTLP intake endpoint (`https://otlp.<site>/v1/traces`).
-- Check for any firewall or proxy settings that might block outbound connections.
+- Confirm that your environment can reach `https://otlp.<DD_SITE>/v1/traces` — for example, `https://otlp.datadoghq.com/v1/traces` for US1.
+- Check for firewall or proxy settings that block outbound HTTPS traffic to Datadog.
