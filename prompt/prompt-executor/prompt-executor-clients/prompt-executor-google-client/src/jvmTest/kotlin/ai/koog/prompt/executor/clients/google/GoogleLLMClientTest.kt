@@ -3,12 +3,15 @@ package ai.koog.prompt.executor.clients.google
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
 import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
 import ai.koog.prompt.executor.clients.google.models.GooglePart
+import ai.koog.prompt.executor.clients.google.models.GoogleRequest
+import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
@@ -16,17 +19,24 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.reflect.KClass
 import kotlin.test.Test
 
 class GoogleLLMClientTest {
@@ -520,13 +530,97 @@ class GoogleLLMClientTest {
     }
 
     @Test
+    fun `executeStreaming emits reasoning delta for thought text parts`() = runTest {
+        val model = GoogleModels.Gemini2_5Pro
+        val thoughtSignature = "thought-signature-dummy"
+        val finalAnswer = "final answer"
+        val thoughtText = "internal thinking"
+        val finishReason = "STOP"
+
+        val transport = object : KoogHttpClient {
+            override val clientName: String = "GoogleStreamingTestClient"
+
+            override suspend fun <R : Any> get(
+                path: String,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+            ): R = error("GET is not expected in this test")
+
+            override suspend fun <T : Any, R : Any> post(
+                path: String,
+                request: T,
+                requestBodyType: KClass<T>,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+            ): R = error("POST is not expected in this test")
+
+            override fun <T : Any, R : Any, O : Any> sse(
+                path: String,
+                request: T,
+                requestBodyType: KClass<T>,
+                dataFilter: (String?) -> Boolean,
+                decodeStreamingResponse: (String) -> R,
+                processStreamingChunk: (R) -> O?,
+                parameters: Map<String, String>,
+            ): Flow<O> {
+                path shouldBe "v1beta/models/${model.id}:streamGenerateContent"
+                request.shouldBeInstanceOf<GoogleRequest>()
+
+                val response = GoogleResponse(
+                    candidates = listOf(
+                        GoogleCandidate(
+                            content = GoogleContent(
+                                role = "model",
+                                parts = listOf(
+                                    GooglePart.Text(
+                                        text = thoughtText,
+                                        thought = true,
+                                        thoughtSignature = thoughtSignature
+                                    ),
+                                    GooglePart.Text(text = finalAnswer)
+                                )
+                            ),
+                            finishReason = finishReason,
+                            index = 0
+                        )
+                    )
+                )
+
+                val chunk = processStreamingChunk(response as R)
+                return if (chunk != null) flowOf(chunk) else emptyFlow()
+            }
+
+            override fun close(): Unit = Unit
+        }
+
+        val client = GoogleLLMClient(httpClient = transport)
+
+        val frames = client.executeStreaming(
+            prompt = Prompt(messages = listOf(Message.User("Hi", RequestMetaInfo.Empty)), id = "id"),
+            model = model,
+        ).toList()
+
+        frames shouldBe listOf(
+            StreamFrame.ReasoningDelta(id = thoughtSignature, text = thoughtText, index = 0),
+            StreamFrame.ReasoningComplete(id = thoughtSignature, text = listOf(thoughtText), index = 0),
+            StreamFrame.TextDelta(finalAnswer, 1),
+            StreamFrame.TextComplete(finalAnswer, 1),
+            StreamFrame.End(finishReason, ResponseMetaInfo.Empty),
+        )
+    }
+
+    @Test
     fun `createGoogleRequest includes Reasoning as Text part with thought=true`() {
         val client = GoogleLLMClient(apiKey = "test")
         val request = client.createGoogleRequest(
             Prompt(
                 messages = listOf(
                     Message.User("query", RequestMetaInfo.Empty),
-                    Message.Reasoning(content = "Previous thought", encrypted = "prev-sig", metaInfo = ResponseMetaInfo.Empty)
+                    Message.Reasoning(
+                        content = "Previous thought",
+                        encrypted = "prev-sig",
+                        metaInfo = ResponseMetaInfo.Empty
+                    )
                 ),
                 id = "id"
             ),

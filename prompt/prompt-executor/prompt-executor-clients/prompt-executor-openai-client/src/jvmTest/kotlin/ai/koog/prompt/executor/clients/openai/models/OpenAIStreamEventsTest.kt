@@ -726,6 +726,15 @@ class OpenAIStreamEventsTest {
         }
 
     @Test
+    fun `test keepalive event`() = runWithBothJsonConfigurations("keepalive event") { json ->
+        json.decodeFromString<OpenAIStreamEvent.ResponseKeepalive>(
+            json.encodeToString(OpenAIStreamEvent.ResponseKeepalive(48))
+        ).shouldNotBeNull {
+            sequenceNumber shouldBe 48
+        }
+    }
+
+    @Test
     fun `test stream error event`() = runWithBothJsonConfigurations("stream error") { json ->
         json.decodeFromString<OpenAIStreamEvent.Error>(
             json.encodeToString(OpenAIStreamEvent.Error("invalid_request", "Bad request", "param", 48))
