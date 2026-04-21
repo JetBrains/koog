@@ -1,24 +1,21 @@
 # W&B Weave exporter
 
-Koog provides built-in support for exporting agent traces to [W&B Weave](https://wandb.ai/site/weave/),
-a developer tool from Weights & Biases for observability and analytics of AI applications.  
-With the Weave integration, you can capture prompts, completions, system context, and execution traces
-and visualize them directly in your W&B workspace.
+Koog emits agent traces using [OpenTelemetry](https://opentelemetry.io/), an open standard for observability data.
+To send those traces to [W&B Weave](https://wandb.ai/site/weave/), Koog includes a built-in OpenTelemetry exporter —
+no manual instrumentation required.
 
-For background on Koog’s OpenTelemetry support, see the [OpenTelemetry support](https://docs.koog.ai/opentelemetry-support/).
+Once connected, Weave’s [OpenTelemetry support](https://weave-docs.wandb.ai/guides/tracking/otel/) lets you visualize,
+analyze, and debug how your agents interact with LLMs, tools, and external APIs.
 
 ---
 
 ## Setup instructions
 
-1. Get up a W&B account at [https://wandb.ai](https://wandb.ai)
+1. Create a W&B account at [https://wandb.ai](https://wandb.ai).
 2. Get your API key from [https://wandb.ai/authorize](https://wandb.ai/authorize).
-3. Find your entity name by visiting your W&B dashboard at [https://wandb.ai/home](https://wandb.ai/home).
-   Your entity is usually your username if it's a personal account or your team/org name.
-4. Define a name for your project. You don't have to create a project beforehand, it will be created automatically when the first trace is sent.
-5. Pass the Weave entity, project name, and API key to the Weave exporter.
-   This can be done by providing them as parameters to the `addWeaveExporter()` function,
-   or by setting environment variables as shown below:
+3. Find your entity name at the [W&B Dashboard](https://wandb.ai/home) — it matches your username for personal accounts, or the team/organization name for shared workspaces.
+4. Choose a project name. If the project doesn't exist yet, it will be created automatically when the first trace is sent.
+5. Provide the entity, project name, and API key — either as parameters to [`addWeaveExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.weave/add-weave-exporter.html), or via environment variables:
 
 ```bash
 export WEAVE_API_KEY="<your-api-key>"
@@ -29,10 +26,9 @@ export WEAVE_PROJECT_NAME="koog-tracing"
 
 ## Configuration
 
-To enable Weave export, install the **OpenTelemetry feature** and add the `WeaveExporter`.  
-The exporter uses Weave’s OpenTelemetry endpoint via `OtlpHttpSpanExporter`.
+Install the **OpenTelemetry feature** and call [`addWeaveExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.weave/add-weave-exporter.html) to enable Weave export.
 
-### Example: agent with Weave tracing
+### Basic example
 
 === "Kotlin"
 
@@ -115,74 +111,8 @@ The exporter uses Weave’s OpenTelemetry endpoint via `OtlpHttpSpanExporter`.
 
 ## What gets traced
 
-When enabled, the Weave exporter captures the same spans as Koog’s general OpenTelemetry integration, including:
-
-- **Agent lifecycle events**: agent start, stop, errors
-- **LLM interactions**: prompts, completions, latency
-- **Tool calls**: execution traces for tool invocations
-- **System context**: metadata such as model name, environment, Koog version
-
-For security reasons, some content of OpenTelemetry spans is masked by default.
-To make the content available in Weave, use the [setVerbose](index.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
-
-=== "Kotlin"
-
-    <!--- INCLUDE
-    import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-    import ai.koog.prompt.executor.clients.openai.OpenAIModels
-    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-    val promptExecutor = simpleOpenAIExecutor("openai-api-key")
-    val agent = AIAgent(
-        promptExecutor = promptExecutor,
-        llmModel = OpenAIModels.Chat.GPT4o,
-        systemPrompt = "You are a helpful assistant."
-    ) {
-    -->
-    <!--- SUFFIX
-    }
-    -->
-    ```kotlin
-    install(OpenTelemetry) {
-        addWeaveExporter()
-        setVerbose(true)
-    }
-    ```
-    <!--- KNIT example-weave-exporter-02.kt -->
-
-=== "Java"
-
-    <!--- INCLUDE
-    import ai.koog.agents.core.agent.AIAgent;
-    import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute;
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
-    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-    import ai.koog.prompt.executor.model.PromptExecutor;
-    import java.util.List;
-    import java.util.UUID;
-    public class exampleWeaveExporterJava02 {
-        public static void main(String[] args) {
-            var promptExecutor = PromptExecutor.builder()
-                .openAI("openai-api-key")
-                .build();
-            var agent = AIAgent.builder()
-                .promptExecutor(promptExecutor)
-                .systemPrompt("You are a helpful assistant.")
-                .llmModel(OpenAIModels.Chat.GPT4oMini)
-                .
-    -->
-    <!--- SUFFIX
-            .build();
-        }
-    }
-    -->
-    ```java
-    install(OpenTelemetry.Feature, config -> {
-        config.addWeaveExporter();
-        config.setVerbose(true);
-    })
-    ```
-    <!--- KNIT exampleWeaveExporterJava02.java -->
+The Weave exporter captures the same activity as Koog’s general OpenTelemetry integration.
+For the full list of captured spans and how to include LLM prompt and response content, see [What gets traced](index.md#what-gets-traced).
 
 When visualized in W&B Weave, the trace appears as follows:
 ![W&B Weave traces](../../img/opentelemetry-weave-exporter-light.png#only-light)
@@ -194,13 +124,8 @@ For more details, see the official [Weave OpenTelemetry Docs](https://weave-docs
 
 ## Troubleshooting
 
-### No traces appear in Weave
-- Confirm that `WEAVE_API_KEY`, `WEAVE_ENTITY`, and `WEAVE_PROJECT_NAME` are set in your environment.
-- Ensure that your W&B account has access to the specified entity and project.
+- **No traces**: confirm `WEAVE_API_KEY`, `WEAVE_ENTITY`, and `WEAVE_PROJECT_NAME` are set, and that your W&B account has access to the specified entity and project.
+- **Authentication errors**: verify `WEAVE_API_KEY` is valid and has write permission for the selected entity.
+- **Connection issues**: confirm your environment can reach W&B’s OpenTelemetry ingestion endpoints.
 
-### Authentication errors
-- Check that your `WEAVE_API_KEY` is valid.
-- API key must have permission to write traces for the selected entity.
-
-### Connection issues
-- Make sure your environment has network access to W&B’s OpenTelemetry ingestion endpoints.
+For general troubleshooting, see [Troubleshooting](index.md#troubleshooting).

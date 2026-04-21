@@ -242,90 +242,17 @@ For example, use `SpanExporter.composite()` to send traces to multiple backends 
 
 ## What gets traced
 
-When enabled, the Datadog exporter captures the same spans as Koog's general OpenTelemetry integration, including:
+The Datadog exporter captures the same activity as Koog's general OpenTelemetry integration.
+For the full list of captured spans and how to include LLM prompt and response content, see [What gets traced](index.md#what-gets-traced).
 
-- **Agent lifecycle events**: agent start, stop, errors
-- **LLM interactions**: prompts, responses, token usage, latency
-- **Tool calls**: execution traces for tool invocations
-- **System context**: metadata such as model name, environment, Koog version
-
-By default, the contents of LLM prompts and responses are masked in exported spans to avoid exposing sensitive data.
-To include the full content in Datadog, call [`setVerbose(true)`](index.md#setverbose):
-
-=== "Kotlin"
-
-    <!--- INCLUDE
-    import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-    import ai.koog.prompt.executor.clients.openai.OpenAIModels
-    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-    val promptExecutor = simpleOpenAIExecutor("openai-api-key")
-    val agent = AIAgent(
-        promptExecutor = promptExecutor,
-        llmModel = OpenAIModels.Chat.GPT4o,
-        systemPrompt = "You are a helpful assistant."
-    ) {
-    -->
-    <!--- SUFFIX
-    }
-    -->
-    ```kotlin
-    install(OpenTelemetry) {
-        addDatadogExporter()
-        setVerbose(true)
-    }
-    ```
-    <!--- KNIT example-datadog-exporter-04.kt -->
-
-=== "Java"
-
-    <!--- INCLUDE
-    import ai.koog.agents.core.agent.AIAgent;
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
-    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-    import ai.koog.prompt.executor.model.PromptExecutor;
-    public class exampleDatadogExporterJava03 {
-        public static void main(String[] args) {
-            var promptExecutor = PromptExecutor.builder()
-                .openAI("openai-api-key")
-                .build();
-            var agent = AIAgent.builder()
-                .promptExecutor(promptExecutor)
-                .systemPrompt("You are a helpful assistant.")
-                .llmModel(OpenAIModels.Chat.GPT4oMini)
-                .
-    -->
-    <!--- SUFFIX
-            .build();
-        }
-    }
-    -->
-    ```java
-    install(OpenTelemetry.Feature, config -> {
-        config.addDatadogExporter();
-        config.setVerbose(true);
-    })
-    ```
-    <!--- KNIT exampleDatadogExporterJava03.java -->
-
-For more details on Datadog's LLM Observability and OpenTelemetry support, see:
-
-- [Datadog LLM Observability Docs](https://docs.datadoghq.com/llm_observability/)
-- [Datadog OTLP API Intake](https://docs.datadoghq.com/opentelemetry/guide/otlp_api/)
+For more details on Datadog's OpenTelemetry support, see [Datadog OTLP API Intake](https://docs.datadoghq.com/opentelemetry/guide/otlp_api/).
 
 ---
 
 ## Troubleshooting
 
-### No traces appear in Datadog
-- Confirm that `DD_API_KEY` is set and exported in your environment.
-- Confirm that `DD_SITE` matches your Datadog region — for example, `datadoghq.com` for US1 or `datadoghq.eu` for EU1.
-- Verify that your API key has permission to send traces in [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys).
+- **No traces**: confirm `DD_API_KEY` and `DD_SITE` are set correctly (see [Setup instructions](#setup-instructions)).
+- **Authentication errors**: verify your key is active in [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys).
+- **Connection issues**: confirm your environment can reach `https://otlp.<DD_SITE>/v1/traces` — for example, `https://otlp.datadoghq.com/v1/traces` for US1.
 
-### Authentication errors
-- Verify that `DD_API_KEY` is valid and has not been revoked.
-- To check or rotate keys, go to [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys).
-
-### Connection issues
-- Confirm that your environment can reach `https://otlp.<DD_SITE>/v1/traces` — for example, `https://otlp.datadoghq.com/v1/traces` for US1.
-- Check for firewall or proxy settings that block outbound HTTPS traffic to Datadog.
+For general troubleshooting, see [Troubleshooting](index.md#troubleshooting).

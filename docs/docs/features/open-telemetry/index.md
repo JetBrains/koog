@@ -431,6 +431,20 @@ takes a key and a value as its arguments.
     ```
     <!--- KNIT exampleOpentelemetrySupportJava04.java -->
 
+## What gets traced
+
+The OpenTelemetry feature captures the following agent activity:
+
+- **Agent lifecycle events**: agent start, stop, errors
+- **LLM interactions**: prompts, responses, token usage, latency
+- **Tool calls**: execution traces for tool invocations
+- **System context**: metadata such as model name, environment, Koog version
+
+By default, the contents of LLM prompts and responses are masked in exported spans to avoid exposing sensitive data.
+To include the full content, call [`setVerbose(true)`](#setverbose).
+
+For a detailed breakdown of individual span types and attributes, see [Span types and attributes](#span-types-and-attributes).
+
 ## Span types and attributes
 
 The OpenTelemetry feature automatically creates different types of spans to track various operations in your agent:
@@ -1027,21 +1041,27 @@ Here is the full code sample:
 
 ### Common issues
 
-1. **No traces appearing in Jaeger, Langfuse, or W&B Weave**
+1. **No traces appearing in the backend**
+    - Confirm all required environment variables are set and exported in your shell.
+    - Verify that your API key or secret is valid, has not been revoked, and has write/trace permissions.
     - Ensure the service is running and the OpenTelemetry port (4317) is accessible.
-    - Check that the OpenTelemetry exporter is configured with the correct endpoint.
-    - Make sure to wait a few seconds after agent execution for traces to be exported.
+    - Check that the exporter is configured with the correct endpoint.
+    - Wait a few seconds after agent execution — traces may not appear instantly.
 
-2. **Missing spans or incomplete traces**
+2. **Connection issues**
+    - Confirm your environment can reach the exporter's intake endpoint.
+    - Check for firewall or proxy settings that block outbound HTTPS traffic.
+
+3. **Missing spans or incomplete traces**
     - Verify that the agent execution completes successfully.
     - Ensure that you're not closing the application too quickly after agent execution.
     - Add a delay after agent execution to allow time for spans to be exported.
 
-3. **Excessive number of spans**
+4. **Excessive number of spans**
     - Consider using a different sampling strategy by configuring the `sampler` property.
     - For example, use `Sampler.traceIdRatioBased(0.1)` to sample only 10% of traces.
 
-4. **Span adapters override each other**
+5. **Span adapters override each other**
     - Currently, the OpenTelemetry agent feature does not support applying multiple span adapters [KG-265](https://youtrack.jetbrains.com/issue/KG-265/Adding-Weave-exporter-breaks-Langfuse-exporter).
 
 ## MCP (Model Context Protocol) telemetry support
