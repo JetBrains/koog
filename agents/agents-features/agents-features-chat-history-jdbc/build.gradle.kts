@@ -26,10 +26,12 @@ dependencies {
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.mysql)
+    testImplementation("org.testcontainers:oracle-xe:${libs.versions.testcontainers.get()}")
 
     testImplementation(libs.h2)
     testImplementation(libs.postgresql)
     testImplementation(libs.mysql)
+    testImplementation("com.oracle.database.jdbc:ojdbc11:23.7.0.25.01")
 }
 
 kotlin {

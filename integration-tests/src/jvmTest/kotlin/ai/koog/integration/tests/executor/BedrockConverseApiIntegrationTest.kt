@@ -16,6 +16,7 @@ import ai.koog.integration.tests.utils.tools.CalculatorTool
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.bedrock.BedrockAPIMethod
+import ai.koog.prompt.executor.clients.bedrock.BedrockCacheControl
 import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
@@ -26,7 +27,6 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.CacheControl
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
@@ -335,7 +335,7 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
 
         val prompt = Prompt.build("test-cache-system") {
             // Caching requires a minimum prompt length to work.
-            system(assistantPromptOfAtLeastLength(1600), CacheControl.Bedrock.Default)
+            system(assistantPromptOfAtLeastLength(1600), BedrockCacheControl.Default)
             user("What is the capital of France?")
         }
 
@@ -358,7 +358,7 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         val prompt = Prompt.build("test-cache-user") {
             // Caching requires a minimum prompt length to work.
             system(assistantPromptOfAtLeastLength(1600))
-            user(listOf(ContentPart.Text("What is the capital of France?")), CacheControl.Bedrock.Default)
+            user(listOf(ContentPart.Text("What is the capital of France?")), BedrockCacheControl.Default)
         }
 
         withRetry(times = 3, testName = "integration_testCacheControlOnUserMessage[${model.id}]") {
@@ -378,7 +378,7 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities?.contains(LLMCapability.Tools) ?: false, "Model $model does not support tools")
 
-        val cachedDescriptor = CalculatorTool.descriptor.withCacheControl(CacheControl.Bedrock.Default).copy(
+        val cachedDescriptor = CalculatorTool.descriptor.withCacheControl(BedrockCacheControl.Default).copy(
             // Caching requires a minimum prompt length to work - in the case of tools, this appears to apply specifically to the tool section
             // rather than the prompt as a whole.
             description = assistantPromptOfAtLeastLength(1600, CalculatorTool.descriptor.description)

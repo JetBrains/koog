@@ -2,13 +2,13 @@ package ai.koog.prompt.executor.clients.bedrock.converse
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.bedrock.BedrockCacheControl
 import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
 import ai.koog.prompt.executor.clients.bedrock.util.JsonDocumentConverters
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.CacheControl
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -81,19 +81,19 @@ internal object BedrockConverseConverters {
         explicitNulls = false
     }
 
-    private fun CacheControl.Bedrock.toBedrockCachePointContentBlock(): ContentBlock =
+    private fun BedrockCacheControl.toBedrockCachePointContentBlock(): ContentBlock =
         ContentBlock.CachePoint(toBedrockCachePointBlock())
 
-    private fun CacheControl.Bedrock.toBedrockSystemCachePoint(): SystemContentBlock =
+    private fun BedrockCacheControl.toBedrockSystemCachePoint(): SystemContentBlock =
         SystemContentBlock.CachePoint(toBedrockCachePointBlock())
 
-    private fun CacheControl.Bedrock.toBedrockCachePointBlock(): CachePointBlock =
+    private fun BedrockCacheControl.toBedrockCachePointBlock(): CachePointBlock =
         CachePointBlock {
             type = CachePointType.Default
             ttl = when (this@toBedrockCachePointBlock) {
-                CacheControl.Bedrock.Default -> null
-                CacheControl.Bedrock.FiveMinutes -> CacheTtl.FiveMinutes
-                CacheControl.Bedrock.OneHour -> CacheTtl.OneHour
+                BedrockCacheControl.Default -> null
+                BedrockCacheControl.FiveMinutes -> CacheTtl.FiveMinutes
+                BedrockCacheControl.OneHour -> CacheTtl.OneHour
             }
         }
 
@@ -135,7 +135,7 @@ internal object BedrockConverseConverters {
                 is Message.System -> {
                     systemMessages += message.parts.map { SystemContentBlock.Text(it.text) }
                     message.cacheControl?.let { cc ->
-                        systemMessages += cc.require<CacheControl.Bedrock>().toBedrockSystemCachePoint()
+                        systemMessages += cc.require<BedrockCacheControl>().toBedrockSystemCachePoint()
                     }
                 }
 
@@ -144,7 +144,7 @@ internal object BedrockConverseConverters {
                         this.role = ConversationRole.User
                         this.content = buildList {
                             addAll(message.parts.map { it.toConverseContentBlock(model) })
-                            addAll(listOfNotNull(message.cacheControl?.require<CacheControl.Bedrock>()?.toBedrockCachePointContentBlock()))
+                            addAll(listOfNotNull(message.cacheControl?.require<BedrockCacheControl>()?.toBedrockCachePointContentBlock()))
                         }
                     }
 
@@ -153,7 +153,7 @@ internal object BedrockConverseConverters {
                         this.role = ConversationRole.Assistant
                         this.content = buildList {
                             addAll(message.parts.map { it.toConverseContentBlock(model) })
-                            addAll(listOfNotNull(message.cacheControl?.require<CacheControl.Bedrock>()?.toBedrockCachePointContentBlock()))
+                            addAll(listOfNotNull(message.cacheControl?.require<BedrockCacheControl>()?.toBedrockCachePointContentBlock()))
                         }
                     }
 
@@ -747,7 +747,7 @@ internal object BedrockConverseConverters {
         return listOfNotNull(
             toolSpec,
             tool.cacheControl?.let { cc ->
-                BedrockTool.CachePoint(cc.require<CacheControl.Bedrock>().toBedrockCachePointBlock())
+                BedrockTool.CachePoint(cc.require<BedrockCacheControl>().toBedrockCachePointBlock())
             }
         )
     }

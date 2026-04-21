@@ -248,6 +248,28 @@ Injects a pre-configured OpenTelemetrySdk instance.
 |-------|--------------------|----------|---------------------------------------|
 | `sdk` | `OpenTelemetrySdk` | Yes      | The SDK instance to use in the agent. |
 
+#### addMetricExporter
+
+Adds a metric exporter to send metric data to external systems. Takes the following arguments:
+
+| Name            | Data type        | Required | Default value | Description                                                                  |
+|-----------------|------------------|----------|---------------|------------------------------------------------------------------------------|
+| `exporter`      | `MetricExporter` | Yes      |               | The `MetricExporter` instance to register with a periodic metric reader.     |
+| `meterInterval` | `Duration`       | No       | `1s`          | The interval between metric reads. Also available as a `java.time.Duration`. |
+
+If no metric exporter is registered, Koog falls back to the console `LoggingMetricExporter` so that metrics are visible during local development.
+
+#### addMetricFilter
+
+Restricts the attribute keys that are reported for a specific metric instrument. This installs an OpenTelemetry `View` that drops any attribute not listed. Takes the following arguments:
+
+| Name            | Data type     | Required | Default value | Description                                                 |
+|-----------------|---------------|----------|---------------|-------------------------------------------------------------|
+| `metricName`    | `String`      | Yes      |               | The name of the metric instrument to apply the filter to.   |
+| `keysToRetain`  | `Set<String>` | Yes      |               | The attribute keys that should be retained for this metric. |
+
+Use this to keep high-cardinality attributes (for example, request identifiers) from blowing up your metric backend while still exporting the metric itself.
+
 ### Advanced configuration
 
 For more advanced configuration, you can also customize the following configuration options:
@@ -516,6 +538,46 @@ the OpenTelemetry support in Koog, event body fields are a separate attribute wh
 string. The string includes the content or payload for the event body field, which is usually a JSON-like object. For
 examples of event body fields, see the [OpenTelemetry documentation](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-events/#examples). For the state of support for event body
 fields in `opentelemetry-java`, see the related [GitHub issue](https://github.com/open-telemetry/semantic-conventions/issues/1870).
+
+## Metrics
+
+In addition to spans, the OpenTelemetry feature emits metrics that follow OpenTelemetry's [Semantic conventions for GenAI metrics](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics/). Metrics are exported through the meter provider configured via [addMetricExporter](#addmetricexporter); if no exporter is registered, a console `LoggingMetricExporter` is used by default.
+
+The following instruments are registered:
+
+| Name                                | Instrument | Unit    | Description                                                                                                 |
+|-------------------------------------|------------|---------|-------------------------------------------------------------------------------------------------------------|
+| `gen_ai.client.token.usage`         | Histogram  | `{token}` | Token usage reported for each LLM call, split by `gen_ai.token.type` (`input`/`output`).                    |
+| `gen_ai.client.operation.duration`  | Histogram  | `s`     | Duration of GenAI operations — both `text_completion` (LLM calls) and `execute_tool` (tool invocations).    |
+| `koog.gen_ai.client.tool.call.count`| Counter    | `{call}` | Koog-specific counter of tool calls performed by the agent, labelled by tool name and call status.          |
+
+Explicit histogram bucket boundaries are provided as advice in line with the semantic conventions:
+
+- `gen_ai.client.token.usage`: `[1, 4, 16, 64, 256, 1024, 4096, 16384, 65536, 262144, 1048576, 4194304, 16777216, 67108864]`
+- `gen_ai.client.operation.duration`: `[0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.28, 2.56, 5.12, 10.24, 20.48, 40.96, 81.92]`
+
+### gen_ai.provider.name
+
+Every data point carries a `gen_ai.provider.name` attribute:
+
+- For `text_completion` operations, the value is the LLM provider id (for example, `openai`, `anthropic`).
+- For `execute_tool` operations, the value is `koog`, because tool execution happens in-process rather than against a third-party provider. MCP tool executions keep this value and surface MCP-specific details through separate `mcp.*` attributes on the corresponding span, so tool metrics stay at low cardinality.
+
+### error.type
+
+`error.type` is set only on failed `gen_ai.client.operation.duration` data points, per the GenAI semconv requirement. The value is the canonical Java class name of the error that caused the failure, so it is bounded by the exception hierarchy and safe to use as a metric dimension:
+
+- Subclasses of `AIAgentError` — for `execute_tool` failures and tool validation failures.
+- Any `Throwable` raised by the LLM client or agent runtime — for `text_completion` failures that surface through the agent-level failure hook.
+- `_OTHER` — fallback when an in-flight operation is flushed at agent close without an associated error.
+
+The attribute is not set on successful operations.
+
+### restrictToolNameCardinality
+
+Tool metrics are labeled with `gen_ai.tool.name`. If you expose tools whose names are dynamic or user-generated, the tool-name cardinality can grow without bound. Use `restrictToolNameCardinality` to map any name outside an allow-list to a single fallback value.
+
+For metric-specific attribute filtering that applies to any instrument and any attribute key, use [addMetricFilter](#addmetricfilter).
 
 ## Exporters
 

@@ -7,6 +7,7 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.integration.tests.agent.AIAgentTestBase.ReportingLLMClient.Event
 import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.RetryUtils
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestGoogleAIKeyFromEnv
@@ -299,6 +300,9 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         val imageFile = File(testResourcesDir.toFile(), "test.png")
         imageFile.exists().shouldBeTrue()
 
+        val imageUrl = "https://cdn.jsdelivr.net/gh/JetBrains/koog@develop/integration-tests/src/jvmTest/resources/media/test.png"
+        RetryUtils.ensureUrlAccessible(imageUrl, testName = "remote image preflight")
+
         val prompt = prompt("example-prompt") {
             system("You are a professional helpful assistant.")
 
@@ -308,7 +312,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                     br()
                     +"Please analyze this image and identify the image format if possible."
                 }
-                image("https://raw.githubusercontent.com/JetBrains/koog/develop/integration-tests/src/jvmTest/resources/media/test.png")
+                image(imageUrl)
             }
         }
 

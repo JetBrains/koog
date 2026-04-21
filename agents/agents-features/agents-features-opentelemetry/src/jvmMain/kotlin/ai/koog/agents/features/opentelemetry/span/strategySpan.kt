@@ -1,8 +1,8 @@
 package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.extension.toSpanEndStatus
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.Tracer
@@ -10,7 +10,7 @@ import io.opentelemetry.api.trace.Tracer
 /**
  * Build and start a new Strategy Span with necessary attributes.
  *
- * Note: This span is not a standard span type defined in the Open Telemetry
+ * Note: This span is not a standard span type defined in the OpenTelemetry
  * Semantic Conventions but is designed to provide support for tracing
  * operations related to strategy execution in Koog events.
  *
@@ -35,7 +35,7 @@ internal fun startStrategySpan(
         kind = SpanKind.INTERNAL,
         name = "strategy $strategyName",
     )
-        .addAttribute(SpanAttributes.Conversation.Id(runId))
+        .addAttribute(GenAIAttributes.Conversation.Id(runId))
         .addAttribute(KoogAttributes.Koog.Strategy.Name(strategyName))
         .addAttribute(KoogAttributes.Koog.Event.Id(id))
 
@@ -45,7 +45,7 @@ internal fun startStrategySpan(
 /**
  * End Strategy Span and set final attributes.
  *
- * Note: This span is not a standard span type defined in the Open Telemetry
+ * Note: This span is not a standard span type defined in the OpenTelemetry
  * Semantic Conventions but is designed to provide support for tracing
  * operations related to strategy execution in Koog events.
  *

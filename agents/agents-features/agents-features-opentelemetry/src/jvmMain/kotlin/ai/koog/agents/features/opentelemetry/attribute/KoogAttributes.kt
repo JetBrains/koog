@@ -10,6 +10,12 @@ import ai.koog.agents.utils.HiddenString
  */
 internal object KoogAttributes {
 
+    /**
+     * Value set on `gen_ai.provider.name` for `execute_tool` metrics and spans. LLM operations
+     * use the actual LLM provider id instead.
+     */
+    const val PROVIDER_NAME: String = "koog"
+
     sealed interface Koog : Attribute {
         override val key: String
             get() = "koog"
@@ -71,6 +77,28 @@ internal object KoogAttributes {
             data class Output(private val output: String) : Subgraph {
                 override val key: String = super.key.concatKey("output")
                 override val value: HiddenString = HiddenString(output)
+            }
+        }
+
+        sealed interface Tool : Koog {
+            override val key: String
+                get() = super.key.concatKey("tool")
+
+            sealed interface Call : Tool {
+                override val key: String
+                    get() = super.key.concatKey("call")
+
+                // koog.tool.call.status
+                data class Status(private val status: StatusType) : Call {
+                    override val key: String = super.key.concatKey("status")
+                    override val value: String = status.str
+                }
+
+                enum class StatusType(val str: String) {
+                    SUCCESS("success"),
+                    ERROR("error"),
+                    VALIDATION_FAILED("validation_failed")
+                }
             }
         }
     }

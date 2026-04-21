@@ -10,7 +10,7 @@ import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getSystemInstr
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.runAgentWithStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.testClock
 import ai.koog.agents.features.opentelemetry.assertSpans
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Operation.OperationNameType
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Operation.OperationNameType
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryTestBase
 import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.message.Message

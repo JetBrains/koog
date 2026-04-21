@@ -34,8 +34,6 @@ import kotlin.jvm.JvmField
  * | [Opus_4_7]   | Moderately fast | $5-$25       | Text, Image, Tools, Document | Text, Tools |
  */
 public object AnthropicModels : LLModelDefinitions {
-    private val thinkingCapabilities: List<LLMCapability> = listOf(LLMCapability.Thinking)
-
     /**
      * Claude 3 Haiku is Anthropic's fastest and most compact model.
      * It's designed for high-throughput, cost-effective applications where speed is a priority.
@@ -56,7 +54,8 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Tools,
             LLMCapability.ToolChoice,
             LLMCapability.Vision.Image,
-            LLMCapability.Completion
+            LLMCapability.Completion,
+            LLMCapability.PromptCaching,
         ),
         contextLength = 200_000,
         maxOutputTokens = 4_096,
@@ -84,7 +83,9 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Completion,
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
-        ) + thinkingCapabilities,
+            LLMCapability.Thinking,
+            LLMCapability.PromptCaching,
+        ),
         contextLength = 200_000,
         maxOutputTokens = 64_000,
     )
@@ -108,7 +109,9 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Document,
             LLMCapability.Completion,
-        ) + thinkingCapabilities,
+            LLMCapability.Thinking,
+            LLMCapability.PromptCaching
+        ),
         contextLength = 200_000,
         maxOutputTokens = 64_000,
     )
@@ -135,7 +138,9 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Completion,
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
-        ) + thinkingCapabilities,
+            LLMCapability.Thinking,
+            LLMCapability.PromptCaching,
+        ),
         contextLength = 200_000,
         maxOutputTokens = 64_000,
     )
@@ -162,7 +167,9 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Completion,
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
-        ) + thinkingCapabilities,
+            LLMCapability.Thinking,
+            LLMCapability.PromptCaching,
+        ),
         contextLength = 1_000_000,
         maxOutputTokens = 64_000,
     )
@@ -187,7 +194,9 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Document,
             LLMCapability.Completion,
-        ) + thinkingCapabilities,
+            LLMCapability.Thinking,
+            LLMCapability.PromptCaching,
+        ),
         contextLength = 200_000,
         maxOutputTokens = 32_000,
     )
@@ -212,7 +221,9 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Document,
             LLMCapability.Completion,
-        ) + thinkingCapabilities,
+            LLMCapability.Thinking,
+            LLMCapability.PromptCaching,
+        ),
         contextLength = 200_000,
         maxOutputTokens = 32_000,
     )
@@ -240,7 +251,9 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Completion,
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
-        ) + thinkingCapabilities,
+            LLMCapability.Thinking,
+            LLMCapability.PromptCaching,
+        ),
         contextLength = 200_000,
         maxOutputTokens = 64_000,
     )
@@ -271,7 +284,9 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Completion,
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
-        ) + thinkingCapabilities,
+            LLMCapability.Thinking,
+            LLMCapability.PromptCaching,
+        ),
         contextLength = 200_000,
         maxOutputTokens = 128_000,
     )
@@ -299,7 +314,9 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Completion,
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
-        ) + thinkingCapabilities,
+            LLMCapability.Thinking,
+            LLMCapability.PromptCaching,
+        ),
         contextLength = 1_000_000,
         maxOutputTokens = 128_000,
     )

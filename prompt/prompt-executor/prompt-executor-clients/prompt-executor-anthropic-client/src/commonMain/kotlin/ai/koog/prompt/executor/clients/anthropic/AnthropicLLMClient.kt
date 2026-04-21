@@ -25,6 +25,7 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicTool
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicToolChoice
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicToolSchema
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicUsage
+import ai.koog.prompt.executor.clients.anthropic.models.CacheTtl
 import ai.koog.prompt.executor.clients.anthropic.models.DocumentSource
 import ai.koog.prompt.executor.clients.anthropic.models.ImageSource
 import ai.koog.prompt.executor.clients.anthropic.models.SystemAnthropicMessage
@@ -35,9 +36,11 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.CacheControl
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.message.require
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
@@ -52,11 +55,14 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
 import kotlin.jvm.JvmOverloads
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicCacheControl as AnthropicCacheControlBlock
 
 /**
  * Represents the settings for configuring an Anthropic client, including model mapping, base URL, and API version.
@@ -348,6 +354,13 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         }.requireEndFrame()
     }
 
+    internal fun CacheControl.toAnthropicCacheControl(): AnthropicCacheControlBlock {
+        return when (this.require<AnthropicCacheControl>()) {
+            AnthropicCacheControl.Default -> AnthropicCacheControlBlock.Ephemeral()
+            AnthropicCacheControl.OneHour -> AnthropicCacheControlBlock.Ephemeral(CacheTtl.OneHour)
+        }
+    }
+
     @OptIn(ExperimentalUuidApi::class)
     internal fun createAnthropicRequest(
         prompt: Prompt,
@@ -362,7 +375,12 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             when (message) {
                 is Message.System -> {
                     if (!message.content.isEmpty()) {
-                        systemMessage.add(SystemAnthropicMessage(message.content))
+                        systemMessage.add(
+                            SystemAnthropicMessage(
+                                message.content,
+                                cacheControl = message.cacheControl?.toAnthropicCacheControl()
+                            )
+                        )
                     }
                 }
 
@@ -373,7 +391,12 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                 is Message.Assistant -> {
                     messages.add(
                         AnthropicMessage.Assistant(
-                            content = listOf(AnthropicContent.Text(message.content))
+                            content = listOf(
+                                AnthropicContent.Text(
+                                    text = message.content,
+                                    cacheControl = message.cacheControl?.toAnthropicCacheControl()
+                                )
+                            ),
                         )
                     )
                 }
@@ -387,7 +410,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                         ?: throw IllegalArgumentException("Encrypted signature is required for reasoning messages but was null"),
                                     thinking = message.content
                                 )
-                            )
+                            ),
                         )
                     )
                 }
@@ -399,9 +422,10 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                 AnthropicContent.ToolResult(
                                     toolUseId = message.id ?: "",
                                     content = message.content,
-                                    isError = message.isError
+                                    isError = message.isError,
+                                    cacheControl = message.cacheControl?.toAnthropicCacheControl()
                                 )
-                            )
+                            ),
                         )
                     )
                 }
@@ -414,9 +438,9 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                 AnthropicContent.ToolUse(
                                     id = message.id ?: Uuid.random().toString(),
                                     name = message.tool,
-                                    input = Json.parseToJsonElement(message.content).jsonObject
+                                    input = Json.parseToJsonElement(message.content).jsonObject,
                                 )
-                            )
+                            ),
                         )
                     )
                 }
@@ -440,7 +464,8 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                 inputSchema = AnthropicToolSchema(
                     properties = JsonObject(properties),
                     required = tool.requiredParameters.map { it.name }
-                )
+                ),
+                cacheControl = tool.cacheControl?.toAnthropicCacheControl()
             )
         }
 
@@ -486,6 +511,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             model = settings.modelVersionsMap[model] ?: throw IllegalArgumentException("Unsupported model: $model"),
             messages = messages,
             maxTokens = anthropicParams.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
+            cacheControl = anthropicParams.cacheControl?.toAnthropicCacheControl(),
             container = anthropicParams.container,
             mcpServers = anthropicParams.mcpServers,
             outputConfig = outputConfig,
@@ -496,7 +522,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             temperature = anthropicParams.temperature,
             thinking = anthropicParams.thinking,
             toolChoice = toolChoice,
-            tools = tools, // Always provide a list for tools
+            tools = tools,
             topK = anthropicParams.topK,
             topP = anthropicParams.topP,
             additionalProperties = anthropicParams.additionalProperties
@@ -509,7 +535,12 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         val listOfContent = buildList {
             parts.forEach { part ->
                 when (part) {
-                    is ContentPart.Text -> add(AnthropicContent.Text(part.text))
+                    is ContentPart.Text -> add(
+                        AnthropicContent.Text(
+                            part.text,
+                            cacheControl = cacheControl?.toAnthropicCacheControl()
+                        )
+                    )
 
                     is ContentPart.Image -> {
                         require(model.supports(LLMCapability.Vision.Image)) {
@@ -527,7 +558,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                             )
                         }
 
-                        add(AnthropicContent.Image(imageSource))
+                        add(AnthropicContent.Image(imageSource, cacheControl = cacheControl?.toAnthropicCacheControl()))
                     }
 
                     is ContentPart.File -> {
@@ -549,7 +580,12 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                             )
                         }
 
-                        add(AnthropicContent.Document(documentSource))
+                        add(
+                            AnthropicContent.Document(
+                                documentSource,
+                                cacheControl = cacheControl?.toAnthropicCacheControl()
+                            )
+                        )
                     }
 
                     else -> throw LLMClientException(
@@ -568,11 +604,20 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         val inputTokensCount = response.usage?.inputTokens
         val outputTokensCount = response.usage?.outputTokens
         val totalTokensCount = response.usage?.let { it.inputTokens?.plus(it.outputTokens ?: 0) ?: it.outputTokens }
+        val cacheCreationInputTokens = response.usage?.cacheCreationInputTokens
+        val cacheReadInputTokens = response.usage?.cacheReadInputTokens
+
+        val cacheMetadata = buildJsonObject {
+            cacheCreationInputTokens?.let { put("cacheCreationInputTokens", it) }
+            cacheReadInputTokens?.let { put("cacheReadInputTokens", it) }
+        }.takeIf { it.isNotEmpty() }
+
         val metaInfo = ResponseMetaInfo.create(
             clock,
             totalTokensCount = totalTokensCount,
             inputTokensCount = inputTokensCount,
             outputTokensCount = outputTokensCount,
+            metadata = cacheMetadata,
         )
 
         val responses = response.content.map { content ->
@@ -623,7 +668,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                         totalTokensCount = totalTokensCount,
                         inputTokensCount = inputTokensCount,
                         outputTokensCount = outputTokensCount,
-                    )
+                    ),
                 )
             )
 

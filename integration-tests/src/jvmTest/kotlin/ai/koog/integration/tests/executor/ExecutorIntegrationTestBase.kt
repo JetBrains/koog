@@ -7,8 +7,10 @@ import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.TextTestScenario
 import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
+import ai.koog.integration.tests.utils.MediaTestUtils.checkImageAnalysisResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
 import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.RetryUtils
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsReasoning
 import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsReasoningWithEncryption
@@ -91,9 +93,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.Base64
 import kotlin.io.path.pathString
-import kotlin.io.path.readBytes
 import kotlin.io.path.readText
-import kotlin.io.path.writeBytes
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
@@ -629,11 +629,6 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val imageFile = MediaTestUtils.getImageFileForScenario(ImageTestScenario.BASIC_PNG, testResourcesDir)
-        val imageBytes = imageFile.readBytes()
-
-        val tempImageFile = testResourcesDir.resolve("small.png")
-
-        tempImageFile.writeBytes(imageBytes)
         val prompt = prompt("base64-encoded-attachments-test") {
             system("You are a helpful assistant that can analyze different types of media files.")
 
@@ -642,7 +637,7 @@ abstract class ExecutorIntegrationTestBase {
                     +"I'm sending you an image. Please analyze them and tell me about their content."
                 }
 
-                image(KtPath(tempImageFile.pathString))
+                image(KtPath(imageFile.pathString))
             }
         }
 
@@ -651,7 +646,7 @@ abstract class ExecutorIntegrationTestBase {
                 getExecutor(model).execute(prompt, model)
                     .first { it is Message.Assistant && it.content.isNotBlank() }
             ) {
-                checkExecutorMediaResponse(this)
+                checkImageAnalysisResponse(this)
             }
         }
     }
@@ -666,7 +661,9 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val imageUrl =
-            "https://raw.githubusercontent.com/JetBrains/koog/develop/integration-tests/src/jvmTest/resources/media/test.png"
+            "https://raw.githubusercontent.com/JetBrains/koog/1e7014eae7dca603cfceaece27c135ecdc45e2a2/integration-tests/src/jvmTest/resources/media/test.png"
+
+        RetryUtils.ensureUrlAccessible(imageUrl, testName = "remote image preflight")
 
         val prompt = prompt("url-based-attachments-test") {
             system("You are a helpful assistant that can analyze images.")
@@ -682,11 +679,7 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry {
             with(getExecutor(model).execute(prompt, model).single()) {
-                checkExecutorMediaResponse(this)
-                content.lowercase()
-                    .shouldContain("image")
-                    .shouldContain("test")
-                    .shouldContain("hat")
+                checkImageAnalysisResponse(this)
             }
         }
     }

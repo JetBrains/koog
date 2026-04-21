@@ -493,3 +493,4 @@ This creates a new prompt that includes all messages from `basePrompt` and the n
 - Learn how to work with [multimodal content](multimodal-content.md).
 - Run prompts with [LLM clients](../llm-clients.md) if you work with a single LLM provider.
 - Run prompts with [prompt executors](../prompt-executors.md) if you work with multiple LLM providers.
+- Learn how to use llm cache with [cache control](cache-control.md).

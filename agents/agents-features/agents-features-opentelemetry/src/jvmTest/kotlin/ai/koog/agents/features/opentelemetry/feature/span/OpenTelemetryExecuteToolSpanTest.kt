@@ -14,7 +14,7 @@ import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.runAgentWithSi
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.runAgentWithStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.testClock
 import ai.koog.agents.features.opentelemetry.assertSpans
-import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Operation.OperationNameType
+import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Operation.OperationNameType
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryTestBase
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -59,6 +59,7 @@ class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.tool.name" to TestGetWeatherTool.name,
                         "gen_ai.tool.call.id" to mockToolCallResponse.toolCallId,
                         "gen_ai.operation.name" to OperationNameType.EXECUTE_TOOL.id,
+                        "gen_ai.provider.name" to "koog",
                         "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
                         "koog.event.id" to collectedTestData.singleToolCallEventIdByToolName(TestGetWeatherTool.name),
                     ),
@@ -100,6 +101,7 @@ class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.tool.name" to TestGetWeatherTool.name,
                         "gen_ai.tool.call.id" to mockToolCallResponse.toolCallId,
                         "gen_ai.operation.name" to OperationNameType.EXECUTE_TOOL.id,
+                        "gen_ai.provider.name" to "koog",
                         "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
                         "koog.event.id" to collectedTestData.singleToolCallEventIdByToolName(TestGetWeatherTool.name),
                     ),
@@ -197,6 +199,7 @@ class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.tool.call.arguments" to serializedToolArgsLondon,
                         "gen_ai.tool.name" to TestGetWeatherTool.name,
                         "gen_ai.operation.name" to OperationNameType.EXECUTE_TOOL.id,
+                        "gen_ai.provider.name" to "koog",
                         "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
                         "koog.event.id" to eventIdFromLondonSpan,
                     ),
@@ -212,6 +215,7 @@ class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.tool.call.arguments" to serializedToolArgsParis,
                         "gen_ai.tool.name" to TestGetWeatherTool.name,
                         "gen_ai.operation.name" to OperationNameType.EXECUTE_TOOL.id,
+                        "gen_ai.provider.name" to "koog",
                         "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
                         "koog.event.id" to eventIdFromParisSpan,
                     ),

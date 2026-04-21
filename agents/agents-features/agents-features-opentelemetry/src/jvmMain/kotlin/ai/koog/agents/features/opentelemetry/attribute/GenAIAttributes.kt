@@ -16,9 +16,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.putJsonArray
 
 /**
- * The class describe Attributes related to a Spans in GenAI system.
+ * This class describes attributes in the GenAI system.
  *
- * The list of supported attributes according to Open Telemetry Semantic Convention
+ * The list of supported attributes according to OpenTelemetry Semantic Convention
  * (https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/)
  *
  * Note: Some shared attributes are located in [CommonAttributes] class.
@@ -28,9 +28,12 @@ import kotlinx.serialization.json.putJsonArray
  * - gen_ai.agent.description (conditional)
  * - gen_ai.agent.id (conditional)
  * - gen_ai.agent.name (conditional)
+ * - gen_ai.provider.name (conditional)
  * - gen_ai.conversation.id (conditional)
  * - gen_ai.data_source.id (conditional)
+ * - gen_ai.input.messages (recommended)
  * - gen_ai.output.type (conditional/required)
+ * - gen_ai.output.messages (recommended)
  * - gen_ai.request.choice.count (conditional/required)
  * - gen_ai.request.model (conditional/required)
  * - gen_ai.request.seed (conditional/required)
@@ -43,13 +46,19 @@ import kotlinx.serialization.json.putJsonArray
  * - gen_ai.response.finish_reasons (recommended)
  * - gen_ai.response.id (recommended)
  * - gen_ai.response.model (recommended)
+ * - gen_ai.token.type (required)
  * - gen_ai.usage.input_tokens (recommended)
  * - gen_ai.usage.output_tokens (recommended)
+ * - gen_ai.usage.total_tokens (non-semantic)
  * - gen_ai.tool.call.id (recommended)
+ * - gen_ai.tool.call.arguments (recommended)
+ * - gen_ai.tool.call.result (recommended)
  * - gen_ai.tool.description (recommended)
  * - gen_ai.tool.name (recommended)
+ * - gen_ai.tool.definitions (recommended)
+ * - gen_ai.system_instructions (recommended)
  */
-internal object SpanAttributes {
+internal object GenAIAttributes {
 
     // gen_ai.operation
     sealed interface Operation : GenAIAttribute {
@@ -104,9 +113,10 @@ internal object SpanAttributes {
         override val key: String
             get() = super.key.concatKey("provider")
 
-        data class Name(private val provider: LLMProvider) : Provider {
+        data class Name(override val value: String) : Provider {
             override val key: String = super.key.concatKey("name")
-            override val value: String = provider.id
+
+            constructor(provider: LLMProvider) : this(provider.id)
         }
     }
 
@@ -275,21 +285,27 @@ internal object SpanAttributes {
 
         sealed interface FinishReasonType {
             val id: String
+
             object ContentFilter : FinishReasonType {
                 override val id = "content_filter"
             }
+
             object Error : FinishReasonType {
                 override val id = "error"
             }
+
             object Length : FinishReasonType {
                 override val id = "length"
             }
+
             object Stop : FinishReasonType {
                 override val id = "stop"
             }
+
             object ToolCalls : FinishReasonType {
                 override val id = "tool_calls"
             }
+
             data class Custom(override val id: String) : FinishReasonType
         }
 
@@ -309,6 +325,23 @@ internal object SpanAttributes {
         data class Metadata(private val metadata: String) : Response {
             override val key: String = super.key.concatKey("metadata")
             override val value: String = metadata
+        }
+    }
+
+    // gen_ai.token
+    sealed interface Token : GenAIAttribute {
+        override val key: String
+            get() = super.key.concatKey("token")
+
+        // gen_ai.token.type
+        data class Type(private val type: TokenType) : Token {
+            override val key: String = super.key.concatKey("type")
+            override val value: String = type.str
+        }
+
+        enum class TokenType(val str: String) {
+            INPUT("input"),
+            OUTPUT("output")
         }
     }
 

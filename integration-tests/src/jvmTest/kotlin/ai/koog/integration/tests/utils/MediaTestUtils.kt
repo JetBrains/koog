@@ -3,6 +3,7 @@ package ai.koog.integration.tests.utils
 import ai.koog.prompt.message.Message
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.string.shouldNotContain
 import java.nio.file.Files
@@ -16,7 +17,7 @@ object MediaTestUtils {
             }
 
             MediaTestScenarios.ImageTestScenario.BASIC_JPG -> {
-                testResourcesDir.resolve("test.jpeg")
+                testResourcesDir.resolve("basic.jpeg")
             }
 
             MediaTestScenarios.ImageTestScenario.EMPTY_IMAGE -> {
@@ -274,6 +275,19 @@ object MediaTestUtils {
             checkResponseBasic(this)
             content.lowercase() shouldNotContain "error processing" shouldNotContain "unable to process" shouldNotContain "cannot process"
         }
+    }
+
+    fun checkImageAnalysisResponse(response: Message.Response) {
+        checkExecutorMediaResponse(response)
+
+        val content = response.content.lowercase()
+        val imageHints = listOf("image", "picture", "illustration", "photo", "graphic")
+        val visualDetailHints = listOf(
+            "shows", "depicts", "contains", "background", "color", "shape", "object", "subject", "wing", "body"
+        )
+
+        imageHints.any(content::contains).shouldBe(true)
+        visualDetailHints.any(content::contains).shouldBe(true)
     }
 
     fun checkResponseBasic(response: Message.Response) {

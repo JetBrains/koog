@@ -59,16 +59,6 @@ object MediaTestScenarios {
     }
 
     @JvmStatic
-    fun imageScenarioModelCombinations(): Stream<Arguments> {
-        val scenarios = ImageTestScenario.entries.toTypedArray()
-        return scenarios.flatMap { scenario ->
-            models.map { model ->
-                Arguments.of(scenario, model)
-            }
-        }.stream()
-    }
-
-    @JvmStatic
     fun textScenarioModelCombinations(): Stream<Arguments> {
         val scenarios = TextTestScenario.entries.toTypedArray()
         return scenarios.flatMap { scenario ->

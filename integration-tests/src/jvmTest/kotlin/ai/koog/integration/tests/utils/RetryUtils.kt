@@ -3,6 +3,8 @@ package ai.koog.integration.tests.utils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
+import java.net.HttpURLConnection
+import java.net.URL
 
 /*
 * The RetryExtension is not working with JUnit parametrized tests,
@@ -38,6 +40,8 @@ object RetryUtils {
 
     // External image URL download failures are third-party service issues
     private const val OPENAI_IMAGE_DOWNLOAD_ERROR = "Error while downloading"
+    private const val URL_CONNECT_TIMEOUT_MS = 5_000
+    private const val URL_READ_TIMEOUT_MS = 10_000
 
     private fun isThirdPartyError(e: Throwable): Boolean {
         val errorMessages = listOf(
@@ -111,4 +115,33 @@ object RetryUtils {
 
         throw lastException!!
     }
+
+    @JvmStatic
+    @JvmOverloads
+    fun ensureUrlAccessible(
+        url: String,
+        times: Int = 3,
+        delayMs: Long = 500,
+        testName: String = "url accessibility check"
+    ) {
+        withRetry(times = times, delayMs = delayMs, testName = "$testName: $url") {
+            openConnection(url).run {
+                try {
+                    val statusCode = responseCode
+                    check(statusCode in 200..299) {
+                        "Remote URL is not accessible: $url returned HTTP $statusCode"
+                    }
+                } finally {
+                    disconnect()
+                }
+            }
+        }
+    }
+
+    private fun openConnection(url: String): HttpURLConnection =
+        (URL(url).openConnection() as HttpURLConnection).apply {
+            connectTimeout = URL_CONNECT_TIMEOUT_MS
+            readTimeout = URL_READ_TIMEOUT_MS
+            instanceFollowRedirects = true
+        }
 }

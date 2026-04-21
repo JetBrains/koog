@@ -4,8 +4,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.bedrock.BedrockCacheControl
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
-import ai.koog.prompt.message.CacheControl
 import aws.sdk.kotlin.services.bedrockruntime.model.CachePointType
 import aws.sdk.kotlin.services.bedrockruntime.model.CacheTtl
 import aws.sdk.kotlin.services.bedrockruntime.model.ContentBlock
@@ -28,7 +28,7 @@ class BedrockCacheControlTest {
 
     @Test
     fun testSystemWithCacheControlDefault() {
-        val prompt = Prompt.build("test") { system("You are helpful.", CacheControl.Bedrock.Default) }
+        val prompt = Prompt.build("test") { system("You are helpful.", BedrockCacheControl.Default) }
         val system = converseRequest(prompt).system!!
         assertEquals(2, system.size)
         assertIs<SystemContentBlock.Text>(system[0])
@@ -47,7 +47,7 @@ class BedrockCacheControlTest {
 
     @Test
     fun testSystemCacheControlFiveMinutes() {
-        val prompt = Prompt.build("test") { system("Cached.", CacheControl.Bedrock.FiveMinutes) }
+        val prompt = Prompt.build("test") { system("Cached.", BedrockCacheControl.FiveMinutes) }
         val cp = assertIs<SystemContentBlock.CachePoint>(converseRequest(prompt).system!![1])
         assertNotNull(cp.value.ttl)
         assertEquals(CacheTtl.FiveMinutes, cp.value.ttl)
@@ -55,7 +55,7 @@ class BedrockCacheControlTest {
 
     @Test
     fun testSystemCacheControlOneHour() {
-        val prompt = Prompt.build("test") { system("Cached.", CacheControl.Bedrock.OneHour) }
+        val prompt = Prompt.build("test") { system("Cached.", BedrockCacheControl.OneHour) }
         val cp = assertIs<SystemContentBlock.CachePoint>(converseRequest(prompt).system!![1])
         assertNotNull(cp.value.ttl)
         assertEquals(CacheTtl.OneHour, cp.value.ttl)
@@ -69,10 +69,10 @@ class BedrockCacheControlTest {
             name = "search",
             description = "Search",
             requiredParameters = listOf(ToolParameterDescriptor("q", "query", ToolParameterType.String)),
-            cacheControl = CacheControl.Bedrock.Default
+            cacheControl = BedrockCacheControl.Default
         )
         val prompt = Prompt.build("test") { user("go") }
-        val tools = converseRequest(prompt, listOf(tool)).toolConfig!!.tools!!
+        val tools = converseRequest(prompt, listOf(tool)).toolConfig!!.tools
         assertEquals(2, tools.size)
         assertIs<BedrockTool.ToolSpec>(tools[0])
         assertIs<BedrockTool.CachePoint>(tools[1])
@@ -86,7 +86,7 @@ class BedrockCacheControlTest {
             requiredParameters = listOf(ToolParameterDescriptor("q", "query", ToolParameterType.String))
         )
         val prompt = Prompt.build("test") { user("go") }
-        val tools = converseRequest(prompt, listOf(tool)).toolConfig!!.tools!!
+        val tools = converseRequest(prompt, listOf(tool)).toolConfig!!.tools
         assertEquals(1, tools.size)
         assertIs<BedrockTool.ToolSpec>(tools[0])
     }
@@ -96,9 +96,9 @@ class BedrockCacheControlTest {
     @Test
     fun testUserWithCacheControl() {
         val prompt = Prompt.build("test") {
-            user(listOf(ai.koog.prompt.message.ContentPart.Text("Hello")), CacheControl.Bedrock.Default)
+            user(listOf(ai.koog.prompt.message.ContentPart.Text("Hello")), BedrockCacheControl.Default)
         }
-        val content = converseRequest(prompt).messages!![0].content!!
+        val content = converseRequest(prompt).messages!![0].content
         assertEquals(2, content.size)
         assertIs<ContentBlock.Text>(content[0])
         assertIs<ContentBlock.CachePoint>(content[1])
@@ -107,7 +107,7 @@ class BedrockCacheControlTest {
     @Test
     fun testUserWithoutCacheControl() {
         val prompt = Prompt.build("test") { user("Hello") }
-        val content = converseRequest(prompt).messages!![0].content!!
+        val content = converseRequest(prompt).messages!![0].content
         assertEquals(1, content.size)
         assertIs<ContentBlock.Text>(content[0])
     }
@@ -118,9 +118,9 @@ class BedrockCacheControlTest {
     fun testAssistantWithCacheControl() {
         val prompt = Prompt.build("test") {
             user("Hi")
-            assistant("Hello!", CacheControl.Bedrock.Default)
+            assistant("Hello!", BedrockCacheControl.Default)
         }
-        val content = converseRequest(prompt).messages!![1].content!!
+        val content = converseRequest(prompt).messages!![1].content
         assertEquals(2, content.size)
         assertIs<ContentBlock.Text>(content[0])
         assertIs<ContentBlock.CachePoint>(content[1])
@@ -132,7 +132,7 @@ class BedrockCacheControlTest {
             user("Hi")
             assistant("Hello!")
         }
-        val content = converseRequest(prompt).messages!![1].content!!
+        val content = converseRequest(prompt).messages!![1].content
         assertEquals(1, content.size)
         assertIs<ContentBlock.Text>(content[0])
     }

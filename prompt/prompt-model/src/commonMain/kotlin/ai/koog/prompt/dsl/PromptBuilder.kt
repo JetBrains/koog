@@ -120,38 +120,31 @@ public class PromptBuilder internal constructor(
      * @param content Content of the user message
      */
     @JavaAPI
-    public fun user(content: String): PromptBuilder = apply {
-        messages.add(Message.User(content, RequestMetaInfo.create(clock)))
+    @JvmOverloads
+    public fun user(content: String, cacheControl: CacheControl? = null): PromptBuilder = apply {
+        messages.add(Message.User(content, RequestMetaInfo.create(clock), cacheControl))
     }
 
     /**
-     * Adds a user message to the prompt with optional attachments.
+     * Adds a user message to the prompt with attachments.
      *
      * User messages represent input from the user to the language model.
-     * This method supports adding text content.
+     * This method allows adding parts of the message such as text content or attachments using a [ContentPartsBuilder].
      *
-     * @param content Content of the user message
+     * Example:```
+     * user {
+     *     test("Image 1:")
+     *     image("photo1.jpg")
+     *     test("Image 2:")
+     *     image("photo3.jpg")
+     * }
+     * ```
+     *
      * @param block Lambda to configure attachments using [ContentPartsBuilder]
      */
     @JavaAPI
-    @Deprecated("Use user(block: ContentPartsBuilder.() -> Unit instead.")
-    public fun user(content: String, block: ContentPartsBuilder.() -> Unit): PromptBuilder = apply {
-        user(content, ContentPartsBuilder().apply(block).build())
-    }
-
-    /**
-     * Adds a user message to the prompt with optional attachments.
-     *
-     * User messages represent input from the user to the language model.
-     * This method supports adding text content.
-     *
-     * @param content Content of the user message
-     * @param attachments Attachments to be added to the message
-     */
-    @JavaAPI
-    @Deprecated("Use user(block: ContentPartsBuilder.() -> Unit instead.")
-    public fun user(content: String, attachments: List<ContentPart> = emptyList()): PromptBuilder = apply {
-        user(listOf(ContentPart.Text(content)) + attachments)
+    public fun user(cacheControl: CacheControl? = null, block: ContentPartsBuilder.() -> Unit): PromptBuilder = apply {
+        user(ContentPartsBuilder().apply(block).build(), cacheControl)
     }
 
     /**

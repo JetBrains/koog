@@ -77,32 +77,6 @@ class JavaAPIPromptBuilderTest {
     }
 
     @Test
-    fun testUserWithContentAndAttachmentsMethod() {
-        @Suppress("DEPRECATION")
-        val prompt = Prompt.builder(promptId, testClock)
-            .user(userMessage, emptyList())
-            .build()
-
-        assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.User)
-        assertEquals(userMessage, prompt.messages[0].content)
-    }
-
-    @Test
-    fun testUserWithContentAndBlockMethod() {
-        @Suppress("DEPRECATION")
-        val prompt = Prompt.builder(promptId, testClock)
-            .user("Base message") {
-                // Lambda for building parts
-            }
-            .build()
-
-        assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.User)
-        assertTrue(prompt.messages[0].content.contains("Base message"))
-    }
-
-    @Test
     fun testUserWithContentPartsBuilderMethod() {
         val prompt = Prompt.builder(promptId, testClock)
             .user {
