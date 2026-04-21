@@ -963,6 +963,75 @@ W&B Weave provides trace visualization and analytics for LLM/agent workloads. In
 
 Please read the [full documentation](opentelemetry-weave-exporter.md) about integration with W&B Weave.
 
+## Integration with Datadog
+
+Datadog provides monitoring, observability, and analytics for cloud-scale applications. Integration with Datadog can be configured via a predefined exporter:
+
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+    import ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+    val promptExecutor = simpleOpenAIExecutor("openai-api-key")
+    val agent = AIAgent(
+        promptExecutor = promptExecutor,
+        llmModel = OpenAIModels.Chat.GPT4o,
+        systemPrompt = "You are a helpful assistant."
+    ) {
+    -->
+    <!--- SUFFIX
+    }
+    -->
+    ```kotlin
+    install(OpenTelemetry) {
+        addDatadogExporter(
+            datadogApiKey = "...",
+            datadogSite = "datadoghq.com"
+        )
+    }
+    ```
+    <!--- KNIT example-opentelemetry-support-10.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgent;
+    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
+    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+    import ai.koog.prompt.executor.model.PromptExecutor;
+    public class exampleOpentelemetrySupportJava10 {
+        public static void main(String[] args) {
+            var promptExecutor = PromptExecutor.builder()
+                .openAI("openai-api-key")
+                .build();
+            var agent = AIAgent.builder()
+                .promptExecutor(promptExecutor)
+                .llmModel(OpenAIModels.Chat.GPT4o)
+                .systemPrompt("You are a helpful assistant.")
+                .
+    -->
+    <!--- SUFFIX
+                .build();
+        }
+    }
+    -->
+    ```java
+    install(OpenTelemetry.Feature, config -> {
+        config.addDatadogExporter(
+            "...",           // datadogApiKey
+            "datadoghq.com", // datadogSite
+            null,
+            null
+        );
+    })
+    ```
+    <!--- KNIT exampleOpentelemetrySupportJava10.java -->
+
+Please read the [full documentation](opentelemetry-datadog-exporter.md) about integration with Datadog.
+
 ## Integration with Jaeger
 
 Jaeger is a popular distributed tracing system that works with OpenTelemetry. The `opentelemetry` directory within
@@ -1049,7 +1118,7 @@ Here is the full code sample:
         }
     }
     ```
-    <!--- KNIT example-opentelemetry-support-10.kt -->
+    <!--- KNIT example-opentelemetry-support-11.kt -->
 
 === "Java"
 
@@ -1060,7 +1129,7 @@ Here is the full code sample:
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.logging.LoggingSpanExporter;
     import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
-    public class exampleOpentelemetrySupportJava10 {
+    public class exampleOpentelemetrySupportJava11 {
         static PromptExecutor promptExecutor = PromptExecutor.builder()
             .openAI("openai-api-key")
             .build();
@@ -1097,7 +1166,7 @@ Here is the full code sample:
         );
     }
     ```
-    <!--- KNIT exampleOpentelemetrySupportJava10.java -->
+    <!--- KNIT exampleOpentelemetrySupportJava11.java -->
 
 ## Troubleshooting
 
@@ -1213,6 +1282,6 @@ Where `{target}` is the tool name or prompt name when applicable. Examples:
         it.run("Use the search tool to find information")
     }
     ```
-    <!--- KNIT example-opentelemetry-support-11.kt -->
+    <!--- KNIT example-opentelemetry-support-12.kt -->
 
 This setup provides complete observability for MCP operations with minimal code changes, following OpenTelemetry best practices and semantic conventions.
