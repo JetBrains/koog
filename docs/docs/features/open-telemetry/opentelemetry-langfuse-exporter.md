@@ -180,10 +180,13 @@ Common attributes to include:
             .llmModel(OpenAIModels.Chat.GPT4oMini)
             .install(OpenTelemetry.Feature, config ->
                 config.addLangfuseExporter(
-                    null, null, null, null,
+                    null,           // Langfuse host (falls back to LANGFUSE_HOST)
+                    null,           // Public key (falls back to LANGFUSE_PUBLIC_KEY)
+                    null,           // Secret key (falls back to LANGFUSE_SECRET_KEY)
+                    null,           // Timeout (uses default)
                     List.of(
                         new CustomAttribute("langfuse.session.id", sessionId),
-                        new CustomAttribute("langfuse.trace.tags", List.of("chat", "kotlin", "production"))
+                        new CustomAttribute("langfuse.trace.tags", List.of("chat", "java", "production"))
                     )
                 ))
             .build();
@@ -192,7 +195,7 @@ Common attributes to include:
 
         // Multiple runs with the same session ID will be grouped in Langfuse
         agent.run("How to setup Langfuse integration in Koog agent?");
-        agent.run("Show me a Java API  example");
+        agent.run("Show me a Java API example");
     }
     ```
     <!--- KNIT exampleLangfuseExporterJava02.java -->

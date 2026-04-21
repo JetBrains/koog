@@ -97,7 +97,11 @@ Install the **OpenTelemetry feature** and call [`addWeaveExporter()`](https://ap
             .llmModel(OpenAIModels.Chat.GPT4oMini)
             .systemPrompt("You are a helpful assistant.")
             .install(OpenTelemetry.Feature, config ->
-                config.addWeaveExporter(null, entity, projectName)
+                config.addWeaveExporter(
+                    null,   // OTel endpoint URL (falls back to WEAVE_URL, defaults to https://trace.wandb.ai)
+                    entity,
+                    projectName
+                )
             )
             .build();
 
