@@ -54,23 +54,22 @@ public class AIAgentPlannerContext(
 ) {
 
     /**
-     * Creates a copy of the current [AIAgentFunctionalContext], allowing for selective overriding of its properties.
-     * This method is particularly useful for creating modified contexts during agent execution without mutating
-     * the original context - perfect for when you need to experiment with different configurations or
-     * pass tweaked contexts down the execution pipeline while keeping the original pristine!
+     * Creates a copy of the current [AIAgentPlannerContext], allowing for selective overriding of its properties.
+     * This method is useful for creating modified contexts during agent execution without mutating the original context.
      *
-     * @param environment The [AIAgentEnvironment] to be used in the new context, or retain the current playground if not specified.
-     * @param agentId The unique agent identifier, or keep the same identity if you're feeling attached.
-     * @param runId The run identifier for this execution adventure, or stick with the current journey.
-     * @param agentInput The input data for the agent - fresh data or the same trusty input, your choice!
-     * @param config The [AIAgentConfig] for the new context, or keep the current rulebook.
-     * @param llm The [AIAgentLLMContext] to be used, or maintain the current AI conversation partner.
-     * @param stateManager The [AIAgentStateManager] to be used, or preserve the current state keeper.
-     * @param storage The [AIAgentStorage] to be used, or stick with the current memory bank.
-     * @param strategyName The strategy name, or maintain the current game plan.
-     * @param pipeline The [AIAgentPlannerContext] to be used, or keep the current execution superhighway.
-     * @param parentRootContext The parent root context, or maintain the current family tree.
-     * @return A new [AIAgentFunctionalContext] with your desired modifications applied!
+     * @param environment The [AIAgentEnvironment] to be used in the new context, or the current one if not specified.
+     * @param agentId The unique agent identifier, or the current one if not specified.
+     * @param runId The run identifier, or the current run ID if not specified.
+     * @param agentInput The input data for the agent, or the current input if not specified.
+     * @param config The [AIAgentConfig] for the new context, or the current configuration if not specified.
+     * @param llm The [AIAgentLLMContext] to be used, or the current LLM context if not specified.
+     * @param stateManager The [AIAgentStateManager] to be used, or the current state manager if not specified.
+     * @param storage The [AIAgentStorage] to be used, or the current storage if not specified.
+     * @param strategyName The strategy name, or the current strategy name if not specified.
+     * @param pipeline The [AIAgentPlannerPipeline] to be used, or the current pipeline if not specified.
+     * @param executionInfo The [AgentExecutionInfo] to be used, or the current execution info if not specified.
+     * @param parentRootContext The parent context, or the current parent context if not specified.
+     * @return A new [AIAgentPlannerContext] with the specified modifications applied.
      */
     public fun copy(
         environment: AIAgentEnvironment = this.environment,

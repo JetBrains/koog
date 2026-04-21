@@ -95,10 +95,15 @@ public abstract class AIAgentLLMContextCommon internal constructor(
      * The current prompt used within the `AIAgentLLMContext`.
      *
      * This property defines the main [Prompt] instance used by the context and is updated as needed to reflect
-     * modifications or new inputs for the language model operations. It is thread-safe, ensuring that updates
-     * and access are managed correctly within concurrent environments.
+     * modifications or new inputs for the language model operations. It is modified internally only from within
+     * [withPrompt] and [writeSession], both of which run under the write portion of an internal read-write lock.
      *
-     * This variable can only be modified internally via specific methods, maintaining control over state changes.
+     * Concurrency caveats:
+     * - A **direct read** of this property (as well as [tools], [model] and [responseProcessor]) does **not**
+     *   acquire the read lock; it returns whatever snapshot happens to be installed. For a consistent view that
+     *   is safe against a concurrent [withPrompt] / [writeSession], read it inside a [readSession].
+     * - Reads performed from inside a [readSession] or [writeSession] are consistent with the current critical
+     *   section.
      */
     @get:JvmName("prompt")
     public var prompt: Prompt = initialPrompt
@@ -106,16 +111,30 @@ public abstract class AIAgentLLMContextCommon internal constructor(
     private val rwLock: RWLock = RWLock()
 
     /**
-     * Updates the current `AIAgentLLMContext` with a new prompt and ensures thread-safe access using a read lock.
+     * Atomically replaces [prompt] with the result of applying [block] to the current prompt while holding the
+     * internal write lock. Callers waiting for read or write access will be suspended until the transformation
+     * completes.
+     *
+     * Concurrency caveats:
+     * - Must not be invoked from inside another [withPrompt], [writeSession], or [readSession] on the same
+     *   context — the underlying lock is **not reentrant** and doing so will deadlock (see
+     *   [ai.koog.agents.core.utils.RWLock]).
+     * - [block] should be a pure, fast transformation; it runs while holding the write lock and will block all
+     *   concurrent readers and writers until it returns.
      *
      * @param block transformation to produce the next [Prompt].
      */
-    public open suspend fun withPrompt(block: Prompt.() -> Prompt): Unit = rwLock.withReadLock {
+    public open suspend fun withPrompt(block: Prompt.() -> Prompt): Unit = rwLock.withWriteLock {
         this.prompt = prompt.block()
     }
 
     /**
-     * Creates a deep copy of this LLM context.
+     * Creates a copy of this LLM context, taking a consistent snapshot of its mutable fields under the
+     * internal read lock. Multiple concurrent [copy] / [readSession] calls may proceed in parallel, but any
+     * concurrent [writeSession] / [withPrompt] will serialize against them.
+     *
+     * Concurrency caveat: must not be invoked from inside a [writeSession] or [withPrompt] on the same
+     * context — the underlying lock is not reentrant (see [ai.koog.agents.core.utils.RWLock]).
      *
      * @return A new instance of [AIAgentLLMContext] with deep copies of mutable properties.
      */
@@ -145,8 +164,18 @@ public abstract class AIAgentLLMContextCommon internal constructor(
     }
 
     /**
-     * Executes a write session on the [AIAgentLLMContext], ensuring that all active write and read sessions
-     * are completed before initiating the write session.
+     * Executes a write session on the [AIAgentLLMContext], suspending until all other active write and read
+     * sessions on this context complete, then running [block] under exclusive access. At the end of the
+     * session, [prompt], [tools] and [model] are overwritten with the values mutated inside the session.
+     *
+     * Concurrency caveats:
+     * - The underlying lock is **not reentrant**. Do not call [writeSession], [readSession], [withPrompt] or
+     *   [copy] on the same context from inside [block] — doing so will deadlock (see
+     *   [ai.koog.agents.core.utils.RWLock]).
+     * - [block] runs while holding the write lock; keep it as short as possible and avoid launching
+     *   long-running child coroutines that need to re-acquire this lock.
+     * - Cancellation inside [block] is propagated; partial mutations made on the session before cancellation
+     *   will not be committed to the outer context.
      */
     @OptIn(ExperimentalStdlibApi::class)
     public open suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T =
@@ -176,8 +205,15 @@ public abstract class AIAgentLLMContextCommon internal constructor(
         }
 
     /**
-     * Executes a read session within the [AIAgentLLMContext], ensuring concurrent safety
-     * with active write session and other read sessions.
+     * Executes a read session on the [AIAgentLLMContext]. Multiple read sessions may run concurrently, while
+     * any concurrent [writeSession] or [withPrompt] is serialized against them.
+     *
+     * Concurrency caveats:
+     * - The underlying lock is **not reentrant for writers**: nested [readSession] calls from the same
+     *   coroutine are safe, but calling [writeSession] or [withPrompt] from inside a [readSession] will
+     *   deadlock (see [ai.koog.agents.core.utils.RWLock]).
+     * - Mutations performed on fields exposed through the session are not persisted back to this context
+     *   (unlike [writeSession]).
      */
     @OptIn(ExperimentalStdlibApi::class)
     public open suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T = rwLock.withReadLock {
@@ -186,9 +222,19 @@ public abstract class AIAgentLLMContextCommon internal constructor(
     }
 
     /**
-     * Returns the current prompt used in the LLM context.
+     * Creates a non-suspending copy of this LLM context with the given overrides. Unlike the suspending [copy]
+     * overload, this variant does **not** acquire the internal read lock and therefore does not guarantee a
+     * consistent snapshot if another coroutine is concurrently mutating this context.
      *
-     * @return The current [Prompt] instance.
+     * @param tools The list of [ToolDescriptor] tools to use, or the current tools if not specified.
+     * @param prompt The [Prompt] to use, or the current prompt if not specified.
+     * @param model The [LLModel] to use, or the current model if not specified.
+     * @param responseProcessor The [ResponseProcessor] to use, or the current one if not specified.
+     * @param promptExecutor The [PromptExecutor] to use, or the current one if not specified.
+     * @param environment The [AIAgentEnvironment] to use, or the current one if not specified.
+     * @param config The [AIAgentConfig] to use, or the current configuration if not specified.
+     * @param clock The [Clock] to use, or the current clock if not specified.
+     * @return A new [AIAgentLLMContext] instance with the specified overrides applied.
      */
     public open fun copy(
         tools: List<ToolDescriptor> = this.tools,

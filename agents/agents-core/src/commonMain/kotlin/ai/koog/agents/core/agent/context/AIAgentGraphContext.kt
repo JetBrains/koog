@@ -8,18 +8,17 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
-import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.TypeToken
 
 /**
- * The `AIAgentGraphContextBase` interface extends the `AIAgentContextBase` interface
+ * The `AIAgentGraphContextBase` interface extends the [AIAgentContext] interface
  * to provide a foundational context specifically tailored for AI agents operating
  * within a graph structure.
  *
- * This interface inherits the core capabilities from `AIAgentContextBase`, including
+ * This interface inherits the core capabilities from [AIAgentContext], including
  * environment management, configuration access, session tracking, state management,
  * and custom workflows. By building upon these features, it serves as a base for
  * defining additional constructs and behaviors that facilitate the agent's execution
@@ -41,14 +40,19 @@ public interface AIAgentGraphContextBase : AIAgentContext {
     /**
      * Creates a copy of the current [AIAgentGraphContext], allowing for selective overriding of its properties.
      *
-     * @param environment The [AIAgentEnvironment] to be used in the new context, or `null` to retain the current one.
-     * @param config The [AIAgentConfig] for the new context, or `null` to retain the current configuration.
-     * @param llm The [AIAgentLLMContext] to be used, or `null` to retain the current LLM context.
-     * @param stateManager The [AIAgentStateManager] to be used, or `null` to retain the current state manager.
-     * @param storage The [AIAgentStorage] to be used, or `null` to retain the current storage.
-     * @param runId The run identifier, or `null` to retain the current run ID.
-     * @param strategyName The strategy name, or `null` to retain the current identifier.
-     * @param pipeline The [AIAgentPipeline] to be used, or `null` to retain the current pipeline.
+     * @param environment The [AIAgentEnvironment] to be used in the new context, or the current one if not specified.
+     * @param agentId The unique agent identifier, or the current one if not specified.
+     * @param agentInput The input data for the agent, or the current input if not specified.
+     * @param agentInputType The [TypeToken] representing the type of [agentInput], or the current type if not specified.
+     * @param config The [AIAgentConfig] for the new context, or the current configuration if not specified.
+     * @param llm The [AIAgentLLMContext] to be used, or the current LLM context if not specified.
+     * @param stateManager The [AIAgentStateManager] to be used, or the current state manager if not specified.
+     * @param storage The [AIAgentStorage] to be used, or the current storage if not specified.
+     * @param runId The run identifier, or the current run ID if not specified.
+     * @param strategyName The strategy name, or the current strategy name if not specified.
+     * @param pipeline The [AIAgentGraphPipeline] to be used, or the current pipeline if not specified.
+     * @param executionInfo The [AgentExecutionInfo] to be used, or the current execution info if not specified.
+     * @param parentContext The parent context, or the current instance if not specified.
      */
     public fun copy(
         environment: AIAgentEnvironment = this.environment,
@@ -155,7 +159,18 @@ public class AIAgentGraphContext(
         }
 
     /**
-     * Mutable wrapper for AI agent context properties.
+     * Mutable wrapper around the context's stateful fields ([llm], [stateManager], [storage], [environment],
+     * [executionInfo]), protected by an internal [RWLock].
+     *
+     * Concurrency caveats:
+     * - The lock is **not reentrant**. In particular [copy] must not be called from inside [replace] on the
+     *   same instance (and vice versa) — doing so will deadlock (see [ai.koog.agents.core.utils.RWLock]).
+     * - Direct reads of the `var` fields through the getters of the enclosing [AIAgentGraphContext]
+     *   ([AIAgentGraphContext.llm], [AIAgentGraphContext.storage], …) **bypass** the lock and may observe a
+     *   value that is concurrently being swapped by [replace]. If a consistent snapshot is required, obtain it
+     *   via [copy] or via a higher-level context operation such as [AIAgentGraphContext.fork].
+     * - [copy] delegates to [AIAgentLLMContext.copy], [AIAgentStateManager.copy], [AIAgentStorage.copy] and
+     *   [AgentExecutionInfo.copy]; those downstream copies may themselves suspend on their own locks.
      */
     internal class MutableAIAgentContext(
         var llm: AIAgentLLMContext,
@@ -200,6 +215,15 @@ public class AIAgentGraphContext(
         }
     }
 
+    /**
+     * Plain in-memory map backing [store], [get] and [remove].
+     *
+     * Concurrency caveat: this is a plain [mutableMapOf], it is **not** thread-safe. Unlike [storage] (which is
+     * an [AIAgentStorage] that provides its own synchronization), concurrent access to [store], [get] or
+     * [remove] from different coroutines/threads on the same [AIAgentGraphContext] is not synchronized and may
+     * lead to data races. Callers must externally serialize access, or use the concurrent-safe [storage]
+     * property for shared data.
+     */
     private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
 
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
@@ -233,6 +257,19 @@ public class AIAgentGraphContext(
         return this.copy(llm = llm.copy(tools = tools))
     }
 
+    /**
+     * Creates an independent fork of this context, taking consistent snapshots of the LLM context, storage,
+     * state manager and execution info. Each `copy()` is performed under the corresponding lock of the source
+     * object, so the returned context is safe to mutate concurrently with the original.
+     *
+     * Concurrency caveat: each downstream `copy()` acquires its own read lock (or equivalent); these locks are
+     * acquired sequentially, and the snapshot of the whole context is therefore **not** atomic across all four
+     * fields. Two fields may be observed at slightly different points in time if another coroutine is
+     * concurrently mutating this context.
+     *
+     * Note also that the in-memory [storeMap] (populated via [store]) is **not** copied here — the returned
+     * context starts with an empty local store.
+     */
     override suspend fun fork(): AIAgentGraphContextBase = copy(
         llm = this.llm.copy(),
         storage = this.storage.copy(),
@@ -240,6 +277,17 @@ public class AIAgentGraphContext(
         executionInfo = this.executionInfo.copy(),
     )
 
+    /**
+     * Atomically replaces the stateful fields of this context with those of [context], under the write lock of
+     * [mutableAIAgentContext].
+     *
+     * Concurrency caveats:
+     * - [mutableAIAgentContext]'s lock is not reentrant; do not call [replace] from inside another operation
+     *   that already holds it (e.g. from within a transformation running under [MutableAIAgentContext.copy]).
+     * - Consumers that read fields directly (e.g. `ctx.llm`, `ctx.storage`) without going through the
+     *   [MutableAIAgentContext] lock may observe a non-atomic mix of old and new values while a concurrent
+     *   [replace] is in progress.
+     */
     override suspend fun replace(context: AIAgentContext) {
         mutableAIAgentContext.replace(
             context.llm,

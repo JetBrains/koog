@@ -75,7 +75,7 @@ public interface AIAgentContext {
     public val llm: AIAgentLLMContext
 
     /**
-     * Manages and tracks the state of aт AI agent within the context of its execution.
+     * Manages and tracks the state of an AI agent within the context of its execution.
      *
      * This variable provides synchronized access to the agent's state to ensure thread safety
      * and consistent state transitions during concurrent operations. It acts as a central

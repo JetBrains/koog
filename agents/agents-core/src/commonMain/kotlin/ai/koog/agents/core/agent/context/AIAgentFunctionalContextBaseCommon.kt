@@ -439,7 +439,6 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * based on its correctness and feedback.
      *
      * @param taskDescription The subtask to be executed by AIAgent.
-     * @param input The input data for the subtask, which will be used to create and execute the task.
      * @param tools An optional list of tools that can be used during the execution of the subtask.
      * @param llmModel An optional parameter specifying the LLM model to be used for the subtask.
      * @param llmParams Optional configuration parameters for the LLM, such as temperature and token limits.
@@ -485,7 +484,6 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * This method allows defining a specific task to be performed with the given input, tools, and optional configuration.
      *
      * @param taskDescription The subtask to be executed by AIAgent.
-     * @param input The input data required for the subtask execution.
      * @param outputClass The output type expected from the subtask.
      * @param tools A list of tools available for use within the subtask.
      * @param llmModel The optional large language model to be used during the subtask, if different from the default one.
@@ -524,7 +522,6 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * This method enables the use of tools to achieve a specific task based on the input provided.
      *
      * @param taskDescription The subtask to be executed by AIAgent.
-     * @param input The input data required to define and execute the subtask.
      * @param tools An optional list of tools that can be used to achieve the task, excluding the finishing tool.
      * @param finishTool A mandatory tool that determines the final result of the subtask by producing and transforming output.
      * @param llmModel An optional specific LLM to use for executing the subtask.
@@ -605,7 +602,6 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * This method allows defining a specific task to be performed with the given input, tools, and optional configuration.
      *
      * @param taskDescription The subtask to be executed by AIAgent.
-     * @param input The input data required for the subtask execution.
      * @param tools A list of tools available for use within the subtask.
      * @param llmModel The optional large language model to be used during the subtask, if different from the default one.
      * @param llmParams The configuration parameters for the large language model, such as temperature.

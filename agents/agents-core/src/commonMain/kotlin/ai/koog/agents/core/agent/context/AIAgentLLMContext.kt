@@ -41,8 +41,7 @@ public annotation class DetachedPromptExecutorAPI
  * through sessions, ensuring thread safety.
  *
  * It inherits all shared behavior from [AIAgentLLMContextCommon].
- */
-/**
+ *
  * Constructs a new instance of `AIAgentLLMContext` with the provided parameters.
  *
  * @param tools A list of tools described by [ToolDescriptor] that the agent can interact with.
