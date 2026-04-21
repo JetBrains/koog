@@ -167,12 +167,8 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                 }
 
                 val additionalPropertiesType = if ("additionalProperties" in element) {
-                    when (element.getValue("additionalProperties")) {
-                        is JsonObject -> parseParameterType(
-                            element.getValue("additionalProperties").jsonObject,
-                            depth + 1
-                        )
-
+                    when (val value = element.getValue("additionalProperties")) {
+                        is JsonObject -> if (value.isEmpty()) null else parseParameterType(value, depth + 1)
                         else -> null
                     }
                 } else {

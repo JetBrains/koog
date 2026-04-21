@@ -501,6 +501,34 @@ class DefaultMcpToolDescriptorParserTest {
     }
 
     @Test
+    fun `test parsing object parameter with empty additional properties`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with empty additionalProperties",
+            properties = buildJsonObject {
+                putJsonObject("objectParam") {
+                    put("type", "object")
+                    put("description", "Object parameter")
+                    putJsonObject("properties") {
+                        putJsonObject("name") {
+                            put("type", "string")
+                        }
+                    }
+                    putJsonObject("additionalProperties") { }
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+
+        val objectParam = toolDescriptor.optionalParameters.single()
+        val objectType = objectParam.type as ToolParameterType.Object
+        assertEquals(true, objectType.additionalProperties)
+        assertEquals(null, objectType.additionalPropertiesType)
+    }
+
+    @Test
     fun `test parameter type is missing`() {
         val missingTypeToolSdk = createSdkTool(
             name = "test-tool",
