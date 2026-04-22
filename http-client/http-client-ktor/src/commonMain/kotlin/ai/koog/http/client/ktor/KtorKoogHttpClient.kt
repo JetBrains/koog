@@ -2,6 +2,7 @@ package ai.koog.http.client.ktor
 
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
+import ai.koog.http.client.lowercaseHeaderKeys
 import ai.koog.http.client.mergeHeaders
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
@@ -27,6 +28,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.URLBuilder
@@ -95,6 +97,7 @@ public class KtorKoogHttpClient internal constructor(
             clientName = clientName,
             statusCode = response.status.value,
             errorBody = response.bodyAsText(),
+            headers = response.headers.toResponseHeaderMap(),
         )
     }
 
@@ -110,6 +113,8 @@ public class KtorKoogHttpClient internal constructor(
             }
         }
     }
+    private fun Headers.toResponseHeaderMap(): Map<String, List<String>> =
+        entries().associate { it.key to it.value }.lowercaseHeaderKeys()
 
     override suspend fun <R : Any> get(
         path: String,
@@ -210,7 +215,8 @@ public class KtorKoogHttpClient internal constructor(
                 statusCode = e.response?.status?.value,
                 errorBody = errorBody,
                 message = e.message,
-                cause = e
+                cause = e,
+                headers = e.response?.headers?.toResponseHeaderMap() ?: emptyMap()
             )
         } catch (e: CancellationException) {
             throw e

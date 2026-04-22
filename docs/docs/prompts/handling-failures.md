@@ -220,6 +220,57 @@ val config = RetryConfig(
 ```
 <!--- KNIT example-handling-failures-05.kt -->
 
+### Header-aware retry-after hints
+
+Many providers return rate-limit metadata in HTTP response headers rather than (or in addition
+to) the error body. OpenAI in particular uses `retry-after`, `x-ratelimit-reset-requests`, and
+`x-ratelimit-reset-tokens` to signal when a client should back off.
+
+When the underlying HTTP client raises a `KoogHttpClientException`, the exception exposes the
+response headers on its `headers: Map<String, List<String>>` property. Keys are normalized to
+lowercase, so extractors can look them up without re-casing.
+
+The default `RetryConfig.retryAfterExtractor` is a composite that consults headers first and
+falls back to parsing the error message:
+
+```kotlin
+public val DEFAULT_RETRY_AFTER_EXTRACTOR: RetryAfterExtractor = CompositeRetryAfterExtractor(
+    StandardHeaderRetryAfterExtractor.DEFAULT,
+    DefaultRetryAfterExtractor
+)
+```
+
+So out of the box, a 429 carrying `retry-after: 5` is honored without any extra configuration.
+If you want to supply a custom header-aware extractor, implement `RetryAfterExtractor` and
+override `extract(error: KoogHttpClientException)`:
+
+```kotlin
+val config = RetryConfig(
+    retryAfterExtractor = RetryAfterExtractor { message ->
+        // message-based fallback
+        null
+    }.let { fallback ->
+        CompositeRetryAfterExtractor(
+            object : RetryAfterExtractor {
+                override fun extract(message: String): Duration? = null
+                override fun extract(error: KoogHttpClientException): Duration? =
+                    error.headers["x-my-custom-retry-after"]?.firstOrNull()?.toLongOrNull()?.seconds
+            },
+            fallback
+        )
+    }
+)
+```
+
+`StandardHeaderRetryAfterExtractor` understands:
+
+- `retry-after` as either delta-seconds or an IMF-fixdate (RFC 9110 §10.2.3);
+- `x-ratelimit-reset-requests` / `x-ratelimit-reset-tokens` as OpenAI-style durations like
+  `1s`, `6m0s`, `100ms`.
+
+When multiple hints are present it returns the smallest strictly-positive delay so the client
+doesn't sleep longer than any of the individual rate-limit buckets require.
+
 ### Streaming with retry
 
 Streaming operations can optionally be retried. This feature is disabled by default.
