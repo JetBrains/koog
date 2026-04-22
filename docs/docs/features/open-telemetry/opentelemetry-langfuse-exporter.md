@@ -13,7 +13,7 @@ analyze, and debug how your agents interact with LLMs, tools, and external APIs.
 
 1. Create a Langfuse project using the [setup guide](https://langfuse.com/docs/get-started#create-new-project-in-langfuse).
 2. Get your `public key` and `secret key` from [Organization Settings > API Keys](https://langfuse.com/faq/all/where-are-langfuse-api-keys).
-3. Provide the host, public key, and secret key — either as parameters to [`addLangfuseExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.langfuse/add-langfuse-exporter.html), or via environment variables:
+3. Provide the host, public key, and secret key — either as parameters to [`addLangfuseExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter), or via environment variables:
 
 ```bash
    export LANGFUSE_HOST="https://cloud.langfuse.com"
@@ -24,7 +24,7 @@ analyze, and debug how your agents interact with LLMs, tools, and external APIs.
 
 ## Configuration
 
-Install the **OpenTelemetry feature** and call [`addLangfuseExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.langfuse/add-langfuse-exporter.html) to enable Langfuse export.
+Install the **OpenTelemetry feature** and call [`addLangfuseExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter) to enable Langfuse export.
 
 ### Basic example
 
@@ -98,7 +98,7 @@ When Koog sends agent activity to Langfuse, it does so as a series of *spans* �
 an LLM call or a tool execution. Related spans are grouped into a *trace*, which represents a complete agent run
 from start to finish.
 
-[`addLangfuseExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.langfuse/add-langfuse-exporter.html) accepts a `traceAttributes` parameter — a list of key-value pairs attached to the
+[`addLangfuseExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter) accepts a `traceAttributes` parameter — a list of key-value pairs attached to the
 root of each trace. These enable Langfuse-specific features such as sessions, environments, and tags, making it
 easy to filter and group traces in the Langfuse UI.
 

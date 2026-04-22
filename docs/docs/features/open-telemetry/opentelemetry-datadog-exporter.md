@@ -15,11 +15,11 @@ analyze, and debug how your agents interact with LLMs, tools, and external APIs.
 
 2. Get your API key from [Organization Settings > API Keys](https://app.datadoghq.com/organization-settings/api-keys)
 
-3. Provide your API key — either as a parameter to [`addDatadogExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.datadog/add-datadog-exporter.html), or via an environment variable:
+3. Provide your API key — either as a parameter to [`addDatadogExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter), or via an environment variable:
 ```bash
 export DD_API_KEY="<your-api-key>"
 ```
-4. (Optional) To use a Datadog region other than US1 (`datadoghq.com`), pass the site as a parameter to [`addDatadogExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.datadog/add-datadog-exporter.html), or set an environment variable:
+4. (Optional) To use a Datadog region other than US1 (`datadoghq.com`), pass the site as a parameter to [`addDatadogExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter), or set an environment variable:
 ```bash
 export DD_SITE="datadoghq.eu"
 ```
@@ -37,7 +37,7 @@ Supported sites:
 
 ## Configuration
 
-To enable Datadog export, install the **OpenTelemetry feature** and call [`addDatadogExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.datadog/add-datadog-exporter.html).
+To enable Datadog export, install the **OpenTelemetry feature** and call [`addDatadogExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter).
 
 ### Basic example
 
@@ -111,7 +111,7 @@ When Koog sends agent activity to Datadog, it does so as a series of *spans* —
 an LLM call or a tool execution. Related spans are grouped into a *trace*, which represents a complete agent run
 from start to finish.
 
-[`addDatadogExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.datadog/add-datadog-exporter.html) accepts a `traceAttributes` parameter — a map of key-value pairs describing
+[`addDatadogExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter) accepts a `traceAttributes` parameter — a map of key-value pairs describing
 the application emitting the traces. These are attached to every span, making it easy to filter and group traces in
 Datadog by properties such as environment or version.
 
@@ -203,7 +203,7 @@ Common attributes to include:
 
 ## Custom exporter wrapping
 
-Use [`buildDatadogExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.datadog/build-datadog-exporter.html) when you need direct access to the exporter object to wrap it with additional processing logic before registering it.
+Use [`buildDatadogExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.datadog.buildDatadogExporter) when you need direct access to the exporter object to wrap it with additional processing logic before registering it.
 For example, use `SpanExporter.composite()` to send traces to multiple backends at once:
 
 === "Kotlin"

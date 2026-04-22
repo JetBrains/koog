@@ -15,7 +15,7 @@ analyze, and debug how your agents interact with LLMs, tools, and external APIs.
 2. Get your API key from [https://wandb.ai/authorize](https://wandb.ai/authorize).
 3. Find your entity name at the [W&B Dashboard](https://wandb.ai/home) — it matches your username for personal accounts, or the team/organization name for shared workspaces.
 4. Choose a project name. If the project doesn't exist yet, it will be created automatically when the first trace is sent.
-5. Provide the entity, project name, and API key — either as parameters to [`addWeaveExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.weave/add-weave-exporter.html), or via environment variables:
+5. Provide the entity, project name, and API key — either as parameters to [`addWeaveExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.weave.addWeaveExporter), or via environment variables:
 
 ```bash
 export WEAVE_API_KEY="<your-api-key>"
@@ -26,7 +26,7 @@ export WEAVE_PROJECT_NAME="koog-tracing"
 
 ## Configuration
 
-Install the **OpenTelemetry feature** and call [`addWeaveExporter()`](https://api.koog.ai/agents/agents-features/agents-features-opentelemetry/ai.koog.agents.features.opentelemetry.integration.weave/add-weave-exporter.html) to enable Weave export.
+Install the **OpenTelemetry feature** and call [`addWeaveExporter()`](api:agents-features-opentelemetry::ai.koog.agents.features.opentelemetry.integration.weave.addWeaveExporter) to enable Weave export.
 
 ### Basic example
 
