@@ -7,7 +7,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.feature.runFromCheckpoint
+import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
@@ -63,7 +63,8 @@ class RunFromCheckpointTest {
             toolRegistry = toolRegistry,
         )
 
-        val output = agent.runFromCheckpoint(
+        val output = Persistence.runFromCheckpoint(
+            agent = agent,
             agentInput = "Start the test",
             checkpoint = checkpoint,
             sessionId = sessionId,
@@ -103,7 +104,8 @@ class RunFromCheckpointTest {
         )
 
         val session = agent.createSession(sessionId)
-        val output = session.runFromCheckpoint(
+        val output = Persistence.runFromCheckpoint(
+            session = session,
             input = "Start the test",
             checkpoint = checkpoint,
         )
@@ -141,7 +143,8 @@ class RunFromCheckpointTest {
             toolRegistry = toolRegistry,
         )
 
-        val output = agent.runFromCheckpoint(
+        val output = Persistence.runFromCheckpoint(
+            agent = agent,
             agentInput = "Start the test",
             checkpoint = checkpoint,
             rollbackStrategy = RollbackStrategy.MessageHistoryOnly,
@@ -185,7 +188,8 @@ class RunFromCheckpointTest {
             toolRegistry = toolRegistry,
         )
 
-        val output = agent.runFromCheckpoint(
+        val output = Persistence.runFromCheckpoint(
+            agent = agent,
             agentInput = "Ignored input",
             checkpoint = checkpoint,
             sessionId = sessionId,
@@ -225,7 +229,8 @@ class RunFromCheckpointTest {
             toolRegistry = toolRegistry,
         )
 
-        val output = agent.runFromCheckpoint(
+        val output = Persistence.runFromCheckpoint(
+            agent = agent,
             agentInput = "ignored",
             checkpoint = checkpoint,
             sessionId = sessionId,
@@ -261,7 +266,8 @@ class RunFromCheckpointTest {
         )
 
         val error = assertFailsWith<IllegalStateException> {
-            agent.runFromCheckpoint(
+            Persistence.runFromCheckpoint(
+                agent = agent,
                 agentInput = "ignored",
                 checkpoint = checkpoint,
                 sessionId = sessionId,
@@ -294,7 +300,8 @@ class RunFromCheckpointTest {
         )
 
         val session = agent.createSession(sessionId)
-        session.runFromCheckpoint(
+        Persistence.runFromCheckpoint(
+            session = session,
             input = "ignored",
             checkpoint = checkpoint,
         )

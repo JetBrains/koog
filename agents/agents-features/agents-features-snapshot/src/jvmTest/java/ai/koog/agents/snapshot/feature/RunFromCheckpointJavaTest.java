@@ -22,7 +22,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Java API tests for {@link RunFromCheckpointJvm#runFromCheckpoint}.
+ * Java API tests for {@link Persistence#runFromCheckpoint}.
  * Mirrors the Kotlin RunFromCheckpointTest to verify Java interop.
  */
 public class RunFromCheckpointJavaTest {
@@ -78,7 +78,7 @@ public class RunFromCheckpointJavaTest {
 
         AIAgent<String, String> agent = createAgent();
 
-        String output = RunFromCheckpointJvm.runFromCheckpoint(
+        String output = Persistence.runFromCheckpoint(
             agent,
             "Start the test",
             checkpoint,
@@ -114,7 +114,7 @@ public class RunFromCheckpointJavaTest {
 
         AIAgent<String, String> agent = createAgent();
 
-        String output = RunFromCheckpointJvm.runFromCheckpoint(
+        String output = Persistence.runFromCheckpoint(
             agent,
             "Start the test",
             checkpoint,
@@ -151,7 +151,7 @@ public class RunFromCheckpointJavaTest {
 
         AIAgent<String, String> agent = createAgent();
 
-        String output = RunFromCheckpointJvm.runFromCheckpoint(
+        String output = Persistence.runFromCheckpoint(
             agent,
             "Ignored input",
             checkpoint,
@@ -186,7 +186,7 @@ public class RunFromCheckpointJavaTest {
 
         AIAgent<String, String> agent = createAgent();
 
-        String output = RunFromCheckpointJvm.runFromCheckpoint(
+        String output = Persistence.runFromCheckpoint(
             agent,
             "Start the test",
             checkpoint

@@ -488,7 +488,7 @@ For advanced control, you can directly set the execution point of an agent:
     val customMessageHistory = emptyList<User>()
     -->
     ```kotlin
-    fun example(context: AIAgentContext) {
+    suspend fun example(context: AIAgentContext) {
         // You can set the execution point before some node and provide an input for it:
         context.persistence().setExecutionPoint(
             agentContext = context,

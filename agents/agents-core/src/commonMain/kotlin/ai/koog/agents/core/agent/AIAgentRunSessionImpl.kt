@@ -7,7 +7,7 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.session.AIAgentRunSession
-import ai.koog.agents.core.agent.session.AIAgentSessionInputs
+import ai.koog.agents.core.agent.session.AdditionalInputs
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.utils.runCatchingCancellable
@@ -54,59 +54,70 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
 
     override suspend fun run(
         input: Input,
-        sessionInputs: AIAgentSessionInputs?,
+        sessionInputs: AdditionalInputs,
     ): Output {
         state = AIAgentState.Starting()
         val context = ctxBuilder(input, id, agent.id)
         ctx = context
 
-        sessionInputs?.storage?.let { inputStorage ->
-            context.storage.putAll(inputStorage.toMap())
+        when (sessionInputs) {
+            is AdditionalInputs.None -> {}
+            is AdditionalInputs.Storage -> context.storage.putAll(sessionInputs.storage.toMap())
         }
 
-        val runResult = withPreparedPipeline(context, agent.id, sessionPipeline) {
-            try {
-                logger.debug { formatLog(id, id, "Starting agent execution") }
-                sessionPipeline.onAgentStarting<Input, Output>(
-                    agent.id,
-                    context.executionInfo,
-                    id,
-                    agent,
-                    context
-                )
+        val runResult = try {
+            withPreparedPipeline(context, agent.id, sessionPipeline) {
+                try {
+                    logger.debug { formatLog(id, id, "Starting agent execution") }
+                    sessionPipeline.onAgentStarting<Input, Output>(
+                        agent.id,
+                        context.executionInfo,
+                        id,
+                        agent,
+                        context
+                    )
 
-                val result = context.with(partName = strategy.name) { executionInfo, eventId ->
-                    runCatchingCancellable {
-                        state = AIAgentState.Running(context.parentContext ?: context)
-                        context.pipeline.onStrategyStarting(eventId, executionInfo, strategy, context)
-                        val result = strategy.execute(context = context, input = input)
+                    val result = context.with(partName = strategy.name) { executionInfo, eventId ->
+                        runCatchingCancellable {
+                            state = AIAgentState.Running(context.parentContext ?: context)
+                            context.pipeline.onStrategyStarting(eventId, executionInfo, strategy, context)
+                            val result = strategy.execute(context = context, input = input)
 
-                        logger.trace { "Finished executing strategy (name: ${strategy.name}) with result: $result" }
-                        context.pipeline.onStrategyCompleted(
-                            eventId,
-                            executionInfo,
-                            strategy,
-                            context,
-                            result,
-                            // FIXME this will break serialization, need to add outputType to the AIAgentStrategy!!
-                            typeToken<Any?>()
-                        )
+                            logger.trace { "Finished executing strategy (name: ${strategy.name}) with result: $result" }
+                            context.pipeline.onStrategyCompleted(
+                                eventId,
+                                executionInfo,
+                                strategy,
+                                context,
+                                result,
+                                // FIXME this will break serialization, need to add outputType to the AIAgentStrategy!!
+                                typeToken<Any?>()
+                            )
 
-                        result
-                    }.onFailure {
-                        context.environment.reportProblem(it)
-                    }.getOrThrow()
+                            result
+                        }.onFailure {
+                            context.environment.reportProblem(it)
+                        }.getOrThrow()
+                    }
+
+                    logger.debug { formatLog(id, id, "Finished agent execution") }
+                    sessionPipeline.onAgentCompleted(id, context.executionInfo, agent.id, id, result, context)
+
+                    result
+                } catch (e: Exception) {
+                    state = AIAgentState.Failed(e)
+                    logger.error(e) { "Execution exception reported by server!" }
+                    sessionPipeline.onAgentExecutionFailed(id, context.executionInfo, agent.id, id, e, context)
+                    throw e
                 }
-
-                logger.debug { formatLog(id, id, "Finished agent execution") }
-                sessionPipeline.onAgentCompleted(id, context.executionInfo, agent.id, id, result, context)
-
-                result
-            } catch (e: Exception) {
-                state = AIAgentState.Failed(e)
-                logger.error(e) { "Execution exception reported by server!" }
-                sessionPipeline.onAgentExecutionFailed(id, context.executionInfo, agent.id, id, e, context)
-                throw e
+            }
+        } finally {
+            when (sessionInputs) {
+                is AdditionalInputs.None -> {}
+                is AdditionalInputs.Storage -> {
+                    sessionInputs.storage.clear()
+                    sessionInputs.storage.putAll(context.storage.toMap())
+                }
             }
         }
 

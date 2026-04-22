@@ -7,7 +7,7 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.agent.entity.AIAgentStorage;
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey;
 import ai.koog.agents.core.agent.session.AIAgentRunSession;
-import ai.koog.agents.core.agent.session.AIAgentSessionInputs;
+import ai.koog.agents.core.agent.session.AdditionalInputs;
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
 import ai.koog.agents.core.environment.ReceivedToolResult;
 import ai.koog.agents.core.tools.ToolRegistry;
@@ -671,10 +671,10 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
 
         AIAgentRunSession<String, String, ?> session = agent.createSession("java-session-storage");
         String firstResult = runBlocking(continuation ->
-            session.run("ignored", new AIAgentSessionInputs(initialStorage), continuation)
+            session.run("ignored", new AdditionalInputs.Storage(initialStorage), continuation)
         );
         String secondResult = runBlocking(continuation ->
-            session.run("ignored", null, continuation)
+            session.run("ignored", AdditionalInputs.None.INSTANCE, continuation)
         );
 
         assertThat(firstResult).isEqualTo("greeting=hello-from-java-session, counter=11");

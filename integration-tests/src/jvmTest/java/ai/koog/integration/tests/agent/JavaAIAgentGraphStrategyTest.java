@@ -17,7 +17,6 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler;
 import ai.koog.agents.snapshot.feature.AgentCheckpointData;
 import ai.koog.agents.snapshot.feature.Persistence;
 import ai.koog.agents.snapshot.feature.PersistenceKt;
-import ai.koog.agents.snapshot.feature.RunFromCheckpointJvm;
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider;
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider;
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider;
@@ -624,7 +623,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             null
         );
 
-        String result = RunFromCheckpointJvm.runFromCheckpoint(
+        String result = Persistence.runFromCheckpoint(
             agent,
             "ignored",
             checkpoint,
@@ -677,7 +676,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
         IllegalStateException error = assertThrows(
             IllegalStateException.class,
-            () -> RunFromCheckpointJvm.runFromCheckpoint(
+            () -> Persistence.runFromCheckpoint(
                 agent,
                 "ignored",
                 checkpoint,

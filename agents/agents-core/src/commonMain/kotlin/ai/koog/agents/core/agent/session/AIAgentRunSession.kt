@@ -9,14 +9,20 @@ import kotlin.reflect.KClass
 /**
  * Additional inputs that can be provided when running an [AIAgentRunSession].
  *
- * This class serves as an extensible container for optional parameters that influence
+ * This sealed hierarchy is an extensible container for optional parameters that influence
  * session execution beyond the primary input.
- *
- * @property storage Optional pre-populated storage to use for the session execution.
  */
-public data class AIAgentSessionInputs(
-    val storage: AIAgentStorage? = null,
-)
+public sealed interface AdditionalInputs {
+    /**
+     * No additional inputs are provided for the session.
+     */
+    public data object None : AdditionalInputs
+
+    /**
+     * Pre-populated [storage] to merge into the session's storage before execution.
+     */
+    public data class Storage(val storage: AIAgentStorage) : AdditionalInputs
+}
 
 /**
  * Represents a session for running an [ai.koog.agents.core.agent.AIAgent].
@@ -50,7 +56,7 @@ public interface AIAgentRunSession<Input, Output, TContext : AIAgentContext> {
      */
     public suspend fun run(
         input: Input,
-        sessionInputs: AIAgentSessionInputs? = null,
+        sessionInputs: AdditionalInputs = AdditionalInputs.None,
     ): Output
 
     /**

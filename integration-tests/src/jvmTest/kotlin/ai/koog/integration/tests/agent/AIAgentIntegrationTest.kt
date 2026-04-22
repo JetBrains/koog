@@ -7,7 +7,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.functionalStrategy
-import ai.koog.agents.core.agent.session.AIAgentSessionInputs
+import ai.koog.agents.core.agent.session.AdditionalInputs
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.node
@@ -26,7 +26,6 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistence
-import ai.koog.agents.snapshot.feature.runFromCheckpoint
 import ai.koog.agents.snapshot.feature.withPersistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider
@@ -926,7 +925,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val session = agent.createSession("integration-session-storage")
         val firstResult = session.run(
             input = "ignored",
-            sessionInputs = AIAgentSessionInputs(storage = initialStorage),
+            sessionInputs = AdditionalInputs.Storage(initialStorage),
         )
         val secondResult = session.run("ignored")
 
@@ -984,7 +983,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             toolRegistry = ToolRegistry {},
         )
 
-        val result = agent.runFromCheckpoint(
+        val result = Persistence.runFromCheckpoint(
+            agent = agent,
             agentInput = "ignored",
             checkpoint = checkpoint,
             sessionId = sessionId,
@@ -1030,7 +1030,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         )
 
         val error = assertFailsWith<IllegalStateException> {
-            agent.runFromCheckpoint(
+            Persistence.runFromCheckpoint(
+                agent = agent,
                 agentInput = "ignored",
                 checkpoint = checkpoint,
                 sessionId = sessionId,

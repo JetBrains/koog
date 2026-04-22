@@ -4,7 +4,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.agent.session.AIAgentSessionInputs
+import ai.koog.agents.core.agent.session.AdditionalInputs
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -15,6 +15,7 @@ import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotSame
 import kotlin.test.assertNull
 
@@ -79,6 +80,36 @@ class AIAgentStoragePassingTest {
         edge(removeNode forwardTo nodeFinish)
     }
 
+    private fun storageAddNewKeyStrategy() = strategy("storage-add-new-key") {
+        val addNode by node<String, String>("addNewKey") {
+            storage.set(counterKey, 99)
+            "added"
+        }
+
+        edge(nodeStart forwardTo addNode)
+        edge(addNode forwardTo nodeFinish)
+    }
+
+    private fun storageRemoveKeyStrategy() = strategy("storage-remove-key") {
+        val removeNode by node<String, String>("removeKey") {
+            storage.remove(greetingKey)
+            "removed"
+        }
+
+        edge(nodeStart forwardTo removeNode)
+        edge(removeNode forwardTo nodeFinish)
+    }
+
+    private fun storageWriteThenFailStrategy() = strategy("storage-write-then-fail") {
+        val writeAndFailNode by node<String, String>("writeAndFail") {
+            storage.set(greetingKey, "written-before-fail")
+            error("boom")
+        }
+
+        edge(nodeStart forwardTo writeAndFailNode)
+        edge(writeAndFailNode forwardTo nodeFinish)
+    }
+
     private fun captureContextStrategy(
         capturedContexts: MutableList<AIAgentContext>
     ) = strategy("capture-context") {
@@ -108,7 +139,7 @@ class AIAgentStoragePassingTest {
         val session = agent.createSession("test-session")
         val output = session.run(
             input = "ignored",
-            sessionInputs = AIAgentSessionInputs(storage = storage),
+            sessionInputs = AdditionalInputs.Storage(storage),
         )
 
         assertEquals("greeting=hello from outside, counter=42", output)
@@ -143,7 +174,7 @@ class AIAgentStoragePassingTest {
         val session = agent.createSession("test-session")
         val output = session.run(
             input = "ignored",
-            sessionInputs = AIAgentSessionInputs(storage = AIAgentStorage()),
+            sessionInputs = AdditionalInputs.Storage(AIAgentStorage()),
         )
 
         assertEquals("greeting=null, counter=null", output)
@@ -164,7 +195,7 @@ class AIAgentStoragePassingTest {
         val session = agent.createSession("test-session")
         val output = session.run(
             input = "ignored",
-            sessionInputs = AIAgentSessionInputs(storage = storage),
+            sessionInputs = AdditionalInputs.Storage(storage),
         )
 
         // The write node overwrites the pre-populated value
@@ -172,7 +203,7 @@ class AIAgentStoragePassingTest {
     }
 
     @Test
-    fun testPrePopulatedStorageDoesNotMutateOriginal() = runTest {
+    fun testPrePopulatedStorageReceivesFinalStateAfterRun() = runTest {
         val agent = AIAgent(
             promptExecutor = getMockExecutor(serializer) { },
             strategy = storageWriteAndReadStrategy(),
@@ -186,12 +217,78 @@ class AIAgentStoragePassingTest {
         val session = agent.createSession("test-session")
         session.run(
             input = "ignored",
-            sessionInputs = AIAgentSessionInputs(storage = externalStorage),
+            sessionInputs = AdditionalInputs.Storage(externalStorage),
         )
 
-        // Original storage should not be mutated by the node's write
-        assertEquals("original", externalStorage.get(greetingKey))
-        assertNull(externalStorage.get(AIAgentStorageKey<String>("written-in-node")))
+        assertEquals("written-in-node", externalStorage.get(greetingKey))
+    }
+
+    @Test
+    fun testNewKeysWrittenInNodeAreReflectedBackToExternalStorage() = runTest {
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) { },
+            strategy = storageAddNewKeyStrategy(),
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry.EMPTY,
+        )
+
+        val externalStorage = AIAgentStorage()
+        externalStorage.set(greetingKey, "keep-me")
+
+        val session = agent.createSession("test-session")
+        session.run(
+            input = "ignored",
+            sessionInputs = AdditionalInputs.Storage(externalStorage),
+        )
+
+        assertEquals("keep-me", externalStorage.get(greetingKey))
+        assertEquals(99, externalStorage.get(counterKey))
+    }
+
+    @Test
+    fun testKeysRemovedInNodeAreRemovedFromExternalStorage() = runTest {
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) { },
+            strategy = storageRemoveKeyStrategy(),
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry.EMPTY,
+        )
+
+        val externalStorage = AIAgentStorage()
+        externalStorage.set(greetingKey, "to-be-removed")
+        externalStorage.set(counterKey, 7)
+
+        val session = agent.createSession("test-session")
+        session.run(
+            input = "ignored",
+            sessionInputs = AdditionalInputs.Storage(externalStorage),
+        )
+
+        assertNull(externalStorage.get(greetingKey))
+        assertEquals(7, externalStorage.get(counterKey))
+    }
+
+    @Test
+    fun testExternalStorageReceivesWritesEvenWhenAgentFails() = runTest {
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) { },
+            strategy = storageWriteThenFailStrategy(),
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry.EMPTY,
+        )
+
+        val externalStorage = AIAgentStorage()
+        externalStorage.set(greetingKey, "original")
+
+        val session = agent.createSession("test-session")
+        assertFailsWith<IllegalStateException> {
+            session.run(
+                input = "ignored",
+                sessionInputs = AdditionalInputs.Storage(externalStorage),
+            )
+        }
+
+        assertEquals("written-before-fail", externalStorage.get(greetingKey))
     }
 
     @Test
@@ -210,7 +307,7 @@ class AIAgentStoragePassingTest {
         val session = agent.createSession("test-session")
         val firstOutput = session.run(
             input = "ignored",
-            sessionInputs = AIAgentSessionInputs(storage = firstStorage),
+            sessionInputs = AdditionalInputs.Storage(firstStorage),
         )
         val secondOutput = session.run(input = "ignored")
 
@@ -234,7 +331,7 @@ class AIAgentStoragePassingTest {
         val session = agent.createSession("test-session")
         session.run(
             input = "ignored",
-            sessionInputs = AIAgentSessionInputs(storage = externalStorage),
+            sessionInputs = AdditionalInputs.Storage(externalStorage),
         )
 
         assertEquals(1, capturedContexts.size)
