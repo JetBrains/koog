@@ -14,10 +14,29 @@ import ai.koog.prompt.message.Message
  * Represents the context for handling LLM-specific events within the framework.
  */
 public interface LLMCallEventContext : AgentLifecycleEventContext {
+    /**
+     * The unique identifier for this LLM call session.
+     */
     public val runId: String
+
+    /**
+     * The prompt that will be sent to the language model.
+     */
     public val prompt: Prompt
+
+    /**
+     * The language model instance being used.
+     */
     public val model: LLModel
+
+    /**
+     * The list of tool descriptors available for the LLM call.
+     */
     public val tools: List<ToolDescriptor>
+
+    /**
+     * The AI agent context.
+     */
     public val context: AIAgentContext
 }
 
@@ -43,7 +62,7 @@ public data class LLMCallStartingContext(
 }
 
 /**
- * Represents the context for handling a after LLM call failed.
+ * Represents the context for handling an after LLM call failed.
  *
  * @property executionInfo The execution information containing parentId and current execution path;
  * @property runId The unique identifier for this LLM call session.

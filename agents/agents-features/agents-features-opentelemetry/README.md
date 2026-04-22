@@ -226,7 +226,8 @@ The OpenTelemetry feature creates different types of spans for various operation
         - `gen_ai.usage.input_tokens` (when available)
         - `gen_ai.usage.output_tokens` (when available)
         - `gen_ai.usage.total_tokens` (when available)
-        - `gen_ai.response.finish_reasons` (Stop, ToolCalls, etc.)
+        - `gen_ai.response.finish_reasons` (Stop, ToolCalls, etc.; `error` on LLM call failure)
+        - `error.type` (on LLM call failure)
         - `gen_ai.response.metadata` (when `ResponseMetaInfo.metadata` is present — serialized JSON containing free-form provider or application metadata)
 
 6. **Execute Tool Span**

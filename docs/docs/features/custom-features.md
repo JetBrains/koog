@@ -139,6 +139,7 @@ Strategy lifecycle:
 LLM call lifecycle:
 
 - `interceptLLMCallStarting`: Invoked before an LLM call.
+- `interceptLLMCallFailed`: Invoked when an LLM call fails (the underlying prompt executor or moderation call throws).
 - `interceptLLMCallCompleted`: Invoked after an LLM call.
 
 LLM streaming lifecycle:

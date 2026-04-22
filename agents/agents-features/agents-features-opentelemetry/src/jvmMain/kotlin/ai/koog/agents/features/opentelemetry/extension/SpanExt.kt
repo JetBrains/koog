@@ -68,20 +68,20 @@ internal fun AIAgentError?.toSpanEndStatus(): SpanEndStatus =
     }
 
 /**
- * We want to add an actual error type as an error attribute.
+ * Check if an error is defined and add common error attributes to the span if not null.
  */
 internal fun GenAIAgentSpan.addCommonErrorAttributes(error: Throwable?) {
     error?.let {
-        addAttribute(CommonAttributes.Error.Type(it.extractActualErrorType()))
+        addAttribute(CommonAttributes.Error.Type(error.extractActualErrorType()))
     }
 }
 
 private fun Throwable.extractActualErrorType(): String {
     val cause = this.cause
     return when {
-        this is KoogHttpClientException -> "KoogHttpClientException-$clientName-httpCode=$statusCode"
-        cause is KoogHttpClientException -> "KoogHttpClientException-${cause.clientName}-httpCode=${cause.statusCode}"
-        cause != null -> "${this.javaClass.simpleName}-${cause.javaClass.typeName}"
+        this is KoogHttpClientException -> "${this::class.simpleName}-$clientName-httpCode=$statusCode"
+        cause is KoogHttpClientException -> "${cause::class.simpleName}-${cause.clientName}-httpCode=${cause.statusCode}"
+        cause != null -> "${this::class.simpleName}-${cause::class.simpleName}"
         else -> this.javaClass.typeName
     }
 }

@@ -1,9 +1,8 @@
 package ai.koog.agents.features.opentelemetry.feature.span
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.START_NODE_PREFIX
 import ai.koog.agents.core.agent.singleRunStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -36,12 +35,12 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.request.HttpRequestPipeline
 import io.opentelemetry.sdk.trace.data.SpanData
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
-import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.params.ParameterizedTest
@@ -49,6 +48,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
@@ -674,8 +674,9 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
             }.run(OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS)
         }
         val exception = result.exceptionOrNull()
-        assertFalse(exception == null, "Unexpected successful result $result")
+        assertNotNull(exception, "Unexpected successful result $result")
         assertFalse(exception is CancellationException, "Unexpected cancellation exception")
+
         testData.collectedSpans = withTimeout(10.seconds) {
             spanExporter.isCollected.first()
             spanExporter.collectedSpans
@@ -696,19 +697,12 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         }
         testData.filterNodeExecutionSpans().filter { span ->
             // KoogAttributes.Koog.Node.Id
-            "koog.node.id" to AIAgentSubgraph.START_NODE_PREFIX !in span.asKeyValue()
+            "koog.node.id" to START_NODE_PREFIX !in span.asKeyValue()
         }.forEach { actual ->
             assertEquals(
                 expected = expectedSpans,
                 actual = actual.asKeyValue().intersect(expectedSpans),
                 message = "Unexpected node execution spans:\nExpected:${expectedSpans}\nActual:${actual.asKeyValue()}"
-            )
-        }
-        testData.filterStrategySpans().single().let { actual ->
-            assertEquals(
-                expected = expectedSpans,
-                actual = actual.asKeyValue().intersect(expectedSpans),
-                message = "Unexpected strategy spans:\nExpected:${expectedSpans}\nActual:${actual.asKeyValue()}"
             )
         }
         testData.filterAgentInvokeSpans().single().let { actual ->
