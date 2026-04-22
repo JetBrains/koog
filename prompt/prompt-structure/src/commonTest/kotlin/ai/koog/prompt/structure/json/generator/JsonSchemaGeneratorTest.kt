@@ -1,17 +1,26 @@
 package ai.koog.prompt.structure.json.generator
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class JsonSchemaGeneratorTest {
     private val json = Json {
@@ -881,5 +890,118 @@ class JsonSchemaGeneratorTest {
         """.trimIndent()
 
         assertEquals(expectedSchema, schema)
+    }
+
+    // ---- @Contextual support ----
+
+    /** A non-serializable type used to exercise @Contextual resolution in tests. */
+    data class ContextualToken(val raw: String)
+
+    object ContextualTokenSerializer : KSerializer<ContextualToken> {
+        override val descriptor: SerialDescriptor =
+            PrimitiveSerialDescriptor("ContextualToken", PrimitiveKind.STRING)
+
+        override fun serialize(encoder: Encoder, value: ContextualToken) =
+            encoder.encodeString(value.raw)
+
+        override fun deserialize(decoder: Decoder): ContextualToken =
+            ContextualToken(decoder.decodeString())
+    }
+
+    @Serializable
+    @SerialName("ClassWithContextual")
+    data class ClassWithContextual(
+        @Contextual val token: ContextualToken,
+        val name: String
+    )
+
+    private val jsonWithContextual = Json {
+        prettyPrint = true
+        prettyPrintIndent = "  "
+        serializersModule = SerializersModule {
+            contextual(ContextualTokenSerializer)
+        }
+    }
+
+    @Test
+    fun testBasicSchemaContextualPropertyResolvesToString() {
+        val result = basicGenerator.generate(
+            jsonWithContextual,
+            "ClassWithContextual",
+            serializer<ClassWithContextual>(),
+            emptyMap()
+        )
+        val schema = jsonWithContextual.encodeToString(result.schema)
+
+        val expectedSchema = """
+            {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "token",
+                "name"
+              ],
+              "additionalProperties": false
+            }
+        """.trimIndent()
+
+        assertEquals(expectedSchema, schema)
+    }
+
+    @Test
+    fun testStandardSchemaContextualPropertyResolvesToString() {
+        val result = standardGenerator.generate(
+            jsonWithContextual,
+            "ClassWithContextual",
+            serializer<ClassWithContextual>(),
+            emptyMap()
+        )
+        val schema = jsonWithContextual.encodeToString(result.schema)
+
+        val expectedSchema = """
+            {
+              "${"$"}id": "ClassWithContextual",
+              "${"$"}defs": {
+                "ClassWithContextual": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "token",
+                    "name"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "${"$"}ref": "#/${"$"}defs/ClassWithContextual"
+            }
+        """.trimIndent()
+
+        assertEquals(expectedSchema, schema)
+    }
+
+    @Test
+    fun testContextualPropertyWithoutRegisteredSerializerThrowsClearError() {
+        // json has no contextual serializer for ContextualToken registered
+        val ex = assertFailsWith<IllegalArgumentException> {
+            basicGenerator.generate(json, "ClassWithContextual", serializer<ClassWithContextual>(), emptyMap())
+        }
+        assertTrue(
+            ex.message?.contains("no contextual serializer") == true,
+            "Expected a descriptive error about missing contextual serializer, got: ${ex.message}"
+        )
     }
 }
