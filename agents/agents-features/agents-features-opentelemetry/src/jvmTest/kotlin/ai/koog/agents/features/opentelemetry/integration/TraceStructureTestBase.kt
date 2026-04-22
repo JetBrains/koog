@@ -2,7 +2,6 @@ package ai.koog.agents.features.opentelemetry.integration
 
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -279,6 +278,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                     "${GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} ${TestGetWeatherTool.name}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "execute_tool",
+                            "gen_ai.provider.name" to "koog",
                             "gen_ai.tool.name" to TestGetWeatherTool.name,
                             "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
                             "gen_ai.tool.call.id" to toolCallId,
@@ -365,6 +365,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                     "${GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} ${TestGetWeatherTool.name}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "execute_tool",
+                            "gen_ai.provider.name" to "koog",
                             "gen_ai.tool.name" to TestGetWeatherTool.name,
                             "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
                             "gen_ai.tool.call.arguments" to "{\"location\":\"Paris\"}",
@@ -378,6 +379,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                     "${GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL.id} ${TestGetWeatherTool.name}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "execute_tool",
+                            "gen_ai.provider.name" to "koog",
                             "gen_ai.tool.name" to TestGetWeatherTool.name,
                             "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
                             "gen_ai.tool.call.arguments" to "{\"location\":\"London\"}",
