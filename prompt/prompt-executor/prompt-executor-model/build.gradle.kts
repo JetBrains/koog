@@ -28,6 +28,7 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-lmstudio-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))

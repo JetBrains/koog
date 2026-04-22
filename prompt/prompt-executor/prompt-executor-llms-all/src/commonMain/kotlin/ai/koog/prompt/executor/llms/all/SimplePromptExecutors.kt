@@ -2,6 +2,8 @@ package ai.koog.prompt.executor.llms.all
 
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.lmstudio.LMStudioClientSettings
+import ai.koog.prompt.executor.clients.lmstudio.LMStudioLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIClientSettings
@@ -98,3 +100,16 @@ public fun simpleOllamaAIExecutor(
  */
 public fun simpleMistralAIExecutor(apiKey: String): SingleLLMPromptExecutor =
     SingleLLMPromptExecutor(MistralAILLMClient(apiKey))
+
+/**
+ * Creates an instance of `SingleLLMPromptExecutor` backed by a locally running LM Studio server.
+ *
+ * LM Studio exposes an OpenAI-compatible API and does not require authentication; the api key is
+ * sent but ignored by the server.
+ *
+ * @param baseUrl The base URL of the LM Studio server. Defaults to `http://localhost:1234`.
+ */
+public fun simpleLMStudioExecutor(
+    baseUrl: String = "http://localhost:1234",
+): SingleLLMPromptExecutor =
+    SingleLLMPromptExecutor(LMStudioLLMClient(settings = LMStudioClientSettings(baseUrl = baseUrl)))
