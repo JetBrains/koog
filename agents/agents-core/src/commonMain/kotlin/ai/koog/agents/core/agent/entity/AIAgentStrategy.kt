@@ -30,9 +30,9 @@ public expect interface AIAgentStrategy<TInput, TOutput, TContext : AIAgentConte
      * Executes the AI agent's strategy using the provided context and input.
      *
      * This method processes the given input data within the specified context, leveraging
-     * the AI agent's internal logic and strategy to produce an output. The result of this
-     * execution may depend on the graph-based execution pipeline, decision-making processes,
-     * and other stateful operations defined in the context.
+     * the AI agent's internal logic and strategy to produce an output. The concrete
+     * decision-making, stateful operations, and any execution-pipeline specifics are fully
+     * determined by the implementing strategy.
      *
      * @param context The execution context in which the AI agent operates. It provides access
      * to the agent's configuration, pipeline, environment, and other components required for

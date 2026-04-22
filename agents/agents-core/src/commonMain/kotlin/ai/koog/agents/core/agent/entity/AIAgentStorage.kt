@@ -8,7 +8,11 @@ package ai.koog.agents.core.agent.entity
  * The generic type parameter [T] specifies the type of data associated with this key, ensuring
  * type safety when storing and retrieving data in the context of an AI agent.
  *
- * @param name The name of the storage key used only for its string representation.
+ * Equality of [AIAgentStorageKey] instances is based on referential identity (default implementation):
+ * two different instances created with the same [name] are not equal and will refer to distinct
+ * storage entries. The [name] is used only for the string representation of the key.
+ *
+ * @param name The human-readable name of the storage key, used only for its string representation.
  */
 public class AIAgentStorageKey<T : Any>(public val name: String) {
     override fun toString(): String = "${super.toString()}(name=$name)"
@@ -35,7 +39,10 @@ public expect class AIAgentStorage internal constructor(
     internal val delegate: AIAgentStorageImpl
 
     /**
-     * Creates a deep copy of this storage.
+     * Creates a copy of this storage.
+     *
+     * The key-to-value mapping is copied, but the stored values themselves are not deep-copied:
+     * both the original and the copy share the same value instances.
      *
      * @return A new instance of [AIAgentStorage] with the same content as this one.
      */

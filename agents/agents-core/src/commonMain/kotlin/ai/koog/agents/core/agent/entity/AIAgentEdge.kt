@@ -12,10 +12,13 @@ import ai.koog.agents.core.utils.Option
  *
  * @param IncomingOutput The type of output produced by the source node connected to this edge.
  * @param OutgoingInput The type of input accepted by the destination node connected to this edge.
+ * @property fromNode The source node that this edge connects from.
  * @property toNode The destination node that this edge connects to.
  * @property forwardOutput A suspending function used to process the output from the source node
  * before forwarding it to the destination node. This function can transform or filter the data
- * and returns an optional value to determine whether to propagate it further.
+ * and returns an [ai.koog.agents.core.utils.Option]: a non-empty value propagates along this edge
+ * as the next node's input, while an empty value indicates that this edge does not match and the
+ * next candidate edge should be evaluated.
  */
 public expect class AIAgentEdge<IncomingOutput, OutgoingInput> internal constructor(
     fromNode: AIAgentNodeBase<*, IncomingOutput>,

@@ -15,7 +15,7 @@ The key-value data storage structure relies on the `AIAgentStorageKey` data clas
 
 The storage uses a typed key system to provide type safety when storing and retrieving data.
 
-`AIAgentStorageKey<T>` data class represents a storage key used for identifying and accessing data. Here are
+`AIAgentStorageKey<T>` class represents a storage key used for identifying and accessing data. Here are
   the key features of this class:
 
 - The generic type parameter `T` specifies the type of data associated with this key, providing type safety.
@@ -97,7 +97,7 @@ Create a typed storage key for the defined data structure:
     ```
     <!--- KNIT exampleDataTransferBetweenNodesJava02.java -->
 
-The `createStorageKey` function takes a single string parameter that uniquely identifies the key.
+The `createStorageKey` function takes a single string parameter used for identification and debugging purposes.
 
 ### Storing data
 

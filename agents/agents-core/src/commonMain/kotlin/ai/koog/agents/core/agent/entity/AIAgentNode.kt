@@ -45,15 +45,11 @@ public abstract class AIAgentNodeBase<in TInput, TOutput> internal constructor()
     public val id: String get() = name
 
     /**
-     * Represents the directed edges connecting the current node in the AI agent strategy graph
-     * to other nodes. Each edge defines the flow and transformation of output data
-     * from this node to another.
+     * The directed edges connecting this node to other nodes in the AI agent strategy graph.
+     * Each edge defines the flow and optional transformation of output data from this node to another.
      *
-     * The list is initially empty and can only be modified internally by using the
-     * [addEdge] function, which appends new edges to the existing list.
-     *
-     * @property edges A list of [AIAgentEdge] describing the connections from this node
-     * to other nodes in the strategy graph.
+     * The list starts empty and can only be extended via [addEdge]. Edges are evaluated in order
+     * during [resolveEdge]: the first edge that successfully processes the node output is selected.
      */
     public var edges: List<AIAgentEdge<TOutput, *>> = emptyList()
         private set
@@ -115,15 +111,21 @@ public abstract class AIAgentNodeBase<in TInput, TOutput> internal constructor()
     /**
      * Executes a specific operation based on the given context and input.
      *
+     * Implementations may return `null` to indicate that no output is produced for the current invocation
+     * (for example, when the execution was interrupted and is expected to be resumed later).
+     * Plain node implementations such as [SimpleAIAgentNodeImpl] always return a non-null [TOutput].
+     *
      * @param context The execution context that provides necessary runtime information and functionality.
      * @param input The input data required to perform the execution.
-     * @return The result of the execution as [TOutput] object.
+     * @return The result of the execution as [TOutput], or `null` if no output is produced.
      */
     public abstract suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput?
 
     /**
-     * Executes the node operation using the provided execution context and input, bypassing type safety checks.
-     * This method internally calls the type-safe `execute` method after casting the input.
+     * Executes the node operation using the provided execution context and input, bypassing static type checks.
+     * This method internally performs an unchecked cast of [input] to [TInput] and delegates to [execute].
+     * The caller is responsible for ensuring that [input] is actually assignable to [TInput];
+     * otherwise a [ClassCastException] may be thrown at the call site or later during execution.
      *
      * @param context The execution context that provides runtime information and functionality.
      * @param input The input data to be processed by the node, which may be of any type.
@@ -228,14 +230,14 @@ public open class SimpleAIAgentNodeImpl<TInput, TOutput> internal constructor(
 }
 
 /**
- * Represents a simple implementation of an AI agent node, encapsulating a specific execution
- * logic that processes the input data and produces an output.
+ * Platform-specific `expect`/`actual` declaration of [SimpleAIAgentNodeImpl].
  *
  * @param TInput The type of input data this node processes.
  * @param TOutput The type of output data this node produces.
  * @property name The name of the node, used for identification and debugging.
  * @property execute A suspending function that defines the execution logic for the node. It
  * processes the provided input within the given execution context and produces an output.
+ * @see SimpleAIAgentNodeImpl
  */
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public expect open class AIAgentNode<TInput, TOutput> internal constructor(
@@ -270,19 +272,16 @@ public class StartNode<TInput> internal constructor(
     execute = { input -> input }
 ) {
     /**
-     * Constructs a `StartNode` using a `TypeToken` to represent the input and output type.
+     * Constructs a [StartNode] using a [KType] to represent the input and output type.
      *
-     * This constructor is marked as deprecated and should be avoided in favor of the
-     * constructor which accepts a `TypeToken`. The use of `TypeToken` has been deprecated
-     * in graphs and nodes due to potential limitations and performance considerations.
+     * This constructor is deprecated. Prefer the primary constructor which accepts a [TypeToken],
+     * as the use of [KType] in graphs and nodes has been deprecated due to potential limitations
+     * and performance considerations. The provided [type] is internally wrapped into a [KotlinTypeToken].
      *
-     * @param subgraphName An optional name for the subgraph this node is part of. If null,
+     * @param subgraphName An optional name for the subgraph this node is part of. If `null`,
      * the default prefix "__start__" is used as the node name.
-     * @param type A `TypeToken` representing the type of `TInput` processed by this node.
-     * Internally converted to a `KotlinTypeToken`.
-     *
-     * @deprecated Use the constructor accepting `TypeToken` instead for better compatibility
-     * and performance within the graph structure.
+     * @param type A [KType] representing the type of [TInput] processed by this node.
+     * Internally converted to a [KotlinTypeToken].
      */
     @Deprecated("KTypes usage in graphs and nodes is deprecated. Please, use TypeTokens instead.")
     public constructor(
@@ -322,14 +321,14 @@ public class FinishNode<TOutput> internal constructor(
     }
 
     /**
-     * Secondary constructor for `FinishNode` allowing initialization with a [KType] instead of a `TypeToken`.
+     * Secondary constructor for [FinishNode] allowing initialization with a [KType] instead of a [TypeToken].
      *
-     * @param subgraphName Optional name of the corresponding subgraph associated with this `FinishNode`.
+     * Prefer the primary constructor which accepts a [TypeToken] for enhanced type handling and
+     * consistency within the framework. The provided [type] is internally wrapped into a [KotlinTypeToken].
+     *
+     * @param subgraphName Optional name of the corresponding subgraph associated with this [FinishNode].
      * If provided, it contributes to forming a unique identifier for the node.
      * @param type The [KType] used as an alternative representation of the output type [TOutput].
-     *
-     * @deprecated Utilize the primary constructor with `KotlinTypeToken` for enhanced type handling
-     * and consistency within the framework.
      */
     @Deprecated("Use Kotlin TypeToken instead of KType for type representation")
     public constructor(

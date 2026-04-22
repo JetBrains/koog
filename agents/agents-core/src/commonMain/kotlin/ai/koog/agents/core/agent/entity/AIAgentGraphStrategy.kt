@@ -20,7 +20,7 @@ import kotlinx.serialization.json.JsonElement
  *
  * @property name The unique identifier for the strategy.
  * @property nodeStart The starting node of the strategy, initiating the subgraph execution.
- * By default, the start node gets the agent input and returns
+ * By default, the start node receives the agent input and passes it through unchanged to the next node.
  * @property nodeFinish The finishing node of the strategy, marking the subgraph's endpoint.
  * @property toolSelectionStrategy The strategy responsible for determining the toolset available during subgraph execution.
  */
@@ -33,11 +33,11 @@ public expect class AIAgentGraphStrategy<TInput, TOutput>(
 ) : AIAgentGraphStrategyBase<TInput, TOutput>
 
 /**
- * Base class for [AIAgentStrategy].
+ * Base class for [AIAgentGraphStrategy].
  *
  * @property name The unique identifier for the strategy.
  * @property nodeStart The starting node of the strategy, initiating the subgraph execution.
- * By default, the start node gets the agent input and returns
+ * By default, the start node receives the agent input and passes it through unchanged to the next node.
  * @property nodeFinish The finishing node of the strategy, marking the subgraph's endpoint.
  * @property toolSelectionStrategy The strategy responsible for determining the toolset available during subgraph execution.
  */
@@ -65,8 +65,9 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
      * subgraph, such as the mapping of node names to their associated implementations and
      * the uniqueness of node names within the subgraph.
      *
-     * This property can only be set internally, and an attempt to access it before initialization
-     * will result in an `IllegalStateException`.
+     * The property is a [lateinit] var that is expected to be assigned once by the graph builder
+     * after the strategy has been constructed. Accessing it before it has been initialized will
+     * result in an [UninitializedPropertyAccessException].
      */
     public lateinit var metadata: SubgraphMetadata
 
@@ -158,7 +159,20 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
     }
 
     /**
-     * Finds and sets the node for the strategy based on the provided context.
+     * Enforces the strategy's next execution to start at the node identified by [nodePath], feeding
+     * it with [input] decoded as that node's declared input type.
+     *
+     * [nodePath] is a [DEFAULT_AGENT_PATH_SEPARATOR]-joined path whose first segment is the agent's id
+     * and is ignored; the remaining segments identify the node inside this strategy's [metadata].
+     * The identified node will be re-executed (its previous output was not persisted in checkpoints,
+     * which is the original behavior prior to version 0.6.1).
+     *
+     * @param nodePath The path identifying the target node within the strategy's metadata.
+     * @param input The serialized input to pass to the target node; it is decoded using the node's [AIAgentNodeBase.inputType].
+     * @param agentContext The graph context whose execution point should be enforced.
+     * @throws IllegalArgumentException if [nodePath] does not contain any node segment after the agent id.
+     * @throws IllegalStateException if no node corresponding to [nodePath] can be found in [metadata],
+     * or if one of the intermediate path segments is not an [ExecutionPointNode].
      */
     @Deprecated("Use setExecutionPointAfterNode instead, setExecutionPoint will be removed in future versions")
     public suspend fun setExecutionPoint(
@@ -186,9 +200,23 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
     }
 
     /**
-     * Finds and sets the node for the strategy based on the provided context.
+     * Overload of [setExecutionPointAfterNode] accepting a [kotlinx.serialization.json.JsonElement]
+     * as the node's output. The element is converted to [ai.koog.serialization.JSONElement] via
+     * [toKoogJSONElement] and delegated to the primary overload.
+     *
+     * Prefer the overload that accepts an [ai.koog.serialization.JSONElement] directly.
+     *
+     * @param nodePath The path identifying the completed node within the strategy's metadata.
+     * @param output The serialized output produced by the node at [nodePath].
+     * @param agentContext The graph context whose execution point should be enforced.
      */
-    @Deprecated("Use setExecutionPointAfterNode with output: JSONElement instead")
+    @Deprecated(
+        "Pass an ai.koog.serialization.JSONElement instead of kotlinx.serialization.json.JsonElement",
+        ReplaceWith(
+            "setExecutionPointAfterNode(nodePath, output.toKoogJSONElement(), agentContext)",
+            "ai.koog.serialization.kotlinx.toKoogJSONElement"
+        )
+    )
     public suspend fun setExecutionPointAfterNode(
         nodePath: String,
         output: JsonElement,
@@ -198,7 +226,26 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
     }
 
     /**
-     * Finds and sets the node for the strategy based on the provided context.
+     * Enforces the strategy's next execution to continue right after the node identified by [nodePath],
+     * using [output] as that node's completed output.
+     *
+     * [nodePath] is a [DEFAULT_AGENT_PATH_SEPARATOR]-joined path whose first segment is the agent's id
+     * and is ignored; the remaining segments identify the completed node inside this strategy's [metadata].
+     * [output] is decoded using the completed node's [AIAgentNodeBase.outputType].
+     *
+     * Behavior:
+     * - If the completed node is a [FinishNode], the subgraph containing it is resumed by re-starting the
+     *   finish node with [output] (finish nodes have no outgoing edges and input equals output).
+     * - Otherwise, the outgoing edge of the completed node is resolved against [output] and the resulting
+     *   next node and transformed input are set as the new execution point.
+     *
+     * @param nodePath The path identifying the completed node within the strategy's metadata.
+     * @param output The serialized output produced by the node at [nodePath].
+     * @param agentContext The graph context whose execution point should be enforced.
+     * @throws IllegalArgumentException if [nodePath] does not contain any node segment after the agent id.
+     * @throws IllegalStateException if no node corresponding to [nodePath] can be found in [metadata],
+     * if no outgoing edge matches the produced output, or if one of the intermediate path segments is not
+     * an [ExecutionPointNode].
      */
     public suspend fun setExecutionPointAfterNode(
         nodePath: String,

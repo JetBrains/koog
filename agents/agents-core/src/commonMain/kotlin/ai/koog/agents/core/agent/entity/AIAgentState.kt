@@ -12,7 +12,12 @@ public class AIAgentState(
     iterations: Int = 0,
 ) : AutoCloseable {
     /**
-     * The number of iterations that have been completed since the agent was created.
+     * The running iteration counter of the agent's execution.
+     *
+     * The value is seeded from the [AIAgentState] constructor parameter and is incremented by the
+     * framework as nodes are executed. Each call to [AIAgentStateManager.withStateLock] closes the
+     * current [AIAgentState] snapshot and creates a new one carrying the latest counter value;
+     * accessing [iterations] on a closed snapshot results in an [IllegalStateException].
      */
     public var iterations: Int by ActiveProperty(iterations) { isActive }
 
@@ -39,8 +44,12 @@ public class AIAgentState(
  * This class ensures consistency across state modifications by using a mutual exclusion
  * lock, allowing only one coroutine to access or modify the state at a time.
  *
- * @constructor Creates a new instance of AIAgentStateManager with the initial state,
- * defaulting to a new `AIAgentState` if not provided.
+ * Note: on every [withStateLock] invocation, a fresh [AIAgentState] snapshot is created that carries
+ * over the current iteration counter, and the previous snapshot is closed. Consumers must therefore
+ * not retain references to the [AIAgentState] instance received inside the lock across calls.
+ *
+ * @constructor Creates a new instance of [AIAgentStateManager] with the initial state,
+ * defaulting to a new [AIAgentState] if not provided.
  */
 public class AIAgentStateManager(
     private var state: AIAgentState = AIAgentState()
@@ -49,6 +58,11 @@ public class AIAgentStateManager(
 
     /**
      * Executes the provided suspending [block] of code with exclusive access to the current state.
+     *
+     * After [block] completes, the current [AIAgentState] snapshot is closed and replaced with a new
+     * snapshot carrying the updated iteration counter. The [AIAgentState] passed to [block] must not
+     * be retained outside of the [block].
+     *
      * @return The result of [block].
      */
     public suspend fun <T> withStateLock(block: suspend (AIAgentState) -> T): T = mutex.withLock {

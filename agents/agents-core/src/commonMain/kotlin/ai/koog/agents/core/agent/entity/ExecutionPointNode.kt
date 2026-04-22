@@ -23,7 +23,11 @@ public interface ExecutionPointNode {
     public fun resetExecutionPoint()
 
     /**
-     * Sets a forced node for the entity.
+     * Enforces execution to start at the specified node with the given input, overriding the default execution flow.
+     *
+     * @param node The node at which execution should be forced to start.
+     * @param input The optional input data to provide to the forced node.
+     * @throws IllegalStateException if an execution point has already been set and not yet reset.
      */
     public fun enforceExecutionPoint(node: AIAgentNodeBase<*, *>, input: Any? = null)
 }
