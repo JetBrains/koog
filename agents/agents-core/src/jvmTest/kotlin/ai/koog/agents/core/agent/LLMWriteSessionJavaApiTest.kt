@@ -56,15 +56,16 @@ class LLMWriteSessionJavaApiTest {
             mockLLMAnswer("ok").asDefaultResponse
         }
 
+        val sharedExecutor = Executors.newSingleThreadExecutor()
         val config = AIAgentConfig(
             prompt = Prompt.builder("write")
                 .system("test")
                 .build(),
             model = OpenAIModels.Chat.GPT4o,
-            maxAgentIterations = 3
+            maxAgentIterations = 3,
+            agentStrategyExecutorService = sharedExecutor,
         )
 
-        val sharedExecutor = Executors.newSingleThreadExecutor()
         try {
             val agent = AIAgent.builder()
                 .agentConfig(config)
