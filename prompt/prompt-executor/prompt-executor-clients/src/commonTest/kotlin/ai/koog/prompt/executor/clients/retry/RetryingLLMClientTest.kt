@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients.retry
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
@@ -31,6 +32,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class RetryingLLMClientTest {
 
@@ -54,6 +56,131 @@ class RetryingLLMClientTest {
             metaInfo = testMetaInfo
         )
     )
+
+    @Test
+    fun testRetryAfterHeaderOverridesExponentialBackoff() = runTest {
+        // Error message alone doesn't carry a retry-after hint; only the structured header
+        // does. Using virtual time we verify the sleep was exactly 7s, proving calculateDelay
+        // dispatched to the KoogHttpClientException overload rather than exponential backoff.
+        val retryDelayHeader = KoogHttpClientException(
+            clientName = "TestClient",
+            statusCode = 429,
+            errorBody = "rate limited",
+            message = "rate limited",
+            headers = mapOf("retry-after" to listOf("7"))
+        )
+
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse,
+            failuresBeforeSuccess = 1,
+            failure = retryDelayHeader
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(
+                maxAttempts = 2,
+                initialDelay = 500.milliseconds,
+                maxDelay = 60.seconds
+            )
+        )
+
+        val startTime = testScheduler.currentTime
+        val result = retryingClient.execute(testPrompt, testModel, emptyList())
+        val elapsed = testScheduler.currentTime - startTime
+
+        assertEquals(testResponse, result)
+        assertEquals(2, mockClient.executeCalls)
+        assertEquals(7_000L, elapsed)
+    }
+
+    @Test
+    fun testHeaderHintWinsOverParseableMessage() = runTest {
+        // Header says 3s, message says 99s. The composite extractor tries headers first, so
+        // the header wins and the client sleeps 3s instead of 99s.
+        val error = KoogHttpClientException(
+            clientName = "TestClient",
+            statusCode = 429,
+            errorBody = "retry-after: 99",
+            message = "retry-after: 99",
+            headers = mapOf("retry-after" to listOf("3"))
+        )
+
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse,
+            failuresBeforeSuccess = 1,
+            failure = error
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 2, initialDelay = 10.milliseconds)
+        )
+
+        val startTime = testScheduler.currentTime
+        retryingClient.execute(testPrompt, testModel, emptyList())
+        val elapsed = testScheduler.currentTime - startTime
+
+        assertEquals(3_000L, elapsed)
+    }
+
+    @Test
+    fun testUnwrapsKoogHttpClientExceptionFromCause() = runTest {
+        // Some upstream LLM clients re-throw as a domain exception that carries the
+        // KoogHttpClientException as cause (Ollama does this today). The retry layer should
+        // still see the headers and dispatch to the header-aware extractor overload.
+        val httpError = KoogHttpClientException(
+            clientName = "TestClient",
+            statusCode = 429,
+            errorBody = "rate limited",
+            message = "rate limited",
+            headers = mapOf("retry-after" to listOf("4"))
+        )
+        // Wrapping message includes the status so the existing shouldRetry patterns match.
+        val wrapped = RuntimeException("LLM call failed with status 429", httpError)
+
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse,
+            failuresBeforeSuccess = 1,
+            failure = wrapped
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 2, initialDelay = 10.milliseconds)
+        )
+
+        val startTime = testScheduler.currentTime
+        retryingClient.execute(testPrompt, testModel, emptyList())
+        val elapsed = testScheduler.currentTime - startTime
+
+        assertEquals(4_000L, elapsed)
+    }
+
+    @Test
+    fun testMessageBasedExtractorStillUsedForNonKoogExceptions() = runTest {
+        // When the throwable isn't a KoogHttpClientException, calculateDelay must continue to
+        // consult the message-based extract(message) overload. The default extractor picks up
+        // "retry-after: 3" from the message text.
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse,
+            failuresBeforeSuccess = 1,
+            failureMessage = "Error 429 retry-after: 3"
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 2, initialDelay = 10.milliseconds)
+        )
+
+        val startTime = testScheduler.currentTime
+        val result = retryingClient.execute(testPrompt, testModel, emptyList())
+        val elapsed = testScheduler.currentTime - startTime
+
+        assertEquals(testResponse, result)
+        assertEquals(2, mockClient.executeCalls)
+        assertEquals(3_000L, elapsed)
+    }
 
     @Test
     fun testSucceedOnFirstAttempt() = runTest {
@@ -542,9 +669,11 @@ class RetryingLLMClientTest {
         private var failuresBeforeSuccess: Int = 0,
         private var streamFailuresBeforeSuccess: Int = 0,
         private val failureMessage: String = "Mock failure",
+        private val failure: Throwable? = null,
         private val throwCancellation: Boolean = false,
         private val llmProvider: LLMProvider = LLMProvider.OpenAI,
     ) : LLMClient() {
+        private fun failureToThrow(): Throwable = failure ?: RuntimeException(failureMessage)
 
         val basicJsonSchemaGeneratorDefault = object : BasicJsonSchemaGenerator() {}
         val standardJsonSchemaGeneratorDefault = object : StandardJsonSchemaGenerator() {}
@@ -578,7 +707,7 @@ class RetryingLLMClientTest {
 
             if (executeFailures < failuresBeforeSuccess) {
                 executeFailures++
-                throw RuntimeException(failureMessage)
+                throw failureToThrow()
             }
 
             return executeResponse
@@ -593,7 +722,7 @@ class RetryingLLMClientTest {
 
             if (streamFailures < streamFailuresBeforeSuccess) {
                 streamFailures++
-                throw RuntimeException(failureMessage)
+                throw failureToThrow()
             }
 
             streamResponse.collect { emit(it) }
@@ -608,7 +737,7 @@ class RetryingLLMClientTest {
 
             if (multipleChoicesFailures < failuresBeforeSuccess) {
                 multipleChoicesFailures++
-                throw RuntimeException(failureMessage)
+                throw failureToThrow()
             }
 
             return multipleChoicesResponse
@@ -619,7 +748,7 @@ class RetryingLLMClientTest {
 
             if (moderateFailures < failuresBeforeSuccess) {
                 moderateFailures++
-                throw RuntimeException(failureMessage)
+                throw failureToThrow()
             }
 
             return moderateResponse
@@ -633,7 +762,7 @@ class RetryingLLMClientTest {
 
             if (embedFailures < failuresBeforeSuccess) {
                 embedFailures++
-                throw RuntimeException(failureMessage)
+                throw failureToThrow()
             }
 
             return embedResponse
@@ -647,7 +776,7 @@ class RetryingLLMClientTest {
 
             if (batchEmbedFailures < failuresBeforeSuccess) {
                 batchEmbedFailures++
-                throw RuntimeException(failureMessage)
+                throw failureToThrow()
             }
 
             return batchEmbedResponse

@@ -2,6 +2,7 @@ package ai.koog.http.client.okhttp
 
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
+import ai.koog.http.client.lowercaseHeaderKeys
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -69,6 +70,7 @@ public class OkHttpKoogHttpClient internal constructor(
             clientName = clientName,
             statusCode = response.code,
             errorBody = response.body.string(),
+            headers = response.headers.toMultimap().lowercaseHeaderKeys(),
         )
     }
 
@@ -188,7 +190,8 @@ public class OkHttpKoogHttpClient internal constructor(
                     statusCode = response?.code,
                     errorBody = response?.body?.string(),
                     message = t?.message,
-                    cause = t
+                    cause = t,
+                    headers = response?.headers?.toMultimap()?.lowercaseHeaderKeys() ?: emptyMap()
                 )
                 logger.error(exception) { exception.message }
                 close(exception)

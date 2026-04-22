@@ -40,7 +40,8 @@ class MockWebServer {
         val responseBody: String,
         val statusCode: HttpStatusCode = HttpStatusCode.OK,
         val contentType: ContentType = ContentType.Text.Plain,
-        val expectedParameters: Map<String, String> = emptyMap()
+        val expectedParameters: Map<String, String> = emptyMap(),
+        val responseHeaders: Map<String, String> = emptyMap()
     )
 
     /**
@@ -51,7 +52,8 @@ class MockWebServer {
         val responseBody: String,
         val statusCode: HttpStatusCode = HttpStatusCode.OK,
         val contentType: ContentType = ContentType.Text.Plain,
-        val expectedParameters: Map<String, String> = emptyMap()
+        val expectedParameters: Map<String, String> = emptyMap(),
+        val responseHeaders: Map<String, String> = emptyMap()
     )
 
     /**
@@ -98,6 +100,9 @@ class MockWebServer {
                             }
                         }
 
+                        config.responseHeaders.forEach { (name, value) ->
+                            call.response.header(name, value)
+                        }
                         call.respondText(
                             text = config.responseBody,
                             contentType = config.contentType,
@@ -124,6 +129,9 @@ class MockWebServer {
                             }
                         }
 
+                        config.responseHeaders.forEach { (name, value) ->
+                            call.response.header(name, value)
+                        }
                         call.respondText(
                             text = config.responseBody,
                             contentType = config.contentType,

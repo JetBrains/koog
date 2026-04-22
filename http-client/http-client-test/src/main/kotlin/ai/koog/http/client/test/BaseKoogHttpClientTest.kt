@@ -148,6 +148,38 @@ abstract class BaseKoogHttpClientTest {
         }
     }
 
+    open fun testCaptureHeadersOnNonSuccess(): Unit = runTest {
+        mockServer.start(
+            postEndpoints = listOf(
+                MockWebServer.PostEndpointConfig(
+                    path = "/rate-limited",
+                    responseBody = "rate limit exceeded",
+                    statusCode = HttpStatusCode.TooManyRequests,
+                    contentType = ContentType.Text.Plain,
+                    responseHeaders = mapOf(
+                        "Retry-After" to "5",
+                        "X-RateLimit-Reset-Tokens" to "6m0s"
+                    )
+                )
+            )
+        )
+
+        val client = createClient()
+
+        try {
+            client.post<String, String>(
+                path = mockServer.url("/rate-limited"),
+                request = "PAYLOAD",
+            )
+            fail("Expected a KoogHttpClientException for 429")
+        } catch (e: KoogHttpClientException) {
+            assertEquals(429, e.statusCode)
+            // Header keys are normalized to lowercase regardless of how the server sent them.
+            assertEquals(listOf("5"), e.headers["retry-after"])
+            assertEquals(listOf("6m0s"), e.headers["x-ratelimit-reset-tokens"])
+        }
+    }
+
     @Suppress("FunctionName")
     open fun `test get SSE flow and collect events`(): Unit = runTest {
         val events = listOf("event1", "event2", "event3")

@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients.retry
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
@@ -192,11 +193,21 @@ public class RetryingLLMClient @JvmOverloads constructor(
     }
 
     private fun calculateDelay(attempt: Int, error: Throwable? = null): Duration {
-        // Check for retry-after hint in error message
-        error?.message?.let { message ->
-            config.retryAfterExtractor?.extract(message)?.let { retryAfter ->
-                return retryAfter
+        // Check for retry-after hint. Prefer the header-aware overload when the caught
+        // throwable is a KoogHttpClientException (directly or wrapped one level deep — some
+        // clients re-throw as LLMClientException with the original exception as cause) so
+        // structured response metadata is available to the extractor; otherwise fall back
+        // to the message-based overload.
+        val extractor = config.retryAfterExtractor
+        if (extractor != null && error != null) {
+            val koogException = error as? KoogHttpClientException
+                ?: error.cause as? KoogHttpClientException
+            val retryAfter = if (koogException != null) {
+                extractor.extract(koogException)
+            } else {
+                error.message?.let { extractor.extract(it) }
             }
+            if (retryAfter != null) return retryAfter
         }
 
         // Exponential backoff with jitter

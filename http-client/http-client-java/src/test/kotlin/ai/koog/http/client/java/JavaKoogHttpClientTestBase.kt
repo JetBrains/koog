@@ -29,8 +29,16 @@ abstract class JavaKoogHttpClientTestBase : BaseKoogHttpClientTest() {
         super.`test handle on non-success status`()
 
     @Test
+    override fun testCaptureHeadersOnNonSuccess() =
+        super.testCaptureHeadersOnNonSuccess()
+
+    @Test
     override fun `test get SSE flow and collect events`() =
         super.`test get SSE flow and collect events`()
+
+    @Test
+    override fun testCaptureHeadersOnSseError() =
+        super.testCaptureHeadersOnSseError()
 
     @Test
     override fun `test filter SSE events`() =
