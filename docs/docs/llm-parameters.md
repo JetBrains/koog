@@ -1,12 +1,16 @@
 # LLM parameters
 
-This page provides details about LLM parameters in the Koog agentic framework. LLM parameters let you control and customize the behavior of language models.
+This page provides details about LLM parameters in the Koog agentic framework. LLM parameters let you control and
+customize the behavior of language models.
 
 ## Overview
 
-LLM parameters are configuration options that let you fine-tune how language models generate responses. These parameters control aspects like response randomness, length, format, and tool usage. By adjusting the parameters, you optimize model behavior for different use cases, from creative content generation to deterministic structured outputs.
+LLM parameters are configuration options that let you fine-tune how language models generate responses. These parameters
+control aspects like response randomness, length, format, and tool usage. By adjusting the parameters, you optimize
+model behavior for different use cases, from creative content generation to deterministic structured outputs.
 
-In Koog, the `LLMParams` class incorporates LLM parameters and provides a consistent interface for configuring language model behavior. You can use LLM parameters in the following ways:
+In Koog, the `LLMParams` class incorporates LLM parameters and provides a consistent interface for configuring language
+model behavior. You can use LLM parameters in the following ways:
 
 - When creating a prompt:
 
@@ -58,7 +62,6 @@ In Koog, the `LLMParams` class incorporates LLM parameters and provides a consis
         .build();
     ```
     <!--- KNIT example-llm-parameters-java-01.java -->
-
 
 For more information about prompt creation, see [Prompts](prompts/prompt-creation/index.md).
 
@@ -114,8 +117,9 @@ For more information about prompt creation, see [Prompts](prompts/prompt-creatio
     ```
     <!--- KNIT example-llm-parameters-java-02.java -->
 
-
-For more information about existing subgraph types in Koog, see [Predefined subgraphs](nodes-and-components.md#predefined-subgraphs). To learn how to create and implement your own subgraphs, see [Custom subgraphs](custom-subgraphs.md).
+For more information about existing subgraph types in Koog,
+see [Predefined subgraphs](nodes-and-components.md#predefined-subgraphs). To learn how to create and implement your own
+subgraphs, see [Custom subgraphs](custom-subgraphs.md).
 
 - When updating a prompt in an LLM write session:
 
@@ -160,8 +164,10 @@ For more information about sessions, see [LLM sessions and manual history manage
 
 ## LLM parameter reference
 
-The following table provides a reference of LLM parameters included in the `LLMParams` class and supported by all LLM providers that are available in Koog out of the box.
-For a list of parameters that are specific to some providers, see [Provider-specific parameters](#provider-specific-parameters).
+The following table provides a reference of LLM parameters included in the `LLMParams` class and supported by all LLM
+providers that are available in Koog out of the box.
+For a list of parameters that are specific to some providers,
+see [Provider-specific parameters](#provider-specific-parameters).
 
 | Parameter              | Type                           | Description                                                                                                                                                                                     |
 |------------------------|--------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -184,6 +190,7 @@ For a list of default values for each parameter, see the corresponding LLM provi
 - [DeepSeek](https://api-docs.deepseek.com/api/create-chat-completion#request)
 - [OpenRouter](https://openrouter.ai/docs/api/reference/parameters)
 - Alibaba ([DashScope](https://www.alibabacloud.com/help/en/model-studio/qwen-api-reference))
+- [Ollama](https://docs.ollama.com/api/openai-compatibility)
 
 ## Schema
 
@@ -192,9 +199,11 @@ Koog supports JSON schemas, as described in the sections below.
 
 ### JSON schemas
 
-JSON schemas let you request structured JSON data from language models. Koog supports the following two types of JSON schemas:
+JSON schemas let you request structured JSON data from language models. Koog supports the following two types of JSON
+schemas:
 
-1) **Basic JSON Schema** (`LLMParams.Schema.JSON.Basic`): Used for basic JSON processing capabilities. This format primarily focuses on nested data definitions without advanced JSON Schema functionalities.
+1) **Basic JSON Schema** (`LLMParams.Schema.JSON.Basic`): Used for basic JSON processing capabilities. This format
+   primarily focuses on nested data definitions without advanced JSON Schema functionalities.
 
 === "Kotlin"
 
@@ -274,7 +283,10 @@ JSON schemas let you request structured JSON data from language models. Koog sup
     ```
     <!--- KNIT example-llm-parameters-java-04.java -->
 
-2) **Standard JSON Schema** (`LLMParams.Schema.JSON.Standard`): Represents a standard JSON schema according to [json-schema.org](https://json-schema.org/). This format is a proper subset of the official JSON Schema specification. Note that the flavor across different LLM providers might vary, since not all of them support full JSON schemas.
+2) **Standard JSON Schema** (`LLMParams.Schema.JSON.Standard`): Represents a standard JSON schema according
+   to [json-schema.org](https://json-schema.org/). This format is a proper subset of the official JSON Schema
+   specification. Note that the flavor across different LLM providers might vary, since not all of them support full
+   JSON schemas.
 
 === "Kotlin"
 
@@ -427,6 +439,7 @@ and add provider-specific functionality. The following classes include parameter
 - `DeepSeekParams`: Parameters specific to DeepSeek models.
 - `OpenRouterParams`: Parameters specific to OpenRouter models.
 - `DashscopeParams`: Parameters specific to Alibaba models.
+- `OllamaParams`: Parameters specific to Ollama models.
 
 Here is the complete reference of provider-specific parameters in Koog:
 
@@ -550,6 +563,13 @@ Here is the complete reference of provider-specific parameters in Koog:
     llm-parameters-snippets.md:stop
     llm-parameters-snippets.md:topLogprobs
     llm-parameters-snippets.md:topP
+    --8<--
+
+=== "Ollama"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:think
     --8<--
 
 The following example shows defined OpenRouter LLM parameters using the provider-specific `OpenRouterParams` class:
@@ -707,7 +727,9 @@ to control how many reasoning tokens the model generates before providing a resp
     ```
     <!--- KNIT example-llm-parameters-java-09.java -->
 
-In addition, when using the OpenAI Responses API in a stateless mode, you keep an encrypted history of reasoning items and send it to the model in every conversation turn. The encryption is done on the OpenAI side, and you need to request encrypted reasoning tokens by setting the `include` parameter in your requests to `reasoning.encrypted_content`.
+In addition, when using the OpenAI Responses API in a stateless mode, you keep an encrypted history of reasoning items
+and send it to the model in every conversation turn. The encryption is done on the OpenAI side, and you need to request
+encrypted reasoning tokens by setting the `include` parameter in your requests to `reasoning.encrypted_content`.
 You can then pass the encrypted reasoning tokens back to the model in the next conversation turns.
 
 === "Kotlin"
@@ -760,7 +782,8 @@ You can then pass the encrypted reasoning tokens back to the model in the next c
 
 ### Custom parameters
 
-To add custom parameters that may be provider specific and not supported in Koog out of the box, use the `additionalProperties` property as shown in the example below.
+To add custom parameters that may be provider specific and not supported in Koog out of the box, use the
+`additionalProperties` property as shown in the example below.
 
 === "Kotlin"
 
@@ -811,7 +834,8 @@ To add custom parameters that may be provider specific and not supported in Koog
 
 The code sample below shows how you can define a set of LLM parameters that you may want to use primarily,
 then create another set by partially overriding values from the original set and adding new values to it.
-This lets you define parameters that are common to most requests but also add more specific parameter combinations without having to repeat the common parameters.
+This lets you define parameters that are common to most requests but also add more specific parameter combinations
+without having to repeat the common parameters.
 
 === "Kotlin"
 

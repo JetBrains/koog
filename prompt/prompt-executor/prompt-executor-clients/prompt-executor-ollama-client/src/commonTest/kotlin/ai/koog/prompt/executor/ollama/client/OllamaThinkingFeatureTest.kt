@@ -377,7 +377,7 @@ class OllamaThinkingFeatureTest {
     fun `execute enables thinking if requested`() = runTest {
         val request = requestFromMockServer {
             execute(
-                prompt = prompt("test", OllamaChatParams(think = true)) { },
+                prompt = prompt("test", OllamaParams(think = true)) { },
                 model = OllamaModels.Meta.LLAMA_3_2
             )
         }
@@ -388,7 +388,7 @@ class OllamaThinkingFeatureTest {
     fun `execute disables thinking if requested`() = runTest {
         val request = requestFromMockServer {
             execute(
-                prompt = prompt("test", OllamaChatParams(think = false)) { },
+                prompt = prompt("test", OllamaParams(think = false)) { },
                 model = OllamaModels.Meta.LLAMA_3_2
             )
         }
@@ -410,7 +410,7 @@ class OllamaThinkingFeatureTest {
     fun `executeStreaming enables thinking if requested`() = runTest {
         val request = requestFromMockServer {
             executeStreaming(
-                prompt = prompt("test", OllamaChatParams(think = true)) { },
+                prompt = prompt("test", OllamaParams(think = true)) { },
                 model = OllamaModels.Meta.LLAMA_3_2
             ).toList()
         }
@@ -421,7 +421,7 @@ class OllamaThinkingFeatureTest {
     fun `executeStreaming disables thinking if requested`() = runTest {
         val request = requestFromMockServer {
             executeStreaming(
-                prompt = prompt("test", OllamaChatParams(think = false)) { },
+                prompt = prompt("test", OllamaParams(think = false)) { },
                 model = OllamaModels.Meta.LLAMA_3_2
             ).toList()
         }

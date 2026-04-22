@@ -159,9 +159,9 @@ public class OllamaClient @JvmOverloads constructor(
         }
     }
 
-    internal fun LLMParams.toOllamaChatParams(): OllamaChatParams {
-        if (this is OllamaChatParams) return this
-        return OllamaChatParams(
+    internal fun LLMParams.toOllamaChatParams(): OllamaParams {
+        if (this is OllamaParams) return this
+        return OllamaParams(
             temperature = temperature,
             maxTokens = maxTokens,
             numberOfChoices = numberOfChoices,
