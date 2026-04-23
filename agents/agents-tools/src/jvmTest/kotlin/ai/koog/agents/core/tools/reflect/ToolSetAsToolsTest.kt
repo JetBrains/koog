@@ -1,5 +1,6 @@
 package ai.koog.agents.core.tools.reflect
 
+import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
@@ -101,6 +102,22 @@ class ComplexToolsImpl : ToolSet {
     fun formatPerson(
         @LLMDescription("Person object") person: Person
     ): String = "${person.name} is ${person.age} years old"
+}
+
+class SearchToolA : ToolSet {
+    @Tool(customName = "tool_a_search")
+    @LLMDescription("Searches source A")
+    fun execute(
+        @LLMDescription("Query") query: String
+    ): String = "result A: $query"
+}
+
+class SearchToolB : ToolSet {
+    @Tool(customName = "tool_b_search")
+    @LLMDescription("Searches source B")
+    fun execute(
+        @LLMDescription("Query") query: String
+    ): String = "result B: $query"
 }
 
 @OptIn(InternalAgentToolsApi::class)
@@ -240,5 +257,25 @@ class ToolSetAsToolsTest {
             formatPersonTool.encodeResultToStringUnsafe(formatPersonResult, serializer),
             "Format tool should return formatted string"
         )
+    }
+
+    @Test
+    @OptIn(InternalAgentToolsApi::class)
+    fun testCustomToolNamesArePreservedForToolSets() {
+        val toolA = SearchToolA()
+        val toolB = SearchToolB()
+
+        val toolANames = toolA.asTools().map { it.descriptor.name }
+        val toolBNames = toolB.asTools().map { it.descriptor.name }
+
+        assertEquals(listOf("tool_a_search"), toolANames)
+        assertEquals(listOf("tool_b_search"), toolBNames)
+
+        val registry = ToolRegistry {
+            tools(toolA)
+            tools(toolB)
+        }
+
+        assertEquals(listOf("tool_a_search", "tool_b_search"), registry.tools.map { it.name }.sorted())
     }
 }
