@@ -22,6 +22,8 @@ import ai.koog.agents.features.opentelemetry.event.ModerationResponseEvent
 import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
+import ai.koog.agents.features.opentelemetry.extension.lastResponse
+import ai.koog.agents.features.opentelemetry.extension.toFinishReason
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.integration.mcp.McpMethod
 import ai.koog.agents.features.opentelemetry.metric.MetricCollector
@@ -355,6 +357,12 @@ public class OpenTelemetry {
                     spanType = SpanType.INVOKE_AGENT
                 ) ?: return@intercept
 
+                eventContext.context.llm.prompt.messages.lastResponse()?.let { response ->
+                    invokeAgentSpan.addAttribute(
+                        GenAIAttributes.Response.FinishReasons(reasons = listOf(response.toFinishReason()))
+                    )
+                }
+
                 spanAdapter?.onBeforeSpanFinished(invokeAgentSpan)
                 endInvokeAgentSpan(
                     span = invokeAgentSpan,
@@ -389,12 +397,6 @@ public class OpenTelemetry {
                     eventId = eventContext.runId,
                     spanType = SpanType.INVOKE_AGENT
                 ) ?: return@intercept
-
-                invokeAgentSpan.addAttribute(
-                    attribute = GenAIAttributes.Response.FinishReasons(
-                        listOf(GenAIAttributes.Response.FinishReasonType.Error)
-                    )
-                )
 
                 spanAdapter?.onBeforeSpanFinished(invokeAgentSpan)
                 endInvokeAgentSpan(
@@ -612,18 +614,10 @@ public class OpenTelemetry {
                 inferenceSpan.addEvents(eventsToAdd)
 
                 // Finish Reasons Attribute
-                eventContext.responses.lastOrNull()?.let { message ->
-                    val finishReasonsAttribute = when (message) {
-                        is Message.Assistant, is Message.Reasoning -> {
-                            GenAIAttributes.Response.FinishReasons(reasons = listOf(GenAIAttributes.Response.FinishReasonType.Stop))
-                        }
-
-                        is Message.Tool.Call -> {
-                            GenAIAttributes.Response.FinishReasons(reasons = listOf(GenAIAttributes.Response.FinishReasonType.ToolCalls))
-                        }
-                    }
-
-                    inferenceSpan.addAttribute(finishReasonsAttribute)
+                eventContext.responses.lastOrNull()?.let { response ->
+                    inferenceSpan.addAttribute(
+                        GenAIAttributes.Response.FinishReasons(reasons = listOf(response.toFinishReason()))
+                    )
                 }
 
                 // Stop InferenceSpan
@@ -684,12 +678,6 @@ public class OpenTelemetry {
                     eventId = eventContext.eventId,
                     spanType = SpanType.INFERENCE
                 ) ?: return@intercept
-
-                inferenceSpan.addAttribute(
-                    GenAIAttributes.Response.FinishReasons(
-                        reasons = listOf(GenAIAttributes.Response.FinishReasonType.Error)
-                    )
-                )
 
                 spanAdapter?.onBeforeSpanFinished(inferenceSpan)
                 endInferenceSpan(

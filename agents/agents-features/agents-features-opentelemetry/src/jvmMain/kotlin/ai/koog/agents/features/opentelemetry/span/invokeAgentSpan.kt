@@ -4,6 +4,9 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.extension.addCommonErrorAttributes
+import ai.koog.agents.features.opentelemetry.extension.sumInputTokens
+import ai.koog.agents.features.opentelemetry.extension.sumOutputTokens
+import ai.koog.agents.features.opentelemetry.extension.systemMessages
 import ai.koog.agents.features.opentelemetry.extension.toSpanEndStatus
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -116,7 +119,7 @@ internal fun startInvokeAgentSpan(
     }
 
     // gen_ai.system_instructions
-    val systemMessages = messages.filterIsInstance<Message.System>()
+    val systemMessages = messages.systemMessages()
     if (systemMessages.isNotEmpty()) {
         builder.addAttribute(GenAIAttributes.SystemInstructions(systemMessages))
     }
@@ -166,18 +169,10 @@ internal fun endInvokeAgentSpan(
     span.addAttribute(GenAIAttributes.Response.Model(model))
 
     // gen_ai.usage.input_tokens
-    span.addAttribute(
-        GenAIAttributes.Usage.InputTokens(
-            messages.filterIsInstance<Message.Response>().sumOf { message -> message.metaInfo.inputTokensCount ?: 0 }
-        )
-    )
+    span.addAttribute(GenAIAttributes.Usage.InputTokens(messages.sumInputTokens()))
 
     // gen_ai.usage.output_tokens
-    span.addAttribute(
-        GenAIAttributes.Usage.OutputTokens(
-            messages.filterIsInstance<Message.Response>().sumOf { message -> message.metaInfo.outputTokensCount ?: 0 }
-        )
-    )
+    span.addAttribute(GenAIAttributes.Usage.OutputTokens(messages.sumOutputTokens()))
 
     // gen_ai.output.messages
     if (messages.isNotEmpty()) {

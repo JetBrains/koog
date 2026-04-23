@@ -127,6 +127,17 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         )
 
         assertSpans(expectedSpans, actualSpans)
+
+        val expectedInvokeAgentAttrs = setOf(
+            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
+        )
+        collectedTestData.filterAgentInvokeSpans().single().let { actual ->
+            assertEquals(
+                expected = expectedInvokeAgentAttrs,
+                actual = actual.asKeyValue().intersect(expectedInvokeAgentAttrs),
+                message = "invoke_agent span missing finish_reasons=[stop]:\nActual:${actual.asKeyValue()}"
+            )
+        }
     }
 
     @ParameterizedTest
@@ -688,7 +699,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
             "error.type" to "KoogHttpClientException-openai-httpCode=429",
         )
         testData.filterInferenceSpans().single().let { actual ->
-            val expectedSpans = expectedSpans + setOf("gen_ai.response.finish_reasons" to listOf(FinishReasonType.Error.id))
             assertEquals(
                 expected = expectedSpans,
                 actual = actual.asKeyValue().intersect(expectedSpans),

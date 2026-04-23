@@ -269,6 +269,7 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
                                     Message.User(USER_PROMPT_PARIS, RequestMetaInfo(testClock.now()))
                                 )
                             ),
+                            "gen_ai.response.finish_reasons" to listOf(GenAIAttributes.Response.FinishReasonType.Stop.id),
                             customBeforeStartAttribute.key to customBeforeStartAttribute.value,
                             customBeforeFinishAttribute.key to customBeforeFinishAttribute.value,
                             "koog.event.id" to mockExporter.lastRunId,
