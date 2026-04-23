@@ -3,28 +3,12 @@ package ai.koog.prompt.executor.clients.retrollmfit
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 
-// Jaika server shapes
-
-@LLMEndpoint(
-    url = "https://35-207-202-131.sslip.io/api/prompt",
-    authHeaderName = "X-User-Id",
-    authHeaderValue = "116542085266142929154",
-)
-@Serializable
-data class JaikaRequest(@PromptField val prompt: String, val stream: Boolean = false)
-
-@Serializable
-data class JaikaResponse(
-    @ResponseTextField val text: String,
-    val session_id: String = "",
-    val type: String = "text",
-)
+// JaikaRequest and JaikaResponse are defined in RetroLLMFitTest.kt
 
 /**
  * Integration test hitting the live Jaika server.
