@@ -72,9 +72,9 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
                     .getContextualDescriptor(context.descriptor)
                     ?: throw IllegalArgumentException(
                         "Cannot generate JSON schema for @Contextual type '${context.descriptor.serialName}': " +
-                        "no contextual serializer was found in the SerializersModule. " +
-                        "Register one via SerializersModule { contextual(...) }, or use " +
-                        "@Serializable(with = ...) on the property instead."
+                            "no contextual serializer was found in the SerializersModule. " +
+                            "Register one via SerializersModule { contextual(...) }, or use " +
+                            "@Serializable(with = ...) on the property instead."
                     )
                 process(context.copy(descriptor = resolvedDescriptor))
             }
