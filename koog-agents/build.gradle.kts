@@ -53,6 +53,7 @@ val excluded = setOf(
     ":koog-spring-ai:koog-spring-ai-starter-vector-store",
 
     project.path, // the current project should not depend on itself
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-retrollmfit", // JVM-only, reflection-based
 )
 
 val included = setOf(
