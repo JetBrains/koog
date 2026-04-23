@@ -387,7 +387,7 @@ public class OllamaClient @JvmOverloads constructor(
         }
 
         val embeddingResponse = response.body<EmbeddingBatchResponseDTO>()
-        return embeddingResponse.embeddings.first()
+        return embeddingResponse.normalizedEmbeddings().firstOrNull() ?: emptyList()
     }
 
     /**
@@ -414,7 +414,7 @@ public class OllamaClient @JvmOverloads constructor(
         }
 
         val embeddingResponse = response.body<EmbeddingBatchResponseDTO>()
-        return embeddingResponse.embeddings
+        return embeddingResponse.normalizedEmbeddings()
     }
 
     /**
