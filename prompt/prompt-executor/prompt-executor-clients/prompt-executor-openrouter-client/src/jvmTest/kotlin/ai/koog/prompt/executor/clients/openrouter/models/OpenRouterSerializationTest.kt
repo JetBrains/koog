@@ -423,10 +423,11 @@ class OpenRouterSerializationTest {
         choice.delta.toolCalls?.size shouldBe 1
 
         val toolCall = choice.delta.toolCalls?.get(0)!!
+        val function = requireNotNull(toolCall.function)
         toolCall.id shouldBe "call_xyz789"
         toolCall.type shouldBe "function"
-        toolCall.function.name shouldBe "calculate_total"
-        toolCall.function.arguments shouldBe "{\"items\": ["
+        function.name shouldBe "calculate_total"
+        function.arguments shouldBe "{\"items\": ["
     }
 
     @Test
