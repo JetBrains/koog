@@ -230,37 +230,9 @@ When the underlying HTTP client raises a `KoogHttpClientException`, the exceptio
 response headers on its `headers: Map<String, List<String>>` property. Keys are normalized to
 lowercase, so extractors can look them up without re-casing.
 
-The default `RetryConfig.retryAfterExtractor` is a composite that consults headers first and
-falls back to parsing the error message:
-
-```kotlin
-public val DEFAULT_RETRY_AFTER_EXTRACTOR: RetryAfterExtractor = CompositeRetryAfterExtractor(
-    StandardHeaderRetryAfterExtractor.DEFAULT,
-    DefaultRetryAfterExtractor
-)
-```
-
-So out of the box, a 429 carrying `retry-after: 5` is honored without any extra configuration.
-If you want to supply a custom header-aware extractor, implement `RetryAfterExtractor` and
-override `extract(error: KoogHttpClientException)`:
-
-```kotlin
-val config = RetryConfig(
-    retryAfterExtractor = RetryAfterExtractor { message ->
-        // message-based fallback
-        null
-    }.let { fallback ->
-        CompositeRetryAfterExtractor(
-            object : RetryAfterExtractor {
-                override fun extract(message: String): Duration? = null
-                override fun extract(error: KoogHttpClientException): Duration? =
-                    error.headers["x-my-custom-retry-after"]?.firstOrNull()?.toLongOrNull()?.seconds
-            },
-            fallback
-        )
-    }
-)
-```
+Out of the box, `RetryConfig.retryAfterExtractor` is a `CompositeRetryAfterExtractor` that
+consults `StandardHeaderRetryAfterExtractor` first and falls back to `DefaultRetryAfterExtractor`.
+So a 429 carrying `retry-after: 5` is honored without any extra configuration.
 
 `StandardHeaderRetryAfterExtractor` understands:
 
@@ -270,6 +242,78 @@ val config = RetryConfig(
 
 When multiple hints are present it returns the smallest strictly-positive delay so the client
 doesn't sleep longer than any of the individual rate-limit buckets require.
+A literal `0`, an expired HTTP-date, or a zero-length OpenAI-style duration is treated as
+"no hint" rather than "retry immediately": the caller falls back to exponential backoff or to
+the next extractor in the composite.
+
+To supply a custom header-aware extractor, implement `RetryAfterExtractor` and override
+`extract(error: KoogHttpClientException)`. Existing single-arg SAM lambdas that only inspect
+the error message continue to work unchanged.
+
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.http.client.KoogHttpClientException
+    import ai.koog.prompt.executor.clients.retry.CompositeRetryAfterExtractor
+    import ai.koog.prompt.executor.clients.retry.DefaultRetryAfterExtractor
+    import ai.koog.prompt.executor.clients.retry.RetryAfterExtractor
+    import ai.koog.prompt.executor.clients.retry.RetryConfig
+    import kotlin.time.Duration
+    import kotlin.time.Duration.Companion.seconds
+
+    object MyHeaderRetryAfterExtractor : RetryAfterExtractor {
+        override fun extract(message: String): Duration? = null
+        override fun extract(error: KoogHttpClientException): Duration? =
+            error.headers["x-my-retry-after"]?.firstOrNull()?.toLongOrNull()?.seconds
+    }
+    -->
+    ```kotlin
+    // Header-aware extractor first, message-based fallback second.
+    val config = RetryConfig(
+        retryAfterExtractor = CompositeRetryAfterExtractor(
+            MyHeaderRetryAfterExtractor,
+            DefaultRetryAfterExtractor,
+        )
+    )
+    ```
+    <!--- KNIT example-handling-failures-06.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    /**
+    -->
+    <!--- SUFFIX
+    **/
+    -->
+    ```java
+    RetryAfterExtractor myExtractor = new RetryAfterExtractor() {
+        @Override
+        public Duration extract(String message) {
+            return null;
+        }
+
+        @Override
+        public Duration extract(KoogHttpClientException error) {
+            List<String> values = error.getHeaders().get("x-my-retry-after");
+            if (values == null || values.isEmpty()) return null;
+            try {
+                long seconds = Long.parseLong(values.get(0));
+                return DurationKt.toDuration(seconds, DurationUnit.SECONDS);
+            } catch (NumberFormatException ex) {
+                return null;
+            }
+        }
+    };
+
+    RetryConfig config = RetryConfig.builder()
+        .retryAfterExtractor(new CompositeRetryAfterExtractor(
+            myExtractor,
+            DefaultRetryAfterExtractor.INSTANCE
+        ))
+        .build();
+    ```
+    <!--- KNIT example-handling-failures-java-03.java -->
 
 ### Streaming with retry
 
@@ -301,7 +345,7 @@ val config = RetryConfig(
 val client = RetryingLLMClient(baseClient, config)
 val stream = client.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
 ```
-<!--- KNIT example-handling-failures-06.kt -->
+<!--- KNIT example-handling-failures-07.kt -->
 
 !!!note
     Streaming retries only apply to connection failures that occur before the first token is received.
@@ -353,7 +397,7 @@ To learn more about prompt executors, see [Prompt executors](prompt-executors.md
         ),
     )
     ```
-    <!--- KNIT example-handling-failures-07.kt -->
+    <!--- KNIT example-handling-failures-08.kt -->
 
 === "Java"
 
@@ -390,7 +434,7 @@ To learn more about prompt executors, see [Prompt executors](prompt-executors.md
 
     MultiLLMPromptExecutor multiExecutor = new MultiLLMPromptExecutor(clients);
     ```
-    <!--- KNIT example-handling-failures-java-03.java -->
+    <!--- KNIT example-handling-failures-java-04.java -->
 
 ## Timeout configuration
 
@@ -428,7 +472,7 @@ You can customize these values for your specific needs. For example:
         )
     )
     ```
-    <!--- KNIT example-handling-failures-08.kt -->
+    <!--- KNIT example-handling-failures-09.kt -->
 
 === "Java"
 
@@ -456,7 +500,7 @@ You can customize these values for your specific needs. For example:
     );
     OpenAILLMClient client = new OpenAILLMClient(apiKey, settings);
     ```
-    <!--- KNIT example-handling-failures-java-04.java -->
+    <!--- KNIT example-handling-failures-java-05.java -->
 
 !!! tip
     For long-running or streaming calls, set higher values for `requestTimeoutMillis` and `socketTimeoutMillis`.
@@ -525,7 +569,7 @@ Here is an example of error handling in Kotlin and Java:
         }
     }
     ```
-    <!--- KNIT example-handling-failures-09.kt -->
+    <!--- KNIT example-handling-failures-10.kt -->
 
 === "Java"
 
@@ -579,4 +623,4 @@ Here is an example of error handling in Kotlin and Java:
         }
     }
     ```
-    <!--- KNIT example-handling-failures-java-05.java -->
+    <!--- KNIT example-handling-failures-java-06.java -->
