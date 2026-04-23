@@ -86,6 +86,8 @@ internal class LangfuseSpanAdapter(
 
             else -> {}
         }
+        // adding attributes to all spans as per Langfuse recommendation for OTEL instrumentation:
+        // https://langfuse.com/integrations/native/opentelemetry#propagating-attributes
         traceAttributes.forEach { attribute ->
             span.addAttribute(attribute)
         }
