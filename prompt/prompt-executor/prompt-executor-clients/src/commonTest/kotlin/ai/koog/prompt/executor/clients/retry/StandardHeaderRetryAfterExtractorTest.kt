@@ -106,6 +106,20 @@ class StandardHeaderRetryAfterExtractorTest {
     }
 
     @Test
+    fun testZeroHintSkippedWhenAnotherHintWins() {
+        // A zero-duration hint must be filtered as "no hint" rather than chosen as the
+        // minimum, so the next-smallest positive value wins. Otherwise a server returning
+        // `x-ratelimit-reset-requests: 0s` would clobber a usable retry-after.
+        val e = error(
+            mapOf(
+                "retry-after" to listOf("10"),
+                "x-ratelimit-reset-requests" to listOf("0s")
+            )
+        )
+        assertEquals(10.seconds, extractor.extract(e))
+    }
+
+    @Test
     fun testReturnsSmallestNonzeroWhenMultipleHeadersPresent() {
         val e = error(
             mapOf(
