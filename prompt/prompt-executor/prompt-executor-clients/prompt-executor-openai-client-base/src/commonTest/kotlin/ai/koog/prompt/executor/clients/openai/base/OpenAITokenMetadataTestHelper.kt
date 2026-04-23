@@ -29,15 +29,15 @@ internal class OpenAITokenMetadataTestHelper :
     AbstractOpenAILLMClient<
         OpenAITokenMetadataTestHelper.StubResponse,
         OpenAITokenMetadataTestHelper.StubStreamResponse
-    >(
-    apiKey = "test-key",
-    settings = object : OpenAIBaseSettings(
-        baseUrl = "https://test.example.com",
-        chatCompletionsPath = "v1/chat/completions"
-    ) {},
-    logger = KotlinLogging.logger("TokenMetadataTestHelper"),
-    toolsConverter = OpenAICompatibleToolDescriptorSchemaGenerator(),
-) {
+        >(
+        apiKey = "test-key",
+        settings = object : OpenAIBaseSettings(
+            baseUrl = "https://test.example.com",
+            chatCompletionsPath = "v1/chat/completions"
+        ) {},
+        logger = KotlinLogging.logger("TokenMetadataTestHelper"),
+        toolsConverter = OpenAICompatibleToolDescriptorSchemaGenerator(),
+    ) {
 
     /**
      * Public wrapper to test [createMetaInfo].
