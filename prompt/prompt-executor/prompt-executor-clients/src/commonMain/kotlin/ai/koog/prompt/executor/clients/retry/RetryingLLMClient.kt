@@ -184,44 +184,44 @@ public class RetryingLLMClient @JvmOverloads constructor(
     private fun shouldRetry(error: Throwable): Boolean {
         if (error is IncompleteStreamException) return true
 
-        val message = error.message ?: return false
+        // Also consult the wrapped cause: some clients re-throw as a domain wrapper whose
+        // own message omits the retry-matching tokens (e.g. "LLM call failed") even though
+        // the underlying KoogHttpClientException carries the status code and keywords.
+        val messages = listOfNotNull(error.message, error.unwrapHttpException()?.message)
+        if (messages.isEmpty()) return false
 
-        // Check if error matches any retry pattern
         return config.retryablePatterns.any { pattern ->
-            pattern.matches(message)
+            messages.any { pattern.matches(it) }
         }
     }
 
-    private fun calculateDelay(attempt: Int, error: Throwable? = null): Duration {
-        // Check for retry-after hint. Prefer the header-aware overload when the caught
-        // throwable is a KoogHttpClientException (directly or wrapped one level deep — some
-        // clients re-throw as LLMClientException with the original exception as cause) so
-        // structured response metadata is available to the extractor; otherwise fall back
-        // to the message-based overload.
-        val extractor = config.retryAfterExtractor
-        if (extractor != null && error != null) {
-            val koogException = error as? KoogHttpClientException
-                ?: error.cause as? KoogHttpClientException
-            val retryAfter = if (koogException != null) {
-                extractor.extract(koogException)
-            } else {
-                error.message?.let { extractor.extract(it) }
-            }
-            if (retryAfter != null) return retryAfter
-        }
+    private fun calculateDelay(attempt: Int, error: Throwable? = null): Duration =
+        retryAfterHint(error) ?: exponentialBackoffWithJitter(attempt)
 
-        // Exponential backoff with jitter
+    // Prefers the header-aware extractor overload when the throwable carries a
+    // KoogHttpClientException (directly or wrapped one level deep) so structured response
+    // metadata is available; falls back to the message-based overload otherwise.
+    private fun retryAfterHint(error: Throwable?): Duration? {
+        val extractor = config.retryAfterExtractor ?: return null
+        if (error == null) return null
+        val koogException = error.unwrapHttpException()
+        return if (koogException != null) {
+            extractor.extract(koogException)
+        } else {
+            error.message?.let { extractor.extract(it) }
+        }
+    }
+
+    private fun exponentialBackoffWithJitter(attempt: Int): Duration {
         var exponentialMs = config.initialDelay.inWholeMilliseconds.toDouble()
         repeat(attempt) {
             exponentialMs *= config.backoffMultiplier
         }
         val boundedMs = minOf(exponentialMs, config.maxDelay.inWholeMilliseconds.toDouble())
-
-        // Add jitter (only increases delay, never decreases)
+        // Jitter is drawn from [0, bound) so it only increases the delay, never decreases it -
+        // guards against clients that shorten their backoff under load and stampede retries.
         val jitterMs = Random.nextDouble(0.0, boundedMs * config.jitterFactor)
-        val finalMs = (boundedMs + jitterMs).toLong()
-
-        return finalMs.milliseconds
+        return (boundedMs + jitterMs).toLong().milliseconds
     }
 
     override fun close() {
@@ -235,6 +235,12 @@ public class RetryingLLMClient @JvmOverloads constructor(
     override fun getBasicJsonSchemaGenerator(): BasicJsonSchemaGenerator {
         return delegate.getBasicJsonSchemaGenerator()
     }
+
+    // Returns the throwable itself if it is a KoogHttpClientException, or its immediate cause
+    // when it wraps one. Keeps `shouldRetry` and `calculateDelay` symmetric so a wrapper whose
+    // own message is non-matching still has its underlying HTTP metadata consulted.
+    private fun Throwable.unwrapHttpException(): KoogHttpClientException? =
+        this as? KoogHttpClientException ?: this.cause as? KoogHttpClientException
 }
 
 /**
