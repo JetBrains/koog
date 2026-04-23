@@ -158,6 +158,40 @@ class RetryingLLMClientTest {
     }
 
     @Test
+    fun testRetriesWhenOuterWrapperIsNonRetryableButCauseIs429() = runTest {
+        // The outer wrapper's own message has no retry-matching tokens, but the wrapped
+        // KoogHttpClientException is a 429. shouldRetry must walk .cause the same way
+        // calculateDelay does; otherwise we'd bail before ever consulting the header hint.
+        val httpError = KoogHttpClientException(
+            clientName = "TestClient",
+            statusCode = 429,
+            errorBody = "rate limited",
+            message = "rate limited",
+            headers = mapOf("retry-after" to listOf("2"))
+        )
+        val wrapped = RuntimeException("Unexpected failure in ollama transport layer", httpError)
+
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse,
+            failuresBeforeSuccess = 1,
+            failure = wrapped
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 2, initialDelay = 10.milliseconds)
+        )
+
+        val startTime = testScheduler.currentTime
+        val result = retryingClient.execute(testPrompt, testModel, emptyList())
+        val elapsed = testScheduler.currentTime - startTime
+
+        assertEquals(testResponse, result)
+        assertEquals(2, mockClient.executeCalls)
+        assertEquals(2_000L, elapsed)
+    }
+
+    @Test
     fun testMessageBasedExtractorStillUsedForNonKoogExceptions() = runTest {
         // When the throwable isn't a KoogHttpClientException, calculateDelay must continue to
         // consult the message-based extract(message) overload. The default extractor picks up
