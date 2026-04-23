@@ -210,6 +210,43 @@ abstract class BaseKoogHttpClientTest {
         assertEquals(events, collected)
     }
 
+    open fun testCaptureHeadersOnSseError(): Unit = runTest {
+        mockServer.start(
+            sseEndpoints = listOf(
+                MockWebServer.SSEEndpointConfig(
+                    path = "/stream",
+                    events = emptyList(),
+                    statusCode = HttpStatusCode.TooManyRequests,
+                    responseHeaders = mapOf(
+                        "Retry-After" to "5",
+                        "X-RateLimit-Reset-Tokens" to "6m0s"
+                    )
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val flow = client.sse(
+            path = mockServer.url("/stream"),
+            request = "{}",
+            requestBodyType = String::class,
+            dataFilter = { it != "[DONE]" },
+            decodeStreamingResponse = { it },
+            processStreamingChunk = { it }
+        )
+
+        try {
+            flow.toList()
+            fail("Expected a KoogHttpClientException for 429 SSE response")
+        } catch (e: KoogHttpClientException) {
+            assertEquals(429, e.statusCode)
+            // Header keys are normalized to lowercase regardless of how the server sent them.
+            assertEquals(listOf("5"), e.headers["retry-after"])
+            assertEquals(listOf("6m0s"), e.headers["x-ratelimit-reset-tokens"])
+        }
+    }
+
     @Suppress("FunctionName")
     open fun `test filter SSE events`(): Unit = runTest {
         val events = listOf("event1", "[DONE]", "event2", "[DONE]", "event3")
