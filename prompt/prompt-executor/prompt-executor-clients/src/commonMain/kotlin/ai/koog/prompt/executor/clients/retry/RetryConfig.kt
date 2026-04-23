@@ -7,7 +7,9 @@ import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 import kotlin.time.Instant
+import kotlin.time.toDuration
 
 /**
  * Configuration for retry behavior in LLM client operations.
@@ -310,19 +312,19 @@ public class StandardHeaderRetryAfterExtractor(
         if (tokens.isEmpty()) return null
         if (tokens.sumOf { it.value.length } != trimmed.length) return null
 
-        var totalMillis = 0.0
+        var total = Duration.ZERO
         for (token in tokens) {
             val amount = token.groupValues[1].toDoubleOrNull() ?: return null
-            val unitMillis = when (token.groupValues[2].lowercase()) {
-                "ms" -> 1.0
-                "s" -> 1000.0
-                "m" -> 60_000.0
-                "h" -> 3_600_000.0
+            val unit = when (token.groupValues[2].lowercase()) {
+                "ms" -> DurationUnit.MILLISECONDS
+                "s" -> DurationUnit.SECONDS
+                "m" -> DurationUnit.MINUTES
+                "h" -> DurationUnit.HOURS
                 else -> return null
             }
-            totalMillis += amount * unitMillis
+            total += amount.toDuration(unit)
         }
-        return totalMillis.toLong().milliseconds
+        return total
     }
 
     /**
@@ -369,4 +371,8 @@ public class CompositeRetryAfterExtractor(
 
     override fun extract(error: KoogHttpClientException): Duration? =
         extractors.firstNotNullOfOrNull { it.extract(error) }
+
+    /** Renders the chain so retry logs make the consultation order obvious. */
+    override fun toString(): String =
+        extractors.joinToString(prefix = "CompositeRetryAfterExtractor(", postfix = ")")
 }
