@@ -12,6 +12,7 @@ import io.ktor.http.headersOf
 import kotlinx.serialization.json.Json
 
 internal class MockOllamaChatServer(
+    private val contentType: String = "application/json",
     private val handler: (OllamaChatRequestDTO) -> OllamaChatResponseDTO,
 ) {
     val mockEngine = MockEngine.Companion { requestData ->
@@ -20,7 +21,7 @@ internal class MockOllamaChatServer(
         respond(
             content = Json.encodeToString<OllamaChatResponseDTO>(response),
             status = HttpStatusCode.Companion.OK,
-            headers = headersOf(HttpHeaders.ContentType to listOf("application/json")),
+            headers = headersOf(HttpHeaders.ContentType to listOf(contentType)),
         )
     }
 
