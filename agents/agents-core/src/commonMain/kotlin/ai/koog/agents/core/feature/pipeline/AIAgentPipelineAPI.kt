@@ -31,6 +31,7 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.feature.model.AIAgentError
+import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
@@ -218,6 +219,26 @@ public interface AIAgentPipelineAPI {
         context: AIAgentContext
     )
 
+    /**
+     * Collects metadata contributions from every feature that registered a handler via
+     * [provideToolCallMetadata] and returns the combined map.
+     *
+     * Contributions are merged in feature installation order; later contributions overwrite earlier
+     * ones on key collision. The caller of [ai.koog.agents.core.environment.AIAgentEnvironment.executeTool]
+     * is responsible for choosing a precedence when mixing this result with caller-supplied metadata.
+     */
+    @InternalAgentsApi
+    public suspend fun collectToolCallMetadata(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        toolCallId: String?,
+        toolName: String,
+        toolDescription: String?,
+        toolArgs: JSONObject,
+        context: AIAgentContext
+    ): ToolCallMetadata
+
     //endregion Trigger Tool Handlers
 
     //region Trigger Streaming Handlers
@@ -335,6 +356,24 @@ public interface AIAgentPipelineAPI {
     public fun interceptToolCallStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallStartingContext) -> Unit
+    )
+
+    /**
+     * Registers a handler that contributes metadata for every tool call.
+     *
+     * The handler fires before the tool executes, receives the same [ToolCallStartingContext] used by
+     * [interceptToolCallStarting], and returns a `Map<String, Any?>` of values to merge into the
+     * metadata threaded into [ai.koog.agents.core.tools.Tool.execute].
+     *
+     * Use this to attach cross-cutting per-call context (trace span id, correlation id, feature flags)
+     * without expanding the tool's argument schema. Return an empty map to contribute nothing.
+     *
+     * Merge precedence (documented in [ai.koog.agents.core.environment.ContextualAgentEnvironment]):
+     * caller-supplied metadata wins over feature contributions on key collision.
+     */
+    public fun provideToolCallMetadata(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: ToolCallStartingContext) -> Map<String, Any?>
     )
 
     public fun interceptToolValidationFailed(

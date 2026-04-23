@@ -14,6 +14,28 @@ The agents-tools module provides a comprehensive framework for creating and mana
 
 Tools are designed to be executed within an environment context, ensuring proper handling of events, feature pipelines, and testing capabilities.
 
+### Passing metadata to a tool
+
+Tools can receive caller- and feature-contributed per-call metadata (e.g. a trace span id, a
+correlation id) alongside their typed arguments. Metadata is a side channel: it is not part of the
+tool's argument schema and is not serialized to the LLM.
+
+Override the metadata-aware `execute` overload when the tool needs the context:
+
+```kotlin
+class TracingTool : Tool<MyArgs, String>(...) {
+    override suspend fun execute(args: MyArgs): String = execute(args, ToolCallMetadata.EMPTY)
+
+    override suspend fun execute(args: MyArgs, metadata: ToolCallMetadata): String {
+        val spanId = metadata["trace.span.id"] as? String
+        // ... use spanId
+    }
+}
+```
+
+Existing tools that only override `execute(args)` continue to work: the default implementation of
+`execute(args, metadata)` delegates to the legacy path.
+
 ### Using in your project
 
 To use tools in your project:

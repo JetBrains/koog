@@ -105,6 +105,21 @@ public abstract class Tool<TArgs, TResult>(
     public abstract suspend fun execute(args: TArgs): TResult
 
     /**
+     * Executes the tool's logic with the provided arguments and caller-contributed [metadata].
+     *
+     * The default implementation delegates to [execute] and ignores [metadata], preserving the behavior
+     * of existing subclasses. Override this overload when the tool needs to read per-call context such as
+     * a trace span id, a correlation id, or a feature-contributed flag. Metadata is a side channel: it is
+     * not part of the argument schema and is not exposed to the LLM.
+     *
+     * @param args The input arguments required to execute the tool.
+     * @param metadata Caller- and feature-contributed per-call context. [ToolCallMetadata.EMPTY] when absent.
+     * @return The result of the tool's execution.
+     */
+    public open suspend fun execute(args: TArgs, metadata: ToolCallMetadata): TResult =
+        execute(args)
+
+    /**
      * Executes the tool with the provided arguments without type safety checks.
      *
      * @throws ClassCastException if the provided arguments cannot be cast to the expected type [TArgs].
@@ -115,6 +130,19 @@ public abstract class Tool<TArgs, TResult>(
             args,
             "executeUnsafe argument must be castable to TArgs"
         ) { execute(it) }
+    }
+
+    /**
+     * Executes the tool with the provided arguments and [metadata] without type safety checks.
+     *
+     * @throws ClassCastException if the provided arguments cannot be cast to the expected type [TArgs].
+     */
+    @InternalAgentToolsApi
+    public suspend fun executeUnsafe(args: Any?, metadata: ToolCallMetadata): TResult {
+        return withUnsafeCast<TArgs, TResult>(
+            args,
+            "executeUnsafe argument must be castable to TArgs"
+        ) { execute(it, metadata) }
     }
 
     /**

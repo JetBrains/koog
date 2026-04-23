@@ -1,0 +1,173 @@
+@file:OptIn(InternalAgentsApi::class)
+
+package ai.koog.agents.core.environment
+
+import ai.koog.agents.core.agent.context.AgentTestBase
+import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.feature.AIAgentFeature
+import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONPrimitive
+import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.agents.core.tools.ToolCallMetadata
+import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+
+class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
+
+    private class CapturingEnvironment : AIAgentEnvironment {
+        var lastMetadata: ToolCallMetadata? = null
+            private set
+
+        override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+            lastMetadata = ToolCallMetadata.EMPTY
+            return buildSuccessResult(toolCall)
+        }
+
+        override suspend fun executeTool(
+            toolCall: Message.Tool.Call,
+            metadata: ToolCallMetadata,
+        ): ReceivedToolResult {
+            lastMetadata = metadata
+            return buildSuccessResult(toolCall)
+        }
+
+        override suspend fun reportProblem(exception: Throwable) {
+            throw exception
+        }
+
+        private fun buildSuccessResult(toolCall: Message.Tool.Call): ReceivedToolResult = ReceivedToolResult(
+            id = toolCall.id,
+            tool = toolCall.tool,
+            toolArgs = toolCall.contentJson.toKoogJSONObject(),
+            toolDescription = null,
+            content = "ok",
+            resultKind = ToolResultKind.Success,
+            result = JSONPrimitive("ok"),
+        )
+    }
+
+    private class TestFeatureConfig : FeatureConfig()
+
+    private class TestFeature(override val key: AIAgentStorageKey<Unit>) : AIAgentFeature<TestFeatureConfig, Unit> {
+        override fun createInitialConfig(
+            agentConfig: ai.koog.agents.core.agent.config.AIAgentConfig,
+        ): TestFeatureConfig = TestFeatureConfig()
+    }
+
+    private fun newToolCall(): Message.Tool.Call = Message.Tool.Call(
+        id = "tool-call-id",
+        tool = "any-tool",
+        content = """{"x":1}""",
+        metaInfo = ResponseMetaInfo.Empty,
+    )
+
+    @Test
+    fun testCallerMetadataFlowsThroughWhenNoFeaturesRegistered() = runTest {
+        val capturing = CapturingEnvironment()
+        val context = createTestContext(environment = capturing)
+        val wrapper = ContextualAgentEnvironment(capturing, context)
+        val callerMetadata = ToolCallMetadata.of("caller.key" to "caller-value")
+
+        wrapper.executeTool(newToolCall(), callerMetadata)
+
+        assertEquals(callerMetadata, capturing.lastMetadata)
+    }
+
+    @Test
+    fun testFeatureContributedMetadataIsMergedWithCaller() = runTest {
+        val capturing = CapturingEnvironment()
+        val context = createTestContext(environment = capturing)
+        val pipeline = context.pipeline
+        val feature = TestFeature(AIAgentStorageKey("trace-feature"))
+        pipeline.provideToolCallMetadata(feature) {
+            mapOf("trace.span.id" to "feature-span")
+        }
+
+        val wrapper = ContextualAgentEnvironment(capturing, context)
+        val callerMetadata = ToolCallMetadata.of("caller.key" to "caller-value")
+
+        wrapper.executeTool(newToolCall(), callerMetadata)
+
+        val captured = capturing.lastMetadata!!
+        assertEquals("feature-span", captured["trace.span.id"])
+        assertEquals("caller-value", captured["caller.key"])
+    }
+
+    @Test
+    fun testCallerMetadataWinsOnKeyCollision() = runTest {
+        val capturing = CapturingEnvironment()
+        val context = createTestContext(environment = capturing)
+        val pipeline = context.pipeline
+        val feature = TestFeature(AIAgentStorageKey("trace-feature"))
+        pipeline.provideToolCallMetadata(feature) {
+            mapOf("trace.span.id" to "feature-span")
+        }
+
+        val wrapper = ContextualAgentEnvironment(capturing, context)
+        val callerMetadata = ToolCallMetadata.of("trace.span.id" to "caller-span")
+
+        wrapper.executeTool(newToolCall(), callerMetadata)
+
+        val captured = capturing.lastMetadata!!
+        assertEquals("caller-span", captured["trace.span.id"], "Caller must win on key collision")
+    }
+
+    @Test
+    fun testMultipleFeaturesMergeInInstallationOrder() = runTest {
+        val capturing = CapturingEnvironment()
+        val context = createTestContext(environment = capturing)
+        val pipeline = context.pipeline
+
+        pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("first"))) {
+            mapOf("shared" to "first", "only-first" to "1")
+        }
+        pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("second"))) {
+            mapOf("shared" to "second", "only-second" to "2")
+        }
+
+        val wrapper = ContextualAgentEnvironment(capturing, context)
+
+        wrapper.executeTool(newToolCall(), ToolCallMetadata.EMPTY)
+
+        val captured = capturing.lastMetadata!!
+        assertEquals("second", captured["shared"], "Later feature must overwrite earlier on key collision")
+        assertEquals("1", captured["only-first"])
+        assertEquals("2", captured["only-second"])
+    }
+
+    @Test
+    fun testNoFeaturesYieldsEmptyMetadataOnNoCallerInput() = runTest {
+        val capturing = CapturingEnvironment()
+        val context = createTestContext(environment = capturing)
+        val wrapper = ContextualAgentEnvironment(capturing, context)
+
+        wrapper.executeTool(newToolCall(), ToolCallMetadata.EMPTY)
+
+        assertSame(ToolCallMetadata.EMPTY, capturing.lastMetadata)
+    }
+
+    @Test
+    fun testLegacyExecuteToolGoesThroughMetadataPathWithEmpty() = runTest {
+        val capturing = CapturingEnvironment()
+        val context = createTestContext(environment = capturing)
+        val pipeline = context.pipeline
+        pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("f"))) {
+            mapOf("trace.span.id" to "span")
+        }
+
+        val wrapper = ContextualAgentEnvironment(capturing, context)
+
+        // Using the single-arg overload should still fire feature contributions.
+        wrapper.executeTool(newToolCall())
+
+        val captured = capturing.lastMetadata!!
+        assertEquals("span", captured["trace.span.id"])
+        assertNull(captured["caller.key"])
+    }
+}

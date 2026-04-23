@@ -31,6 +31,7 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.feature.model.AIAgentError
+import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
@@ -400,6 +401,35 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         context: AIAgentContext
     )
 
+    /**
+     * Collects metadata contributions from every feature that registered a handler via
+     * [provideToolCallMetadata] and returns the combined map.
+     *
+     * Contributions are merged in feature installation order; later contributions overwrite earlier
+     * ones on key collision. Called by [ai.koog.agents.core.environment.ContextualAgentEnvironment] before
+     * it delegates to the wrapped environment.
+     *
+     * @param eventId The unique identifier for the current event;
+     * @param executionInfo The execution information for the tool call event;
+     * @param runId The unique identifier for the current run;
+     * @param toolCallId The unique identifier for the current tool call;
+     * @param toolName The tool name that is being called;
+     * @param toolDescription The description of the tool that is being called;
+     * @param toolArgs The arguments provided to the tool;
+     * @param context The agent context associated with the tool call.
+     */
+    @InternalAgentsApi
+    public override suspend fun collectToolCallMetadata(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        toolCallId: String?,
+        toolName: String,
+        toolDescription: String?,
+        toolArgs: JSONObject,
+        context: AIAgentContext
+    ): ToolCallMetadata
+
     //endregion Trigger Tool Call Handlers
 
     //region Trigger LLM Streaming
@@ -761,6 +791,27 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
     public override fun interceptToolCallStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallStartingContext) -> Unit
+    )
+
+    /**
+     * Registers a handler that contributes per-call metadata before a tool executes.
+     *
+     * The handler receives the same [ToolCallStartingContext] as [interceptToolCallStarting] and returns
+     * a `Map<String, Any?>` that is merged into the metadata passed to [ai.koog.agents.core.tools.Tool.execute].
+     *
+     * @param feature The feature associated with this handler.
+     * @param handle A suspend function returning the metadata entries this feature wants to contribute.
+     *
+     * Example:
+     * ```
+     * pipeline.provideToolCallMetadata(feature) { eventContext ->
+     *     mapOf("trace.span.id" to currentSpan()?.id)
+     * }
+     * ```
+     */
+    public override fun provideToolCallMetadata(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: ToolCallStartingContext) -> Map<String, Any?>
     )
 
     /**

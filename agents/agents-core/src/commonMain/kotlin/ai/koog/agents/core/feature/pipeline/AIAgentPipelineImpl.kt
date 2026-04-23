@@ -39,6 +39,7 @@ import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.system.getEnvironmentVariableOrNull
 import ai.koog.agents.core.system.getVMOptionOrNull
+import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
@@ -425,6 +426,37 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    @InternalAgentsApi
+    public override suspend fun collectToolCallMetadata(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        toolCallId: String?,
+        toolName: String,
+        toolDescription: String?,
+        toolArgs: JSONObject,
+        context: AIAgentContext
+    ): ToolCallMetadata {
+        val startingContext = ToolCallStartingContext(
+            eventId = eventId,
+            executionInfo = executionInfo,
+            runId = runId,
+            toolCallId = toolCallId,
+            toolName = toolName,
+            toolDescription = toolDescription,
+            toolArgs = toolArgs,
+            context = context,
+        )
+
+        val merged = invokeRegisteredHandlersForEvent<ToolCallStartingContext, Map<String, Any?>>(
+            eventType = AgentLifecycleEventType.ToolCallMetadataContributing,
+            context = startingContext,
+            entity = emptyMap()
+        )
+
+        return if (merged.isEmpty()) ToolCallMetadata.EMPTY else ToolCallMetadata(merged)
+    }
+
     //endregion Invoke Tool Call Handlers
 
     //region Invoke LLM Streaming
@@ -662,6 +694,27 @@ public class AIAgentPipelineImpl(
             featureKey = feature.key,
             eventType = AgentLifecycleEventType.ToolCallStarting,
             handler = createConditionalHandler(feature, handle)
+        )
+    }
+
+    @OptIn(InternalAgentsApi::class)
+    public override fun provideToolCallMetadata(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: ToolCallStartingContext) -> Map<String, Any?>
+    ) {
+        val transform = AgentLifecycleTransformEventHandler<ToolCallStartingContext, Map<String, Any?>> { ctx, accumulated ->
+            val featureConfig = registeredFeatures[feature.key]?.featureConfig
+            if (featureConfig != null && !featureConfig.isAccepted(ctx)) {
+                accumulated
+            } else {
+                val contribution = handle(ctx)
+                if (contribution.isEmpty()) accumulated else accumulated + contribution
+            }
+        }
+        addHandlerForFeature(
+            featureKey = feature.key,
+            eventType = AgentLifecycleEventType.ToolCallMetadataContributing,
+            handler = transform
         )
     }
 

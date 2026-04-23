@@ -80,6 +80,39 @@ val result = agent.execute("Calculate the square root of 16")
 ```
 
 
+### Passing metadata to tool calls
+
+Caller code and installed features can thread per-call metadata (for example a trace span id) into
+`Tool.execute` through the environment, without modifying the tool's argument schema.
+
+Callers can pass metadata directly:
+
+```kotlin
+val safeTool = context.findTool(MyTool)
+safeTool.execute(args, serializer, ToolCallMetadata.of("trace.span.id" to currentSpan().id))
+```
+
+Or via the environment:
+
+```kotlin
+environment.executeTool(toolCall, ToolCallMetadata.of("trace.span.id" to currentSpan().id))
+```
+
+Features can contribute metadata for every tool call in an agent run by registering a handler
+during installation:
+
+```kotlin
+override fun install(config: MyConfig, pipeline: AIAgentGraphPipeline) {
+    pipeline.provideToolCallMetadata(this) { eventContext ->
+        mapOf("trace.span.id" to currentSpan()?.id)
+    }
+}
+```
+
+Contributions from multiple features are merged in installation order; later features overwrite
+earlier ones on key collision. Caller-supplied metadata then takes precedence over every feature
+contribution, so an explicit call-site override is never silently replaced.
+
 ### Standard Feature Events
 
 Features in the Koog ecosystem consume standardized Feature Events emitted by agents-core during agent execution. These events are defined in this module under the package `ai.koog.agents.core.feature.model.events`.

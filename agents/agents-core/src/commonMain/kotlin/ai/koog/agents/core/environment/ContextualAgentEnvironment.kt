@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.model.toAgentError
+import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.kotlinx.toKoogJSONObject
@@ -17,6 +18,13 @@ import kotlin.uuid.Uuid
  *
  * This class acts as a decorator over an existing [AIAgentEnvironment], augmenting operations with contextual
  * processing using the provided [AIAgentContext].
+ *
+ * Metadata handling: when [executeTool] is called with a [ToolCallMetadata] argument, this environment
+ * collects metadata contributions from every feature that registered a handler via
+ * [ai.koog.agents.core.feature.pipeline.AIAgentPipelineAPI.provideToolCallMetadata] and merges them with
+ * the caller-supplied metadata. On key collision, the caller's value wins, so an explicit call-site
+ * override is never silently replaced by a feature contribution. The merged metadata is then passed to
+ * the wrapped environment, which threads it into [ai.koog.agents.core.tools.Tool.execute].
  *
  * @constructor Constructs a new instance of [ContextualAgentEnvironment] with a decorated [environment] and a
  * contextual [context].
@@ -34,7 +42,13 @@ public class ContextualAgentEnvironment(
         private val logger = KotlinLogging.logger { }
     }
 
-    override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+    override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult =
+        executeTool(toolCall, ToolCallMetadata.EMPTY)
+
+    override suspend fun executeTool(
+        toolCall: Message.Tool.Call,
+        metadata: ToolCallMetadata,
+    ): ReceivedToolResult {
         @OptIn(ExperimentalUuidApi::class)
         val eventId = Uuid.random().toString()
         val toolDescription = context.llm.toolRegistry.getToolOrNull(toolCall.tool)?.descriptor?.description
@@ -92,7 +106,22 @@ public class ContextualAgentEnvironment(
             context = context
         )
 
-        val toolResult = environment.executeTool(toolCall)
+        val featureMetadata = context.pipeline.collectToolCallMetadata(
+            eventId = eventId,
+            executionInfo = context.executionInfo,
+            runId = context.runId,
+            toolCallId = toolCall.id,
+            toolName = toolCall.tool,
+            toolDescription = toolDescription,
+            toolArgs = toolArgs,
+            context = context
+        )
+
+        // Caller-supplied metadata wins on key collision, so an explicit call-site override is never
+        // silently replaced by a feature contribution.
+        val mergedMetadata = featureMetadata + metadata
+
+        val toolResult = environment.executeTool(toolCall, mergedMetadata)
         processToolResult(eventId, context.executionInfo, toolResult)
 
         logger.trace {

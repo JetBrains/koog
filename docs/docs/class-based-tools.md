@@ -97,6 +97,22 @@ After implementing your tool, you need to add it to a tool registry and then use
 
 For more details, see [API reference](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool/index.html).
 
+#### Receiving per-call metadata
+
+Tools can read caller- and feature-contributed metadata by overriding the second `execute` overload. This is a side channel designed for cross-cutting context such as a distributed-tracing span id or a correlation id, and it does not affect the tool's argument schema or the data sent to the LLM.
+
+```kotlin
+override suspend fun execute(args: Args, metadata: ToolCallMetadata): Int {
+    val traceSpanId = metadata["trace.span.id"] as? String
+    // ... use traceSpanId
+    return execute(args)
+}
+```
+
+Callers can pass metadata through `SafeTool.execute(args, serializer, metadata)` or directly through `AIAgentEnvironment.executeTool(toolCall, metadata)`. Features can contribute metadata for every tool call during installation by calling `pipeline.provideToolCallMetadata(this) { eventContext -> mapOf(...) }`. Caller-supplied metadata always wins over feature contributions on key collision.
+
+Existing tools that only override `execute(args)` continue to work unchanged: the default implementation of the metadata-aware overload delegates to the legacy path.
+
 ### SimpleTool class (Kotlin)
 
 The [`SimpleTool<Args>`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-simple-tool/index.html) abstract class extends `Tool<Args, ToolResult.Text>` and simplifies the creation of tools that return text results.
