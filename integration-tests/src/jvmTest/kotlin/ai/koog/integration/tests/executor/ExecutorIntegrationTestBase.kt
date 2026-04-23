@@ -1190,7 +1190,6 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
-        
         assumeTrue(
             model != GoogleModels.Gemini3_Pro_Preview,
             "KG-768 GoogleLLMClient.executeStreaming() may hang because the stream never completes with End frame"
