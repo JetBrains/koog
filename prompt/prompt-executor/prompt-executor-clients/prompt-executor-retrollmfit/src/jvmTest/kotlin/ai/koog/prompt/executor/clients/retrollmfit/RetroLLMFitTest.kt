@@ -199,7 +199,7 @@ class RetroLLMFitTest {
 
     @Test
     fun testMissingPromptFieldAnnotationThrows() {
-        val ex = assertFailsWith<IllegalStateException> {
+        val ex = assertFailsWith<IllegalArgumentException> {
             RetroLLMFit.create<NoPromptFieldRequest, TestResponse>()
         }
         assertTrue(ex.message!!.contains("@PromptField"), "Error should mention @PromptField, was: ${ex.message}")
@@ -207,7 +207,7 @@ class RetroLLMFitTest {
 
     @Test
     fun testMissingResponseTextFieldAnnotationThrows() {
-        val ex = assertFailsWith<IllegalStateException> {
+        val ex = assertFailsWith<IllegalArgumentException> {
             RetroLLMFit.create<TestRequest, NoTextFieldResponse>()
         }
         assertTrue(ex.message!!.contains("@ResponseTextField"), "Error should mention @ResponseTextField, was: ${ex.message}")
