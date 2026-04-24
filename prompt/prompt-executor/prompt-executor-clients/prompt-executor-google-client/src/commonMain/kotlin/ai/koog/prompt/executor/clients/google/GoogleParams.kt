@@ -4,6 +4,46 @@ import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.json.JsonElement
 
+/**
+ * Controls grounding with Google Search for Gemini models.
+ *
+ * Grounding augments model responses with real-time information from Google Search.
+ * Use [GoogleSearch] for Gemini 2.0+ models, [GoogleSearchRetrieval] for Gemini 1.5 models.
+ *
+ * ### Example:
+ * ```kotlin
+ * val prompt = prompt("search") { user("Who won Euro 2024?") }
+ * val response = executor.execute(prompt, GoogleModels.Gemini2_5Flash,
+ *     params = GoogleParams(groundingConfig = GoogleGroundingConfig.GoogleSearch))
+ * ```
+ */
+public sealed class GoogleGroundingConfig {
+
+    /**
+     * Enables grounding via the native `google_search` tool.
+     * Supported by Gemini 2.0+ models.
+     */
+    public data object GoogleSearch : GoogleGroundingConfig()
+
+    /**
+     * Enables grounding via `googleSearchRetrieval` with optional dynamic retrieval.
+     * Supported by Gemini 1.5 models.
+     *
+     * @property dynamicThreshold Confidence threshold in [0.0, 1.0] below which
+     *   the model will trigger a retrieval request. Lower values retrieve more often.
+     *   Defaults to the API default when null.
+     */
+    public data class GoogleSearchRetrieval(
+        val dynamicThreshold: Double? = null,
+    ) : GoogleGroundingConfig() {
+        init {
+            require(dynamicThreshold == null || dynamicThreshold in 0.0..1.0) {
+                "dynamicThreshold must be in [0.0, 1.0], but was $dynamicThreshold"
+            }
+        }
+    }
+}
+
 internal fun LLMParams.toGoogleParams(): GoogleParams {
     if (this is GoogleParams) return this
     return GoogleParams(
@@ -35,6 +75,8 @@ internal fun LLMParams.toGoogleParams(): GoogleParams {
  * @property topK The maximum number of tokens to consider when sampling.
  * @property thinkingConfig Controls whether the model should expose its chain-of-thought
  * and how many tokens it may spend on it (see [GoogleThinkingConfig]).
+ * @property groundingConfig Enables grounding with Google Search to augment responses with
+ * real-time information (see [GoogleGroundingConfig]). Requires [ai.koog.prompt.llm.LLMCapability.Grounding].
  */
 @Suppress("LongParameterList")
 public class GoogleParams(
@@ -49,6 +91,7 @@ public class GoogleParams(
     public val topP: Double? = null,
     public val topK: Int? = null,
     public val thinkingConfig: GoogleThinkingConfig? = null,
+    public val groundingConfig: GoogleGroundingConfig? = null,
 ) : LLMParams(
     temperature,
     maxTokens,
@@ -92,6 +135,7 @@ public class GoogleParams(
         topP = topP,
         topK = topK,
         thinkingConfig = thinkingConfig,
+        groundingConfig = groundingConfig,
     )
 
     /**
@@ -109,6 +153,7 @@ public class GoogleParams(
         topP: Double? = this.topP,
         topK: Int? = this.topK,
         thinkingConfig: GoogleThinkingConfig? = this.thinkingConfig,
+        groundingConfig: GoogleGroundingConfig? = this.groundingConfig,
     ): GoogleParams = GoogleParams(
         temperature = temperature,
         maxTokens = maxTokens,
@@ -121,6 +166,7 @@ public class GoogleParams(
         topP = topP,
         topK = topK,
         thinkingConfig = thinkingConfig,
+        groundingConfig = groundingConfig,
     )
 
     override fun equals(other: Any?): Boolean = when {
@@ -137,13 +183,14 @@ public class GoogleParams(
                 additionalProperties == other.additionalProperties &&
                 topP == other.topP &&
                 topK == other.topK &&
-                thinkingConfig == other.thinkingConfig
+                thinkingConfig == other.thinkingConfig &&
+                groundingConfig == other.groundingConfig
     }
 
     override fun hashCode(): Int = listOf(
         temperature, maxTokens, numberOfChoices,
         speculation, schema, toolChoice, user,
-        additionalProperties, topP, topK, thinkingConfig
+        additionalProperties, topP, topK, thinkingConfig, groundingConfig
     ).fold(0) { acc, element ->
         31 * acc + (element?.hashCode() ?: 0)
     }
@@ -161,6 +208,7 @@ public class GoogleParams(
         append(", topP=$topP")
         append(", topK=$topK")
         append(", thinkingConfig=$thinkingConfig")
+        append(", groundingConfig=$groundingConfig")
         append(")")
     }
 }

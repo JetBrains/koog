@@ -402,10 +402,37 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             null -> null
         }
 
+        val groundingTool: GoogleTool? = googleParams.groundingConfig?.let { config ->
+            require(model.supports(LLMCapability.Grounding)) {
+                "Model ${model.id} does not support grounding"
+            }
+            when (config) {
+                is GoogleGroundingConfig.GoogleSearch -> GoogleTool(googleSearch = buildJsonObject {})
+                is GoogleGroundingConfig.GoogleSearchRetrieval -> GoogleTool(
+                    googleSearchRetrieval = buildJsonObject {
+                        if (config.dynamicThreshold != null) {
+                            put("dynamicRetrievalConfig", buildJsonObject {
+                                // MODE_DYNAMIC is required for the threshold to take effect;
+                                // without it the API uses MODE_UNSPECIFIED and ignores the threshold.
+                                put("mode", "MODE_DYNAMIC")
+                                put("dynamicThreshold", config.dynamicThreshold)
+                            })
+                        }
+                    }
+                )
+            }
+        }
+
+        val allTools = when {
+            groundingTool != null && googleTools != null -> googleTools + groundingTool
+            groundingTool != null -> listOf(groundingTool)
+            else -> googleTools
+        }
+
         return GoogleRequest(
             contents = contents,
             systemInstruction = googleSystemInstruction,
-            tools = googleTools,
+            tools = allTools,
             generationConfig = generationConfig,
             toolConfig = GoogleToolConfig(functionCallingConfig),
         )
