@@ -1,6 +1,7 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
@@ -8,6 +9,7 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ContextualAgentEnvironment
@@ -24,6 +26,8 @@ import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.reflect.KType
 import kotlin.time.Clock
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Represents an implementation of an AI agent that provides functionalities to execute prompts,
@@ -60,7 +64,7 @@ public open class GraphAIAgent<Input, Output>(
     public val clock: Clock = Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
-) : AIAgentBase<Input, Output, AIAgentGraphContextBase>(
+) : AIAgent<Input, Output>(
     logger = logger,
     id = id,
 ) {
@@ -132,7 +136,13 @@ public open class GraphAIAgent<Input, Output>(
         FeatureContext(this).installFeatures()
     }
 
-    override suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentGraphContextBase {
+    override fun createSession(sessionId: String?): AIAgentRunSession<Input, Output, out AIAgentContext> {
+        @OptIn(ExperimentalUuidApi::class)
+        val runId = sessionId ?: Uuid.random().toString()
+        return AIAgentRunSessionImpl(runId, logger, this, strategy, pipeline, ::prepareContext)
+    }
+
+    private suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentGraphContextBase {
         val stateManager = AIAgentStateManager()
         val storage = AIAgentStorage()
 

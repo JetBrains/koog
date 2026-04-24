@@ -6,7 +6,10 @@ import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.session.AIAgentRunSession
+import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
@@ -14,6 +17,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.io.Closeable
+import io.github.oshai.kotlinlogging.KLogger
 import kotlin.jvm.JvmStatic
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
@@ -21,12 +25,20 @@ import kotlin.uuid.ExperimentalUuidApi
 /**
  * Represents a basic interface for AI agent.
  */
-public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
+public expect abstract class AIAgent<Input, Output>(
+    logger: KLogger,
+    id: String?
+) : Closeable {
 
     /**
      * Represents the unique identifier for the AI agent.
      */
-    public abstract val id: String
+    public val id: String
+
+    /**
+     * Logger instance used for logging messages and events specific to this agent.
+     */
+    internal open val logger: KLogger
 
     /**
      * The configuration for the AI agent.
@@ -34,12 +46,28 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
     public abstract val agentConfig: AIAgentConfig
 
     /**
+     * The execution strategy defining how the agent processes input and produces output.
+     */
+    public abstract val strategy: AIAgentStrategy<Input, Output, *>
+
+    /**
+     * Represents the pipeline used by the AI agent for processing tasks or data.
+     *
+     * This abstract property defines the structure or sequence of operations
+     * within the AI agent's pipeline. It serves as the core mechanism for
+     * executing workflows, handling inputs, and generating outputs in the
+     * AI agent's functionality.
+     */
+    @InternalAgentsApi
+    public abstract val pipeline: AIAgentPipeline
+
+    /**
      * Executes the AI agent with the given input and retrieves the resulting output.
      *
      * @param agentInput The input for the agent.
      * @return The output produced by the agent.
      */
-    public abstract suspend fun run(agentInput: Input, sessionId: String? = null): Output
+    public suspend fun run(agentInput: Input, sessionId: String? = null): Output
 
     /**
      * Creates a new session for executing the agent with the given input.
@@ -51,6 +79,18 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
      * @return A session instance that can be used to run the agent with specific input and context.
      */
     public abstract fun createSession(sessionId: String? = null): AIAgentRunSession<Input, Output, out AIAgentContext>
+
+    /**
+     * Closes the AI Agent and performs necessary cleanup operations.
+     *
+     * This method is a suspending function that ensures that the AI Agent's resources are released
+     * when it is no longer needed. It notifies the pipeline of the agent's closure and ensures
+     * that any associated features or stream providers are properly closed.
+     *
+     * Overrides the `close` method to implement agent-specific shutdown logic.
+     */
+    // TODO: Delete Closeable interface from [AIAgent] declaration.
+    override suspend fun close()
 
     /**
      * The companion object for the AIAgent class, providing functionality to instantiate an AI agent

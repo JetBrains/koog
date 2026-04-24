@@ -1,11 +1,13 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ContextualAgentEnvironment
@@ -19,6 +21,8 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.time.Clock
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Represents the core AI agent for processing input and generating output using
@@ -45,7 +49,7 @@ public class FunctionalAIAgent<Input, Output>(
     public val clock: Clock = Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
-) : AIAgentBase<Input, Output, AIAgentFunctionalContext>(
+) : AIAgent<Input, Output>(
     logger = logger,
     id = id,
 ) {
@@ -78,7 +82,13 @@ public class FunctionalAIAgent<Input, Output>(
         FeatureContext(this).installFeatures()
     }
 
-    override suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentFunctionalContext {
+    override fun createSession(sessionId: String?): AIAgentRunSession<Input, Output, out AIAgentContext> {
+        @OptIn(ExperimentalUuidApi::class)
+        val runId = sessionId ?: Uuid.random().toString()
+        return AIAgentRunSessionImpl(runId, logger, this, strategy, pipeline, ::prepareContext)
+    }
+
+    private suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentFunctionalContext {
         val environment = prepareEnvironment()
         val executionInfo = AgentExecutionInfo(parent = null, partName = id)
 
