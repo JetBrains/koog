@@ -13,6 +13,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 import java.util.concurrent.Executors
 import kotlin.test.assertNotNull
@@ -40,6 +41,19 @@ class JavaAPIAgentBuilderTest {
         // Test that AIAgent.builder() static method is accessible
         val builder = AIAgent.builder()
         builder.shouldNotBeNull()
+    }
+
+    @Test
+    fun testAIAgentConfigBuilderDefaultsToKotlinxSerializer() {
+        // KG-751: builder() must default to KotlinxSerializer, not JacksonSerializer,
+        // so that KSerializerTypeToken-based tool arg decoding works out of the box.
+        val config = AIAgentConfig.builder()
+            .model(OpenAIModels.Chat.GPT4o)
+            .prompt(builder("test").system("sys").build())
+            .maxAgentIterations(10)
+            .build()
+
+        config.serializer.shouldBeInstanceOf<KotlinxSerializer>()
     }
 
     @Test
