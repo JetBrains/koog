@@ -252,6 +252,9 @@ internal sealed interface GoogleData {
 @Serializable
 internal class GoogleTool(
     val functionDeclarations: List<GoogleFunctionDeclaration>? = null,
+    @SerialName("google_search")
+    val googleSearch: JsonObject? = null,
+    val googleSearchRetrieval: JsonObject? = null,
 )
 
 /**

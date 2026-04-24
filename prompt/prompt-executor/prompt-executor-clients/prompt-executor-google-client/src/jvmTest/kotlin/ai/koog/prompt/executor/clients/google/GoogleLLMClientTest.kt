@@ -664,4 +664,97 @@ class GoogleLLMClientTest {
         val filePart = (responses[1] as Message.Assistant).parts.single() as ContentPart.Image
         filePart.format shouldBe "png"
     }
+
+    @Test
+    fun `createGoogleRequest injects google_search tool when GoogleSearch grounding is set`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Flash
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(
+                messages = emptyList(),
+                id = "id",
+                params = GoogleParams(groundingConfig = GoogleGroundingConfig.GoogleSearch)
+            ),
+            model = model,
+            tools = emptyList()
+        )
+
+        val tools = request.tools
+        tools shouldNotBe null
+        tools!!.shouldHaveSize(1)
+        tools.first().googleSearch shouldNotBe null
+        tools.first().functionDeclarations shouldBe null
+    }
+
+    @Test
+    fun `createGoogleRequest injects googleSearchRetrieval tool with threshold when set`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Flash
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(
+                messages = emptyList(),
+                id = "id",
+                params = GoogleParams(groundingConfig = GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = 0.3))
+            ),
+            model = model,
+            tools = emptyList()
+        )
+
+        val tools = request.tools
+        tools shouldNotBe null
+        tools!!.shouldHaveSize(1)
+        val retrieval = tools.first().googleSearchRetrieval
+        retrieval shouldNotBe null
+        val retrievalConfig = retrieval!!["dynamicRetrievalConfig"]?.jsonObject
+        retrievalConfig shouldNotBe null
+        retrievalConfig!!["mode"]?.jsonPrimitive?.content shouldBe "MODE_DYNAMIC"
+        retrievalConfig["dynamicThreshold"]?.jsonPrimitive?.content shouldBe "0.3"
+    }
+
+    @Test
+    fun `createGoogleRequest merges grounding tool with function tools`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Flash
+
+        val tool = ToolDescriptor(name = "myTool", description = "desc", requiredParameters = emptyList())
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(
+                messages = emptyList(),
+                id = "id",
+                params = GoogleParams(groundingConfig = GoogleGroundingConfig.GoogleSearch)
+            ),
+            model = model,
+            tools = listOf(tool)
+        )
+
+        val tools = request.tools
+        tools shouldNotBe null
+        tools!!.shouldHaveSize(2)
+        val hasGrounding = tools.any { it.googleSearch != null }
+        val hasFunctions = tools.any { it.functionDeclarations != null }
+        hasGrounding shouldBe true
+        hasFunctions shouldBe true
+    }
+
+    @Test
+    fun `createGoogleRequest throws when grounding set on model that does not support it`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val modelWithoutGrounding = GoogleModels.Embeddings.GeminiEmbedding001
+
+        val result = runCatching {
+            client.createGoogleRequest(
+                prompt = Prompt(
+                    messages = emptyList(),
+                    id = "id",
+                    params = GoogleParams(groundingConfig = GoogleGroundingConfig.GoogleSearch)
+                ),
+                model = modelWithoutGrounding,
+                tools = emptyList()
+            )
+        }
+        result.isFailure shouldBe true
+    }
 }

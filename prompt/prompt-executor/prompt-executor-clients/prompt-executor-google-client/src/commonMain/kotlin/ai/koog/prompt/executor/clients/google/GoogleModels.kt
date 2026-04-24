@@ -64,10 +64,11 @@ public object GoogleModels : LLModelDefinitions {
     )
 
     /**
-     * Full capabilities including standard, multimodal, tools, native structured output
+     * Full capabilities including standard, multimodal, tools, native structured output, and grounding
      */
     private val fullCapabilities: List<LLMCapability> =
-        standardCapabilities + multimodalCapabilities + toolCapabilities + structuredOutputCapabilities
+        standardCapabilities + multimodalCapabilities + toolCapabilities + structuredOutputCapabilities +
+            listOf(LLMCapability.Grounding)
 
     /**
      * Gemini 2.0 Flash is a fast, efficient model for a wide range of tasks.
