@@ -44,6 +44,7 @@ val excluded = setOf(
 
     ":serialization:serialization-test",
     ":serialization:serialization-jackson",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-retrollmfit", // annotation-driven factory, optional
 
     ":koog-spring-ai",
     ":koog-spring-ai:koog-spring-ai-common",
