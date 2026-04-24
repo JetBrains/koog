@@ -9,7 +9,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.utils.RWLock
+import ai.koog.agents.lock.RWLock
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.TypeToken
 

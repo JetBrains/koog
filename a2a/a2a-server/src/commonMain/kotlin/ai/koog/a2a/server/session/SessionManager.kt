@@ -5,9 +5,9 @@ import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
 import ai.koog.a2a.server.tasks.TaskStorage
-import ai.koog.a2a.utils.KeyedMutex
-import ai.koog.a2a.utils.RWLock
-import ai.koog.a2a.utils.withLock
+import ai.koog.agents.lock.KeyedMutex
+import ai.koog.agents.lock.RWLock
+import ai.koog.agents.lock.withLock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.CoroutineScope

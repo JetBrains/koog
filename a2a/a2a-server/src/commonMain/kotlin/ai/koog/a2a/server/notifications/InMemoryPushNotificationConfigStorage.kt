@@ -2,7 +2,7 @@ package ai.koog.a2a.server.notifications
 
 import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.model.PushNotificationConfig
-import ai.koog.a2a.utils.RWLock
+import ai.koog.agents.lock.RWLock
 
 /**
  * In-memory implementation of [PushNotificationConfigStorage] using a thread-safe map.

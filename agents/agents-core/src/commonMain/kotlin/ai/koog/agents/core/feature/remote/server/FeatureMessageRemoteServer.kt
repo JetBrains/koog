@@ -2,7 +2,7 @@ package ai.koog.agents.core.feature.remote.server
 
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.remote.server.config.ServerConnectionConfig
-import ai.koog.agents.core.utils.ExceptionExtractor.rootCause
+import ai.koog.agents.exception.rootCause
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCallPipeline
@@ -188,7 +188,7 @@ public class FeatureMessageRemoteServer(
         } catch (t: CancellationException) {
             // Server start() method starts a coroutine job canceled in case of IOException.
             // The result is that we get a JobCancellationException here in case of any error on server start.
-            // Get a root cause to know a real exception that case server to stop.
+            // Get a root cause to know a real exception that cases server to stop.
             val rootCause = t.rootCause
             logger.error(t) {
                 "Feature Message Remote Server. Starting server on port $port job was cancelled. Root exception: $rootCause"
