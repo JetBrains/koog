@@ -757,4 +757,25 @@ class GoogleLLMClientTest {
         }
         result.isFailure shouldBe true
     }
+
+    @Test
+    fun `GoogleSearchRetrieval rejects dynamicThreshold above 1_0`() {
+        val result = runCatching { GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = 1.5) }
+        result.isFailure shouldBe true
+        result.exceptionOrNull()!!.message shouldBe "dynamicThreshold must be in [0.0, 1.0], but was 1.5"
+    }
+
+    @Test
+    fun `GoogleSearchRetrieval rejects negative dynamicThreshold`() {
+        val result = runCatching { GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = -0.1) }
+        result.isFailure shouldBe true
+    }
+
+    @Test
+    fun `GoogleSearchRetrieval accepts null and boundary dynamicThreshold values`() {
+        GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = null)
+        GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = 0.0)
+        GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = 1.0)
+        GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = 0.5)
+    }
 }

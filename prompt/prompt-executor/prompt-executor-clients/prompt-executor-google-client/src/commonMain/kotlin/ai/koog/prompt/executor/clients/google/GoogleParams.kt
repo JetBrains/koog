@@ -35,7 +35,13 @@ public sealed class GoogleGroundingConfig {
      */
     public data class GoogleSearchRetrieval(
         val dynamicThreshold: Double? = null,
-    ) : GoogleGroundingConfig()
+    ) : GoogleGroundingConfig() {
+        init {
+            require(dynamicThreshold == null || dynamicThreshold in 0.0..1.0) {
+                "dynamicThreshold must be in [0.0, 1.0], but was $dynamicThreshold"
+            }
+        }
+    }
 }
 
 internal fun LLMParams.toGoogleParams(): GoogleParams {
