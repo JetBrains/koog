@@ -7,7 +7,7 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import kotlin.time.Clock
@@ -22,7 +22,7 @@ val testClock: Clock = object : Clock {
 fun createAgent(
     strategy: AIAgentGraphStrategy<String, String>,
     agentId: String = "test-agent-id",
-    executor: PromptExecutor? = null,
+    executor: HookablePromptExecutor? = null,
     promptId: String? = null,
     systemPrompt: String? = null,
     userPrompt: String? = null,

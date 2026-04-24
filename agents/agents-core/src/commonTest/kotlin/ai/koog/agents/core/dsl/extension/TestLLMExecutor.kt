@@ -3,9 +3,13 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.ModerateHook
+import ai.koog.prompt.executor.model.MultipleChoicesHook
+import ai.koog.prompt.executor.model.StreamingHook
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -15,7 +19,7 @@ import kotlinx.coroutines.flow.flow
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-class TestLLMExecutor : PromptExecutor() {
+class TestLLMExecutor : HookablePromptExecutor() {
     companion object {
         val testClock: Clock = object : Clock {
             override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
@@ -41,7 +45,7 @@ class TestLLMExecutor : PromptExecutor() {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: ExecuteHook?,
     ): List<Message.Response> {
         return listOf(handlePrompt(prompt))
     }
@@ -50,12 +54,19 @@ class TestLLMExecutor : PromptExecutor() {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: StreamingHook?,
     ): Flow<StreamFrame> = flow {
         handlePrompt(prompt).toStreamFrames().forEach { emit(it) }
     }
 
-    override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        hook: MultipleChoicesHook?,
+    ): List<LLMChoice> = throw UnsupportedOperationException("Multiple choices not supported")
+
+    override suspend fun moderate(prompt: Prompt, model: LLModel, hook: ModerateHook?): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed for TestLLMExecutor")
     }
 

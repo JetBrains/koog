@@ -3,12 +3,13 @@ package ai.koog.agents.features.eventHandler.feature
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
-import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
-import ai.koog.prompt.executor.model.InitialExecutionIntent
-import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.ModerateHook
+import ai.koog.prompt.executor.model.MultipleChoicesHook
+import ai.koog.prompt.executor.model.StreamingHook
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -17,26 +18,26 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlin.time.Clock
 
-class TestLLMExecutor(val clock: Clock) : PromptExecutor() {
-    override suspend fun execute(
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
-    ): List<Message.Response> =
-        executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.execute) { finalIntent ->
-            listOf(handlePrompt(finalIntent.prompt))
-        }
+class TestLLMExecutor(val clock: Clock) : HookablePromptExecutor() {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>, hook: ExecuteHook?): List<Message.Response> {
+        return listOf(handlePrompt(prompt))
+    }
 
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
-    ): Flow<StreamFrame> =
-        streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) { finalIntent ->
-            flow { handlePrompt(finalIntent.prompt).toStreamFrames().forEach { emit(it) } }
-        }
+        hook: StreamingHook?
+    ): Flow<StreamFrame> = flow {
+        handlePrompt(prompt).toStreamFrames().forEach { emit(it) }
+    }
+
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        hook: MultipleChoicesHook?
+    ): List<LLMChoice> = throw UnsupportedOperationException("Multiple choices not supported")
 
     private fun handlePrompt(prompt: Prompt): Message.Response {
         // For a compression test, return a summary
@@ -50,7 +51,11 @@ class TestLLMExecutor(val clock: Clock) : PromptExecutor() {
         return Message.Assistant("Default test response", metaInfo = ResponseMetaInfo.create(clock))
     }
 
-    override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
+    override suspend fun moderate(
+        prompt: Prompt,
+        model: LLModel,
+        hook: ModerateHook?
+    ): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed here")
     }
 

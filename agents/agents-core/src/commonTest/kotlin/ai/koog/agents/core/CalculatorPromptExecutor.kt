@@ -3,9 +3,13 @@ package ai.koog.agents.core
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.ModerateHook
+import ai.koog.prompt.executor.model.MultipleChoicesHook
+import ai.koog.prompt.executor.model.StreamingHook
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -19,7 +23,7 @@ import kotlinx.serialization.json.put
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-object CalculatorChatExecutor : PromptExecutor() {
+object CalculatorChatExecutor : HookablePromptExecutor() {
     private val json = Json {
         ignoreUnknownKeys = true
         allowStructuredMapKeys = true
@@ -35,7 +39,7 @@ object CalculatorChatExecutor : PromptExecutor() {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: ExecuteHook?,
     ): List<Message.Response> {
         val input = prompt.messages.filterIsInstance<Message.User>().joinToString("\n") { it.content }
         val numbers = input.split(Regex("[^0-9.]")).filter { it.isNotEmpty() }.map { it.toFloat() }
@@ -63,11 +67,11 @@ object CalculatorChatExecutor : PromptExecutor() {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: StreamingHook?,
     ): Flow<StreamFrame> =
         flow {
             try {
-                execute(prompt, model, tools).toStreamFrames().forEach { emit(it) }
+                execute(prompt, model, tools, null).toStreamFrames().forEach { emit(it) }
             } catch (t: CancellationException) {
                 throw t
             } catch (t: Throwable) {
@@ -75,7 +79,14 @@ object CalculatorChatExecutor : PromptExecutor() {
             }
         }
 
-    override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        hook: MultipleChoicesHook?,
+    ): List<LLMChoice> = throw UnsupportedOperationException("Multiple choices not supported")
+
+    override suspend fun moderate(prompt: Prompt, model: LLModel, hook: ModerateHook?): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed for CalculatorExecutor")
     }
 

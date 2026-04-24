@@ -4,7 +4,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
@@ -15,7 +15,7 @@ import ai.koog.serialization.kotlinx.KotlinxSerializer
  * Shared fluent configuration for agent service builders.
  */
 public abstract class AIAgentServiceBuilderBase<Self : AIAgentServiceBuilderBase<Self>> internal constructor(
-    protected var promptExecutor: PromptExecutor?,
+    protected var promptExecutor: HookablePromptExecutor?,
     protected var toolRegistry: ToolRegistry,
     protected var config: AIAgentConfig,
 ) {
@@ -43,7 +43,7 @@ public abstract class AIAgentServiceBuilderBase<Self : AIAgentServiceBuilderBase
 
     protected abstract fun self(): Self
 
-    protected val validatedPromptExecutor: PromptExecutor
+    protected val validatedPromptExecutor: HookablePromptExecutor
         get() = requireNotNull(promptExecutor) { "PromptExecutor must be set" }
 
     protected val validatedConfig: AIAgentConfig
@@ -62,7 +62,7 @@ public abstract class AIAgentServiceBuilderBase<Self : AIAgentServiceBuilderBase
      * and interacting with language models.
      * @return The current builder instance for chaining additional configurations.
      */
-    public fun promptExecutor(promptExecutor: PromptExecutor): Self = self().apply {
+    public fun promptExecutor(promptExecutor: HookablePromptExecutor): Self = self().apply {
         this.promptExecutor = promptExecutor
     }
 

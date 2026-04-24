@@ -9,36 +9,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-
-/**
- * Container for lifecycle hook sets covering each executor operation.
- *
- * Pass an instance via the `hooks` parameter on any [PromptExecutorAPI] method.
- * The executor invokes the appropriate sub-hook at each lifecycle point, allowing callers
- * to observe or alter the effective prompt and model without wrapping the executor.
- *
- * By default, all hooks are No-Ops. Overriding each hook is opt-in.
- */
-public interface PromptExecutorHooks {
-
-    /** Hooks for [PromptExecutorAPI.execute]. */
-    public val execute: SimpleExecutorHook<List<Message.Response>>
-        get() = object : SimpleExecutorHook<List<Message.Response>> {}
-
-    /** Hooks for [PromptExecutorAPI.executeMultipleChoices]. */
-    public val multipleChoices: SimpleExecutorHook<List<LLMChoice>>
-        get() = object : SimpleExecutorHook<List<LLMChoice>> {}
-
-    /** Hooks for [PromptExecutorAPI.moderate]. */
-    public val moderation: SimpleExecutorHook<ModerationResult>
-        get() = object : SimpleExecutorHook<ModerationResult> {}
-
-    /** Hooks for [PromptExecutorAPI.executeStreaming]. */
-    public val streaming: StreamingExecutorHook
-        get() = object : StreamingExecutorHook {}
-}
 
 /**
  * Base lifecycle callbacks shared by all executor hook types.
@@ -49,10 +19,10 @@ public interface PromptExecutorHooks {
  * 3. [onFailure] — if the LLM call throws.
  *
  * Subtypes add operation-specific completion callbacks: [SimpleExecutorHook.onCompleted]
- * for non-streaming operations and [StreamingExecutorHook.onFrame] /
- * [StreamingExecutorHook.onCompleted] for streaming.
+ * for non-streaming operations and [StreamingHook.onFrame] /
+ * [StreamingHook.onCompleted] for streaming.
  */
-public interface ExecutorHook {
+public sealed interface ExecutorHook {
 
     /**
      * Called when no LLM client can be found for the model requested in [intent]
@@ -80,8 +50,7 @@ public interface ExecutorHook {
 /**
  * Extends [ExecutorHook] with a completion callback for operations that return a single result [T].
  *
- * Used for [PromptExecutorHooks.execute], [PromptExecutorHooks.multipleChoices],
- * and [PromptExecutorHooks.moderation].
+ * Used for [ExecuteHook], [MultipleChoicesHook], and [ModerateHook].
  */
 public interface SimpleExecutorHook<T> : ExecutorHook {
 
@@ -92,12 +61,24 @@ public interface SimpleExecutorHook<T> : ExecutorHook {
 }
 
 /**
- * Extends [ExecutorHook] with per-frame and completion callbacks for streaming operations.
- *
- * Used for [PromptExecutorHooks.streaming].
- * [onCompleted] is always invoked — even after [onFailure].
+ * Hook used for [HookablePromptExecutor.execute]
  */
-public interface StreamingExecutorHook : ExecutorHook {
+public interface ExecuteHook : SimpleExecutorHook<List<Message.Response>>
+
+/**
+ * Hook used for [HookablePromptExecutor.executeMultipleChoices]
+ */
+public interface MultipleChoicesHook : SimpleExecutorHook<List<LLMChoice>>
+
+/**
+ * Hook used for [HookablePromptExecutor.moderate]
+ */
+public interface ModerateHook : SimpleExecutorHook<ModerationResult>
+
+/**
+ * Hook used for [HookablePromptExecutor.executeStreaming]
+ */
+public interface StreamingHook : ExecutorHook {
 
     /**
      * Called for each [StreamFrame] emitted by the model before the frame is forwarded to the collector.
@@ -173,104 +154,19 @@ public class ResolvedExecutionIntent private constructor(
  */
 public sealed interface ExecutionArgOverrides {
 
-    /**
-     * Merges this override with [nestedOverrides] produced by an inner hook call.
-     * The innermost (most specific) override wins.
-     */
-    public fun combineWith(nestedOverrides: ExecutionArgOverrides): ExecutionArgOverrides
-
     /** Signals that no argument substitution is needed; the original prompt and tools are used as-is. */
-    public object NoOverrides : ExecutionArgOverrides {
-        override fun combineWith(nestedOverrides: ExecutionArgOverrides): ExecutionArgOverrides {
-            when (nestedOverrides) {
-                is NoOverrides -> return this
-                is UseDifferentPrompt -> return nestedOverrides
-            }
-        }
-    }
+    public object NoOverrides : ExecutionArgOverrides
 
     /** Signals that [prompt] should replace the originally requested prompt for the LLM call. */
-    public data class UseDifferentPrompt(val prompt: Prompt) : ExecutionArgOverrides {
-        override fun combineWith(nestedOverrides: ExecutionArgOverrides): ExecutionArgOverrides {
-            when (nestedOverrides) {
-                is NoOverrides -> return this
-                is UseDifferentPrompt -> return nestedOverrides
-            }
-        }
-    }
+    public data class UseDifferentPrompt(val prompt: Prompt) : ExecutionArgOverrides
 }
 
 /**
- * Shared hook-lifecycle implementations used by some [PromptExecutor] subclasses.
- *
- * Each helper encapsulates the repetitive scaffolding around a single LLM call:
- * resolving [ExecutionArgOverrides] from [ExecutorHook.beforeExecution], constructing
- * [ResolvedExecutionIntent], running the actual call inside a try/catch, and dispatching
- * the appropriate completion or failure callback.
- *
- * Executors call these helpers rather than duplicating the lifecycle sequence themselves,
- * keeping each `execute` / `executeStreaming` override focused on client selection and
- * the LLM call itself.
+ * Combines this [ExecutionArgOverrides] with [nested] overrides from an inner hook.
+ * Nested overrides take precedence: if [nested] is [ExecutionArgOverrides.UseDifferentPrompt], it wins;
+ * otherwise this (outer) override is used unchanged.
  */
-public object ExecutorHooksHelper {
-
-    /**
-     * Runs [block] with the full [SimpleExecutorHook] lifecycle:
-     * - resolves overrides via [SimpleExecutorHook.beforeExecution]
-     * - builds [ResolvedExecutionIntent],
-     * - calls the block, and notifies [SimpleExecutorHook.onCompleted] or [SimpleExecutorHook.onFailure].
-     *
-     * The [effectiveModel] parameter should be populated by [PromptExecutor] instances that support dynamic model selection
-     * (ie [ai.koog.prompt.executor.llms.MultiLLMPromptExecutor.fallback]).
-     * If given [PromptExecutor] implementation does not support dynamic model selection, it should use initially provided model - [InitialExecutionIntent.model]
-     */
-    public suspend fun <T> executeWithHook(
-        initialIntent: InitialExecutionIntent,
-        effectiveModel: LLModel = initialIntent.model,
-        hook: SimpleExecutorHook<T>?,
-        block: suspend (ResolvedExecutionIntent) -> T
-    ): T {
-        val overrides = hook?.beforeExecution(initialIntent, effectiveModel) ?: NoOverrides
-        val finalIntent = ResolvedExecutionIntent(initialIntent, overrides)
-        val result = try {
-            block(finalIntent)
-        } catch (e: Throwable) {
-            hook?.onFailure(finalIntent, effectiveModel, e)
-            throw e
-        }
-        hook?.onCompleted(finalIntent, effectiveModel, result)
-        return result
-    }
-
-    /**
-     * Runs [block] with the full [StreamingExecutorHook] lifecycle:
-     * - resolves overrides via [StreamingExecutorHook.beforeExecution]
-     * - builds [ResolvedExecutionIntent],
-     * - collects the inner flow while forwarding each frame to [StreamingExecutorHook.onFrame],
-     * - always calls [StreamingExecutorHook.onCompleted] on both success and failure.
-     *
-     * The [effectiveModel] parameter should be populated by [PromptExecutor] instances that support dynamic model selection
-     * (ie [ai.koog.prompt.executor.llms.MultiLLMPromptExecutor.fallback]).
-     * If given [PromptExecutor] implementation does not support dynamic model selection, it should use initially provided model - [InitialExecutionIntent.model]
-     */
-    public fun streamingWithHook(
-        initialIntent: InitialExecutionIntent,
-        effectiveModel: LLModel = initialIntent.model,
-        hook: StreamingExecutorHook?,
-        block: (ResolvedExecutionIntent) -> Flow<StreamFrame>
-    ): Flow<StreamFrame> = flow {
-        val overrides = hook?.beforeExecution(initialIntent, effectiveModel) ?: NoOverrides
-        val finalIntent = ResolvedExecutionIntent(initialIntent, overrides)
-        try {
-            block(finalIntent).collect { frame ->
-                hook?.onFrame(finalIntent, effectiveModel, frame)
-                emit(frame)
-            }
-            hook?.onCompleted(finalIntent, effectiveModel)
-        } catch (e: Throwable) {
-            hook?.onFailure(finalIntent, effectiveModel, e)
-            hook?.onCompleted(finalIntent, effectiveModel)
-            throw e
-        }
-    }
+public fun ExecutionArgOverrides.combineWith(nested: ExecutionArgOverrides): ExecutionArgOverrides = when (nested) {
+    is ExecutionArgOverrides.NoOverrides -> this
+    is ExecutionArgOverrides.UseDifferentPrompt -> nested
 }

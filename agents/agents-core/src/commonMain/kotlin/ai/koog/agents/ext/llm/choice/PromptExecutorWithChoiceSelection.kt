@@ -3,8 +3,11 @@ package ai.koog.agents.ext.llm.choice
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.ModerateHook
+import ai.koog.prompt.executor.model.MultipleChoicesHook
+import ai.koog.prompt.executor.model.StreamingHook
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -21,23 +24,22 @@ import kotlinx.coroutines.flow.Flow
  * 1. Generating multiple response choices using the underlying executor
  * 2. Applying the specified selection strategy to choose the most suitable responses
  *
- * @param executor The underlying `PromptExecutor` responsible for performing the prompt execution
+ * @param executor The underlying `HookablePromptExecutor` responsible for performing the prompt execution
  *                 and generating multiple response choices.
  * @param choiceSelectionStrategy The strategy implementation that defines the logic for
  *                               selecting and filtering the generated response choices.
  */
 public class PromptExecutorWithChoiceSelection(
-    private val executor: PromptExecutor,
+    private val executor: HookablePromptExecutor,
     private val choiceSelectionStrategy: ChoiceSelectionStrategy,
-) : PromptExecutor() {
+) : HookablePromptExecutor() {
     override suspend fun execute(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: ExecuteHook?
     ): List<Message.Response> {
-        val choices = executor.executeMultipleChoices(prompt, model, tools, hooks)
-
+        val choices = executor.executeMultipleChoices(prompt, model, tools, null)
         return choiceSelectionStrategy.choose(prompt, choices)
     }
 
@@ -45,14 +47,14 @@ public class PromptExecutorWithChoiceSelection(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
-    ): Flow<StreamFrame> = executor.executeStreaming(prompt, model, tools, hooks)
+        hook: StreamingHook?
+    ): Flow<StreamFrame> = executor.executeStreaming(prompt, model, tools, hook)
 
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel,
-        hooks: PromptExecutorHooks?
-    ): ModerationResult = executor.moderate(prompt, model, hooks)
+        hook: ModerateHook?
+    ): ModerationResult = executor.moderate(prompt, model, hook)
 
     override fun close(): Unit = executor.close()
 
@@ -62,6 +64,6 @@ public class PromptExecutorWithChoiceSelection(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
-    ): List<LLMChoice> = executor.executeMultipleChoices(prompt, model, tools, hooks)
+        hook: MultipleChoicesHook?
+    ): List<LLMChoice> = executor.executeMultipleChoices(prompt, model, tools, hook)
 }

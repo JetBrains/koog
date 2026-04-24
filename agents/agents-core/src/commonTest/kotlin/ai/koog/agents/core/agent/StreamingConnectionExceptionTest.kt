@@ -1,5 +1,6 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
@@ -11,11 +12,13 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
-import ai.koog.prompt.executor.model.InitialExecutionIntent
-import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.ModerateHook
+import ai.koog.prompt.executor.model.MultipleChoicesHook
+import ai.koog.prompt.executor.model.StreamingHook
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.IncompleteStreamException
 import ai.koog.prompt.streaming.StreamFrame
@@ -44,36 +47,43 @@ class StreamingConnectionExceptionTest {
      * for simulating streaming failures (connection drops, incomplete streams, etc.).
      */
     private class StreamOverrideExecutor(
-        private val delegate: PromptExecutor,
+        private val delegate: HookablePromptExecutor,
         private val streamingBehavior: () -> Flow<StreamFrame>
-    ) : PromptExecutor() {
+    ) : HookablePromptExecutor() {
 
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hooks: PromptExecutorHooks?
-        ): List<Message.Response> = delegate.execute(prompt, model, tools)
+            hook: ExecuteHook?
+        ): List<Message.Response> = delegate.execute(prompt, model, tools, hook)
 
         override fun executeStreaming(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hooks: PromptExecutorHooks?
-        ): Flow<StreamFrame> =
-            streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) {
-                streamingBehavior()
-            }
+            hook: StreamingHook?
+        ): Flow<StreamFrame> = streamingBehavior()
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult =
-            delegate.moderate(prompt, model)
+        override suspend fun executeMultipleChoices(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>,
+            hook: MultipleChoicesHook?
+        ): List<LLMChoice> = delegate.executeMultipleChoices(prompt, model, tools, hook)
+
+        override suspend fun moderate(
+            prompt: Prompt,
+            model: LLModel,
+            hook: ModerateHook?
+        ): ModerationResult = delegate.moderate(prompt, model, hook)
 
         override fun close() = delegate.close()
     }
 
     private val model = OpenAIModels.Chat.GPT4oMini
 
-    private fun baseMockExecutor(): PromptExecutor = getMockExecutor {
+    private fun baseMockExecutor(): HookablePromptExecutor = getMockExecutor {
         mockLLMAnswer("fallback").asDefaultResponse
     }
 

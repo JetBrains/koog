@@ -8,7 +8,7 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
@@ -68,7 +68,7 @@ internal object AIAgentServiceHelper {
     @OptIn(InternalAgentsApi::class)
     @PublishedApi
     internal inline operator fun <reified Input, reified Output> invoke(
-        promptExecutor: PromptExecutor,
+        promptExecutor: HookablePromptExecutor,
         agentConfig: AIAgentConfig,
         strategy: AIAgentGraphStrategy<Input, Output>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -91,7 +91,7 @@ internal object AIAgentServiceHelper {
      * @param llmModel The large language model to be used by the agent.
      * @param strategy The graph strategy defining the agent's execution behavior. Defaults to a single-run*/
     internal operator fun invoke(
-        promptExecutor: PromptExecutor,
+        promptExecutor: HookablePromptExecutor,
         llmModel: LLModel,
         responseProcessor: ResponseProcessor? = null,
         strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
@@ -134,7 +134,7 @@ internal object AIAgentServiceHelper {
      */
     @OptIn(InternalAgentsApi::class)
     internal operator fun <Input, Output> invoke(
-        promptExecutor: PromptExecutor,
+        promptExecutor: HookablePromptExecutor,
         agentConfig: AIAgentConfig,
         strategy: AIAgentFunctionalStrategy<Input, Output>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,

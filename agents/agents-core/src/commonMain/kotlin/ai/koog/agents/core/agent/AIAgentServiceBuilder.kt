@@ -11,7 +11,7 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.serialization.TypeToken
 import kotlin.time.Clock
 
@@ -46,7 +46,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
     private val strategy: AIAgentGraphStrategy<Input, Output>,
     private val inputType: TypeToken,
     private val outputType: TypeToken,
-    promptExecutor: PromptExecutor?,
+    promptExecutor: HookablePromptExecutor?,
     toolRegistry: ToolRegistry,
     config: AIAgentConfig,
     private var featureInstallers: MutableList<FeatureContext.() -> Unit> = mutableListOf(),
@@ -118,7 +118,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
  */
 public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
     private val strategy: AIAgentFunctionalStrategy<Input, Output>,
-    promptExecutor: PromptExecutor? = null,
+    promptExecutor: HookablePromptExecutor? = null,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     config: AIAgentConfig,
     private var featureInstallers: MutableList<FunctionalAIAgent.FeatureContext.() -> Unit> = mutableListOf(),

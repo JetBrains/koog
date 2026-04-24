@@ -10,7 +10,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -112,7 +112,7 @@ internal fun createAgent(
     userPrompt: String? = null,
     assistantPrompt: String? = null,
     toolRegistry: ToolRegistry? = null,
-    promptExecutor: PromptExecutor? = null,
+    promptExecutor: HookablePromptExecutor? = null,
     installFeatures: GraphAIAgent.FeatureContext.() -> Unit = { }
 ): AIAgent<String, String> {
     val agentConfig = AIAgentConfig(

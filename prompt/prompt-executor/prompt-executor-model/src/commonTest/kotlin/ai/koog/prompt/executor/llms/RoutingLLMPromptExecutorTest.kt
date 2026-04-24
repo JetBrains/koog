@@ -5,11 +5,10 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.ExecuteHook
 import ai.koog.prompt.executor.model.ExecutionArgOverrides
 import ai.koog.prompt.executor.model.InitialExecutionIntent
-import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.executor.model.ResolvedExecutionIntent
-import ai.koog.prompt.executor.model.SimpleExecutorHook
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -374,31 +373,29 @@ class RoutingLLMPromptExecutorTest {
         var completedEffectiveModel: LLModel? = null
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val execute = object : SimpleExecutorHook<List<Message.Response>> {
-                override suspend fun beforeExecution(
-                    intent: InitialExecutionIntent,
-                    effectiveModel: LLModel
-                ): ExecutionArgOverrides {
-                    beforeIntent = intent
-                    beforeEffectiveModel = effectiveModel
-                    return ExecutionArgOverrides.NoOverrides
-                }
+        val hook = object : ExecuteHook {
+            override suspend fun beforeExecution(
+                intent: InitialExecutionIntent,
+                effectiveModel: LLModel
+            ): ExecutionArgOverrides {
+                beforeIntent = intent
+                beforeEffectiveModel = effectiveModel
+                return ExecutionArgOverrides.NoOverrides
+            }
 
-                override suspend fun onCompleted(
-                    intent: ResolvedExecutionIntent,
-                    effectiveModel: LLModel,
-                    result: List<Message.Response>
-                ) {
-                    completedIntent = intent
-                    completedEffectiveModel = effectiveModel
-                }
+            override suspend fun onCompleted(
+                intent: ResolvedExecutionIntent,
+                effectiveModel: LLModel,
+                result: List<Message.Response>
+            ) {
+                completedIntent = intent
+                completedEffectiveModel = effectiveModel
             }
         }
 
         // When
         val requestedModel = AnthropicModels.Sonnet_4
-        executor.execute(prompt, requestedModel, hooks = hooks)
+        executor.execute(prompt, requestedModel, hook = hook)
 
         // Then
         assertEquals(requestedModel, beforeIntent?.model)
@@ -417,19 +414,17 @@ class RoutingLLMPromptExecutorTest {
         var modelChoiceError: Throwable? = null
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val execute = object : SimpleExecutorHook<List<Message.Response>> {
-                override suspend fun onModelChoiceFailed(intent: InitialExecutionIntent, error: Throwable) {
-                    modelChoiceFailedIntent = intent
-                    modelChoiceError = error
-                }
+        val hook = object : ExecuteHook {
+            override suspend fun onModelChoiceFailed(intent: InitialExecutionIntent, error: Throwable) {
+                modelChoiceFailedIntent = intent
+                modelChoiceError = error
             }
         }
 
         // When
         val requestedModel = AnthropicModels.Sonnet_4
         val thrown = assertFailsWith<IllegalArgumentException> {
-            executor.execute(prompt, requestedModel, hooks = hooks)
+            executor.execute(prompt, requestedModel, hook = hook)
         }
 
         // Then

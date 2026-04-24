@@ -3,6 +3,7 @@ package ai.koog.agents.testing.tools
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.ModerationResult
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -827,7 +828,7 @@ public class MockExecutorDSLBuilder(
      *
      * @return A configured MockLLMExecutor instance
      */
-    public fun build(): PromptExecutor {
+    public fun build(): HookablePromptExecutor {
         // Exact Matches
         val processedAssistantExactMatches = assistantExactMatches.mapValues { (_, value) ->
             val texts = value.map { text -> text.trimIndent() }
@@ -1095,7 +1096,7 @@ public fun getMockExecutor(
     tokenizer: Tokenizer? = null,
     handleLastAssistantMessage: Boolean = false,
     init: MockExecutorDSLBuilder.() -> Unit
-): PromptExecutor {
+): HookablePromptExecutor {
     return MockExecutorDSLBuilder(clock, serializer, tokenizer)
         .apply {
             this.handleLastAssistantMessage = handleLastAssistantMessage

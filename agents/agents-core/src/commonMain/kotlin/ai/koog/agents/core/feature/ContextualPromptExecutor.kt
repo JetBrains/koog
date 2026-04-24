@@ -5,16 +5,17 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.ExecuteHook
 import ai.koog.prompt.executor.model.ExecutionArgOverrides
 import ai.koog.prompt.executor.model.ExecutionArgOverrides.NoOverrides
 import ai.koog.prompt.executor.model.ExecutionIntent
-import ai.koog.prompt.executor.model.ExecutorHook
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.executor.model.InitialExecutionIntent
+import ai.koog.prompt.executor.model.ModerateHook
+import ai.koog.prompt.executor.model.MultipleChoicesHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.executor.model.ResolvedExecutionIntent
-import ai.koog.prompt.executor.model.SimpleExecutorHook
-import ai.koog.prompt.executor.model.StreamingExecutorHook
+import ai.koog.prompt.executor.model.StreamingHook
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -35,7 +36,7 @@ import kotlin.uuid.Uuid
  */
 @InternalAgentsApi
 public class ContextualPromptExecutor(
-    private val executor: PromptExecutor,
+    private val executor: HookablePromptExecutor,
     private val context: AIAgentContext,
 ) : PromptExecutor() {
 
@@ -47,54 +48,28 @@ public class ContextualPromptExecutor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
-    ): List<Message.Response> {
-        return executor.execute(
-            prompt = prompt,
-            model = model,
-            tools = tools,
-            hooks = ContextualPromptExecutorHooks(eventId(), outerHooks = hooks)
-        )
-    }
+    ): List<Message.Response> =
+        executor.execute(prompt, model, tools, hook = ContextualPromptExecutorHooks.executeHook(eventId(), context))
 
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
-    ): Flow<StreamFrame> {
-        return executor.executeStreaming(
-            prompt = prompt,
-            model = model,
-            tools = tools,
-            hooks = ContextualPromptExecutorHooks(eventId(), outerHooks = hooks)
-        )
-    }
+    ): Flow<StreamFrame> =
+        executor.executeStreaming(prompt, model, tools, hook = ContextualPromptExecutorHooks.streamingHook(eventId(), context))
 
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
     ): List<LLMChoice> =
-        executor.executeMultipleChoices(
-            prompt = prompt,
-            model = model,
-            tools = tools,
-            hooks = ContextualPromptExecutorHooks(eventId(), outerHooks = hooks)
-        )
+        executor.executeMultipleChoices(prompt, model, tools, hook = ContextualPromptExecutorHooks.multipleChoicesHook(eventId(), context))
 
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel,
-        hooks: PromptExecutorHooks?
-    ): ModerationResult {
-        return executor.moderate(
-            prompt = prompt,
-            model = model,
-            hooks = ContextualPromptExecutorHooks(eventId(), outerHooks = hooks)
-        )
-    }
+    ): ModerationResult =
+        executor.moderate(prompt, model, hook = ContextualPromptExecutorHooks.moderationHook(eventId(), context))
 
     override suspend fun models(): List<LLModel> = executor.models()
 
@@ -115,18 +90,16 @@ public class ContextualPromptExecutor(
         return Uuid.random().toString()
     }
 
-    private inner class ContextualPromptExecutorHooks(
-        private val eventId: String,
-        private val outerHooks: PromptExecutorHooks?,
-    ) : PromptExecutorHooks {
-        override val execute = object : SimpleExecutorHook<List<Message.Response>> {
+    private object ContextualPromptExecutorHooks {
+
+        fun executeHook(eventId: String, context: AIAgentContext) = object : ExecuteHook {
             override suspend fun onModelChoiceFailed(intent: InitialExecutionIntent, error: Throwable) =
-                handleModelChoiceFailure(intent, error, outerHooks?.execute)
+                handleModelChoiceFailure(eventId, intent, error)
 
             override suspend fun beforeExecution(
                 intent: InitialExecutionIntent,
                 effectiveModel: LLModel
-            ): ExecutionArgOverrides = beforeNonStreamingCall(intent, effectiveModel, outerHooks?.execute)
+            ): ExecutionArgOverrides = beforeNonStreamingCall(eventId, context, intent, effectiveModel)
 
             override suspend fun onCompleted(
                 intent: ResolvedExecutionIntent,
@@ -145,66 +118,45 @@ public class ContextualPromptExecutor(
                     moderationResponse = null,
                     context = context
                 )
-                outerHooks?.execute?.onCompleted(intent, effectiveModel, result)
-            }
-
-            override suspend fun onFailure(
-                intent: ResolvedExecutionIntent,
-                effectiveModel: LLModel,
-                error: Throwable
-            ) {
-                outerHooks?.execute?.onFailure(intent, effectiveModel, error)
             }
         }
 
-        override val multipleChoices: SimpleExecutorHook<List<LLMChoice>> =
-            object : SimpleExecutorHook<List<LLMChoice>> {
-                override suspend fun onModelChoiceFailed(intent: InitialExecutionIntent, error: Throwable) =
-                    handleModelChoiceFailure(intent, error, outerHooks?.multipleChoices)
+        fun multipleChoicesHook(eventId: String, context: AIAgentContext) = object : MultipleChoicesHook {
+            override suspend fun onModelChoiceFailed(intent: InitialExecutionIntent, error: Throwable) =
+                handleModelChoiceFailure(eventId, intent, error)
 
-                // TODO: Add Pipeline interceptors for this method. Without them features cannot modify prompts before calls to LLMs.
-                override suspend fun beforeExecution(
-                    intent: InitialExecutionIntent,
-                    effectiveModel: LLModel
-                ): ExecutionArgOverrides =
-                    beforeNonStreamingCall(intent, effectiveModel, outerHooks?.multipleChoices, ignorePipeline = true)
+            // TODO: Add Pipeline interceptors for this method. Without them features cannot modify prompts before calls to LLMs.
+            override suspend fun beforeExecution(
+                intent: InitialExecutionIntent,
+                effectiveModel: LLModel
+            ): ExecutionArgOverrides = beforeNonStreamingCall(eventId, context, intent, effectiveModel, ignorePipeline = true)
 
-                override suspend fun onCompleted(
-                    intent: ResolvedExecutionIntent,
-                    effectiveModel: LLModel,
-                    result: List<LLMChoice>
-                ) {
-                    logger.debug {
-                        val messageBuilder = StringBuilder().appendLine("Finished LLM call with LLM Choice response:")
-                        result.forEachIndexed { index, response ->
-                            messageBuilder.appendLine("- Response #$index")
-                            response.forEach { message ->
-                                messageBuilder.appendLine("  -- [${message.role}] ${message.content}")
-                            }
+            override suspend fun onCompleted(
+                intent: ResolvedExecutionIntent,
+                effectiveModel: LLModel,
+                result: List<LLMChoice>
+            ) {
+                logger.debug {
+                    val messageBuilder = StringBuilder().appendLine("Finished LLM call with LLM Choice response:")
+                    result.forEachIndexed { index, response ->
+                        messageBuilder.appendLine("- Response #$index")
+                        response.forEach { message ->
+                            messageBuilder.appendLine("  -- [${message.role}] ${message.content}")
                         }
-                        "Finished LLM call with responses: $messageBuilder"
                     }
-                    outerHooks?.multipleChoices?.onCompleted(intent, effectiveModel, result)
-                }
-
-                override suspend fun onFailure(
-                    intent: ResolvedExecutionIntent,
-                    effectiveModel: LLModel,
-                    error: Throwable
-                ) {
-                    outerHooks?.multipleChoices?.onFailure(intent, effectiveModel, error)
+                    "Finished LLM call with responses: $messageBuilder"
                 }
             }
+        }
 
-        override val moderation: SimpleExecutorHook<ModerationResult> = object : SimpleExecutorHook<ModerationResult> {
+        fun moderationHook(eventId: String, context: AIAgentContext) = object : ModerateHook {
             override suspend fun onModelChoiceFailed(intent: InitialExecutionIntent, error: Throwable) =
-                handleModelChoiceFailure(intent, error, outerHooks?.moderation)
+                handleModelChoiceFailure(eventId, intent, error)
 
             override suspend fun beforeExecution(
                 intent: InitialExecutionIntent,
                 effectiveModel: LLModel
-            ): ExecutionArgOverrides =
-                beforeNonStreamingCall(intent, effectiveModel, outerHooks?.moderation)
+            ): ExecutionArgOverrides = beforeNonStreamingCall(eventId, context, intent, effectiveModel)
 
             override suspend fun onCompleted(
                 intent: ResolvedExecutionIntent,
@@ -223,17 +175,12 @@ public class ContextualPromptExecutor(
                     moderationResponse = result,
                     context = context
                 )
-                outerHooks?.moderation?.onCompleted(intent, effectiveModel, result)
-            }
-
-            override suspend fun onFailure(intent: ResolvedExecutionIntent, effectiveModel: LLModel, error: Throwable) {
-                outerHooks?.moderation?.onFailure(intent, effectiveModel, error)
             }
         }
 
-        override val streaming: StreamingExecutorHook = object : StreamingExecutorHook {
+        fun streamingHook(eventId: String, context: AIAgentContext) = object : StreamingHook {
             override suspend fun onModelChoiceFailed(intent: InitialExecutionIntent, error: Throwable) =
-                handleModelChoiceFailure(intent, error, outerHooks?.streaming)
+                handleModelChoiceFailure(eventId, intent, error)
 
             override suspend fun beforeExecution(
                 intent: InitialExecutionIntent,
@@ -244,7 +191,6 @@ public class ContextualPromptExecutor(
                         " requested model: ${intent.model.id}, effective model: ${effectiveModel.id})"
                 }
                 val promptBeforeInterceptors = context.llm.prompt
-
                 context.pipeline.onLLMStreamingStarting(
                     eventId = eventId,
                     executionInfo = context.executionInfo,
@@ -254,9 +200,7 @@ public class ContextualPromptExecutor(
                     tools = intent.tools,
                     context = context
                 )
-
-                val outerOverrides = outerHooks?.streaming?.beforeExecution(intent, effectiveModel)
-                return potentialPromptOverride(promptBeforeInterceptors, intent, outerOverrides)
+                return potentialPromptOverride(eventId, context, promptBeforeInterceptors, intent)
             }
 
             override suspend fun onFrame(intent: ResolvedExecutionIntent, effectiveModel: LLModel, frame: StreamFrame) {
@@ -270,7 +214,6 @@ public class ContextualPromptExecutor(
                     streamFrame = frame,
                     context = context
                 )
-                outerHooks?.streaming?.onFrame(intent, effectiveModel, frame)
             }
 
             override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel) {
@@ -284,7 +227,6 @@ public class ContextualPromptExecutor(
                     tools = intent.tools,
                     context = context
                 )
-                outerHooks?.streaming?.onCompleted(intent, effectiveModel)
             }
 
             override suspend fun onFailure(intent: ResolvedExecutionIntent, effectiveModel: LLModel, error: Throwable) {
@@ -298,37 +240,34 @@ public class ContextualPromptExecutor(
                     throwable = error,
                     context = context
                 )
-                outerHooks?.streaming?.onFailure(intent, effectiveModel, error)
             }
         }
 
-        private suspend fun handleModelChoiceFailure(
+        private fun handleModelChoiceFailure(
+            eventId: String,
             intent: InitialExecutionIntent,
-            error: Throwable,
-            outerHook: ExecutorHook?
+            error: Throwable
         ) {
             logger.debug {
                 "Failed to choose model for LLM call (event id: $eventId, prompt: ${intent.prompt}, tools: [${intent.tools.joinToString { it.name }}]," +
                     " requested model: ${intent.model.id}, error: $error)"
             }
-            outerHook?.onModelChoiceFailed(intent, error)
         }
 
         private suspend fun beforeNonStreamingCall(
+            eventId: String,
+            context: AIAgentContext,
             intent: InitialExecutionIntent,
             effectiveModel: LLModel,
-            outerHook: SimpleExecutorHook<*>?,
             ignorePipeline: Boolean = false, // TODO: utilized only for executeMultipleChoices, remove once corresponding pipeline interceptors are added
         ): ExecutionArgOverrides {
             logger.debug {
                 "Starting LLM call (event id: $eventId, prompt: ${intent.prompt}, tools: [${intent.tools.joinToString { it.name }}]," +
                     " requested model: ${intent.model.id}, effective model: ${effectiveModel.id})"
             }
-
             if (ignorePipeline) {
-                return outerHook?.beforeExecution(intent, effectiveModel) ?: NoOverrides
+                return NoOverrides
             }
-
             val promptBeforeInterceptors = context.llm.prompt
             context.pipeline.onLLMCallStarting(
                 eventId = eventId,
@@ -339,27 +278,21 @@ public class ContextualPromptExecutor(
                 tools = intent.tools,
                 context = context
             )
-
-            val outerOverrides = outerHook?.beforeExecution(intent, effectiveModel)
-            return potentialPromptOverride(promptBeforeInterceptors, intent, outerOverrides)
+            return potentialPromptOverride(eventId, context, promptBeforeInterceptors, intent)
         }
 
         private fun potentialPromptOverride(
+            eventId: String,
+            context: AIAgentContext,
             promptBeforeInterceptors: Prompt,
-            intent: ExecutionIntent,
-            outerOverrides: ExecutionArgOverrides?
+            intent: ExecutionIntent
         ): ExecutionArgOverrides {
-            val nestedOverrides = if (promptBeforeInterceptors !== context.llm.prompt) {
+            return if (promptBeforeInterceptors !== context.llm.prompt) {
                 logger.debug { "Executing LLM call with modified prompt (event id: $eventId, prompt: ${context.llm.prompt}, tools: [${intent.tools.joinToString { it.name }}])" }
                 ExecutionArgOverrides.UseDifferentPrompt(context.llm.prompt)
             } else {
                 logger.debug { "Executing LLM call prompt (event id: $eventId, prompt: ${context.llm.prompt}, tools: [${intent.tools.joinToString { it.name }}])" }
                 NoOverrides
-            }
-
-            return when (outerOverrides) {
-                null -> nestedOverrides
-                else -> outerOverrides.combineWith(nestedOverrides)
             }
         }
     }

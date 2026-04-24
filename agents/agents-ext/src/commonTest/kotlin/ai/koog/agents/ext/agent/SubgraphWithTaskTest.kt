@@ -17,10 +17,14 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.ModerateHook
+import ai.koog.prompt.executor.model.MultipleChoicesHook
+import ai.koog.prompt.executor.model.StreamingHook
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -728,14 +732,14 @@ class SubgraphWithTaskTest {
         private val finishToolName: String,
         private val invalidArgsJson: String,
         private val validArgsJson: String,
-    ) : PromptExecutor() {
+    ) : HookablePromptExecutor() {
         var callCount = 0
 
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hooks: PromptExecutorHooks?
+            hook: ExecuteHook?
         ): List<Message.Response> {
             callCount += 1
             val content = if (callCount == 1) invalidArgsJson else validArgsJson
@@ -753,11 +757,18 @@ class SubgraphWithTaskTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hooks: PromptExecutorHooks?
+            hook: StreamingHook?
         ): Flow<StreamFrame> =
             emptyFlow()
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult =
+        override suspend fun executeMultipleChoices(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>,
+            hook: MultipleChoicesHook?
+        ): List<LLMChoice> = throw UnsupportedOperationException("Not used in test")
+
+        override suspend fun moderate(prompt: Prompt, model: LLModel, hook: ModerateHook?): ModerationResult =
             ModerationResult(isHarmful = false, categories = emptyMap())
 
         override fun close() {}
@@ -808,7 +819,7 @@ class SubgraphWithTaskTest {
         runMode: ToolCalls,
         toolRegistry: ToolRegistry? = null,
         finishTool: Tool<TestFinishTool.Args, String>? = null,
-        executor: PromptExecutor? = null,
+        executor: HookablePromptExecutor? = null,
         installFeatures: FeatureContext.() -> Unit = {},
     ): AIAgent<String, String> {
         val finishTool = finishTool ?: TestFinishTool

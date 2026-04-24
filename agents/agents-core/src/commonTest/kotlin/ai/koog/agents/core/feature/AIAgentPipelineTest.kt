@@ -43,7 +43,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.Message.Role
@@ -1026,7 +1026,7 @@ class AIAgentPipelineTest {
         systemPrompt: String? = null,
         assistantPrompt: String? = null,
         toolRegistry: ToolRegistry? = null,
-        promptExecutor: PromptExecutor? = null,
+        promptExecutor: HookablePromptExecutor? = null,
         installFeatures: FeatureContext.() -> Unit = {}
     ): AIAgent<String, String> {
         val agentConfig = AIAgentConfig(

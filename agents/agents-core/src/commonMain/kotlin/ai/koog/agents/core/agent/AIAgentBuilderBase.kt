@@ -3,7 +3,7 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlin.time.Clock
@@ -12,7 +12,7 @@ import kotlin.time.Clock
  * Shared fluent configuration for agent builders.
  */
 public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> internal constructor(
-    promptExecutor: PromptExecutor?,
+    promptExecutor: HookablePromptExecutor?,
     toolRegistry: ToolRegistry,
     protected var id: String?,
     config: AIAgentConfig,

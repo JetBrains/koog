@@ -7,7 +7,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
@@ -45,7 +45,7 @@ internal object AIAgentHelper {
     @OptIn(ExperimentalUuidApi::class)
     @PublishedApi
     internal inline operator fun <reified Input, reified Output> invoke(
-        promptExecutor: PromptExecutor,
+        promptExecutor: HookablePromptExecutor,
         agentConfig: AIAgentConfig,
         strategy: AIAgentGraphStrategy<Input, Output>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -80,7 +80,7 @@ internal object AIAgentHelper {
      */
     @OptIn(ExperimentalUuidApi::class)
     internal operator fun invoke(
-        promptExecutor: PromptExecutor,
+        promptExecutor: HookablePromptExecutor,
         agentConfig: AIAgentConfig,
         strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -112,7 +112,7 @@ internal object AIAgentHelper {
      */
     @OptIn(ExperimentalUuidApi::class)
     internal operator fun <Input, Output> invoke(
-        promptExecutor: PromptExecutor,
+        promptExecutor: HookablePromptExecutor,
         agentConfig: AIAgentConfig,
         strategy: AIAgentFunctionalStrategy<Input, Output>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -148,7 +148,7 @@ internal object AIAgentHelper {
      */
     @OptIn(ExperimentalUuidApi::class)
     internal operator fun invoke(
-        promptExecutor: PromptExecutor,
+        promptExecutor: HookablePromptExecutor,
         llmModel: LLModel,
         responseProcessor: ResponseProcessor? = null,
         strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
@@ -202,7 +202,7 @@ internal object AIAgentHelper {
     @OptIn(ExperimentalUuidApi::class)
     @PublishedApi
     internal inline operator fun <reified Input, reified Output> invoke(
-        promptExecutor: PromptExecutor,
+        promptExecutor: HookablePromptExecutor,
         llmModel: LLModel,
         strategy: AIAgentGraphStrategy<Input, Output>,
         responseProcessor: ResponseProcessor? = null,
@@ -255,7 +255,7 @@ internal object AIAgentHelper {
      * @return An AI agent instance configured with the provided parameters and ready to execute the specified strategy.
      */
     internal operator fun <Input, Output> invoke(
-        promptExecutor: PromptExecutor,
+        promptExecutor: HookablePromptExecutor,
         llmModel: LLModel,
         responseProcessor: ResponseProcessor? = null,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -288,7 +288,7 @@ internal object AIAgentHelper {
     )
 
     internal operator fun <Input, Output> invoke(
-        promptExecutor: PromptExecutor,
+        promptExecutor: HookablePromptExecutor,
         llmModel: LLModel,
         responseProcessor: ResponseProcessor?,
         toolRegistry: ToolRegistry,
@@ -321,7 +321,7 @@ internal object AIAgentHelper {
     )
 
     internal operator fun <Input, Output> invoke(
-        promptExecutor: PromptExecutor,
+        promptExecutor: HookablePromptExecutor,
         agentConfig: AIAgentConfig,
         strategy: AIAgentPlannerStrategy<Input, Output, *>,
         toolRegistry: ToolRegistry,

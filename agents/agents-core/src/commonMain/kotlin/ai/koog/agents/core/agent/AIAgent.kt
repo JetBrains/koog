@@ -10,7 +10,7 @@ import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.io.Closeable
@@ -82,7 +82,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          */
         @OptIn(ExperimentalUuidApi::class)
         public inline operator fun <reified Input, reified Output> invoke(
-            promptExecutor: PromptExecutor,
+            promptExecutor: HookablePromptExecutor,
             agentConfig: AIAgentConfig,
             strategy: AIAgentGraphStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -104,7 +104,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          */
         @OptIn(ExperimentalUuidApi::class)
         public operator fun invoke(
-            promptExecutor: PromptExecutor,
+            promptExecutor: HookablePromptExecutor,
             agentConfig: AIAgentConfig,
             strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -128,7 +128,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          */
         @OptIn(ExperimentalUuidApi::class)
         public operator fun <Input, Output> invoke(
-            promptExecutor: PromptExecutor,
+            promptExecutor: HookablePromptExecutor,
             agentConfig: AIAgentConfig,
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -155,7 +155,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          */
         @OptIn(ExperimentalUuidApi::class)
         public operator fun invoke(
-            promptExecutor: PromptExecutor,
+            promptExecutor: HookablePromptExecutor,
             llmModel: LLModel,
             responseProcessor: ResponseProcessor? = null,
             strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
@@ -189,7 +189,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          */
         @OptIn(ExperimentalUuidApi::class)
         public inline operator fun <reified Input, reified Output> invoke(
-            promptExecutor: PromptExecutor,
+            promptExecutor: HookablePromptExecutor,
             llmModel: LLModel,
             strategy: AIAgentGraphStrategy<Input, Output>,
             responseProcessor: ResponseProcessor? = null,
@@ -223,7 +223,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @return An AI agent instance configured with the provided parameters and ready to execute the specified strategy.
          */
         public operator fun <Input, Output> invoke(
-            promptExecutor: PromptExecutor,
+            promptExecutor: HookablePromptExecutor,
             llmModel: LLModel,
             responseProcessor: ResponseProcessor? = null,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -253,7 +253,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @return An AI agent instance configured with the provided parameters.
          */
         public operator fun <Input, Output> invoke(
-            promptExecutor: PromptExecutor,
+            promptExecutor: HookablePromptExecutor,
             llmModel: LLModel,
             responseProcessor: ResponseProcessor? = null,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -279,7 +279,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @return An instance of an AI agent configured with the provided parameters that maps a world state to another world state.
          */
         public operator fun <Input, Output> invoke(
-            promptExecutor: PromptExecutor,
+            promptExecutor: HookablePromptExecutor,
             agentConfig: AIAgentConfig,
             strategy: AIAgentPlannerStrategy<Input, Output, *>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,

@@ -16,7 +16,7 @@ import ai.koog.agents.core.feature.ContextualPromptExecutor
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.time.Clock
 
@@ -37,7 +37,7 @@ import kotlin.time.Clock
  */
 @OptIn(InternalAgentsApi::class)
 public class FunctionalAIAgent<Input, Output>(
-    public val promptExecutor: PromptExecutor,
+    public val promptExecutor: HookablePromptExecutor,
     override val agentConfig: AIAgentConfig,
     override val strategy: AIAgentFunctionalStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,

@@ -22,7 +22,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
@@ -248,7 +248,7 @@ class AIAgentPipelineJvmTest {
     private fun createAgent(
         id: String? = null,
         strategy: AIAgentGraphStrategy<String, String>? = null,
-        promptExecutor: PromptExecutor? = null,
+        promptExecutor: HookablePromptExecutor? = null,
         installFeatures: FeatureContext.() -> Unit = {}
     ): TestAIAgent {
         val agentConfig = AIAgentConfig(
@@ -284,7 +284,7 @@ class AIAgentPipelineJvmTest {
      * Test agent wrapper for a [GraphAIAgent] with exposed pipeline instance for testing.
      */
     private class TestAIAgent(
-        promptExecutor: PromptExecutor,
+        promptExecutor: HookablePromptExecutor,
         agentConfig: AIAgentConfig,
         strategy: AIAgentGraphStrategy<String, String>,
         toolRegistry: ToolRegistry,

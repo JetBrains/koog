@@ -11,7 +11,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.KSerializerTypeToken
@@ -42,7 +42,7 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
      * This variable is used to handle interactions and executions related to prompts,
      * providing a centralized mechanism to manage user inputs or automated instructions.
      */
-    public abstract val promptExecutor: PromptExecutor
+    public abstract val promptExecutor: HookablePromptExecutor
 
     /**
      * Holds the configuration details for an AI agent.
@@ -141,7 +141,7 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
          * @param toolRegistry*/
         @OptIn(InternalAgentsApi::class)
         public inline operator fun <reified Input, reified Output> invoke(
-            promptExecutor: PromptExecutor,
+            promptExecutor: HookablePromptExecutor,
             agentConfig: AIAgentConfig,
             strategy: AIAgentGraphStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -156,7 +156,7 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
          * @param llmModel The large language model to be used by the agent.
          * @param strategy The graph strategy defining the agent's execution behavior. Defaults to a single-run*/
         public operator fun invoke(
-            promptExecutor: PromptExecutor,
+            promptExecutor: HookablePromptExecutor,
             llmModel: LLModel,
             responseProcessor: ResponseProcessor? = null,
             strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
@@ -180,7 +180,7 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
          */
         @OptIn(InternalAgentsApi::class)
         public operator fun <Input, Output> invoke(
-            promptExecutor: PromptExecutor,
+            promptExecutor: HookablePromptExecutor,
             agentConfig: AIAgentConfig,
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -339,7 +339,7 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
 public class GraphAIAgentService<Input, Output>
 @InternalAgentsApi
 public constructor(
-    override val promptExecutor: PromptExecutor,
+    override val promptExecutor: HookablePromptExecutor,
     override val agentConfig: AIAgentConfig,
     public val strategy: AIAgentGraphStrategy<Input, Output>,
     private val inputType: TypeToken,
@@ -384,7 +384,7 @@ public constructor(
 public class FunctionalAIAgentService<Input, Output>
 @InternalAgentsApi
 public constructor(
-    override val promptExecutor: PromptExecutor,
+    override val promptExecutor: HookablePromptExecutor,
     override val agentConfig: AIAgentConfig,
     public val strategy: AIAgentFunctionalStrategy<Input, Output>,
     override val toolRegistry: ToolRegistry,
@@ -424,7 +424,7 @@ public constructor(
  * @param toolRegistry The registry containing tools available for the agent to use. Defaults to an empty*/
 @OptIn(InternalAgentsApi::class)
 public operator fun AIAgentService.Companion.invoke(
-    promptExecutor: PromptExecutor,
+    promptExecutor: HookablePromptExecutor,
     agentConfig: AIAgentConfig,
     strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
