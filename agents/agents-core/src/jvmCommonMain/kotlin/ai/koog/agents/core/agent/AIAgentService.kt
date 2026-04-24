@@ -9,14 +9,14 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
-import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import java.util.concurrent.ExecutorService
 import kotlin.time.Clock
 
 public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> {
-    public actual abstract val promptExecutor: HookablePromptExecutor
+    public actual abstract val promptExecutor: PromptExecutor
     public actual abstract val agentConfig: AIAgentConfig
     public actual abstract val toolRegistry: ToolRegistry
     public actual abstract suspend fun createAgent(
@@ -202,7 +202,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
 
         @OptIn(markerClass = [InternalAgentsApi::class])
         public actual inline operator fun <reified Input, reified Output> invoke(
-            promptExecutor: HookablePromptExecutor,
+            promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
             strategy: AIAgentGraphStrategy<Input, Output>,
             toolRegistry: ToolRegistry,
@@ -211,7 +211,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
             AIAgentServiceHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, installFeatures)
 
         public actual operator fun invoke(
-            promptExecutor: HookablePromptExecutor,
+            promptExecutor: PromptExecutor,
             llmModel: LLModel,
             responseProcessor: ResponseProcessor?,
             strategy: AIAgentGraphStrategy<String, String>,
@@ -236,7 +236,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
 
         @OptIn(markerClass = [InternalAgentsApi::class])
         public actual operator fun <Input, Output> invoke(
-            promptExecutor: HookablePromptExecutor,
+            promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             toolRegistry: ToolRegistry,

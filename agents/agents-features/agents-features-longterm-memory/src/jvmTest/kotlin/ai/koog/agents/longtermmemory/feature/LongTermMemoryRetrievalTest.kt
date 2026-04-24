@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
@@ -18,9 +17,14 @@ import ai.koog.agents.longtermmemory.retrieval.KeywordSearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.InitialExecutionIntent
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -75,20 +79,29 @@ class LongTermMemoryRetrievalTest {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
-            tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            val allContent = prompt.messages.joinToString("\n") { it.content }
-            return listOf(Message.Assistant(onPrompt(allContent), ResponseMetaInfo.Empty))
-        }
-
-        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
-            flow {
-                val allContent = prompt.messages.joinToString("\n") { it.content }
-                emit(StreamFrame.TextDelta(onPrompt(allContent)))
-                emit(StreamFrame.End("stop"))
+            tools: List<ToolDescriptor>,
+            hooks: PromptExecutorHooks?
+        ): List<Message.Response> =
+            executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.execute) { finalIntent ->
+                val allContent = finalIntent.prompt.messages.joinToString("\n") { it.content }
+                listOf(Message.Assistant(onPrompt(allContent), ResponseMetaInfo.Empty))
             }
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel) =
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>,
+            hooks: PromptExecutorHooks?
+        ): Flow<StreamFrame> =
+            streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) { finalIntent ->
+                val allContent = finalIntent.prompt.messages.joinToString("\n") { it.content }
+                flow {
+                    emit(StreamFrame.TextDelta(onPrompt(allContent)))
+                    emit(StreamFrame.End("stop"))
+                }
+            }
+
+        override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult =
             throw UnsupportedOperationException("Not needed")
 
         override fun close() {}

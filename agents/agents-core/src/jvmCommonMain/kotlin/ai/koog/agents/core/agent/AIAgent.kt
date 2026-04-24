@@ -13,7 +13,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
-import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.io.Closeable
@@ -54,7 +54,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
     public actual companion object {
         @OptIn(markerClass = [ExperimentalUuidApi::class])
         public actual inline operator fun <reified Input, reified Output> invoke(
-            promptExecutor: HookablePromptExecutor,
+            promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
             strategy: AIAgentGraphStrategy<Input, Output>,
             toolRegistry: ToolRegistry,
@@ -66,7 +66,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
 
         @OptIn(markerClass = [ExperimentalUuidApi::class])
         public actual operator fun invoke(
-            promptExecutor: HookablePromptExecutor,
+            promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
             strategy: AIAgentGraphStrategy<String, String>,
             toolRegistry: ToolRegistry,
@@ -83,7 +83,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
 
         @OptIn(markerClass = [ExperimentalUuidApi::class])
         public actual operator fun <Input, Output> invoke(
-            promptExecutor: HookablePromptExecutor,
+            promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             toolRegistry: ToolRegistry,
@@ -95,7 +95,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
 
         @OptIn(markerClass = [ExperimentalUuidApi::class])
         public actual operator fun invoke(
-            promptExecutor: HookablePromptExecutor,
+            promptExecutor: PromptExecutor,
             llmModel: LLModel,
             responseProcessor: ResponseProcessor?,
             strategy: AIAgentGraphStrategy<String, String>,
@@ -122,7 +122,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
 
         @OptIn(markerClass = [ExperimentalUuidApi::class])
         public actual inline operator fun <reified Input, reified Output> invoke(
-            promptExecutor: HookablePromptExecutor,
+            promptExecutor: PromptExecutor,
             llmModel: LLModel,
             strategy: AIAgentGraphStrategy<Input, Output>,
             responseProcessor: ResponseProcessor?,
@@ -150,7 +150,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
         )
 
         public actual operator fun <Input, Output> invoke(
-            promptExecutor: HookablePromptExecutor,
+            promptExecutor: PromptExecutor,
             llmModel: LLModel,
             responseProcessor: ResponseProcessor?,
             toolRegistry: ToolRegistry,
@@ -176,7 +176,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
         )
 
         public actual operator fun <Input, Output> invoke(
-            promptExecutor: HookablePromptExecutor,
+            promptExecutor: PromptExecutor,
             llmModel: LLModel,
             responseProcessor: ResponseProcessor?,
             toolRegistry: ToolRegistry,
@@ -202,7 +202,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
         )
 
         public actual operator fun <Input, Output> invoke(
-            promptExecutor: HookablePromptExecutor,
+            promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
             strategy: AIAgentPlannerStrategy<Input, Output, *>,
             toolRegistry: ToolRegistry,

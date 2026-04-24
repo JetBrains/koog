@@ -1,12 +1,13 @@
 package ai.koog.prompt.executor.llms
 
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 
 /**
- * Test class for verifying the hook lifecycle of [RoutingLLMPromptExecutor].
+ * Test class for verifying the behavior of the [RoutingLLMPromptExecutor] with [PromptExecutorHooks].
  * Note: this test IS used - use cases are defined in [PromptExecutorHooksTestBase]
  */
 @Suppress("unused")
@@ -14,5 +15,5 @@ class RoutingLLMPromptExecutorHooksTest : PromptExecutorHooksTestBase() {
 
     override val model = LLModel(provider = LLMProvider.OpenAI, id = "test-model")
 
-    override fun createExecutor(client: LLMClient): HookablePromptExecutor = RoutingLLMPromptExecutor(client)
+    override fun createExecutor(client: LLMClient): PromptExecutor = RoutingLLMPromptExecutor(client)
 }

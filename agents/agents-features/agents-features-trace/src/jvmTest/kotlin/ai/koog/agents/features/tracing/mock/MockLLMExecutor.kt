@@ -3,13 +3,12 @@ package ai.koog.agents.features.tracing.mock
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.ExecuteHook
-import ai.koog.prompt.executor.model.HookablePromptExecutor
-import ai.koog.prompt.executor.model.ModerateHook
-import ai.koog.prompt.executor.model.MultipleChoicesHook
-import ai.koog.prompt.executor.model.StreamingHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.InitialExecutionIntent
+import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -19,33 +18,26 @@ import kotlinx.coroutines.flow.flow
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-class MockLLMExecutor : HookablePromptExecutor() {
+class MockLLMExecutor : PromptExecutor() {
 
     private val clock: Clock = object : Clock {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
 
-    override suspend fun execute(
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>,
-        hook: ExecuteHook?
-    ): List<Message.Response> = listOf(handlePrompt(prompt))
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>, hooks: PromptExecutorHooks?): List<Message.Response> =
+        executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.execute) { finalIntent ->
+            listOf(handlePrompt(finalIntent.prompt))
+        }
 
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hook: StreamingHook?
+        hooks: PromptExecutorHooks?
     ): Flow<StreamFrame> =
-        flow { handlePrompt(prompt).toStreamFrames().forEach { emit(it) } }
-
-    override suspend fun executeMultipleChoices(
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>,
-        hook: MultipleChoicesHook?
-    ): List<LLMChoice> = throw UnsupportedOperationException("Multiple choices not supported")
+        streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) { finalIntent ->
+            flow { handlePrompt(finalIntent.prompt).toStreamFrames().forEach { emit(it) } }
+        }
 
     private fun handlePrompt(prompt: Prompt): Message.Response {
         val lastMessage = prompt.messages.last()
@@ -64,9 +56,9 @@ class MockLLMExecutor : HookablePromptExecutor() {
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel,
-        hook: ModerateHook?
+        hooks: PromptExecutorHooks?
     ): ModerationResult {
-        throw UnsupportedOperationException("Moderation is not needed for MockLLMExecutor")
+        throw UnsupportedOperationException("Moderation is not needed for TestLLMExecutor")
     }
 
     override fun close() {}

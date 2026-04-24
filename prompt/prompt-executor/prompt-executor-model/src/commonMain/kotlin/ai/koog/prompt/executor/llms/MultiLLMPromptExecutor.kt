@@ -4,14 +4,12 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.model.ExecuteHook
-import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.ExecutorHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
 import ai.koog.prompt.executor.model.InitialExecutionIntent
-import ai.koog.prompt.executor.model.ModerateHook
-import ai.koog.prompt.executor.model.MultipleChoicesHook
-import ai.koog.prompt.executor.llms.PromptExecutorHelper.executeWithHook
-import ai.koog.prompt.executor.llms.PromptExecutorHelper.streamWithHook
-import ai.koog.prompt.executor.model.StreamingHook
+import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -21,6 +19,8 @@ import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlin.jvm.JvmOverloads
 
 /**
@@ -35,8 +35,8 @@ import kotlin.jvm.JvmOverloads
  */
 public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     private val llmClients: Map<LLMProvider, LLMClient>,
-    private val fallback: FallbackPromptExecutorSettings? = null,
-) : HookablePromptExecutor() {
+    private val fallback: FallbackPromptExecutorSettings? = null
+) : PromptExecutor() {
     /**
      * Represents configuration for a fallback large language model (LLM) execution strategy.
      *
@@ -144,88 +144,95 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Executes a given prompt using the specified tools and model, and returns a list of response messages.
+     *
+     * @param prompt The `Prompt` to be executed, containing the input messages and parameters.
+     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
+     * @param model The LLM model to use for execution.
+     * @return A list of `Message.Response` objects containing the responses generated based on the prompt.
+     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
+     */
     override suspend fun execute(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hook: ExecuteHook?
+        hooks: PromptExecutorHooks?
     ): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        return executeWithHook(
-            prompt = prompt,
-            model = model,
-            tools = tools,
-            chooseExecutionSubject = this::chooseExecutionSubject,
-            hook = hook
-        ) { finalIntent, (effectiveClient, effectiveModel) ->
-            val response = effectiveClient.execute(finalIntent.prompt, effectiveModel, finalIntent.tools)
-            logger.debug { "Response: $response" }
-            response
+        val initialIntent = InitialExecutionIntent(prompt, tools, model)
+        val (effectiveClient, effectiveModel) = chooseClientAndModel(initialIntent, hooks?.execute)
+        return executeWithHook(initialIntent, effectiveModel, hooks?.execute) { finalIntent ->
+            effectiveClient.execute(finalIntent.prompt, effectiveModel, finalIntent.tools)
+                .also { logger.debug { "Response: $it" } }
         }
     }
 
+    /**
+     * Executes the given prompt with the specified model and streams the response in chunks as a flow.
+     *
+     * @param prompt The prompt to execute, containing the messages and parameters.
+     * @param model The LLM model to use for execution.
+     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
+     **/
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hook: StreamingHook?
-    ): Flow<StreamFrame> {
+        hooks: PromptExecutorHooks?
+    ): Flow<StreamFrame> = flow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
-        return streamWithHook(
-            prompt = prompt,
-            model = model,
-            tools = tools,
-            chooseExecutionSubject = this::chooseExecutionSubject,
-            hook = hook
-        ) { finalIntent, (effectiveClient, effectiveModel) ->
-            effectiveClient.executeStreaming(finalIntent.prompt, effectiveModel, finalIntent.tools)
-        }
+        val initialIntent = InitialExecutionIntent(prompt, tools, model)
+        val (effectiveClient, effectiveModel) = chooseClientAndModel(initialIntent, hooks?.streaming)
+        emitAll(
+            streamingWithHook(initialIntent, effectiveModel, hooks?.streaming) { finalIntent ->
+                effectiveClient.executeStreaming(finalIntent.prompt, effectiveModel, finalIntent.tools)
+            }
+        )
     }
 
+    /**
+     * Executes a given prompt using the specified tools and model and returns a list of model choices.
+     *
+     * @param prompt The `Prompt` to be executed, containing the input messages and parameters.
+     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
+     * @param model The LLM model to use for execution.
+     * @return A list of `LLMChoice` objects containing the choices generated based on the prompt.
+     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
+     */
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hook: MultipleChoicesHook?
+        hooks: PromptExecutorHooks?
     ): List<LLMChoice> {
-        logger.debug { "Executing multiple choices: $prompt with tools: $tools and model: $model" }
-        return executeWithHook(
-            prompt = prompt,
-            model = model,
-            tools = tools,
-            chooseExecutionSubject = this::chooseExecutionSubject,
-            hook = hook
-        ) { finalIntent, (effectiveClient, effectiveModel) ->
-            val choices = effectiveClient.executeMultipleChoices(finalIntent.prompt, effectiveModel, finalIntent.tools)
-            logger.debug { "Choices: $choices" }
-            choices
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+        val initialIntent = InitialExecutionIntent(prompt, tools, model)
+        val (effectiveClient, effectiveModel) = chooseClientAndModel(initialIntent, hooks?.multipleChoices)
+        return executeWithHook(initialIntent, effectiveModel, hooks?.multipleChoices) { finalIntent ->
+            effectiveClient.executeMultipleChoices(finalIntent.prompt, effectiveModel, finalIntent.tools)
+                .also { logger.debug { "Choices: $it" } }
         }
     }
 
+    /**
+     * Moderates the provided multi-modal content using the specified model.
+     *
+     * @param prompt The `Prompt` containing the content to be moderated.
+     * @param model The `LLModel` to use for moderation, including its ID and provider information.
+     * @return A `ModerationResult` representing the result of the moderation process.
+     * @throws IllegalArgumentException If no client is found for the model's provider.
+     */
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel,
-        hook: ModerateHook?
+        hooks: PromptExecutorHooks?
     ): ModerationResult {
         logger.debug { "Moderating multi-modal content with model: ${model.id}" }
-        return executeWithHook(
-            prompt = prompt,
-            model = model,
-            chooseExecutionSubject = this::chooseExecutionSubject,
-            hook = hook
-        ) { finalIntent, (effectiveClient, effectiveModel) ->
-            effectiveClient.moderate(finalIntent.prompt, effectiveModel)
-        }
-    }
-
-    private suspend fun chooseExecutionSubject(executionIntent: InitialExecutionIntent): EffectiveExecutionSubject {
-        val provider = executionIntent.model.provider
-        val effectiveClient = llmClients[provider] ?: fallbackClient
-        return if (effectiveClient != null) {
-            val effectiveModel = if (provider in llmClients) executionIntent.model else fallback!!.fallbackModel
-            effectiveClient to effectiveModel
-        } else {
-            throw IllegalArgumentException("No client found for provider: $provider")
+        val initialIntent = InitialExecutionIntent(prompt = prompt, model = model)
+        val (client, effectiveModel) = chooseClientAndModel(initialIntent, hooks?.moderation)
+        return executeWithHook(initialIntent, effectiveModel, hooks?.moderation) { finalIntent ->
+            client.moderate(finalIntent.prompt, effectiveModel)
         }
     }
 
@@ -253,5 +260,21 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
 
     override fun close() {
         llmClients.forEach { (_, client) -> client.close() }
+    }
+
+    private suspend fun chooseClientAndModel(
+        executionIntent: InitialExecutionIntent,
+        hook: ExecutorHook?
+    ): Pair<LLMClient, LLModel> {
+        val provider = executionIntent.model.provider
+        val effectiveClient = llmClients[provider] ?: fallbackClient
+        return if (effectiveClient != null) {
+            val effectiveModel = if (provider in llmClients) executionIntent.model else fallback!!.fallbackModel
+            effectiveClient to effectiveModel
+        } else {
+            val error = IllegalArgumentException("No client found for provider: $provider")
+            hook?.onModelChoiceFailed(executionIntent, error)
+            throw error
+        }
     }
 }

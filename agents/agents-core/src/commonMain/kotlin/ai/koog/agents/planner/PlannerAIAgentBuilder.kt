@@ -10,7 +10,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import kotlin.time.Clock
 
@@ -20,7 +20,7 @@ import kotlin.time.Clock
 public class PlannerAIAgentBuilder<Input, Output>(
     private val strategy: AIAgentPlannerStrategy<Input, Output, *>
 ) {
-    private var promptExecutor: HookablePromptExecutor? = null
+    private var promptExecutor: PromptExecutor? = null
     private var toolRegistry: ToolRegistry = ToolRegistry.EMPTY
     private var id: String? = null
     private var prompt: Prompt = Prompt.Empty
@@ -43,7 +43,7 @@ public class PlannerAIAgentBuilder<Input, Output>(
      * and interacting with language models.
      * @return The current instance of the [PlannerAIAgentBuilder] for chaining additional configurations.
      */
-    public fun promptExecutor(promptExecutor: HookablePromptExecutor): PlannerAIAgentBuilder<Input, Output> = apply {
+    public fun promptExecutor(promptExecutor: PromptExecutor): PlannerAIAgentBuilder<Input, Output> = apply {
         this.promptExecutor = promptExecutor
     }
 

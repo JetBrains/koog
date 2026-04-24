@@ -5,9 +5,13 @@ import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.cache.model.put
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.InitialExecutionIntent
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.executor.model.ResolvedExecutionIntent
+import ai.koog.prompt.executor.model.SimpleExecutorHook
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -65,21 +69,29 @@ class CachedPromptExecutorTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-        ): List<Message.Response> {
+            hooks: PromptExecutorHooks?
+        ): List<Message.Response> = executeWithHook(
+            initialIntent = InitialExecutionIntent(prompt, tools, model),
+            hook = hooks?.execute
+        ) {
             executeCalled = true
-            return testResponse
+            testResponse
         }
 
         override fun executeStreaming(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-        ): Flow<StreamFrame> {
+            hooks: PromptExecutorHooks?
+        ): Flow<StreamFrame> = streamingWithHook(
+            initialIntent = InitialExecutionIntent(prompt, tools, model),
+            hook = hooks?.streaming
+        ) {
             executeStreamingCalled = true
-            return streamFrameFlowOf("Streaming response from executor")
+            streamFrameFlowOf("Streaming response from executor")
         }
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+        override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
             throw UnsupportedOperationException("Moderation is not needed for TestLLMExecutor")
         }
 
@@ -160,13 +172,15 @@ class CachedPromptExecutorTest {
         assertEquals(testResponse, result)
     }
 
-    /** Creates an [ExecuteHook] that calls [onCompleted] when execute completes successfully. */
-    private fun executeTrackingHooks(onCompleted: () -> Unit): ExecuteHook = object : ExecuteHook {
-        override suspend fun onCompleted(
-            intent: ResolvedExecutionIntent,
-            effectiveModel: LLModel,
-            result: List<Message.Response>
-        ) =
-            onCompleted()
+    /** Creates a [PromptExecutorHooks] that calls [onCompleted] when execute completes successfully. */
+    private fun executeTrackingHooks(onCompleted: () -> Unit): PromptExecutorHooks = object : PromptExecutorHooks {
+        override val execute = object : SimpleExecutorHook<List<Message.Response>> {
+            override suspend fun onCompleted(
+                intent: ResolvedExecutionIntent,
+                effectiveModel: LLModel,
+                result: List<Message.Response>
+            ) =
+                onCompleted()
+        }
     }
 }

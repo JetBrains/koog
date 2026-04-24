@@ -33,12 +33,8 @@ import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.ExecuteHook
-import ai.koog.prompt.executor.model.HookablePromptExecutor
-import ai.koog.prompt.executor.model.ModerateHook
-import ai.koog.prompt.executor.model.MultipleChoicesHook
-import ai.koog.prompt.executor.model.StreamingHook
-import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
@@ -274,33 +270,26 @@ class DebuggerStreamingTest {
         val testStreamingErrorMessage = "Test streaming error"
         var testStreamingStackTrace = ""
 
-        val testStreamingExecutor = object : HookablePromptExecutor() {
+        val testStreamingExecutor = object : PromptExecutor() {
             override suspend fun execute(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>,
-                hook: ExecuteHook?
+                hooks: PromptExecutorHooks?
             ): List<Message.Response> = emptyList()
 
             override fun executeStreaming(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>,
-                hook: StreamingHook?
+                hooks: PromptExecutorHooks?
             ): Flow<StreamFrame> = flow {
                 val testException = IllegalStateException(testStreamingErrorMessage)
                 testStreamingStackTrace = testException.stackTraceToString()
                 throw testException
             }
 
-            override suspend fun executeMultipleChoices(
-                prompt: Prompt,
-                model: LLModel,
-                tools: List<ToolDescriptor>,
-                hook: MultipleChoicesHook?
-            ): List<LLMChoice> = throw UnsupportedOperationException("Not used in test")
-
-            override suspend fun moderate(prompt: Prompt, model: LLModel, hook: ModerateHook?): ModerationResult {
+            override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
                 throw UnsupportedOperationException("Not used in test")
             }
 

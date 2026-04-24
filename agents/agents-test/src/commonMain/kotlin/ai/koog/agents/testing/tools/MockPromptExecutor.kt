@@ -4,18 +4,12 @@ import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.ExecuteHook
-import ai.koog.prompt.executor.model.ExecutionArgOverrides
-import ai.koog.prompt.executor.model.ExecutorHook
-import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
 import ai.koog.prompt.executor.model.InitialExecutionIntent
-import ai.koog.prompt.executor.model.ModerateHook
-import ai.koog.prompt.executor.model.MultipleChoicesHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.ResolvedExecutionIntent
-import ai.koog.prompt.executor.model.StreamingHook
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -77,7 +71,7 @@ public class MockPromptExecutor internal constructor(
     internal val toolActions: List<ToolCondition<*, *>> = emptyList(),
     private val clock: Clock = Clock.System,
     private val tokenizer: Tokenizer? = null
-) : HookablePromptExecutor() {
+) : PromptExecutor() {
     public companion object {
         @JvmStatic
         @JavaAPI
@@ -96,13 +90,12 @@ public class MockPromptExecutor internal constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hook: ExecuteHook?
+        hooks: PromptExecutorHooks?
     ): List<Message.Response> {
         logger.debug { "Executing prompt with tools: ${tools.map { it.name }}" }
-        val resolvedIntent = resolvedIntent(prompt, model, tools, hook)
-        val messages = handlePrompt(prompt)
-        hook?.onCompleted(resolvedIntent, model, messages)
-        return messages
+        return executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.execute) { finalIntent ->
+            handlePrompt(finalIntent.prompt)
+        }
     }
 
     /**
@@ -119,23 +112,11 @@ public class MockPromptExecutor internal constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hook: StreamingHook?
-    ): Flow<StreamFrame> = flow {
-        val resolvedIntent = resolvedIntent(prompt, model, tools, hook)
-        execute(prompt = prompt, model = model).toStreamFrames()
-            .onEach {
-                emit(it)
-                hook?.onFrame(resolvedIntent, model, it)
-            }
-        hook?.onCompleted(resolvedIntent, model)
-    }
-
-    override suspend fun executeMultipleChoices(
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>,
-        hook: MultipleChoicesHook?
-    ): List<LLMChoice> = throw UnsupportedOperationException("MockPromptExecutor does not support multiple choices")
+        hooks: PromptExecutorHooks?
+    ): Flow<StreamFrame> =
+        streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) { finalIntent ->
+            flow { handlePrompt(finalIntent.prompt).toStreamFrames().forEach { emit(it) } }
+        }
 
     /**
      * Processes a given prompt to determine if it adheres to moderation rules and returns a moderation result.
@@ -150,31 +131,14 @@ public class MockPromptExecutor internal constructor(
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel,
-        hook: ModerateHook?
-    ): ModerationResult {
-        val resolvedIntent = resolvedIntent(prompt = prompt, model = model, hook = hook)
-        val lastMessage = getLastMessage(prompt)
-        val response = if (lastMessage == null) {
-            moderationResponseMatcher.defaultResponse
-        } else {
+        hooks: PromptExecutorHooks?
+    ): ModerationResult =
+        executeWithHook(InitialExecutionIntent(prompt, emptyList(), model), model, hooks?.moderation) { finalIntent ->
+            val lastMessage = getLastMessage(finalIntent.prompt) ?: return@executeWithHook moderationResponseMatcher.defaultResponse
             findExactResponse(lastMessage, moderationResponseMatcher.exactMatches)
-                ?: findPartialResponse(lastMessage, moderationResponseMatcher.exactMatches)
+                ?: findPartialResponse(lastMessage, moderationResponseMatcher.partialMatches)
                 ?: moderationResponseMatcher.defaultResponse
         }
-        hook?.onCompleted(resolvedIntent, model, response)
-        return response
-    }
-
-    private suspend fun resolvedIntent(
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor> = emptyList(),
-        hook: ExecutorHook?
-    ): ResolvedExecutionIntent {
-        val initialIntent = InitialExecutionIntent(prompt, tools, model)
-        val overrides = hook?.beforeExecution(initialIntent, initialIntent.model) ?: ExecutionArgOverrides.NoOverrides
-        return ResolvedExecutionIntent(initialIntent, overrides)
-    }
 
     private fun getLastMessage(prompt: Prompt): Message? {
         return if (handleLastAssistantMessage && prompt.messages.any { it is Message.Assistant }) {

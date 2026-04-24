@@ -4,11 +4,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.ExecuteHook
-import ai.koog.prompt.executor.model.HookablePromptExecutor
-import ai.koog.prompt.executor.model.ModerateHook
-import ai.koog.prompt.executor.model.MultipleChoicesHook
-import ai.koog.prompt.executor.model.StreamingHook
+import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -55,12 +52,12 @@ class ChoiceSelectionStrategyTest {
     @JsName("PromptExecutorChoice_should_delegate_to_strategy")
     fun `PromptExecutorWithChoiceSelection should delegate to strategy`() = runTest {
         // Arrange
-        val mockExecutor = object : HookablePromptExecutor() {
+        val mockExecutor = object : PromptExecutor() {
             override suspend fun execute(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>,
-                hook: ExecuteHook?
+                hooks: PromptExecutorHooks?
             ): List<Message.Response> {
                 return listOf(
                     Message.Assistant(
@@ -74,7 +71,7 @@ class ChoiceSelectionStrategyTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>,
-                hook: StreamingHook?
+                hooks: PromptExecutorHooks?
             ): Flow<StreamFrame> =
                 streamFrameFlowOf("Default streaming response")
 
@@ -82,7 +79,7 @@ class ChoiceSelectionStrategyTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>,
-                hook: MultipleChoicesHook?
+                hooks: PromptExecutorHooks?
             ): List<LLMChoice> {
                 val choice1 =
                     listOf(Message.Assistant("Choice 1", metaInfo = ResponseMetaInfo.create(testClock)))
@@ -91,7 +88,7 @@ class ChoiceSelectionStrategyTest {
                 return listOf(choice1, choice2)
             }
 
-            override suspend fun moderate(prompt: Prompt, model: LLModel, hook: ModerateHook?): ModerationResult {
+            override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
                 throw UnsupportedOperationException("Moderation is not needed here")
             }
 

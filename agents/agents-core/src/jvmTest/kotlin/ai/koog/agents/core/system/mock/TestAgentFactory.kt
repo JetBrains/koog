@@ -12,7 +12,7 @@ import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -105,7 +105,7 @@ object TestAgentFactory {
         userPrompt: String? = null,
         assistantPrompt: String? = null,
         toolRegistry: ToolRegistry? = null,
-        promptExecutor: HookablePromptExecutor? = null,
+        promptExecutor: PromptExecutor? = null,
         installFeatures: GraphAIAgent.FeatureContext.() -> Unit = { }
     ): AIAgent<String, String> {
         val agentConfig = AIAgentConfig(
@@ -141,7 +141,7 @@ object TestAgentFactory {
         userPrompt: String? = null,
         assistantPrompt: String? = null,
         toolRegistry: ToolRegistry? = null,
-        promptExecutor: HookablePromptExecutor? = null,
+        promptExecutor: PromptExecutor? = null,
         installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = { }
     ): FunctionalAIAgent<String, String> {
         val agentConfig = AIAgentConfig(

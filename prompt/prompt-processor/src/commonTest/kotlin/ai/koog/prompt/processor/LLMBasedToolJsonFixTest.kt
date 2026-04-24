@@ -5,13 +5,8 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.ExecuteHook
-import ai.koog.prompt.executor.model.HookablePromptExecutor
-import ai.koog.prompt.executor.model.ModerateHook
-import ai.koog.prompt.executor.model.MultipleChoicesHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.StreamingHook
-import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -58,7 +53,7 @@ class LLMBasedToolJsonFixTest {
 
     private class MockExecutor(
         private val responses: List<Message.Response>,
-    ) : HookablePromptExecutor() {
+    ) : PromptExecutor() {
         private var index = 0
         val prompts = mutableListOf<Prompt>()
 
@@ -66,7 +61,7 @@ class LLMBasedToolJsonFixTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hook: ExecuteHook?
+            hooks: PromptExecutorHooks?
         ): List<Message.Response> =
             listOf(responses[index++]).also { prompts.add(prompt) }
 
@@ -74,18 +69,11 @@ class LLMBasedToolJsonFixTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hook: StreamingHook?
+            hooks: PromptExecutorHooks?
         ): Flow<StreamFrame> =
             error("Not supported")
 
-        override suspend fun executeMultipleChoices(
-            prompt: Prompt,
-            model: LLModel,
-            tools: List<ToolDescriptor>,
-            hook: MultipleChoicesHook?
-        ): List<LLMChoice> = error("Not supported")
-
-        override suspend fun moderate(prompt: Prompt, model: LLModel, hook: ModerateHook?): ModerationResult = error("Not supported")
+        override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult = error("Not supported")
 
         override fun close() {}
     }

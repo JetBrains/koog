@@ -13,7 +13,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
-import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.TypeToken
 import kotlin.time.Clock
 
@@ -45,7 +45,7 @@ public class GraphAgentBuilder<Input, Output>(
     private val strategy: AIAgentGraphStrategy<Input, Output>,
     private val inputType: TypeToken,
     private val outputType: TypeToken,
-    promptExecutor: HookablePromptExecutor? = null,
+    promptExecutor: PromptExecutor? = null,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     config: AIAgentConfig,
@@ -136,7 +136,7 @@ public class GraphAgentBuilder<Input, Output>(
  */
 public class FunctionalAgentBuilder<Input, Output>(
     private val strategy: AIAgentFunctionalStrategy<Input, Output>,
-    promptExecutor: HookablePromptExecutor? = null,
+    promptExecutor: PromptExecutor? = null,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     config: AIAgentConfig,
@@ -209,7 +209,7 @@ public class FunctionalAgentBuilder<Input, Output>(
  */
 public class PlannerAgentBuilder<Input, Output>(
     private val strategy: AIAgentPlannerStrategy<Input, Output, *>,
-    promptExecutor: HookablePromptExecutor? = null,
+    promptExecutor: PromptExecutor? = null,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     config: AIAgentConfig,

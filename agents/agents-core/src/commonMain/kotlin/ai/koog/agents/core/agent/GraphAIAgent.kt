@@ -18,7 +18,7 @@ import ai.koog.agents.core.feature.ContextualPromptExecutor
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.executor.model.HookablePromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -52,7 +52,7 @@ import kotlin.time.Clock
 public open class GraphAIAgent<Input, Output>(
     public val inputType: TypeToken,
     public val outputType: TypeToken,
-    public val promptExecutor: HookablePromptExecutor,
+    public val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
     override val strategy: AIAgentGraphStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
@@ -69,7 +69,7 @@ public open class GraphAIAgent<Input, Output>(
      *
      * @param inputType Represents the input type of the agent as a `KType`.
      * @param outputType Represents the output type of the agent as a `KType`.
-     * @param promptExecutor The `HookablePromptExecutor` responsible for processing LLM prompts within the agent.
+     * @param promptExecutor The `PromptExecutor` responsible for processing LLM prompts within the agent.
      * @param agentConfig The configuration settings for the AI agent, including prompts, models, and execution limits.
      * @param strategy The graph strategy for handling input/output transformations during agent execution.
      * @param toolRegistry A registry of tools available for use by the agent, defaulting to an empty registry.
@@ -81,7 +81,7 @@ public open class GraphAIAgent<Input, Output>(
     public constructor(
         inputType: KType,
         outputType: KType,
-        promptExecutor: HookablePromptExecutor,
+        promptExecutor: PromptExecutor,
         agentConfig: AIAgentConfig,
         strategy: AIAgentGraphStrategy<Input, Output>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,

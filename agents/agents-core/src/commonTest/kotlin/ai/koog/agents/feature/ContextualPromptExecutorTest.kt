@@ -27,15 +27,13 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels.Chat.GPT4o
 import ai.koog.prompt.executor.clients.openai.OpenAIModels.Chat.GPT5Pro
-import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.ExecutionArgOverrides
 import ai.koog.prompt.executor.model.ExecutionArgOverrides.NoOverrides
-import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.executor.model.InitialExecutionIntent
-import ai.koog.prompt.executor.model.ModerateHook
-import ai.koog.prompt.executor.model.MultipleChoicesHook
+import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.executor.model.ResolvedExecutionIntent
 import ai.koog.prompt.executor.model.SimpleExecutorHook
-import ai.koog.prompt.executor.model.StreamingHook
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -283,6 +281,30 @@ class ContextualPromptExecutorTest {
     }
 
     @Test
+    fun testOuterHooksChainingOnExecute() = runTest {
+        val capturingPipeline = CapturingPipeline(agentConfig)
+        val context = agentContext(capturingPipeline)
+        val contextualExecutor = ContextualPromptExecutor(TestHookPromptExecutor(), context)
+        val outerHooks = CapturingOuterHooks()
+
+        contextualExecutor.execute(testPrompt, GPT4o, hooks = outerHooks)
+
+        assertPipelineCalls(
+            capturingPipeline, listOf(
+                ExpectedPipelineCall(ON_LLM_CALL_STARTING, testPrompt, GPT4o, context),
+                ExpectedPipelineCall(ON_LLM_CALL_COMPLETED, testPrompt, GPT4o, context),
+            )
+        )
+        assertEquals(
+            listOf(
+                CapturingOuterHooks.HookType.BEFORE_EXECUTION,
+                CapturingOuterHooks.HookType.ON_COMPLETED,
+            ),
+            outerHooks.capturedHookCalls
+        );
+    }
+
+    @Test
     fun testPromptOverrideViaFeatureInterceptor() = runTest {
         val modifiedPrompt = prompt("modified-prompt") { user("I was modified by a feature") }
         val modifyingPipeline = PromptModifyingPipeline(agentConfig, modifiedPrompt)
@@ -377,6 +399,34 @@ class ContextualPromptExecutorTest {
         ) {
             super.onLLMCallStarting(eventId, executionInfo, runId, prompt, model, tools, context)
             context.llm.prompt = modifiedPrompt
+        }
+    }
+
+    private class CapturingOuterHooks : PromptExecutorHooks {
+
+        enum class HookType {
+            BEFORE_EXECUTION,
+            ON_COMPLETED,
+        }
+
+        val capturedHookCalls = mutableListOf<HookType>()
+
+        override val execute = object : SimpleExecutorHook<List<Message.Response>> {
+            override suspend fun beforeExecution(
+                intent: InitialExecutionIntent,
+                effectiveModel: LLModel
+            ): ExecutionArgOverrides {
+                capturedHookCalls += HookType.BEFORE_EXECUTION
+                return NoOverrides
+            }
+
+            override suspend fun onCompleted(
+                intent: ResolvedExecutionIntent,
+                effectiveModel: LLModel,
+                result: List<Message.Response>
+            ) {
+                capturedHookCalls += HookType.ON_COMPLETED
+            }
         }
     }
 
@@ -578,7 +628,7 @@ class ContextualPromptExecutorTest {
         val streamFrames: List<StreamFrame>? = null,
         val responses: List<Message.Response>? = null,
         val moderationResponse: ModerationResult? = null,
-    ) : HookablePromptExecutor() {
+    ) : PromptExecutor() {
 
         private suspend fun <T> basicFlow(
             prompt: Prompt,
@@ -609,8 +659,8 @@ class ContextualPromptExecutorTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hook: ExecuteHook?
-        ): List<Message.Response> = basicFlow(prompt, model, tools, hook) {
+            hooks: PromptExecutorHooks?
+        ): List<Message.Response> = basicFlow(prompt, model, tools, hooks?.execute) {
             requireNotNull(responses) { "Stub responses for non-error execution flow" }
         }
 
@@ -618,8 +668,8 @@ class ContextualPromptExecutorTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hook: MultipleChoicesHook?
-        ): List<LLMChoice> = basicFlow(prompt, model, tools, hook) {
+            hooks: PromptExecutorHooks?
+        ): List<LLMChoice> = basicFlow(prompt, model, tools, hooks?.multipleChoices) {
             listOf(requireNotNull(responses) { "Stub responses for non-error execution flow" })
         }
 
@@ -627,35 +677,35 @@ class ContextualPromptExecutorTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hook: StreamingHook?
+            hooks: PromptExecutorHooks?
         ): Flow<StreamFrame> = flow {
             val resolvedModel = effectiveModel ?: model
             val initialIntent = InitialExecutionIntent(prompt, tools, model)
             if (modelChoiceFailure != null) {
-                hook?.onModelChoiceFailed(initialIntent, modelChoiceFailure)
+                hooks?.streaming?.onModelChoiceFailed(initialIntent, modelChoiceFailure)
                 throw modelChoiceFailure
             }
-            val override = hook?.beforeExecution(initialIntent, resolvedModel) ?: NoOverrides
+            val override = hooks?.streaming?.beforeExecution(initialIntent, resolvedModel) ?: NoOverrides
             val finalIntent = ResolvedExecutionIntent(initialIntent, override)
             if (executionFailure != null) {
-                hook?.onFailure(finalIntent, resolvedModel, executionFailure)
-                hook?.onCompleted(finalIntent, resolvedModel)
+                hooks?.streaming?.onFailure(finalIntent, resolvedModel, executionFailure)
+                hooks?.streaming?.onCompleted(finalIntent, resolvedModel)
                 throw executionFailure
             } else {
                 requireNotNull(streamFrames) { "Stub stream frames for non-error streaming flow" }
                 streamFrames.forEach {
                     emit(it)
-                    hook?.onFrame(finalIntent, resolvedModel, it)
+                    hooks?.streaming?.onFrame(finalIntent, resolvedModel, it)
                 }
-                hook?.onCompleted(finalIntent, resolvedModel)
+                hooks?.streaming?.onCompleted(finalIntent, resolvedModel)
             }
         }
 
         override suspend fun moderate(
             prompt: Prompt,
             model: LLModel,
-            hook: ModerateHook?
-        ): ModerationResult = basicFlow(prompt, model, emptyList(), hook) {
+            hooks: PromptExecutorHooks?
+        ): ModerationResult = basicFlow(prompt, model, emptyList(), hooks?.moderation) {
             requireNotNull(moderationResponse) { "Stub moderation response for non-error moderation flow" }
         }
 
