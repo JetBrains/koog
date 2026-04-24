@@ -219,6 +219,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraph(
     name = name,
@@ -226,13 +227,15 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
 ) {
     val finishTool = FinishTool<Output>(typeToken<Output>())
 
-    setupSubgraphWithTask<Input, Output, Output>(
+    setupSubgraphWithTask(
         finishTool = finishTool,
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
+        freshHistory = freshHistory,
         defineTask = defineTask
     )
 }
@@ -268,6 +271,7 @@ public fun <Input : Any, Output : Any> subgraphWithTask(
     parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraph(
     name = name,
@@ -277,6 +281,7 @@ public fun <Input : Any, Output : Any> subgraphWithTask(
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
 ) {
     val finishTool = FinishTool<Output>(outputType)
 
@@ -286,6 +291,7 @@ public fun <Input : Any, Output : Any> subgraphWithTask(
         outputTransformedType = outputType,
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
+        freshHistory = freshHistory,
         defineTask = defineTask
     )
 }
@@ -313,6 +319,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
@@ -322,6 +329,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     parallelTools = parallelTools,
     assistantResponseRepeatMax = assistantResponseRepeatMax,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
     defineTask = defineTask
 )
 
@@ -354,6 +362,7 @@ public fun <Input : Any, OutputTransformed : Any> subgraphWithTask(
     parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph<Input, OutputTransformed>(
     inputType = inputType,
@@ -363,6 +372,7 @@ public fun <Input : Any, OutputTransformed : Any> subgraphWithTask(
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
 ) {
     setupSubgraphWithTask(
         finishTool = finishTool,
@@ -370,6 +380,7 @@ public fun <Input : Any, OutputTransformed : Any> subgraphWithTask(
         outputTransformedType = finishTool.resultType,
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
+        freshHistory = freshHistory,
         defineTask = defineTask,
     )
 }
@@ -402,6 +413,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> sub
     parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph(
     name = name,
@@ -409,11 +421,13 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> sub
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
 ) {
     setupSubgraphWithTask<Input, Output, OutputTransformed>(
         finishTool = finishTool,
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
+        freshHistory = freshHistory,
         defineTask = defineTask
     )
 }
@@ -446,6 +460,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> sub
     parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph(
     name = name,
@@ -453,11 +468,13 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> sub
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
 ) {
     setupSubgraphWithTask<Input, Output, OutputTransformed>(
         finishTool = finishTool,
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
+        freshHistory = freshHistory,
         defineTask = defineTask
     )
 }
@@ -621,6 +638,9 @@ public inline fun <reified Input : Any> subgraphWithVerification(
  * @param parallelTools the mode in which tools are executed, e.g., parallel or sequential execution.
  * @param assistantResponseRepeatMax the maximum number of assistant responses allowed before
  *        determining that the task cannot be completed. If not provided, a default is used.
+ * @param freshHistory when `true`, the string returned by [defineTask] is appended as a
+ *        `system` message; when `false`, it is appended as a `user` message via the standard
+ *        LLM request node.
  * @param defineTask a suspend function defining the task description, executed within the
  *        context of an AI agent graph and based on the given input data.
  */
@@ -631,6 +651,7 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
     outputTransformedType: TypeToken,
     parallelTools: Boolean,
     assistantResponseRepeatMax: Int? = null,
+    freshHistory: Boolean = false,
     defineTask: suspend AIAgentGraphContextBase.(Input) -> String
 ) {
     val originalToolsKey = createStorageKey<List<ToolDescriptor>>("all-available-tools")
@@ -685,7 +706,20 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
     // Helper node to overcome problems of the current api and repeat less code when writing routing conditions
     val nodeDecide by node<Message.Assistant, Message.Assistant> { it }
 
-    val nodeCallLLM by nodeLLMRequest()
+    val nodeCallLLM by if (freshHistory) {
+        // When freshHistory is true, the defineTask result becomes a system message
+        // rather than a user message to serve as the subgraph's own instruction.
+        node<String, Message.Assistant> { message ->
+            llm.writeSession {
+                appendPrompt {
+                    system(message)
+                }
+                requestLLM()
+            }
+        }
+    } else {
+        nodeLLMRequest()
+    }
 
     val callToolsHacked by node<ToolCalls, ReceivedToolResults> { message ->
         val (finishToolCalls, regularToolCalls) = message.toolCalls.partition { it.tool == finishTool.name }
@@ -786,6 +820,9 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
  * @param parallelTools the mode in which tools are executed, e.g., parallel or sequential execution.
  * @param assistantResponseRepeatMax the maximum number of assistant responses allowed before
  *        determining that the task cannot be completed. If not provided, a default is used.
+ * @param freshHistory when `true`, the string returned by [defineTask] is appended as a
+ *        `system` message; when `false`, it is appended as a `user` message via the standard
+ *        LLM request node.
  * @param defineTask a suspend function defining the task description, executed within the
  *        context of an AI agent graph and based on the given input data.
  */
@@ -794,6 +831,7 @@ public inline fun <reified Input, Output, reified OutputTransformed> AIAgentSubg
     finishTool: Tool<Output, OutputTransformed>,
     parallelTools: Boolean,
     assistantResponseRepeatMax: Int? = null,
+    freshHistory: Boolean = false,
     noinline defineTask: suspend AIAgentGraphContextBase.(Input) -> String
 ) {
     setupSubgraphWithTask(
@@ -802,6 +840,7 @@ public inline fun <reified Input, Output, reified OutputTransformed> AIAgentSubg
         outputTransformedType = typeToken<OutputTransformed>(),
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
+        freshHistory = freshHistory,
         defineTask = defineTask,
     )
 }
