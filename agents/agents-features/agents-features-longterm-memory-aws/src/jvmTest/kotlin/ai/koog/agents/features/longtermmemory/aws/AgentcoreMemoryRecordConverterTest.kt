@@ -1,6 +1,6 @@
 package ai.koog.agents.features.longtermmemory.aws
 
-import ai.koog.agents.longtermmemory.model.MemoryRecord
+import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemoryStrategy
 import ai.koog.rag.base.storage.search.ScoreMetric
 import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryContent
 import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordSummary
@@ -36,10 +36,11 @@ class AgentcoreMemoryRecordConverterTest {
             score = 0.95
         )
 
-        val result = AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary)
+        val result =
+            AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary, AgentcoreMemoryStrategy.SUMMARY)
 
-        assertIs<MemoryRecord>(result.document)
-        val record = result.document as MemoryRecord
+        assertIs<AgentcoreMemoryRecord>(result.document)
+        val record = result.document as AgentcoreMemoryRecord
         assertEquals("User prefers dark mode", record.content)
         assertEquals("rec-42", record.id)
         assertEquals(0.95, result.score.value)
@@ -50,9 +51,10 @@ class AgentcoreMemoryRecordConverterTest {
     fun testNullContentBecomesEmptyString() {
         val summary = makeMemoryRecordSummary(text = null, score = 0.5)
 
-        val result = AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary)
+        val result =
+            AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary, AgentcoreMemoryStrategy.SUMMARY)
 
-        val record = result.document as MemoryRecord
+        val record = result.document as AgentcoreMemoryRecord
         assertEquals("", record.content)
     }
 
@@ -60,7 +62,8 @@ class AgentcoreMemoryRecordConverterTest {
     fun testNullScoreBecomesZero() {
         val summary = makeMemoryRecordSummary(score = null)
 
-        val result = AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary)
+        val result =
+            AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary, AgentcoreMemoryStrategy.SUMMARY)
 
         assertEquals(0.0, result.score.value)
     }
@@ -74,9 +77,10 @@ class AgentcoreMemoryRecordConverterTest {
             )
         )
 
-        val result = AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary)
+        val result =
+            AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary, AgentcoreMemoryStrategy.SUMMARY)
 
-        val record = result.document as MemoryRecord
+        val record = result.document as AgentcoreMemoryRecord
         assertEquals("value1", record.metadata["key1"])
         assertEquals("value2", record.metadata["key2"])
     }
@@ -85,9 +89,10 @@ class AgentcoreMemoryRecordConverterTest {
     fun testNullMetadataBecomesEmptyMap() {
         val summary = makeMemoryRecordSummary(metadata = null)
 
-        val result = AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary)
+        val result =
+            AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary, AgentcoreMemoryStrategy.SUMMARY)
 
-        val record = result.document as MemoryRecord
+        val record = result.document as AgentcoreMemoryRecord
         assertEquals(emptyMap(), record.metadata)
     }
 
@@ -95,9 +100,10 @@ class AgentcoreMemoryRecordConverterTest {
     fun testEmptyMetadataBecomesEmptyMap() {
         val summary = makeMemoryRecordSummary(metadata = emptyMap())
 
-        val result = AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary)
+        val result =
+            AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary, AgentcoreMemoryStrategy.SUMMARY)
 
-        val record = result.document as MemoryRecord
+        val record = result.document as AgentcoreMemoryRecord
         assertEquals(emptyMap(), record.metadata)
     }
 
@@ -107,9 +113,10 @@ class AgentcoreMemoryRecordConverterTest {
             metadata = mapOf("key" to MetadataValue.SdkUnknown)
         )
 
-        val result = AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary)
+        val result =
+            AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary, AgentcoreMemoryStrategy.SUMMARY)
 
-        val record = result.document as MemoryRecord
+        val record = result.document as AgentcoreMemoryRecord
         assertEquals("", record.metadata["key"])
     }
 
@@ -117,9 +124,10 @@ class AgentcoreMemoryRecordConverterTest {
     fun testMemoryRecordIdIsPreserved() {
         val summary = makeMemoryRecordSummary(id = "unique-record-id-999")
 
-        val result = AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary)
+        val result =
+            AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(summary, AgentcoreMemoryStrategy.SUMMARY)
 
-        val record = result.document as MemoryRecord
+        val record = result.document as AgentcoreMemoryRecord
         assertEquals("unique-record-id-999", record.id)
     }
 }

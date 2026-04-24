@@ -5,6 +5,7 @@ import ai.koog.agents.features.longtermmemory.aws.AgentcoreCompositeSearchStrate
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceResolver
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceScope
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreSearchStorage
+import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemoryStrategy
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreCompositeSearchRequest
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreListingSearchRequest
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreSimilaritySearchRequest
@@ -249,6 +250,7 @@ class AgentcoreRetrievalDslTest {
     @Test
     fun testEpisodicAllowsOverridingReflectionsStrategyId() {
         val settings = configure {
+            namespaceResolver
             episodic(
                 strategyId = "ep-1",
                 actorId = "alice",
@@ -279,6 +281,7 @@ class AgentcoreRetrievalDslTest {
     @Test
     fun testRawLegTemplateIsAppendedAsIs() {
         val template = AgentcoreCompositeSearchStrategy.AgentcoreSearchSubrequest.listing(
+            strategyType = AgentcoreMemoryStrategy.PREFERENCE,
             memoryStrategyId = "raw-1",
             namespace = "/custom/ns/",
             limit = 11,
@@ -414,6 +417,7 @@ class AgentcoreRetrievalDslTest {
                 when (scope) {
                     is AgentcoreNamespaceScope.Actor ->
                         "/custom/${scope.actorId}/${scope.strategyId}/"
+
                     is AgentcoreNamespaceScope.Session ->
                         "/custom/${scope.actorId}/${scope.strategyId}/${scope.sessionId}/"
                 }
@@ -428,6 +432,7 @@ class AgentcoreRetrievalDslTest {
     @Test
     fun testSubrequestEscapeHatchBypassesCustomResolver() {
         val template = AgentcoreCompositeSearchStrategy.AgentcoreSearchSubrequest.listing(
+            strategyType = AgentcoreMemoryStrategy.PREFERENCE,
             memoryStrategyId = "raw-1",
             namespace = "/literal/ns/",
             limit = 3,

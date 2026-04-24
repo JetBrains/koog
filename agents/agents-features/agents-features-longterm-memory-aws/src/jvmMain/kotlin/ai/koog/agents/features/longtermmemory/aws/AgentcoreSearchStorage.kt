@@ -65,7 +65,7 @@ public class AgentcoreSearchStorage(
         namespace: String?,
     ): List<SearchResult<TextDocument>> = runRetrieve(request.memoryStrategyId, namespace) {
         retrieveMemoryRecords(request.memoryStrategyId, request.limit, request.queryText, namespace)
-            .map { AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(it) }
+            .map { AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(it, request.strategyType) }
             .filter { it.score.value >= (request.minScore ?: 0.0) }
     }
 
@@ -74,7 +74,7 @@ public class AgentcoreSearchStorage(
         namespace: String?,
     ): List<SearchResult<TextDocument>> = runRetrieve(request.memoryStrategyId, namespace) {
         listMemoryRecords(request.memoryStrategyId, request.limit, namespace)
-            .map { AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(it) }
+            .map { AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(it, request.strategyType) }
     }
 
     /**

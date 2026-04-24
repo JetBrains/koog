@@ -1,5 +1,6 @@
 package ai.koog.agents.features.longtermmemory.aws
 
+import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemoryStrategy
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreCompositeSearchRequest
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreListingSearchRequest
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreSearchRequest
@@ -12,9 +13,9 @@ import ai.koog.rag.base.storage.search.SearchRequest
  * list of subrequest templates at retrieval time.
  *
  * subrequests can target different AgentCore strategies (different `memoryStrategyId`) and
- * different namespace scopes — for example, a USER_PREFERENCE listing merged with a
- * SEMANTIC similarity search, or EPISODIC episodes (session-scoped) merged with
- * reflections (actor-scoped).
+ * different namespace scopes — for example, a PREFERENCE listing merged with a
+ * SEMANTIC similarity search, or EPISODES (session-scoped) merged with
+ * REFLECTIONS (actor-scoped).
  *
  * The outer query string produced by
  * [ai.koog.agents.longtermmemory.retrieval.QueryExtractor] is injected into each
@@ -82,12 +83,14 @@ public class AgentcoreCompositeSearchStrategy(
              * as `queryText`.
              */
             public fun similarity(
+                strategyType: AgentcoreMemoryStrategy,
                 memoryStrategyId: String,
                 namespace: String,
                 limit: Int = 10,
                 minScore: Double? = null,
                 filterExpression: String? = null,
             ): AgentcoreSearchSubrequest = Similarity(
+                strategyType = strategyType,
                 memoryStrategyId = memoryStrategyId,
                 namespace = namespace,
                 limit = limit,
@@ -100,10 +103,12 @@ public class AgentcoreCompositeSearchStrategy(
              * is ignored.
              */
             public fun listing(
+                strategyType: AgentcoreMemoryStrategy,
                 memoryStrategyId: String,
                 namespace: String,
                 limit: Int = 10,
             ): AgentcoreSearchSubrequest = Listing(
+                strategyType = strategyType,
                 memoryStrategyId = memoryStrategyId,
                 namespace = namespace,
                 limit = limit,
@@ -111,6 +116,7 @@ public class AgentcoreCompositeSearchStrategy(
         }
 
         private data class Similarity(
+            val strategyType: AgentcoreMemoryStrategy,
             val memoryStrategyId: String,
             override val namespace: String,
             val limit: Int,
@@ -119,6 +125,7 @@ public class AgentcoreCompositeSearchStrategy(
         ) : AgentcoreSearchSubrequest {
             override fun buildRequest(query: String): AgentcoreSearchRequest =
                 AgentcoreSimilaritySearchRequest(
+                    strategyType = strategyType,
                     memoryStrategyId = memoryStrategyId,
                     queryText = query,
                     limit = limit,
@@ -128,12 +135,14 @@ public class AgentcoreCompositeSearchStrategy(
         }
 
         private data class Listing(
+            val strategyType: AgentcoreMemoryStrategy,
             val memoryStrategyId: String,
             override val namespace: String,
             val limit: Int,
         ) : AgentcoreSearchSubrequest {
             override fun buildRequest(query: String): AgentcoreSearchRequest =
                 AgentcoreListingSearchRequest(
+                    strategyType = strategyType,
                     memoryStrategyId = memoryStrategyId,
                     limit = limit,
                 )

@@ -16,8 +16,8 @@ public sealed interface AgentcoreNamespaceScope {
     public val actorId: String
 
     /**
-     * An actor-scoped namespace — used by listing strategies (USER_PREFERENCE) and by
-     * actor-level similarity lookups (SEMANTIC, EPISODIC reflections, ...).
+     * An actor-scoped namespace — used by listing strategies (PREFERENCE) and by
+     * actor-level similarity lookups (SEMANTIC, REFLECTIONS, ...).
      */
     public data class Actor(
         override val strategyId: String,
@@ -26,7 +26,7 @@ public sealed interface AgentcoreNamespaceScope {
 
     /**
      * A session-scoped namespace — used by strategies that partition memory per conversation
-     * session (SUMMARY, EPISODIC episodes, ...).
+     * session (SUMMARY, EPISODES, ...).
      */
     public data class Session(
         override val strategyId: String,

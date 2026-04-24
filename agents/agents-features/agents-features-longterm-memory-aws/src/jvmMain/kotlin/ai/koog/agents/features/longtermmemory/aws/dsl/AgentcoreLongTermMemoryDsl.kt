@@ -6,6 +6,7 @@ import ai.koog.agents.features.longtermmemory.aws.AgentcoreCompositeSearchStrate
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceResolver
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceScope
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreSearchStorage
+import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemoryStrategy
 import ai.koog.agents.longtermmemory.feature.LongTermMemory
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
@@ -23,7 +24,7 @@ public annotation class AgentcoreLtmDsl
  *
  * Every `agentcore { }` block is a composite retrieval: each subrequest helper inside [block]
  * appends one [AgentcoreSearchSubrequest] to an [AgentcoreCompositeSearchStrategy]. Mixed strategies
- * are allowed (e.g., a USER_PREFERENCE listing subrequest and a SEMANTIC similarity subrequest in the
+ * are allowed (e.g., a PREFERENCE listing subrequest and a SEMANTIC similarity subrequest in the
  * same block), and multiple subrequests can target the same `memoryStrategyId` / `actorId` in
  * different namespace scopes (this is how EPISODIC memories issue session‑scoped
  * episodes and actor‑scoped reflections with a single strategy id).
@@ -121,6 +122,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
         require(strategyId.isNotBlank()) { "strategyId must not be blank" }
         require(topK > 0) { "topK must be positive, was $topK" }
         subrequests += AgentcoreSearchSubrequest.similarity(
+            strategyType = AgentcoreMemoryStrategy.SEMANTIC,
             memoryStrategyId = strategyId,
             namespace = actorNs(strategyId, actorId),
             limit = topK,
@@ -143,6 +145,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
         require(strategyId.isNotBlank()) { "strategyId must not be blank" }
         require(topK > 0) { "topK must be positive, was $topK" }
         subrequests += AgentcoreSearchSubrequest.similarity(
+            strategyType = AgentcoreMemoryStrategy.SUMMARY,
             memoryStrategyId = strategyId,
             namespace = sessionNs(strategyId, actorId, sessionId),
             limit = topK,
@@ -152,7 +155,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
     }
 
     /**
-     * Append a USER_PREFERENCE listing subrequest against [strategyId] in an actor‑scoped namespace.
+     * Append a PREFERENCE listing subrequest against [strategyId] in an actor‑scoped namespace.
      *
      * AgentCore returns this as a listing, so results carry no meaningful score.
      */
@@ -164,6 +167,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
         require(strategyId.isNotBlank()) { "strategyId must not be blank" }
         require(limit > 0) { "limit must be positive, was $limit" }
         subrequests += AgentcoreSearchSubrequest.listing(
+            strategyType = AgentcoreMemoryStrategy.PREFERENCE,
             memoryStrategyId = strategyId,
             namespace = actorNs(strategyId, actorId),
             limit = limit,
@@ -184,6 +188,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
         require(strategyId.isNotBlank()) { "strategyId must not be blank" }
         require(topK > 0) { "topK must be positive, was $topK" }
         subrequests += AgentcoreSearchSubrequest.similarity(
+            strategyType = AgentcoreMemoryStrategy.EPISODES,
             memoryStrategyId = strategyId,
             namespace = sessionNs(strategyId, actorId, sessionId),
             limit = topK,
@@ -205,6 +210,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
         require(strategyId.isNotBlank()) { "strategyId must not be blank" }
         require(topK > 0) { "topK must be positive, was $topK" }
         subrequests += AgentcoreSearchSubrequest.similarity(
+            strategyType = AgentcoreMemoryStrategy.REFLECTIONS,
             memoryStrategyId = strategyId,
             namespace = actorNs(strategyId, actorId),
             limit = topK,

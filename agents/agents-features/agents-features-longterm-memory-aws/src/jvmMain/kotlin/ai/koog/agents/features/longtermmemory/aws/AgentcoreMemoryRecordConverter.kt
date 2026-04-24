@@ -1,6 +1,6 @@
 package ai.koog.agents.features.longtermmemory.aws
 
-import ai.koog.agents.longtermmemory.model.MemoryRecord
+import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemoryStrategy
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.search.Score
 import ai.koog.rag.base.storage.search.ScoreMetric
@@ -16,12 +16,16 @@ import aws.sdk.kotlin.services.bedrockagentcore.model.MetadataValue
  */
 internal object AgentcoreMemoryRecordConverter {
 
-    internal fun memoryRecordSummaryToSearchResult(memoryRecordSummary: MemoryRecordSummary): SearchResult<TextDocument> {
+    internal fun memoryRecordSummaryToSearchResult(
+        memoryRecordSummary: MemoryRecordSummary,
+        strategyTYpe: AgentcoreMemoryStrategy
+    ): SearchResult<TextDocument> {
         return SearchResult(
-            MemoryRecord(
+            AgentcoreMemoryRecord(
                 memoryRecordSummary.content?.asTextOrNull() ?: "",
                 memoryRecordSummary.memoryRecordId,
-                mapMetadata(memoryRecordSummary.metadata)
+                mapMetadata(memoryRecordSummary.metadata),
+                strategyTYpe
             ),
             Score(memoryRecordSummary.score ?: 0.0, ScoreMetric.COSINE_SIMILARITY)
         )

@@ -1,9 +1,9 @@
 package ai.koog.agents.features.longtermmemory.aws
 
+import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemoryStrategy
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreCompositeSearchRequest
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreListingSearchRequest
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreSimilaritySearchRequest
-import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.rag.base.storage.search.SearchRequest
 import aws.sdk.kotlin.services.bedrockagentcore.BedrockAgentCoreClient
 import aws.sdk.kotlin.services.bedrockagentcore.model.ListMemoryRecordsRequest
@@ -66,7 +66,14 @@ class AgentcoreSearchStorageTest {
             memoryRecordSummaries = emptyList()
         }
 
-        storage.search(AgentcoreSimilaritySearchRequest(memoryStrategyId = strategyId, queryText = "query", limit = 5))
+        storage.search(
+            AgentcoreSimilaritySearchRequest(
+                strategyType = AgentcoreMemoryStrategy.SEMANTIC,
+                memoryStrategyId = strategyId,
+                queryText = "query",
+                limit = 5
+            )
+        )
 
         coVerify(exactly = 1) { client.retrieveMemoryRecords(any<RetrieveMemoryRecordsRequest>()) }
         coVerify(exactly = 0) { client.listMemoryRecords(any<ListMemoryRecordsRequest>()) }
@@ -81,6 +88,7 @@ class AgentcoreSearchStorageTest {
 
         storage.search(
             AgentcoreSimilaritySearchRequest(
+                strategyType = AgentcoreMemoryStrategy.SEMANTIC,
                 memoryStrategyId = strategyId,
                 queryText = "find coffee",
                 limit = 7
@@ -105,6 +113,7 @@ class AgentcoreSearchStorageTest {
 
         val results = storage.search(
             AgentcoreSimilaritySearchRequest(
+                strategyType = AgentcoreMemoryStrategy.SEMANTIC,
                 memoryStrategyId = strategyId,
                 queryText = "query",
                 limit = 5
@@ -112,7 +121,7 @@ class AgentcoreSearchStorageTest {
         )
 
         assertEquals(1, results.size)
-        assertEquals("Semantic result", (results[0].document as MemoryRecord).content)
+        assertEquals("Semantic result", (results[0].document as AgentcoreMemoryRecord).content)
         assertEquals(0.95, results[0].score.value)
     }
 
@@ -128,6 +137,7 @@ class AgentcoreSearchStorageTest {
 
         val results = storage.search(
             AgentcoreSimilaritySearchRequest(
+                strategyType = AgentcoreMemoryStrategy.SEMANTIC,
                 memoryStrategyId = strategyId,
                 queryText = "q",
                 limit = 10,
@@ -149,7 +159,14 @@ class AgentcoreSearchStorageTest {
         }
 
         val results =
-            storage.search(AgentcoreSimilaritySearchRequest(memoryStrategyId = strategyId, queryText = "q", limit = 10))
+            storage.search(
+                AgentcoreSimilaritySearchRequest(
+                    strategyType = AgentcoreMemoryStrategy.SEMANTIC,
+                    memoryStrategyId = strategyId,
+                    queryText = "q",
+                    limit = 10
+                )
+            )
 
         assertEquals(2, results.size)
     }
@@ -162,7 +179,12 @@ class AgentcoreSearchStorageTest {
         }
 
         storage.search(
-            AgentcoreSimilaritySearchRequest(memoryStrategyId = strategyId, queryText = "query", limit = 5),
+            AgentcoreSimilaritySearchRequest(
+                strategyType = AgentcoreMemoryStrategy.SEMANTIC,
+                memoryStrategyId = strategyId,
+                queryText = "query",
+                limit = 5
+            ),
             namespace = null
         )
 
@@ -177,7 +199,13 @@ class AgentcoreSearchStorageTest {
             memoryRecordSummaries = emptyList()
         }
 
-        storage.search(AgentcoreListingSearchRequest(memoryStrategyId = strategyId, limit = 5))
+        storage.search(
+            AgentcoreListingSearchRequest(
+                strategyType = AgentcoreMemoryStrategy.PREFERENCE,
+                memoryStrategyId = strategyId,
+                limit = 5
+            )
+        )
 
         coVerify(exactly = 1) { client.listMemoryRecords(any<ListMemoryRecordsRequest>()) }
         coVerify(exactly = 0) { client.retrieveMemoryRecords(any<RetrieveMemoryRecordsRequest>()) }
@@ -190,7 +218,14 @@ class AgentcoreSearchStorageTest {
             memoryRecordSummaries = emptyList()
         }
 
-        storage.search(AgentcoreListingSearchRequest(memoryStrategyId = strategyId, limit = 10), namespace = "ns2")
+        storage.search(
+            AgentcoreListingSearchRequest(
+                strategyType = AgentcoreMemoryStrategy.PREFERENCE,
+                memoryStrategyId = strategyId,
+                limit = 10
+            ),
+            namespace = "ns2"
+        )
 
         assertEquals(memoryId, requestSlot.captured.memoryId)
         assertEquals(strategyId, requestSlot.captured.memoryStrategyId)
@@ -207,13 +242,19 @@ class AgentcoreSearchStorageTest {
             )
         }
 
-        val results = storage.search(AgentcoreListingSearchRequest(memoryStrategyId = strategyId, limit = 5))
+        val results = storage.search(
+            AgentcoreListingSearchRequest(
+                strategyType = AgentcoreMemoryStrategy.PREFERENCE,
+                memoryStrategyId = strategyId,
+                limit = 5
+            )
+        )
 
         assertEquals(2, results.size)
-        assertEquals("r1", (results[0].document as MemoryRecord).id)
-        assertEquals("Prefers dark mode", (results[0].document as MemoryRecord).content)
+        assertEquals("r1", (results[0].document as AgentcoreMemoryRecord).id)
+        assertEquals("Prefers dark mode", (results[0].document as AgentcoreMemoryRecord).content)
         assertEquals(0.8, results[0].score.value)
-        assertEquals("r2", (results[1].document as MemoryRecord).id)
+        assertEquals("r2", (results[1].document as AgentcoreMemoryRecord).id)
     }
 
     // ---- Error handling ----
@@ -225,6 +266,7 @@ class AgentcoreSearchStorageTest {
         assertFailsWith<AgentcoreMemoryException.RetrieveException> {
             storage.search(
                 AgentcoreSimilaritySearchRequest(
+                    strategyType = AgentcoreMemoryStrategy.SEMANTIC,
                     memoryStrategyId = strategyId,
                     queryText = "query",
                     limit = 5
@@ -238,7 +280,13 @@ class AgentcoreSearchStorageTest {
         coEvery { client.listMemoryRecords(any<ListMemoryRecordsRequest>()) } throws RuntimeException("AWS list error")
 
         assertFailsWith<AgentcoreMemoryException.RetrieveException> {
-            storage.search(AgentcoreListingSearchRequest(memoryStrategyId = strategyId, limit = 5))
+            storage.search(
+                AgentcoreListingSearchRequest(
+                    strategyType = AgentcoreMemoryStrategy.PREFERENCE,
+                    memoryStrategyId = strategyId,
+                    limit = 5
+                )
+            )
         }
     }
 
@@ -252,6 +300,7 @@ class AgentcoreSearchStorageTest {
 
         val results = storage.search(
             AgentcoreSimilaritySearchRequest(
+                strategyType = AgentcoreMemoryStrategy.SEMANTIC,
                 memoryStrategyId = strategyId,
                 queryText = "nothing",
                 limit = 5
@@ -278,13 +327,14 @@ class AgentcoreSearchStorageTest {
 
         val results = storage.search(
             AgentcoreSimilaritySearchRequest(
+                strategyType = AgentcoreMemoryStrategy.SEMANTIC,
                 memoryStrategyId = strategyId,
                 queryText = "query",
                 limit = 5
             )
         )
 
-        val record = results[0].document as MemoryRecord
+        val record = results[0].document as AgentcoreMemoryRecord
         assertEquals("chat", record.metadata["source"])
         assertEquals("en", record.metadata["lang"])
     }
@@ -318,6 +368,7 @@ class AgentcoreSearchStorageTest {
             entries = listOf(
                 AgentcoreCompositeSearchRequest.Entry(
                     request = AgentcoreSimilaritySearchRequest(
+                        strategyType = AgentcoreMemoryStrategy.SEMANTIC,
                         memoryStrategyId = "sem-1",
                         queryText = "q",
                         limit = 3,
@@ -325,7 +376,11 @@ class AgentcoreSearchStorageTest {
                     namespace = "/ns/sem/",
                 ),
                 AgentcoreCompositeSearchRequest.Entry(
-                    request = AgentcoreListingSearchRequest(memoryStrategyId = "up-1", limit = 5),
+                    request = AgentcoreListingSearchRequest(
+                        strategyType = AgentcoreMemoryStrategy.PREFERENCE,
+                        memoryStrategyId = "up-1",
+                        limit = 5
+                    ),
                     namespace = "/ns/list/",
                 ),
             ),
@@ -350,6 +405,7 @@ class AgentcoreSearchStorageTest {
             entries = listOf(
                 AgentcoreCompositeSearchRequest.Entry(
                     request = AgentcoreSimilaritySearchRequest(
+                        strategyType = AgentcoreMemoryStrategy.SEMANTIC,
                         memoryStrategyId = "sem-1",
                         queryText = "q",
                         limit = 3,
@@ -357,7 +413,11 @@ class AgentcoreSearchStorageTest {
                     namespace = "/ns/sem/",
                 ),
                 AgentcoreCompositeSearchRequest.Entry(
-                    request = AgentcoreListingSearchRequest(memoryStrategyId = "up-1", limit = 5),
+                    request = AgentcoreListingSearchRequest(
+                        strategyType = AgentcoreMemoryStrategy.PREFERENCE,
+                        memoryStrategyId = "up-1",
+                        limit = 5
+                    ),
                     namespace = "/ns/list/",
                 ),
             ),
@@ -366,7 +426,7 @@ class AgentcoreSearchStorageTest {
         val results = storage.search(composite)
 
         assertEquals(1, results.size)
-        assertEquals("survived", (results[0].document as MemoryRecord).id)
+        assertEquals("survived", (results[0].document as AgentcoreMemoryRecord).id)
     }
 
     @Test
@@ -389,6 +449,7 @@ class AgentcoreSearchStorageTest {
             entries = listOf(
                 AgentcoreCompositeSearchRequest.Entry(
                     request = AgentcoreSimilaritySearchRequest(
+                        strategyType = AgentcoreMemoryStrategy.SEMANTIC,
                         memoryStrategyId = "sem-1",
                         queryText = "q",
                         limit = 2,
@@ -396,14 +457,18 @@ class AgentcoreSearchStorageTest {
                     namespace = "/ns/sem/",
                 ),
                 AgentcoreCompositeSearchRequest.Entry(
-                    request = AgentcoreListingSearchRequest(memoryStrategyId = "up-1", limit = 2),
+                    request = AgentcoreListingSearchRequest(
+                        strategyType = AgentcoreMemoryStrategy.PREFERENCE,
+                        memoryStrategyId = "up-1",
+                        limit = 2
+                    ),
                     namespace = "/ns/list/",
                 ),
             ),
         )
 
         val results = storage.search(composite)
-        val ids = results.map { (it.document as MemoryRecord).id }
+        val ids = results.map { (it.document as AgentcoreMemoryRecord).id }
 
         // First subrequest's results come first, preserving per-subrequest order.
         assertEquals(listOf("sem-a", "sem-b", "list-a", "list-b"), ids)
@@ -425,6 +490,7 @@ class AgentcoreSearchStorageTest {
             entries = listOf(
                 AgentcoreCompositeSearchRequest.Entry(
                     request = AgentcoreSimilaritySearchRequest(
+                        strategyType = AgentcoreMemoryStrategy.SEMANTIC,
                         memoryStrategyId = "sem-1",
                         queryText = "q",
                         limit = 3,
