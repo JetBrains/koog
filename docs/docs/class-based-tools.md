@@ -101,13 +101,41 @@ For more details, see [API reference](https://api.koog.ai/agents/agents-tools/ai
 
 Tools can read caller- and feature-contributed metadata by overriding the second `execute` overload. This is a side channel designed for cross-cutting context such as a distributed-tracing span id or a correlation id, and it does not affect the tool's argument schema or the data sent to the LLM.
 
-```kotlin
-override suspend fun execute(args: Args, metadata: ToolCallMetadata): Int {
-    val traceSpanId = metadata["trace.span.id"] as? String
-    // ... use traceSpanId
-    return execute(args)
-}
-```
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.Tool
+    import ai.koog.agents.core.tools.ToolCallMetadata
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.serialization.typeToken
+    import kotlinx.serialization.Serializable
+    -->
+    ```kotlin
+    // A tool that reads an optional trace span id from caller- or feature-contributed metadata.
+    object TracingCalculatorTool : Tool<TracingCalculatorTool.Args, Int>(
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Int>(),
+        name = "tracing_calculator",
+        description = "Adds two digits and optionally reads a trace span id from metadata."
+    ) {
+        @Serializable
+        data class Args(
+            @property:LLMDescription("The first digit to add (0-9)")
+            val digit1: Int,
+            @property:LLMDescription("The second digit to add (0-9)")
+            val digit2: Int
+        )
+
+        override suspend fun execute(args: Args): Int = args.digit1 + args.digit2
+
+        override suspend fun execute(args: Args, metadata: ToolCallMetadata): Int {
+            val traceSpanId = metadata["trace.span.id"] as? String
+            // ... use traceSpanId for cross-cutting context (logging, tracing, correlation)
+            return execute(args)
+        }
+    }
+    ```
+    <!--- KNIT example-class-based-tools-metadata-01.kt -->
 
 Callers can pass metadata through `SafeTool.execute(args, serializer, metadata)` or directly through `AIAgentEnvironment.executeTool(toolCall, metadata)`. Features can contribute metadata for every tool call during installation by calling `pipeline.provideToolCallMetadata(this) { eventContext -> mapOf(...) }`. Caller-supplied metadata always wins over feature contributions on key collision.
 
