@@ -361,7 +361,8 @@ class FeatureMessageProcessorTest {
             val testError = AIAgentError(
                 message = "Test error message",
                 stackTrace = "Test stack trace",
-                cause = "Test cause"
+                cause = "Test cause",
+                type = "Test error type"
             )
 
             // Node Execution Failed Event

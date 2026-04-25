@@ -37,6 +37,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
@@ -48,7 +49,6 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
-import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -56,7 +56,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-@Disabled("Flaky, see #1124")
 class DebuggerStreamingTest {
     private val serializer = KotlinxSerializer()
 
@@ -197,7 +196,25 @@ class DebuggerStreamingTest {
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = mockLLModel.toModelInfo(),
-                            frame = StreamFrame.TextDelta(testLLMResponse),
+                            frame = StreamFrame.TextDelta(testLLMResponse, index = 0),
+                            timestamp = testClock.now().toEpochMilliseconds(),
+                        ),
+                        LLMStreamingFrameReceivedEvent(
+                            eventId = actualStreamingStartingEvent.eventId,
+                            executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
+                            runId = clientEventsCollector.runId,
+                            prompt = expectedLLMCallPrompt,
+                            model = mockLLModel.toModelInfo(),
+                            frame = StreamFrame.TextComplete(testLLMResponse, index = 0),
+                            timestamp = testClock.now().toEpochMilliseconds(),
+                        ),
+                        LLMStreamingFrameReceivedEvent(
+                            eventId = actualStreamingStartingEvent.eventId,
+                            executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
+                            runId = clientEventsCollector.runId,
+                            prompt = expectedLLMCallPrompt,
+                            model = mockLLModel.toModelInfo(),
+                            frame = StreamFrame.End(null, ResponseMetaInfo.Empty),
                             timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         LLMStreamingCompletedEvent(
@@ -266,8 +283,10 @@ class DebuggerStreamingTest {
         )
 
         // Executor
-        val testStreamingErrorMessage = "Test streaming error"
-        var testStreamingStackTrace = ""
+        val expectedErrorMessage = "Test streaming error"
+        var expectedStackTrace = ""
+        var expectedCause: String? = null
+        var expectedType: String? = null
 
         val testStreamingExecutor = object : PromptExecutor() {
             override suspend fun execute(
@@ -281,8 +300,10 @@ class DebuggerStreamingTest {
                 model: LLModel,
                 tools: List<ToolDescriptor>
             ): Flow<StreamFrame> = flow {
-                val testException = IllegalStateException(testStreamingErrorMessage)
-                testStreamingStackTrace = testException.stackTraceToString()
+                val testException = IllegalStateException(expectedErrorMessage)
+                expectedStackTrace = testException.stackTraceToString()
+                expectedCause = testException.cause?.toString()
+                expectedType = testException::class.qualifiedName
                 throw testException
             }
 
@@ -346,7 +367,7 @@ class DebuggerStreamingTest {
                 }
             }
 
-            assertEquals(testStreamingErrorMessage, throwable.message)
+            assertEquals(expectedErrorMessage, throwable.message)
         }
 
         // Client
@@ -397,7 +418,12 @@ class DebuggerStreamingTest {
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = testModel.toModelInfo(),
-                            error = AIAgentError(testStreamingErrorMessage, testStreamingStackTrace),
+                            error = AIAgentError(
+                                message = expectedErrorMessage,
+                                stackTrace = expectedStackTrace,
+                                cause = expectedCause,
+                                type = expectedType,
+                            ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         LLMStreamingCompletedEvent(

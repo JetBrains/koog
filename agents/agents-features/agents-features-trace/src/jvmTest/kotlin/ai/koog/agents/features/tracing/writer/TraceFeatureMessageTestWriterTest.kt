@@ -280,10 +280,12 @@ class TraceFeatureMessageTestWriterTest {
     fun `test agent with node execution error`() = runBlocking {
         val agentId = "test-agent-id"
         val nodeWithErrorName = "node-with-error"
-        val testErrorMessage = "Test error"
         val strategyName = "test-strategy"
 
+        val testErrorMessage = "Test error"
         var expectedStackTrace = ""
+        var expectedCause: String? = null
+        var expectedType: String? = null
 
         val strategy = strategy(strategyName) {
             val nodeWithError by node<String, String>(nodeWithErrorName) {
@@ -292,6 +294,8 @@ class TraceFeatureMessageTestWriterTest {
                     throw IllegalStateException(testErrorMessage)
                 } catch (t: IllegalStateException) {
                     expectedStackTrace = t.stackTraceToString()
+                    expectedCause = t.cause?.toString()
+                    expectedType = t::class.qualifiedName
                     throw t
                 }
             }
@@ -301,40 +305,45 @@ class TraceFeatureMessageTestWriterTest {
         }
 
         TestFeatureMessageWriter().use { writer ->
-            createAgent(
+            val agent = createAgent(
                 agentId = agentId,
                 strategy = strategy
             ) {
                 install(Tracing) {
                     addMessageProcessor(writer)
                 }
-            }.use { agent ->
-                val throwable = assertFails { agent.run("", null) }
-                assertEquals(testErrorMessage, throwable.message)
-
-                val actualEvents = writer.messages.filterIsInstance<NodeExecutionFailedEvent>().toList()
-
-                val actualNodeWithErrorEvent = writer.messages.singleNodeEvent(nodeWithErrorName)
-
-                val expectedEvents = listOf(
-                    NodeExecutionFailedEvent(
-                        eventId = actualNodeWithErrorEvent.eventId,
-                        executionInfo = agentExecutionInfo(agentId, strategyName, nodeWithErrorName),
-                        runId = writer.runId,
-                        nodeName = nodeWithErrorName,
-                        input = @OptIn(InternalAgentsApi::class)
-                        serializer.encodeToJSONElement(
-                            "",
-                            typeToken<String>()
-                        ),
-                        error = AIAgentError(testErrorMessage, expectedStackTrace, null),
-                        timestamp = testClock.now().toEpochMilliseconds()
-                    )
-                )
-
-                assertEquals(expectedEvents.size, actualEvents.size)
-                assertContentEquals(expectedEvents, actualEvents)
             }
+
+            val throwable = assertFails { agent.run("", null) }
+            assertEquals(testErrorMessage, throwable.message)
+
+            val actualEvents = writer.messages.filterIsInstance<NodeExecutionFailedEvent>().toList()
+
+            val actualNodeWithErrorEvent = writer.messages.singleNodeEvent(nodeWithErrorName)
+
+            val expectedEvents = listOf(
+                NodeExecutionFailedEvent(
+                    eventId = actualNodeWithErrorEvent.eventId,
+                    executionInfo = agentExecutionInfo(agentId, strategyName, nodeWithErrorName),
+                    runId = writer.runId,
+                    nodeName = nodeWithErrorName,
+                    input = @OptIn(InternalAgentsApi::class)
+                    serializer.encodeToJSONElement(
+                        "",
+                        typeToken<String>()
+                    ),
+                    error = AIAgentError(
+                        message = testErrorMessage,
+                        stackTrace = expectedStackTrace,
+                        cause = expectedCause,
+                        type = expectedType
+                    ),
+                    timestamp = testClock.now().toEpochMilliseconds()
+                )
+            )
+
+            assertEquals(expectedEvents.size, actualEvents.size)
+            assertContentEquals(expectedEvents, actualEvents)
         }
     }
 
@@ -475,13 +484,15 @@ class TraceFeatureMessageTestWriterTest {
 
         val toolRegistry = ToolRegistry { tool(DummyTool()) }
 
-        val testStreamingErrorMessage = "Test streaming error"
-        var testStreamingStackTrace = ""
+        val expectedErrorMessage = "Test streaming error"
+        var expectedStackTrace = ""
+        var expectedCause: String? = null
+        var expectedType: String? = null
 
         val testStreamingExecutor = object : PromptExecutor() {
             override suspend fun execute(
                 prompt: Prompt,
-                model: ai.koog.prompt.llm.LLModel,
+                model: LLModel,
                 tools: List<ToolDescriptor>
             ): List<Message.Response> = emptyList()
 
@@ -490,8 +501,10 @@ class TraceFeatureMessageTestWriterTest {
                 model: LLModel,
                 tools: List<ToolDescriptor>
             ): Flow<StreamFrame> = flow {
-                val testException = IllegalStateException(testStreamingErrorMessage)
-                testStreamingStackTrace = testException.stackTraceToString()
+                val testException = IllegalStateException(expectedErrorMessage)
+                expectedStackTrace = testException.stackTraceToString()
+                expectedCause = testException.cause?.toString()
+                expectedType = testException::class.qualifiedName
                 throw testException
             }
 
@@ -526,7 +539,7 @@ class TraceFeatureMessageTestWriterTest {
                     agent.run("", null)
                 }
 
-                assertEquals(testStreamingErrorMessage, throwable.message)
+                assertEquals(expectedErrorMessage, throwable.message)
 
                 val expectedPrompt = Prompt(
                     messages = listOf(
@@ -560,7 +573,12 @@ class TraceFeatureMessageTestWriterTest {
                         runId = writer.runId,
                         prompt = expectedPrompt,
                         model = model.toModelInfo(),
-                        error = AIAgentError(testStreamingErrorMessage, testStreamingStackTrace),
+                        error = AIAgentError(
+                            message = expectedErrorMessage,
+                            stackTrace = expectedStackTrace,
+                            cause = expectedCause,
+                            type = expectedType
+                        ),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMStreamingCompletedEvent(
@@ -674,25 +692,27 @@ class TraceFeatureMessageTestWriterTest {
         }
 
         TestFeatureMessageWriter().use { writer ->
-            var expectedStackTrace: String = ""
+            var expectedStackTrace = ""
             var expectedCause: String? = null
+            var expectedType: String? = null
 
-            val agentThrowable = createAgent(
+            val agent = createAgent(
                 agentId = agentId,
                 strategy = strategy,
             ) {
                 install(Tracing) {
                     addMessageProcessor(writer)
                 }
-            }.use { agent ->
-                assertFails {
-                    try {
-                        agent.run(inputRequest, null)
-                    } catch (t: Throwable) {
-                        expectedStackTrace = t.stackTraceToString()
-                        expectedCause = t.cause?.stackTraceToString()
-                        throw t
-                    }
+            }
+
+            val agentThrowable = assertFails {
+                try {
+                    agent.run(inputRequest, null)
+                } catch (t: Throwable) {
+                    expectedStackTrace = t.stackTraceToString()
+                    expectedCause = t.cause?.stackTraceToString()
+                    expectedType = t::class.qualifiedName
+                    throw t
                 }
             }
 
@@ -734,6 +754,7 @@ class TraceFeatureMessageTestWriterTest {
                         message = subgraphNodeErrorMessage,
                         stackTrace = expectedStackTrace,
                         cause = expectedCause,
+                        type = expectedType
                     ),
                     timestamp = testClock.now().toEpochMilliseconds()
                 )
