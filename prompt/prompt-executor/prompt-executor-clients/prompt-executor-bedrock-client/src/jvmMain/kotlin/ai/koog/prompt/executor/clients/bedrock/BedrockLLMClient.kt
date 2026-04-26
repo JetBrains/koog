@@ -215,7 +215,13 @@ public class BedrockLLMClient @JvmOverloads constructor(
 
             model.id.contains("cohere.embed") -> BedrockModelFamilies.Cohere
 
-            model.id.contains("moonshot.kimi") -> BedrockModelFamilies.MoonshotKimi
+            model.id.contains("moonshot.kimi") || model.id.contains("moonshotai.kimi") -> BedrockModelFamilies.MoonshotKimi
+
+            model.id.contains("google.gemma") -> BedrockModelFamilies.GoogleGemma
+
+            model.id.contains("minimax.") -> BedrockModelFamilies.MiniMax
+
+            model.id.contains("openai.gpt") -> BedrockModelFamilies.OpenAI
 
             else -> {
                 if (fallbackModelFamily != null) {
@@ -293,7 +299,10 @@ public class BedrockLLMClient @JvmOverloads constructor(
                         clock
                     )
 
-                    is BedrockModelFamilies.MoonshotKimi -> throw LLMClientException(
+                    is BedrockModelFamilies.MoonshotKimi,
+                    is BedrockModelFamilies.GoogleGemma,
+                    is BedrockModelFamilies.MiniMax,
+                    is BedrockModelFamilies.OpenAI -> throw LLMClientException(
                         clientName,
                         "Model family ${modelFamily.display} requires the Bedrock Converse API. " +
                             "Please configure BedrockClientSettings with apiMethod = BedrockAPIMethod.Converse"
@@ -432,7 +441,10 @@ public class BedrockLLMClient @JvmOverloads constructor(
                     clock = clock,
                 )
 
-                is BedrockModelFamilies.MoonshotKimi -> throw LLMClientException(
+                is BedrockModelFamilies.MoonshotKimi,
+                is BedrockModelFamilies.GoogleGemma,
+                is BedrockModelFamilies.MiniMax,
+                is BedrockModelFamilies.OpenAI -> throw LLMClientException(
                     clientName,
                     "Model family ${modelFamily.display} requires the Bedrock Converse API. " +
                         "Please configure BedrockClientSettings with apiMethod = BedrockAPIMethod.Converse"
@@ -595,7 +607,10 @@ public class BedrockLLMClient @JvmOverloads constructor(
                 BedrockMetaLlamaSerialization.createLlamaRequest(prompt, model)
             )
 
-            is BedrockModelFamilies.MoonshotKimi -> throw LLMClientException(
+            is BedrockModelFamilies.MoonshotKimi,
+            is BedrockModelFamilies.GoogleGemma,
+            is BedrockModelFamilies.MiniMax,
+            is BedrockModelFamilies.OpenAI -> throw LLMClientException(
                 clientName,
                 "Model family ${getBedrockModelFamily(model).display} requires the Bedrock Converse API. " +
                     "Please configure BedrockClientSettings with apiMethod = BedrockAPIMethod.Converse"
