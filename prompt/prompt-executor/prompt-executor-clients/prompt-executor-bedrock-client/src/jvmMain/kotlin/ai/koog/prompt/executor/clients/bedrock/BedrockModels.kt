@@ -290,6 +290,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-micro-v1:0",
             capabilities = novaCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 5_000,
         ),
     ).effectiveModel
 
@@ -310,6 +311,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-lite-v1:0",
             capabilities = novaCapabilities,
             contextLength = 300_000,
+            maxOutputTokens = 5_000,
         ),
     ).effectiveModel
 
@@ -330,6 +332,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-pro-v1:0",
             capabilities = novaCapabilities,
             contextLength = 300_000,
+            maxOutputTokens = 5_000,
         ),
     ).effectiveModel
 
@@ -350,6 +353,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-premier-v1:0",
             capabilities = novaCapabilities,
             contextLength = 1_000_000,
+            maxOutputTokens = 25_000,
         ),
     ).effectiveModel
 
@@ -370,6 +374,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-8b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 8_000,
+            maxOutputTokens = 8_192,
         ),
     ).effectiveModel
 
@@ -390,6 +395,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-70b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 8_000,
+            maxOutputTokens = 8_192,
         ),
     ).effectiveModel
 
@@ -410,6 +416,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-1-8b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -430,6 +437,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-1-70b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -450,6 +458,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-1-405b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -470,6 +479,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-2-1b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -490,6 +500,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-2-3b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -510,6 +521,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-2-11b-instruct-v1:0",
             capabilities = fullCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -530,6 +542,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-2-90b-instruct-v1:0",
             capabilities = fullCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -550,6 +563,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-3-70b-instruct-v1:0",
             capabilities = standardCapabilities + toolCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -579,6 +593,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "moonshot.kimi-k2-thinking",
             capabilities = standardCapabilities + toolCapabilities,
             contextLength = 256_000,
+            maxOutputTokens = 16_384,
         ),
         inferenceProfilePrefix = null
     ).effectiveModel
@@ -602,6 +617,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "moonshotai.kimi-k2.5",
             capabilities = standardCapabilities + toolCapabilities + listOf(LLMCapability.Vision.Image),
             contextLength = 256_000,
+            maxOutputTokens = 16_384,
         ),
         inferenceProfilePrefix = null
     ).effectiveModel
@@ -625,6 +641,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "minimax.minimax-m2.5",
             capabilities = standardCapabilities + toolCapabilities,
             contextLength = 1_000_000,
+            maxOutputTokens = 8_192,
         ),
         inferenceProfilePrefix = null
     ).effectiveModel
@@ -649,6 +666,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "openai.gpt-oss-120b-1:0",
             capabilities = standardCapabilities + toolCapabilities + listOf(LLMCapability.Schema.JSON.Standard),
             contextLength = 128_000,
+            maxOutputTokens = 16_384,
         ),
         inferenceProfilePrefix = null
     ).effectiveModel
@@ -673,6 +691,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "openai.gpt-oss-20b-1:0",
             capabilities = standardCapabilities + toolCapabilities + listOf(LLMCapability.Schema.JSON.Standard),
             contextLength = 128_000,
+            maxOutputTokens = 16_384,
         ),
         inferenceProfilePrefix = null
     ).effectiveModel
@@ -697,6 +716,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "google.gemma-3-4b-it",
             capabilities = standardCapabilities + toolCapabilities + listOf(LLMCapability.Vision.Image),
             contextLength = 128_000,
+            maxOutputTokens = 8_192,
         ),
         inferenceProfilePrefix = null
     ).effectiveModel
@@ -722,6 +742,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "google.gemma-3-12b-it",
             capabilities = fullCapabilities + listOf(LLMCapability.Schema.JSON.Standard),
             contextLength = 128_000,
+            maxOutputTokens = 8_192,
         ),
         inferenceProfilePrefix = null
     ).effectiveModel
@@ -747,6 +768,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "google.gemma-3-27b-it",
             capabilities = fullCapabilities + listOf(LLMCapability.Schema.JSON.Standard),
             contextLength = 128_000,
+            maxOutputTokens = 8_192,
         ),
         inferenceProfilePrefix = null
     ).effectiveModel
