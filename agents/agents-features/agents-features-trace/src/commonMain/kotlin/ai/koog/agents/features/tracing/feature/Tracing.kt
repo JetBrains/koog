@@ -153,7 +153,7 @@ public class Tracing {
                     executionInfo = eventContext.executionInfo,
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
-                    error = eventContext.throwable.toAgentError(),
+                    error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -252,7 +252,7 @@ public class Tracing {
                         eventContext.inputType,
                         pipeline.config.serializer
                     ),
-                    error = eventContext.throwable.toAgentError(),
+                    error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -310,7 +310,7 @@ public class Tracing {
                         eventContext.inputType,
                         pipeline.config.serializer
                     ),
-                    error = eventContext.throwable.toAgentError(),
+                    error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -430,7 +430,7 @@ public class Tracing {
                     toolArgs = eventContext.toolArgs,
                     toolDescription = eventContext.toolDescription,
                     message = eventContext.message,
-                    error = eventContext.error,
+                    error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -445,7 +445,7 @@ public class Tracing {
                     toolName = eventContext.toolName,
                     toolArgs = eventContext.toolArgs,
                     toolDescription = eventContext.toolDescription,
-                    error = eventContext.error,
+                    error = eventContext.error?.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)

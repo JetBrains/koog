@@ -29,7 +29,6 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
-import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
@@ -160,7 +159,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param executionInfo The execution information for the agent environment transformation event;
      * @param agentId The unique identifier of the agent that encountered the error;
      * @param runId The unique identifier of the agent run;
-     * @param throwable The [Throwable] exception instance that was thrown during agent execution;
+     * @param error The [Throwable] exception instance that was thrown during agent execution;
      * @param context The context of the strategy execution.
      */
     @InternalAgentsApi
@@ -169,7 +168,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         executionInfo: AgentExecutionInfo,
         agentId: String,
         runId: String,
-        throwable: Throwable,
+        error: Throwable,
         context: AIAgentContext
     )
 
@@ -358,7 +357,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param toolDescription The description of the tool that was called;
      * @param toolArgs The arguments that failed validation;
      * @param message The validation error message;
-     * @param error The [AIAgentError] validation error;
+     * @param error The validation error exception;
      * @param context The context of the strategy execution.
      */
     @InternalAgentsApi
@@ -371,7 +370,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         toolDescription: String?,
         toolArgs: JSONObject,
         message: String,
-        error: AIAgentError,
+        error: Throwable,
         context: AIAgentContext
     )
 
@@ -386,7 +385,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param toolDescription The description of the tool that was called;
      * @param toolArgs The arguments provided to the tool;
      * @param message A message describing the failure.
-     * @param error The [AIAgentError] that caused the failure;
+     * @param error The exception that caused the failure, or `null` if no exception is available;
      * @param context The context of the strategy execution.
      */
     @InternalAgentsApi
@@ -399,7 +398,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         toolDescription: String?,
         toolArgs: JSONObject,
         message: String,
-        error: AIAgentError?,
+        error: Throwable?,
         context: AIAgentContext
     )
 
@@ -494,7 +493,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param runId The unique identifier for this streaming session;
      * @param prompt The prompt being sent to the language model;
      * @param model The language model being used for streaming;
-     * @param throwable The exception that occurred during streaming if applicable;
+     * @param error The exception that occurred during streaming if applicable;
      * @param context The context of the strategy execution.
      */
     @InternalAgentsApi
@@ -504,7 +503,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         runId: String,
         prompt: Prompt,
         model: LLModel,
-        throwable: Throwable,
+        error: Throwable,
         context: AIAgentContext
     )
 

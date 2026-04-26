@@ -117,7 +117,7 @@ public class ContextualPromptExecutor(
             }
             .catch { error ->
                 logger.debug(error) { "Error in LLM streaming call (event id: $eventId): $error" }
-                context.pipeline.onLLMStreamingFailed(eventId, context.executionInfo, context.runId, prompt = effectivePrompt, model, throwable = error, context)
+                context.pipeline.onLLMStreamingFailed(eventId, context.executionInfo, context.runId, prompt = effectivePrompt, model, error = error, context)
 
                 throw error
             }

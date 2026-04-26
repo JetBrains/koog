@@ -92,7 +92,7 @@ class StreamingConnectionExceptionTest {
             systemPrompt = "You are helpful"
         ) {
             install(EventHandler) {
-                onAgentExecutionFailed { ctx -> errors.add(ctx.throwable) }
+                onAgentExecutionFailed { ctx -> errors.add(ctx.error) }
             }
         }
 
@@ -123,7 +123,7 @@ class StreamingConnectionExceptionTest {
             systemPrompt = "You are helpful"
         ) {
             install(EventHandler) {
-                onAgentExecutionFailed { ctx -> errors.add(ctx.throwable) }
+                onAgentExecutionFailed { ctx -> errors.add(ctx.error) }
             }
         }
 
@@ -157,7 +157,7 @@ class StreamingConnectionExceptionTest {
             systemPrompt = "You are helpful"
         ) {
             install(EventHandler) {
-                onAgentExecutionFailed { ctx -> errors.add(ctx.throwable) }
+                onAgentExecutionFailed { ctx -> errors.add(ctx.error) }
             }
         }
 
@@ -188,7 +188,7 @@ class StreamingConnectionExceptionTest {
             systemPrompt = "You are helpful"
         ) {
             install(EventHandler) {
-                onAgentExecutionFailed { ctx -> errors.add(ctx.throwable) }
+                onAgentExecutionFailed { ctx -> errors.add(ctx.error) }
             }
         }
 
@@ -228,7 +228,7 @@ class StreamingConnectionExceptionTest {
             systemPrompt = "You are helpful"
         ) {
             install(EventHandler) {
-                onAgentExecutionFailed { ctx -> errors.add(ctx.throwable) }
+                onAgentExecutionFailed { ctx -> errors.add(ctx.error) }
                 onToolCallStarting { ctx -> toolCallsStarted.add(ctx.toolName) }
             }
         }

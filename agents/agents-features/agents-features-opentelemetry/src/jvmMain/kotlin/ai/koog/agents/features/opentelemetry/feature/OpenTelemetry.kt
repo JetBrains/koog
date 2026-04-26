@@ -8,7 +8,6 @@ import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.handler.tool.ToolCallEventContext
-import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
@@ -170,7 +169,7 @@ public class OpenTelemetry {
                 endNodeExecuteSpan(
                     span = nodeExecuteSpan,
                     nodeOutput = null,
-                    error = eventContext.throwable,
+                    error = eventContext.error,
                     verbose = config.isVerbose
                 )
                 spanCollector.removeSpan(
@@ -249,7 +248,7 @@ public class OpenTelemetry {
                 endSubgraphExecuteSpan(
                     span = subgraphExecuteSpan,
                     subgraphOutput = null,
-                    error = eventContext.throwable,
+                    error = eventContext.error,
                     verbose = config.isVerbose
                 )
                 spanCollector.removeSpan(
@@ -381,7 +380,7 @@ public class OpenTelemetry {
 
                 // Record any pending operation-duration metric events (e.g., an LLM call that
                 // started but never completed) as failed measurements per GenAI semconv.
-                metricCollector.flushPendingAsErrors(eventContext.throwable)
+                metricCollector.flushPendingAsErrors(eventContext.error)
 
                 // Stop all unfinished spans, except InvokeAgentSpan and AgentCreateSpan
                 endUnfinishedSpans(spanCollector, config.isVerbose) { span ->
@@ -403,7 +402,7 @@ public class OpenTelemetry {
                     span = invokeAgentSpan,
                     messages = eventContext.context.config.prompt.messages.toList(),
                     model = eventContext.context.config.model,
-                    error = eventContext.throwable,
+                    error = eventContext.error,
                     verbose = config.isVerbose
                 )
                 spanCollector.removeSpan(
@@ -958,7 +957,7 @@ public class OpenTelemetry {
             spanAdapter: SpanAdapter?,
             spanCollector: SpanCollector,
             eventContext: ToolCallEventContext,
-            error: AIAgentError? = null,
+            error: Throwable? = null,
         ) {
             val path = eventContext.executionInfo.appendRunId(eventContext.runId).appendId(eventContext.eventId)
             val span = spanCollector.getStartedSpan(

@@ -1,9 +1,8 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.core.feature.model.AIAgentError
-import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
+import ai.koog.agents.features.opentelemetry.extension.addCommonErrorAttributes
 import ai.koog.agents.features.opentelemetry.extension.toSpanEndStatus
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.Tracer
@@ -85,7 +84,7 @@ internal fun startExecuteToolSpan(
 internal fun endExecuteToolSpan(
     span: GenAIAgentSpan,
     toolResult: JsonElement?,
-    error: AIAgentError? = null,
+    error: Throwable? = null,
     verbose: Boolean = false
 ) {
     check(span.type == SpanType.EXECUTE_TOOL) {
@@ -93,9 +92,7 @@ internal fun endExecuteToolSpan(
     }
 
     // error.type
-    error?.javaClass?.typeName?.let { typeName ->
-        span.addAttribute(CommonAttributes.Error.Type(typeName))
-    }
+    span.addCommonErrorAttributes(error)
 
     // gen_ai.tool.call.result
     toolResult?.let { result ->

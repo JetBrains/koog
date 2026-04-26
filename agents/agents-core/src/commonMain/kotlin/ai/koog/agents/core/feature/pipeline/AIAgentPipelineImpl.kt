@@ -37,7 +37,6 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
-import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.system.getEnvironmentVariableOrNull
 import ai.koog.agents.core.system.getVMOptionOrNull
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -203,12 +202,12 @@ public class AIAgentPipelineImpl(
         executionInfo: AgentExecutionInfo,
         agentId: String,
         runId: String,
-        throwable: Throwable,
+        error: Throwable,
         context: AIAgentContext
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.AgentExecutionFailed,
-            context = AgentExecutionFailedContext(eventId, executionInfo, agentId, runId, throwable, context)
+            context = AgentExecutionFailedContext(eventId, executionInfo, agentId, runId, error, context)
         )
     }
 
@@ -364,7 +363,7 @@ public class AIAgentPipelineImpl(
         toolDescription: String?,
         toolArgs: JSONObject,
         message: String,
-        error: AIAgentError,
+        error: Throwable,
         context: AIAgentContext
     ) {
         invokeRegisteredHandlersForEvent(
@@ -394,7 +393,7 @@ public class AIAgentPipelineImpl(
         toolDescription: String?,
         toolArgs: JSONObject,
         message: String,
-        error: AIAgentError?,
+        error: Throwable?,
         context: AIAgentContext
     ) {
         invokeRegisteredHandlersForEvent(
@@ -485,12 +484,12 @@ public class AIAgentPipelineImpl(
         runId: String,
         prompt: Prompt,
         model: LLModel,
-        throwable: Throwable,
+        error: Throwable,
         context: AIAgentContext
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.LLMStreamingFailed,
-            context = LLMStreamingFailedContext(eventId, executionInfo, runId, prompt, model, throwable, context)
+            context = LLMStreamingFailedContext(eventId, executionInfo, runId, prompt, model, error, context)
         )
     }
 

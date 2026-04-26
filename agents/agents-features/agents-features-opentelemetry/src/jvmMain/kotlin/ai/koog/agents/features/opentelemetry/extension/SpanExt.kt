@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.extension
 
-import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
@@ -57,13 +56,6 @@ internal fun Span.setEvents(events: List<GenAIAgentEvent>, verbose: Boolean) {
 }
 
 internal fun Throwable?.toSpanEndStatus(): SpanEndStatus =
-    if (this == null) {
-        SpanEndStatus(code = StatusCode.OK)
-    } else {
-        SpanEndStatus(code = StatusCode.ERROR, description = this.message)
-    }
-
-internal fun AIAgentError?.toSpanEndStatus(): SpanEndStatus =
     if (this == null) {
         SpanEndStatus(code = StatusCode.OK)
     } else {

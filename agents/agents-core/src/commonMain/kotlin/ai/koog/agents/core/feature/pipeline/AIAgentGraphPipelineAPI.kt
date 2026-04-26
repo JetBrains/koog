@@ -56,7 +56,7 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: TypeToken,
-        throwable: Throwable
+        error: Throwable
     )
 
     //endregion Trigger Node Handlers
@@ -93,7 +93,7 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: TypeToken,
-        throwable: Throwable
+        error: Throwable
     )
 
     //endregion Trigger Subgraph Handlers

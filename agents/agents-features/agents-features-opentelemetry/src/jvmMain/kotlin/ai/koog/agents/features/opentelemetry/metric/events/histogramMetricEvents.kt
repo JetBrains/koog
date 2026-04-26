@@ -2,7 +2,6 @@ package ai.koog.agents.features.opentelemetry.metric.events
 
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
-import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
@@ -93,7 +92,7 @@ internal fun createExecuteToolDurationHistogramMetricEvent(
     toolName: String,
     toolCallStatus: KoogAttributes.Koog.Tool.Call.StatusType,
     duration: Duration,
-    error: AIAgentError? = null,
+    error: Throwable? = null,
 ): HistogramMetricEvent {
     val attributes = buildList {
         add(GenAIAttributes.Operation.Name(GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL))
@@ -113,7 +112,4 @@ internal fun createExecuteToolDurationHistogramMetricEvent(
 }
 
 private fun Throwable.errorTypeAttribute(): CommonAttributes.Error.Type =
-    CommonAttributes.Error.Type(this::class.java.typeName)
-
-private fun AIAgentError.errorTypeAttribute(): CommonAttributes.Error.Type =
     CommonAttributes.Error.Type(this::class.java.typeName)

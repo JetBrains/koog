@@ -1,7 +1,6 @@
 package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
-import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.reflect.ToolFromCallable
@@ -89,7 +88,7 @@ class SafeToolTest {
                     toolArgs = toolCall.contentJson.toKoogJSONObject(),
                     toolDescription = null,
                     content = TEST_ERROR,
-                    resultKind = ToolResultKind.Failure(Exception(TEST_ERROR).toAgentError()),
+                    resultKind = ToolResultKind.Failure(Exception(TEST_ERROR)),
                     result = null,
                 )
             }
@@ -242,7 +241,7 @@ class SafeToolTest {
                         toolArgs = toolCall.contentJson.toKoogJSONObject(),
                         toolDescription = null,
                         content = "Error: ${e.message}",
-                        resultKind = ToolResultKind.Failure(e.toAgentError()),
+                        resultKind = ToolResultKind.Failure(e),
                         result = null
                     )
                 }

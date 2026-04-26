@@ -1,6 +1,5 @@
 package ai.koog.agents.core.environment
 
-import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolRegistry
@@ -61,7 +60,7 @@ public class GenericAgentEnvironment(
                 toolArgs = JSONObject(emptyMap()),
                 toolDescription = null,
                 content = "Tool with name '$toolName' failed to parse arguments due to the error: ${e.message}",
-                resultKind = ToolResultKind.Failure(e.toAgentError()),
+                resultKind = ToolResultKind.Failure(e),
                 result = null,
             )
         }
@@ -95,7 +94,7 @@ public class GenericAgentEnvironment(
                 toolArgs = toolArgsJson,
                 toolDescription = toolDescription,
                 content = "Tool with name '$toolName' failed to parse arguments due to the error: ${e.message}",
-                resultKind = ToolResultKind.Failure(e.toAgentError()),
+                resultKind = ToolResultKind.Failure(e),
                 result = null,
             )
         }
@@ -112,7 +111,7 @@ public class GenericAgentEnvironment(
                 toolArgs = toolArgsJson,
                 toolDescription = toolDescription,
                 content = e.message,
-                resultKind = ToolResultKind.ValidationError(e.toAgentError()),
+                resultKind = ToolResultKind.ValidationError(e),
                 result = null,
             )
         } catch (e: Exception) {
@@ -124,7 +123,7 @@ public class GenericAgentEnvironment(
                 toolArgs = toolArgsJson,
                 toolDescription = toolDescription,
                 content = "Tool with name '$toolName' failed to execute due to the error: ${e.message}!",
-                resultKind = ToolResultKind.Failure(e.toAgentError()),
+                resultKind = ToolResultKind.Failure(e),
                 result = null
             )
         }
@@ -144,7 +143,7 @@ public class GenericAgentEnvironment(
                 toolArgs = toolArgsJson,
                 toolDescription = toolDescription,
                 content = "Tool with name '$toolName' failed to serialize result due to the error: ${e.message}!",
-                resultKind = ToolResultKind.Failure(e.toAgentError()),
+                resultKind = ToolResultKind.Failure(e),
                 result = null
             )
         }

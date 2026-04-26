@@ -75,7 +75,7 @@ class TestFeature(val events: MutableList<String>) {
                     event,
                     mapOf(
                         "name" to event.node.name,
-                        "error" to event.throwable.message
+                        "error" to event.error.message
                     )
                 )
             }
@@ -106,7 +106,7 @@ class TestFeature(val events: MutableList<String>) {
                     event,
                     mapOf(
                         "name" to event.subgraph.name,
-                        "error" to event.throwable.message
+                        "error" to event.error.message
                     )
                 )
             }

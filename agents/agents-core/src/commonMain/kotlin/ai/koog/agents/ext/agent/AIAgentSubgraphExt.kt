@@ -19,7 +19,6 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.environment.toSafeResult
-import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
@@ -868,7 +867,7 @@ internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishToo
                 .getOrElse { JSONObject(emptyMap()) },
             toolDescription = toolDescription,
             content = "Failed to execute '${finishTool.name}' with error: ${e.message}'",
-            resultKind = ToolResultKind.Failure(e.toAgentError()),
+            resultKind = ToolResultKind.Failure(e),
             result = null,
         )
     }

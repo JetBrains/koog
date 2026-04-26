@@ -83,12 +83,12 @@ class SimpleAgentMockedTest {
         }
 
         onAgentExecutionFailed { eventContext ->
-            eventContext.throwable.let { errors.add(it.toAgentError()) }
+            eventContext.error.let { errors.add(it.toAgentError()) }
         }
 
         onToolCallFailed { eventContext ->
             failedToolCalls.add(eventContext.toolName)
-            eventContext.error?.let { errors.add(it) }
+            eventContext.error?.let { errors.add(it.toAgentError()) }
         }
 
         onAgentCompleted { eventContext ->
