@@ -44,16 +44,13 @@ public object McpToolRegistryProvider {
     /**
      * Configuration for connecting to an MCP server over the Streamable HTTP transport.
      *
-     * Used as the receiver of the configuration lambda passed to [streamableHttp]. The [url] and
-     * [httpClient] properties are required and must be set before the configuration block returns;
-     * the remaining properties have sensible defaults and are optional.
+     * Used as the receiver of the configuration lambda passed to [streamableHttp]. The [url] property
+     * is required; the remaining properties have sensible defaults and are optional.
      *
      * Example:
      * ```kotlin
-     * val httpClient = HttpClient { install(SSE) }
      * val registry = McpToolRegistryProvider.streamableHttp {
      *     url = "http://localhost:3000/mcp"
-     *     this.httpClient = httpClient
      * }
      * ```
      */
@@ -62,16 +59,19 @@ public object McpToolRegistryProvider {
         public lateinit var url: String
 
         /**
-         * HttpClient used for the MCP connection (required). Must have the Ktor `SSE` plugin installed
-         * (the Streamable HTTP transport relies on it). Lifecycle is managed by the caller — we do not
-         * close this client.
+         * HttpClient used for the MCP connection. Must have the Ktor `SSE` plugin installed
+         * (the Streamable HTTP transport relies on it).
+         *
+         * If `null` (default), a private [HttpClient] is created internally and closed automatically
+         * when the underlying MCP transport closes. If a custom client is provided, the caller
+         * retains full responsibility for its lifecycle (we do not close it).
          *
          * Example:
          * ```kotlin
          * val httpClient = HttpClient { install(SSE) }
          * ```
          */
-        public lateinit var httpClient: HttpClient
+        public var httpClient: HttpClient? = null
 
         /** Custom MCP tool descriptor parser. */
         public var mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser
@@ -89,9 +89,10 @@ public object McpToolRegistryProvider {
      * This is the recommended way to connect to remote MCP servers. Streamable HTTP supports
      * bidirectional communication, session management, and reconnection.
      *
-     * The caller is responsible for providing an [HttpClient][io.ktor.client.HttpClient] with the
-     * Ktor `SSE` plugin installed and for closing it when no longer needed. The same client can be
-     * reused across multiple MCP connections.
+     * If [StreamableHttpConfig.httpClient] is not set, a default [HttpClient] with the `SSE` plugin
+     * is created internally and closed automatically when the MCP transport closes. To reuse a
+     * single client across multiple MCP connections, set it explicitly — in that case the caller
+     * is responsible for closing it.
      *
      * @param block Configuration block for the Streamable HTTP connection.
      * @return A ToolRegistry containing all tools from the MCP server.
@@ -100,7 +101,12 @@ public object McpToolRegistryProvider {
         block: StreamableHttpConfig.() -> Unit
     ): ToolRegistry {
         val config = StreamableHttpConfig().apply(block)
-        val transport = config.httpClient.mcpStreamableHttpTransport(config.url)
+        val httpClient = config.httpClient ?: HttpClient { install(SSE) }
+        val ownsClient = config.httpClient == null
+        val transport = httpClient.mcpStreamableHttpTransport(config.url)
+        if (ownsClient) {
+            transport.onClose { httpClient.close() }
+        }
         val mcpClient = Client(clientInfo = Implementation(config.name, config.version))
         mcpClient.connect(transport)
         return fromClient(

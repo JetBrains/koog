@@ -25,6 +25,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
@@ -34,6 +35,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.milliseconds
 import io.modelcontextprotocol.kotlin.sdk.types.Tool as SdkTool
 
 /**
@@ -93,7 +95,6 @@ public suspend fun startMcpServer(
 /**
  * Starts a new MCP server with the passed [tools] that listens to and writes
  * to the specified [port] on the passed [host] using SSE transport.
- * A port can be obtained from the returned list of [EngineConnectorConfig].
  */
 @Deprecated(
     "SSE transport is deprecated. Use startMcpServer() which defaults to Streamable HTTP.",
@@ -156,6 +157,7 @@ private suspend fun EmbeddedServer<*, *>.connectors(): List<EngineConnectorConfi
         if (connectors.isNotEmpty()) {
             return@coroutineScope connectors
         }
+        delay(50.milliseconds)
     }
 
     return@coroutineScope emptyList()

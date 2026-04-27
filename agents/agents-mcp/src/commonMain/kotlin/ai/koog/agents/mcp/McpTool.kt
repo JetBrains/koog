@@ -75,10 +75,19 @@ public class McpTool(
      * Postprocess result string representation for LLMs a bit, removing unnecessary meta fields.
      * When the result indicates an error (isError == true), returns a clearly prefixed error string
      * so the LLM can recognize the failure and adjust its strategy.
+     *
+     * If the error result has no [TextContent] (or only blank text), falls back to encoding the full
+     * [CallToolResult] as JSON so non-text content (e.g. images, embedded resources) is not silently
+     * dropped.
      */
     override fun encodeResultToString(result: CallToolResult?, serializer: JSONSerializer): String {
         if (result?.isError == true) {
-            return "Error: ${result.content.filterIsInstance<TextContent>().joinToString("\n") { it.text }}"
+            val errorText = result.content.filterIsInstance<TextContent>().joinToString("\n") { it.text }
+            if (errorText.isNotBlank()) {
+                return "Error: $errorText"
+            }
+            val fallbackJson = json.encodeToJsonElement(resultSerializer, result).toKoogJSONElement()
+            return "Error: ${serializer.encodeJSONElementToString(fallbackJson)}"
         }
 
         val preparedResultJson: JsonElement = result

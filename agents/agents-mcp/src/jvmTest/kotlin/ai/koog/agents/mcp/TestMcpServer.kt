@@ -160,6 +160,7 @@ class TestMcpServer(
     fun stop() {
         if (!isRunning) return
 
+        embeddedServer?.stop(gracePeriodMillis = 1000, timeoutMillis = 1000)
         serverJob?.cancel()
         serverJob = null
         embeddedServer = null
