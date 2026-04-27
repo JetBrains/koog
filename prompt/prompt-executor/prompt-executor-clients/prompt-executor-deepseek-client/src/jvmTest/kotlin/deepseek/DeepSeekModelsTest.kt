@@ -4,6 +4,7 @@ import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.list
 import ai.koog.prompt.llm.LLMProvider
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAll
 import kotlin.test.Test
 import kotlin.test.assertSame
 
@@ -33,5 +34,15 @@ class DeepSeekModelsTest {
         reflectionModels.forEach { model ->
             models shouldContain model
         }
+    }
+
+    @Test
+    fun `DeepSeek models should include v4 and legacy aliases`() {
+        DeepSeekModels.models.map { it.id } shouldContainAll listOf(
+            "deepseek-v4-flash",
+            "deepseek-v4-pro",
+            "deepseek-chat",
+            "deepseek-reasoner"
+        )
     }
 }
