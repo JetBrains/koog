@@ -224,6 +224,43 @@ class AIAgentContextTest : AgentTestBase() {
         assertNotSame(originalContext.llm, forkedContext.llm)
     }
 
+    @Test
+    fun testContextForkWithIndependentPromptSnapshot() = runTest {
+        val originalContext = createTestContext()
+        originalContext.llm.writeSession {
+            appendPrompt {
+                user("original-message")
+            }
+        }
+
+        val forkedContext = originalContext.fork()
+
+        assertNotSame(originalContext.llm.prompt, forkedContext.llm.prompt)
+        assertEquals(listOf("original-message"), originalContext.getHistory().map { it.content })
+        assertEquals(listOf("original-message"), forkedContext.getHistory().map { it.content })
+
+        originalContext.llm.writeSession {
+            appendPrompt {
+                user("original-only-message")
+            }
+        }
+
+        forkedContext.llm.writeSession {
+            appendPrompt {
+                user("forked-only-message")
+            }
+        }
+
+        assertEquals(
+            listOf("original-message", "original-only-message"),
+            originalContext.getHistory().map { it.content }
+        )
+        assertEquals(
+            listOf("original-message", "forked-only-message"),
+            forkedContext.getHistory().map { it.content }
+        )
+    }
+
     //region Agent Execution Info
 
     @Test
