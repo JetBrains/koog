@@ -4,11 +4,13 @@ import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
-import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.ExecuteHook
 import ai.koog.prompt.executor.model.InitialExecutionIntent
+import ai.koog.prompt.executor.model.ModerationHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.PromptExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.PromptExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.StreamingExecutorHook
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -67,6 +69,7 @@ public class MockPromptExecutor internal constructor(
     private val handleLastAssistantMessage: Boolean,
     private val responseMatcher: ResponseMatcher<List<Message.Response>>,
     private val moderationResponseMatcher: ResponseMatcher<ModerationResult>,
+    private val streamResponseMatcher: ResponseMatcher<Flow<StreamFrame>>,
     private val logger: KLogger = KotlinLogging.logger(MockPromptExecutor::class.simpleName.toString()),
     internal val toolActions: List<ToolCondition<*, *>> = emptyList(),
     private val clock: Clock = Clock.System,
@@ -90,10 +93,10 @@ public class MockPromptExecutor internal constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: ExecuteHook?
     ): List<Message.Response> {
         logger.debug { "Executing prompt with tools: ${tools.map { it.name }}" }
-        return executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.execute) { finalIntent ->
+        return executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hook) { finalIntent ->
             handlePrompt(finalIntent.prompt)
         }
     }
@@ -112,10 +115,16 @@ public class MockPromptExecutor internal constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: StreamingExecutorHook?
     ): Flow<StreamFrame> =
-        streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) { finalIntent ->
-            flow { handlePrompt(finalIntent.prompt).toStreamFrames().forEach { emit(it) } }
+
+        streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hook) { finalIntent ->
+            val lastMessage = getLastMessage(prompt)
+            val matchedStream = lastMessage?.let {
+                findExactResponse(it, streamResponseMatcher.exactMatches)
+                    ?: findPartialResponse(it, streamResponseMatcher.partialMatches)
+            }
+            matchedStream ?: flow { handlePrompt(finalIntent.prompt).toStreamFrames().forEach { emit(it) } }
         }
 
     /**
@@ -131,10 +140,11 @@ public class MockPromptExecutor internal constructor(
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel,
-        hooks: PromptExecutorHooks?
+        hook: ModerationHook?
     ): ModerationResult =
-        executeWithHook(InitialExecutionIntent(prompt, emptyList(), model), model, hooks?.moderation) { finalIntent ->
-            val lastMessage = getLastMessage(finalIntent.prompt) ?: return@executeWithHook moderationResponseMatcher.defaultResponse
+        executeWithHook(InitialExecutionIntent(prompt, emptyList(), model), model, hook) { finalIntent ->
+            val lastMessage =
+                getLastMessage(finalIntent.prompt) ?: return@executeWithHook moderationResponseMatcher.defaultResponse
             findExactResponse(lastMessage, moderationResponseMatcher.exactMatches)
                 ?: findPartialResponse(lastMessage, moderationResponseMatcher.partialMatches)
                 ?: moderationResponseMatcher.defaultResponse

@@ -18,10 +18,12 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.ExecuteHook
 import ai.koog.prompt.executor.model.InitialExecutionIntent
+import ai.koog.prompt.executor.model.ModerationHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.PromptExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.StreamingExecutorHook
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -73,7 +75,7 @@ class LongTermMemoryIngestionTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hooks: PromptExecutorHooks?
+            hook: ExecuteHook?
         ): List<Message.Response> {
             return listOf(Message.Assistant("non-streaming", ResponseMetaInfo.Empty))
         }
@@ -82,9 +84,9 @@ class LongTermMemoryIngestionTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hooks: PromptExecutorHooks?
+            hook: StreamingExecutorHook?
         ): Flow<StreamFrame> =
-            streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) {
+            streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hook) {
                 flow {
                     for (frame in frames) emit(StreamFrame.TextDelta(frame))
                     emit(StreamFrame.TextComplete(frames.joinToString("")))
@@ -92,7 +94,7 @@ class LongTermMemoryIngestionTest {
                 }
             }
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult =
+        override suspend fun moderate(prompt: Prompt, model: LLModel, hook: ModerationHook?): ModerationResult =
             throw UnsupportedOperationException("Not needed")
 
         override fun close() {}
@@ -414,7 +416,7 @@ class LongTermMemoryIngestionTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>,
-                hooks: PromptExecutorHooks?
+                hook: ExecuteHook?
             ): List<Message.Response> {
                 storageSizeDuringLLMCall = storage.size()
                 return listOf(Message.Assistant("Response that should not be stored yet", ResponseMetaInfo.Empty))
@@ -424,11 +426,11 @@ class LongTermMemoryIngestionTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>,
-                hooks: PromptExecutorHooks?
+                hook: StreamingExecutorHook?
             ): Flow<StreamFrame> =
                 throw UnsupportedOperationException("Not needed")
 
-            override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult =
+            override suspend fun moderate(prompt: Prompt, model: LLModel, hook: ModerationHook?): ModerationResult =
                 throw UnsupportedOperationException("Not needed")
 
             override fun close() {}

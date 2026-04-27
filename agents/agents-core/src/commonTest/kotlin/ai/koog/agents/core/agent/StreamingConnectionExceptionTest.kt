@@ -11,10 +11,12 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.ExecuteHook
 import ai.koog.prompt.executor.model.InitialExecutionIntent
+import ai.koog.prompt.executor.model.ModerationHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.PromptExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.StreamingExecutorHook
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.IncompleteStreamException
@@ -52,20 +54,20 @@ class StreamingConnectionExceptionTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hooks: PromptExecutorHooks?
+            hook: ExecuteHook?
         ): List<Message.Response> = delegate.execute(prompt, model, tools)
 
         override fun executeStreaming(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hooks: PromptExecutorHooks?
+            hook: StreamingExecutorHook?
         ): Flow<StreamFrame> =
-            streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) {
+            streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hook) {
                 streamingBehavior()
             }
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult =
+        override suspend fun moderate(prompt: Prompt, model: LLModel, hook: ModerationHook?): ModerationResult =
             delegate.moderate(prompt, model)
 
         override fun close() = delegate.close()

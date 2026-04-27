@@ -930,7 +930,7 @@ public class MockExecutorDSLBuilder(
         )
 
         return MockPromptExecutor(
-            handleLastAssistantMessage,
+            handleLastAssistantMessage = handleLastAssistantMessage,
             responseMatcher = responseMatcher,
             moderationResponseMatcher = moderationResponseMatcher,
             streamResponseMatcher = streamResponseMatcher,

@@ -3,8 +3,10 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.ModerationHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.StreamingExecutorHook
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -41,7 +43,7 @@ class TestLLMExecutor : PromptExecutor() {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: ExecuteHook?
     ): List<Message.Response> {
         return listOf(handlePrompt(prompt))
     }
@@ -50,12 +52,12 @@ class TestLLMExecutor : PromptExecutor() {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: StreamingExecutorHook?
     ): Flow<StreamFrame> = flow {
         handlePrompt(prompt).toStreamFrames().forEach { emit(it) }
     }
 
-    override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
+    override suspend fun moderate(prompt: Prompt, model: LLModel, hook: ModerationHook?): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed for TestLLMExecutor")
     }
 

@@ -6,23 +6,28 @@ import ai.koog.prompt.cache.model.get
 import ai.koog.prompt.cache.model.put
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.ModerationHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.StreamingExecutorHook
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toMessageResponses
 import ai.koog.prompt.streaming.toStreamFrames
 import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
 import kotlin.time.Clock
 
 /**
  * A [PromptExecutor] that caches responses from a nested executor.
  *
  * On a cache hit, the response is returned directly without invoking the nested executor,
- * which means any [PromptExecutorHooks] passed to [execute] or [executeStreaming] are
+ * which means any hooks passed to [execute] or [executeStreaming] are
  * **not** called — hooks only fire on cache misses, where the call is delegated to [nested].
  *
  * @param cache The cache implementation to use
@@ -38,36 +43,35 @@ public class CachedPromptExecutor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: ExecuteHook?
     ): List<Message.Response> {
-        return getOrPut(prompt, tools, model, hooks)
+        return cache.get(prompt, tools, clock)
+            ?: nested.execute(prompt, model, tools, hook).also { cache.put(prompt, tools, it) }
     }
 
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: StreamingExecutorHook?
     ): Flow<StreamFrame> =
         flow {
-            getOrPut(prompt, tools, model, hooks).toStreamFrames().forEach { emit(it) }
+            val cached = cache.get(prompt, tools, clock)
+            if (cached != null) {
+                cached.toStreamFrames().forEach { emit(it) }
+            } else {
+                val frames = nested.executeStreaming(prompt, model, tools, hook)
+                    .onEach { emit(it) }
+                    .toList()
+                cache.put(prompt, tools, frames.toMessageResponses())
+            }
         }
-
-    private suspend fun getOrPut(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>,
-        model: LLModel,
-        hooks: PromptExecutorHooks?
-    ): List<Message.Response> {
-        return cache.get(prompt, tools, clock)
-            ?: nested.execute(prompt, model, tools, hooks).also { cache.put(prompt, tools, it) }
-    }
 
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel,
-        hooks: PromptExecutorHooks?
-    ): ModerationResult = nested.moderate(prompt, model, hooks)
+        hook: ModerationHook?
+    ): ModerationResult = nested.moderate(prompt, model, hook)
 
     override suspend fun models(): List<LLModel> = nested.models()
 

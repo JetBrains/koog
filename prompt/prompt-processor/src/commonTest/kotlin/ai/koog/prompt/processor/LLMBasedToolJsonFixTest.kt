@@ -5,8 +5,10 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.ModerationHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.StreamingExecutorHook
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -61,7 +63,7 @@ class LLMBasedToolJsonFixTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hooks: PromptExecutorHooks?
+            hook: ExecuteHook?
         ): List<Message.Response> =
             listOf(responses[index++]).also { prompts.add(prompt) }
 
@@ -69,11 +71,11 @@ class LLMBasedToolJsonFixTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            hooks: PromptExecutorHooks?
+            hook: StreamingExecutorHook?
         ): Flow<StreamFrame> =
             error("Not supported")
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult = error("Not supported")
+        override suspend fun moderate(prompt: Prompt, model: LLModel, hook: ModerationHook?): ModerationResult = error("Not supported")
 
         override fun close() {}
     }

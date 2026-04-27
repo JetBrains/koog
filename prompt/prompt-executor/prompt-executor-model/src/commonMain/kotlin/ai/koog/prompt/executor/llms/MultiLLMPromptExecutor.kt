@@ -4,12 +4,15 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.ExecuteHook
 import ai.koog.prompt.executor.model.ExecutorHook
-import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
-import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
 import ai.koog.prompt.executor.model.InitialExecutionIntent
+import ai.koog.prompt.executor.model.ModerationHook
+import ai.koog.prompt.executor.model.MultipleChoicesHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.PromptExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.PromptExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.StreamingExecutorHook
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -157,12 +160,12 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: ExecuteHook?
     ): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
         val initialIntent = InitialExecutionIntent(prompt, tools, model)
-        val (effectiveClient, effectiveModel) = chooseClientAndModel(initialIntent, hooks?.execute)
-        return executeWithHook(initialIntent, effectiveModel, hooks?.execute) { finalIntent ->
+        val (effectiveClient, effectiveModel) = chooseClientAndModel(initialIntent, hook)
+        return executeWithHook(initialIntent, effectiveModel, hook) { finalIntent ->
             effectiveClient.execute(finalIntent.prompt, effectiveModel, finalIntent.tools)
                 .also { logger.debug { "Response: $it" } }
         }
@@ -179,13 +182,13 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: StreamingExecutorHook?
     ): Flow<StreamFrame> = flow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         val initialIntent = InitialExecutionIntent(prompt, tools, model)
-        val (effectiveClient, effectiveModel) = chooseClientAndModel(initialIntent, hooks?.streaming)
+        val (effectiveClient, effectiveModel) = chooseClientAndModel(initialIntent, hook)
         emitAll(
-            streamingWithHook(initialIntent, effectiveModel, hooks?.streaming) { finalIntent ->
+            streamingWithHook(initialIntent, effectiveModel, hook) { finalIntent ->
                 effectiveClient.executeStreaming(finalIntent.prompt, effectiveModel, finalIntent.tools)
             }
         )
@@ -204,12 +207,12 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: MultipleChoicesHook?
     ): List<LLMChoice> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
         val initialIntent = InitialExecutionIntent(prompt, tools, model)
-        val (effectiveClient, effectiveModel) = chooseClientAndModel(initialIntent, hooks?.multipleChoices)
-        return executeWithHook(initialIntent, effectiveModel, hooks?.multipleChoices) { finalIntent ->
+        val (effectiveClient, effectiveModel) = chooseClientAndModel(initialIntent, hook)
+        return executeWithHook(initialIntent, effectiveModel, hook) { finalIntent ->
             effectiveClient.executeMultipleChoices(finalIntent.prompt, effectiveModel, finalIntent.tools)
                 .also { logger.debug { "Choices: $it" } }
         }
@@ -226,12 +229,12 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel,
-        hooks: PromptExecutorHooks?
+        hook: ModerationHook?
     ): ModerationResult {
         logger.debug { "Moderating multi-modal content with model: ${model.id}" }
         val initialIntent = InitialExecutionIntent(prompt = prompt, model = model)
-        val (client, effectiveModel) = chooseClientAndModel(initialIntent, hooks?.moderation)
-        return executeWithHook(initialIntent, effectiveModel, hooks?.moderation) { finalIntent ->
+        val (client, effectiveModel) = chooseClientAndModel(initialIntent, hook)
+        return executeWithHook(initialIntent, effectiveModel, hook) { finalIntent ->
             client.moderate(finalIntent.prompt, effectiveModel)
         }
     }

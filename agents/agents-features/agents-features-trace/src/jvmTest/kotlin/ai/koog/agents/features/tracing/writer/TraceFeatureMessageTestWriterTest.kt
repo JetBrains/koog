@@ -38,11 +38,13 @@ import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.ExecutorHooksHelper.executeWithHook
-import ai.koog.prompt.executor.model.ExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.ExecuteHook
 import ai.koog.prompt.executor.model.InitialExecutionIntent
+import ai.koog.prompt.executor.model.ModerationHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.PromptExecutorHooksHelper.executeWithHook
+import ai.koog.prompt.executor.model.PromptExecutorHooksHelper.streamingWithHook
+import ai.koog.prompt.executor.model.StreamingExecutorHook
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -486,17 +488,17 @@ class TraceFeatureMessageTestWriterTest {
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
                 tools: List<ToolDescriptor>,
-                hooks: PromptExecutorHooks?
+                hook: ExecuteHook?
             ): List<Message.Response> =
-                executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.execute) { emptyList() }
+                executeWithHook(InitialExecutionIntent(prompt, tools, model), hook = hook) { emptyList() }
 
             override fun executeStreaming(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
                 tools: List<ToolDescriptor>,
-                hooks: PromptExecutorHooks?
+                hook: StreamingExecutorHook?
             ): Flow<StreamFrame> =
-                streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hooks?.streaming) {
+                streamingWithHook(InitialExecutionIntent(prompt, tools, model), hook = hook) {
                     flow {
                         val testException = IllegalStateException(testStreamingErrorMessage)
                         testStreamingStackTrace = testException.stackTraceToString()
@@ -507,7 +509,7 @@ class TraceFeatureMessageTestWriterTest {
             override suspend fun moderate(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
-                hooks: PromptExecutorHooks?
+                hook: ModerationHook?
             ): ai.koog.prompt.dsl.ModerationResult {
                 throw UnsupportedOperationException("Not used in test")
             }

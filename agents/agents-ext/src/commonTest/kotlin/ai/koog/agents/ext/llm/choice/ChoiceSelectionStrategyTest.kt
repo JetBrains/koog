@@ -1,11 +1,19 @@
 package ai.koog.agents.ext.llm.choice
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.testing.client.CapturingLLMClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.ExecutionArgOverrides
+import ai.koog.prompt.executor.model.InitialExecutionIntent
+import ai.koog.prompt.executor.model.ModerationHook
+import ai.koog.prompt.executor.model.MultipleChoicesHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.ResolvedExecutionIntent
+import ai.koog.prompt.executor.model.StreamingExecutorHook
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -57,7 +65,7 @@ class ChoiceSelectionStrategyTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>,
-                hooks: PromptExecutorHooks?
+                hook: ExecuteHook?
             ): List<Message.Response> {
                 return listOf(
                     Message.Assistant(
@@ -71,7 +79,7 @@ class ChoiceSelectionStrategyTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>,
-                hooks: PromptExecutorHooks?
+                hook: StreamingExecutorHook?
             ): Flow<StreamFrame> =
                 streamFrameFlowOf("Default streaming response")
 
@@ -79,7 +87,7 @@ class ChoiceSelectionStrategyTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>,
-                hooks: PromptExecutorHooks?
+                hook: MultipleChoicesHook?
             ): List<LLMChoice> {
                 val choice1 =
                     listOf(Message.Assistant("Choice 1", metaInfo = ResponseMetaInfo.create(testClock)))
@@ -88,7 +96,7 @@ class ChoiceSelectionStrategyTest {
                 return listOf(choice1, choice2)
             }
 
-            override suspend fun moderate(prompt: Prompt, model: LLModel, hooks: PromptExecutorHooks?): ModerationResult {
+            override suspend fun moderate(prompt: Prompt, model: LLModel, hook: ModerationHook?): ModerationResult {
                 throw UnsupportedOperationException("Moderation is not needed here")
             }
 
@@ -113,5 +121,42 @@ class ChoiceSelectionStrategyTest {
             (result.first() as Message.Assistant).content,
             "PromptExecutorChoice should delegate to strategy and return the chosen choice"
         )
+    }
+
+    @Test
+    fun testExecuteHookOnCompletedReceivesSelectedChoice() = runTest {
+        val choice1 = listOf(Message.Assistant("Choice 1", metaInfo = ResponseMetaInfo.create(testClock)))
+        val choice2 = listOf(Message.Assistant("Choice 2", metaInfo = ResponseMetaInfo.create(testClock)))
+
+        val client = CapturingLLMClient(choices = listOf(choice1, choice2))
+        val executor = PromptExecutorWithChoiceSelection(SingleLLMPromptExecutor(client), ChoiceSelectionStrategy.Default)
+
+        var completedWith: List<Message.Response>? = null
+        val hook = object : ExecuteHook {
+            override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel, result: List<Message.Response>) {
+                completedWith = result
+            }
+        }
+
+        val result = executor.execute(prompt("test") {}, OllamaModels.Meta.LLAMA_3_2, emptyList(), hook)
+
+        assertEquals(choice1, result)
+        assertEquals(choice1, completedWith, "onCompleted should receive the selected choice, not all choices")
+    }
+
+    @Test
+    fun testExecuteHookBeforeExecutionPromptOverrideIsForwarded() = runTest {
+        val overriddenPrompt = prompt("overridden") { user("overridden") }
+        val client = CapturingLLMClient(choices = listOf(listOf(Message.Assistant("ok", ResponseMetaInfo.create(testClock)))))
+        val executor = PromptExecutorWithChoiceSelection(SingleLLMPromptExecutor(client), ChoiceSelectionStrategy.Default)
+
+        val hook = object : ExecuteHook {
+            override suspend fun beforeExecution(intent: InitialExecutionIntent, effectiveModel: LLModel) =
+                ExecutionArgOverrides.UseDifferentPrompt(overriddenPrompt)
+        }
+
+        executor.execute(prompt("original") {}, OllamaModels.Meta.LLAMA_3_2, emptyList(), hook)
+
+        assertEquals(overriddenPrompt, client.lastChoicesPrompt, "beforeExecution prompt override should reach the inner executor")
     }
 }

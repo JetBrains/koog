@@ -5,10 +5,12 @@ import ai.koog.agents.testing.client.CapturingLLMClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.ExecuteHook
 import ai.koog.prompt.executor.model.ExecutionArgOverrides
 import ai.koog.prompt.executor.model.InitialExecutionIntent
+import ai.koog.prompt.executor.model.ModerationHook
+import ai.koog.prompt.executor.model.MultipleChoicesHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.executor.model.ResolvedExecutionIntent
 import ai.koog.prompt.executor.model.SimpleExecutorHook
 import ai.koog.prompt.executor.model.StreamingExecutorHook
@@ -27,7 +29,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
- * Contract tests verifying the [PromptExecutorHooks] lifecycle for a [PromptExecutor] implementation.
+ * Contract tests verifying the executor hook lifecycle for a [PromptExecutor] implementation.
  *
  * Subclass once per executor and implement [createExecutor] and [model].
  * All hook lifecycle guarantees are then verified automatically:
@@ -70,15 +72,13 @@ abstract class PromptExecutorHooksTestBase {
         val executor = createExecutor(client)
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val execute = object : SimpleExecutorHook<List<Message.Response>> {
-                override suspend fun beforeExecution(intent: InitialExecutionIntent, effectiveModel: LLModel) =
-                    ExecutionArgOverrides.UseDifferentPrompt(overriddenPrompt)
-            }
+        val hook = object : ExecuteHook {
+            override suspend fun beforeExecution(intent: InitialExecutionIntent, effectiveModel: LLModel) =
+                ExecutionArgOverrides.UseDifferentPrompt(overriddenPrompt)
         }
 
         // When
-        executor.execute(prompt = originalPrompt, model = model, tools = someTools, hooks = hooks)
+        executor.execute(prompt = originalPrompt, model = model, tools = someTools, hook = hook)
 
         // Then
         assertEquals(overriddenPrompt, client.lastExecutedPrompt)
@@ -93,20 +93,18 @@ abstract class PromptExecutorHooksTestBase {
         var completedResult: List<Message.Response>? = null
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val execute = object : SimpleExecutorHook<List<Message.Response>> {
-                override suspend fun beforeExecution(intent: InitialExecutionIntent, effectiveModel: LLModel) =
-                    ExecutionArgOverrides.UseDifferentPrompt(overriddenPrompt)
+        val hook = object : ExecuteHook {
+            override suspend fun beforeExecution(intent: InitialExecutionIntent, effectiveModel: LLModel) =
+                ExecutionArgOverrides.UseDifferentPrompt(overriddenPrompt)
 
-                override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel, result: List<Message.Response>) {
-                    completedIntent = intent
-                    completedResult = result
-                }
+            override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel, result: List<Message.Response>) {
+                completedIntent = intent
+                completedResult = result
             }
         }
 
         // When
-        executor.execute(prompt = originalPrompt, model = model, hooks = hooks)
+        executor.execute(prompt = originalPrompt, model = model, hook = hook)
 
         // Then
         assertEquals(overriddenPrompt, completedIntent?.prompt, "onCompleted receives the resolved (overridden) prompt")
@@ -121,17 +119,15 @@ abstract class PromptExecutorHooksTestBase {
         var capturedError: Throwable? = null
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val execute = object : SimpleExecutorHook<List<Message.Response>> {
-                override suspend fun onFailure(intent: ResolvedExecutionIntent, effectiveModel: LLModel, error: Throwable) {
-                    capturedError = error
-                }
+        val hook = object : ExecuteHook {
+            override suspend fun onFailure(intent: ResolvedExecutionIntent, effectiveModel: LLModel, error: Throwable) {
+                capturedError = error
             }
         }
 
         // When
         val thrown = assertFailsWith<Throwable> {
-            executor.execute(prompt = originalPrompt, model = model, hooks = hooks)
+            executor.execute(prompt = originalPrompt, model = model, hook = hook)
         }
 
         // Then
@@ -145,17 +141,15 @@ abstract class PromptExecutorHooksTestBase {
         var completedCalled = false
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val execute = object : SimpleExecutorHook<List<Message.Response>> {
-                override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel, result: List<Message.Response>) {
-                    completedCalled = true
-                }
+        val hook = object : ExecuteHook {
+            override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel, result: List<Message.Response>) {
+                completedCalled = true
             }
         }
 
         // When
         assertFailsWith<Throwable> {
-            executor.execute(prompt = originalPrompt, model = model, hooks = hooks)
+            executor.execute(prompt = originalPrompt, model = model, hook = hook)
         }
 
         // Then
@@ -168,7 +162,7 @@ abstract class PromptExecutorHooksTestBase {
         val executor = createExecutor(capturingClient())
 
         // When
-        val result = executor.execute(originalPrompt, model, someTools, hooks = null)
+        val result = executor.execute(originalPrompt, model, someTools, hook = null)
 
         // Then
         assertEquals(someResponse, result)
@@ -181,15 +175,13 @@ abstract class PromptExecutorHooksTestBase {
         val executor = createExecutor(client)
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val streaming = object : StreamingExecutorHook {
-                override suspend fun beforeExecution(intent: InitialExecutionIntent, effectiveModel: LLModel) =
-                    ExecutionArgOverrides.UseDifferentPrompt(overriddenPrompt)
-            }
+        val hook = object : StreamingExecutorHook {
+            override suspend fun beforeExecution(intent: InitialExecutionIntent, effectiveModel: LLModel) =
+                ExecutionArgOverrides.UseDifferentPrompt(overriddenPrompt)
         }
 
         // When
-        executor.executeStreaming(prompt = originalPrompt, model = model, tools = someTools, hooks = hooks).toList()
+        executor.executeStreaming(prompt = originalPrompt, model = model, tools = someTools, hook = hook).toList()
 
         // Then
         assertEquals(overriddenPrompt, client.lastStreamingPrompt)
@@ -202,16 +194,14 @@ abstract class PromptExecutorHooksTestBase {
         val capturedFrames = mutableListOf<StreamFrame>()
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val streaming = object : StreamingExecutorHook {
-                override suspend fun onFrame(intent: ResolvedExecutionIntent, effectiveModel: LLModel, frame: StreamFrame) {
-                    capturedFrames += frame
-                }
+        val hook = object : StreamingExecutorHook {
+            override suspend fun onFrame(intent: ResolvedExecutionIntent, effectiveModel: LLModel, frame: StreamFrame) {
+                capturedFrames += frame
             }
         }
 
         // When
-        executor.executeStreaming(prompt = originalPrompt, model = model, hooks = hooks).toList()
+        executor.executeStreaming(prompt = originalPrompt, model = model, hook = hook).toList()
 
         // Then
         assertEquals(someFrames, capturedFrames)
@@ -224,20 +214,18 @@ abstract class PromptExecutorHooksTestBase {
         val events = mutableListOf<String>()
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val streaming = object : StreamingExecutorHook {
-                override suspend fun onFrame(intent: ResolvedExecutionIntent, effectiveModel: LLModel, frame: StreamFrame) {
-                    events += "frame"
-                }
+        val hook = object : StreamingExecutorHook {
+            override suspend fun onFrame(intent: ResolvedExecutionIntent, effectiveModel: LLModel, frame: StreamFrame) {
+                events += "frame"
+            }
 
-                override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel) {
-                    events += "completed"
-                }
+            override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel) {
+                events += "completed"
             }
         }
 
         // When
-        executor.executeStreaming(prompt = originalPrompt, model = model, hooks = hooks).toList()
+        executor.executeStreaming(prompt = originalPrompt, model = model, hook = hook).toList()
 
         // Then
         assertEquals(someFrames.size, events.count { it == "frame" })
@@ -253,21 +241,19 @@ abstract class PromptExecutorHooksTestBase {
         var onCompletedCalled = false
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val streaming = object : StreamingExecutorHook {
-                override suspend fun onFailure(intent: ResolvedExecutionIntent, effectiveModel: LLModel, error: Throwable) {
-                    onFailureCalled = true
-                }
+        val hook = object : StreamingExecutorHook {
+            override suspend fun onFailure(intent: ResolvedExecutionIntent, effectiveModel: LLModel, error: Throwable) {
+                onFailureCalled = true
+            }
 
-                override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel) {
-                    onCompletedCalled = true
-                }
+            override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel) {
+                onCompletedCalled = true
             }
         }
 
         // When
         assertFailsWith<RuntimeException> {
-            executor.executeStreaming(prompt = originalPrompt, model = model, hooks = hooks).toList()
+            executor.executeStreaming(prompt = originalPrompt, model = model, hook = hook).toList()
         }
 
         // Then
@@ -281,7 +267,7 @@ abstract class PromptExecutorHooksTestBase {
         val executor = createExecutor(capturingClient())
 
         // When
-        val result = executor.executeStreaming(originalPrompt, model, someTools, hooks = null).toList()
+        val result = executor.executeStreaming(originalPrompt, model, someTools, hook = null).toList()
 
         // Then
         assertEquals(someFrames, result)
@@ -294,15 +280,13 @@ abstract class PromptExecutorHooksTestBase {
         val executor = createExecutor(client)
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val multipleChoices = object : SimpleExecutorHook<List<LLMChoice>> {
-                override suspend fun beforeExecution(intent: InitialExecutionIntent, effectiveModel: LLModel) =
-                    ExecutionArgOverrides.UseDifferentPrompt(overriddenPrompt)
-            }
+        val hook = object : MultipleChoicesHook {
+            override suspend fun beforeExecution(intent: InitialExecutionIntent, effectiveModel: LLModel) =
+                ExecutionArgOverrides.UseDifferentPrompt(overriddenPrompt)
         }
 
         // When
-        executor.executeMultipleChoices(prompt = originalPrompt, model = model, tools = someTools, hooks = hooks)
+        executor.executeMultipleChoices(prompt = originalPrompt, model = model, tools = someTools, hook = hook)
 
         // Then
         assertEquals(overriddenPrompt, client.lastChoicesPrompt)
@@ -315,16 +299,14 @@ abstract class PromptExecutorHooksTestBase {
         var completedResult: List<LLMChoice>? = null
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val multipleChoices = object : SimpleExecutorHook<List<LLMChoice>> {
-                override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel, result: List<LLMChoice>) {
-                    completedResult = result
-                }
+        val hook = object : MultipleChoicesHook {
+            override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel, result: List<LLMChoice>) {
+                completedResult = result
             }
         }
 
         // When
-        executor.executeMultipleChoices(prompt = originalPrompt, model = model, hooks = hooks)
+        executor.executeMultipleChoices(prompt = originalPrompt, model = model, hook = hook)
 
         // Then
         assertEquals(someChoices, completedResult)
@@ -337,17 +319,15 @@ abstract class PromptExecutorHooksTestBase {
         var capturedError: Throwable? = null
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val multipleChoices = object : SimpleExecutorHook<List<LLMChoice>> {
-                override suspend fun onFailure(intent: ResolvedExecutionIntent, effectiveModel: LLModel, error: Throwable) {
-                    capturedError = error
-                }
+        val hook = object : MultipleChoicesHook {
+            override suspend fun onFailure(intent: ResolvedExecutionIntent, effectiveModel: LLModel, error: Throwable) {
+                capturedError = error
             }
         }
 
         // When
         val thrown = assertFailsWith<Throwable> {
-            executor.executeMultipleChoices(prompt = originalPrompt, model = model, hooks = hooks)
+            executor.executeMultipleChoices(prompt = originalPrompt, model = model, hook = hook)
         }
 
         // Then
@@ -360,7 +340,7 @@ abstract class PromptExecutorHooksTestBase {
         val executor = createExecutor(capturingClient())
 
         // When
-        val result = executor.executeMultipleChoices(originalPrompt, model, someTools, hooks = null)
+        val result = executor.executeMultipleChoices(originalPrompt, model, someTools, hook = null)
 
         // Then
         assertEquals(someChoices, result)
@@ -373,15 +353,13 @@ abstract class PromptExecutorHooksTestBase {
         val executor = createExecutor(client)
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val moderation = object : SimpleExecutorHook<ModerationResult> {
-                override suspend fun beforeExecution(intent: InitialExecutionIntent, effectiveModel: LLModel) =
-                    ExecutionArgOverrides.UseDifferentPrompt(overriddenPrompt)
-            }
+        val hook = object : ModerationHook {
+            override suspend fun beforeExecution(intent: InitialExecutionIntent, effectiveModel: LLModel) =
+                ExecutionArgOverrides.UseDifferentPrompt(overriddenPrompt)
         }
 
         // When
-        executor.moderate(prompt = originalPrompt, model = model, hooks = hooks)
+        executor.moderate(prompt = originalPrompt, model = model, hook = hook)
 
         // Then
         assertEquals(overriddenPrompt, client.lastModerationPrompt)
@@ -394,16 +372,14 @@ abstract class PromptExecutorHooksTestBase {
         var completedResult: ModerationResult? = null
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val moderation = object : SimpleExecutorHook<ModerationResult> {
-                override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel, result: ModerationResult) {
-                    completedResult = result
-                }
+        val hook = object : ModerationHook {
+            override suspend fun onCompleted(intent: ResolvedExecutionIntent, effectiveModel: LLModel, result: ModerationResult) {
+                completedResult = result
             }
         }
 
         // When
-        executor.moderate(prompt = originalPrompt, model = model, hooks = hooks)
+        executor.moderate(prompt = originalPrompt, model = model, hook = hook)
 
         // Then
         assertEquals(someModerationResult, completedResult)
@@ -416,17 +392,15 @@ abstract class PromptExecutorHooksTestBase {
         var capturedError: Throwable? = null
 
         // And
-        val hooks = object : PromptExecutorHooks {
-            override val moderation = object : SimpleExecutorHook<ModerationResult> {
-                override suspend fun onFailure(intent: ResolvedExecutionIntent, effectiveModel: LLModel, error: Throwable) {
-                    capturedError = error
-                }
+        val hook = object : ModerationHook {
+            override suspend fun onFailure(intent: ResolvedExecutionIntent, effectiveModel: LLModel, error: Throwable) {
+                capturedError = error
             }
         }
 
         // When
         val thrown = assertFailsWith<Throwable> {
-            executor.moderate(prompt = originalPrompt, model = model, hooks = hooks)
+            executor.moderate(prompt = originalPrompt, model = model, hook = hook)
         }
 
         // Then
@@ -439,7 +413,7 @@ abstract class PromptExecutorHooksTestBase {
         val executor = createExecutor(capturingClient())
 
         // When
-        val result = executor.moderate(originalPrompt, model, hooks = null)
+        val result = executor.moderate(originalPrompt, model, hook = null)
 
         // Then
         assertEquals(someModerationResult, result)

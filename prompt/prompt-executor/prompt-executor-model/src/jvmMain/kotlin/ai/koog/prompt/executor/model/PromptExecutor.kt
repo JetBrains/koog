@@ -34,10 +34,10 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList(),
-        hooks: PromptExecutorHooks? = null,
+        hook: ExecuteHook? = null,
         executorService: ExecutorService? = null
     ): List<Message.Response> = runOnIOBoundDispatcher(executorService) {
-        execute(prompt, model, tools, hooks)
+        execute(prompt, model, tools, hook)
     }
 
     /**
@@ -56,14 +56,14 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList(),
-        hooks: PromptExecutorHooks? = null,
+        hook: MultipleChoicesHook? = null,
         executorService: ExecutorService? = null
     ): List<LLMChoice> = runOnIOBoundDispatcher(executorService) {
         executeMultipleChoices(
             prompt = prompt,
             model = model,
             tools = tools,
-            hooks = hooks
+            hook = hook
         )
     }
 
@@ -82,8 +82,8 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList(),
-        hooks: PromptExecutorHooks? = null,
-    ): Publisher<StreamFrame> = executeStreaming(prompt, model, tools, hooks).asPublisher()
+        hook: StreamingExecutorHook? = null,
+    ): Publisher<StreamFrame> = executeStreaming(prompt, model, tools, hook).asPublisher()
 
     /**
      * Moderates the content of a given message with attachments using a specified LLM.
@@ -103,13 +103,13 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
     public fun moderate(
         prompt: Prompt,
         model: LLModel,
+        hook: ModerationHook? = null,
         executorService: ExecutorService? = null,
-        hooks: PromptExecutorHooks? = null,
     ): ModerationResult = runOnIOBoundDispatcher(executorService) {
         moderate(
             prompt = prompt,
             model = model,
-            hooks = hooks
+            hook = hook
         )
     }
 

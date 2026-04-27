@@ -2,12 +2,11 @@ package ai.koog.prompt.executor.llms
 
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 
 /**
- * Test class for verifying the behavior of the [RoutingLLMPromptExecutor] with [PromptExecutorHooks].
+ * Test class for verifying the behavior of the [RoutingLLMPromptExecutor] with executor hooks.
  * Note: this test IS used - use cases are defined in [PromptExecutorHooksTestBase]
  */
 @Suppress("unused")

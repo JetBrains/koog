@@ -3,8 +3,14 @@ package ai.koog.agents.ext.llm.choice
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.ExecuteHook
+import ai.koog.prompt.executor.model.ExecutionArgOverrides
+import ai.koog.prompt.executor.model.InitialExecutionIntent
+import ai.koog.prompt.executor.model.ModerationHook
+import ai.koog.prompt.executor.model.MultipleChoicesHook
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorHooks
+import ai.koog.prompt.executor.model.ResolvedExecutionIntent
+import ai.koog.prompt.executor.model.StreamingExecutorHook
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -34,25 +40,57 @@ public class PromptExecutorWithChoiceSelection(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
+        hook: ExecuteHook?
     ): List<Message.Response> {
-        val choices = executor.executeMultipleChoices(prompt, model, tools, hooks)
+        val adapter = hook?.let { CapturingMultipleChoicesHook(prompt, it) }
+        val choices = executor.executeMultipleChoices(prompt, model, tools, adapter)
+        return adapter?.chosen ?: choiceSelectionStrategy.choose(prompt, choices)
+    }
 
-        return choiceSelectionStrategy.choose(prompt, choices)
+    private inner class CapturingMultipleChoicesHook(
+        private val prompt: Prompt,
+        private val hook: ExecuteHook,
+    ) : MultipleChoicesHook {
+        var chosen: List<Message.Response>? = null
+            private set
+
+        override suspend fun onModelChoiceFailed(intent: InitialExecutionIntent, error: Throwable) =
+            hook.onModelChoiceFailed(intent, error)
+
+        override suspend fun beforeExecution(
+            intent: InitialExecutionIntent,
+            effectiveModel: LLModel
+        ): ExecutionArgOverrides = hook.beforeExecution(intent, effectiveModel)
+
+        override suspend fun onCompleted(
+            intent: ResolvedExecutionIntent,
+            effectiveModel: LLModel,
+            result: List<LLMChoice>
+        ) {
+            val selected = choiceSelectionStrategy.choose(prompt, result)
+            chosen = selected
+            hook.onCompleted(intent, effectiveModel, selected)
+        }
+
+        override suspend fun onFailure(
+            intent: ResolvedExecutionIntent,
+            effectiveModel: LLModel,
+            error: Throwable
+        ) = hook.onFailure(intent, effectiveModel, error)
     }
 
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
-    ): Flow<StreamFrame> = executor.executeStreaming(prompt, model, tools, hooks)
+        hook: StreamingExecutorHook?
+    ): Flow<StreamFrame> = executor.executeStreaming(prompt, model, tools, hook)
 
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel,
-        hooks: PromptExecutorHooks?
-    ): ModerationResult = executor.moderate(prompt, model, hooks)
+        hook: ModerationHook?
+    ): ModerationResult = executor.moderate(prompt, model, hook)
 
     override fun close(): Unit = executor.close()
 
@@ -62,6 +100,6 @@ public class PromptExecutorWithChoiceSelection(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        hooks: PromptExecutorHooks?
-    ): List<LLMChoice> = executor.executeMultipleChoices(prompt, model, tools, hooks)
+        hook: MultipleChoicesHook?
+    ): List<LLMChoice> = executor.executeMultipleChoices(prompt, model, tools, hook)
 }
