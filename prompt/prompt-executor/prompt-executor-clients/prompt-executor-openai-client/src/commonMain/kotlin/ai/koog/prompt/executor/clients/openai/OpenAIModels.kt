@@ -41,6 +41,8 @@ import kotlin.jvm.JvmField
  * | [Chat.GPT5_4Mini]                | Fast      | $0.75-$4.5         | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5_4Nano]                | Fast      | $0.2-$1.25         | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5_4Pro]                 | Slowest   | $30-$180           | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5_5]                    | Fast      | $5-$30             | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5_5Pro]                 | Slowest   | $30-$180           | Text, Image, Tools, Document | Text, Tools                  |
  * | [Audio.GptAudio]                 | Fast      | $2.5-$10           | Text, Audio, Tools           | Text, Audio, Tools           |
  * | [Audio.GPT4oMiniAudio]           | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools           | Text, Audio, Tools           |
  * | [Audio.GPT4oAudio]               | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools           | Text, Audio, Tools           |
@@ -879,6 +881,70 @@ public object OpenAIModels : LLModelDefinitions {
             contextLength = 1_050_000,
             maxOutputTokens = 128_000,
         )
+
+        /**
+         * GPT-5.5 is OpenAI's newest frontier model for the most complex professional work.
+         * Reasoning.effort supports: none, low, medium (default), high and xhigh.
+         *
+         * 1,050,000 context window
+         * 128,000 max output tokens
+         * Dec 01, 2025 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.5">Model page</a>
+         */
+        @JvmField
+        public val GPT5_5: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.5",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+            ) + reasoningCapabilities,
+            contextLength = 1_050_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5.5 pro uses more compute to think harder and provide consistently better answers.
+         * OpenAI's model page text says GPT-5.5 pro is for Responses API requests, while the endpoint table
+         * on the same page also lists chat completions. Koog follows the textual model description and
+         * treats GPT-5.5 pro as Responses-only.
+         *
+         * 1,050,000 context window
+         * 128,000 max output tokens
+         * Dec 01, 2025 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://developers.openai.com/api/docs/models/gpt-5.5-pro">Model page</a>
+         */
+        @JvmField
+        public val GPT5_5Pro: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.5-pro",
+            capabilities = listOf(
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Responses,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+            ) + reasoningCapabilities,
+            contextLength = 1_050_000,
+            maxOutputTokens = 128_000,
+        )
     }
 
     /**
@@ -1100,6 +1166,10 @@ public object OpenAIModels : LLModelDefinitions {
             Chat.GPT5_4Mini,
             Chat.GPT5_4Nano,
             Chat.GPT5_4Pro,
+
+            // Chat Models - GPT-5.5 Series
+            Chat.GPT5_5,
+            Chat.GPT5_5Pro,
 
             // Audio Models
             Audio.GptAudio,
