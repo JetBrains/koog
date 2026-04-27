@@ -31,7 +31,7 @@ dependencies {
     testImplementation(libs.h2)
     testImplementation(libs.postgresql)
     testImplementation(libs.mysql)
-    testImplementation("com.oracle.database.jdbc:ojdbc11:23.7.0.25.01")
+    testImplementation("com.oracle.database.jdbc:ojdbc11:23.26.1.0.0")
 }
 
 kotlin {
