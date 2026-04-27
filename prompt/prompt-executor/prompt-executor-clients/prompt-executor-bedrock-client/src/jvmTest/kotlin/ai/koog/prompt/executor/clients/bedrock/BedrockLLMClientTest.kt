@@ -1219,6 +1219,31 @@ class BedrockLLMClientTest {
         assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
     }
 
+    @Test
+    fun `Kimi K2_5 model requires Converse API for executeStreaming`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                apiMethod = BedrockAPIMethod.InvokeModel
+            ),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("Hello!")
+        }
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.executeStreaming(prompt, BedrockModels.MoonshotKimiK2_5, emptyList()).toList()
+        }
+
+        assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
+    }
+
     // --- MiniMax M2.5 ---
 
     @Test
@@ -1337,11 +1362,36 @@ class BedrockLLMClientTest {
         assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
     }
 
+    @Test
+    fun `GPT-OSS model requires Converse API for executeStreaming`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                apiMethod = BedrockAPIMethod.InvokeModel
+            ),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("Hello!")
+        }
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.executeStreaming(prompt, BedrockModels.OpenAIGptOss120B, emptyList()).toList()
+        }
+
+        assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
+    }
+
     // --- Google Gemma 3 ---
 
     @Test
-    fun `GoogleGemma3_4bIt model has correct properties`() {
-        val model = BedrockModels.GoogleGemma3_4bIt
+    fun `GoogleGemma3_4BIt model has correct properties`() {
+        val model = BedrockModels.GoogleGemma3_4BIt
 
         assertEquals("google.gemma-3-4b-it", model.id)
         assertEquals(LLMProvider.Bedrock, model.provider)
@@ -1354,8 +1404,8 @@ class BedrockLLMClientTest {
     }
 
     @Test
-    fun `GoogleGemma3_12bIt model has correct properties`() {
-        val model = BedrockModels.GoogleGemma3_12bIt
+    fun `GoogleGemma3_12BIt model has correct properties`() {
+        val model = BedrockModels.GoogleGemma3_12BIt
 
         assertEquals("google.gemma-3-12b-it", model.id)
         assertEquals(LLMProvider.Bedrock, model.provider)
@@ -1369,8 +1419,8 @@ class BedrockLLMClientTest {
     }
 
     @Test
-    fun `GoogleGemma3_27bIt model has correct properties`() {
-        val model = BedrockModels.GoogleGemma3_27bIt
+    fun `GoogleGemma3_27BIt model has correct properties`() {
+        val model = BedrockModels.GoogleGemma3_27BIt
 
         assertEquals("google.gemma-3-27b-it", model.id)
         assertEquals(LLMProvider.Bedrock, model.provider)
@@ -1402,7 +1452,7 @@ class BedrockLLMClientTest {
         }
 
         val exception = assertFailsWith<LLMClientException> {
-            client.execute(prompt, BedrockModels.GoogleGemma3_12bIt, emptyList())
+            client.execute(prompt, BedrockModels.GoogleGemma3_12BIt, emptyList())
         }
 
         assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
@@ -1427,7 +1477,7 @@ class BedrockLLMClientTest {
         }
 
         val exception = assertFailsWith<LLMClientException> {
-            client.executeStreaming(prompt, BedrockModels.GoogleGemma3_27bIt, emptyList()).toList()
+            client.executeStreaming(prompt, BedrockModels.GoogleGemma3_27BIt, emptyList()).toList()
         }
 
         assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
@@ -1455,9 +1505,9 @@ class BedrockLLMClientTest {
             BedrockModels.MiniMaxM2_5 to "minimax.minimax-m2.5",
             BedrockModels.OpenAIGptOss120B to "openai.gpt-oss-120b-1:0",
             BedrockModels.OpenAIGptOss20B to "openai.gpt-oss-20b-1:0",
-            BedrockModels.GoogleGemma3_4bIt to "google.gemma-3-4b-it",
-            BedrockModels.GoogleGemma3_12bIt to "google.gemma-3-12b-it",
-            BedrockModels.GoogleGemma3_27bIt to "google.gemma-3-27b-it",
+            BedrockModels.GoogleGemma3_4BIt to "google.gemma-3-4b-it",
+            BedrockModels.GoogleGemma3_12BIt to "google.gemma-3-12b-it",
+            BedrockModels.GoogleGemma3_27BIt to "google.gemma-3-27b-it",
         )
 
         for ((model, expectedId) in models) {

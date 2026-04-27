@@ -303,7 +303,7 @@ val gemmaResponse = converseClient.execute(
             image("/path/to/image.jpg")
         }
     },
-    model = BedrockModels.GoogleGemma3_27bIt
+    model = BedrockModels.GoogleGemma3_27BIt
 )
 
 // Kimi K2 Thinking with deep reasoning traces

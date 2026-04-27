@@ -609,7 +609,7 @@ public object BedrockModels : LLModelDefinitions {
      *
      * Important: This model requires the Bedrock Converse API (apiMethod = BedrockAPIMethod.Converse).
      *
-     * @see <a href="https://github.com/MoonshotAI/Kimi-K2.5">
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-moonshot-ai-kimi-k2-5.html">
      */
     public val MoonshotKimiK2_5: LLModel = BedrockModel(
         LLModel(
@@ -710,7 +710,7 @@ public object BedrockModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-google-gemma-3-4b-it.html">
      */
-    public val GoogleGemma3_4bIt: LLModel = BedrockModel(
+    public val GoogleGemma3_4BIt: LLModel = BedrockModel(
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "google.gemma-3-4b-it",
@@ -736,7 +736,7 @@ public object BedrockModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-google-gemma-3-12b-it.html">
      */
-    public val GoogleGemma3_12bIt: LLModel = BedrockModel(
+    public val GoogleGemma3_12BIt: LLModel = BedrockModel(
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "google.gemma-3-12b-it",
@@ -762,7 +762,7 @@ public object BedrockModels : LLModelDefinitions {
      *
      * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-google-gemma-3-27b-it.html">
      */
-    public val GoogleGemma3_27bIt: LLModel = BedrockModel(
+    public val GoogleGemma3_27BIt: LLModel = BedrockModel(
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "google.gemma-3-27b-it",
@@ -923,9 +923,9 @@ public object BedrockModels : LLModelDefinitions {
         OpenAIGptOss20B,
 
         // Google Gemma 3 Series
-        GoogleGemma3_4bIt,
-        GoogleGemma3_12bIt,
-        GoogleGemma3_27bIt,
+        GoogleGemma3_4BIt,
+        GoogleGemma3_12BIt,
+        GoogleGemma3_27BIt,
     )
 
     /**

@@ -541,31 +541,31 @@ In the tables below:
 
     ##### Moonshot Kimi (Converse-only)
 
-    | Model                  | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) |
-    |------------------------|-------------|-------------|------------|-------|-------------|----------------|
-    | MoonshotKimiK2_5 **(C)** | ✓        | -           | ✓          | ✓     | ✓           | ✓              |
-    | MoonshotKimiK2Thinking **(C)** | ✓  | -           | ✓          | ✓     | ✓           | -              |
+    | Model                          | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) | Document |
+    |--------------------------------|-------------|-------------|------------|-------|-------------|----------------|----------|
+    | MoonshotKimiK2_5 **(C)**       | ✓           | -           | ✓          | ✓     | ✓           | ✓              | -        |
+    | MoonshotKimiK2Thinking **(C)** | ✓           | -           | ✓          | ✓     | ✓           | -              | -        |
 
     ##### MiniMax (Converse-only)
 
-    | Model              | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) |
-    |--------------------|-------------|-------------|------------|-------|-------------|----------------|
-    | MiniMaxM2_5 **(C)**| ✓           | -           | ✓          | ✓     | ✓           | -              |
+    | Model               | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) | Document |
+    |---------------------|-------------|-------------|------------|-------|-------------|----------------|----------|
+    | MiniMaxM2_5 **(C)** | ✓           | -           | ✓          | ✓     | ✓           | -              | -        |
 
     ##### OpenAI GPT-OSS (Converse-only)
 
-    | Model                    | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) |
-    |--------------------------|-------------|-------------|------------|-------|-------------|----------------|
-    | OpenAIGptOss120B **(C)** | ✓           | Full        | ✓          | ✓     | ✓           | -              |
-    | OpenAIGptOss20B **(C)**  | ✓           | Full        | ✓          | ✓     | ✓           | -              |
+    | Model                    | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) | Document |
+    |--------------------------|-------------|-------------|------------|-------|-------------|----------------|----------|
+    | OpenAIGptOss120B **(C)** | ✓           | Full        | ✓          | ✓     | ✓           | -              | -        |
+    | OpenAIGptOss20B **(C)**  | ✓           | Full        | ✓          | ✓     | ✓           | -              | -        |
 
     ##### Google Gemma 3 (Converse-only)
 
     | Model                      | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) | Document |
     |----------------------------|-------------|-------------|------------|-------|-------------|----------------|----------|
-    | GoogleGemma3_27bIt **(C)** | ✓           | Full        | ✓          | ✓     | ✓           | ✓              | ✓        |
-    | GoogleGemma3_12bIt **(C)** | ✓           | Full        | ✓          | ✓     | ✓           | ✓              | ✓        |
-    | GoogleGemma3_4bIt **(C)**  | ✓           | -           | ✓          | ✓     | ✓           | ✓              | -        |
+    | GoogleGemma3_27BIt **(C)** | ✓           | Full        | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | GoogleGemma3_12BIt **(C)** | ✓           | Full        | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | GoogleGemma3_4BIt **(C)**  | ✓           | -           | ✓          | ✓     | ✓           | ✓              | -        |
 
     ##### Embedding Models
 
