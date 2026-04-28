@@ -48,11 +48,9 @@ class RetryingLLMClientTest {
 
     private val testMetaInfo = ResponseMetaInfo.create(KoogClock.System)
 
-    private val testResponse = listOf(
-        Message.Assistant(
-            content = "Test response",
-            metaInfo = testMetaInfo
-        )
+    private val testResponse = Message.Assistant(
+        content = "Test response",
+        metaInfo = testMetaInfo
     )
 
     @Test
@@ -71,7 +69,9 @@ class RetryingLLMClientTest {
 
     @Test
     fun testConvertLLMClientToRetryingClientWithDefaultConfig() = runTest {
-        val mockClient = MockLLMClient()
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse
+        )
         // when
         val retryingClient = mockClient.toRetryingClient()
 
@@ -82,7 +82,9 @@ class RetryingLLMClientTest {
     @Test
     fun testConvertLLMClientToRetryingClientWithCustomConfig() = runTest {
         // given
-        val mockClient = MockLLMClient()
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse
+        )
         val retryConfig = RetryConfig(maxAttempts = 100500)
         // when
         val retryingClient = mockClient.toRetryingClient(retryConfig)
@@ -336,8 +338,8 @@ class RetryingLLMClientTest {
     @Test
     fun testRetryMultipleChoices() = runTest {
         val choices = listOf(
-            listOf(Message.Assistant("Choice 1", testMetaInfo)),
-            listOf(Message.Assistant("Choice 2", testMetaInfo))
+            Message.Assistant("Choice 1", testMetaInfo),
+            Message.Assistant("Choice 2", testMetaInfo)
         )
 
         val mockClient = MockLLMClient(
@@ -533,9 +535,9 @@ class RetryingLLMClientTest {
 
     // Mock LLMClient for testing
     private class MockLLMClient(
-        private val executeResponse: List<Message.Response> = emptyList(),
+        private val executeResponse: Message.Assistant? = null,
         private val streamResponse: Flow<StreamFrame> = flowOf(),
-        private val multipleChoicesResponse: List<LLMChoice> = emptyList(),
+        private val multipleChoicesResponse: LLMChoice? = null,
         private val moderateResponse: ModerationResult = ModerationResult(false, emptyMap()),
         private val embedResponse: List<Double> = emptyList(),
         private val batchEmbedResponse: List<List<Double>> = emptyList(),
@@ -569,7 +571,7 @@ class RetryingLLMClientTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
+        ): Message.Assistant {
             executeCalls++
 
             if (throwCancellation) {
@@ -581,7 +583,7 @@ class RetryingLLMClientTest {
                 throw RuntimeException(failureMessage)
             }
 
-            return executeResponse
+            return executeResponse!!
         }
 
         override fun executeStreaming(
@@ -603,7 +605,7 @@ class RetryingLLMClientTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<LLMChoice> {
+        ): LLMChoice {
             multipleChoicesCalls++
 
             if (multipleChoicesFailures < failuresBeforeSuccess) {
@@ -611,7 +613,7 @@ class RetryingLLMClientTest {
                 throw RuntimeException(failureMessage)
             }
 
-            return multipleChoicesResponse
+            return multipleChoicesResponse!!
         }
 
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {

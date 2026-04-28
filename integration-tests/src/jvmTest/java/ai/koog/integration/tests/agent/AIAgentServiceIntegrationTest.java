@@ -10,10 +10,13 @@ import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
 import org.junit.jupiter.api.Test;
 import ai.koog.utils.time.KoogClock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -95,7 +98,7 @@ public class AIAgentServiceIntegrationTest extends KoogJavaTestBase {
 
         ToolRegistry emptyRegistry = ToolRegistry.builder().build();
         String result = service.createAgentAndRun("What is 2+2?", "one-shot-agent",
-            emptyRegistry, service.getAgentConfig(), KoogClock.System);
+            emptyRegistry, service.getAgentConfig(),  KoogClock.System);
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -174,11 +177,11 @@ public class AIAgentServiceIntegrationTest extends KoogJavaTestBase {
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((context, input) -> {
                 String inputStr = (input instanceof String) ? (String) input : String.valueOf(input);
-                Message.Response response = context.requestLLM(inputStr, true);
-                if (response instanceof Message.Assistant) {
-                    return response.getContent();
-                }
-                return "Unexpected response type";
+                Message.Assistant response = context.requestLLM(inputStr);
+                return response.getParts().stream()
+                    .filter(p -> p instanceof MessagePart.Text)
+                    .map(p -> ((MessagePart.Text) p).getText())
+                    .collect(Collectors.joining("\n"));
             })
             .build();
 

@@ -4,96 +4,137 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.params.LLMParams
-import kotlinx.serialization.json.Json
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonObject
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Converts a Prompt to a list of ChatMessage objects for the Ollama API.
  */
 internal fun Prompt.toOllamaChatMessages(model: LLModel): List<OllamaChatMessageDTO> {
-    val messages = mutableListOf<OllamaChatMessageDTO>()
-    for (message in this.messages) {
-        val converted = when (message) {
-            is Message.System -> OllamaChatMessageDTO(
-                role = "system",
-                content = message.content
-            )
-
-            is Message.User -> message.toOllamaChatMessage(model)
-
-            is Message.Assistant -> OllamaChatMessageDTO(
-                role = "assistant",
-                content = message.content
-            )
-
-            is Message.Tool.Call -> OllamaChatMessageDTO(
-                role = "assistant",
-                content = "",
-                toolCalls = listOf(
-                    OllamaToolCallDTO(
-                        function = OllamaToolCallDTO.Call(
-                            name = message.tool,
-                            arguments = Json.parseToJsonElement(message.content)
+    val messages = this.messages
+    return buildList {
+        for (message in messages) {
+            when (message) {
+                is Message.System -> {
+                    message.parts.forEach { part ->
+                        add(
+                            OllamaChatMessageDTO(
+                                role = "system",
+                                content = part.text
+                            )
                         )
-                        // Note: Ollama doesn't support tool call IDs in requests,
-                        // so we don't include the message.id here
-                    )
-                )
-            )
+                    }
+                }
 
-            is Message.Tool.Result -> OllamaChatMessageDTO(
-                role = "tool",
-                content = message.content
-            )
+                is Message.User -> {
+                    add(message.toOllamaTextChatMessage(model))
+                    message.parts.filterIsInstance<MessagePart.Tool.Result>().forEach { part ->
+                        add(
+                            OllamaChatMessageDTO(
+                                role = "tool",
+                                content = part.output,
+                            )
+                        )
+                    }
+                }
 
-            is Message.Reasoning -> throw NotImplementedError("Reasoning is not supported by Ollama")
+                is Message.Assistant -> {
+                    message.parts.forEach { part ->
+                        when (part) {
+                            is MessagePart.Text -> {
+                                add(
+                                    OllamaChatMessageDTO(
+                                        role = "assistant",
+                                        content = part.text
+                                    )
+                                )
+                            }
+
+                            is MessagePart.Attachment -> {
+                                throw NotImplementedError("Attachments in assistant messages are not supported by Ollama")
+                            }
+
+                            is MessagePart.Tool.Call -> {
+                                add(
+                                    OllamaChatMessageDTO(
+                                        role = "assistant",
+                                        content = "",
+                                        toolCalls = listOf(
+                                            OllamaToolCallDTO(
+                                                function = OllamaToolCallDTO.Call(
+                                                    name = part.tool,
+                                                    arguments = part.argsJson
+                                                )
+                                                // Note: Ollama doesn't support tool call IDs in requests,
+                                                // so we don't include the message.id here
+                                            )
+                                        )
+                                    )
+                                )
+                            }
+
+                            is MessagePart.Reasoning -> {
+                                throw NotImplementedError("Reasoning is not supported by Ollama")
+                            }
+                        }
+                    }
+                }
+            }
         }
-
-        messages.add(converted)
     }
-    return messages
 }
 
-private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageDTO {
+private fun Message.User.toOllamaTextChatMessage(model: LLModel): OllamaChatMessageDTO {
     val text = StringBuilder()
     val images = buildList {
         parts.forEach { part ->
             when (part) {
-                is ContentPart.Text -> {
+                is MessagePart.Text -> {
                     text.append(part.text)
                 }
-                is ContentPart.Image -> {
-                    require(model.supports(LLMCapability.Vision.Image)) {
-                        "Model ${model.id} doesn't support images"
-                    }
 
-                    val image: String = when (val content = part.content) {
-                        is AttachmentContent.Binary -> content.asBase64()
-                        else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
-                    }
+                is MessagePart.Attachment -> {
+                    when (val source = part.source) {
+                        is AttachmentSource.Image -> {
+                            require(model.supports(LLMCapability.Vision.Image)) {
+                                "Model ${model.id} doesn't support images"
+                            }
 
-                    add(image)
-                }
+                            val image: String = when (val content = source.content) {
+                                is AttachmentContent.Binary -> content.asBase64()
+                                else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                            }
 
-                is ContentPart.File -> {
-                    val fileContent = when (val actualContent = part.content) {
-                        is AttachmentContent.PlainText -> {
-                            actualContent.text
+                            add(image)
                         }
 
-                        is AttachmentContent.Binary -> actualContent.asBase64()
+                        is AttachmentSource.File -> {
+                            val fileContent = when (val actualContent = source.content) {
+                                is AttachmentContent.PlainText -> {
+                                    actualContent.text
+                                }
 
-                        else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                                is AttachmentContent.Binary -> actualContent.asBase64()
+
+                                else -> throw IllegalArgumentException("Unsupported file attachment content: ${source.content::class}")
+                            }
+
+                            text.append("\n\n$fileContent")
+                        }
+
+                        else -> throw IllegalArgumentException("Unsupported attachment type: $part")
                     }
-
-                    text.append("\n\n$fileContent")
                 }
 
-                else -> throw IllegalArgumentException("Unsupported attachment type: $part")
+                else -> {
+                    logger.warn { "Skipping unsupported message part: $part" }
+                }
             }
         }
     }
@@ -111,56 +152,6 @@ private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageD
 internal fun Prompt.extractOllamaJsonFormat(): JsonObject? {
     val schema = params.schema
     return if (schema is LLMParams.Schema.JSON) schema.schema else null
-}
-
-/**
- * Extracts tool calls from a ChatMessage.
- * Returns the first tool call for compatibility, but logs if multiple calls exist.
- */
-internal fun OllamaChatMessageDTO.getFirstToolCall(responseMetadata: ResponseMetaInfo): Message.Tool.Call? {
-    if (this.toolCalls.isNullOrEmpty()) {
-        return null
-    }
-
-    val toolCall = this.toolCalls.firstOrNull() ?: return null
-
-    val name = toolCall.function.name
-    val json = Json {
-        ignoreUnknownKeys = true
-        allowStructuredMapKeys = true
-    }
-    val content = json.encodeToString(toolCall.function.arguments)
-
-    return Message.Tool.Call(
-        // Generate a deterministic ID based on tool name and arguments
-        // Ollama doesn't provide tool call IDs, so we create one based on content
-        id = generateToolCallId(name, content),
-        tool = name,
-        content = content,
-        metaInfo = responseMetadata
-    )
-}
-
-/**
- * Extracts all tool calls from a ChatMessage.
- * Use this method when you need to handle multiple simultaneous tool calls.
- */
-internal fun OllamaChatMessageDTO.getToolCalls(responseMetadata: ResponseMetaInfo): List<Message.Tool.Call> {
-    if (this.toolCalls.isNullOrEmpty()) {
-        return emptyList()
-    }
-
-    return this.toolCalls.mapIndexed { index, toolCall ->
-        val name = toolCall.function.name
-        val content = Json.encodeToString(toolCall.function.arguments)
-
-        Message.Tool.Call(
-            id = generateToolCallId(name, content, index),
-            tool = name,
-            content = content,
-            metaInfo = responseMetadata
-        )
-    }
 }
 
 /**

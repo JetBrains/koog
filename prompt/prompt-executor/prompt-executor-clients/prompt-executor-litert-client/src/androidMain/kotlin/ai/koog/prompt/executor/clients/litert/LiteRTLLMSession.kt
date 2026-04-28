@@ -104,14 +104,14 @@ internal class LiteRTLLMSession(private val config: LiteRTClientConfig) {
      * @param prompt Prompt containing at least one message.
      * @param model The LLM to run inference with.
      * @param tools Tool descriptors registered with the conversation.
-     * @return List of [Message.Response] objects produced by the model.
+     * @return [Message.Assistant] produced by the model.
      * @throws IllegalArgumentException if [prompt] contains no messages.
      */
     suspend fun execute(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-    ): List<Message.Response> {
+    ): Message.Assistant {
         require(prompt.messages.isNotEmpty()) { "There should be at least one message" }
 
         return mutex.withLock {
@@ -132,7 +132,7 @@ internal class LiteRTLLMSession(private val config: LiteRTClientConfig) {
                 // messages from the per-turn message stream.
                 val systemInstruction = prompt.messages
                     .firstOrNull { it is Message.System }
-                    ?.let { (it as Message.System).content }
+                    ?.let { (it as Message.System).parts.joinToString("\n") { part -> part.text } }
                 val nonSystemMessages = prompt.messages.filter { it !is Message.System }
                 require(nonSystemMessages.isNotEmpty()) {
                     "Prompt must contain at least one non-system message"
@@ -190,9 +190,9 @@ internal class LiteRTLLMSession(private val config: LiteRTClientConfig) {
                     // which it keeps in its internal history. Mirror that in
                     // `sentMessages` so the next call's prefix check matches the
                     // prompt that Koog will build (which appends our response).
-                    val responseMessages = response.toKoogMessages(config.clock)
-                    sentMessages = nonSystemMessages + responseMessages
-                    responseMessages
+                    val responseMessage = response.toKoogMessage(config.clock)
+                    sentMessages = nonSystemMessages + responseMessage
+                    responseMessage
                 } catch (t: Throwable) {
                     // The native conversation state may be inconsistent after a
                     // failure; drop it so the next call rebuilds cleanly.

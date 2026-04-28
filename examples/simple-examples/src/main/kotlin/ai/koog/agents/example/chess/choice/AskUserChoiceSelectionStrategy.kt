@@ -3,6 +3,7 @@ package ai.koog.agents.example.chess.choice
 import ai.koog.agents.ext.llm.choice.ChoiceSelectionStrategy
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.Message
 
 /**
  * `AskUserChoiceStrategy` allows users to interactively select a choice from a list of options
@@ -10,17 +11,17 @@ import ai.koog.prompt.message.LLMChoice
  * and choices and read user input to determine the selected choice.
  *
  * @property promptShowToUser A function that formats and displays a given `Prompt` to the user.
- * @property choiceShowToUser A function that formats and represents a given `LLMChoice` to the user.
+ * @property choiceShowToUser A function that formats and represents a given assistant choice to the user.
  * @property print A function responsible for displaying messages to the user, e.g., for showing prompts or feedback.
  * @property read A function to capture user input.
  */
 class AskUserChoiceSelectionStrategy(
     private val promptShowToUser: (Prompt) -> String = { "Current prompt: $it" },
-    private val choiceShowToUser: (LLMChoice) -> String = { "$it" },
+    private val choiceShowToUser: (Message.Assistant) -> String = { "$it" },
     private val print: (String) -> Unit = ::println,
     private val read: () -> String? = ::readlnOrNull
 ) : ChoiceSelectionStrategy {
-    override suspend fun choose(prompt: Prompt, choices: List<LLMChoice>): LLMChoice {
+    override suspend fun choose(prompt: Prompt, choices: LLMChoice): Message.Assistant {
         print(promptShowToUser(prompt))
 
         print("Available LLM choices")

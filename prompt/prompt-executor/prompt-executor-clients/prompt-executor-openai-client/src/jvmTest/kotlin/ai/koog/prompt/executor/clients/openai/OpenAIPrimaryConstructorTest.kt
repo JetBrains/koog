@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIStreamEvent
 import ai.koog.prompt.executor.clients.openai.models.OpenAITextConfig
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.test.utils.CapturingKoogHttpClient
@@ -68,9 +69,9 @@ class OpenAIPrimaryConstructorTest {
             """{"role":"user","content":"Hello?"}""",
             transport.lastRequest.toString().substringAfter("\"messages\":[").substringBefore("]")
         )
-        assertEquals(1, responses.size)
-        val message = assertIs<Message.Assistant>(responses.single())
-        assertEquals("Hello from KoogHttpClient", message.content)
+        assertEquals(1, responses.parts.size)
+        val textPart = assertIs<MessagePart.Text>(responses.parts.single())
+        assertEquals("Hello from KoogHttpClient", textPart.text)
     }
 
     @Test
@@ -206,7 +207,7 @@ class OpenAIPrimaryConstructorTest {
         assertEquals(
             StreamFrame.ReasoningComplete(
                 id = reasoningId,
-                text = listOf(reasoningContent),
+                content = listOf(reasoningContent),
                 summary = listOf(reasoningSummary),
                 encrypted = encryptedReasoning,
                 index = 0

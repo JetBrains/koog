@@ -4,8 +4,9 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocumentExtractor
@@ -19,6 +20,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.rag.base.TextDocument
@@ -53,15 +55,15 @@ class LongTermMemoryRetrievalTest {
 
     private val nonStreamingStrategy =
         strategy<String, String>("retrieval-test", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
-            val llmNode by nodeLLMRequest(name = "llm-node", allowToolCalls = false)
-            edge(nodeStart forwardTo llmNode)
-            edge(llmNode forwardTo nodeFinish transformed { it.content })
+            val llmNode by nodeLLMRequestWithoutTools(name = "llm-node")
+            edge(nodeStart forwardTo llmNode asUserMessage { it })
+            edge(llmNode forwardTo nodeFinish transformed { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text } })
         }
 
     private val streamingStrategy =
         strategy<String, String>("retrieval-streaming-test", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
             val llmNode by nodeLLMRequestStreaming(name = "llm-node")
-            edge(nodeStart forwardTo llmNode)
+            edge(nodeStart forwardTo llmNode asUserMessage { it })
             edge(
                 llmNode forwardTo nodeFinish transformed { flow ->
                     flow.toList().filterIsInstance<StreamFrame.TextDelta>().joinToString("") { it.text }
@@ -78,14 +80,14 @@ class LongTermMemoryRetrievalTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            val allContent = prompt.messages.joinToString("\n") { it.content }
-            return listOf(Message.Assistant(onPrompt(allContent), ResponseMetaInfo.Empty))
+        ): Message.Assistant {
+            val allContent = prompt.messages.joinToString("\n") { msg -> msg.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text } }
+            return Message.Assistant(onPrompt(allContent), ResponseMetaInfo.Empty)
         }
 
         override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
             flow {
-                val allContent = prompt.messages.joinToString("\n") { it.content }
+                val allContent = prompt.messages.joinToString("\n") { msg -> msg.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text } }
                 emit(StreamFrame.TextDelta(onPrompt(allContent)))
                 emit(StreamFrame.End("stop"))
             }

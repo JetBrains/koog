@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.streamFrameFlowOf
@@ -42,8 +43,8 @@ public class ToolCondition<Args, Result>(
      * @param toolCall The tool call to check
      * @return True if the tool name matches and the arguments satisfy the condition
      */
-    internal suspend fun satisfies(toolCall: Message.Tool.Call) =
-        tool.name == toolCall.tool && argsCondition(tool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), serializer))
+    internal suspend fun satisfies(toolCall: MessagePart.Tool.Call) =
+        tool.name == toolCall.tool && argsCondition(tool.decodeArgs(toolCall.argsJson.toKoogJSONObject(), serializer))
 
     /**
      * Invokes the tool with the arguments from the tool call.
@@ -51,8 +52,8 @@ public class ToolCondition<Args, Result>(
      * @param toolCall The tool call containing the arguments
      * @return The result produced by the tool
      */
-    internal suspend fun invoke(toolCall: Message.Tool.Call) =
-        produceResult(tool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), serializer))
+    internal suspend fun invoke(toolCall: MessagePart.Tool.Call) =
+        produceResult(tool.decodeArgs(toolCall.argsJson.toKoogJSONObject(), serializer))
 
     /**
      * Invokes the tool and serializes the result.
@@ -60,8 +61,8 @@ public class ToolCondition<Args, Result>(
      * @param toolCall The tool call containing the arguments
      * @return A pair of the result object and its serialized string representation
      */
-    internal suspend fun invokeAndSerialize(toolCall: Message.Tool.Call): Pair<Result, String> {
-        val toolResult = produceResult(tool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), serializer))
+    internal suspend fun invokeAndSerialize(toolCall: MessagePart.Tool.Call): Pair<Result, String> {
+        val toolResult = produceResult(tool.decodeArgs(toolCall.argsJson.toKoogJSONObject(), serializer))
         return toolResult to tool.encodeResultToString(toolResult, serializer)
     }
 }
@@ -84,9 +85,9 @@ public class MockExecutorDSLBuilder(
     private val serializer: JSONSerializer,
     private val tokenizer: Tokenizer? = null
 ) {
-    private val toolCallExactMatches = mutableMapOf<String, List<Message.Tool.Call>>()
-    private val toolCallPartialMatches = mutableMapOf<String, List<Message.Tool.Call>>()
-    private val toolCallConditionalMatches = mutableMapOf<(String) -> Boolean, List<Message.Tool.Call>>()
+    private val toolCallExactMatches = mutableMapOf<String, List<Message.Assistant>>()
+    private val toolCallPartialMatches = mutableMapOf<String, List<Message.Assistant>>()
+    private val toolCallConditionalMatches = mutableMapOf<(String) -> Boolean, List<Message.Assistant>>()
     private var toolActions: MutableList<ToolCondition<*, *>> = mutableListOf()
 
     private val assistantPartialMatches = mutableMapOf<String, List<String>>()
@@ -182,10 +183,14 @@ public class MockExecutorDSLBuilder(
     ) {
         toolCallExactMatches[pattern] = tool.encodeArgsToString(args, serializer).let { toolContent ->
             listOf(
-                Message.Tool.Call(
-                    id = toolCallId,
-                    tool = tool.name,
-                    content = toolContent,
+                Message.Assistant(
+                    parts = listOf(
+                        MessagePart.Tool.Call(
+                            id = toolCallId,
+                            tool = tool.name,
+                            args = toolContent,
+                        )
+                    ),
                     metaInfo = ResponseMetaInfo.create(
                         clock,
                         inputTokensCount = null, // Will be updated at runtime with actual input
@@ -211,10 +216,14 @@ public class MockExecutorDSLBuilder(
     ) {
         toolCallPartialMatches[pattern] = tool.encodeArgsToString(args, serializer).let { toolContent ->
             listOf(
-                Message.Tool.Call(
-                    id = null,
-                    tool = tool.name,
-                    content = toolContent,
+                Message.Assistant(
+                    parts = listOf(
+                        MessagePart.Tool.Call(
+                            id = null,
+                            tool = tool.name,
+                            args = toolContent,
+                        )
+                    ),
                     metaInfo = ResponseMetaInfo.create(
                         clock,
                         inputTokensCount = null, // Will be updated at runtime with actual input
@@ -239,10 +248,14 @@ public class MockExecutorDSLBuilder(
     ) {
         toolCallPartialMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args, serializer).let { toolContent ->
-                Message.Tool.Call(
-                    id = null,
-                    tool = tool.name,
-                    content = toolContent,
+                Message.Assistant(
+                    parts = listOf(
+                        MessagePart.Tool.Call(
+                            id = null,
+                            tool = tool.name,
+                            args = toolContent,
+                        )
+                    ),
                     metaInfo = ResponseMetaInfo.create(
                         clock,
                         inputTokensCount = null, // Will be updated at runtime with actual input
@@ -266,10 +279,14 @@ public class MockExecutorDSLBuilder(
     ) {
         toolCallExactMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args, serializer).let { toolContent ->
-                Message.Tool.Call(
-                    id = null,
-                    tool = tool.name,
-                    content = toolContent,
+                Message.Assistant(
+                    parts = listOf(
+                        MessagePart.Tool.Call(
+                            id = null,
+                            tool = tool.name,
+                            args = toolContent,
+                        )
+                    ),
                     metaInfo = ResponseMetaInfo.create(
                         clock,
                         inputTokensCount = null, // Will be updated at runtime with actual input
@@ -296,10 +313,14 @@ public class MockExecutorDSLBuilder(
     ) {
         toolCallExactMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args, serializer).let { toolContent ->
-                Message.Tool.Call(
-                    id = null,
-                    tool = tool.name,
-                    content = toolContent,
+                Message.Assistant(
+                    parts = listOf(
+                        MessagePart.Tool.Call(
+                            id = null,
+                            tool = tool.name,
+                            args = toolContent,
+                        )
+                    ),
                     metaInfo = ResponseMetaInfo.create(
                         clock,
                         inputTokensCount = null, // Will be updated at runtime with actual input
@@ -329,10 +350,14 @@ public class MockExecutorDSLBuilder(
     ) {
         toolCallConditionalMatches[condition] = tool.encodeArgsToString(args, serializer).let { toolContent ->
             listOf(
-                Message.Tool.Call(
-                    id = null,
-                    tool = tool.name,
-                    content = toolContent,
+                Message.Assistant(
+                    parts = listOf(
+                        MessagePart.Tool.Call(
+                            id = null,
+                            tool = tool.name,
+                            args = toolContent,
+                        )
+                    ),
                     metaInfo = ResponseMetaInfo.create(
                         clock,
                         inputTokensCount = null, // Cannot determine input tokens for conditional matches without the actual input string
@@ -358,10 +383,14 @@ public class MockExecutorDSLBuilder(
     ) {
         toolCallConditionalMatches[condition] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args, serializer).let { toolContent ->
-                Message.Tool.Call(
-                    id = null,
-                    tool = tool.name,
-                    content = toolContent,
+                Message.Assistant(
+                    parts = listOf(
+                        MessagePart.Tool.Call(
+                            id = null,
+                            tool = tool.name,
+                            args = toolContent,
+                        )
+                    ),
                     metaInfo = ResponseMetaInfo.create(
                         clock,
                         inputTokensCount = null, // Cannot determine input tokens for conditional matches without the actual input string
@@ -399,10 +428,14 @@ public class MockExecutorDSLBuilder(
     ) {
         toolCallPartialMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args, serializer).let { toolContent ->
-                Message.Tool.Call(
-                    id = null,
-                    tool = tool.name,
-                    content = toolContent,
+                Message.Assistant(
+                    parts = listOf(
+                        MessagePart.Tool.Call(
+                            id = null,
+                            tool = tool.name,
+                            args = toolContent,
+                        )
+                    ),
                     metaInfo = ResponseMetaInfo.create(
                         clock,
                         inputTokensCount = tokenizer?.countTokens(pattern),
@@ -779,8 +812,8 @@ public class MockExecutorDSLBuilder(
      * @param response The string to return
      * @return The result of the alwaysReturns call
      */
-    public infix fun <Args> MockToolReceiver<Args, ToolResult.Text>.alwaysReturns(response: String): Unit =
-        alwaysReturns(ToolResult.Text(response))
+    public infix fun <Args> MockToolReceiver<Args, String>.alwaysReturns(response: String): Unit =
+        alwaysReturns(response)
 
     /**
      * Convenience extension function for configuring a text tool to always execute the specified action
@@ -828,89 +861,63 @@ public class MockExecutorDSLBuilder(
      * @return A configured MockLLMExecutor instance
      */
     public fun build(): PromptExecutor {
-        // Exact Matches
-        val processedAssistantExactMatches = assistantExactMatches.mapValues { (_, value) ->
-            val texts = value.map { text -> text.trimIndent() }
-            texts.map { text ->
-                Message.Assistant(
-                    text,
-                    ResponseMetaInfo.create(
-                        clock,
-                        inputTokensCount = null, // Will be updated at runtime with actual input
-                        outputTokensCount = tokenizer?.countTokens(text),
-                        totalTokensCount = null // Will be calculated at runtime
-                    )
+        // Helper to merge text strings and tool call messages into a single Message.Assistant
+        fun combineToAssistant(texts: List<String>, toolCallMessages: List<Message.Assistant>): Message.Assistant {
+            val textParts = texts.map { text -> MessagePart.Text(text.trimIndent()) }
+            val toolCallParts = toolCallMessages.flatMap { msg -> msg.parts }
+            val allParts: List<MessagePart.ResponsePart> = textParts + toolCallParts
+            val outputContent = texts.joinToString("") { it.trimIndent() } +
+                toolCallParts.filterIsInstance<MessagePart.Tool.Call>().joinToString("") { it.args }
+            return Message.Assistant(
+                parts = allParts,
+                metaInfo = ResponseMetaInfo.create(
+                    clock,
+                    inputTokensCount = null, // Will be updated at runtime with actual input
+                    outputTokensCount = tokenizer?.countTokens(outputContent),
+                    totalTokensCount = null // Will be calculated at runtime
                 )
-            }
+            )
         }
 
+        // Exact Matches
         val combinedExactMatches =
-            (processedAssistantExactMatches.keys + toolCallExactMatches.keys).associateWith { key ->
-                val assistantList = processedAssistantExactMatches[key] ?: emptyList()
-                val toolCallList = toolCallExactMatches[key] ?: emptyList()
-                assistantList + toolCallList
+            (assistantExactMatches.keys + toolCallExactMatches.keys).distinct().associateWith { key ->
+                combineToAssistant(
+                    texts = assistantExactMatches[key] ?: emptyList(),
+                    toolCallMessages = toolCallExactMatches[key] ?: emptyList()
+                )
             }
 
         // Partial Matches
-        val processedAssistantPartialMatches = assistantPartialMatches.mapValues { (_, value) ->
-            val texts = value.map { text -> text.trimIndent() }
-            texts.map { text ->
-                Message.Assistant(
-                    text,
-                    ResponseMetaInfo.create(
-                        clock,
-                        inputTokensCount = null, // Will be updated at runtime with actual input
-                        outputTokensCount = tokenizer?.countTokens(text),
-                        totalTokensCount = null // Will be calculated at runtime
-                    )
-                )
-            }
-        }
-
         val combinedPartialMatches =
-            (processedAssistantPartialMatches.keys + toolCallPartialMatches.keys).associateWith { key ->
-                val assistantList = processedAssistantPartialMatches[key] ?: emptyList()
-                val toolCallList = toolCallPartialMatches[key] ?: emptyList()
-                assistantList + toolCallList
+            (assistantPartialMatches.keys + toolCallPartialMatches.keys).distinct().associateWith { key ->
+                combineToAssistant(
+                    texts = assistantPartialMatches[key] ?: emptyList(),
+                    toolCallMessages = toolCallPartialMatches[key] ?: emptyList()
+                )
             }
 
         // Conditional Matches
-        val processedAssistantConditionalMatches: Map<(String) -> Boolean, List<Message.Response>> =
-            conditionalResponses.takeIf { it.isNotEmpty() }?.mapValues { (_, textResponse) ->
-                textResponse.map { response ->
-                    Message.Assistant(
-                        content = response,
-                        metaInfo = ResponseMetaInfo.create(
-                            clock,
-                            inputTokensCount = null, // Cannot determine input tokens for conditional matches without the actual input string
-                            outputTokensCount = tokenizer?.countTokens(response),
-                            totalTokensCount = null // Will be calculated at runtime
-                        )
-                    )
-                }
-            } ?: emptyMap()
-
         val combinedConditionalMatches =
-            (processedAssistantConditionalMatches.keys + toolCallConditionalMatches.keys).associateWith { key ->
-                buildList {
-                    processedAssistantConditionalMatches[key]?.let { addAll(it) }
-                    toolCallConditionalMatches[key]?.let { addAll(it) }
-                }
+            (conditionalResponses.keys + toolCallConditionalMatches.keys).associateWith { key ->
+                combineToAssistant(
+                    texts = conditionalResponses[key] ?: emptyList(),
+                    toolCallMessages = toolCallConditionalMatches[key] ?: emptyList()
+                )
             }
 
+        val defaultText = defaultResponse.trimIndent()
         val responseMatcher = ResponseMatcher(
             partialMatches = combinedPartialMatches.takeIf { it.isNotEmpty() },
             exactMatches = combinedExactMatches.takeIf { it.isNotEmpty() },
-            conditional = combinedConditionalMatches,
-            defaultResponse = listOf(
-                Message.Assistant(
-                    defaultResponse,
-                    ResponseMetaInfo.create(
-                        clock,
-                        inputTokensCount = null, // Will be updated at runtime with actual input
-                        outputTokensCount = tokenizer?.countTokens(defaultResponse),
-                        totalTokensCount = null // Will be calculated at runtime
-                    )
+            conditional = combinedConditionalMatches.takeIf { it.isNotEmpty() },
+            defaultResponse = Message.Assistant(
+                defaultText,
+                ResponseMetaInfo.create(
+                    clock,
+                    inputTokensCount = null, // Will be updated at runtime with actual input
+                    outputTokensCount = tokenizer?.countTokens(defaultText),
+                    totalTokensCount = null // Will be calculated at runtime
                 )
             )
         )

@@ -344,7 +344,7 @@ methods handle this transparently:
     <!--- INCLUDE
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
-    import ai.koog.prompt.message.Message
+    import ai.koog.prompt.message.MessagePart
 
     val strategy = strategy<Unit, Unit>("strategy-name") {
         val node by node<Unit, Unit> {
@@ -357,9 +357,10 @@ methods handle this transparently:
     llm.writeSession {
         val response = requestLLM()
 
-        // The response might be a tool call or a text response
-        if (response is Message.Tool.Call) {
-            // Handle tool call
+        // The response might contain tool calls and/or text
+        val toolCalls = response.parts.filterIsInstance<MessagePart.Tool.Call>()
+        if (toolCalls.isNotEmpty()) {
+            // Handle tool calls
         } else {
             // Handle text response
         }
@@ -372,6 +373,7 @@ methods handle this transparently:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.prompt.message.Message;
+    import ai.koog.prompt.message.MessagePart;
     class exampleSessionsJava05 {
         public static void main(String[] args) {
             var node = AIAgentNode.builder("node_name")
@@ -390,8 +392,10 @@ methods handle this transparently:
     ctx.getLlm().writeSession(session -> {
         var response = session.requestLLM();
 
-        // The response might be a tool call or a text response
-        if (response instanceof Message.Tool.Call) {
+        // The response parts might contain a tool call or text content
+        boolean hasToolCall = response.getParts().stream()
+            .anyMatch(p -> p instanceof MessagePart.Tool.Call);
+        if (hasToolCall) {
             // Handle tool call
         } else {
             // Handle text response
@@ -487,15 +491,12 @@ In a write session, you can add messages to the prompt (conversation history) us
     <!--- INCLUDE
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
-    import ai.koog.prompt.message.Message
-    import ai.koog.prompt.message.RequestMetaInfo
-    import kotlin.time.Clock
+    import ai.koog.prompt.message.MessagePart
 
-    val myToolResult = Message.Tool.Result(
+    val myToolResult = MessagePart.Tool.Result(
         id = "",
         tool = "",
-        content = "",
-        metaInfo = RequestMetaInfo(Clock.System.now())
+        output = "",
     )
 
     val strategy = strategy<Unit, Unit>("strategy-name") {
@@ -518,9 +519,7 @@ In a write session, you can add messages to the prompt (conversation history) us
             assistant("Of course! What's your question?")
 
             // Add a tool result
-            tool {
-                result(myToolResult)
-            }
+            toolResult(myToolResult)
         }
     }
     ```
@@ -810,8 +809,8 @@ Example:
     -->
     ```java
     // Java uses dedicated tool-execution nodes in graph strategies.
-    var executeTool = AIAgentNode.executeTool("executeTool");
-    var sendToolResult = AIAgentNode.llmSendToolResult("sendToolResult");
+    var executeTool = AIAgentNode.executeTools("executeTool");
+    var sendToolResult = AIAgentNode.llmRequest("sendToolResult");
     ```
     <!--- KNIT exampleSessionsJava11.java -->
 
@@ -866,8 +865,8 @@ To run multiple tools in parallel, write sessions provide extension functions on
     }
     -->
     ```java
-    // Java equivalent for multi-tool execution in parallel: use executeMultipleTools node.
-    var executeMultipleTools = AIAgentNode.executeMultipleTools(true, "executeMultipleTools");
+    // Java equivalent for multi-tool execution: use the executeTools node.
+    var executeMultipleTools = AIAgentNode.executeTools("executeMultipleTools");
     ```
     <!--- KNIT exampleSessionsJava12.java -->
 

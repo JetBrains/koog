@@ -76,7 +76,7 @@ public data class LLMCallFailedContext(
 /**
  * Represents the context for handling an after LLM call event.
  *
- * @property responses The response messages received from the language model.
+ * @property response The response message received from the language model.
  * @property moderationResponse The moderation response, if any, received from the language model.
  */
 public data class LLMCallCompletedContext(
@@ -87,7 +87,7 @@ public data class LLMCallCompletedContext(
     override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-    public val responses: List<Message.Response>,
+    public val response: Message.Assistant?,
     public val moderationResponse: ModerationResult?,
 ) : LLMCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallCompleted

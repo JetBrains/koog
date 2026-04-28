@@ -30,7 +30,7 @@ public interface LLMClientAPI : AutoCloseable {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
-    ): List<Message.Response>
+    ): Message.Assistant
 
     /**
      * Executes a prompt and returns a streaming flow of response chunks.
@@ -73,7 +73,7 @@ public interface LLMClientAPI : AutoCloseable {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
-    ): List<LLMChoice> =
+    ): LLMChoice =
         throw UnsupportedOperationException("Not implemented for this client")
 
     /**

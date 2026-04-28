@@ -6,15 +6,20 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrames
 import ai.koog.utils.time.KoogClock
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlin.time.Instant
 
 class TestLLMExecutor : PromptExecutor() {
+
+    private val logger = KotlinLogging.logger {}
+
     companion object {
         val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
@@ -30,17 +35,17 @@ class TestLLMExecutor : PromptExecutor() {
         private set
 
     // Store the messages for inspection
-    val messages = mutableListOf<Message>()
+    var messages: MutableList<Message> = mutableListOf()
 
     // Reset the state for a new test
     fun reset() {
         tldrCount = 0
         factCount = 0
-        messages.clear()
+        messages = mutableListOf()
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        return listOf(handlePrompt(prompt))
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
+        return handlePrompt(prompt)
     }
 
     override fun executeStreaming(
@@ -58,14 +63,20 @@ class TestLLMExecutor : PromptExecutor() {
         throw UnsupportedOperationException("Moderation is not needed for TestLLMExecutor")
     }
 
-    private fun handlePrompt(prompt: Prompt): Message.Response {
-        prompt.messages.forEach { println("[DEBUG_LOG] Message: ${it.content}") }
+    private fun handlePrompt(prompt: Prompt): Message.Assistant {
+        prompt.messages.forEach { logger.debug { "Message: $it" } }
 
         // Store all messages for later inspection
         messages.addAll(prompt.messages)
 
         // For compression test, return a TLDR summary
-        if (prompt.messages.any { it.content.contains("Create a comprehensive summary of this conversation") }) {
+        if (prompt.messages.any {
+                it.parts.any { part ->
+                    part is MessagePart.Text &&
+                        part.text.contains("Create a comprehensive summary of this conversation")
+                }
+            }
+        ) {
             tldrCount++
             val tldrResponse = Message.Assistant(
                 "TLDR #$tldrCount: Summary of conversation history",
@@ -76,10 +87,18 @@ class TestLLMExecutor : PromptExecutor() {
         }
 
         // For FactRetrieval compression: return a structured JSON response
-        if (prompt.messages.any { it.content.contains("specialized information extractor") }) {
+        if (prompt.messages.any { message ->
+                message.parts.any { part ->
+                    part is MessagePart.Text && part.text.contains("specialized information extractor")
+                }
+            }
+        ) {
             factCount++
-            val isMultiple = prompt.messages.any {
-                it.content.contains("\"facts\" array") || it.content.contains("facts found")
+            val isMultiple = prompt.messages.any { message ->
+                message.parts.any { part ->
+                    part is MessagePart.Text &&
+                        (part.text.contains("\"facts\" array") || part.text.contains("facts found"))
+                }
             }
             val factResponse = if (isMultiple) {
                 Message.Assistant(

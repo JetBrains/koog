@@ -35,7 +35,7 @@ public abstract class Tool<TArgs, TResult>(
      * Convenience constructor that generates [ToolDescriptor] from the provided
      * [name], [description] and [argsType].
      */
-    @OptIn(InternalAgentToolsApi::class, InternalKoogSerializationApi::class)
+    @OptIn(InternalAgentToolsApi::class)
     public constructor(
         argsType: TypeToken,
         resultType: TypeToken,

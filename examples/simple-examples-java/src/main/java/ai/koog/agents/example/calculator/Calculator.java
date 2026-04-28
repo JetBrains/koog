@@ -10,7 +10,7 @@ import ai.koog.agents.core.agent.entity.AIAgentNodeBase;
 import ai.koog.agents.core.agent.entity.GraphStrategyBuilder;
 import ai.koog.agents.core.agent.entity.TypedGraphStrategyBuilder;
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
-import ai.koog.agents.core.environment.ReceivedToolResult;
+import ai.koog.agents.core.dsl.extension.ToolCalls;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.example.ApiKeyService;
 import ai.koog.agents.ext.tool.AskUser;
@@ -21,8 +21,6 @@ import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.executor.ollama.client.OllamaModels.Meta;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Demonstrates how to build a graph-based calculator agent in Java using the Koog Java API:
@@ -47,7 +45,6 @@ public class Calculator {
         OPEN_AI_GPT_4o
     }
 
-    @SuppressWarnings("unchecked")
     public static void main(String[] args) {
         RunMode runMode = args.length > 0 && "local".equalsIgnoreCase(args[0])
             ? RunMode.LOCAL_LLAMA_3_2
@@ -78,51 +75,41 @@ public class Calculator {
                         builder.withInput(String.class).withOutput(String.class);
 
                     // --- Node definitions ---
-                    AIAgentNodeBase<String, List<Message.Response>> nodeCallLLM =
-                        AIAgentNode.llmRequestMultiple("callLLM");
+                    AIAgentNodeBase<Message.User, Message.Assistant> nodeCallLLM =
+                        AIAgentNode.llmRequest("callLLM");
 
-                    AIAgentNodeBase<List<Message.Tool.Call>, List<ReceivedToolResult>> nodeExecuteTools =
-                        AIAgentNode.executeMultipleTools(true, "executeMultipleTools");
+                    AIAgentNodeBase<ToolCalls, Message.User> nodeExecuteTools =
+                        AIAgentNode.executeTools("executeTools");
 
-                    AIAgentNodeBase<List<ReceivedToolResult>, List<Message.Response>> nodeSendResults =
-                        AIAgentNode.llmSendMultipleToolResults("sendToolResults");
+                    AIAgentNodeBase<Message.User, Message.Assistant> nodeSendResults =
+                        AIAgentNode.llmRequest("sendToolResults");
 
-                    // Raw List is required because Java generics don't support Class<List<T>>
-                    AIAgentNodeBase<List<ReceivedToolResult>, List<ReceivedToolResult>> nodeCompress =
-                        (AIAgentNodeBase<List<ReceivedToolResult>, List<ReceivedToolResult>>)
-                            (AIAgentNodeBase<?, ?>) AIAgentNode.llmCompressHistory("compressHistory")
-                                .withInput(List.class)
-                                .compressionStrategy(HistoryCompressionStrategy.WholeHistory)
-                                .build();
+                    AIAgentNodeBase<Message.User, Message.User> nodeCompress =
+                        AIAgentNode.llmCompressHistory("compressHistory")
+                            .withInput(Message.User.class)
+                            .compressionStrategy(HistoryCompressionStrategy.WholeHistory)
+                            .build();
 
                     // --- Edge definitions ---
 
-                    // start → callLLM
-                    graph.edge(graph.nodeStart, nodeCallLLM);
+                    // start → callLLM (wrap the agent's String input as a user message)
+                    graph.edge(
+                        AIAgentEdge.builder().from(graph.nodeStart).to(nodeCallLLM)
+                            .asUserMessage(s -> s)
+                            .build()
+                    );
 
-                    // callLLM → finish (when LLM returns an assistant message)
+                    // callLLM → finish (when LLM returns a text response)
                     graph.edge(
                         AIAgentEdge.builder().from(nodeCallLLM).to(graph.nodeFinish)
-                            .onCondition((List<Message.Response> rs) ->
-                                rs.stream().anyMatch(r -> r instanceof Message.Assistant))
-                            .transformed((List<Message.Response> rs) ->
-                                rs.stream()
-                                    .filter(r -> r instanceof Message.Assistant)
-                                    .map(r -> ((Message.Assistant) r).getContent())
-                                    .findFirst().orElse(""))
+                            .onTextParts()
                             .build()
                     );
 
                     // callLLM → executeTools (when LLM returns tool calls)
                     graph.edge(
                         AIAgentEdge.builder().from(nodeCallLLM).to(nodeExecuteTools)
-                            .onCondition((List<Message.Response> rs) ->
-                                rs.stream().anyMatch(r -> r instanceof Message.Tool.Call))
-                            .transformed((List<Message.Response> rs) ->
-                                rs.stream()
-                                    .filter(r -> r instanceof Message.Tool.Call)
-                                    .map(r -> (Message.Tool.Call) r)
-                                    .collect(Collectors.toList()))
+                            .onToolCalls(call -> true)
                             .build()
                     );
 
@@ -150,26 +137,14 @@ public class Calculator {
                     // sendResults → executeTools (when LLM requests more tool calls)
                     graph.edge(
                         AIAgentEdge.builder().from(nodeSendResults).to(nodeExecuteTools)
-                            .onCondition((List<Message.Response> rs) ->
-                                rs.stream().anyMatch(r -> r instanceof Message.Tool.Call))
-                            .transformed((List<Message.Response> rs) ->
-                                rs.stream()
-                                    .filter(r -> r instanceof Message.Tool.Call)
-                                    .map(r -> (Message.Tool.Call) r)
-                                    .collect(Collectors.toList()))
+                            .onToolCalls(call -> true)
                             .build()
                     );
 
-                    // sendResults → finish (when LLM returns a final assistant message)
+                    // sendResults → finish (when LLM returns a final text response)
                     graph.edge(
                         AIAgentEdge.builder().from(nodeSendResults).to(graph.nodeFinish)
-                            .onCondition((List<Message.Response> rs) ->
-                                rs.stream().anyMatch(r -> r instanceof Message.Assistant))
-                            .transformed((List<Message.Response> rs) ->
-                                rs.stream()
-                                    .filter(r -> r instanceof Message.Assistant)
-                                    .map(r -> ((Message.Assistant) r).getContent())
-                                    .findFirst().orElse(""))
+                            .onTextParts()
                             .build()
                     );
 

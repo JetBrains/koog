@@ -8,6 +8,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.message.MessagePart
 import kotlinx.serialization.Serializable
 
 object ToneTools {
@@ -46,7 +47,11 @@ object ToneTools {
             val response = executor.execute(prompt = prompt, model = OpenAIModels.Chat.GPT4o)
 
             // Process the response
-            val answer = response.single().content.trim().lowercase()
+            val answer = response.parts
+                .filterIsInstance<MessagePart.Text>()
+                .joinToString("\n") { it.text }
+                .trim()
+                .lowercase()
 
             // Return a formatted response based on the LLM's answer
             return if (answer == "yes") {

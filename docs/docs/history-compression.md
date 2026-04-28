@@ -58,13 +58,14 @@ Depending on which step you decide to perform compression, the following scenari
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.subgraph
-    import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+    import ai.koog.agents.core.dsl.extension.asUserMessage
+    import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
     import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-    import ai.koog.agents.core.dsl.extension.onAssistantMessage
-    import ai.koog.agents.core.dsl.extension.onToolCall
-    import ai.koog.agents.core.environment.ReceivedToolResult
+    import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
+    import ai.koog.agents.core.dsl.extension.onTextParts
+    import ai.koog.agents.core.dsl.extension.onToolCalls
+    import ai.koog.agents.core.dsl.extension.ReceivedToolResults
     -->
     ```kotlin
     // Define that the history is too long if there are more than 100 messages
@@ -72,15 +73,15 @@ Depending on which step you decide to perform compression, the following scenari
     
     val strategy = strategy<String, String>("execute-with-history-compression") {
         val callLLM by nodeLLMRequest()
-        val executeTool by nodeExecuteTool()
-        val sendToolResult by nodeLLMSendToolResult()
+        val executeTool by nodeExecuteToolsAndGetResults()
+        val sendToolResult by nodeSendToolReceivedResults()
     
-        // Compress the LLM history and keep the current ReceivedToolResult for the next node
-        val compressHistory by nodeLLMCompressHistory<ReceivedToolResult>()
+        // Compress the LLM history and keep the current ReceivedToolResults for the next node
+        val compressHistory by nodeLLMCompressHistory<ReceivedToolResults>()
     
-        edge(nodeStart forwardTo callLLM)
-        edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
-        edge(callLLM forwardTo executeTool onToolCall { true })
+        edge(nodeStart forwardTo callLLM asUserMessage { it })
+        edge(callLLM forwardTo nodeFinish onTextParts { true })
+        edge(callLLM forwardTo executeTool onToolCalls { true })
     
         // Compress history after executing any tool if the history is too long 
         edge(executeTool forwardTo compressHistory onCondition { historyIsTooLong() })
@@ -88,8 +89,8 @@ Depending on which step you decide to perform compression, the following scenari
         // Otherwise, proceed to the next LLM request
         edge(executeTool forwardTo sendToolResult onCondition { !historyIsTooLong() })
     
-        edge(sendToolResult forwardTo executeTool onToolCall { true })
-        edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+        edge(sendToolResult forwardTo executeTool onToolCalls { true })
+        edge(sendToolResult forwardTo nodeFinish onTextParts { true })
     }
     ```
     <!--- KNIT example-history-compression-01.kt -->
@@ -100,7 +101,6 @@ Depending on which step you decide to perform compression, the following scenari
     import ai.koog.agents.core.agent.entity.AIAgentEdge;
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
     import ai.koog.agents.core.agent.entity.AIAgentNode;
-    import ai.koog.agents.core.environment.ReceivedToolResult;
     import ai.koog.prompt.message.Message;
     class exampleHistoryCompressionJava01 {
         public static void main(String[] args) {
@@ -114,39 +114,42 @@ Depending on which step you decide to perform compression, the following scenari
         .withInput(String.class)
         .withOutput(String.class);
 
-    var callLLM = AIAgentNode.llmRequest();
-    var executeTool = AIAgentNode.executeTool();
-    var sendToolResult = AIAgentNode.llmSendToolResult();
+    var callLLM = AIAgentNode.llmRequest(null);
+    var executeTool = AIAgentNode.executeTools(null);
+    var sendToolResult = AIAgentNode.llmRequest("sendToolResult");
 
-    // Compress the LLM history and keep the current ReceivedToolResult for the next node
+    // Compress the LLM history; the carried Message.User flows into the next node.
     var compressHistory = AIAgentNode
         .llmCompressHistory("compressHistory")
-        .withInput(ReceivedToolResult.class)
+        .withInput(Message.User.class)
         .build();
 
     // Edge from start to callLLM
-    graph.edge(graph.nodeStart, callLLM);
+    graph.edge(AIAgentEdge.builder()
+        .from(graph.nodeStart)
+        .to(callLLM)
+        .asUserMessage(s -> s)
+        .build());
 
-    // Edge from callLLM to finish on assistant message
+    // Edge from callLLM to finish on text response
     graph.edge(AIAgentEdge.builder()
         .from(callLLM)
         .to(graph.nodeFinish)
-        .onIsInstance(Message.Assistant.class)
-        .transformed(Message.Assistant::getContent)
+        .onTextParts()
         .build());
 
     // Edge from callLLM to executeTool on tool call
     graph.edge(AIAgentEdge.builder()
         .from(callLLM)
         .to(executeTool)
-        .onIsInstance(Message.Tool.Call.class)
+        .onToolCalls(call -> true)
         .build());
 
     // Compress history after executing any tool if the history is too long
     graph.edge(AIAgentEdge.builder()
         .from(executeTool)
         .to(compressHistory)
-        .onCondition((toolResult, ctx) ->
+        .onCondition((message, ctx) ->
             ctx.getLlm().readSession(session ->
                 session.getPrompt().getMessages().size() > 100
             )
@@ -159,7 +162,7 @@ Depending on which step you decide to perform compression, the following scenari
     graph.edge(AIAgentEdge.builder()
         .from(executeTool)
         .to(sendToolResult)
-        .onCondition((toolResult, ctx) ->
+        .onCondition((message, ctx) ->
             ctx.getLlm().readSession(session ->
                 session.getPrompt().getMessages().size() <= 100
             )
@@ -170,15 +173,14 @@ Depending on which step you decide to perform compression, the following scenari
     graph.edge(AIAgentEdge.builder()
         .from(sendToolResult)
         .to(executeTool)
-        .onIsInstance(Message.Tool.Call.class)
+        .onToolCalls(call -> true)
         .build());
 
-    // Edge from sendToolResult to finish on assistant message
+    // Edge from sendToolResult to finish on text response
     graph.edge(AIAgentEdge.builder()
         .from(sendToolResult)
         .to(graph.nodeFinish)
-        .onIsInstance(Message.Assistant.class)
-        .transformed(Message.Assistant::getContent)
+        .onTextParts()
         .build());
     ```
     <!--- KNIT exampleHistoryCompressionJava01.java -->
@@ -890,6 +892,7 @@ Here is an example:
     import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
     import ai.koog.prompt.message.Message
+    import ai.koog.prompt.message.MessagePart
     -->
     ```kotlin
     class MyCustomCompressionStrategy : HistoryCompressionStrategy() {
@@ -905,10 +908,12 @@ Here is an example:
             val originalMessages = llmSession.prompt.messages
             
             // Example implementation:
-            val importantMessages = llmSession.prompt.messages.filter {
-                // Your custom filtering logic
-                it.content.contains("important")
-            }.filterIsInstance<Message.Response>()
+            val importantMessages = llmSession.prompt.messages
+                .filterIsInstance<Message.Assistant>()
+                .filter { message ->
+                    // Your custom filtering logic
+                    message.parts.filterIsInstance<MessagePart.Text>().any { it.text.contains("important") }
+                }
             
             // Note: you can also make LLM requests using the `llmSession` and ask the LLM to do some job for you using, for example, `llmSession.requestLLMWithoutTools()`
             // Or you can change the current model: `llmSession.model = AnthropicModels.Opus_4_6` and ask some other LLM model -- but don't forget to change it back after

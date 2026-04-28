@@ -46,9 +46,9 @@ class RedisPromptCacheTest {
 
         private val testPrompt = Prompt(listOf(Message.User("Hello, world!", RequestMetaInfo.Empty)), "test-prompt-id")
         private val testTools = emptyList<ToolDescriptor>()
-        private val testResponse = listOf(Message.Assistant("Hello, user!", ResponseMetaInfo.Empty))
+        private val testResponse = Message.Assistant("Hello, user!", ResponseMetaInfo.Empty)
 
-        private val testClock = KoogClock { testResponse.first().metaInfo.timestamp }
+        private val testClock = KoogClock { testResponse.metaInfo.timestamp }
     }
 
     @BeforeTest

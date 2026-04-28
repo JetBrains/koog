@@ -298,12 +298,12 @@ public class AIAgentPipelineImpl(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        responses: List<Message.Response>,
+        response: Message.Assistant?,
         moderationResponse: ModerationResult?,
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.LLMCallCompleted,
-            context = LLMCallCompletedContext(eventId, executionInfo, context, runId, prompt, model, tools, responses, moderationResponse)
+            context = LLMCallCompletedContext(eventId, executionInfo, context, runId, prompt, model, tools, response, moderationResponse)
         )
     }
 

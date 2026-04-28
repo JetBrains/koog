@@ -8,6 +8,7 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
@@ -153,7 +154,7 @@ public class SpringAiLLMClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<Message.Response> = withContext(dispatcher) {
+    ): Message.Assistant = withContext(dispatcher) {
         val springPrompt = toSpringPrompt(prompt, model, tools)
         val chatResponse: ChatResponse = try {
             chatModel.call(springPrompt)
@@ -162,8 +163,8 @@ public class SpringAiLLMClient(
         } catch (e: Exception) {
             throw LLMClientException(clientName, "ChatModel.call() failed: ${e.message}", e)
         }
-        val usage = chatResponse.metadata?.usage
-        chatResponse.results.flatMap { generation ->
+        val usage = chatResponse.metadata.usage
+        chatResponse.results.first().let { generation ->
             springGenerationToKoogResponses(generation, clock, usage)
         }
     }
@@ -257,17 +258,21 @@ public class SpringAiLLMClient(
                     "a ModerationModel bean is registered."
             )
 
-        require(prompt.messages.isNotEmpty()) { "Can't moderate an empty prompt" }
-
-        if (prompt.messages.any { it.hasAttachments() }) {
-            throw UnsupportedOperationException(
-                "Moderation of non-text content (images, audio, video, files) is not supported by Spring AI. " +
-                    "Only text-only prompts can be moderated. Remove attachments before calling moderate()."
-            )
-        }
-
         val response = try {
-            val instructions = prompt.messages.joinToString(separator = "\n\n") { it.content.trim() }.trim()
+            val hasAttachments = prompt.messages.any { message ->
+                message.parts.any { it is MessagePart.Attachment }
+            }
+            if (hasAttachments) {
+                throw UnsupportedOperationException(
+                    "Moderation does not support non-text content (images, audio, files). " +
+                        "Only plain-text messages can be moderated."
+                )
+            }
+            val instructions = prompt.messages.joinToString(separator = "\n\n") { message ->
+                message.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n\n") { it.text }.trim()
+            }.trim()
+            require(instructions.isNotEmpty()) { "Can't moderate an empty prompt" }
+
             springModerationModel.call(ModerationPrompt(instructions))
         } catch (e: CancellationException) {
             throw e
@@ -286,7 +291,7 @@ public class SpringAiLLMClient(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): SpringPrompt {
-        val springMessages = prompt.messages.map { koogMessageToSpringMessage(it) }
+        val springMessages = koogMessageToSpringMessage(prompt.messages)
         val chatOptions: ChatOptions = buildChatOptions(prompt.params, model, tools)
         return SpringPrompt(springMessages, chatOptions)
     }

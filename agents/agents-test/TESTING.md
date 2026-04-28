@@ -483,7 +483,7 @@ fun testMultiSubgraphAgentStructure() = runTest {
                 val finish = finishNode()
 
                 val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-                val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
+                val callTool = assertNodeByName<MessagePart.Tool.Call, ReceivedToolResult>("executeTool")
                 val giveFeedback = assertNodeByName<Any?, Any?>("giveFeedback")
 
                 assertReachable(start, askLLM)

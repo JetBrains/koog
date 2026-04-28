@@ -2,14 +2,14 @@ package ai.koog.agents.features.tokenizer.feature
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
+import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.feature.withTesting
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -90,8 +90,8 @@ class MessageTokenizerTest {
 
         val testStrategy = strategy("test") {
             val callLLM by nodeLLMRequest()
-            val callTool by nodeExecuteTool()
-            val sendToolResul by nodeLLMSendToolResult()
+            val callTool by nodeExecuteToolsAndGetResults()
+            val sendToolResul by nodeSendToolReceivedResults()
 
             val checkTokens by node<String, String> {
                 val totalTokens = llm.readSession {
@@ -101,12 +101,12 @@ class MessageTokenizerTest {
                 "Total tokens: $totalTokens"
             }
 
-            edge(nodeStart forwardTo callLLM)
-            edge(callLLM forwardTo callTool onToolCall { true })
-            edge(callLLM forwardTo checkTokens onAssistantMessage { true })
+            edge(nodeStart forwardTo callLLM asUserMessage { it })
+            edge(callLLM forwardTo callTool onToolCalls { true })
+            edge(callLLM forwardTo checkTokens onTextParts { true })
             edge(callTool forwardTo sendToolResul)
-            edge(sendToolResul forwardTo callTool onToolCall { true })
-            edge(sendToolResul forwardTo checkTokens onAssistantMessage { true })
+            edge(sendToolResul forwardTo callTool onToolCalls { true })
+            edge(sendToolResul forwardTo checkTokens onTextParts { true })
             edge(checkTokens forwardTo nodeFinish)
         }
 

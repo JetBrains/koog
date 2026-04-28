@@ -29,7 +29,7 @@ public interface PromptExecutorAPI : AutoCloseable {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
-    ): List<Message.Response>
+    ): Message.Assistant
 
     /**
      * Executes a given prompt using the specified LLM and returns a stream of output as a flow of `StreamFrame` objects.
@@ -60,7 +60,7 @@ public interface PromptExecutorAPI : AutoCloseable {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> =
+    ): LLMChoice =
         listOf(execute(prompt, model, tools))
 
     /**

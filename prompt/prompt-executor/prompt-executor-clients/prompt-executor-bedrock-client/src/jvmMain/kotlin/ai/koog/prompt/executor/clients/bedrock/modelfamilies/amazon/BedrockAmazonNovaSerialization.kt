@@ -6,11 +6,12 @@ import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerializ
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -43,51 +44,27 @@ internal object BedrockAmazonNovaSerialization {
     // Amazon Nova specific methods
     @OptIn(ExperimentalUuidApi::class)
     internal fun createNovaRequest(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): NovaRequest {
-        val systemMessages = prompt.messages
-            .filterIsInstance<Message.System>()
-            .map { NovaSystemMessage(text = it.content) }
-            .takeIf { it.isNotEmpty() }
+        val systemMessages = mutableListOf<NovaSystemMessage>()
 
-        val conversationMessages = prompt.messages
-            .filter { it !is Message.System }.map { msg ->
-                when (msg) {
-                    is Message.User -> NovaMessage(
-                        role = "user",
-                        content = NovaContent(text = msg.content)
-                    )
-
-                    is Message.Assistant -> NovaMessage(
-                        role = "assistant",
-                        content = NovaContent(text = msg.content)
-                    )
-
-                    is Message.Tool.Call -> NovaMessage(
-                        role = "assistant",
-                        content = NovaContent(
-                            toolUse = NovaToolUse(
-                                toolUseId = msg.id ?: Uuid.random().toString(),
-                                name = msg.tool,
-                                input = msg.contentJsonResult.getOrElse { JsonObject(emptyMap()) },
+        val conversationMessages = buildList {
+            prompt.messages.forEach { message ->
+                when (message) {
+                    is Message.System -> {
+                        message.parts.forEach { part ->
+                            systemMessages.add(
+                                NovaSystemMessage(
+                                    text = part.text
+                                )
                             )
-                        )
-                    )
+                        }
+                    }
 
-                    is Message.Tool.Result -> NovaMessage(
-                        role = "user",
-                        content = NovaContent(
-                            toolResult = NovaToolResult(
-                                msg.id ?: Uuid.random().toString(),
-                                NovaToolResultContent(msg.content),
-                                // right now, `Message.Tool.Result` does not know
-                                // if the call was successful or not
-                                "success"
-                            )
-                        )
-                    )
+                    is Message.User -> add(message.toNovaMessage())
 
-                    else -> error("Unknown message type: $msg")
+                    is Message.Assistant -> add(message.toNovaMessage())
                 }
             }
+        }
 
         val inferenceConfig = NovaInferenceConfig(
             maxTokens = prompt.params.maxTokens ?: NovaInferenceConfig.MAX_TOKENS_DEFAULT,
@@ -115,28 +92,79 @@ internal object BedrockAmazonNovaSerialization {
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    internal fun parseNovaResponse(responseBody: String, clock: KoogClock = KoogClock.System): List<Message.Response> {
+    private fun Message.User.toNovaMessage(): NovaMessage {
+        return NovaMessage(
+            role = "user",
+            content = buildList {
+                parts.forEach { part ->
+                    when (part) {
+                        is MessagePart.Text -> add(NovaContent(text = part.text))
+                        is MessagePart.Attachment -> throw IllegalArgumentException("No attachments are supported in user messages")
+                        is MessagePart.Tool.Result -> add(
+                            NovaContent(
+                                toolResult = NovaToolResult(
+                                    toolUseId = part.id ?: Uuid.random().toString(),
+                                    content = NovaToolResultContent(part.output),
+                                    status = if (part.isError) "error" else "success"
+                                )
+                            )
+                        )
+                    }
+                }
+            }
+        )
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    private fun Message.Assistant.toNovaMessage(): NovaMessage {
+        return NovaMessage(
+            role = "assistant",
+            content = buildList {
+                parts.forEach { part ->
+                    when (part) {
+                        is MessagePart.Text -> add(NovaContent(text = part.text))
+                        is MessagePart.Attachment -> throw IllegalArgumentException("No attachments are supported in user messages")
+                        is MessagePart.Reasoning -> throw IllegalArgumentException("No reasoning messages are supported in assistant messages")
+                        is MessagePart.Tool.Call -> add(
+                            NovaContent(
+                                toolUse = NovaToolUse(
+                                    toolUseId = part.id ?: Uuid.random().toString(),
+                                    name = part.tool,
+                                    input = part.argsJson
+                                )
+                            )
+                        )
+                    }
+                }
+            }
+        )
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    internal fun parseNovaResponse(responseBody: String, clock: KoogClock = KoogClock.System): Message.Assistant {
         val response = json.decodeFromString<NovaResponse>(responseBody)
         val metaInfo = parseMetaInfo(clock, response.usage)
 
-        return response.output.message.content.map { content ->
-            when {
-                content.text != null -> Message.Assistant(
-                    content = content.text,
-                    finishReason = response.stopReason,
-                    metaInfo = metaInfo
-                )
+        return Message.Assistant(
+            parts = buildList {
+                response.output.message.content.forEach { content ->
+                    when {
+                        content.text != null -> add(MessagePart.Text(content.text))
+                        content.toolUse != null -> add(
+                            MessagePart.Tool.Call(
+                                content.toolUse.toolUseId,
+                                content.toolUse.name,
+                                content.toolUse.input
+                            )
+                        )
 
-                content.toolUse != null -> Message.Tool.Call(
-                    id = content.toolUse.toolUseId,
-                    tool = content.toolUse.name,
-                    content = content.toolUse.input.toString(),
-                    metaInfo = metaInfo
-                )
-
-                else -> error("Unknown content type: $content")
-            }
-        }
+                        content.toolResult != null -> error("Unknown content type: $content")
+                    }
+                }
+            },
+            metaInfo = metaInfo,
+            finishReason = response.stopReason
+        )
     }
 
     internal fun parseNovaStreamChunk(chunkJsonString: String, clock: KoogClock = KoogClock.System): List<StreamFrame> {
@@ -162,9 +190,9 @@ internal object BedrockAmazonNovaSerialization {
         totalTokensCount = novaUsage?.totalTokens,
         inputTokensCount = novaUsage?.inputTokens,
         outputTokensCount = novaUsage?.outputTokens,
-        additionalInfo = mapOf(
-            "cacheReadInputTokenCount" to novaUsage?.cacheReadInputTokenCount.toString(),
-            "cacheWriteInputTokenCount" to novaUsage?.cacheWriteInputTokenCount.toString()
-        ).filterValues { it != "null" }
+        metadata = buildJsonObject {
+            put("cacheReadInputTokenCount", JsonPrimitive(novaUsage?.cacheReadInputTokenCount))
+            put("cacheWriteInputTokenCount", JsonPrimitive(novaUsage?.cacheWriteInputTokenCount))
+        }
     )
 }

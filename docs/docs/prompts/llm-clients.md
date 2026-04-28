@@ -228,6 +228,7 @@ being executed.
     import ai.koog.prompt.dsl.prompt
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
+    import ai.koog.prompt.message.MessagePart
     import ai.koog.prompt.params.LLMParams
     import kotlinx.coroutines.runBlocking
     -->
@@ -245,7 +246,7 @@ being executed.
         )
 
         choices.forEachIndexed { i, choice ->
-            val text = choice.joinToString(" ") { it.content }
+            val text = choice.parts.filterIsInstance<MessagePart.Text>().joinToString(" ") { it.text }
             println("Line #${i + 1}: $text")
         }
     }

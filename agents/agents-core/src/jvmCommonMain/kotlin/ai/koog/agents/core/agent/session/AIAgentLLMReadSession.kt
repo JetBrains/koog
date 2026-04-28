@@ -44,8 +44,8 @@ public actual class AIAgentLLMReadSession actual constructor(
     public fun executeMultipleBlocking(
         prompt: Prompt,
         tools: List<ToolDescriptor>
-    ): List<Message.Response> = config.runBlockingOnStrategyDispatcher {
-        executeMultiple(prompt, tools)
+    ): Message.Assistant = config.runBlockingOnStrategyDispatcher {
+        execute(prompt, tools)
     }
 
     @JavaAPI
@@ -53,34 +53,34 @@ public actual class AIAgentLLMReadSession actual constructor(
     public fun executeSingleBlocking(
         prompt: Prompt,
         tools: List<ToolDescriptor>
-    ): Message.Response = config.runBlockingOnStrategyDispatcher {
+    ): Message.Assistant = config.runBlockingOnStrategyDispatcher {
         executeSingle(prompt, tools)
     }
 
     @JavaAPI
     @JvmName("requestLLMMultipleWithoutTools")
-    public fun requestLLMMultipleWithoutToolsBlocking(): List<Message.Response> =
+    public fun requestLLMMultipleWithoutToolsBlocking(): Message.Assistant =
         config.runBlockingOnStrategyDispatcher {
-            requestLLMMultipleWithoutTools()
+            requestLLMMWithoutTools()
         }
 
     @JavaAPI
     @JvmName("requestLLMWithoutTools")
-    public fun requestLLMWithoutToolsBlocking(): Message.Response =
+    public fun requestLLMWithoutToolsBlocking(): Message.Assistant =
         config.runBlockingOnStrategyDispatcher {
             requestLLMWithoutTools()
         }
 
     @JavaAPI
     @JvmName("requestLLMOnlyCallingTools")
-    public fun requestLLMOnlyCallingToolsBlocking(): Message.Response =
+    public fun requestLLMOnlyCallingToolsBlocking(): Message.Assistant =
         config.runBlockingOnStrategyDispatcher {
             requestLLMOnlyCallingTools()
         }
 
     @JavaAPI
     @JvmName("requestLLMMultipleOnlyCallingTools")
-    public fun requestLLMMultipleOnlyCallingToolsBlocking(): List<Message.Response> =
+    public fun requestLLMMultipleOnlyCallingToolsBlocking(): Message.Assistant =
         config.runBlockingOnStrategyDispatcher {
             requestLLMMultipleOnlyCallingTools()
         }
@@ -89,7 +89,7 @@ public actual class AIAgentLLMReadSession actual constructor(
     @JvmName("requestLLMForceOneTool")
     public fun requestLLMForceOneToolBlocking(
         tool: ToolDescriptor
-    ): Message.Response = config.runBlockingOnStrategyDispatcher {
+    ): Message.Assistant = config.runBlockingOnStrategyDispatcher {
         requestLLMForceOneTool(tool)
     }
 
@@ -97,13 +97,13 @@ public actual class AIAgentLLMReadSession actual constructor(
     @JvmName("requestLLMForceOneTool")
     public fun requestLLMForceOneToolBlocking(
         tool: ToolBase<*, *>
-    ): Message.Response = config.runBlockingOnStrategyDispatcher {
+    ): Message.Assistant = config.runBlockingOnStrategyDispatcher {
         requestLLMForceOneTool(tool)
     }
 
     @JavaAPI
     @JvmName("requestLLM")
-    public fun requestLLMBlocking(): Message.Response = config.runBlockingOnStrategyDispatcher {
+    public fun requestLLMBlocking(): Message.Assistant = config.runBlockingOnStrategyDispatcher {
         requestLLM()
     }
 
@@ -125,7 +125,7 @@ public actual class AIAgentLLMReadSession actual constructor(
 
     @JavaAPI
     @JvmName("requestLLMMultiple")
-    public fun requestLLMMultipleBlocking(): List<Message.Response> =
+    public fun requestLLMMultipleBlocking(): Message.Assistant =
         config.runBlockingOnStrategyDispatcher {
             requestLLMMultiple()
         }
@@ -164,7 +164,7 @@ public actual class AIAgentLLMReadSession actual constructor(
 
     @JavaAPI
     @JvmName("requestLLMMultipleChoices")
-    public fun requestLLMMultipleChoicesBlocking(): List<LLMChoice> =
+    public fun requestLLMMultipleChoicesBlocking(): LLMChoice =
         config.runBlockingOnStrategyDispatcher {
             requestLLMMultipleChoices()
         }

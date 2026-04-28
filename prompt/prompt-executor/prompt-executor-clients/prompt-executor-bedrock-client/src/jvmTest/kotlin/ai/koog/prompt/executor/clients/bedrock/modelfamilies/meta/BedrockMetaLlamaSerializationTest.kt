@@ -5,15 +5,15 @@ import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.time.KoogClock
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class BedrockMetaLlamaSerializationTest {
 
@@ -94,23 +94,22 @@ class BedrockMetaLlamaSerializationTest {
 
     @Test
     fun testParseLlamaResponse() {
+        val generationText = "Machine learning is a subset of artificial intelligence that focuses on developing systems that learn from data."
         val responseJson = """
             {
-                "generation": "Machine learning is a subset of artificial intelligence that focuses on developing systems that learn from data.",
+                "generation": "$generationText",
                 "prompt_token_count": 15,
                 "generation_token_count": 20,
                 "stop_reason": "stop"
             }
         """.trimIndent()
 
-        val messages = BedrockMetaLlamaSerialization.parseLlamaResponse(responseJson, mockClock)
+        val message = BedrockMetaLlamaSerialization.parseLlamaResponse(responseJson, mockClock)
 
-        assertNotNull(messages)
-        assertEquals(1, messages.size)
+        assertEquals(1, message.parts.size)
 
-        val message = messages.first()
-        assertTrue(message is Message.Assistant)
-        assertContains(message.content, "Machine learning is a subset of artificial intelligence")
+        val textPart = assertIs<MessagePart.Text>(message.parts.first())
+        assertEquals(generationText, textPart.text)
         assertEquals("stop", message.finishReason)
 
         assertEquals(15, message.metaInfo.inputTokensCount)
@@ -127,14 +126,12 @@ class BedrockMetaLlamaSerializationTest {
             }
         """.trimIndent()
 
-        val messages = BedrockMetaLlamaSerialization.parseLlamaResponse(responseJson, mockClock)
+        val message = BedrockMetaLlamaSerialization.parseLlamaResponse(responseJson, mockClock)
 
-        assertNotNull(messages)
-        assertEquals(1, messages.size)
+        assertEquals(1, message.parts.size)
 
-        val message = messages.first()
-        assertTrue(message is Message.Assistant)
-        assertEquals("This is a test response.", message.content)
+        val textPart = assertIs<MessagePart.Text>(message.parts.first())
+        assertEquals("This is a test response.", textPart.text)
         assertEquals("length", message.finishReason)
 
         assertEquals(null, message.metaInfo.inputTokensCount)

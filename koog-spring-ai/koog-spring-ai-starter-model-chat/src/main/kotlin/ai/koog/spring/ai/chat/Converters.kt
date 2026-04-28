@@ -6,15 +6,18 @@ import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.utils.time.KoogClock
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.messages.AssistantMessage
@@ -34,85 +37,104 @@ import org.springframework.ai.moderation.Moderation as SpringModeration
 private val converterLogger = LoggerFactory.getLogger("ai.koog.spring.ai.chat.Converters")
 
 /**
- * Converts a Koog [Message] to a Spring AI [SpringMessage].
+ * Converts a list of Koog [Message]s to a list of Spring AI [SpringMessage]s.
  *
- * @param message the Koog message to convert
- * @return the corresponding Spring AI message
- * @throws IllegalArgumentException if the message type is not supported
+ * @param messages the Koog messages to convert
+ * @return the corresponding Spring AI messages
+ * @throws IllegalArgumentException if a message type is not supported
  */
-public fun koogMessageToSpringMessage(message: Message): SpringMessage {
-    return when (message) {
-        is Message.System -> SystemMessage(message.content)
-        is Message.User -> {
-            if (message.hasOnlyTextContent()) {
-                UserMessage(message.content)
-            } else {
-                val mediaList: List<Media> = message.parts
-                    .filterIsInstance<ContentPart.Attachment>()
-                    .map { attachment -> attachmentToSpringMedia(attachment) }
-                UserMessage.builder()
-                    .text(message.content)
-                    .media(mediaList)
-                    .build()
+public fun koogMessageToSpringMessage(messages: List<Message>): List<SpringMessage> {
+    return buildList {
+        messages.forEach { message ->
+            when (message) {
+                is Message.System -> {
+                    add(SystemMessage(message.parts.joinToString(separator = "\n") { it.text }))
+                }
+
+                is Message.User -> {
+                    val textContent = message.parts.filterIsInstance<MessagePart.Text>()
+                        .joinToString("\n") { it.text }
+                    val media = message.parts.filterIsInstance<MessagePart.Attachment>()
+                        .map { attachmentToSpringMedia(it.source) }
+                    val toolResults = message.parts.filterIsInstance<MessagePart.Tool.Result>()
+
+                    if (textContent.isNotEmpty() || media.isNotEmpty()) {
+                        val builder = UserMessage.builder().text(textContent)
+                        if (media.isNotEmpty()) builder.media(media)
+                        add(builder.build())
+                    }
+
+                    toolResults.forEach { toolResult ->
+                        val toolResponse = ToolResponseMessage.ToolResponse(
+                            toolResult.id ?: "",
+                            toolResult.tool,
+                            toolResult.output
+                        )
+                        add(
+                            ToolResponseMessage.builder()
+                                .responses(listOf(toolResponse))
+                                .build()
+                        )
+                    }
+                }
+
+                is Message.Assistant -> {
+                    val textContent = message.parts.filterIsInstance<MessagePart.Text>()
+                        .joinToString("") { it.text }
+                    val springToolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
+                        .map { part ->
+                            AssistantMessage.ToolCall(
+                                part.id ?: "",
+                                "function",
+                                part.tool,
+                                part.args
+                            )
+                        }
+                    val reasoningContent = message.parts.filterIsInstance<MessagePart.Reasoning>()
+                        .flatMap { it.content }
+                        .joinToString("")
+
+                    val builder = AssistantMessage.builder()
+                        .content(textContent)
+                        .toolCalls(springToolCalls)
+                    if (reasoningContent.isNotEmpty()) {
+                        builder.properties(mapOf("reasoningContent" to reasoningContent))
+                    }
+                    add(builder.build())
+                }
             }
-        }
-
-        is Message.Assistant -> {
-            AssistantMessage(message.content)
-        }
-
-        is Message.Tool.Call -> {
-            val toolCall = AssistantMessage.ToolCall(
-                message.id ?: "",
-                "function",
-                message.tool,
-                message.content
-            )
-            AssistantMessage.builder()
-                .toolCalls(listOf(toolCall))
-                .build()
-        }
-
-        is Message.Tool.Result -> {
-            val toolResponse = ToolResponseMessage.ToolResponse(
-                message.id ?: "",
-                message.tool,
-                message.content
-            )
-            ToolResponseMessage.builder()
-                .responses(listOf(toolResponse))
-                .build()
-        }
-
-        is Message.Reasoning -> {
-            // Reasoning content is stored only in properties, not in the visible content field.
-            // Placing it in content would re-inject the chain-of-thought as an ordinary assistant
-            // utterance in multi-turn conversations, which can degrade follow-up responses for
-            // models that treat reasoning as hidden (e.g. Anthropic extended thinking, DeepSeek-R1).
-            AssistantMessage.builder()
-                .content("")
-                .properties(mapOf("reasoningContent" to message.content))
-                .build()
         }
     }
 }
 
 /**
- * Converts a Spring AI [Generation] (from a [org.springframework.ai.chat.model.ChatResponse]) to a list of Koog [Message.Response].
+ * Converts a single Koog [Message] to a Spring AI [SpringMessage].
  *
- * If the generation contains tool calls, each tool call is converted to a [Message.Tool.Call].
- * Otherwise, the text content is converted to a [Message.Assistant].
+ * @param message the Koog message to convert
+ * @return the corresponding Spring AI message
+ * @throws NoSuchElementException if the message produces no Spring AI output (e.g. a [Message.User]
+ *   containing only tool results with no text or media content)
+ */
+public fun koogMessageToSpringMessage(message: Message): SpringMessage {
+    return koogMessageToSpringMessage(listOf(message)).first()
+}
+
+/**
+ * Converts a Spring AI [Generation] (from a [org.springframework.ai.chat.model.ChatResponse]) to a Koog [Message.Assistant].
+ *
+ * If the generation contains tool calls, each tool call is converted to a [MessagePart.Tool.Call].
+ * Otherwise, the text content is converted to a [MessagePart.Text].
  *
  * @param generation the Spring AI generation to convert
  * @param clock the clock to use for creating response metadata timestamps
  * @param usage optional token usage information from the chat response metadata
- * @return a list of Koog response messages
+ * @return a Koog [Message.Assistant]
  */
 public fun springGenerationToKoogResponses(
     generation: Generation,
     clock: KoogClock = KoogClock.System,
     usage: Usage? = null
-): List<Message.Response> {
+): Message.Assistant {
     val assistantMessage = generation.output
     val metaInfo = ResponseMetaInfo.create(
         clock = clock,
@@ -120,34 +142,31 @@ public fun springGenerationToKoogResponses(
         inputTokensCount = usage?.promptTokens,
         outputTokensCount = usage?.completionTokens
     )
-    val toolCallMessages: List<Message.Tool.Call> = if (assistantMessage.hasToolCalls()) {
-        assistantMessage.toolCalls.map { toolCall ->
-            Message.Tool.Call(
-                id = toolCall.id(),
-                tool = toolCall.name(),
-                content = toolCall.arguments(),
-                metaInfo = metaInfo
-            )
+    val finishReason = assistantMessage.metadata["finishReason"]?.toString()
+    val parts = buildList {
+        assistantMessage.metadata["reasoningContent"]
+            ?.toString()
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { add(MessagePart.Reasoning(content = it)) }
+
+        assistantMessage.text
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { add(MessagePart.Text(it)) }
+
+        if (assistantMessage.hasToolCalls()) {
+            assistantMessage.toolCalls.forEach { toolCall ->
+                add(
+                    MessagePart.Tool.Call(
+                        id = toolCall.id(),
+                        tool = toolCall.name(),
+                        args = Json.decodeFromString<JsonObject>(toolCall.arguments()).jsonObject,
+                    )
+                )
+            }
         }
-    } else {
-        emptyList()
     }
 
-    val reasoningMessage: Message.Reasoning? = assistantMessage.metadata["reasoningContent"]
-        ?.toString()
-        ?.takeIf { it.isNotEmpty() }
-        ?.let { Message.Reasoning(content = it, metaInfo = metaInfo) }
-
-    val textMessage: Message.Assistant? = assistantMessage.text
-        ?.takeIf { it.isNotEmpty() }
-        ?.let { Message.Assistant(content = it, metaInfo = metaInfo) }
-
-    return buildList {
-        reasoningMessage?.let { add(it) }
-        textMessage?.let { add(it) }
-        addAll(toolCallMessages)
-        if (isEmpty()) add(Message.Assistant(content = "", metaInfo = metaInfo))
-    }
+    return Message.Assistant(parts = parts, finishReason = finishReason, metaInfo = metaInfo)
 }
 
 /**
@@ -373,14 +392,14 @@ public fun springModerationResultToKoogModerationResult(springResult: SpringMode
 }
 
 /**
- * Converts a Koog [ContentPart.Attachment] to a Spring AI [Media] object.
+ * Converts a Koog [AttachmentSource] to a Spring AI [Media] object.
  *
  * Supports URL-based, binary (base64/bytes), and plain-text attachment content.
  *
  * @param attachment the Koog attachment to convert
  * @return the corresponding Spring AI Media
  */
-internal fun attachmentToSpringMedia(attachment: ContentPart.Attachment): Media {
+internal fun attachmentToSpringMedia(attachment: AttachmentSource): Media {
     val mimeType = try {
         MimeType.valueOf(attachment.mimeType)
     } catch (e: IllegalArgumentException) {

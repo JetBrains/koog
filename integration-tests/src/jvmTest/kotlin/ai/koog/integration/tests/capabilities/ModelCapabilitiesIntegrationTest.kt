@@ -29,8 +29,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OpenAILLMProvider
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.AttachmentSource
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import io.kotest.inspectors.shouldForAny
@@ -153,8 +153,8 @@ class ModelCapabilitiesIntegrationTest {
                     }
                     withRetry {
                         executor.execute(prompt, model, listOf(tools))
-                            .shouldNotBeEmpty()
-                            .shouldForAny { it is Message.Tool.Call }
+                            .parts
+                            .shouldForAny { it is MessagePart.Tool.Call }
                     }
                 }
 
@@ -166,7 +166,7 @@ class ModelCapabilitiesIntegrationTest {
                         user {
                             markdown { +"Describe the image in 5-10 words." }
                             image(
-                                ContentPart.Image(
+                                AttachmentSource.Image(
                                     content = AttachmentContent.Binary.Base64(base64),
                                     format = "jpeg",
                                     mimeType = "image/jpeg"
@@ -190,7 +190,7 @@ class ModelCapabilitiesIntegrationTest {
                         user {
                             markdown { +"Transcribe the attached audio in 5-10 words." }
                             audio(
-                                ContentPart.Audio(
+                                AttachmentSource.Audio(
                                     AttachmentContent.Binary.Base64(base64),
                                     format = "mp3"
                                 )
@@ -253,8 +253,8 @@ class ModelCapabilitiesIntegrationTest {
                             size shouldBe 2
                             forEach { choice ->
                                 choice
-                                    .shouldNotBeEmpty()
-                                    .shouldForAny { it is Message.Assistant && it.content.isNotBlank() }
+                                    .parts
+                                    .shouldForAny { it is MessagePart.Text && it.text.isNotBlank() }
                             }
                         }
                     }
@@ -268,7 +268,7 @@ class ModelCapabilitiesIntegrationTest {
                         user {
                             markdown { +"Describe in 5-10 words what you can infer from the attached video." }
                             video(
-                                ContentPart.Video(
+                                AttachmentSource.Video(
                                     content = AttachmentContent.Binary.Base64(base64),
                                     format = "mp4",
                                     mimeType = "video/mp4",
@@ -299,8 +299,8 @@ class ModelCapabilitiesIntegrationTest {
                     }
                     withRetry {
                         with(
-                            executor.execute(prompt, model).filterIsInstance<Message.Assistant>()
-                                .joinToString("\n") { it.content }
+                            executor.execute(prompt, model).parts.filterIsInstance<MessagePart.Text>()
+                                .joinToString("\n") { it.text }
                         ) {
                             shouldNotBeBlank()
                             isValidJson(this).shouldBeTrue()
@@ -320,8 +320,8 @@ class ModelCapabilitiesIntegrationTest {
                     }
                     withRetry {
                         with(
-                            executor.execute(prompt, model).filterIsInstance<Message.Assistant>()
-                                .joinToString("\n") { it.content }
+                            executor.execute(prompt, model).parts.filterIsInstance<MessagePart.Text>()
+                                .joinToString("\n") { it.text }
                         ) {
                             shouldNotBeBlank()
                             shouldContain("\"y\"")
@@ -416,7 +416,7 @@ class ModelCapabilitiesIntegrationTest {
                         user {
                             markdown { +"Describe the image in 5-10 words." }
                             image(
-                                ContentPart.Image(
+                                AttachmentSource.Image(
                                     content = AttachmentContent.Binary.Base64(base64),
                                     format = "png",
                                     mimeType = "image/png"
@@ -444,7 +444,7 @@ class ModelCapabilitiesIntegrationTest {
                         user {
                             markdown { +"Transcribe the attached audio in 5-10 words." }
                             audio(
-                                ContentPart.Audio(
+                                AttachmentSource.Audio(
                                     AttachmentContent.Binary.Base64(base64),
                                     format = "mp3"
                                 )
@@ -525,7 +525,7 @@ class ModelCapabilitiesIntegrationTest {
                         user {
                             markdown { +"Describe in 5-10 words what you can infer from the attached video." }
                             video(
-                                ContentPart.Video(
+                                AttachmentSource.Video(
                                     content = AttachmentContent.Binary.Base64(base64),
                                     format = "mp4",
                                     mimeType = "video/mp4",
@@ -637,8 +637,9 @@ class ModelCapabilitiesIntegrationTest {
     private suspend fun checkAssistantResponse(prompt: Prompt, model: LLModel) {
         executor
             .execute(prompt, model)
-            .filterIsInstance<Message.Assistant>()
-            .joinToString("\n") { it.content }
+            .parts
+            .filterIsInstance<MessagePart.Text>()
+            .joinToString("\n") { it.text }
             .shouldNotBeBlank()
     }
 }

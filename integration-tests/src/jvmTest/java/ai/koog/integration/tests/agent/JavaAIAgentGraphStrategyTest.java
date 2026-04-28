@@ -28,6 +28,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.llm.LLMCapability;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
 import ai.koog.prompt.message.RequestMetaInfo;
 import ai.koog.prompt.message.ResponseMetaInfo;
 import ai.koog.serialization.JSONPrimitive;
@@ -48,6 +49,7 @@ import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static ai.koog.utils.concurrency.ReentrantCoroutineUtilsKt.runBlockingReentrant;
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,13 +71,16 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
         var preprocess = AIAgentNode.builder("preprocess")
             .withInput(String.class)
-            .withOutput(String.class)
-            .withAction((input, ctx) -> "Reply with the single word hello to: " + input)
+            .withOutput(Message.User.class)
+            .withAction((input, ctx) -> new Message.User(
+                "Reply with the single word hello to: " + input,
+                new RequestMetaInfo(kotlin.time.Clock.System.INSTANCE.now(), null)
+            ))
             .build();
 
-        var llm = AIAgentNode.llmRequest(true, "llm");
+        var llm = AIAgentNode.llmRequest("llm");
         var extractContent = AIAgentNode.builder("extract-content")
-            .withInput(Message.Response.class)
+            .withInput(Message.Assistant.class)
             .withOutput(String.class)
             .withAction((response, ctx) -> assistantContent(response, ""))
             .build();
@@ -343,9 +348,10 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             .withInput(String.class)
             .withOutput(String.class);
 
-        var firstLlm = AIAgentNode.llmRequest(true, "first-llm");
+        var wrapAsUserFirst = toUserMessageNode("wrap-as-user-first");
+        var firstLlm = AIAgentNode.llmRequest("first-llm");
         var extractFirstResponse = AIAgentNode.builder("extract-first-response")
-            .withInput(Message.Response.class)
+            .withInput(Message.Assistant.class)
             .withOutput(String.class)
             .withAction((response, ctx) -> assistantContent(response, "No response"))
             .build();
@@ -354,17 +360,20 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             .compressionStrategy(HistoryCompressionStrategy.WholeHistory)
             .preserveMemory(true)
             .build();
-        var finalLlm = AIAgentNode.llmRequest(true, "final-llm");
+        var wrapAsUserFinal = toUserMessageNode("wrap-as-user-final");
+        var finalLlm = AIAgentNode.llmRequest("final-llm");
         var extractFinalResponse = AIAgentNode.builder("extract-final-response")
-            .withInput(Message.Response.class)
+            .withInput(Message.Assistant.class)
             .withOutput(String.class)
             .withAction((response, ctx) -> assistantContent(response, ""))
             .build();
 
-        strategy.edge(strategy.nodeStart, firstLlm);
+        strategy.edge(strategy.nodeStart, wrapAsUserFirst);
+        strategy.edge(wrapAsUserFirst, firstLlm);
         strategy.edge(firstLlm, extractFirstResponse);
         strategy.edge(extractFirstResponse, compress);
-        strategy.edge(compress, finalLlm);
+        strategy.edge(compress, wrapAsUserFinal);
+        strategy.edge(wrapAsUserFinal, finalLlm);
         strategy.edge(finalLlm, extractFinalResponse);
         strategy.edge(AIAgentEdge.builder()
             .from(extractFinalResponse)
@@ -817,11 +826,23 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             .toList();
     }
 
-    private static String assistantContent(Message.Response response, String fallback) {
-        if (response instanceof Message.Assistant) {
-            return (response).getContent();
-        }
-        return fallback;
+    private static String assistantContent(Message.Assistant response, String fallback) {
+        String text = response.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Text)
+            .map(p -> ((MessagePart.Text) p).getText())
+            .collect(Collectors.joining("\n"));
+        return text.isEmpty() ? fallback : text;
+    }
+
+    private static AIAgentNode<String, Message.User> toUserMessageNode(String name) {
+        return AIAgentNode.builder(name)
+            .withInput(String.class)
+            .withOutput(Message.User.class)
+            .withAction((input, ctx) -> new Message.User(
+                input,
+                new RequestMetaInfo(kotlin.time.Clock.System.INSTANCE.now(), null)
+            ))
+            .build();
     }
 
     private static boolean containsIgnoreCase(String text, String expected) {

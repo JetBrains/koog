@@ -1,13 +1,14 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -30,11 +31,11 @@ class AIAgentGenericTypesTest {
 
         val customStrategy = strategy<CustomInput, CustomOutput>("custom-strategy") {
             val processInput = { input: CustomInput -> input.query }
-            val processOutput = { output: Message.Response -> CustomOutput(result = output.content, confidence = 0.95) }
+            val processOutput = { output: Message.Assistant -> CustomOutput(result = output.parts.filterIsInstance<MessagePart.Text>().first().text, confidence = 0.95) }
 
             val callLLM by nodeLLMRequest()
 
-            edge(nodeStart forwardTo callLLM transformed { input -> processInput(input) })
+            edge(nodeStart forwardTo callLLM asUserMessage { input -> processInput(input) })
             edge(callLLM forwardTo nodeFinish transformed { output -> processOutput(output) })
         }
 
@@ -61,14 +62,14 @@ class AIAgentGenericTypesTest {
         val customStrategy = strategy<Int, Boolean>("int-to-bool-strategy") {
             val convertToString = { input: Int -> "Is $input an even number?" }
 
-            val parseResponse = { output: Message.Response ->
-                output.content.contains("yes", ignoreCase = true) ||
-                    output.content.contains("even", ignoreCase = true)
+            val parseResponse = { output: Message.Assistant ->
+                val text = output.parts.filterIsInstance<MessagePart.Text>().firstOrNull()?.text ?: ""
+                text.contains("yes", ignoreCase = true) || text.contains("even", ignoreCase = true)
             }
 
             val callLLM by nodeLLMRequest()
 
-            edge(nodeStart forwardTo callLLM transformed { input -> convertToString(input) })
+            edge(nodeStart forwardTo callLLM asUserMessage { input -> convertToString(input) })
             edge(callLLM forwardTo nodeFinish transformed { output -> parseResponse(output) })
         }
 

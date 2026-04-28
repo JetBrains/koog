@@ -73,7 +73,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
     /**
      * Executes a streaming request for the provided prompt and tools.
      */
-    public fun executeStreaming(prompt: Prompt, tools: List<ToolDescriptor>): Flow<StreamFrame> {
+    protected fun executeStreaming(prompt: Prompt, tools: List<ToolDescriptor>): Flow<StreamFrame> {
         val preparedPrompt = preparePrompt(prompt, tools)
         return executor.executeStreaming(preparedPrompt, model, tools)
     }
@@ -82,7 +82,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * Executes a request for the provided prompt and tools and returns all response messages.
      */
     @JvmSynthetic
-    public suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
+    protected suspend fun execute(prompt: Prompt, tools: List<ToolDescriptor>): Message.Assistant {
         val preparedPrompt = preparePrompt(prompt, tools)
         return executor.executeProcessed(
             prompt = preparedPrompt,
@@ -93,58 +93,19 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
     }
 
     /**
-     * Executes a request for the provided prompt and tools and returns the first response.
-     */
-    @JvmSynthetic
-    public suspend fun executeSingle(prompt: Prompt, tools: List<ToolDescriptor>): Message.Response =
-        executeMultiple(prompt, tools).first()
-
-    /**
      * Sends a request to the language model without utilizing any tools and returns multiple responses.
      *
      * @return A list of response messages from the language model.
      */
     @JvmSynthetic
-    public suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
+    public suspend fun requestLLMMWithoutTools(): Message.Assistant {
         validateSession()
 
         val promptWithDisabledTools = prompt
             .withUpdatedParams { toolChoice = null }
             .let { preparePrompt(it, emptyList()) }
 
-        return executeMultiple(promptWithDisabledTools, emptyList())
-    }
-
-    /**
-     * Sends a request to the language model without utilizing any tools and returns the response.
-     *
-     * @return The response message from the language model after executing the request.
-     */
-    @JvmSynthetic
-    public suspend fun requestLLMWithoutTools(): Message.Response {
-        validateSession()
-        val promptWithDisabledTools = prompt
-            .withUpdatedParams { toolChoice = null }
-            .let { preparePrompt(it, emptyList()) }
-
-        return executeMultiple(promptWithDisabledTools, emptyList()).first { it !is Message.Reasoning }
-    }
-
-    /**
-     * Sends a request to the language model that enforces the usage of tools and retrieves the response.
-     *
-     * @return The first tool call response if present, otherwise the first assistant response.
-     */
-    @JvmSynthetic
-    public suspend fun requestLLMOnlyCallingTools(): Message.Response {
-        validateSession()
-        val promptWithOnlyCallingTools = prompt.withUpdatedParams {
-            toolChoice = LLMParams.ToolChoice.Required
-        }
-        val responses = executeMultiple(promptWithOnlyCallingTools, tools)
-
-        return responses.firstOrNull { it is Message.Tool.Call }
-            ?: responses.first { it is Message.Assistant }
+        return execute(promptWithDisabledTools, emptyList())
     }
 
     /**
@@ -153,12 +114,12 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * @return A list of responses from the language model.
      */
     @JvmSynthetic
-    public suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
+    public suspend fun requestLLMMultipleOnlyCallingTools(): Message.Assistant {
         validateSession()
         val promptWithOnlyCallingTools = prompt.withUpdatedParams {
             toolChoice = LLMParams.ToolChoice.Required
         }
-        return executeMultiple(promptWithOnlyCallingTools, tools)
+        return execute(promptWithOnlyCallingTools, tools)
     }
 
     /**
@@ -168,16 +129,13 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * @return The response from the language model.
      */
     @JvmSynthetic
-    public suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
+    public suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Assistant {
         validateSession()
         check(tools.contains(tool)) { "Unable to force call to tool `${tool.name}` because it is not defined" }
         val promptWithForcingOneTool = prompt.withUpdatedParams {
             toolChoice = LLMParams.ToolChoice.Named(tool.name)
         }
-        val responses = executeMultiple(promptWithForcingOneTool, tools)
-
-        return responses.firstOrNull { it is Message.Tool.Call }
-            ?: responses.first { it is Message.Assistant }
+        return execute(promptWithForcingOneTool, tools)
     }
 
     /**
@@ -187,7 +145,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * @return The response from the language model.
      */
     @JvmSynthetic
-    public suspend fun requestLLMForceOneTool(tool: ToolBase<*, *>): Message.Response {
+    public suspend fun requestLLMForceOneTool(tool: ToolBase<*, *>): Message.Assistant {
         return requestLLMForceOneTool(tool.descriptor)
     }
 
@@ -197,9 +155,9 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * @return The first response message from the LLM after executing the request.
      */
     @JvmSynthetic
-    public suspend fun requestLLM(): Message.Response {
+    public suspend fun requestLLM(): Message.Assistant {
         validateSession()
-        return executeMultiple(prompt, tools).first { it !is Message.Reasoning }
+        return execute(prompt, tools)
     }
 
     /**
@@ -232,9 +190,9 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * @return A list of responses from the language model.
      */
     @JvmSynthetic
-    public suspend fun requestLLMMultiple(): List<Message.Response> {
+    public suspend fun requestLLMMultiple(): Message.Assistant {
         validateSession()
-        return executeMultiple(prompt, tools)
+        return execute(prompt, tools)
     }
 
     /**
@@ -255,6 +213,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
             prompt = preparedPrompt,
             model = model,
             config = config,
+            fixingParser
         )
     }
 
@@ -317,7 +276,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * Sends a request to the language model and returns all available response choices.
      */
     @JvmSynthetic
-    public suspend fun requestLLMMultipleChoices(): List<LLMChoice> {
+    public suspend fun requestLLMMultipleChoices(): LLMChoice {
         validateSession()
         val preparedPrompt = preparePrompt(prompt, tools)
         return executor.executeMultipleChoices(preparedPrompt, model, tools)

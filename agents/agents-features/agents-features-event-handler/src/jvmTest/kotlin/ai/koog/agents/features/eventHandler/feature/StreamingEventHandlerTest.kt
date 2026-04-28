@@ -2,12 +2,11 @@ package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMStream
 import ai.koog.prompt.streaming.collectText
 import ai.koog.prompt.streaming.streamFrameFlowOf
 import ai.koog.serialization.kotlinx.KotlinxSerializer
@@ -69,7 +68,8 @@ class StreamingEventHandlerTest {
         // Verify the overall event collection is working
         assertEventsCollected(eventsCollector)
         // Verify that streaming events were captured
-        val streamingEventTypes = listOf("OnLLMStreamingStarting", "OnLLMStreamingFrameReceived", "OnLLMStreamingCompleted")
+        val streamingEventTypes =
+            listOf("OnLLMStreamingStarting", "OnLLMStreamingFrameReceived", "OnLLMStreamingCompleted")
         assertTrue(
             actual = eventsCollector.collectedEvents.any { streamingEventTypes.any(it::contains) },
             message = "Should have captured at least one streaming event (${streamingEventTypes.joinToString()})"
@@ -103,6 +103,6 @@ private suspend fun mockStreaming(
 private fun streamTextStrategy(strategyName: String) =
     strategy<String, String>(strategyName) {
         val llmNode by nodeLLMRequestStreaming("streaming-llm-node")
-        edge(nodeStart forwardTo llmNode)
+        edge(nodeStart forwardTo llmNode asUserMessage { it })
         edge(llmNode forwardTo nodeFinish transformed { it.collectText() })
     }

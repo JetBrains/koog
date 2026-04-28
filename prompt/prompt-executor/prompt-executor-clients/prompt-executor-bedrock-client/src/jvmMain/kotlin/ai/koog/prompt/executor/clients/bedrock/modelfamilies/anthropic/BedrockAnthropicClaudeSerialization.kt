@@ -15,6 +15,7 @@ import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicRes
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
@@ -24,7 +25,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
@@ -41,94 +41,64 @@ internal object BedrockAnthropicClaudeSerialization {
         namingStrategy = JsonNamingStrategy.SnakeCase
     }
 
-    private fun buildMessagesHistory(prompt: Prompt): MutableList<BedrockAnthropicInvokeModelMessage> {
-        val messages = mutableListOf<BedrockAnthropicInvokeModelMessage>()
-        prompt.messages.forEach { msg ->
-            when (msg) {
-                is Message.User -> {
-                    require(!msg.hasAttachments()) {
-                        "Amazon Bedrock requests to Anthropic models via InvokeModel currently support text-only user messages"
-                    }
-                    if (msg.content.isNotEmpty()) {
-                        messages.add(
-                            BedrockAnthropicInvokeModelMessage.User(
-                                content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content))
-                            )
-                        )
-                    }
+    private fun Message.User.toAnthropicMessage(): BedrockAnthropicInvokeModelMessage.User {
+        return BedrockAnthropicInvokeModelMessage.User(
+            content = parts.map { part ->
+                when (part) {
+                    is MessagePart.Text -> BedrockAnthropicInvokeModelContent.Text(text = part.text)
+                    is MessagePart.Attachment -> throw IllegalArgumentException("No attachments are supported in user messages")
+                    is MessagePart.Tool.Result -> BedrockAnthropicInvokeModelContent.ToolResult(
+                        toolUseId = part.id!!,
+                        content = part.output,
+                        isError = part.isError
+                    )
                 }
-
-                is Message.Assistant -> {
-                    if (msg.content.isNotEmpty()) {
-                        messages.add(
-                            BedrockAnthropicInvokeModelMessage.Assistant(
-                                content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content))
-                            )
-                        )
-                    }
-                }
-
-                is Message.Reasoning -> {
-                    if (msg.content.isNotEmpty()) {
-                        messages.add(
-                            BedrockAnthropicInvokeModelMessage.Assistant(
-                                content = listOf(
-                                    BedrockAnthropicInvokeModelContent.Thinking(
-                                        signature = msg.encrypted
-                                            ?: error("Encrypted signature is required for reasoning messages but was null"),
-                                        thinking = msg.content
-                                    )
-                                )
-                            )
-                        )
-                    }
-                }
-
-                is Message.Tool.Result -> {
-                    if (msg.content.isNotEmpty()) {
-                        messages.add(
-                            BedrockAnthropicInvokeModelMessage.User(
-                                content = listOf(
-                                    BedrockAnthropicInvokeModelContent.ToolResult(
-                                        toolUseId = msg.id!!,
-                                        content = msg.content,
-                                        isError = msg.isError
-                                    )
-                                )
-                            )
-                        )
-                    }
-                }
-
-                is Message.Tool.Call -> {
-                    if (msg.content.isNotEmpty()) {
-                        messages.add(
-                            BedrockAnthropicInvokeModelMessage.Assistant(
-                                content = listOf(
-                                    BedrockAnthropicInvokeModelContent.ToolCall(
-                                        msg.id!!,
-                                        msg.tool,
-                                        msg.contentJsonResult.getOrElse { JsonObject(emptyMap()) }
-                                    )
-                                )
-                            )
-                        )
-                    }
-                }
-
-                is Message.System -> {} // skip
             }
-        }
+        )
+    }
 
-        return messages
+    private fun Message.Assistant.toAnthropicMessage(): BedrockAnthropicInvokeModelMessage.Assistant {
+        return BedrockAnthropicInvokeModelMessage.Assistant(
+            content = parts.map { part ->
+                when (part) {
+                    is MessagePart.Text -> BedrockAnthropicInvokeModelContent.Text(
+                        text = part.text
+                    )
+
+                    is MessagePart.Reasoning -> BedrockAnthropicInvokeModelContent.Thinking(
+                        signature = part.encrypted
+                            ?: throw IllegalArgumentException("Encrypted signature is required for reasoning messages but was null"),
+                        thinking = part.content.singleOrNull()
+                            ?: throw IllegalArgumentException("Content for reasoning message cannot be single")
+                    )
+
+                    is MessagePart.Tool.Call -> BedrockAnthropicInvokeModelContent.ToolCall(
+                        part.id!!,
+                        part.tool,
+                        part.argsJson
+                    )
+
+                    is MessagePart.Attachment -> throw IllegalArgumentException("No attachments are supported in assistant messages")
+                }
+            }
+        )
     }
 
     internal fun createAnthropicRequest(
         prompt: Prompt,
         tools: List<ToolDescriptor>
     ): BedrockAnthropicInvokeModel {
-        val systemText = prompt.messages.filterIsInstance<Message.System>().joinToString("\n") { it.content }
-        val messages = buildMessagesHistory(prompt)
+        val systemMessages = mutableListOf<Message.System>()
+        val messages = buildList {
+            prompt.messages.forEach { message ->
+                when (message) {
+                    is Message.System -> systemMessages.add(message)
+                    is Message.User -> add(message.toAnthropicMessage())
+                    is Message.Assistant -> add(message.toAnthropicMessage())
+                }
+            }
+        }
+        val systemText = systemMessages.flatMap { it.parts.map { part -> part.text } }.joinToString("\n")
 
         val params: LLMParams = prompt.params
         val temperature = params.temperature
@@ -203,7 +173,7 @@ internal object BedrockAnthropicClaudeSerialization {
         )
     }
 
-    internal fun parseAnthropicResponse(responseBody: String, clock: KoogClock = KoogClock.System): List<Message.Response> {
+    internal fun parseAnthropicResponse(responseBody: String, clock: KoogClock = KoogClock.System): Message.Assistant {
         val response = json.decodeFromString<BedrockAnthropicResponse>(responseBody)
 
         val inputTokens = response.usage?.inputTokens
@@ -216,30 +186,30 @@ internal object BedrockAnthropicClaudeSerialization {
             outputTokensCount = outputTokens
         )
 
-        return response.content.map { content ->
-            when (content) {
-                is AnthropicContent.Text -> Message.Assistant(
-                    content = content.text,
-                    finishReason = response.stopReason,
-                    metaInfo = metaInfo
-                )
+        return Message.Assistant(
+            parts = response.content.map { content ->
+                when (content) {
+                    is AnthropicContent.Text -> MessagePart.Text(
+                        text = content.text,
+                    )
 
-                is AnthropicContent.Thinking -> Message.Reasoning(
-                    encrypted = content.signature,
-                    content = content.thinking,
-                    metaInfo = metaInfo
-                )
+                    is AnthropicContent.Thinking -> MessagePart.Reasoning(
+                        content = content.thinking,
+                        encrypted = content.signature,
+                    )
 
-                is AnthropicContent.ToolUse -> Message.Tool.Call(
-                    id = content.id,
-                    tool = content.name,
-                    content = content.input.toString(),
-                    metaInfo = metaInfo
-                )
+                    is AnthropicContent.ToolUse -> MessagePart.Tool.Call(
+                        id = content.id,
+                        tool = content.name,
+                        args = content.input
+                    )
 
-                else -> throw IllegalArgumentException("Unhandled AnthropicContent type. Content: $content")
-            }
-        }
+                    else -> throw IllegalArgumentException("Unhandled AnthropicContent type. Content: $content")
+                }
+            },
+            metaInfo = metaInfo,
+            finishReason = response.stopReason,
+        )
     }
 
     internal fun transformAnthropicStreamChunks(

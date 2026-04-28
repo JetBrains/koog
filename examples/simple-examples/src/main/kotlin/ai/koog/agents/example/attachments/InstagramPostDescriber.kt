@@ -12,7 +12,12 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.markdown.markdown
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import kotlinx.io.files.Path
+
+private fun Message.Assistant.textContent(): String =
+    parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
 
 suspend fun main() {
     val resourcePath =
@@ -51,13 +56,13 @@ suspend fun main() {
 
     try {
         println("OllamaAI response:")
-        ollamaExecutor.execute(prompt, ollamaModel).single().content.also(::println)
+        ollamaExecutor.execute(prompt, ollamaModel).textContent().also(::println)
         println("OpenAI response:")
-        openaiExecutor.execute(prompt, OpenAIModels.Chat.GPT4_1).single().content.also(::println)
+        openaiExecutor.execute(prompt, OpenAIModels.Chat.GPT4_1).textContent().also(::println)
         println("Anthropic response:")
-        anthropicExecutor.execute(prompt, AnthropicModels.Sonnet_4).single().content.also(::println)
+        anthropicExecutor.execute(prompt, AnthropicModels.Sonnet_4).textContent().also(::println)
         println("Google response:")
-        googleExecutor.execute(prompt, GoogleModels.Gemini2_0Flash).single().content.also(::println)
+        googleExecutor.execute(prompt, GoogleModels.Gemini2_0Flash).textContent().also(::println)
     } finally {
         ollamaExecutor.close()
         openaiExecutor.close()

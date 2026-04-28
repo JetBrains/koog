@@ -2,6 +2,7 @@ package ai.koog.agents.features.persistence.jdbc
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
@@ -13,6 +14,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -144,18 +146,14 @@ abstract class AbstractJdbcPersistenceStorageProviderTest {
             Message.System("System prompt", RequestMetaInfo.create(KoogClock.System)),
             Message.User("User input", RequestMetaInfo.create(KoogClock.System)),
             Message.Assistant("Assistant response", ResponseMetaInfo.create(KoogClock.System)),
-            Message.Tool.Call(
-                id = "call-1",
-                tool = "searchTool",
-                content = """{"query": "test"}""",
-                metaInfo = ResponseMetaInfo.create(KoogClock.System)
+            Message.Assistant(
+                parts = listOf(MessagePart.Tool.Call(id = "call-1", tool = "searchTool", args = """{"query": "test"}""")),
+                metaInfo = ResponseMetaInfo.create(KoogClock.System),
             ),
-            Message.Tool.Result(
-                id = "call-1",
-                tool = "searchTool",
-                content = """{"result": "found"}""",
-                metaInfo = RequestMetaInfo.create(KoogClock.System)
-            )
+            Message.User(
+                parts = listOf(MessagePart.Tool.Result(id = "call-1", tool = "searchTool", output = """{"result": "found"}""")),
+                metaInfo = RequestMetaInfo.create(KoogClock.System),
+            ),
         )
 
         val checkpoint = createTestCheckpoint(messages = messages)
@@ -169,14 +167,14 @@ abstract class AbstractJdbcPersistenceStorageProviderTest {
         assertTrue(loadedMessages[0] is Message.System)
         assertTrue(loadedMessages[1] is Message.User)
         assertTrue(loadedMessages[2] is Message.Assistant)
-        assertTrue(loadedMessages[3] is Message.Tool.Call)
-        assertTrue(loadedMessages[4] is Message.Tool.Result)
+        assertTrue(loadedMessages[3] is Message.Assistant)
+        assertTrue(loadedMessages[4] is Message.User)
 
-        val toolCall = loadedMessages[3] as Message.Tool.Call
+        val toolCall = (loadedMessages[3] as Message.Assistant).parts.filterIsInstance<MessagePart.Tool.Call>().single()
         assertEquals("call-1", toolCall.id)
         assertEquals("searchTool", toolCall.tool)
 
-        val toolResult = loadedMessages[4] as Message.Tool.Result
+        val toolResult = (loadedMessages[4] as Message.User).parts.filterIsInstance<MessagePart.Tool.Result>().single()
         assertEquals("call-1", toolResult.id)
         assertEquals("searchTool", toolResult.tool)
     }
@@ -190,7 +188,7 @@ abstract class AbstractJdbcPersistenceStorageProviderTest {
         p.saveCheckpoint(sessionId, createTestCheckpoint(version = 1L))
         assertEquals(1, p.getCheckpointCount(sessionId))
 
-        delay(1100)
+        delay(1100.milliseconds)
         p.cleanupExpired()
 
         assertEquals(0, p.getCheckpointCount(sessionId))
@@ -204,7 +202,7 @@ abstract class AbstractJdbcPersistenceStorageProviderTest {
 
         p.saveCheckpoint("session-active", createTestCheckpoint(version = 1L))
 
-        delay(500)
+        delay(500.milliseconds)
 
         val loaded = p.getCheckpoints("session-active")
         assertEquals(1, loaded.size)

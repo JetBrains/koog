@@ -2,7 +2,7 @@ package ai.koog.prompt.tokenizer
 
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
-import kotlin.collections.sumOf
+import ai.koog.prompt.message.MessagePart
 
 /**
  * An interface that provides utilities for tokenizing and calculating token usage in messages and prompts.
@@ -44,7 +44,8 @@ public class OnDemandTokenizer(private val tokenizer: Tokenizer) : PromptTokeniz
      *                The content of the message is analyzed to estimate the token count.
      * @return The estimated number of tokens in the message content.
      */
-    public override fun tokenCountFor(message: Message): Int = tokenizer.countTokens(message.content)
+    public override fun tokenCountFor(message: Message): Int =
+        tokenizer.countTokens(message.getTextContent())
 
     /**
      * Calculates the total number of tokens spent for the given prompt based on its messages.
@@ -85,7 +86,7 @@ public class CachingTokenizer(private val tokenizer: Tokenizer) : PromptTokenize
      * @return The number of tokens in the content of the message
      */
     public override fun tokenCountFor(message: Message): Int = cache.getOrPut(message) {
-        tokenizer.countTokens(message.content)
+        tokenizer.countTokens(message.getTextContent())
     }
 
     /**
@@ -108,3 +109,14 @@ public class CachingTokenizer(private val tokenizer: Tokenizer) : PromptTokenize
         cache.clear()
     }
 }
+
+private fun Message.getTextContent(): String =
+    this.parts.mapNotNull { part ->
+        when (part) {
+            is MessagePart.Text -> part.text
+            is MessagePart.Reasoning -> part.content.joinToString("\n")
+            is MessagePart.Tool.Call -> part.args
+            is MessagePart.Tool.Result -> part.output
+            is MessagePart.Attachment -> null
+        }
+    }.joinToString("\n")

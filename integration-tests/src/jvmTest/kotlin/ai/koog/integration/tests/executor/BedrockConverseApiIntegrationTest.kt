@@ -27,13 +27,11 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.ContentPart
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.params.LLMParams
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
@@ -342,11 +340,10 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         withRetry(times = 3, testName = "integration_testCacheControlOnSystemMessage[${model.id}]") {
             val result = getExecutor(model).execute(prompt, model)
             result.shouldNotBeNull()
-            result.shouldNotBeEmpty()
-            result.filterIsInstance<Message.Assistant>().firstOrNull().shouldNotBeNull {
-                content.lowercase().shouldContain("paris")
-                this.metaInfo.metadata.shouldNotBeNull().validateRequestWasCachedCorrectly()
+            result.parts.filterIsInstance<MessagePart.Text>().firstOrNull().shouldNotBeNull {
+                text.lowercase().shouldContain("paris")
             }
+            result.metaInfo.metadata.shouldNotBeNull().validateRequestWasCachedCorrectly()
         }
     }
 
@@ -358,17 +355,16 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         val prompt = Prompt.build("test-cache-user") {
             // Caching requires a minimum prompt length to work.
             system(assistantPromptOfAtLeastLength(1600))
-            user(listOf(ContentPart.Text("What is the capital of France?")), BedrockCacheControl.Default)
+            user("What is the capital of France?", BedrockCacheControl.Default)
         }
 
         withRetry(times = 3, testName = "integration_testCacheControlOnUserMessage[${model.id}]") {
             val result = getExecutor(model).execute(prompt, model)
             result.shouldNotBeNull()
-            result.shouldNotBeEmpty()
-            result.filterIsInstance<Message.Assistant>().firstOrNull().shouldNotBeNull {
-                content.lowercase().shouldContain("paris")
-                this.metaInfo.metadata.shouldNotBeNull().validateRequestWasCachedCorrectly()
+            result.parts.filterIsInstance<MessagePart.Text>().firstOrNull().shouldNotBeNull {
+                text.lowercase().shouldContain("paris")
             }
+            result.metaInfo.metadata.shouldNotBeNull().validateRequestWasCachedCorrectly()
         }
     }
 
@@ -391,10 +387,7 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         withRetry(times = 3, testName = "integration_testCacheControlOnToolDefinition[${model.id}]") {
             val result = getExecutor(model).execute(prompt, model, listOf(cachedDescriptor))
             result.shouldNotBeNull()
-            result.shouldNotBeEmpty()
-            result.filterIsInstance<Message.Assistant>().firstOrNull().shouldNotBeNull {
-                this.metaInfo.metadata.shouldNotBeNull().validateRequestWasCachedCorrectly()
-            }
+            result.metaInfo.metadata.shouldNotBeNull().validateRequestWasCachedCorrectly()
         }
     }
 }

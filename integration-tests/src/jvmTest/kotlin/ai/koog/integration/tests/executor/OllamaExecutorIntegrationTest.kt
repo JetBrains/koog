@@ -18,8 +18,10 @@ import ai.koog.prompt.llm.LLMCapability.Tools
 import ai.koog.prompt.llm.LLMCapability.Vision
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.streaming.StreamFrame
 import io.kotest.assertions.withClue
+import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.booleans.shouldNotBeTrue
 import io.kotest.matchers.collections.shouldContain
@@ -307,13 +309,13 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         }
 
         try {
-            val response = executor.execute(prompt, visionModel).single()
+            val response = executor.execute(prompt, visionModel)
 
             when (scenario) {
                 ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG,
 
                 ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                    response.content.shouldNotBeBlank()
+                    response.parts.shouldForAny { it !is MessagePart.Attachment }
                 }
             }
         } catch (e: Exception) {
@@ -348,8 +350,8 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             }
         }
 
-        val response = executor.execute(prompt, model).single()
-        response.content.shouldNotBeBlank()
+        val response = executor.execute(prompt, model)
+        response.parts.shouldForAny { it is MessagePart.Text }
     }
 
     @Test

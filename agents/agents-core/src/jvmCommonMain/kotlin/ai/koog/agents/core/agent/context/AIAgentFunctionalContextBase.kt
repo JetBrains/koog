@@ -21,6 +21,7 @@ import ai.koog.agents.core.utils.runBlockingOnLLMDispatcher
 import ai.koog.agents.core.utils.runBlockingOnStrategyDispatcher
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredResponse
@@ -161,22 +162,38 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     }
 
     /**
-     * Sends a request to the Large Language Model (LLM) and retrieves its response.
+     * Sends a request to the Large Language Model (LLM) with tools enabled and retrieves its response.
+     * To run the request without tool calls, use [requestLLMWithoutTools].
      *
      * @param message The input message to be sent to the LLM.
-     * @param allowToolCalls Determines whether the LLM is allowed to use tools during its response generation.
-     *                       Defaults to true.
-     * @return A [Message.Response] object containing the message received from the LLM.
+     * @return A [Message.Assistant] object containing the message received from the LLM.
      */
     @JavaAPI
     @JvmOverloads
     @JvmName("requestLLM")
     public fun requestLLMBlocking(
         message: String,
-        allowToolCalls: Boolean = true
-    ): Message.Response = config.runBlockingOnLLMDispatcher {
-        requestLLM(message, allowToolCalls)
+    ): Message.Assistant = config.runBlockingOnLLMDispatcher(executorService) {
+        // Resolves to the parent's `suspend requestLLM(String)` by Kotlin's most-specific-overload rule
+        // (parent's 1-arg suspend wins over this class's 2-arg-with-defaults JVM wrapper).
+        requestLLM(message)
     }
+
+    /**
+     * Sends a request to the Large Language Model (LLM) with tools disabled and retrieves its response.
+     * To run the request with tool calls allowed, use [requestLLM].
+     *
+     * @param message The input message to be sent to the LLM.
+     * @return A [Message.Assistant] object containing the message received from the LLM.
+     */
+    @JavaAPI
+    @JvmOverloads
+    public fun requestLLMWithoutTools(
+        message: String,
+    ): Message.Assistant = config.runBlockingOnLLMDispatcher(executorService) {
+        // Resolves to the parent's `suspend requestLLMWithoutTools(String)` by specificity (see requestLLM above).
+        requestLLMWithoutTools(message)
+    )
 
     /**
      * Retrieves the most recent token usage count synchronously.
@@ -238,6 +255,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
                     subscriber.onError(e)
                 }
             }
+
             subscriber.onSubscribe(object : Flow.Subscription {
                 override fun request(n: Long) {
                     // Basic implementation without backpressure handling for simplicity.
@@ -255,14 +273,14 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      * Sends a request to the Large Language Model (LLM) and retrieves multiple responses.
      *
      * @param message The input message to be sent to the LLM.
-     * @return A list of [Message.Response] objects containing the LLM responses to the provided message.
+     * @return A list of [Message.Assistant] objects containing the LLM responses to the provided message.
      */
     @JavaAPI
     @JvmName("requestLLMMultiple")
     public fun requestLLMMultipleBlocking(
         message: String
-    ): List<Message.Response> = config.runBlockingOnLLMDispatcher {
-        requestLLMMultiple(message)
+    ): Message.Assistant = config.runBlockingOnLLMDispatcher {
+        requestLLM(message)
     }
 
     /**
@@ -275,7 +293,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     @JvmName("requestLLMOnlyCallingTools")
     public fun requestLLMOnlyCallingToolsBlocking(
         message: String
-    ): Message.Response = config.runBlockingOnLLMDispatcher {
+    ): Message.Assistant = config.runBlockingOnLLMDispatcher {
         requestLLMOnlyCallingTools(message)
     }
 
@@ -292,7 +310,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     public fun requestLLMForceOneToolBlocking(
         message: String,
         tool: ToolDescriptor
-    ): Message.Response = config.runBlockingOnLLMDispatcher {
+    ): Message.Assistant = config.runBlockingOnLLMDispatcher {
         requestLLMForceOneTool(message, tool)
     }
 
@@ -308,7 +326,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     public fun requestLLMForceOneToolBlocking(
         message: String,
         tool: Tool<*, *>
-    ): Message.Response = config.runBlockingOnLLMDispatcher {
+    ): Message.Assistant = config.runBlockingOnLLMDispatcher {
         requestLLMForceOneTool(message, tool)
     }
 
@@ -321,7 +339,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     @JavaAPI
     @JvmName("executeTool")
     public fun executeToolBlocking(
-        toolCall: Message.Tool.Call
+        toolCall: MessagePart.Tool.Call
     ): ReceivedToolResult = config.runBlockingOnStrategyDispatcher {
         executeTool(toolCall)
     }
@@ -336,10 +354,10 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     @JavaAPI
     @JvmName("executeMultipleTools")
     public fun executeMultipleToolsBlocking(
-        toolCalls: List<Message.Tool.Call>,
+        toolCalls: List<MessagePart.Tool.Call>,
         parallelTools: Boolean
     ): List<ReceivedToolResult> = config.runBlockingOnStrategyDispatcher {
-        executeMultipleTools(toolCalls, parallelTools)
+        executeTools(toolCalls, parallelTools)
     }
 
     /**
@@ -352,7 +370,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     @JvmName("sendToolResult")
     public fun sendToolResultBlocking(
         toolResult: ReceivedToolResult
-    ): Message.Response = config.runBlockingOnLLMDispatcher {
+    ): Message.Assistant = config.runBlockingOnLLMDispatcher {
         sendToolResult(toolResult)
     }
 
@@ -366,8 +384,8 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     @JvmName("sendMultipleToolResults")
     public fun sendMultipleToolResultsBlocking(
         results: List<ReceivedToolResult>
-    ): List<Message.Response> = config.runBlockingOnLLMDispatcher {
-        sendMultipleToolResults(results)
+    ): Message.Assistant = config.runBlockingOnLLMDispatcher {
+        sendToolResults(results)
     }
 
     /**

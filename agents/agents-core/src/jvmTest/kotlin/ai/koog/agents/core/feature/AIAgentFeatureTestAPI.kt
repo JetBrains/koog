@@ -33,8 +33,8 @@ import ai.koog.agents.testing.agent.agentExecutionInfo
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
-import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -287,7 +287,7 @@ internal object AIAgentFeatureTestAPI {
             id = "test-prompt-id",
             messages = listOf(
                 Message.System(
-                    part = ContentPart.Text("test-system-message"),
+                    part = MessagePart.Text("test-system-message"),
                     metaInfo = RequestMetaInfo(timestamp = testClock.now())
                 )
             ),
@@ -306,18 +306,16 @@ internal object AIAgentFeatureTestAPI {
             id = "test-prompt-id",
             messages = listOf(
                 Message.System(
-                    part = ContentPart.Text("test-system-message"),
+                    part = MessagePart.Text("test-system-message"),
                     metaInfo = RequestMetaInfo(timestamp = testClock.now())
                 )
             ),
             params = LLMParams()
         ),
         model = mockLLModel.toModelInfo(),
-        responses = listOf(
-            Message.Assistant(
-                content = "test-assistant-message",
-                metaInfo = ResponseMetaInfo(timestamp = testClock.now())
-            )
+        response = Message.Assistant(
+            content = "test-assistant-message",
+            metaInfo = ResponseMetaInfo(timestamp = testClock.now())
         ),
         timestamp = testClock.now().toEpochMilliseconds()
     )
@@ -330,7 +328,7 @@ internal object AIAgentFeatureTestAPI {
             id = "test-prompt-id",
             messages = listOf(
                 Message.System(
-                    part = ContentPart.Text("test-system-message"),
+                    part = MessagePart.Text("test-system-message"),
                     metaInfo = RequestMetaInfo(timestamp = testClock.now())
                 )
             ),
@@ -349,7 +347,7 @@ internal object AIAgentFeatureTestAPI {
             id = "test-prompt-id",
             messages = listOf(
                 Message.System(
-                    part = ContentPart.Text("test-system-message"),
+                    part = MessagePart.Text("test-system-message"),
                     metaInfo = RequestMetaInfo(timestamp = testClock.now())
                 )
             ),
@@ -368,7 +366,7 @@ internal object AIAgentFeatureTestAPI {
             id = "test-prompt-id",
             messages = listOf(
                 Message.System(
-                    part = ContentPart.Text("test-system-message"),
+                    part = MessagePart.Text("test-system-message"),
                     metaInfo = RequestMetaInfo(timestamp = testClock.now())
                 )
             ),
@@ -392,7 +390,7 @@ internal object AIAgentFeatureTestAPI {
             id = "test-prompt-id",
             messages = listOf(
                 Message.System(
-                    part = ContentPart.Text("test-system-message"),
+                    part = MessagePart.Text("test-system-message"),
                     metaInfo = RequestMetaInfo(timestamp = testClock.now())
                 )
             ),

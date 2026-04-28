@@ -5,6 +5,7 @@ import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.tombstoneCheckpoint
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONObject
@@ -56,9 +57,9 @@ class CheckpointSerializationTest {
         assertEquals(2, restored.messageHistory.size)
         val m0 = restored.messageHistory[0] as Message.User
         val m1 = restored.messageHistory[1] as Message.Assistant
-        assertEquals("Hello", m0.content)
+        assertEquals("Hello", (m0.parts[0] as MessagePart.Text).text)
         assertEquals(now, m0.metaInfo.timestamp)
-        assertEquals("Hi!", m1.content)
+        assertEquals("Hi!", (m1.parts[0] as MessagePart.Text).text)
         assertEquals(now, m1.metaInfo.timestamp)
 
         // Full equality as a final check

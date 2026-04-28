@@ -28,8 +28,9 @@ import ai.koog.prompt.llm.LLMCapability;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.AttachmentContent;
-import ai.koog.prompt.message.ContentPart;
+import ai.koog.prompt.message.AttachmentSource;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
 import ai.koog.serialization.TypeToken;
 import ai.koog.serialization.kotlinx.KotlinxSerializer;
 import ai.koog.serialization.jackson.JacksonSerializer;
@@ -47,12 +48,14 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -205,12 +208,12 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
             )
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                Message.Response first = context.requestLLM("Reply the user", true);
+                Message.Assistant first = context.requestLLM("Reply the user");
                 String second = context.subtask("Verify the answer")
                     .withOutput(String.class)
                     .useLLM(AnthropicModels.Opus_4_6)
                     .run();
-                return first.getContent() + " | " + second;
+                return assistantText(first) + " | " + second;
             })
             .install(EventHandler.Feature, config ->
                 config.onLLMCallStarting(ctx -> providersSeen.add(ctx.getModel().getProvider()))
@@ -312,11 +315,11 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
                     .build()
             )
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                context.requestLLM("Acknowledge the context in one short sentence.", false);
+                context.requestLLMWithoutTools("Acknowledge the context in one short sentence.");
                 context.compressHistory(strategy, true);
                 compressionsApplied.incrementAndGet();
                 historyAfterCompression.set(new ArrayList<>(context.getHistory()));
-                return context.requestLLM("Who am I according to instructions? Reply shortly.", false).getContent();
+                return assistantText(context.requestLLMWithoutTools("Who am I according to instructions? Reply shortly."));
             })
             .install(EventHandler.Feature, config ->
                 config.onAgentExecutionFailed(ctx -> errors.incrementAndGet())
@@ -353,24 +356,27 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
             )
             .toolRegistry(ToolRegistry.builder().tools(numberTools).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                Message.Response response = context.requestLLM("Calculate 7 times 2. Use multiply tool.", true);
-                if (!(response instanceof Message.Tool.Call)) {
-                    return response.getContent();
+                Message.Assistant response = context.requestLLM("Calculate 7 times 2. Use multiply tool.");
+                Optional<MessagePart.Tool.Call> maybeToolCall = response.getParts().stream()
+                    .filter(p -> p instanceof MessagePart.Tool.Call)
+                    .map(p -> (MessagePart.Tool.Call) p)
+                    .findFirst();
+                if (maybeToolCall.isEmpty()) {
+                    return assistantText(response);
                 }
 
-                Message.Tool.Call toolCall = (Message.Tool.Call) response;
-                ReceivedToolResult toolResult = context.executeTool(toolCall);
+                ReceivedToolResult toolResult = context.executeTool(maybeToolCall.get());
 
                 context.compressHistory(HistoryCompressionStrategy.WholeHistory, true);
                 beforeCompressCalls.incrementAndGet();
 
-                Message.Response afterToolResult = context.sendToolResult(toolResult);
+                Message.Assistant afterToolResult = context.sendToolResult(toolResult);
 
                 context.compressHistory(HistoryCompressionStrategy.FromLastNMessages(2), true);
                 afterCompressCalls.incrementAndGet();
                 historyAfterCompression.set(new ArrayList<>(context.getHistory()));
 
-                return afterToolResult.getContent();
+                return assistantText(afterToolResult);
             })
             .install(EventHandler.Feature, config -> {
                 config.onToolCallStarting(ctx -> toolCalls.incrementAndGet());
@@ -433,13 +439,15 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
 
         Prompt prompt = Prompt.builder("java-vision-url-image-part")
             .system("You analyze images. Keep answers short.")
-            .user(List.of(
-                new ContentPart.Text("Please identify the image format."),
-                new ContentPart.Image(
-                    new AttachmentContent.URL(imageUrl),
-                    "png",
-                    "image/png",
-                    "test.png"
+            .user(List.<MessagePart.RequestPart>of(
+                new MessagePart.Text("Please identify the image format."),
+                new MessagePart.Attachment(
+                    new AttachmentSource.Image(
+                        new AttachmentContent.URL(imageUrl),
+                        "png",
+                        "image/png",
+                        "test.png"
+                    )
                 )
             ))
             .build();
@@ -454,7 +462,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
                     .build()
             )
             .functionalStrategy((AIAgentFunctionalContext context, String input) ->
-                context.requestLLM("Answer the user", false).getContent()
+                assistantText(context.requestLLMWithoutTools("Answer the user"))
             )
             .install(EventHandler.Feature, config ->
                 config.onAgentExecutionFailed(ctx -> errors.incrementAndGet())
@@ -551,7 +559,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 JavaUtils.storageSet(context.getStorage(), storageKey, expectedValue);
                 retrievedValue.set(JavaUtils.storageGet(context.getStorage(), storageKey));
-                return context.requestLLM(input, true).getContent();
+                return assistantText(context.requestLLM(input));
             })
             .build();
 
@@ -571,7 +579,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 retrievedValue.set(JavaUtils.storageGet(context.getStorage(), nonExistentKey));
-                return context.requestLLM(input, true).getContent();
+                return assistantText(context.requestLLM(input));
             })
             .build();
 
@@ -595,7 +603,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
                 firstRead.set(JavaUtils.storageGet(context.getStorage(), storageKey));
                 JavaUtils.storageSet(context.getStorage(), storageKey, "updated");
                 secondRead.set(JavaUtils.storageGet(context.getStorage(), storageKey));
-                return context.requestLLM(input, true).getContent();
+                return assistantText(context.requestLLM(input));
             })
             .build();
 
@@ -621,7 +629,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
                 JavaUtils.storageSet(context.getStorage(), intKey, 42);
                 retrievedString.set(JavaUtils.storageGet(context.getStorage(), stringKey));
                 retrievedInt.set(JavaUtils.storageGet(context.getStorage(), intKey));
-                return context.requestLLM(input, true).getContent();
+                return assistantText(context.requestLLM(input));
             })
             .build();
 
@@ -642,7 +650,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
                 Integer existing = JavaUtils.storageGet(context.getStorage(), runCountKey);
                 int newCount = existing == null ? 1 : existing + 1;
                 JavaUtils.storageSet(context.getStorage(), runCountKey, newCount);
-                context.requestLLM(input, true);
+                context.requestLLM(input);
                 return String.valueOf(newCount);
             })
             .build();
@@ -708,5 +716,12 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         )
             .isInstanceOf(RuntimeException.class)
             .hasMessageContaining("Intentional error from functional strategy");
+    }
+
+    private static String assistantText(Message.Assistant response) {
+        return response.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Text)
+            .map(p -> ((MessagePart.Text) p).getText())
+            .collect(Collectors.joining("\n"));
     }
 }

@@ -282,7 +282,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param prompt The prompt that was sent to the language model;
      * @param model The language model instance that processed the request;
      * @param tools The list of tool descriptors that were available for the LLM call;
-     * @param responses The response messages received from the language model;
+     * @param response The response messages received from the language model;
      * @param moderationResponse The moderation response, if any, received from the language model.
      */
     @InternalAgentsApi
@@ -294,7 +294,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        responses: List<Message.Response>,
+        response: Message.Assistant?,
         moderationResponse: ModerationResult?,
     )
 

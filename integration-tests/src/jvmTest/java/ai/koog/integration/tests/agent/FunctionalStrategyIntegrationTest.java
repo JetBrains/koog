@@ -14,12 +14,15 @@ import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
 import ai.koog.serialization.kotlinx.KotlinxSerializer;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -36,11 +39,12 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
             );
     }
 
-    private String getAssistantContentOrDefault(Message.Response response, String defaultValue) {
-        if (response instanceof Message.Assistant) {
-            return response.getContent();
-        }
-        return defaultValue;
+    private String getAssistantContentOrDefault(Message.Assistant response, String defaultValue) {
+        String text = response.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Text)
+            .map(p -> ((MessagePart.Text) p).getText())
+            .collect(Collectors.joining("\n"));
+        return text.isEmpty() ? defaultValue : text;
     }
 
     @ParameterizedTest
@@ -53,7 +57,7 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
                 for (int i = 0; i < 3; i++) {
                     String result = getAssistantContentOrDefault(
-                        context.requestLLM(input, true),
+                        context.requestLLM(input),
                         ""
                     );
                     if (!result.isEmpty()) {
@@ -79,12 +83,11 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
         AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                Message.Response response1 = context.requestLLM("First step: " + input, true);
+                Message.Assistant response1 = context.requestLLM("First step: " + input);
                 String step1Result = getAssistantContentOrDefault(response1, "");
 
-                Message.Response response2 = context.requestLLM(
-                    "Second step, previous result was: " + step1Result,
-                    true
+                Message.Assistant response2 = context.requestLLM(
+                    "Second step, previous result was: " + step1Result
                 );
 
                 return getAssistantContentOrDefault(response2, "Unexpected response type");
@@ -109,24 +112,31 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
             .systemPrompt("You are a calculator. You MUST use the add tool to perform calculations. DO NOT answer without calling tools.")
             .toolRegistry(toolRegistry)
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                Message.Response currentResponse = context.requestLLM(
-                    "Calculate: " + input + ". You MUST use the add tool.",
-                    true
+                Message.Assistant currentResponse = context.requestLLM(
+                    "Calculate: " + input + ". You MUST use the add tool."
                 );
 
                 int maxIterations = 5;
-                for (int i = 0; i < maxIterations && currentResponse instanceof Message.Tool.Call; i++) {
-                    Message.Tool.Call toolCall = (Message.Tool.Call) currentResponse;
-                    ReceivedToolResult toolResult = context.executeTool(toolCall);
+                for (int i = 0; i < maxIterations; i++) {
+                    Optional<MessagePart.Tool.Call> maybeToolCall = currentResponse.getParts().stream()
+                        .filter(p -> p instanceof MessagePart.Tool.Call)
+                        .map(p -> (MessagePart.Tool.Call) p)
+                        .findFirst();
+                    if (maybeToolCall.isEmpty()) {
+                        break;
+                    }
+                    ReceivedToolResult toolResult = context.executeTool(maybeToolCall.get());
                     currentResponse = context.sendToolResult(toolResult);
                 }
 
-                if (currentResponse instanceof Message.Assistant) {
-                    return currentResponse.getContent();
-                } else if (currentResponse instanceof Message.Tool.Call) {
-                    return "Max iterations reached, last tool: " + ((Message.Tool.Call) currentResponse).getTool();
+                Optional<MessagePart.Tool.Call> remaining = currentResponse.getParts().stream()
+                    .filter(p -> p instanceof MessagePart.Tool.Call)
+                    .map(p -> (MessagePart.Tool.Call) p)
+                    .findFirst();
+                if (remaining.isPresent()) {
+                    return "Max iterations reached, last tool: " + remaining.get().getTool();
                 }
-                return "Unexpected response type";
+                return getAssistantContentOrDefault(currentResponse, "");
             })
             .build();
 
@@ -191,9 +201,8 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
         AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a helpful assistant that generates JSON.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                Message.Response response = context.requestLLM(
-                    "Generate a JSON object with 'status' field set to 'success'",
-                    true
+                Message.Assistant response = context.requestLLM(
+                    "Generate a JSON object with 'status' field set to 'success'"
                 );
 
                 String content = getAssistantContentOrDefault(response, "Unexpected response type");

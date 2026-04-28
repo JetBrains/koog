@@ -1,8 +1,8 @@
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
@@ -50,7 +50,7 @@ class StreamingConnectionExceptionTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> = delegate.execute(prompt, model, tools)
+        ): Message.Assistant = delegate.execute(prompt, model, tools)
 
         override fun executeStreaming(
             prompt: Prompt,
@@ -338,7 +338,7 @@ class StreamingConnectionExceptionTest {
                 stream.collectText()
             }
 
-            edge(nodeStart forwardTo streamNode)
+            edge(nodeStart forwardTo streamNode asUserMessage { it })
             edge(streamNode forwardTo collectNode)
             edge(collectNode forwardTo nodeFinish)
         }

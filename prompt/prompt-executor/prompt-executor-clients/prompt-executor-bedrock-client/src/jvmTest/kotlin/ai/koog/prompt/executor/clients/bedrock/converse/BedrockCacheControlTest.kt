@@ -96,7 +96,7 @@ class BedrockCacheControlTest {
     @Test
     fun testUserWithCacheControl() {
         val prompt = Prompt.build("test") {
-            user(listOf(ai.koog.prompt.message.ContentPart.Text("Hello")), BedrockCacheControl.Default)
+            user("Hello", BedrockCacheControl.Default)
         }
         val content = converseRequest(prompt).messages!![0].content
         assertEquals(2, content.size)
@@ -113,18 +113,6 @@ class BedrockCacheControlTest {
     }
 
     // --- Assistant ---
-
-    @Test
-    fun testAssistantWithCacheControl() {
-        val prompt = Prompt.build("test") {
-            user("Hi")
-            assistant("Hello!", BedrockCacheControl.Default)
-        }
-        val content = converseRequest(prompt).messages!![1].content
-        assertEquals(2, content.size)
-        assertIs<ContentBlock.Text>(content[0])
-        assertIs<ContentBlock.CachePoint>(content[1])
-    }
 
     @Test
     fun testAssistantWithoutCacheControl() {

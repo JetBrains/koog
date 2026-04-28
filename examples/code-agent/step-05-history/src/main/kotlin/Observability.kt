@@ -5,9 +5,14 @@ import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger("code-agent-events")
+
+private fun List<Message>.textCharCount(): Int =
+    sumOf { msg -> msg.parts.filterIsInstance<MessagePart.Text>().sumOf { it.text.length } }
 
 /**
  * Extracted observability setup used by agents in this module.
@@ -29,13 +34,13 @@ fun GraphAIAgent.FeatureContext.setupObservability(agentName: String) {
         onNodeExecutionStarting { ctx ->
             if (ctx.node.name == "compressHistory") {
                 val messages = ctx.context.llm.prompt.messages
-                logger.info { "[$agentName] Pre-compression: ${messages.size} msgs, ${messages.sumOf { it.content.length }} chars" }
+                logger.info { "[$agentName] Pre-compression: ${messages.size} msgs, ${messages.textCharCount()} chars" }
             }
         }
         onNodeExecutionCompleted { ctx ->
             if (ctx.node.name == "compressHistory") {
                 val messages = ctx.context.llm.prompt.messages
-                logger.info { "[$agentName] Post-compression: ${messages.size} msgs, ${messages.sumOf { it.content.length }} chars" }
+                logger.info { "[$agentName] Post-compression: ${messages.size} msgs, ${messages.textCharCount()} chars" }
             }
         }
     }

@@ -25,7 +25,7 @@ import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterModelsRespons
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
@@ -153,7 +153,7 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         return json.encodeToString(OpenRouterChatCompletionRequestSerializer, request)
     }
 
-    override fun processProviderChatResponse(response: OpenRouterChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: OpenRouterChatCompletionResponse): List<Message.Assistant> {
         // Handle error responses
         response.error?.let { error ->
             throw LLMClientException(
@@ -165,7 +165,7 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
 
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
         return response.choices.map {
-            it.message.toMessageResponses(
+            it.message.toMessageResponse(
                 it.finishReason,
                 createMetaInfo(response.usage),
             )

@@ -62,7 +62,7 @@ class FilePromptCacheTest {
     fun `test basic cache operations`() = runBlocking {
         // Create a simple prompt and response
         val prompt = createTestPrompt("test prompt")
-        val response = listOf(assistantMessage("test response"))
+        val response = assistantMessage("test response")
 
         // Put the response in the cache
         cache.put(prompt, emptyList(), response)
@@ -83,7 +83,7 @@ class FilePromptCacheTest {
 
         // Create several prompts and responses
         val prompts = (1..5).map { createTestPrompt("test prompt $it") }
-        val responses = (1..5).map { listOf(assistantMessage("test response $it")) }
+        val responses = (1..5).map { assistantMessage("test response $it") }
 
         // Put all responses in the cache
         prompts.zip(responses).forEach { (prompt, response) ->
@@ -112,7 +112,7 @@ class FilePromptCacheTest {
 
         // Create several prompts and responses
         val prompts = (1..3).map { createTestPrompt("test prompt $it") }
-        val responses = (1..3).map { listOf(assistantMessage("test response $it")) }
+        val responses = (1..3).map { assistantMessage("test response $it") }
 
         // Put all responses in the cache
         prompts.zip(responses).forEach { (prompt, response) ->
@@ -126,7 +126,7 @@ class FilePromptCacheTest {
 
         // Add a new file which should trigger removal of least recently accessed
         val newPrompt = createTestPrompt("test prompt new")
-        val newResponse = listOf(assistantMessage("test response new"))
+        val newResponse = assistantMessage("test response new")
         smallCache.put(newPrompt, emptyList(), newResponse)
 
         // Check that the number of files is still limited to maxFiles

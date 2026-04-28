@@ -7,6 +7,7 @@ import ai.koog.integration.tests.utils.Models;
 import ai.koog.integration.tests.utils.structuredOutput.WeatherReport;
 import ai.koog.integration.tests.utils.structuredOutput.WeatherReportKt;
 import ai.koog.integration.tests.utils.tools.*;
+import ai.koog.prompt.message.MessagePart;
 import ai.koog.prompt.params.LLMParams;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort;
@@ -31,6 +32,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import kotlin.time.Instant;
 
@@ -39,6 +41,33 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.assertj.core.api.Assertions.fail;
 
 public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
+
+    private static String textContent(Message m) {
+        return m.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Text)
+            .map(p -> ((MessagePart.Text) p).getText())
+            .collect(Collectors.joining("\n"));
+    }
+
+    /**
+     * Joins all {@link MessagePart.Text} and {@link MessagePart.Reasoning} content from a
+     * {@link Message.Assistant} into a single string, mirroring the behaviour of the removed
+     * {@code JavaUtils.mergeAssistantAndReasoningContent}.
+     */
+    private static String mergeAssistantAndReasoningContent(Message.Assistant response) {
+        return response.getParts().stream()
+            .map(p -> {
+                if (p instanceof MessagePart.Text) {
+                    return ((MessagePart.Text) p).getText();
+                }
+                if (p instanceof MessagePart.Reasoning) {
+                    return String.join("\n", ((MessagePart.Reasoning) p).getContent());
+                }
+                return "";
+            })
+            .filter(s -> !s.isEmpty())
+            .collect(Collectors.joining("\n"));
+    }
 
     private static final class ToolSchemaCase {
         private final String id;
@@ -100,11 +129,11 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
         assertThat(prompt.getMessages().get(1)).isInstanceOf(Message.User.class);
         assertThat(prompt.getMessages().get(2)).isInstanceOf(Message.Assistant.class);
         assertThat(prompt.getMessages().get(3)).isInstanceOf(Message.User.class);
-        List<Message.Response> responses = executor.execute(prompt, model);
 
-        Message.Response firstResponse = responses.get(0);
-        assertThat(firstResponse).isInstanceOf(Message.Assistant.class);
-        String content = firstResponse.getContent();
+        Message.Assistant response = executor.execute(prompt, model);
+        assertThat(response).isInstanceOf(Message.Assistant.class);
+
+        String content = textContent(response);
         assertThat(content.toLowerCase()).contains("four");
     }
 
@@ -133,10 +162,11 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .build()
             .withParams(params);
 
-        List<Message.Response> responses = executor.execute(prompt, model);
-        assertThat(responses).isNotEmpty();
-        assertThat(responses.stream().anyMatch(it -> it instanceof Message.Assistant || it instanceof Message.Reasoning))
-            .isTrue();
+        Message.Assistant response = executor.execute(prompt, model);
+        assertThat(response).isNotNull();
+        assertThat(response.getParts().stream().anyMatch(p ->
+            p instanceof MessagePart.Text || p instanceof MessagePart.Reasoning
+        )).isTrue();
     }
 
     @ParameterizedTest
@@ -153,15 +183,15 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .build()
             .withParams(params);
 
-        List<Message.Response> responses = executor.execute(prompt, model);
-        assertThat(responses).isNotEmpty();
+        Message.Assistant response = executor.execute(prompt, model);
+        assertThat(response).isNotNull();
 
-        List<Message.Reasoning> reasoningMessages = responses.stream()
-            .filter(Message.Reasoning.class::isInstance)
-            .map(Message.Reasoning.class::cast)
-            .toList();
+        List<MessagePart.Reasoning> reasoningParts = response.getParts().stream()
+            .filter(MessagePart.Reasoning.class::isInstance)
+            .map(MessagePart.Reasoning.class::cast)
+            .collect(Collectors.toList());
 
-        assertThat(reasoningMessages.stream().anyMatch(r -> r.getEncrypted() != null && !r.getEncrypted().isBlank()))
+        assertThat(reasoningParts.stream().anyMatch(r -> r.getEncrypted() != null && !r.getEncrypted().isBlank()))
             .isTrue();
     }
 
@@ -205,12 +235,12 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .build()
             .withParams(params);
 
-        List<Message.Response> firstResponse = executor.execute(firstPrompt, model);
-        assertThat(firstResponse).isNotEmpty();
-        assertThat(firstResponse.stream().anyMatch(Message.Reasoning.class::isInstance)).isTrue();
+        Message.Assistant firstResponse = executor.execute(firstPrompt, model);
+        assertThat(firstResponse).isNotNull();
+        assertThat(firstResponse.getParts().stream().anyMatch(MessagePart.Reasoning.class::isInstance)).isTrue();
 
         List<Message> secondTurnMessages = new ArrayList<>(firstPrompt.getMessages());
-        secondTurnMessages.addAll(firstResponse);
+        secondTurnMessages.add(firstResponse);
         secondTurnMessages.add(
             new Message.User(
                 "Summarize the result in 2 sentences.",
@@ -219,9 +249,9 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
         );
         Prompt secondPrompt = new Prompt(secondTurnMessages, "java-interop-reasoning-multistep-2", params);
 
-        List<Message.Response> secondResponse = executor.execute(secondPrompt, model);
-        assertThat(secondResponse).isNotEmpty();
-        String answer = JavaUtils.mergeAssistantAndReasoningContent(secondResponse);
+        Message.Assistant secondResponse = executor.execute(secondPrompt, model);
+        assertThat(secondResponse).isNotNull();
+        String answer = mergeAssistantAndReasoningContent(secondResponse);
         assertThat(answer).isNotBlank();
     }
 
@@ -281,9 +311,9 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .withParams(params);
 
         var tools = List.of(SimpleCalculatorTool.INSTANCE.getDescriptor());
-        List<Message.Response> responses = executor.execute(prompt, model, tools);
-        assertThat(responses).isNotEmpty();
-        assertThat(responses.stream().anyMatch(Message.Tool.Call.class::isInstance)).isTrue();
+        Message.Assistant response = executor.execute(prompt, model, tools);
+        assertThat(response).isNotNull();
+        assertThat(response.getParts().stream().anyMatch(MessagePart.Tool.Call.class::isInstance)).isTrue();
     }
 
     @ParameterizedTest
@@ -307,10 +337,10 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .build()
             .withParams(params);
 
-        List<Message.Response> responses = executor.execute(prompt, model, List.of(PickColorTool.INSTANCE.getDescriptor()));
-        assertThat(responses).isNotEmpty();
-        assertThat(responses.stream().anyMatch(r ->
-            r instanceof Message.Tool.Call || r instanceof Message.Assistant
+        Message.Assistant response = executor.execute(prompt, model, List.of(PickColorTool.INSTANCE.getDescriptor()));
+        assertThat(response).isNotNull();
+        assertThat(response.getParts().stream().anyMatch(p ->
+            p instanceof MessagePart.Tool.Call || p instanceof MessagePart.Text
         )).isTrue();
     }
 
@@ -335,9 +365,9 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .build()
             .withParams(params);
 
-        List<Message.Response> responses = executor.execute(prompt, model, List.of(SimpleCalculatorTool.INSTANCE.getDescriptor()));
-        assertThat(responses).isNotEmpty();
-        assertThat(responses.stream().noneMatch(Message.Tool.Call.class::isInstance)).isTrue();
+        Message.Assistant response = executor.execute(prompt, model, List.of(SimpleCalculatorTool.INSTANCE.getDescriptor()));
+        assertThat(response).isNotNull();
+        assertThat(response.getParts().stream().noneMatch(MessagePart.Tool.Call.class::isInstance)).isTrue();
     }
 
     @ParameterizedTest
@@ -361,11 +391,11 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .build()
             .withParams(params);
 
-        List<Message.Response> responses = executor.execute(prompt, model, List.of(SimpleCalculatorTool.INSTANCE.getDescriptor(), CalculatorToolNoArgs.INSTANCE.getDescriptor(), CalculatorTool.INSTANCE.getDescriptor()));
-        assertThat(responses).isNotEmpty();
-        assertThat(responses.stream().anyMatch(r ->
-            r instanceof Message.Tool.Call &&
-                ((Message.Tool.Call) r).getTool().equals(SimpleCalculatorTool.INSTANCE.getDescriptor().getName())
+        Message.Assistant response = executor.execute(prompt, model, List.of(SimpleCalculatorTool.INSTANCE.getDescriptor(), CalculatorToolNoArgs.INSTANCE.getDescriptor(), CalculatorTool.INSTANCE.getDescriptor()));
+        assertThat(response).isNotNull();
+        assertThat(response.getParts().stream().anyMatch(p ->
+            p instanceof MessagePart.Tool.Call &&
+                ((MessagePart.Tool.Call) p).getTool().equals(SimpleCalculatorTool.INSTANCE.getDescriptor().getName())
         )).isTrue();
     }
 
@@ -393,9 +423,9 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
 
         assertThat(prompt.getParams().getNumberOfChoices()).isEqualTo(2);
 
-        List<List<Message.Response>> choices = executor.executeMultipleChoices(prompt, model);
+        List<Message.Assistant> choices = executor.executeMultipleChoices(prompt, model);
         assertThat(choices).hasSize(2);
-        assertThat(choices).allMatch(choice -> !choice.isEmpty());
+        assertThat(choices).allMatch(choice -> !choice.getParts().isEmpty());
     }
 
     @ParameterizedTest
@@ -453,9 +483,9 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .build()
             .withParams(params);
 
-        List<Message.Response> responses = executor.execute(prompt, model);
-        assertThat(responses).isNotEmpty();
-        assertThat(responses.stream().anyMatch(Message.Assistant.class::isInstance)).isTrue();
+        Message.Assistant response = executor.execute(prompt, model);
+        assertThat(response).isInstanceOf(Message.Assistant.class);
+        assertThat(response.getParts()).isNotEmpty();
     }
 
     @ParameterizedTest
@@ -483,10 +513,10 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .build()
             .withParams(params);
 
-        List<Message.Response> responses = executor.execute(prompt, model);
-        assertThat(responses).isNotEmpty();
+        Message.Assistant response = executor.execute(prompt, model);
+        assertThat(response).isNotNull();
 
-        String content = JavaUtils.firstAssistantContent(responses);
+        String content = textContent(response);
         assertThat(content).isNotBlank();
         assertThat(content).doesNotContain("```");
         assertThat(content.trim()).startsWith("{").endsWith("}");
@@ -521,10 +551,10 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .build()
             .withParams(params);
 
-        List<Message.Response> responses = executor.execute(prompt, model);
-        assertThat(responses).isNotEmpty();
+        Message.Assistant response = executor.execute(prompt, model);
+        assertThat(response).isNotNull();
 
-        String content = JavaUtils.firstAssistantContent(responses);
+        String content = textContent(response);
         assertThat(content).isNotBlank();
         assertThat(content).doesNotContain("```");
         assertThat(content.trim()).startsWith("{").endsWith("}");
@@ -595,30 +625,25 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
                 .build()
                 .withParams(params);
 
-            List<Message.Response> responses = executor.execute(prompt, model, List.of(currentCase.descriptor()));
-            assertThat(responses).as(currentCase.id()).isNotEmpty();
+            Message.Assistant response = executor.execute(prompt, model, List.of(currentCase.descriptor()));
+            assertThat(response).as(currentCase.id()).isNotNull();
 
-            Message.Tool.Call toolCall = responses.stream()
-                .filter(Message.Tool.Call.class::isInstance)
-                .map(Message.Tool.Call.class::cast)
+            MessagePart.Tool.Call toolCall = response.getParts().stream()
+                .filter(MessagePart.Tool.Call.class::isInstance)
+                .map(MessagePart.Tool.Call.class::cast)
                 .findFirst()
                 .orElse(null);
 
             if (toolCall != null) {
                 assertThat(toolCall.getTool()).as(currentCase.id() + " tool name").isEqualTo(currentCase.expectedToolName());
-                String argsContent = toolCall.getContent();
+                String argsContent = toolCall.getArgs();
                 for (String expectedSnippet : currentCase.expectedSnippets()) {
                     assertThat(argsContent)
                         .as(currentCase.id() + " args should contain " + expectedSnippet)
                         .contains(expectedSnippet);
                 }
             } else {
-                String assistantContent = responses.stream()
-                    .filter(Message.Assistant.class::isInstance)
-                    .map(Message::getContent)
-                    .filter(content -> content != null && !content.isBlank())
-                    .findFirst()
-                    .orElse("");
+                String assistantContent = textContent(response);
                 assertThat(assistantContent)
                     .as(currentCase.id() + " assistant fallback should be present")
                     .isNotBlank();

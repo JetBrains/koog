@@ -2,12 +2,16 @@ package ai.koog.prompt
 
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
-import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
+import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.message.ToolCallBuilder
 import ai.koog.utils.time.KoogClock
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.assertIs
 import kotlin.time.Instant
 
 /**
@@ -21,20 +25,22 @@ class JavaAPIPromptBuilderTest {
         val testClock: KoogClock = KoogClock { ts }
 
         const val promptId = "test-id"
-        const val systemMessage = "You are a helpful assistant"
-        const val userMessage = "Hello, how are you?"
-        const val assistantMessage = "I'm doing well, thank you!"
+        const val systemMessageText = "You are a helpful assistant"
+        const val userMessageText = "Hello, how are you?"
+        const val assistantMessageText = "I'm doing well, thank you!"
     }
 
     @Test
     fun testSystemStringMethod() {
         val prompt = Prompt.builder(promptId, testClock)
-            .system(systemMessage)
+            .system(systemMessageText)
             .build()
 
         assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.System)
-        assertEquals(systemMessage, prompt.messages[0].content)
+        val systemMessage = assertIs<Message.System>(prompt.messages[0])
+        assertEquals(1, systemMessage.parts.size)
+        val systemTextPart = assertIs<MessagePart.Text>(systemMessage.parts[0])
+        assertEquals(systemMessageText, systemTextPart.text)
     }
 
     @Test
@@ -47,31 +53,35 @@ class JavaAPIPromptBuilderTest {
             .build()
 
         assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.System)
-        assertEquals("First partSecond part", prompt.messages[0].content)
+        val systemMessage = assertIs<Message.System>(prompt.messages[0])
+        assertEquals(1, systemMessage.parts.size)
+        val systemTextPart = assertIs<MessagePart.Text>(systemMessage.parts[0])
+        assertEquals("First partSecond part", systemTextPart.text)
     }
 
     @Test
     fun testUserListMethod() {
-        val parts = listOf(ContentPart.Text("Hello"))
+        val parts = listOf(MessagePart.Text("Hello"))
         val prompt = Prompt.builder(promptId, testClock)
             .user(parts)
             .build()
 
         assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.User)
-        assertEquals("Hello", prompt.messages[0].content)
+        val userMessage = assertIs<Message.User>(prompt.messages[0])
+        val userTextPart = assertIs<MessagePart.Text>(userMessage.parts[0])
+        assertEquals("Hello", userTextPart.text)
     }
 
     @Test
     fun testUserStringMethod() {
         val prompt = Prompt.builder(promptId, testClock)
-            .user(userMessage)
+            .user(userMessageText)
             .build()
 
         assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.User)
-        assertEquals(userMessage, prompt.messages[0].content)
+        val userMessage = assertIs<Message.User>(prompt.messages[0])
+        val userTextPart = assertIs<MessagePart.Text>(userMessage.parts[0])
+        assertEquals(userMessageText, userTextPart.text)
     }
 
     @Test
@@ -84,19 +94,21 @@ class JavaAPIPromptBuilderTest {
             .build()
 
         assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.User)
-        assertEquals("Hello World", prompt.messages[0].content)
+        val userMessage = assertIs<Message.User>(prompt.messages[0])
+        val userTextPart = assertIs<MessagePart.Text>(userMessage.parts[0])
+        assertEquals("Hello World", userTextPart.text)
     }
 
     @Test
     fun testAssistantStringMethod() {
         val prompt = Prompt.builder(promptId, testClock)
-            .assistant(assistantMessage)
+            .assistant(assistantMessageText)
             .build()
 
         assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.Assistant)
-        assertEquals(assistantMessage, prompt.messages[0].content)
+        val assistantMessage = assertIs<Message.Assistant>(prompt.messages[0])
+        val assistantTextPart = assertIs<MessagePart.Text>(assistantMessage.parts[0])
+        assertEquals(assistantMessageText, assistantTextPart.text)
     }
 
     @Test
@@ -109,171 +121,121 @@ class JavaAPIPromptBuilderTest {
             .build()
 
         assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.Assistant)
-        assertEquals("Part 1Part 2", prompt.messages[0].content)
+        val assistantMessage = assertIs<Message.Assistant>(prompt.messages[0])
+        val assistantTextPart = assertIs<MessagePart.Text>(assistantMessage.parts[0])
+        assertEquals("Part 1Part 2", assistantTextPart.text)
     }
 
     @Test
     fun testMessageMethod() {
-        val systemMsg = Message.System(systemMessage, ai.koog.prompt.message.RequestMetaInfo.create(testClock))
+        val systemMsg = Message.System(systemMessageText, RequestMetaInfo.create(testClock))
         val prompt = Prompt.builder(promptId, testClock)
             .message(systemMsg)
             .build()
 
         assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.System)
-        assertEquals(systemMessage, prompt.messages[0].content)
+        val systemMessage = assertIs<Message.System>(prompt.messages[0])
+        val systemTextPart = assertIs<MessagePart.Text>(systemMessage.parts[0])
+        assertEquals(systemMessageText, systemTextPart.text)
     }
 
     @Test
     fun testMessagesMethod() {
         val messages = listOf(
-            Message.System(systemMessage, ai.koog.prompt.message.RequestMetaInfo.create(testClock)),
-            Message.User(userMessage, ai.koog.prompt.message.RequestMetaInfo.create(testClock))
+            Message.System(systemMessageText, RequestMetaInfo.create(testClock)),
+            Message.User(userMessageText, RequestMetaInfo.create(testClock))
         )
         val prompt = Prompt.builder(promptId, testClock)
             .messages(messages)
             .build()
 
         assertEquals(2, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.System)
-        assertTrue(prompt.messages[1] is Message.User)
-        assertEquals(systemMessage, prompt.messages[0].content)
-        assertEquals(userMessage, prompt.messages[1].content)
+
+        val systemMessage = assertIs<Message.System>(prompt.messages[0])
+        assertEquals(1, systemMessage.parts.size)
+        val systemTextPart = assertIs<MessagePart.Text>(systemMessage.parts[0])
+        assertEquals(systemMessageText, systemTextPart.text)
+
+        val userMessage = assertIs<Message.User>(prompt.messages[1])
+        assertEquals(1, userMessage.parts.size)
+        val userMessagePart = assertIs<MessagePart.Text>(userMessage.parts[0])
+        assertEquals(userMessageText, userMessagePart.text)
     }
 
     @Test
     fun testToolCallMethod() {
         val toolCallId = "call-123"
         val toolName = "calculator"
-        val toolContent = """{"op":"add","a":1,"b":2}"""
-
-        val builder = PromptBuilder(promptId, clock = testClock)
-        val toolBuilder = builder.ToolMessageBuilder(testClock)
-        toolBuilder.call(toolCallId, toolName, toolContent)
-
-        val prompt = builder.build()
-
-        assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.Tool.Call)
-        val call = prompt.messages[0] as Message.Tool.Call
-        assertEquals(toolCallId, call.id)
-        assertEquals(toolName, call.tool)
-        assertEquals(toolContent, call.content)
-    }
-
-    @Test
-    fun testToolCallWithMessageMethod() {
-        val toolCallId = "call-123"
-        val toolName = "calculator"
-        val toolContent = """{"op":"add","a":1,"b":2}"""
-        val toolCallMessage = Message.Tool.Call(
-            toolCallId,
-            toolName,
-            toolContent,
-            ai.koog.prompt.message.ResponseMetaInfo.create(testClock)
+        val toolArgs = JsonObject(
+            mapOf("op" to JsonPrimitive("add"), "a" to JsonPrimitive(1), "b" to JsonPrimitive(2))
         )
 
         val builder = PromptBuilder(promptId, clock = testClock)
-        val toolBuilder = builder.ToolMessageBuilder(testClock)
-        toolBuilder.call(toolCallMessage)
+        val toolCall = ToolCallBuilder().id(toolCallId).tool(toolName).args(toolArgs).build()
 
-        val prompt = builder.build()
+        val prompt = builder.assistant { toolCall(toolCall) }.build()
 
         assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.Tool.Call)
-        val call = prompt.messages[0] as Message.Tool.Call
-        assertEquals(toolCallId, call.id)
-        assertEquals(toolName, call.tool)
-        assertEquals(toolContent, call.content)
+        val assistantMessage = assertIs<Message.Assistant>(prompt.messages[0])
+        assertEquals(1, assistantMessage.parts.size)
+        val toolCallPart = assertIs<MessagePart.Tool.Call>(assistantMessage.parts[0])
+        assertEquals(toolCall, toolCallPart)
     }
 
     @Test
     fun testToolResultMethod() {
         val toolCallId = "call-123"
         val toolName = "calculator"
-        val toolContent = """{"op":"add","a":1,"b":2}"""
-        val toolResultContent = "3"
+        val toolArgs = JsonObject(
+            mapOf("op" to JsonPrimitive("add"), "a" to JsonPrimitive(1), "b" to JsonPrimitive(2))
+        )
+        val toolOutput = "3"
 
         val builder = PromptBuilder(promptId, clock = testClock)
-        val toolBuilder = builder.ToolMessageBuilder(testClock)
-        toolBuilder.call(toolCallId, toolName, toolContent)
-        toolBuilder.result(toolCallId, toolName, toolResultContent)
+        builder.assistant { toolCall(id = toolCallId, tool = toolName, args = toolArgs) }
+        builder.user { toolResult(id = toolCallId, tool = toolName, output = toolOutput) }
 
         val prompt = builder.build()
 
         assertEquals(2, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.Tool.Call)
-        assertTrue(prompt.messages[1] is Message.Tool.Result)
-        val result = prompt.messages[1] as Message.Tool.Result
+        val callMsg = assertIs<Message.Assistant>(prompt.messages[0])
+        assertEquals(1, callMsg.parts.size)
+        val callPart = assertIs<MessagePart.Tool.Call>(callMsg.parts[0])
+        assertEquals(toolCallId, callPart.id)
+        assertEquals(toolName, callPart.tool)
+
+        val resultMsg = assertIs<Message.User>(prompt.messages[1])
+        assertEquals(1, resultMsg.parts.size)
+        val result = assertIs<MessagePart.Tool.Result>(resultMsg.parts[0])
         assertEquals(toolCallId, result.id)
         assertEquals(toolName, result.tool)
-        assertEquals(toolResultContent, result.content)
-    }
-
-    @Test
-    fun testToolResultWithMessageMethod() {
-        val toolCallId = "call-123"
-        val toolName = "calculator"
-        val toolContent = """{"op":"add","a":1,"b":2}"""
-        val toolResultContent = "3"
-
-        val toolCallMessage = Message.Tool.Call(
-            toolCallId,
-            toolName,
-            toolContent,
-            ai.koog.prompt.message.ResponseMetaInfo.create(testClock)
-        )
-        val toolResultMessage = Message.Tool.Result(
-            toolCallId,
-            toolName,
-            toolResultContent,
-            ai.koog.prompt.message.RequestMetaInfo.create(testClock)
-        )
-
-        val builder = PromptBuilder(promptId, clock = testClock)
-        val toolBuilder = builder.ToolMessageBuilder(testClock)
-        toolBuilder.call(toolCallMessage)
-        toolBuilder.result(toolResultMessage)
-
-        val prompt = builder.build()
-
-        assertEquals(2, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.Tool.Call)
-        assertTrue(prompt.messages[1] is Message.Tool.Result)
-        val result = prompt.messages[1] as Message.Tool.Result
-        assertEquals(toolCallId, result.id)
-        assertEquals(toolName, result.tool)
-        assertEquals(toolResultContent, result.content)
+        assertEquals(toolOutput, result.output)
     }
 
     @Test
     fun testChainedJavaAPIMethodCalls() {
         // Test that all @JavaAPI methods can be chained together
         val prompt = Prompt.builder(promptId, testClock)
-            .system(systemMessage)
-            .user(userMessage)
-            .assistant(assistantMessage)
-            .user(listOf(ContentPart.Text("Another message")))
-            .message(Message.User("Yet another", ai.koog.prompt.message.RequestMetaInfo.create(testClock)))
+            .system(systemMessageText)
+            .user(userMessageText)
+            .assistant(assistantMessageText)
+            .user(listOf(MessagePart.Text("Another message")))
+            .message(Message.User("Yet another", RequestMetaInfo.create(testClock)))
             .build()
 
         assertEquals(5, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.System)
-        assertTrue(prompt.messages[1] is Message.User)
-        assertTrue(prompt.messages[2] is Message.Assistant)
-        assertTrue(prompt.messages[3] is Message.User)
-        assertTrue(prompt.messages[4] is Message.User)
+        assertIs<Message.System>(prompt.messages[0])
+        assertIs<Message.User>(prompt.messages[1])
+        assertIs<Message.Assistant>(prompt.messages[2])
+        assertIs<Message.User>(prompt.messages[3])
+        assertIs<Message.User>(prompt.messages[4])
     }
 
     @Test
-    fun testToolMessageBuilderClass() {
-        // Test that ToolMessageBuilder class is accessible and properly annotated
+    fun testPromptBuilderUsesProvidedClock() {
         val builder = PromptBuilder(promptId, clock = testClock)
-        val toolBuilder = builder.ToolMessageBuilder(testClock)
-
-        // Verify that the ToolMessageBuilder can be created
-        assertEquals(testClock, toolBuilder.clock)
+        val prompt = builder.system(systemMessageText).build()
+        assertEquals(ts, prompt.messages[0].metaInfo.timestamp)
     }
 
     @Test
@@ -286,55 +248,65 @@ class JavaAPIPromptBuilderTest {
             .assistant("assistant")
             .user("user")
             .assistant("assistant")
-            .toolCall("id-1", "tool-1", "args-1")
-            .toolResult("id-1", "tool-1", "result-1")
-            .toolCall("id-2", "tool-2", "args-2")
-            .toolResult("id-2", "tool-2", "result-2")
+            .assistant {
+                toolCall(id = "id-1", tool = "tool-1", args = JsonObject(mapOf("arg" to JsonPrimitive("value1"))))
+            }
+            .user {
+                toolResult(id = "id-1", tool = "tool-1", output = "123")
+            }
+            .assistant {
+                toolCall(id = "id-2", tool = "tool-2", args = JsonObject(mapOf("arg" to JsonPrimitive("value2"))))
+            }
+            .user {
+                toolResult(id = "id-2", tool = "tool-2", output = "1234")
+            }
             .build()
 
         // Verify the structure: 5 regular messages + 4 tool messages = 9 total
         assertEquals(9, prompt.messages.size)
 
         // Verify message types and order
-        assertTrue(prompt.messages[0] is Message.System)
-        assertEquals("system", prompt.messages[0].content)
+        val msg0 = assertIs<Message.System>(prompt.messages[0])
+        assertEquals("system", assertIs<MessagePart.Text>(msg0.parts[0]).text)
 
-        assertTrue(prompt.messages[1] is Message.User)
-        assertEquals("user", prompt.messages[1].content)
+        val msg1 = assertIs<Message.User>(prompt.messages[1])
+        assertEquals("user", assertIs<MessagePart.Text>(msg1.parts[0]).text)
 
-        assertTrue(prompt.messages[2] is Message.Assistant)
-        assertEquals("assistant", prompt.messages[2].content)
+        val msg2 = assertIs<Message.Assistant>(prompt.messages[2])
+        assertEquals("assistant", assertIs<MessagePart.Text>(msg2.parts[0]).text)
 
-        assertTrue(prompt.messages[3] is Message.User)
-        assertEquals("user", prompt.messages[3].content)
+        val msg3 = assertIs<Message.User>(prompt.messages[3])
+        assertEquals("user", assertIs<MessagePart.Text>(msg3.parts[0]).text)
 
-        assertTrue(prompt.messages[4] is Message.Assistant)
-        assertEquals("assistant", prompt.messages[4].content)
+        val msg4 = assertIs<Message.Assistant>(prompt.messages[4])
+        assertEquals("assistant", assertIs<MessagePart.Text>(msg4.parts[0]).text)
 
         // First tool call and result
-        assertTrue(prompt.messages[5] is Message.Tool.Call)
-        val toolCall1 = prompt.messages[5] as Message.Tool.Call
+        val callMsg1 = assertIs<Message.Assistant>(prompt.messages[5])
+        assertEquals(1, callMsg1.parts.size)
+        val toolCall1 = assertIs<MessagePart.Tool.Call>(callMsg1.parts[0])
         assertEquals("id-1", toolCall1.id)
         assertEquals("tool-1", toolCall1.tool)
-        assertEquals("args-1", toolCall1.content)
 
-        assertTrue(prompt.messages[6] is Message.Tool.Result)
-        val toolResult1 = prompt.messages[6] as Message.Tool.Result
+        val resultMsg1 = assertIs<Message.User>(prompt.messages[6])
+        assertEquals(1, resultMsg1.parts.size)
+        val toolResult1 = assertIs<MessagePart.Tool.Result>(resultMsg1.parts[0])
         assertEquals("id-1", toolResult1.id)
         assertEquals("tool-1", toolResult1.tool)
-        assertEquals("result-1", toolResult1.content)
+        assertEquals("123", toolResult1.output)
 
         // Second tool call and result
-        assertTrue(prompt.messages[7] is Message.Tool.Call)
-        val toolCall2 = prompt.messages[7] as Message.Tool.Call
+        val callMsg2 = assertIs<Message.Assistant>(prompt.messages[7])
+        assertEquals(1, callMsg2.parts.size)
+        val toolCall2 = assertIs<MessagePart.Tool.Call>(callMsg2.parts[0])
         assertEquals("id-2", toolCall2.id)
         assertEquals("tool-2", toolCall2.tool)
-        assertEquals("args-2", toolCall2.content)
 
-        assertTrue(prompt.messages[8] is Message.Tool.Result)
-        val toolResult2 = prompt.messages[8] as Message.Tool.Result
+        val resultMsg2 = assertIs<Message.User>(prompt.messages[8])
+        assertEquals(1, resultMsg2.parts.size)
+        val toolResult2 = assertIs<MessagePart.Tool.Result>(resultMsg2.parts[0])
         assertEquals("id-2", toolResult2.id)
         assertEquals("tool-2", toolResult2.tool)
-        assertEquals("result-2", toolResult2.content)
+        assertEquals("1234", toolResult2.output)
     }
 }

@@ -4,6 +4,7 @@ import ai.koog.agents.features.longtermmemory.aws.AgentcoreMemoryRecord
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.search.SearchResult
@@ -110,8 +111,14 @@ public class AgentcorePromptAugmenter @JvmOverloads constructor(
         return prompt.withMessages { messages ->
             if (systemIndex >= 0) {
                 val existing = messages[systemIndex] as Message.System
-                val mergedContent = existing.content + sectionSeparator + contextText
-                val merged = Message.System(mergedContent, existing.metaInfo, existing.cacheControl)
+                val merged = Message.System(
+                    parts = buildList {
+                        addAll(existing.parts)
+                        add(MessagePart.Text(sectionSeparator))
+                        add(MessagePart.Text(contextText))
+                    },
+                    existing.metaInfo
+                )
                 messages.toMutableList().also { it[systemIndex] = merged }
             } else {
                 listOf<Message>(Message.System(contextText, RequestMetaInfo.Empty)) + messages
@@ -135,9 +142,12 @@ public class AgentcorePromptAugmenter @JvmOverloads constructor(
         return prompt.withMessages { messages ->
             val original = messages[userIndex] as Message.User
             val rewritten = Message.User(
-                content = "$contextText\nUser question: ${original.content}",
+                parts = buildList {
+                    add(MessagePart.Text(contextText))
+                    add(MessagePart.Text("\nUser question:"))
+                    addAll(original.parts)
+                },
                 metaInfo = original.metaInfo,
-                cacheControl = original.cacheControl,
             )
             messages.toMutableList().also { it[userIndex] = rewritten }
         }

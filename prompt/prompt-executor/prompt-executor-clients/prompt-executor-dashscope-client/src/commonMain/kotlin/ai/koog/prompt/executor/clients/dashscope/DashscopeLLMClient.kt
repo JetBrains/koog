@@ -120,10 +120,10 @@ public class DashscopeLLMClient @JvmOverloads constructor(
         return json.encodeToString(DashscopeChatCompletionRequestSerializer, request)
     }
 
-    override fun processProviderChatResponse(response: DashscopeChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: DashscopeChatCompletionResponse): LLMChoice {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
         return response.choices.map {
-            it.message.toMessageResponses(
+            it.message.toMessageResponse(
                 it.finishReason,
                 createMetaInfo(response.usage),
             )

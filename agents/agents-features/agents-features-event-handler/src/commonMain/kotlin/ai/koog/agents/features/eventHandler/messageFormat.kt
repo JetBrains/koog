@@ -3,6 +3,7 @@ package ai.koog.agents.features.eventHandler
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 
 /**
  * Constructs a string representation of the `Prompt` object, detailing its unique identifier,
@@ -12,33 +13,34 @@ import ai.koog.prompt.message.Message
  * the `Prompt` object's state.
  */
 internal val Prompt.traceString: String
-    get() {
-        val builder = StringBuilder()
-            .append("id: ").append(id)
-            .append(", messages: [")
-            .append(
-                messages.joinToString(", ", prefix = "{", postfix = "}") { message ->
-                    "role: ${message.role}, message: ${message.content}"
-                }
-            )
-            .append("]")
-            .append(", ")
-            .append("temperature: ").append(params.temperature)
+    get() = StringBuilder()
+        .append("id: ").append(id)
+        .append(", messages: [")
+        .append(
+            messages.joinToString { message ->
+                "{${message.traceString}}"
+            }
+        )
+        .append("]")
+        .append(", ")
+        .append("temperature: ").append(params.temperature)
+        .toString()
 
-        return builder.toString()
-    }
+internal val Message.traceString: String
+    get() = StringBuilder()
+        .append("role: ").append(role)
+        .append(", parts: [")
+        .append(parts.joinToString { part -> "{${part.traceString}}" })
+        .append("]")
+        .toString()
 
-/**
- * Provides a formatted string representation of a `Response` message that includes its role and content.
- *
- * The string is structured as: `role: <role>, message: <content>`.
- *
- * This property is useful for logging or debugging purposes where a concise yet descriptive
- * summary of the message content and its associated role is required.
- */
-internal val Message.Response.traceString: String
-    get() {
-        return "role: $role, message: $content"
+internal val MessagePart.traceString: String
+    get() = when (this) {
+        is MessagePart.Text -> "type: ${this::class.simpleName}, text: $text"
+        is MessagePart.Attachment -> "type: ${this::class.simpleName}, source: ${this.source::class.simpleName}"
+        is MessagePart.Reasoning -> "type: ${this::class.simpleName}, content: $content"
+        is MessagePart.Tool.Call -> "type: ${this::class.simpleName}, tool: $tool, args: $args"
+        is MessagePart.Tool.Result -> "type: ${this::class.simpleName}, tool: $tool, output: $output"
     }
 
 /**

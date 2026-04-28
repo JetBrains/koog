@@ -9,13 +9,14 @@ import ai.koog.prompt.executor.clients.bedrock.modelfamilies.amazon.NovaInferenc
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.time.KoogClock
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
-import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
@@ -151,14 +152,13 @@ class BedrockAmazonNovaSerializationTest {
             }
         """.trimIndent()
 
-        val messages = BedrockAmazonNovaSerialization.parseNovaResponse(responseJson, mockClock)
+        val message = BedrockAmazonNovaSerialization.parseNovaResponse(responseJson, mockClock)
 
-        assertNotNull(messages)
-        assertEquals(1, messages.size)
+        assertNotNull(message)
+        assertEquals(1, message.parts.size)
 
-        val message = messages.first()
-        assertTrue(message is Message.Assistant)
-        assertContains(message.content, responseContent)
+        val textPart = assertIs<MessagePart.Text>(message.parts.first())
+        assertEquals(responseContent, textPart.text)
 
         // Check token counts - Note: Nova only provides outputTokens in the metaInfo
         assertEquals(25, message.metaInfo.inputTokensCount)
@@ -185,14 +185,13 @@ class BedrockAmazonNovaSerializationTest {
             }
         """.trimIndent()
 
-        val messages = BedrockAmazonNovaSerialization.parseNovaResponse(responseJson, mockClock)
+        val message = BedrockAmazonNovaSerialization.parseNovaResponse(responseJson, mockClock)
 
-        assertNotNull(messages)
-        assertEquals(1, messages.size)
+        assertNotNull(message)
+        assertEquals(1, message.parts.size)
 
-        val message = messages.first()
-        assertTrue(message is Message.Assistant)
-        assertEquals(responseContent, message.content)
+        val textPart = assertIs<MessagePart.Text>(message.parts.first())
+        assertEquals(responseContent, textPart.text)
 
         assertEquals(null, message.metaInfo.inputTokensCount)
         assertEquals(null, message.metaInfo.outputTokensCount)
@@ -271,7 +270,11 @@ class BedrockAmazonNovaSerializationTest {
                         clock = mockClock,
                         totalTokensCount = null,
                         inputTokensCount = null,
-                        outputTokensCount = 20
+                        outputTokensCount = 20,
+                        metadata = buildJsonObject {
+                            put("cacheReadInputTokenCount", JsonPrimitive(null))
+                            put("cacheWriteInputTokenCount", JsonPrimitive(null))
+                        }
                     )
                 )
             ),
@@ -350,23 +353,26 @@ class BedrockAmazonNovaSerializationTest {
             }
         """.trimIndent()
 
-        val messages = BedrockAmazonNovaSerialization.parseNovaResponse(responseJson, mockClock)
+        val message = BedrockAmazonNovaSerialization.parseNovaResponse(responseJson, mockClock)
 
-        assertNotNull(messages)
-        assertEquals(1, messages.size)
+        assertNotNull(message)
+        assertEquals(1, message.parts.size)
 
-        val message = messages.first()
-        assertIs<Message.Tool.Call>(message)
+        val toolCall = assertIs<MessagePart.Tool.Call>(message.parts.first())
 
-        val toolCall = message
         assertEquals("tool_123", toolCall.id)
         assertEquals("get_weather", toolCall.tool)
-        assertTrue(toolCall.content.contains("Paris"))
-        assertTrue(toolCall.content.contains("celsius"))
+        assertEquals(
+            buildJsonObject {
+                put("city", JsonPrimitive("Paris"))
+                put("units", JsonPrimitive("celsius"))
+            },
+            toolCall.argsJson
+        )
 
         // Check token counts
-        assertEquals(20, toolCall.metaInfo.outputTokensCount)
-        assertEquals(25, toolCall.metaInfo.inputTokensCount)
-        assertEquals(45, toolCall.metaInfo.totalTokensCount)
+        assertEquals(20, message.metaInfo.outputTokensCount)
+        assertEquals(25, message.metaInfo.inputTokensCount)
+        assertEquals(45, message.metaInfo.totalTokensCount)
     }
 }

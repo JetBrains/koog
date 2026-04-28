@@ -70,7 +70,6 @@ object Tools {
         }
     }
 
-    val tools = listOf(PlusTool, StringTool)
     val toolRegistry = ToolRegistry {
         tool(PlusTool)
         tool(StringTool)

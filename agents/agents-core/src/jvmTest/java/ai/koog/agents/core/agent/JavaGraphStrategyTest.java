@@ -2,29 +2,21 @@ package ai.koog.agents.core.agent;
 
 import ai.koog.agents.core.agent.entity.AIAgentEdge;
 import ai.koog.agents.core.agent.entity.AIAgentNode;
-import ai.koog.agents.core.agent.entity.AIAgentNodeBase;
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
-import ai.koog.agents.core.agent.ToolCalls;
-import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate;
-import ai.koog.agents.core.dsl.builder.SimpleTransformation;
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
 import ai.koog.agents.core.tools.ToolRegistry;
-import ai.koog.agents.core.tools.reflect.ToolSet;
-import ai.koog.agents.ext.agent.CriticResult;
 import ai.koog.agents.testing.tools.MockPromptExecutor;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-import ai.koog.prompt.message.Message;
 import ai.koog.serialization.jackson.JacksonSerializer;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class GraphStrategyJavaTest {
+public class JavaGraphStrategyTest {
     private static final JacksonSerializer serializer = new JacksonSerializer();
 
     @Test
@@ -59,23 +51,25 @@ public class GraphStrategyJavaTest {
         AIAgent<String, String> agent = (AIAgent<String, String>) AIAgent.builder()
             .promptExecutor(MockPromptExecutor.builder(serializer).mockLLMAnswer("llm-response").asDefaultResponse().build())
             .llmModel(OpenAIModels.Chat.GPT4o)
-            .<String, String>graphStrategy("llm", b -> {
+            .graphStrategy("llm", b -> {
                 var graph = b
                     .withInput(String.class)
                     .withOutput(String.class);
 
-                var llmNode = AIAgentNode.llmRequest(false, "llm");
+                var llmNode = AIAgentNode.llmRequest("llm");
 
-                graph.edge(graph.nodeStart, llmNode);
+                graph.edge(AIAgentEdge.builder()
+                    .from(graph.nodeStart)
+                    .to(llmNode)
+                    .asUserMessage(input -> {
+                        return input;
+                    })
+                    .build()
+                );
                 graph.edge(AIAgentEdge.builder()
                     .from(llmNode)
                     .to(graph.nodeFinish)
-                    .transformed(response -> {
-                        if (response instanceof Message.Assistant) {
-                            return ((Message.Assistant) response).getContent();
-                        }
-                        return "error";
-                    })
+                    .onTextParts()
                     .build()
                 );
 

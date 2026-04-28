@@ -13,6 +13,7 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.filterTextOnly
@@ -25,6 +26,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.time.Instant
 
 class MultipleLLMPromptExecutorMockTest {
@@ -41,8 +43,8 @@ class MultipleLLMPromptExecutorMockTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            return listOf(Message.Assistant("OpenAI response", ResponseMetaInfo.create(mockClock)))
+        ): Message.Assistant {
+            return Message.Assistant("OpenAI response", ResponseMetaInfo.create(mockClock))
         }
 
         override fun executeStreaming(
@@ -59,8 +61,8 @@ class MultipleLLMPromptExecutorMockTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(mockClock)))
+        ): Message.Assistant {
+            return Message.Assistant("Anthropic response", ResponseMetaInfo.create(mockClock))
         }
 
         override fun executeStreaming(
@@ -77,8 +79,8 @@ class MultipleLLMPromptExecutorMockTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(mockClock)))
+        ): Message.Assistant {
+            return Message.Assistant("Gemini response", ResponseMetaInfo.create(mockClock))
         }
 
         override fun executeStreaming(
@@ -107,11 +109,12 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = OpenAIModels.Chat.GPT4o).single()
+        val response = executor.execute(prompt = prompt, model = OpenAIModels.Chat.GPT4o)
+        val textContent = assertIs<MessagePart.Text>(response.parts.first())
 
         assertEquals(
             "OpenAI response",
-            response.content,
+            textContent.text,
             "Response should be from OpenAI client"
         )
     }
@@ -123,11 +126,12 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = AnthropicModels.Opus_4_6).single()
+        val response = executor.execute(prompt = prompt, model = AnthropicModels.Opus_4_6)
+        val textContent = assertIs<MessagePart.Text>(response.parts.first())
 
         assertEquals(
             "Anthropic response",
-            response.content,
+            textContent.text,
             "Response should be from Anthropic client"
         )
     }
@@ -139,11 +143,12 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = GoogleModels.Gemini2_0Flash).single()
+        val response = executor.execute(prompt = prompt, model = GoogleModels.Gemini2_0Flash)
+        val textContent = assertIs<MessagePart.Text>(response.parts.first())
 
         assertEquals(
             "Gemini response",
-            response.content,
+            textContent.text,
             "Response should be from Google client"
         )
     }

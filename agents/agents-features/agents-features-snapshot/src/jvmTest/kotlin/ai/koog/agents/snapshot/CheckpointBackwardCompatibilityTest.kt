@@ -4,6 +4,7 @@ import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONElement
@@ -144,8 +145,8 @@ class CheckpointBackwardCompatibilityTest {
 
         assertEquals("cp-with-messages", checkpoint.checkpointId)
         assertEquals(2, checkpoint.messageHistory.size)
-        assertEquals("Hello", checkpoint.messageHistory[0].content)
-        assertEquals("Hi!", checkpoint.messageHistory[1].content)
+        assertEquals("Hello", checkpoint.messageHistory[0].parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text })
+        assertEquals("Hi!", checkpoint.messageHistory[1].parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text })
         assertEquals(nodePath, checkpoint.nodePath)
         assertEquals(JSONNull, checkpoint.lastInput)
         assertEquals(lastOutput, checkpoint.lastOutput)

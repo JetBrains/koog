@@ -268,10 +268,10 @@ class PlannerPersistenceTests {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
-            ): List<Message.Response> = when (++llmCallCount) {
-                1 -> listOf(Message.Assistant(planJson, ResponseMetaInfo.Empty)) // buildPlan's requestLLMStructured
+            ): Message.Assistant = when (++llmCallCount) {
+                1 -> Message.Assistant(planJson, ResponseMetaInfo.Empty) // buildPlan's requestLLMStructured
                 2 -> throw RuntimeException("fail step when executed the first time")
-                else -> listOf(Message.Assistant("step done", ResponseMetaInfo.Empty)) // executeStep on resume
+                else -> Message.Assistant("step done", ResponseMetaInfo.Empty) // executeStep on resume
             }
 
             override fun executeStreaming(

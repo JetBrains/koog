@@ -126,7 +126,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      * @return A list of `Message.Response` objects containing the responses generated based on the prompt.
      * @throws IllegalArgumentException If no client is found for the model's provider and no fallback is configured.
      */
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
         val (effectiveClient, effectiveModel) = chooseClientAndModel(model)
@@ -170,7 +170,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> {
+    ): LLMChoice {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
         val (client, effectiveModel) = chooseClientAndModel(model)

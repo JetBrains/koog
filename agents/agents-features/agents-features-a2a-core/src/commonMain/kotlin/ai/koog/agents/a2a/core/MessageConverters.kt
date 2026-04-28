@@ -8,8 +8,9 @@ import ai.koog.a2a.model.Part
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.TextPart
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.serialization.json.JsonObject
@@ -86,7 +87,7 @@ public fun Message.toA2AMessage(
         else -> throw IllegalArgumentException("A2A can't handle this Koog message type: $this")
     }
 
-    val parts = parts.map { it.toA2APart() }
+    val parts = parts.filterIsInstance<MessagePart.ContentPart>().map { it.toA2APart() }
 
     return A2AMessage(
         messageId = actualMetadata?.messageId ?: Uuid.random().toString(),
@@ -103,29 +104,29 @@ public fun Message.toA2AMessage(
 /**
  * Converts Koog [ContentPart] to A2A [Part].
  */
-public fun ContentPart.toA2APart(): Part = when (this) {
-    is ContentPart.Text -> TextPart(this.text)
+public fun MessagePart.ContentPart.toA2APart(): Part = when (this) {
+    is MessagePart.Text -> TextPart(this.text)
 
-    is ContentPart.Attachment -> {
-        val file = when (val content = this.content) {
+    is MessagePart.Attachment -> {
+        val file = when (val content = this.source.content) {
             // Plain text files are not supported, convert them to binary files.
             is AttachmentContent.PlainText -> FileWithBytes(
                 bytes = AttachmentContent.Binary.Bytes(content.text.encodeToByteArray())
                     .asBase64(),
-                name = this.fileName,
-                mimeType = this.mimeType,
+                name = this.source.fileName,
+                mimeType = this.source.mimeType,
             )
 
             is AttachmentContent.Binary -> FileWithBytes(
                 bytes = content.asBase64(),
-                name = this.fileName,
-                mimeType = this.mimeType,
+                name = this.source.fileName,
+                mimeType = this.source.mimeType,
             )
 
             is AttachmentContent.URL -> FileWithUri(
                 uri = content.url,
-                name = this.fileName,
-                mimeType = this.mimeType,
+                name = this.source.fileName,
+                mimeType = this.source.mimeType,
             )
         }
 
@@ -136,25 +137,27 @@ public fun ContentPart.toA2APart(): Part = when (this) {
 /**
  * Converts A2A [Part] to Koog [ContentPart].
  */
-public fun Part.toKoogPart(): ContentPart = when (this) {
-    is TextPart -> ContentPart.Text(this.text)
+public fun Part.toKoogPart(): MessagePart.ContentPart = when (this) {
+    is TextPart -> MessagePart.Text(this.text)
     // Koog doesn't support structured data as a separate type, treat it as a content part.
 
-    is DataPart -> ContentPart.Text(A2AFeatureJson.encodeToString(this.data))
+    is DataPart -> MessagePart.Text(A2AFeatureJson.encodeToString(this.data))
 
     is FilePart -> {
         val file = this.file // to enable smart cast
 
-        val part = ContentPart.File(
-            // do not have that information separately in A2A
-            format = "",
-            // if no mime type is provided, assume it's arbitrary binary data
-            mimeType = file.mimeType ?: "application/octet-stream",
-            fileName = file.name,
-            content = when (file) {
-                is FileWithBytes -> AttachmentContent.Binary.Base64(file.bytes)
-                is FileWithUri -> AttachmentContent.URL(file.uri)
-            }
+        val part = MessagePart.Attachment(
+            AttachmentSource.File(
+                // do not have that information separately in A2A
+                format = "",
+                // if no mime type is provided, assume it's arbitrary binary data
+                mimeType = file.mimeType ?: "application/octet-stream",
+                fileName = file.name,
+                content = when (file) {
+                    is FileWithBytes -> AttachmentContent.Binary.Base64(file.bytes)
+                    is FileWithUri -> AttachmentContent.URL(file.uri)
+                }
+            )
         )
 
         part

@@ -9,6 +9,7 @@ import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.SpanType
 import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -106,66 +107,76 @@ internal class LangfuseSpanAdapter(
 
     private fun applyPromptAttributes(span: GenAIAgentSpan, index: Int, message: Message) {
         when (message) {
-            is Message.System,
-            is Message.User,
-            is Message.Assistant,
-            is Message.Reasoning -> {
+            is Message.System -> {
                 span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
-                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(message.content)))
+                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(message.parts.joinToString("\n") { it.text })))
             }
 
-            is Message.Tool.Call -> {
+            is Message.User -> {
+                val toolResults = message.parts.filterIsInstance<MessagePart.Tool.Result>()
+                val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+
+                if (toolResults.isNotEmpty()) {
+                    val toolResult = toolResults.first()
+                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", "tool"))
+                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(toolResult.output)))
+                } else {
+                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
+                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(textParts.joinToString("\n") { it.text })))
+                }
+            }
+
+            is Message.Assistant -> {
+                val toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
+                val reasoningParts = message.parts.filterIsInstance<MessagePart.Reasoning>()
+                val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+
                 span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
                 span.addAttribute(
                     CustomAttribute(
                         "gen_ai.prompt.$index.content",
-                        HiddenString(encodeToolCallsContent(listOf(message))),
+                        when {
+                            toolCalls.isNotEmpty() -> HiddenString(encodeToolCallsContent(toolCalls))
+                            reasoningParts.isNotEmpty() -> HiddenString(reasoningParts.joinToString("\n") { it.content.joinToString("\n") })
+                            else -> HiddenString(textParts.joinToString("\n") { it.text })
+                        }
                     )
                 )
-            }
-
-            is Message.Tool.Result -> {
-                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
-                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(message.content)))
             }
         }
     }
 
     private fun applyCompletionAttributes(span: GenAIAgentSpan, index: Int, message: Message) {
-        // Langfuse expects `assistant` for completion entries (even when the underlying message is a Tool.Call).
+        // Langfuse expects `assistant` for completion entries.
         span.addAttribute(
             CustomAttribute("gen_ai.completion.$index.role", Message.Role.Assistant.name.lowercase())
         )
 
         when (message) {
             is Message.Assistant -> {
-                span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(message.content)))
-                message.finishReason?.let { reason ->
-                    span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", reason))
+                val toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
+                val reasoningParts = message.parts.filterIsInstance<MessagePart.Reasoning>()
+                val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+
+                when {
+                    toolCalls.isNotEmpty() -> {
+                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(encodeToolCallsContent(toolCalls))))
+                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", GenAIAttributes.Response.FinishReasonType.ToolCalls.id))
+                    }
+                    reasoningParts.isNotEmpty() -> {
+                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(reasoningParts.joinToString("\n") { it.content.joinToString("\n") })))
+                    }
+                    else -> {
+                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(textParts.joinToString("\n") { it.text })))
+                        message.finishReason?.let { reason ->
+                            span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", reason))
+                        }
+                    }
                 }
             }
 
-            is Message.Reasoning -> {
-                span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(message.content)))
-            }
-
-            is Message.Tool.Call -> {
-                span.addAttribute(
-                    CustomAttribute(
-                        "gen_ai.completion.$index.content",
-                        HiddenString(encodeToolCallsContent(listOf(message))),
-                    )
-                )
-                span.addAttribute(
-                    CustomAttribute(
-                        "gen_ai.completion.$index.finish_reason",
-                        GenAIAttributes.Response.FinishReasonType.ToolCalls.id
-                    )
-                )
-            }
-
             else -> {
-                // Output messages should only be assistant/reasoning/tool-call responses.
+                // Output messages should only be assistant responses.
             }
         }
     }
@@ -184,7 +195,7 @@ internal class LangfuseSpanAdapter(
  *
  * Marked `internal` so the [LangfuseSpanAdapter] tests can compute the identical expected value.
  */
-internal fun encodeToolCallsContent(toolCalls: List<Message.Tool.Call>): String {
+internal fun encodeToolCallsContent(toolCalls: List<MessagePart.Tool.Call>): String {
     val array = JsonArray(
         toolCalls.map { tool ->
             JsonObject(
@@ -192,7 +203,7 @@ internal fun encodeToolCallsContent(toolCalls: List<Message.Tool.Call>): String 
                     "function" to JsonObject(
                         mapOf(
                             "name" to JsonPrimitive(tool.tool),
-                            "arguments" to JsonPrimitive(tool.content),
+                            "arguments" to JsonPrimitive(tool.args),
                         )
                     ),
                     "id" to JsonPrimitive(tool.id ?: ""),

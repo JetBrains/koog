@@ -6,6 +6,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONSerializer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.jvm.JvmOverloads
@@ -35,16 +36,19 @@ public class ManualToolCallFixProcessor @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        responses: List<Message.Response>,
+        response: Message.Assistant,
         serializer: JSONSerializer,
-    ): List<Message.Response> = responses.map { response ->
-        logger.info { "Updating message: $response" }
-        (
-            response
-                as? Message.Tool.Call
-                ?: extractToolCall(response.content, response.metaInfo)
-                ?: response
-            )
-            .also { logger.info { "Updated message: $it" } }
+    ): Message.Assistant {
+        return Message.Assistant(
+            parts = response.parts.map { part ->
+                when (part) {
+                    is MessagePart.Tool.Call -> extractToolCall(part.args) ?: part
+                    is MessagePart.Text -> extractToolCall(part.text) ?: part
+                    else -> part
+                }
+            },
+            finishReason = response.finishReason,
+            metaInfo = response.metaInfo
+        )
     }
 }

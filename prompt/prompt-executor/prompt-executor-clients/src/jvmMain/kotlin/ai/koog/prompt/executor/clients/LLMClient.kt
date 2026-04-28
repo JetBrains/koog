@@ -40,7 +40,7 @@ public actual abstract class LLMClient actual constructor() : LLMClientAPI, LLME
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
-    ): List<Message.Response> = runBlockingReentrant {
+    ): Message.Assistant = runBlockingReentrant {
         execute(prompt, model, tools)
     }
 
@@ -60,7 +60,7 @@ public actual abstract class LLMClient actual constructor() : LLMClientAPI, LLME
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
-    ): List<LLMChoice> = runBlockingReentrant {
+    ): LLMChoice = runBlockingReentrant {
         executeMultipleChoices(prompt, model, tools)
     }
 

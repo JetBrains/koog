@@ -9,6 +9,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
@@ -151,7 +152,10 @@ public class FactRetrievalHistoryCompressionStrategy(
     ) {
         // Snapshot original messages BEFORE any extraction (preserves trailing tool calls)
         val originalMessages = llmSession.prompt.messages
-        val toolResultCount = originalMessages.count { it is Message.Tool.Result }
+        val toolResultCount = originalMessages.sumOf { message ->
+            if (message !is Message.User) return@sumOf 0
+            message.parts.count { it is MessagePart.Tool.Result }
+        }
 
         val extractedFacts = concepts
             .mapNotNull { concept ->
@@ -273,7 +277,7 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
 
     // Combine all history into one message with XML tags, excluding unresolved trailing
     // tool calls (they have no result and are not discovered information).
-    val messagesForExtraction = initialPrompt.messages.dropLastWhile { it is Message.Tool.Call }
+    val messagesForExtraction = initialPrompt.messages.dropLastWhile { it is Message.Assistant && it.parts.any { it is MessagePart.Tool.Call } }
     this.prompt = buildPromptAsXml(messagesForExtraction, systemInstruction, initialPrompt.id, historyWrapperTag)
     if (llmModel != null) {
         this.model = llmModel

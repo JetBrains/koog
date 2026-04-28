@@ -1,5 +1,7 @@
 package ai.koog.prompt.message
 
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -14,44 +16,46 @@ class MessageBuilderTest {
     @Test
     fun testUserMessageWithContent() {
         val message = MessageBuilder.user()
-            .content("Hello!")
+            .addText("Hello!")
             .build()
 
-        assertEquals("Hello!", message.content)
+        assertEquals("Hello!", (message.parts[0] as MessagePart.Text).text)
         assertEquals(Message.Role.User, message.role)
     }
 
     @Test
     fun testUserMessageWithJavaInstant() {
         val message = MessageBuilder.user()
-            .content("Hello!")
-            .timestamp(javaInstant)
+            .addText("Hello!")
+            .metaInfo(RequestMetaInfo.fromJavaInstant(javaInstant))
             .build()
 
-        assertEquals("Hello!", message.content)
+        assertEquals("Hello!", (message.parts[0] as MessagePart.Text).text)
         assertEquals(javaInstant.epochSecond, message.metaInfo.timestamp.epochSeconds)
     }
 
     @Test
     fun testUserMessageWithMultipleParts() {
         val message = MessageBuilder.user()
-            .addPart(ContentPart.Text("Part 1"))
-            .addPart(ContentPart.Text("Part 2"))
+            .addText("Part 1")
+            .addText("Part 2")
             .build()
 
         assertEquals(2, message.parts.size)
-        assertEquals("Part 1\nPart 2", message.content)
+        assertEquals("Part 1", (message.parts[0] as MessagePart.Text).text)
+        assertEquals("Part 2", (message.parts[1] as MessagePart.Text).text)
     }
 
     @Test
-    fun testUserMessageContentReplacesParts() {
+    fun testUserMessageAddTextAccumulates() {
         val message = MessageBuilder.user()
-            .addPart(ContentPart.Text("Old"))
-            .content("New")
+            .addText("First")
+            .addText("Second")
             .build()
 
-        assertEquals(1, message.parts.size)
-        assertEquals("New", message.content)
+        assertEquals(2, message.parts.size)
+        assertEquals("First", (message.parts[0] as MessagePart.Text).text)
+        assertEquals("Second", (message.parts[1] as MessagePart.Text).text)
     }
 
     @Test
@@ -64,11 +68,11 @@ class MessageBuilderTest {
     @Test
     fun testAssistantMessageWithContent() {
         val message = MessageBuilder.assistant()
-            .content("Hi there!")
+            .addText("Hi there!")
             .finishReason("stop")
             .build()
 
-        assertEquals("Hi there!", message.content)
+        assertEquals("Hi there!", (message.parts[0] as MessagePart.Text).text)
         assertEquals(Message.Role.Assistant, message.role)
         assertEquals("stop", message.finishReason)
     }
@@ -76,11 +80,15 @@ class MessageBuilderTest {
     @Test
     fun testAssistantMessageWithJavaInstant() {
         val message = MessageBuilder.assistant()
-            .content("Response")
-            .timestamp(javaInstant)
-            .totalTokensCount(100)
-            .inputTokensCount(40)
-            .outputTokensCount(60)
+            .addText("Response")
+            .metaInfo(
+                ResponseMetaInfo.builder()
+                    .timestamp(javaInstant)
+                    .totalTokensCount(100)
+                    .inputTokensCount(40)
+                    .outputTokensCount(60)
+                    .build()
+            )
             .build()
 
         assertEquals(javaInstant.epochSecond, message.metaInfo.timestamp.epochSeconds)
@@ -99,18 +107,18 @@ class MessageBuilderTest {
     @Test
     fun testSystemMessage() {
         val message = MessageBuilder.system()
-            .content("You are a helpful assistant.")
+            .addText("You are a helpful assistant.")
             .build()
 
-        assertEquals("You are a helpful assistant.", message.content)
+        assertEquals("You are a helpful assistant.", (message.parts[0] as MessagePart.Text).text)
         assertEquals(Message.Role.System, message.role)
     }
 
     @Test
     fun testSystemMessageWithJavaInstant() {
         val message = MessageBuilder.system()
-            .content("System prompt")
-            .timestamp(javaInstant)
+            .addText("System prompt")
+            .metaInfo(RequestMetaInfo.fromJavaInstant(javaInstant))
             .build()
 
         assertEquals(javaInstant.epochSecond, message.metaInfo.timestamp.epochSeconds)
@@ -124,130 +132,112 @@ class MessageBuilderTest {
     }
 
     @Test
-    fun testToolCallMessage() {
-        val message = MessageBuilder.toolCall()
+    fun testToolCallPart() {
+        val toolCall = ToolCallBuilder()
             .id("call_123")
             .tool("search")
-            .content("{\"query\": \"hello\"}")
+            .args(JsonObject(mapOf("query" to JsonPrimitive("hello"))))
             .build()
 
-        assertEquals("call_123", message.id)
-        assertEquals("search", message.tool)
-        assertEquals("{\"query\": \"hello\"}", message.content)
-        assertEquals(Message.Role.Tool, message.role)
+        assertEquals("call_123", toolCall.id)
+        assertEquals("search", toolCall.tool)
+        assertEquals(JsonObject(mapOf("query" to JsonPrimitive("hello"))), toolCall.argsJson)
     }
 
     @Test
-    fun testToolCallMessageWithJavaInstant() {
-        val message = MessageBuilder.toolCall()
-            .id("call_456")
-            .tool("calculate")
-            .content("{\"expression\": \"2+2\"}")
-            .timestamp(javaInstant)
-            .build()
-
-        assertEquals(javaInstant.epochSecond, message.metaInfo.timestamp.epochSeconds)
-    }
-
-    @Test
-    fun testToolCallMessageMissingToolFails() {
+    fun testToolCallMissingToolFails() {
         assertFailsWith<IllegalStateException> {
-            MessageBuilder.toolCall()
-                .content("content")
+            ToolCallBuilder()
+                .args(JsonObject(mapOf()))
                 .build()
         }
     }
 
     @Test
-    fun testToolCallMessageEmptyContentFails() {
+    fun testToolCallMissingArgsFails() {
         assertFailsWith<IllegalStateException> {
-            MessageBuilder.toolCall()
+            ToolCallBuilder()
                 .tool("search")
                 .build()
         }
     }
 
     @Test
-    fun testToolResultMessage() {
-        val message = MessageBuilder.toolResult()
+    fun testToolResultPart() {
+        val toolResult = ToolResultBuilder()
             .id("call_123")
             .tool("search")
-            .content("Found 5 results")
+            .output("Found 5 results")
             .build()
 
-        assertEquals("call_123", message.id)
-        assertEquals("search", message.tool)
-        assertEquals("Found 5 results", message.content)
-        assertEquals(Message.Role.Tool, message.role)
+        assertEquals("call_123", toolResult.id)
+        assertEquals("search", toolResult.tool)
+        assertEquals("Found 5 results", toolResult.output)
     }
 
     @Test
-    fun testToolResultMessageWithJavaInstant() {
-        val message = MessageBuilder.toolResult()
+    fun testToolResultWithError() {
+        val toolResult = ToolResultBuilder()
             .id("call_789")
             .tool("fetch")
-            .content("Data retrieved")
-            .timestamp(javaInstant)
+            .output("Error occurred")
+            .isError(true)
             .build()
 
-        assertEquals(javaInstant.epochSecond, message.metaInfo.timestamp.epochSeconds)
+        assertEquals(true, toolResult.isError)
     }
 
     @Test
-    fun testToolResultMessageMissingToolFails() {
+    fun testToolResultMissingToolFails() {
         assertFailsWith<IllegalStateException> {
-            MessageBuilder.toolResult()
-                .content("result")
+            ToolResultBuilder()
+                .output("result")
                 .build()
         }
     }
 
     @Test
-    fun testReasoningMessage() {
-        val message = MessageBuilder.reasoning()
-            .content("Let me think about this...")
-            .summary("Thinking about the problem")
+    fun testReasoningPart() {
+        val reasoning = ReasoningBuilder()
+            .content(listOf("Let me think about this..."))
+            .summary(listOf("Thinking about the problem"))
             .build()
 
-        assertEquals("Let me think about this...", message.content)
-        assertEquals(Message.Role.Reasoning, message.role)
-        assertNotNull(message.summary)
-        assertEquals("Thinking about the problem", message.summary?.first()?.text)
+        assertEquals("Let me think about this...", reasoning.content[0])
+        assertNotNull(reasoning.summary)
+        assertEquals("Thinking about the problem", reasoning.summary.first())
     }
 
     @Test
-    fun testReasoningMessageWithAllFields() {
-        val message = MessageBuilder.reasoning()
+    fun testReasoningPartWithAllFields() {
+        val reasoning = ReasoningBuilder()
             .id("reasoning_1")
             .encrypted("encrypted_content")
-            .content("Reasoning content")
-            .summary("Summary")
-            .timestamp(javaInstant)
-            .totalTokensCount(50)
+            .content(listOf("Reasoning content"))
+            .summary(listOf("Summary"))
             .build()
 
-        assertEquals("reasoning_1", message.id)
-        assertEquals("encrypted_content", message.encrypted)
-        assertEquals("Reasoning content", message.content)
-        assertEquals(javaInstant.epochSecond, message.metaInfo.timestamp.epochSeconds)
-        assertEquals(50, message.metaInfo.totalTokensCount)
+        assertEquals("reasoning_1", reasoning.id)
+        assertEquals("encrypted_content", reasoning.encrypted)
+        assertEquals("Reasoning content", reasoning.content[0])
+        assertEquals("Summary", reasoning.summary?.first())
     }
 
     @Test
-    fun testReasoningMessageEmptyFails() {
+    fun testReasoningEmptyFails() {
         assertFailsWith<IllegalStateException> {
-            MessageBuilder.reasoning().build()
+            ReasoningBuilder().build()
         }
     }
 
     @Test
     fun testToolCallWithNullId() {
-        val message = MessageBuilder.toolCall()
+        val toolCall = ToolCallBuilder()
             .tool("search")
-            .content("query")
+            .args(JsonObject(mapOf()))
             .build()
 
-        assertNull(message.id)
+        assertNull(toolCall.id)
     }
 
     @Test

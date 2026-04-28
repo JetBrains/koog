@@ -1,8 +1,5 @@
 package ai.koog.prompt.text
 
-// TODO: should the library provide such a function?
-// fun spaces(count: Int): String = " ".repeat(count)
-
 /**
  * Extension function for [TextContentBuilder] that adds line numbering to the content.
  *

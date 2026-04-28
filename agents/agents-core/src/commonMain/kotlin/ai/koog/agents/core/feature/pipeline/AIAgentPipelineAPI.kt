@@ -155,7 +155,7 @@ public interface AIAgentPipelineAPI {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        responses: List<Message.Response>,
+        response: Message.Assistant?,
         moderationResponse: ModerationResult? = null,
     )
 

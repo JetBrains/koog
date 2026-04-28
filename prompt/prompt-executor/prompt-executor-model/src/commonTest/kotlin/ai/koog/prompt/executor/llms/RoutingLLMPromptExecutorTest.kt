@@ -7,6 +7,7 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
@@ -14,6 +15,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class RoutingLLMPromptExecutorTest {
@@ -37,9 +39,11 @@ class RoutingLLMPromptExecutorTest {
 
         // When
         val response = executor.execute(prompt, OpenAIModels.Chat.GPT4o)
+        val textPart = assertIs<MessagePart.Text>(response.parts.single())
+        val expectedTextPart = assertIs<MessagePart.Text>(client.executeResponse.parts.single())
 
         // Then
-        assertEquals(client.executeResponse.single().content, response.single().content)
+        assertEquals(expectedTextPart, textPart)
     }
 
     @Test
@@ -59,7 +63,11 @@ class RoutingLLMPromptExecutorTest {
         val response = executor.execute(prompt, AnthropicModels.Sonnet_4)
 
         // Then
-        assertEquals(openAIClient.executeResponse.single().content, response.single().content)
+        val textPart = assertIs<MessagePart.Text>(response.parts.single())
+        val expectedTextPart = assertIs<MessagePart.Text>(openAIClient.executeResponse.parts.single())
+
+        // Then
+        assertEquals(expectedTextPart, textPart)
     }
 
     @Test

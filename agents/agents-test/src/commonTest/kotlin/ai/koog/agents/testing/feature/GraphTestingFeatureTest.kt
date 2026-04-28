@@ -2,21 +2,19 @@ package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.nodeExecuteSingleTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithUserText
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -30,15 +28,14 @@ class GraphTestingFeatureTest {
 
     @Test
     fun testMultiSubgraphAgentStructure() = runTest {
-        val strategy = strategy("test") {
-            val firstSubgraph by subgraph(
-                "first",
+        val strategy = strategy<String, String>("test") {
+            val firstSubgraph by subgraph<Unit, String>(
+                name = "first",
                 tools = listOf(DummyTool, CreateTool, SolveTool)
             ) {
-                val callLLM by nodeLLMRequest(allowToolCalls = false)
-                val executeTool by nodeExecuteTool()
-                val sendToolResult by nodeLLMSendToolResult()
-                val giveFeedback by node<String, String> { input ->
+                val callLLM by nodeLLMRequestWithUserText(name = "callLLM")
+                val executeTool by nodeExecuteSingleTool(name = "executeTool")
+                val giveFeedback by node<Any?, Any?>("giveFeedback") { input ->
                     llm.writeSession {
                         appendPrompt {
                             user("Call tools! Don't chat!")
@@ -47,20 +44,30 @@ class GraphTestingFeatureTest {
                     input
                 }
 
-                edge(nodeStart forwardTo callLLM)
-                edge(callLLM forwardTo executeTool onToolCall { true })
-                edge(callLLM forwardTo giveFeedback onAssistantMessage { true })
-                edge(giveFeedback forwardTo giveFeedback onAssistantMessage { true })
-                edge(giveFeedback forwardTo executeTool onToolCall { true })
-                edge(executeTool forwardTo nodeFinish transformed { it.content })
+                edge(nodeStart forwardTo callLLM transformed { "Hello" })
+                edge(
+                    callLLM forwardTo executeTool
+                        onToolCalls { true }
+                        transformed { it.toolCalls.first() }
+                )
+                edge(
+                    callLLM forwardTo giveFeedback
+                        onCondition { msg -> msg.parts.none { it is MessagePart.Tool.Call } }
+                )
+                edge(
+                    giveFeedback forwardTo executeTool
+                        onCondition { it is Message.Assistant && it.parts.any { p -> p is MessagePart.Tool.Call } }
+                        transformed { (it as Message.Assistant).parts.filterIsInstance<MessagePart.Tool.Call>().first() }
+                )
+                edge(executeTool forwardTo nodeFinish transformed { it.output })
             }
 
-            val secondSubgraph by subgraph<String, String>("second") {
-                edge(nodeStart forwardTo nodeFinish)
+            val secondSubgraph by subgraph<Unit, String>(name = "second") {
+                edge(nodeStart forwardTo nodeFinish transformed { "" })
             }
 
-            edge(nodeStart forwardTo firstSubgraph)
-            edge(firstSubgraph forwardTo secondSubgraph)
+            edge(nodeStart forwardTo firstSubgraph transformed { })
+            edge(firstSubgraph forwardTo secondSubgraph transformed { })
             edge(secondSubgraph forwardTo nodeFinish)
         }
 
@@ -97,8 +104,8 @@ class GraphTestingFeatureTest {
                     val start = startNode()
                     val finish = finishNode()
 
-                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
+                    val askLLM = assertNodeByName<String, Message.Assistant>("callLLM")
+                    val callTool = assertNodeByName<MessagePart.Tool.Call, ReceivedToolResult>("executeTool")
                     val giveFeedback = assertNodeByName<Any?, Any?>("giveFeedback")
 
                     assertReachable(start, askLLM)
@@ -106,16 +113,16 @@ class GraphTestingFeatureTest {
 
                     assertNodes {
                         askLLM withInput "Hello" outputs assistantMessage("Hello!")
-                        askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
+                        askLLM withInput "Solve task" outputs assistantMessage(CreateTool, CreateTool.Args("solve"))
 
                         val createToolArgs = SolveTool.Args("solve")
-                        callTool withInput toolCallMessage(
+                        callTool withInput toolCallMessagePart(
                             SolveTool,
                             createToolArgs,
                         ) outputs toolResult(SolveTool, createToolArgs, result = "solved")
 
                         val solveToolArgs = CreateTool.Args("solve")
-                        callTool withInput toolCallMessage(
+                        callTool withInput toolCallMessagePart(
                             CreateTool,
                             solveToolArgs,
                         ) outputs toolResult(CreateTool, solveToolArgs, result = "created")
@@ -123,7 +130,7 @@ class GraphTestingFeatureTest {
 
                     assertEdges {
                         askLLM withOutput assistantMessage("Hello!") goesTo giveFeedback
-                        askLLM withOutput toolCallMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
+                        askLLM withOutput assistantMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
                     }
                 }
             }
@@ -144,8 +151,8 @@ class GraphTestingFeatureTest {
                     val start = startNode()
                     val finish = finishNode()
 
-                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-                    val callTool = assertNodeByName<Message.Tool.Call, Message.Tool.Result>("executeTool")
+                    val askLLM = assertNodeByName<String, Message.Assistant>("callLLM")
+                    val callTool = assertNodeByName<MessagePart.Tool.Call, MessagePart.Tool.Result>("executeTool")
                     val giveFeedback = assertNodeByName<Any?, Any?>("giveFeedback")
 
                     assertReachable(start, askLLM)

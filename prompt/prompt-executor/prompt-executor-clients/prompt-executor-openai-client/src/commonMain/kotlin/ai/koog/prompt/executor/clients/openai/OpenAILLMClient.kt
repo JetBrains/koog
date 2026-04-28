@@ -46,9 +46,9 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
-import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
@@ -64,6 +64,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.jvm.JvmOverloads
 import kotlin.uuid.ExperimentalUuidApi
@@ -263,10 +264,10 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         private val staticLogger = KotlinLogging.logger { }
     }
 
-    override fun processProviderChatResponse(response: OpenAIChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: OpenAIChatCompletionResponse): List<Message.Assistant> {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
         return response.choices.map {
-            it.message.toMessageResponses(
+            it.message.toMessageResponse(
                 it.finishReason,
                 createMetaInfo(response.usage),
             )
@@ -306,7 +307,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         emitEnd(finishReason, metaInfo)
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         return selectExecutionStrategy(prompt, model) { params ->
             when (params) {
                 is OpenAIResponsesParams -> {
@@ -350,7 +351,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             )
         }
 
-        val messages = convertPromptToInput(prompt, model)
+        val messages = convertPromptToResponsesMessages(prompt, model)
         val request = serializeResponsesAPIRequest(
             messages = messages,
             model = model,
@@ -407,7 +408,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                     } else {
                                         StreamFrame.ReasoningComplete(
                                             id = item.id,
-                                            text = item.content?.map { content -> content.text } ?: emptyList(),
+                                            content = item.content?.map { content -> content.text } ?: emptyList(),
                                             summary = item.summary.map { content -> content.text },
                                             encrypted = item.encryptedContent,
                                             index = it.outputIndex
@@ -461,7 +462,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> = selectExecutionStrategy(prompt, model) { params ->
+    ): List<Message.Assistant> = selectExecutionStrategy(prompt, model) { params ->
         when (params) {
             is OpenAIChatParams -> super.executeMultipleChoices(prompt, model, tools)
 
@@ -552,11 +553,11 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
         val input = prompt.messages
             .map { message ->
-                require(message.parts.all { it is ContentPart.Text || it is ContentPart.Image }) {
+                require(message.parts.all { it is MessagePart.Text || (it is MessagePart.Attachment && it.source is AttachmentSource.Image) }) {
                     "Only image attachments are supported for moderation"
                 }
 
-                message.toMessageContent(model)
+                message.parts.filterIsInstance<MessagePart.Text>().toMessageContent(model)
             }
             .let { contents ->
                 /*
@@ -738,7 +739,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             )
         }
 
-        val messages = convertPromptToInput(prompt, model)
+        val messages = convertPromptToResponsesMessages(prompt, model)
 
         val request = serializeResponsesAPIRequest(
             messages,
@@ -758,145 +759,163 @@ public open class OpenAILLMClient @JvmOverloads constructor(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    private fun convertPromptToInput(prompt: Prompt, model: LLModel): List<Item> {
-        val messages = mutableListOf<Item>()
-        val pendingCalls = mutableListOf<Item.FunctionToolCall>()
-
-        fun flushPendingCalls() {
-            if (model.supports(LLMCapability.Tools)) {
-                if (pendingCalls.isNotEmpty()) {
-                    messages += pendingCalls
-                    pendingCalls.clear()
-                }
-            }
-        }
-
-        with(messages) {
+    private fun convertPromptToResponsesMessages(prompt: Prompt, model: LLModel): List<Item> {
+        return buildList {
             prompt.messages.forEach { message ->
                 when (message) {
                     is Message.System -> {
-                        flushPendingCalls()
                         add(
                             Item.InputMessage(
                                 role = "developer",
-                                content = listOf(InputContent.Text(message.content))
+                                content = message.parts.map { InputContent.Text(it.text) }
                             )
                         )
                     }
 
                     is Message.User -> {
-                        flushPendingCalls()
-                        add(
-                            Item.InputMessage(role = "user", content = message.toInputMessage(model))
-                        )
+                        // First add tool results
+                        message.parts.filterIsInstance<MessagePart.Tool.Result>().forEach { part ->
+                            if (model.supports(LLMCapability.Tools)) {
+                                add(
+                                    Item.FunctionToolCallOutput(
+                                        callId = part.id ?: Uuid.random().toString(),
+                                        output = part.output
+                                    )
+                                )
+                            } else {
+                                logger.debug { "Model does not support tools, ignoring tool result message" }
+                            }
+                        }
+
+                        // Only after add user texts if not empty
+                        message.parts.filterIsInstance<MessagePart.ContentPart>().let {
+                            if (it.isNotEmpty()) {
+                                add(
+                                    Item.InputMessage(
+                                        role = "user",
+                                        content = it.toResponsesMessageContent(model)
+                                    )
+                                )
+                            }
+                        }
                     }
 
                     is Message.Assistant -> {
-                        flushPendingCalls()
-                        add(
-                            Item.OutputMessage(
-                                content = listOf(
-                                    OutputContent.Text(text = message.content, annotations = emptyList())
-                                ),
-                            )
-                        )
-                    }
+                        message.parts.forEach { part ->
+                            when (part) {
+                                is MessagePart.ContentPart -> {
+                                    when (part) {
+                                        is MessagePart.Text -> {
+                                            add(
+                                                Item.OutputMessage(
+                                                    content = listOf(
+                                                        OutputContent.Text(text = part.text, annotations = emptyList())
+                                                    ),
+                                                )
+                                            )
+                                        }
 
-                    is Message.Reasoning -> {
-                        flushPendingCalls()
-                        if (model.supports(LLMCapability.Thinking)) {
-                            add(
-                                Item.Reasoning(
-                                    id = message.id ?: Uuid.random().toString(),
-                                    content = message.parts.map { Item.Reasoning.Content(text = it.text) }.ifEmpty { null },
-                                    encryptedContent = message.encrypted,
-                                    summary = message.summary?.map { Item.Reasoning.Summary(text = it.text) } ?: emptyList(),
-                                )
-                            )
-                        } else {
-                            logger.debug { "Model does not support reasoning, ignoring reasoning message" }
-                        }
-                    }
+                                        is MessagePart.Attachment -> {
+                                            // TODO: implement
+                                        }
+                                    }
+                                }
 
-                    is Message.Tool.Result -> {
-                        flushPendingCalls()
-                        if (model.supports(LLMCapability.Tools)) {
-                            add(
-                                Item.FunctionToolCallOutput(
-                                    callId = message.id ?: Uuid.random().toString(),
-                                    output = message.content
-                                )
-                            )
-                        } else {
-                            logger.debug { "Model does not support tools, ignoring tool result message" }
-                        }
-                    }
+                                is MessagePart.Tool.Call -> {
+                                    if (model.supports(LLMCapability.Tools)) {
+                                        add(
+                                            Item.FunctionToolCall(
+                                                callId = part.id ?: Uuid.random().toString(),
+                                                name = part.tool,
+                                                arguments = Json.encodeToString(part.args)
+                                            )
+                                        )
+                                    } else {
+                                        logger.debug { "Model does not support tools, ignoring tool call message" }
+                                    }
+                                }
 
-                    is Message.Tool.Call -> {
-                        if (model.supports(LLMCapability.Tools)) {
-                            pendingCalls += Item.FunctionToolCall(
-                                callId = message.id ?: Uuid.random().toString(),
-                                name = message.tool,
-                                arguments = message.content
-                            )
-                        } else {
-                            logger.debug { "Model does not support tools, ignoring tool call message" }
+                                is MessagePart.Reasoning -> {
+                                    if (model.supports(LLMCapability.Thinking)) {
+                                        add(
+                                            Item.Reasoning(
+                                                id = part.id ?: Uuid.random().toString(),
+                                                content = part.content.map { Item.Reasoning.Content(text = it) }
+                                                    .ifEmpty { null },
+                                                encryptedContent = part.encrypted,
+                                                summary = part.summary?.map { Item.Reasoning.Summary(text = it) }
+                                                    ?: emptyList(),
+                                            )
+                                        )
+                                    } else {
+                                        logger.debug { "Model does not support reasoning, ignoring reasoning message" }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-        flushPendingCalls()
-
-        return messages
     }
 
-    private fun Message.toInputMessage(model: LLModel): List<InputContent> {
+    private fun List<MessagePart.ContentPart>.toResponsesMessageContent(model: LLModel): List<InputContent> {
+        val contentParts = this
         return buildList {
-            parts.forEach { part ->
+            contentParts.forEach { part ->
                 when (part) {
-                    is ContentPart.Text -> {
+                    is MessagePart.Text -> {
                         add(InputContent.Text(part.text))
                     }
 
-                    is ContentPart.Image -> {
-                        model.requireCapability(LLMCapability.Vision.Image)
+                    is MessagePart.Attachment -> {
+                        when (val source = part.source) {
+                            is AttachmentSource.Image -> {
+                                model.requireCapability(LLMCapability.Vision.Image)
 
-                        val imageUrl: String = when (val content = part.content) {
-                            is AttachmentContent.URL -> content.url
-                            is AttachmentContent.Binary -> "data:${part.mimeType};base64,${content.asBase64()}"
-                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                                val imageUrl: String = when (val content = source.content) {
+                                    is AttachmentContent.URL -> content.url
+                                    is AttachmentContent.Binary -> "data:${source.mimeType};base64,${content.asBase64()}"
+                                    else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                                }
+
+                                add(InputContent.Image(imageUrl = imageUrl))
+                            }
+
+                            is AttachmentSource.File -> {
+                                model.requireCapability(LLMCapability.Document)
+
+                                val fileData = when (val content = source.content) {
+                                    is AttachmentContent.Binary -> "data:${source.mimeType};base64,${content.asBase64()}"
+                                    else -> null
+                                }
+
+                                val fileUrl = when (val content = source.content) {
+                                    is AttachmentContent.URL -> content.url
+                                    else -> null
+                                }
+
+                                add(
+                                    InputContent.File(
+                                        fileData = fileData,
+                                        fileUrl = fileUrl,
+                                        filename = source.fileName
+                                    )
+                                )
+                            }
+
+                            else -> throw LLMClientException(
+                                clientName,
+                                "Unsupported attachment type: $part, for model: $model with Responses API"
+                            )
                         }
-
-                        add(InputContent.Image(imageUrl = imageUrl))
                     }
-
-                    is ContentPart.File -> {
-                        model.requireCapability(LLMCapability.Document)
-
-                        val fileData = when (val content = part.content) {
-                            is AttachmentContent.Binary -> "data:${part.mimeType};base64,${content.asBase64()}"
-                            else -> null
-                        }
-
-                        val fileUrl = when (val content = part.content) {
-                            is AttachmentContent.URL -> content.url
-                            else -> null
-                        }
-
-                        add(InputContent.File(fileData = fileData, fileUrl = fileUrl, filename = part.fileName))
-                    }
-
-                    else -> throw LLMClientException(
-                        clientName,
-                        "Unsupported attachment type: $part, for model: $model with Responses API"
-                    )
                 }
             }
         }
     }
 
-    private fun processResponsesAPIResponse(response: OpenAIResponsesAPIResponse): List<Message.Response> {
+    private fun processResponsesAPIResponse(response: OpenAIResponsesAPIResponse): Message.Assistant {
         require(response.output.isNotEmpty()) { "Empty output in response" }
 
         val metaInfo = ResponseMetaInfo.create(
@@ -906,31 +925,46 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             outputTokensCount = response.usage?.outputTokens
         )
 
-        return response.output
-            .map { output ->
-                when (output) {
-                    is Item.FunctionToolCall -> Message.Tool.Call(
-                        id = output.callId,
-                        tool = output.name,
-                        content = output.arguments,
-                        metaInfo = metaInfo
-                    )
+        var finishReason: String? = null
 
-                    is Item.OutputMessage -> {
-                        val text = output.text().ifBlank { response.outputText.orEmpty() }
-                        Message.Assistant(
-                            content = text,
-                            finishReason = output.status?.name,
-                            metaInfo = metaInfo
+        val parts = buildList {
+            response.output.forEach { output ->
+                when (output) {
+                    is Item.Reasoning -> {
+                        add(
+                            MessagePart.Reasoning(
+                                id = output.id,
+                                encrypted = output.encryptedContent,
+                                content = output.content?.map { it.text } ?: emptyList(),
+                                summary = output.summary.map { it.text },
+                            )
                         )
                     }
 
-                    is Item.Reasoning -> Message.Reasoning(
-                        id = output.id,
-                        encrypted = output.encryptedContent,
-                        content = output.summary.joinToString(separator = "\n") { it.text },
-                        metaInfo = metaInfo
-                    )
+                    is Item.OutputMessage -> {
+                        finishReason = output.status?.name
+                        output.content.forEach { content ->
+                            when (content) {
+                                is OutputContent.Text -> {
+                                    add(MessagePart.Text(content.text))
+                                }
+
+                                is OutputContent.Refusal -> {
+                                    add(MessagePart.Text(content.refusal))
+                                }
+                            }
+                        }
+                    }
+
+                    is Item.FunctionToolCall -> {
+                        add(
+                            MessagePart.Tool.Call(
+                                id = output.callId,
+                                tool = output.name,
+                                args = output.arguments,
+                            )
+                        )
+                    }
 
                     else -> throw LLMClientException(
                         clientName,
@@ -938,6 +972,13 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                     )
                 }
             }
+        }
+
+        return Message.Assistant(
+            parts = parts,
+            finishReason = finishReason,
+            metaInfo = metaInfo
+        )
     }
 
     private fun LLMParams.ToolChoice.toOpenAIResponseToolChoice() = when (this) {

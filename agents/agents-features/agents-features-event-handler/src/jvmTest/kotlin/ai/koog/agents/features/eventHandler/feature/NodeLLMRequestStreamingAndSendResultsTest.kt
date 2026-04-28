@@ -4,25 +4,24 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
+import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
-import ai.koog.agents.testing.tools.mockLLMStream
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.streaming.streamFrameFlowOf
+import ai.koog.prompt.streaming.collectText
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import kotlinx.coroutines.runBlocking
+import ai.koog.utils.io.use
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Tests for nodeLLMRequestStreamingAndSendResults function.
+ * Tests for nodeLLMRequestStreaming function.
  * Verifies that the node correctly streams responses, collects them, and updates the prompt.
  */
 class NodeLLMRequestStreamingAndSendResultsTest {
@@ -56,83 +55,70 @@ class NodeLLMRequestStreamingAndSendResultsTest {
     }
 
     @Test
-    fun `test nodeLLMRequestStreamingAndSendResults collects text responses`() = runBlocking {
+    fun `test nodeLLMRequestStreaming collects text responses`() = runTest {
         val eventsCollector = TestEventsCollector()
         val assistantResponse = "This is a streamed response that will be collected"
 
         val strategy = strategy<String, String>("streaming-collect-strategy") {
-            val streamAndCollectNode by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
+            val streamAndCollectNode by nodeLLMRequestStreaming("stream-and-collect")
 
-            edge(nodeStart forwardTo streamAndCollectNode)
-            edge(
-                streamAndCollectNode forwardTo nodeFinish transformed { messages ->
-                    // Convert List<Message.Response> to String for the test
-                    messages.firstOrNull()?.content ?: ""
-                }
-            )
+            edge(nodeStart forwardTo streamAndCollectNode asUserMessage { it })
+            edge(streamAndCollectNode forwardTo nodeFinish transformed { it.collectText() })
         }
 
         val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             // Match on the test user message from createAgent
-            mockLLMStream(streamFrameFlowOf(assistantResponse)) onRequestContains "Test user message"
+            mockLLMAnswer(assistantResponse).asDefaultResponse
         }
 
-        val agent = createStreamingTestAgent(
+        createStreamingTestAgent(
             strategy = strategy,
             promptExecutor = mockExecutor,
             installFeatures = {
                 install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
             }
-        )
-
-        val result = agent.run("input", null)
-        agent.close()
-
-        // Verify the result contains the assistant response
-        assertEquals(assistantResponse, result, "Should contain the expected response")
+        ).use { agent ->
+            val result = agent.run("input", null)
+            // Verify the result contains the assistant response
+            assertEquals(assistantResponse, result, "Should contain the expected response")
+        }
 
         // Verify streaming events were captured
         val streamingEvents = eventsCollector.collectedEvents.filter {
-            it.contains("OnLLMStreamingStarting") || it.contains("OnLLMStreamingFrameReceived") || it.contains("OnLLMStreamingCompleted")
+            it.contains("OnLLMStreamingStarting") ||
+                it.contains("OnLLMStreamingFrameReceived") ||
+                it.contains("OnLLMStreamingCompleted")
         }
         assertTrue(streamingEvents.isNotEmpty(), "Should have captured streaming events")
     }
 
     @Test
-    fun `test nodeLLMRequestStreamingAndSendResults returns collected messages`() = runBlocking {
+    fun `test nodeLLMRequestStreaming returns collected messages`() = runTest {
         val eventsCollector = TestEventsCollector()
         val assistantResponse = "Response from streaming LLM"
 
         val strategy = strategy<String, String>("streaming-response-strategy") {
-            val streamNode by nodeLLMRequestStreamingAndSendResults<String>("stream-collect")
+            val streamNode by nodeLLMRequestStreaming("stream-collect")
 
-            edge(nodeStart forwardTo streamNode)
-            edge(
-                streamNode forwardTo nodeFinish transformed { messages ->
-                    // Verify we got messages back
-                    assertTrue(messages.isNotEmpty(), "Should have collected messages")
-                    messages.firstOrNull()?.content ?: ""
-                }
-            )
+            edge(nodeStart forwardTo streamNode asUserMessage { it })
+            edge(streamNode forwardTo nodeFinish transformed { it.collectText() })
         }
 
-        val mockExecutor = getMockExecutor(clock = testClock) {
-            mockLLMStream(streamFrameFlowOf(assistantResponse)) onRequestContains "Test user message"
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
+            mockLLMAnswer(assistantResponse).asDefaultResponse
         }
 
-        val agent = createStreamingTestAgent(
+        createStreamingTestAgent(
             strategy = strategy,
             promptExecutor = mockExecutor,
             installFeatures = {
                 install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
             }
-        )
-
-        val result = agent.run("input", null)
-        agent.close()
-
-        // Verify the response was collected correctly
-        assertEquals(assistantResponse, result, "Should return the streamed response")
+        ).use { agent ->
+            val result = agent.run("input", null)
+            // Verify the response was collected correctly
+            assertEquals(assistantResponse, result, "Should return the streamed response")
+        }
 
         // Verify streaming events occurred
         val streamingEvents = eventsCollector.collectedEvents.filter {
@@ -142,74 +128,70 @@ class NodeLLMRequestStreamingAndSendResultsTest {
     }
 
     @Test
-    fun `test nodeLLMRequestStreamingAndSendResults with empty response`() = runBlocking {
+    fun `test nodeLLMRequestStreaming with empty response`() = runTest {
         val eventsCollector = TestEventsCollector()
 
         val strategy = strategy<String, String>("empty-streaming-strategy") {
-            val streamNode by nodeLLMRequestStreamingAndSendResults<String>("stream-empty")
+            val streamNode by nodeLLMRequestStreaming("stream-empty")
 
-            edge(nodeStart forwardTo streamNode)
-            edge(
-                streamNode forwardTo nodeFinish transformed { messages ->
-                    messages.firstOrNull()?.content ?: ""
-                }
-            )
+            edge(nodeStart forwardTo streamNode asUserMessage { it })
+            edge(streamNode forwardTo nodeFinish transformed { it.collectText() })
         }
 
         val mockExecutor = getMockExecutor(serializer, clock = testClock) {
-            // Return empty response for test user message
-            mockLLMAnswer("") onRequestContains "Test user message"
+            // Return empty content by default; executeStreaming falls back to converting this to a stream.
+            mockLLMAnswer("").asDefaultResponse
         }
 
-        val agent = createStreamingTestAgent(strategy, promptExecutor = mockExecutor) {
-            install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
+        createStreamingTestAgent(
+            strategy = strategy,
+            promptExecutor = mockExecutor,
+            installFeatures = {
+                install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
+            }
+        ).use { agent ->
+            val result = agent.run("input", null)
+            // Should return empty content
+            assertEquals("", result, "Content should be empty")
         }
-
-        val result = agent.run("input", null)
-        agent.close()
-
-        // Should return empty content
-        assertEquals("", result, "Content should be empty")
     }
 
     // Define a data class for typed input
     data class TestData(val value: Int, val description: String)
 
     @Test
-    fun `test nodeLLMRequestStreamingAndSendResults preserves input type`() = runBlocking {
+    fun `test nodeLLMRequestStreaming preserves input transformation`() = runTest {
         val eventsCollector = TestEventsCollector()
         val inputData = TestData(value = 42, description = "Test input")
         val assistantResponse = "Response for structured input"
 
-        // Strategy that takes TestData as input to the streaming node
+        // Strategy that transforms String input into a TestData value, then formats it
+        // into a Message.User for the streaming node.
         val strategy = strategy<String, String>("typed-input-strategy") {
-            val streamNode by nodeLLMRequestStreamingAndSendResults<TestData>("stream-typed")
+            val streamNode by nodeLLMRequestStreaming("stream-typed")
 
             edge(
-                nodeStart forwardTo streamNode transformed { userInput ->
-                    // Transform String input to TestData
-                    inputData
-                }
+                nodeStart forwardTo streamNode
+                    transformed { inputData }
+                    asUserMessage { it.description }
             )
-            edge(
-                streamNode forwardTo nodeFinish transformed { messages ->
-                    messages.firstOrNull()?.content ?: ""
-                }
-            )
+            edge(streamNode forwardTo nodeFinish transformed { it.collectText() })
         }
 
-        val mockExecutor = getMockExecutor(clock = testClock) {
-            mockLLMStream(streamFrameFlowOf(assistantResponse)) onRequestContains "Test user message"
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
+            mockLLMAnswer(assistantResponse).asDefaultResponse
         }
 
-        val agent = createStreamingTestAgent(strategy, promptExecutor = mockExecutor) {
-            install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
+        createStreamingTestAgent(
+            strategy = strategy,
+            promptExecutor = mockExecutor,
+            installFeatures = {
+                install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
+            }
+        ).use { agent ->
+            val result = agent.run("trigger", null)
+            // Verify the result
+            assertEquals(assistantResponse, result, "Should contain the expected response")
         }
-
-        val result = agent.run("trigger", null)
-        agent.close()
-
-        // Verify the result
-        assertEquals(assistantResponse, result, "Should contain the expected response")
     }
 }

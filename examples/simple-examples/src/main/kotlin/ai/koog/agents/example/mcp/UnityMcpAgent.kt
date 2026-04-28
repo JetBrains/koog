@@ -4,8 +4,9 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
+import ai.koog.agents.core.dsl.extension.onTextParts
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -77,7 +78,7 @@ fun main() {
             val executor = simpleOpenAIExecutor(token)
 
             val strategy = strategy<String, String>("unity_interaction") {
-                val nodePlanIngredients by nodeLLMRequest(allowToolCalls = false)
+                val nodePlanIngredients by nodeLLMRequestWithoutTools()
                 val interactionWithUnity by subgraphWithTask<String, String>(
                     // work with plan
                     tools = toolRegistry.tools,
@@ -86,14 +87,14 @@ fun main() {
                 }
 
                 edge(
-                    nodeStart forwardTo nodePlanIngredients transformed {
-                        "Create detailed plan for $agentInput" +
+                    nodeStart forwardTo nodePlanIngredients asUserMessage { input ->
+                        "Create detailed plan for $input" +
                             "unsing next tools: ${toolRegistry.tools.joinToString("\n") {
                                 it.name + "\ndescription:" + it.descriptor
                             }}"
                     }
                 )
-                edge(nodePlanIngredients forwardTo interactionWithUnity onAssistantMessage { true })
+                edge(nodePlanIngredients forwardTo interactionWithUnity onTextParts { true })
                 edge(interactionWithUnity forwardTo nodeFinish)
             }
 

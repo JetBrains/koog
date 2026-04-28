@@ -20,6 +20,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -51,17 +52,17 @@ class AIAgentLLMWriteSessionTest {
     private class TestEnvironment(private val toolRegistry: ToolRegistry) : AIAgentEnvironment {
 
         @OptIn(InternalAgentToolsApi::class)
-        override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+        override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult {
             val tool = toolRegistry.getTool(toolCall.tool)
-            val args = tool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), serializer)
+            val args = tool.decodeArgs(toolCall.argsJson.toKoogJSONObject(), serializer)
             val result = tool.executeUnsafe(args)
 
             return ReceivedToolResult(
                 id = toolCall.id,
                 tool = toolCall.tool,
-                toolArgs = toolCall.contentJson.toKoogJSONObject(),
+                toolArgs = toolCall.argsJson.toKoogJSONObject(),
                 toolDescription = null,
-                content = tool.encodeResultToStringUnsafe(result, serializer),
+                output = tool.encodeResultToStringUnsafe(result, serializer),
                 resultKind = ToolResultKind.Success,
                 result = tool.encodeResultUnsafe(result, serializer)
             )
@@ -128,18 +129,22 @@ class AIAgentLLMWriteSessionTest {
             assistant("I'd be happy to help you analyze your data. What kind of data are we working with?")
             user("I have some text that needs processing.")
             assistant("I'll use the test-tool to process your text.")
-            tool {
-                call("call_1", "test-tool", """{"input":"sample data"}""")
-                result("call_1", "test-tool", "Processed: sample data")
+            assistant {
+                toolCall("call_1", "test-tool", """{"input":"sample data"}""")
+            }
+            user {
+                toolResult("call_1", "test-tool", "Processed: sample data")
             }
             assistant(
                 "I've processed your sample data. The result was: Processed: sample data. Would you like me to do anything else with it?"
             )
             user("Can you also use the custom tool to process this data?")
             assistant("Sure, I'll use the custom tool for additional processing.")
-            tool {
-                call("call_2", "custom-tool", """{"input":"additional processing"}""")
-                result("call_2", "custom-tool", """{"output":"Custom processed: additional processing"}""")
+            assistant {
+                toolCall("call_2", "custom-tool", """{"input":"additional processing"}""")
+            }
+            user {
+                toolResult("call_2", "custom-tool", """{"output":"Custom processed: additional processing"}""")
             }
             assistant(
                 "I've completed the additional processing. The custom tool returned: Custom processed: additional processing"
@@ -190,7 +195,7 @@ class AIAgentLLMWriteSessionTest {
 
         val response = session.requestLLM()
 
-        assertEquals("This is a test response", response.content)
+        assertEquals("This is a test response", assertIs<MessagePart.Text>(response.parts.single()).text)
         assertEquals(initialMessageCount + 1, session.prompt.messages.size)
         assertEquals(assistantMessage("This is a test response"), session.prompt.messages.last())
     }
@@ -206,7 +211,7 @@ class AIAgentLLMWriteSessionTest {
 
         val response = session.requestLLMWithoutTools()
 
-        assertEquals("Response without tools", response.content)
+        assertEquals("Response without tools", assertIs<MessagePart.Text>(response.parts.single()).text)
         assertEquals(initialMessageCount + 1, session.prompt.messages.size)
         assertEquals(assistantMessage("Response without tools"), session.prompt.messages.last())
     }
@@ -310,7 +315,7 @@ class AIAgentLLMWriteSessionTest {
         assertEquals(userMessage("Additional user message"), session.prompt.messages[2])
 
         val response = session.requestLLM()
-        assertEquals("Updated prompt response", response.content)
+        assertEquals("Updated prompt response", assertIs<MessagePart.Text>(response.parts.single()).text)
     }
 
     @Test
@@ -338,7 +343,7 @@ class AIAgentLLMWriteSessionTest {
         assertEquals(userMessage("Rewritten user message"), session.prompt.messages[1])
 
         val response = session.requestLLM()
-        assertEquals("Rewritten prompt response", response.content)
+        assertEquals("Rewritten prompt response", assertIs<MessagePart.Text>(response.parts.single()).text)
     }
 
     @Test
@@ -357,7 +362,7 @@ class AIAgentLLMWriteSessionTest {
         assertEquals(newModel, session.model)
 
         val response = session.requestLLM()
-        assertEquals("Changed model response", response.content)
+        assertEquals("Changed model response", assertIs<MessagePart.Text>(response.parts.single()).text)
     }
 
     @Test
@@ -372,7 +377,7 @@ class AIAgentLLMWriteSessionTest {
         assertEquals(0.5, session.prompt.params.temperature)
 
         val response = session.requestLLM()
-        assertEquals("Changed params response", response.content)
+        assertEquals("Changed params response", assertIs<MessagePart.Text>(response.parts.single()).text)
     }
 
     @Test
@@ -390,16 +395,16 @@ class AIAgentLLMWriteSessionTest {
 
         val session = createSession(mockExecutor, listOf(testTool))
 
-        val responses = session.requestLLMMultipleOnlyCallingTools()
+        val response = session.requestLLMOnlyCallingTools()
 
-        assertEquals(2, responses.size)
-        assertEquals(thinkingContent, (responses[0] as Message.Assistant).content)
-        assertEquals("test-tool", (responses[1] as Message.Tool.Call).tool)
+        // Response is a single Message.Assistant with text and tool call parts
+        assertEquals(thinkingContent, assertIs<MessagePart.Text>(response.parts[0]).text)
+        assertEquals("test-tool", assertIs<MessagePart.Tool.Call>(response.parts[1]).tool)
 
-        // Verify that BOTH messages were appended to the prompt history in correct order
-        val lastTwoMessages = session.prompt.messages.takeLast(2)
-        assertEquals(thinkingContent, (lastTwoMessages[0] as Message.Assistant).content)
-        assertEquals("test-tool", (lastTwoMessages[1] as Message.Tool.Call).tool)
+        // Verify that the message was appended to the prompt history
+        val lastMessage = assertIs<Message.Assistant>(session.prompt.messages.last())
+        assertEquals(thinkingContent, assertIs<MessagePart.Text>(lastMessage.parts[0]).text)
+        assertEquals("test-tool", assertIs<MessagePart.Tool.Call>(lastMessage.parts[1]).tool)
     }
 
     @Test
@@ -424,13 +429,13 @@ class AIAgentLLMWriteSessionTest {
         val response = session.requestLLMOnlyCallingTools()
 
         // It should strictly return the ToolCall (fixing the bug), skipping the thinking message
-        assertTrue(response is Message.Tool.Call, "Expected response to be a Tool Call, not the thinking message")
-        assertEquals("test-tool", response.tool)
+        val toolCallPart = response.parts.filterIsInstance<MessagePart.Tool.Call>().firstOrNull()
+        assertNotNull(toolCallPart, "Expected response to contain a Tool Call, not just the thinking message")
+        assertEquals("test-tool", toolCallPart.tool)
 
-        // It should still persist the "Thinking" message in history in correct order
-        val lastTwoMessages = session.prompt.messages.takeLast(2)
-        assertEquals(thinkingContent, (lastTwoMessages[0] as Message.Assistant).content)
-        assertEquals("test-tool", (lastTwoMessages[1] as Message.Tool.Call).tool)
+        // It should still persist the message with tool call in history
+        val lastMessage = assertIs<Message.Assistant>(session.prompt.messages.last())
+        assertEquals("test-tool", lastMessage.parts.filterIsInstance<MessagePart.Tool.Call>().first().tool)
     }
 
     @Test
@@ -452,14 +457,17 @@ class AIAgentLLMWriteSessionTest {
 
         val response = session.requestLLMOnlyCallingTools()
 
-        // Should return the first tool call
-        assertTrue(response is Message.Tool.Call, "Expected response to be a Tool Call")
-        assertEquals("test-tool", response.tool)
+        // Should return a Message.Assistant containing tool call parts
+        assertIs<Message.Assistant>(response)
+        val toolCallParts = response.parts.filterIsInstance<MessagePart.Tool.Call>()
+        assertTrue(toolCallParts.isNotEmpty())
+        assertEquals("test-tool", toolCallParts.first().tool)
 
-        // Only the first tool call should be added to the history
-        val lastMessage = session.prompt.messages.last()
-        assertIs<Message.Tool.Call>(lastMessage)
-        assertContains(lastMessage.content, "first")
+        // The message should be added to the history
+        val lastMessage = assertIs<Message.Assistant>(session.prompt.messages.last())
+        val lastToolCallParts = lastMessage.parts.filterIsInstance<MessagePart.Tool.Call>()
+        assertTrue(lastToolCallParts.isNotEmpty())
+        assertContains(lastToolCallParts.first().args, "first")
     }
 
     @Test
@@ -478,16 +486,21 @@ class AIAgentLLMWriteSessionTest {
 
         val session = createSession(mockExecutor, listOf(testTool))
 
-        val response = session.requestLLMForceOneTool(testTool)
+        val response = session.requestLLMForceOneTool(testTool.descriptor)
 
         // Should return the tool call
-        assertTrue(response is Message.Tool.Call, "Expected response to be a Tool Call")
-        assertEquals("test-tool", response.tool)
+        assertIs<Message.Assistant>(response)
+        val toolCallPart = assertIs<MessagePart.Tool.Call>(
+            response.parts.filterIsInstance<MessagePart.Tool.Call>().single()
+        )
+        assertEquals("test-tool", toolCallPart.tool)
 
         // The tool call should be added to the history
-        val lastMessage = session.prompt.messages.last()
-        assertIs<Message.Tool.Call>(lastMessage)
-        assertContains(lastMessage.content, "tool")
+        val lastMessage = assertIs<Message.Assistant>(session.prompt.messages.last())
+        val lastToolCallPart = assertIs<MessagePart.Tool.Call>(
+            lastMessage.parts.filterIsInstance<MessagePart.Tool.Call>().single()
+        )
+        assertContains(lastToolCallPart.args, "tool")
 
         assertNotEquals(
             lastMessage,
@@ -511,8 +524,9 @@ class AIAgentLLMWriteSessionTest {
 
         val session = createSession(mockExecutor)
 
-        val response = session.requestLLMForceOneTool(TestTool())
+        val response = session.requestLLMForceOneTool(TestTool().descriptor)
 
-        assertIs<Message.Tool.Call>(response)
+        assertIs<Message.Assistant>(response)
+        assertTrue(response.parts.filterIsInstance<MessagePart.Tool.Call>().isNotEmpty())
     }
 }

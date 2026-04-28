@@ -4,8 +4,8 @@ import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.environment.result
 import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.Message
 
 /**
  * A node that sends multiple tool execution results to the LLM and gets multiple LLM choices.
@@ -15,12 +15,12 @@ import ai.koog.prompt.message.LLMChoice
 @AIAgentBuilderDslMarker
 public fun nodeLLMSendResultsMultipleChoices(
     name: String? = null
-): AIAgentNodeDelegate<List<ReceivedToolResult>, List<LLMChoice>> =
+): AIAgentNodeDelegate<List<ReceivedToolResult>, LLMChoice> =
     node(name) { results ->
         llm.writeSession {
             appendPrompt {
-                tool {
-                    results.forEach { result(it) }
+                user {
+                    results.forEach { toolResult(it.toMessagePart()) }
                 }
             }
 
@@ -38,11 +38,11 @@ public fun nodeLLMSendResultsMultipleChoices(
 public fun nodeSelectLLMChoice(
     choiceSelectionStrategy: ChoiceSelectionStrategy,
     name: String? = null
-): AIAgentNodeDelegate<List<LLMChoice>, LLMChoice> =
+): AIAgentNodeDelegate<LLMChoice, Message.Assistant> =
     node(name) { choices ->
         llm.writeSession {
             choiceSelectionStrategy.choose(prompt, choices).also { choice ->
-                choice.forEach { appendPrompt { message(it) } }
+                appendPrompt { message(choice) }
             }
         }
     }

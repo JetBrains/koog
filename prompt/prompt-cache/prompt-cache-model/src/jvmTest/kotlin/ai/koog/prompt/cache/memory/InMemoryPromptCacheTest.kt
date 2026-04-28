@@ -5,10 +5,13 @@ import ai.koog.prompt.cache.model.get
 import ai.koog.prompt.cache.model.put
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -30,15 +33,26 @@ class InMemoryPromptCacheTest {
         private val testUserMessage = Message.User("Hello, user!", RequestMetaInfo.Empty)
         private val testPrompt = createTestPrompt(listOf(testUserMessage))
         private val testTools = emptyList<ToolDescriptor>()
-        private val testResponse = listOf(createAssistantMessage("Hello, user!"))
-        private val updatedTestResponse = listOf(createAssistantMessage("Hello, user, updated!"))
-        private val testToolCallResponse =
-            listOf(Message.Tool.Call("test-id", "test-tool", "test-content", ResponseMetaInfo.Empty))
+        private val testResponse = createAssistantMessage("Hello, user!")
+        private val updatedTestResponse = createAssistantMessage("Hello, user, updated!")
+        private val testToolCallResponse = Message.Assistant(
+            parts = listOf(
+                MessagePart.Tool.Call("test-id", "test-tool", JsonObject(mapOf("arg1" to JsonPrimitive("value1"))))
+            ),
+            metaInfo = ResponseMetaInfo.Empty
+        )
+        private val mixedResponse = Message.Assistant(
+            parts = listOf(
+                MessagePart.Text("Hello, user!"),
+                MessagePart.Tool.Call("test-id", "test-tool", JsonObject(mapOf("arg1" to JsonPrimitive("value1"))))
+            ),
+            metaInfo = ResponseMetaInfo.Empty
+        )
 
         private val testPrompts = (1..5).map { iter -> Prompt.build(testPrompt) { user("Hello, world! $iter") } }
-        private val testResponses = (1..5).map { iter -> listOf(createAssistantMessage("Hello, user $iter")) }
+        private val testResponses = (1..5).map { iter -> createAssistantMessage("Hello, user $iter") }
 
-        private val testClock = KoogClock { testResponse.first().metaInfo.timestamp }
+        private val testClock = KoogClock { testResponse.metaInfo.timestamp }
 
         private val differentTestClock = KoogClock { testClock.now().plus(1.milliseconds) }
     }
@@ -111,45 +125,23 @@ class InMemoryPromptCacheTest {
 
     @Test
     fun `test different response types`() = runTest {
-        // Create different types of responses
-        val assistantResponse = testResponse
-        val toolCallResponse = testToolCallResponse
-        val mixedResponse = listOf(
-            assistantResponse.first(),
-            toolCallResponse.first()
-        )
-
         // Test assistant response
-        cache.put(testPrompt, testTools, assistantResponse)
+        cache.put(testPrompt, testTools, testResponse)
         val cachedAssistantResponse = cache.get(testPrompt, testTools, testClock)
         assertNotNull(cachedAssistantResponse)
-        assertEquals(assistantResponse, cachedAssistantResponse)
+        assertEquals(testResponse, cachedAssistantResponse)
 
         // Test tool call response
-        cache.put(testPrompt, testTools, toolCallResponse)
+        cache.put(testPrompt, testTools, testToolCallResponse)
         val cachedToolCallResponse = cache.get(testPrompt, testTools, testClock)
         assertNotNull(cachedToolCallResponse)
-        assertEquals(toolCallResponse, cachedToolCallResponse)
+        assertEquals(testToolCallResponse, cachedToolCallResponse)
 
         // Test mixed response
         cache.put(testPrompt, testTools, mixedResponse)
         val cachedMixedResponse = cache.get(testPrompt, testTools, testClock)
         assertNotNull(cachedMixedResponse)
         assertEquals(mixedResponse, cachedMixedResponse)
-    }
-
-    @Test
-    fun `test empty response list`() = runTest {
-        // Put an empty response list in the cache
-        val emptyResponse = emptyList<Message.Response>()
-        cache.put(testPrompt, testTools, emptyResponse)
-
-        // Get the response from the cache
-        val cachedResponse = cache.get(testPrompt, testTools, testClock)
-
-        // Verify the response is correct
-        assertNotNull(cachedResponse)
-        assertTrue(cachedResponse.isEmpty())
     }
 
     @Test

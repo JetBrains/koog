@@ -54,7 +54,7 @@ public class LiteRTLLMClient(config: LiteRTClientConfig) : LLMClient() {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<Message.Response> {
+    ): Message.Assistant {
         return session.execute(prompt, model, tools)
     }
 

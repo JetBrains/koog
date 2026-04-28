@@ -7,6 +7,7 @@ import ai.koog.agents.core.planner.AIAgentPlanner
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.typeToken
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
@@ -195,7 +196,7 @@ public open class SimpleLLMPlanner @JvmOverloads constructor(
         val stepIndex = plan.steps.indexOf(currentStep)
         plan.steps[stepIndex] = currentStep.copy(isCompleted = true)
 
-        return result.content
+        return result.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
     }
 
     override suspend fun isPlanCompleted(context: AIAgentPlannerContext, state: String, plan: SimplePlan): Boolean =

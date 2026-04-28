@@ -100,7 +100,7 @@ private fun createAgent(
         }
 
         // Executing tool
-        val nodeProcessTool by node<Message.Tool.Call, Unit> { toolCall ->
+        val nodeProcessTool by node<MessagePart.Tool.Call, Unit> { toolCall ->
             withA2AAgentServer {
                 sendTaskUpdate("Executing tool: ${toolCall.content}", TaskState.Working)
             }

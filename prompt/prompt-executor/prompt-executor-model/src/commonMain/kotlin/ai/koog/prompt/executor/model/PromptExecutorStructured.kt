@@ -4,6 +4,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
@@ -36,11 +37,10 @@ public suspend fun <T> PromptExecutor.executeStructured(
     fixingParser: StructureFixingParser? = null
 ): Result<StructuredResponse<T>> {
     val updatedPrompt = config.updatePrompt(model, prompt)
-    val response = this.execute(prompt = updatedPrompt, model = model).filterNot { it is Message.Reasoning }.single()
+    val response = this.execute(prompt = updatedPrompt, model = model)
 
     return runCatching {
         require(response is Message.Assistant) { "Response for structured output must be an assistant message, got ${response::class.simpleName} instead" }
-
         parseResponseToStructuredResponse(response, config, model, fixingParser)
     }
 }
@@ -151,10 +151,11 @@ public suspend fun <T> PromptExecutor.parseResponseToStructuredResponse(
     fixingParser: StructureFixingParser? = null
 ): StructuredResponse<T> {
     // Use fixingParser if provided, otherwise parse directly
+    val messagePart = response.parts.filterIsInstance<MessagePart.Text>().single()
     val structure = config.structure(model)
     val structureResponse = fixingParser
-        ?.parse(this, structure, response.content)
-        ?: structure.parse(response.content)
+        ?.parse(this, structure, messagePart.text)
+        ?: structure.parse(messagePart.text)
 
     return StructuredResponse(
         data = structureResponse,

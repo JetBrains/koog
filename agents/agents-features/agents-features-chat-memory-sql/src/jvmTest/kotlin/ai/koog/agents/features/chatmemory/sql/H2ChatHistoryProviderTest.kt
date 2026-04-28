@@ -1,6 +1,7 @@
 package ai.koog.agents.features.chatmemory.sql
 
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.utils.time.KoogClock
@@ -42,9 +43,9 @@ class H2ChatHistoryProviderTest {
 
         val loaded = p.load("conv-1")
         assertEquals(3, loaded.size)
-        assertEquals("You are a helpful assistant", loaded[0].content)
-        assertEquals("Hello", loaded[1].content)
-        assertEquals("Hi there! How can I help?", loaded[2].content)
+        assertEquals("You are a helpful assistant", (loaded[0].parts[0] as MessagePart.Text).text)
+        assertEquals("Hello", (loaded[1].parts[0] as MessagePart.Text).text)
+        assertEquals("Hi there! How can I help?", (loaded[2].parts[0] as MessagePart.Text).text)
     }
 
     @Test
@@ -72,8 +73,8 @@ class H2ChatHistoryProviderTest {
 
         val loaded = p.load("conv-1")
         assertEquals(2, loaded.size)
-        assertEquals("New message", loaded[0].content)
-        assertEquals("New response", loaded[1].content)
+        assertEquals("New message", (loaded[0].parts[0] as MessagePart.Text).text)
+        assertEquals("New response", (loaded[1].parts[0] as MessagePart.Text).text)
 
         // Should still be one row in the table
         assertEquals(1, p.getConversationCount())
@@ -100,10 +101,10 @@ class H2ChatHistoryProviderTest {
         val loaded2 = p.load("conv-2")
 
         assertEquals(2, loaded1.size)
-        assertEquals("Hello from conv-1", loaded1[0].content)
+        assertEquals("Hello from conv-1", (loaded1[0].parts[0] as MessagePart.Text).text)
 
         assertEquals(2, loaded2.size)
-        assertEquals("Hello from conv-2", loaded2[0].content)
+        assertEquals("Hello from conv-2", (loaded2[0].parts[0] as MessagePart.Text).text)
 
         assertEquals(2, p.getConversationCount())
     }
@@ -117,16 +118,20 @@ class H2ChatHistoryProviderTest {
             Message.System("System prompt", RequestMetaInfo.create(KoogClock.System)),
             Message.User("User input", RequestMetaInfo.create(KoogClock.System)),
             Message.Assistant("Assistant response", ResponseMetaInfo.create(KoogClock.System)),
-            Message.Tool.Call(
-                id = "call-1",
-                tool = "searchTool",
-                content = """{"query": "test"}""",
+            Message.Assistant(
+                part = MessagePart.Tool.Call(
+                    id = "call-1",
+                    tool = "searchTool",
+                    args = """{"query": "test"}""",
+                ),
                 metaInfo = ResponseMetaInfo.create(KoogClock.System)
             ),
-            Message.Tool.Result(
-                id = "call-1",
-                tool = "searchTool",
-                content = """{"result": "found"}""",
+            Message.User(
+                MessagePart.Tool.Result(
+                    id = "call-1",
+                    tool = "searchTool",
+                    output = """{"result": "found"}""",
+                ),
                 metaInfo = RequestMetaInfo.create(KoogClock.System)
             )
         )
@@ -140,16 +145,16 @@ class H2ChatHistoryProviderTest {
         assertTrue(loaded[0] is Message.System)
         assertTrue(loaded[1] is Message.User)
         assertTrue(loaded[2] is Message.Assistant)
-        assertTrue(loaded[3] is Message.Tool.Call)
-        assertTrue(loaded[4] is Message.Tool.Result)
+        assertTrue(loaded[3] is Message.Assistant)
+        assertTrue(loaded[4] is Message.User)
 
         // Verify Tool.Call fields
-        val toolCall = loaded[3] as Message.Tool.Call
+        val toolCall = loaded[3].parts[0] as MessagePart.Tool.Call
         assertEquals("call-1", toolCall.id)
         assertEquals("searchTool", toolCall.tool)
 
         // Verify Tool.Result fields
-        val toolResult = loaded[4] as Message.Tool.Result
+        val toolResult = loaded[4].parts[0] as MessagePart.Tool.Result
         assertEquals("call-1", toolResult.id)
         assertEquals("searchTool", toolResult.tool)
     }

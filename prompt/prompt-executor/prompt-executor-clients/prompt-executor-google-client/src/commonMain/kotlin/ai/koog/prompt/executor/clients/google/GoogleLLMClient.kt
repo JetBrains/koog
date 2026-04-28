@@ -34,9 +34,10 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
@@ -155,7 +156,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
 
     override fun llmProvider(): LLMProvider = LLMProvider.Google
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -243,7 +244,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> {
+    ): LLMChoice {
         logger.debug { "Executing prompt with multiple choices: $prompt with tools: $tools and model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -306,120 +307,24 @@ public open class GoogleLLMClient @JvmOverloads constructor(
     internal fun createGoogleRequest(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): GoogleRequest {
         val systemMessageParts = mutableListOf<GooglePart.Text>()
         val contents = mutableListOf<GoogleContent>()
-        val pendingCalls = mutableListOf<GooglePart.FunctionCall>()
-        val pendingResults = mutableListOf<GooglePart.FunctionResponse>()
-        var lastSignature: String? = null
-        val isThinkingModel = model.supports(LLMCapability.Thinking)
-
-        fun flushCalls() {
-            if (pendingCalls.isNotEmpty()) {
-                contents += GoogleContent(role = "model", parts = pendingCalls.toList())
-                pendingCalls.clear()
-            }
-        }
-
-        fun flushResults() {
-            if (pendingResults.isNotEmpty()) {
-                contents += GoogleContent(role = "user", parts = pendingResults.toList())
-                pendingResults.clear()
-            }
-        }
-
-        fun flushAll() {
-            flushCalls()
-            flushResults()
-        }
 
         for (message in prompt.messages) {
             when (message) {
                 is Message.System -> {
-                    systemMessageParts.add(GooglePart.Text(message.content))
+                    message.parts.forEach { part ->
+                        systemMessageParts.add(GooglePart.Text(part.text))
+                    }
                 }
 
                 is Message.User -> {
-                    flushAll()
-                    // User messages become 'user' role content
                     contents.add(message.toGoogleContent(model))
                 }
 
                 is Message.Assistant -> {
-                    flushAll()
-                    contents.add(
-                        GoogleContent(
-                            role = "model",
-                            parts = listOf(GooglePart.Text(message.content))
-                        )
-                    )
-                }
-
-                is Message.Reasoning -> {
-                    // Reasoning indicates a new step - flush previous step
-                    flushAll()
-
-                    if (message.content.isNotBlank()) {
-                        // If content is present, it's a "Thought Summary" -> Convert to Text part with thought=true
-                        contents.add(
-                            GoogleContent(
-                                role = "model",
-                                parts = listOf(
-                                    GooglePart.Text(
-                                        text = message.content,
-                                        thought = true,
-                                        thoughtSignature = message.encrypted
-                                    )
-                                )
-                            )
-                        )
-                    } else {
-                        // If content is empty/blank, it's strictly a signature carrier for the next Tool.Call
-                        lastSignature = message.encrypted
-                    }
-                }
-
-                is Message.Tool.Result -> {
-                    // Just buffer results. We only flush when we know the current tool turn is complete.
-                    pendingResults.add(
-                        GooglePart.FunctionResponse(
-                            functionResponse = GoogleData.FunctionResponse(
-                                id = message.id,
-                                name = message.tool,
-                                response = buildJsonObject { put("result", message.content) }
-                            )
-                        )
-                    )
-                }
-
-                is Message.Tool.Call -> {
-                    // First call in step needs to flush stale results
-                    if (pendingCalls.isEmpty()) {
-                        flushResults()
-                    }
-
-                    // Use signature from preceding Reasoning message
-                    val signature = lastSignature
-                    lastSignature = null // Consume: only first call gets the signature
-
-                    // For thinking models (e.g., Gemini 3), thought_signature is required for all function calls.
-                    // If no signature is available from a Reasoning message, use the official workaround dummy signature.
-                    // See: https://ai.google.dev/gemini-api/docs/thought-signatures
-                    val effectiveSignature = signature ?: if (isThinkingModel) {
-                        settings.fallbackThoughtSignature
-                    } else {
-                        null
-                    }
-
-                    pendingCalls += GooglePart.FunctionCall(
-                        functionCall = GoogleData.FunctionCall(
-                            id = message.id,
-                            name = message.tool,
-                            args = json.decodeFromString(message.content)
-                        ),
-                        thoughtSignature = effectiveSignature
-                    )
+                    contents.add(message.toGoogleContent(model))
                 }
             }
         }
-        flushAll()
 
         val googleTools = tools
             .map { tool ->
@@ -506,82 +411,179 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         )
     }
 
-    private fun Message.User.toGoogleContent(model: LLModel): GoogleContent {
-        val contentParts = buildList {
-            parts.forEach { part ->
-                when (part) {
-                    is ContentPart.Text -> {
-                        add(GooglePart.Text(part.text))
-                    }
+    private fun Message.Assistant.toGoogleContent(model: LLModel): GoogleContent {
+        var lastSignature: String? = null
 
-                    is ContentPart.Image -> {
-                        require(model.supports(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support images"
+        return GoogleContent(
+            role = "model",
+            parts = buildList {
+                parts.forEach { part ->
+                    when (part) {
+                        is MessagePart.Reasoning -> {
+                            if (part.content.isEmpty()) {
+                                // If the reasoning message is empty, it only contains the signature for the next message.
+                                // Saving the signature for the next message and do not adding reasoning part.
+                                lastSignature = part.encrypted
+                            } else {
+                                // If the reasoning message is not empty, it contains the actual reasoning content.
+                                // TODO replace exception with if
+                                add(
+                                    GooglePart.Text(
+                                        text = part.content.singleOrNull()
+                                            // TODO: Improve exception messages
+                                            ?: throw IllegalArgumentException("Only single content is required for reasoning messages"),
+                                        thought = true,
+                                        thoughtSignature = part.encrypted
+                                    )
+                                )
+                            }
                         }
 
-                        val blob: GoogleData.Blob = when (val content = part.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+                        is MessagePart.Text -> {
+                            add(GooglePart.Text(part.text))
+                        }
 
-                            else -> throw IllegalArgumentException(
-                                "Unsupported image attachment content: ${content::class}"
+                        is MessagePart.Attachment -> {
+                            // TODO: implement attachments in assistant messages
+                            throw IllegalArgumentException("No attachments are supported in assistant messages")
+                        }
+
+                        is MessagePart.Tool.Call -> {
+                            // Use signature from preceding Reasoning message
+                            val signature = lastSignature
+                            lastSignature = null // Consume: only first call gets the signature
+
+                            // For thinking models (e.g., Gemini 3), thought_signature is required for all function calls.
+                            // If no signature is available from a Reasoning message, use the official workaround dummy signature.
+                            // See: https://ai.google.dev/gemini-api/docs/thought-signatures
+                            val effectiveSignature = signature ?: if (model.supports(LLMCapability.Thinking)) {
+                                settings.fallbackThoughtSignature
+                            } else {
+                                null
+                            }
+
+                            add(
+                                GooglePart.FunctionCall(
+                                    functionCall = GoogleData.FunctionCall(
+                                        id = part.id,
+                                        name = part.tool,
+                                        args = part.argsJson
+                                    ),
+                                    thoughtSignature = effectiveSignature
+                                )
                             )
                         }
-
-                        add(GooglePart.InlineData(blob))
-                    }
-
-                    is ContentPart.Audio -> {
-                        require(model.supports(LLMCapability.Audio)) {
-                            "Model ${model.id} does not support audio"
-                        }
-
-                        val blob: GoogleData.Blob = when (val content = part.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
-
-                            else -> throw IllegalArgumentException(
-                                "Unsupported audio attachment content: ${content::class}"
-                            )
-                        }
-
-                        add(GooglePart.InlineData(blob))
-                    }
-
-                    is ContentPart.File -> {
-                        require(model.supports(LLMCapability.Document)) {
-                            "Model ${model.id} does not support documents"
-                        }
-
-                        val blob: GoogleData.Blob = when (val content = part.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
-
-                            else -> throw IllegalArgumentException(
-                                "Unsupported file attachment content: ${content::class}"
-                            )
-                        }
-
-                        add(GooglePart.InlineData(blob))
-                    }
-
-                    is ContentPart.Video -> {
-                        require(model.supports(LLMCapability.Vision.Video)) {
-                            "Model ${model.id} does not support video"
-                        }
-
-                        val blob: GoogleData.Blob = when (val content = part.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
-
-                            else -> throw IllegalArgumentException(
-                                "Unsupported video attachment content: ${content::class}"
-                            )
-                        }
-
-                        add(GooglePart.InlineData(blob))
                     }
                 }
             }
-        }
+        )
+    }
 
-        return GoogleContent(role = "user", parts = contentParts)
+    private fun Message.User.toGoogleContent(model: LLModel): GoogleContent {
+        return GoogleContent(
+            role = "user",
+            parts = buildList {
+                parts.forEach { part ->
+                    when (part) {
+                        is MessagePart.Text -> {
+                            add(GooglePart.Text(part.text))
+                        }
+
+                        is MessagePart.Attachment -> {
+                            when (val source = part.source) {
+                                is AttachmentSource.Image -> {
+                                    require(model.supports(LLMCapability.Vision.Image)) {
+                                        "Model ${model.id} does not support images"
+                                    }
+
+                                    val blob: GoogleData.Blob = when (val content = source.content) {
+                                        is AttachmentContent.Binary -> GoogleData.Blob(
+                                            source.mimeType,
+                                            content.asBytes()
+                                        )
+
+                                        else -> throw IllegalArgumentException(
+                                            "Unsupported image attachment content: ${content::class}"
+                                        )
+                                    }
+
+                                    add(GooglePart.InlineData(blob))
+                                }
+
+                                is AttachmentSource.Audio -> {
+                                    require(model.supports(LLMCapability.Audio)) {
+                                        "Model ${model.id} does not support audio"
+                                    }
+
+                                    val blob: GoogleData.Blob = when (val content = source.content) {
+                                        is AttachmentContent.Binary -> GoogleData.Blob(
+                                            source.mimeType,
+                                            content.asBytes()
+                                        )
+
+                                        else -> throw IllegalArgumentException(
+                                            "Unsupported audio attachment content: ${content::class}"
+                                        )
+                                    }
+
+                                    add(GooglePart.InlineData(blob))
+                                }
+
+                                is AttachmentSource.File -> {
+                                    require(model.supports(LLMCapability.Document)) {
+                                        "Model ${model.id} does not support documents"
+                                    }
+
+                                    val blob: GoogleData.Blob = when (val content = source.content) {
+                                        is AttachmentContent.Binary -> GoogleData.Blob(
+                                            source.mimeType,
+                                            content.asBytes()
+                                        )
+
+                                        else -> throw IllegalArgumentException(
+                                            "Unsupported file attachment content: ${content::class}"
+                                        )
+                                    }
+
+                                    add(GooglePart.InlineData(blob))
+                                }
+
+                                is AttachmentSource.Video -> {
+                                    require(model.supports(LLMCapability.Vision.Video)) {
+                                        "Model ${model.id} does not support video"
+                                    }
+
+                                    val blob: GoogleData.Blob = when (val content = source.content) {
+                                        is AttachmentContent.Binary -> GoogleData.Blob(
+                                            source.mimeType,
+                                            content.asBytes()
+                                        )
+
+                                        else -> throw IllegalArgumentException(
+                                            "Unsupported video attachment content: ${content::class}"
+                                        )
+                                    }
+
+                                    add(GooglePart.InlineData(blob))
+                                }
+                            }
+                        }
+
+                        is MessagePart.Tool.Result -> {
+                            add(
+                                GooglePart.FunctionResponse(
+                                    functionResponse = GoogleData.FunctionResponse(
+                                        id = part.id,
+                                        name = part.tool,
+                                        response = buildJsonObject { put("result", part.output) }
+                                    )
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        )
     }
 
     /**
@@ -662,35 +664,31 @@ public open class GoogleLLMClient @JvmOverloads constructor(
     internal fun processGoogleCandidate(
         candidate: GoogleCandidate,
         metaInfo: ResponseMetaInfo
-    ): List<Message.Response> {
-        val parts = candidate.content?.parts.orEmpty()
-        val responses = mutableListOf<Message.Response>()
-        with(responses) {
-            parts.forEach { part ->
-                // Create Reasoning for any part with signature (signature carrier),
-                // unless the part itself is a thought (in which case it carries the signature)
+    ): Message.Assistant {
+        val parts = buildList {
+            candidate.content?.parts.orEmpty().forEach { part ->
                 val signature = part.thoughtSignature
                 val isThought = part.thought == true
                 if (signature != null && !isThought) {
-                    add(Message.Reasoning(encrypted = signature, content = "", metaInfo = metaInfo))
+                    // If the part has signature but is not a thought,
+                    // adding a Reasoning part with signature and empty reasoining content.
+                    add(MessagePart.Reasoning(content = listOf(), encrypted = signature))
                 }
 
                 when (part) {
                     is GooglePart.Text -> {
                         if (isThought) {
+                            // If the part is a thought, adding a Reasoning part with signature and reasoning content.
                             add(
-                                Message.Reasoning(
+                                MessagePart.Reasoning(
                                     content = part.text,
                                     encrypted = signature,
-                                    metaInfo = metaInfo
                                 )
                             )
                         } else {
                             add(
-                                Message.Assistant(
-                                    content = part.text,
-                                    finishReason = candidate.finishReason,
-                                    metaInfo = metaInfo
+                                MessagePart.Text(
+                                    text = part.text,
                                 )
                             )
                         }
@@ -698,35 +696,33 @@ public open class GoogleLLMClient @JvmOverloads constructor(
 
                     is GooglePart.FunctionCall -> {
                         add(
-                            Message.Tool.Call(
+                            MessagePart.Tool.Call(
                                 id = Uuid.random().toString(),
                                 tool = part.functionCall.name,
-                                content = part.functionCall.args.toString(),
-                                metaInfo = metaInfo
+                                args = part.functionCall.args
+                                    ?: throw IllegalArgumentException("Function call args must not be null")
                             )
                         )
                     }
 
                     is GooglePart.InlineData -> {
                         val inlineData = part.inlineData
-                        val contentPart = when (val mimeType = inlineData.mimeType) {
-                            "image/png", "image/jpeg", "image/webp" -> ContentPart.Image(
+                        val source = when (val mimeType = inlineData.mimeType) {
+                            "image/png", "image/jpeg", "image/webp" -> AttachmentSource.Image(
                                 content = AttachmentContent.Binary.Bytes(inlineData.data),
                                 format = mimeType.substringAfter("image/"),
                                 mimeType = mimeType,
                             )
 
-                            else -> ContentPart.File(
+                            else -> AttachmentSource.File(
                                 content = AttachmentContent.Binary.Bytes(inlineData.data),
                                 mimeType = mimeType,
                                 format = mimeType.substringAfterLast('.'),
                             )
                         }
                         add(
-                            Message.Assistant(
-                                parts = listOf(contentPart),
-                                finishReason = candidate.finishReason,
-                                metaInfo = metaInfo
+                            MessagePart.Attachment(
+                                source = source,
                             )
                         )
                     }
@@ -736,22 +732,11 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             }
         }
 
-        return when {
-            // When the model calls tools, keep Reasoning (for signature) and Tool.Call, filter out Assistant text
-            responses.any { it is Message.Tool.Call } -> responses.filter { it is Message.Reasoning || it is Message.Tool.Call }
-
-            // If no messages where returned, return an empty message and check finishReason
-            responses.isEmpty() -> listOf(
-                Message.Assistant(
-                    content = "",
-                    finishReason = candidate.finishReason,
-                    metaInfo = metaInfo
-                )
-            )
-
-            // Just return responses
-            else -> responses
-        }
+        return Message.Assistant(
+            parts = parts,
+            finishReason = candidate.finishReason?.let { candidate.finishReason },
+            metaInfo = metaInfo
+        )
     }
 
     /**
@@ -760,7 +745,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
      * @param response The raw response from the Google AI API
      * @return A list of choices, where each choice is a list of response messages
      */
-    private fun processGoogleResponse(response: GoogleResponse): List<List<Message.Response>> {
+    private fun processGoogleResponse(response: GoogleResponse): List<Message.Assistant> {
         if (response.candidates.isEmpty()) {
             logger.error { "Empty candidates in Google API response" }
             throw LLMClientException(clientName, "Empty candidates in Google API response")

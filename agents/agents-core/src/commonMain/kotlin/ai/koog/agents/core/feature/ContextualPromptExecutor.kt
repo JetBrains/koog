@@ -39,7 +39,7 @@ public class ContextualPromptExecutor(
         private val logger = KotlinLogging.logger { }
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         @OptIn(ExperimentalUuidApi::class)
         val eventId = Uuid.random().toString()
 
@@ -57,11 +57,11 @@ public class ContextualPromptExecutor(
         }
 
         try {
-            val responses = executor.execute(effectivePrompt, model, tools)
-            logger.trace { "Finished LLM call (event id: $eventId) with responses: [${responses.joinToString { "${it.role}: ${it.content}" }}]" }
+            val response = executor.execute(effectivePrompt, model, tools)
+            logger.trace { "Finished LLM call (event id: $eventId) with responses: $response]" }
 
-            context.pipeline.onLLMCallCompleted(eventId, context.executionInfo, context, context.runId, effectivePrompt, model, tools, responses, moderationResponse = null)
-            return responses
+            context.pipeline.onLLMCallCompleted(eventId, context.executionInfo, context, context.runId, effectivePrompt, model, tools, response, moderationResponse = null)
+            return response
         } catch (e: Throwable) {
             logger.debug(e) { "Error in executing LLM call (event id: $eventId): $e" }
             context.pipeline.onLLMCallFailed(eventId, context.executionInfo, context, context.runId, prompt, model, tools, error = e)
@@ -136,23 +136,12 @@ public class ContextualPromptExecutor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> {
+    ): LLMChoice {
         logger.debug { "Executing LLM call prompt: $prompt with tools: [${tools.joinToString { it.name }}]" }
 
         val responses = executor.executeMultipleChoices(prompt, model, tools)
 
-        logger.debug {
-            val messageBuilder = StringBuilder().appendLine("Finished LLM call with LLM Choice response:")
-
-            responses.forEachIndexed { index, response ->
-                messageBuilder.appendLine("- Response #$index")
-                response.forEach { message ->
-                    messageBuilder.appendLine("  -- [${message.role}] ${message.content}")
-                }
-            }
-
-            "Finished LLM call with responses: $messageBuilder"
-        }
+        logger.debug { "Finished LLM call with LLM Choice response: $responses" }
 
         return responses
     }
@@ -181,7 +170,7 @@ public class ContextualPromptExecutor(
             val result = executor.moderate(effectivePrompt, model)
             logger.trace { "Finished moderation LLM request (event id: $eventId) with response: $result" }
 
-            context.pipeline.onLLMCallCompleted(eventId, context.executionInfo, context, context.runId, effectivePrompt, model, tools = emptyList(), responses = emptyList(), moderationResponse = result)
+            context.pipeline.onLLMCallCompleted(eventId, context.executionInfo, context, context.runId, effectivePrompt, model, tools = emptyList(), response = null, moderationResponse = result)
             return result
         } catch (e: Throwable) {
             logger.debug(e) { "Error in moderation LLM request (event id: $eventId): $e" }

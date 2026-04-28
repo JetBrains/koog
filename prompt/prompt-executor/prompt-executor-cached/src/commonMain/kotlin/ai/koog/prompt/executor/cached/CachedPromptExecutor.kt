@@ -34,7 +34,7 @@ public class CachedPromptExecutor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<Message.Response> {
+    ): Message.Assistant {
         return getOrPut(prompt, tools, model)
     }
 
@@ -49,15 +49,13 @@ public class CachedPromptExecutor(
         }
 
     private suspend fun getOrPut(prompt: Prompt, model: LLModel): Message.Assistant {
-        return cache.get(prompt, emptyList(), clock)
-            ?.first() as Message.Assistant?
-            ?: nested
-                .execute(prompt, model, emptyList()).first()
-                .let { it as Message.Assistant }
-                .also { cache.put(prompt, emptyList(), listOf(it)) }
+        return cache.get(prompt, emptyList(), clock) as? Message.Assistant? ?: nested
+            .execute(prompt, model, emptyList())
+            .let { it as Message.Assistant }
+            .also { cache.put(prompt, emptyList(), it) }
     }
 
-    private suspend fun getOrPut(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel): List<Message.Response> {
+    private suspend fun getOrPut(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel): Message.Assistant {
         return cache.get(prompt, tools, clock)
             ?: nested.execute(prompt, model, tools).also { cache.put(prompt, tools, it) }
     }

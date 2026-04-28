@@ -5,7 +5,7 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.asTool
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
@@ -70,14 +70,14 @@ class SafeToolTest {
         private val resultContent: String = "Success content",
     ) : AIAgentEnvironment {
         @OptIn(InternalAgentToolsApi::class)
-        override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+        override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult {
             return if (shouldSucceed) {
                 ReceivedToolResult(
                     id = toolCall.id,
                     tool = toolCall.tool,
-                    toolArgs = toolCall.contentJson.toKoogJSONObject(),
+                    toolArgs = toolCall.argsJson.toKoogJSONObject(),
                     toolDescription = null,
-                    content = resultContent,
+                    output = resultContent,
                     resultKind = ToolResultKind.Success,
                     result = JSONPrimitive(TEST_RESULT)
                 )
@@ -85,9 +85,9 @@ class SafeToolTest {
                 ReceivedToolResult(
                     id = toolCall.id,
                     tool = toolCall.tool,
-                    toolArgs = toolCall.contentJson.toKoogJSONObject(),
+                    toolArgs = toolCall.argsJson.toKoogJSONObject(),
                     toolDescription = null,
-                    content = TEST_ERROR,
+                    output = TEST_ERROR,
                     resultKind = ToolResultKind.Failure(Exception(TEST_ERROR)),
                     result = null,
                 )
@@ -145,7 +145,7 @@ class SafeToolTest {
             tool = EchoTool.name,
             toolArgs = JSONObject(emptyMap()),
             toolDescription = null,
-            content = "Bad result",
+            output = "Bad result",
             resultKind = ToolResultKind.Success,
             result = badResult.toKoogJSONElement(),
         )
@@ -213,7 +213,7 @@ class SafeToolTest {
     @Test
     fun testWithComplexArgumentsInDirectCallEnvironment() = runTest {
         val directCallEnvironment = object : AIAgentEnvironment {
-            override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+            override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult {
                 return try {
                     val complexData = ComplexDataClass(
                         id = "direct-call-id",
@@ -228,9 +228,9 @@ class SafeToolTest {
                     ReceivedToolResult(
                         id = toolCall.id,
                         tool = toolCall.tool,
-                        toolArgs = toolCall.contentJson.toKoogJSONObject(),
+                        toolArgs = toolCall.argsJson.toKoogJSONObject(),
                         toolDescription = null,
-                        content = "Success: $result",
+                        output = "Success: $result",
                         resultKind = ToolResultKind.Success,
                         result = JSONPrimitive(result)
                     )
@@ -238,9 +238,9 @@ class SafeToolTest {
                     ReceivedToolResult(
                         id = toolCall.id,
                         tool = toolCall.tool,
-                        toolArgs = toolCall.contentJson.toKoogJSONObject(),
+                        toolArgs = toolCall.argsJson.toKoogJSONObject(),
                         toolDescription = null,
-                        content = "Error: ${e.message}",
+                        output = "Error: ${e.message}",
                         resultKind = ToolResultKind.Failure(e),
                         result = null
                     )

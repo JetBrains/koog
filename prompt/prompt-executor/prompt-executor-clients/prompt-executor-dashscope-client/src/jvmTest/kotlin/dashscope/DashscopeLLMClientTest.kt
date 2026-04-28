@@ -6,7 +6,7 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.dashscope.DashscopeClientSettings
 import ai.koog.prompt.executor.clients.dashscope.DashscopeLLMClient
 import ai.koog.prompt.executor.clients.dashscope.DashscopeModels
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.params.LLMParams
 import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
@@ -19,6 +19,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
@@ -194,9 +195,9 @@ class DashscopeLLMClientTest {
         assertTrue(capturedUrl.endsWith("compatible-mode/v1/chat/completions"))
         assertEquals(HttpMethod.Post, capturedMethod)
         assertEquals("Bearer $key", capturedAuth)
-        assertEquals(1, responses.size)
-        val text = (responses.first() as Message.Assistant).content
-        assertEquals(content, text)
+        assertEquals(1, responses.parts.size)
+        val textPart = assertIs<MessagePart.Text>(responses.parts.first())
+        assertEquals(content, textPart.text)
     }
 
     @Test
@@ -219,8 +220,12 @@ class DashscopeLLMClientTest {
 
         val choices = client.executeMultipleChoices(prompt, DashscopeModels.QWEN_PLUS, tools = emptyList())
         assertEquals(2, choices.size, "Response should have two choices")
-        assertEquals(optionA, (choices[0].first() as Message.Assistant).content, "$optionA should be first")
-        assertEquals(optionB, (choices[1].first() as Message.Assistant).content, "$optionB should be second")
+
+        val fistTextPart = assertIs<MessagePart.Text>(choices[0].parts.first())
+        assertEquals(optionA, fistTextPart.text, "$optionA should be first")
+
+        val secondTextPart = assertIs<MessagePart.Text>(choices[1].parts.first())
+        assertEquals(optionB, secondTextPart.text, "$optionB should be second")
     }
 
     @Test
@@ -258,14 +263,12 @@ class DashscopeLLMClientTest {
         }
 
         val responses = client.execute(prompt, DashscopeModels.QWEN_PLUS)
-        assertEquals(1, responses.size, "Response should have one choice")
+        assertEquals(1, responses.parts.size, "Response should have one choice")
         assertNotNull(capturedBody, "Captured body should not be null")
         assertTrue(capturedBody.contains("\"response_format\""), "Response body should contain response_format")
         assertTrue(capturedBody.contains("\"json_schema\""), "Response body should contain json_schema")
-        assertTrue(
-            responses.first().content.contains("{\"name\":\"Alice\"}"),
-            "Response should contain JSON string [{\"name\":\"Alice\"}]"
-        )
+        val textPart = assertIs<MessagePart.Text>(responses.parts.first())
+        assertEquals("{\"name\":\"Alice\"}", textPart.text)
     }
 
     @Test
@@ -302,13 +305,18 @@ class DashscopeLLMClientTest {
 
         val responses = client.execute(prompt, DashscopeModels.QWEN_PLUS)
 
-        assertEquals(2, responses.size, "Response should contain reasoning and tool call")
-        assertIs<Message.Reasoning>(responses[0])
-        assertEquals("I should call the weather tool first.", responses[0].content)
-        val toolCall = assertIs<Message.Tool.Call>(responses[1])
+        assertEquals(2, responses.parts.size, "Response should contain reasoning and tool call")
+        val reasoning = assertIs<MessagePart.Reasoning>(responses.parts[0])
+        assertEquals(1, reasoning.content.size)
+        assertEquals("I should call the weather tool first.", reasoning.content.first())
+
+        val toolCall = assertIs<MessagePart.Tool.Call>(responses.parts[1])
         assertEquals("call_weather", toolCall.id)
         assertEquals("weather", toolCall.tool)
-        assertEquals("{\"city\":\"Boston\"}", toolCall.content)
+        assertEquals(
+            buildJsonObject { put("city", JsonPrimitive("Boston")) },
+            toolCall.argsJson
+        )
     }
 
     @Test
@@ -354,10 +362,8 @@ class DashscopeLLMClientTest {
             temperature = 0.2
         }
 
-        val responses = client.execute(prompt, DashscopeModels.QWEN_PLUS, tools = emptyList())
-        assertEquals(1, responses.size, "Response should have once response")
-        val response = responses.first()
-        assertIs<Message.Assistant>(response, "Response should be assistant message")
+        val response = client.execute(prompt, DashscopeModels.QWEN_PLUS, tools = emptyList())
+        assertEquals(1, response.parts.size, "Response should have once response")
         assertEquals(35, response.metaInfo.inputTokensCount)
         assertEquals(191, response.metaInfo.outputTokensCount)
         assertEquals(226, response.metaInfo.totalTokensCount)

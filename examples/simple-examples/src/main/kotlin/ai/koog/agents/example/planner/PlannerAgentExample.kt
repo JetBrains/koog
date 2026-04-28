@@ -8,9 +8,14 @@ import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutToolsWithUserText
 import ai.koog.agents.core.dsl.extension.onIsInstance
+import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
@@ -85,9 +90,9 @@ class FailedToPlanSequentialNode(problemDescription: String) : FailureMessage(pr
 fun parse(message: String): ParsedMessage = ParsingErrorMessage("TODO: parsing is not implemented")
 
 inline fun <reified T : FailureMessage> retryPlanning(
-    nextNode: AIAgentNodeBase<String, Message.Response>
-): AIAgentNodeBase<T, Message.Response> {
-    val result by node<T, Message.Response> { parsedMessage ->
+    nextNode: AIAgentNodeBase<String, Message.Assistant>
+): AIAgentNodeBase<T, Message.Assistant> {
+    val result by node<T, Message.Assistant> { parsedMessage ->
         nextNode.execute(this, parsedMessage.problemDescription)
             ?: throw UnsupportedOperationException("Node interruption is not supported here")
     }
@@ -110,7 +115,7 @@ suspend fun planWork(
     val result = CompletableDeferred<PlannerNode>()
 
     val planner = strategy<String, String>("planner") {
-        suspend fun AIAgentContext.defineTask(inputTask: String, prompt: String): Message.Response {
+        suspend fun AIAgentContext.defineTask(inputTask: String, prompt: String): Message.Assistant {
             return llm.writeSession {
                 appendPrompt {
                     system(prompt)
@@ -124,7 +129,7 @@ suspend fun planWork(
 
         val setup by nodeLLMRequest()
 
-        val tryFindingSequentialSubtasks: AIAgentNodeBase<String, Message.Response> by node { inputTask ->
+        val tryFindingSequentialSubtasks: AIAgentNodeBase<String, Message.Assistant> by node { inputTask ->
             llm.writeSession {
                 replaceHistoryWithTLDR()
             }
@@ -143,7 +148,7 @@ suspend fun planWork(
             defineTask(inputTask = inputTask, prompt = DEFINE_CONSECUTIVE_PLANNING_TASK)
         }
 
-        val tryFindingParallelSubtasks: AIAgentNodeBase<String, Message.Response> by node { inputTask ->
+        val tryFindingParallelSubtasks: AIAgentNodeBase<String, Message.Assistant> by node { inputTask ->
             llm.writeSession {
                 replaceHistoryWithTLDR()
             }
@@ -162,8 +167,8 @@ suspend fun planWork(
             defineTask(inputTask = inputTask, prompt = DEFINE_PARALLEL_PLANNING_TASK)
         }
 
-        val parseLLMResponse by node<Message.Assistant, ParsedMessage> { message ->
-            parse(message.content)
+        val parseLLMResponse by node<String, ParsedMessage> { message ->
+            parse(message)
         }
 
         val saveNodesToState by node<ParsedSubNodesMessage, Unit> {
@@ -186,8 +191,9 @@ suspend fun planWork(
             }
         }
 
-        val callTool by nodeExecuteTool()
-        val askLLM by nodeLLMRequest(allowToolCalls = false)
+        val callTool by nodeExecuteTools()
+        val askLLM by nodeLLMRequestWithoutToolsWithUserText()
+        val resumeAfterTool by nodeLLMRequestWithoutTools("resumeAfterTool")
 
         val buildPlanTree by node<Unit, Unit> {
             val tree = storage.get(currentNodeKey)?.builder?.build()
@@ -195,18 +201,20 @@ suspend fun planWork(
             result.complete(tree)
         }
 
-        edge(nodeStart forwardTo setup)
+        edge(nodeStart forwardTo setup asUserMessage { it })
         edge(setup forwardTo tryFindingSequentialSubtasks transformed { initialTaskDescription })
 
-        edge(tryFindingParallelSubtasks forwardTo callTool onIsInstance Message.Tool.Call::class)
-        edge(tryFindingParallelSubtasks forwardTo parseLLMResponse onIsInstance Message.Assistant::class)
+        edge(tryFindingParallelSubtasks forwardTo callTool onToolCalls { true })
+        edge(tryFindingParallelSubtasks forwardTo parseLLMResponse onTextParts { true })
 
-        edge(tryFindingSequentialSubtasks forwardTo callTool onIsInstance Message.Tool.Call::class)
-        edge(tryFindingSequentialSubtasks forwardTo parseLLMResponse onIsInstance Message.Assistant::class)
+        edge(tryFindingSequentialSubtasks forwardTo callTool onToolCalls { true })
+        edge(tryFindingSequentialSubtasks forwardTo parseLLMResponse onTextParts { true })
 
-        edge(callTool forwardTo askLLM transformed { it.content })
-        edge(askLLM forwardTo callTool onIsInstance Message.Tool.Call::class)
-        edge(askLLM forwardTo parseLLMResponse onIsInstance Message.Assistant::class)
+        edge(callTool forwardTo resumeAfterTool)
+        edge(resumeAfterTool forwardTo callTool onToolCalls { true })
+        edge(resumeAfterTool forwardTo parseLLMResponse onTextParts { true })
+        edge(askLLM forwardTo callTool onToolCalls { true })
+        edge(askLLM forwardTo parseLLMResponse onTextParts { true })
 
         edge(
             parseLLMResponse forwardTo retryPlanning<ParsingErrorMessage>(nextNode = askLLM) onIsInstance

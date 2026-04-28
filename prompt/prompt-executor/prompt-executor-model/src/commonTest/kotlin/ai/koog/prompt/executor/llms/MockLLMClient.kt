@@ -10,6 +10,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
@@ -25,9 +26,9 @@ internal class MockLLMClient @JvmOverloads constructor(
 ) : LLMClient() {
 
     internal data class ResponseSpec(
-        val execute: Result<List<Message.Assistant>>,
+        val execute: Result<Message.Assistant>,
         val executeStreaming: Result<Flow<StreamFrame>>,
-        val executeMultipleChoices: Result<List<LLMChoice>>,
+        val executeMultipleChoices: Result<LLMChoice>,
         val moderate: Result<ModerationResult>,
         val embed: Result<List<Double>>,
         val batchEmbed: Result<List<List<Double>>>,
@@ -54,7 +55,7 @@ internal class MockLLMClient @JvmOverloads constructor(
             )
 
             fun executeSuccess(vararg messages: String) =
-                Result.success(messages.map { Message.Assistant(it, ResponseMetaInfo.Empty) }.toList())
+                Result.success(Message.Assistant(parts = messages.map { MessagePart.Text(it) }, metaInfo = ResponseMetaInfo.Empty))
 
             fun executeStreamingSuccess(vararg messages: String) =
                 Result.success(flowOf(*messages).map(StreamFrame::TextDelta))
@@ -80,9 +81,9 @@ internal class MockLLMClient @JvmOverloads constructor(
 
         operator fun invoke(
             provider: LLMProvider = LLMProvider.OpenAI,
-            executeSpec: Result<List<Message.Assistant>>? = null,
+            executeSpec: Result<Message.Assistant>? = null,
             executeStreamingSpec: Result<Flow<StreamFrame>>? = null,
-            executeMultipleChoicesSpec: Result<List<LLMChoice>>? = null,
+            executeMultipleChoicesSpec: Result<LLMChoice>? = null,
             moderateSpec: Result<ModerationResult>? = null,
             embedSpec: Result<List<Double>>? = null,
             batchEmbedSpec: Result<List<List<Double>>>? = null,
@@ -105,7 +106,7 @@ internal class MockLLMClient @JvmOverloads constructor(
             provider: LLMProvider = LLMProvider.OpenAI,
             executeContent: String? = null,
             executeStreamingContent: List<String>? = null,
-            executeMultipleContent: List<LLMChoice>? = null,
+            executeMultipleContent: LLMChoice? = null,
             moderateContent: ModerationResult? = null,
             embedContent: List<Double>? = null,
             batchEmbedContent: List<List<Double>>? = null,
@@ -131,7 +132,7 @@ internal class MockLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<Message.Response> = executeResponse
+    ): Message.Assistant = executeResponse
 
     override fun executeStreaming(
         prompt: Prompt,
@@ -143,7 +144,7 @@ internal class MockLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> = executeMultipleChoicesResponse
+    ): LLMChoice = executeMultipleChoicesResponse
 
     override suspend fun moderate(
         prompt: Prompt,
@@ -171,7 +172,7 @@ internal class MockLLMClient @JvmOverloads constructor(
         wasClosed = true
     }
 
-    val executeResponse: List<Message.Assistant>
+    val executeResponse: Message.Assistant
         get() = responseSpec.execute.getOrThrow()
 
     val executeFailure: Throwable?
@@ -183,7 +184,7 @@ internal class MockLLMClient @JvmOverloads constructor(
     val executeStreamingFailure: Throwable?
         get() = responseSpec.executeStreaming.exceptionOrNull()
 
-    val executeMultipleChoicesResponse: List<LLMChoice>
+    val executeMultipleChoicesResponse: LLMChoice
         get() = responseSpec.executeMultipleChoices.getOrThrow()
 
     val executeMultipleChoicesFailure: Throwable?

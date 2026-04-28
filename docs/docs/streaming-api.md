@@ -20,7 +20,7 @@ The stream carries **typed frames** organized into two categories:
     **Complete frames** (full content):
 
     - `StreamFrame.TextComplete(text: String, index: Int?)` — complete assistant text
-    - `StreamFrame.ReasoningComplete(text: List<String>, summary: List<String>?, encrypted: String?, index: Int?)` — complete reasoning with optional summary and encrypted content
+    - `StreamFrame.ReasoningComplete(content: List<String>, summary: List<String>?, encrypted: String?, index: Int?)` — complete reasoning with optional summary and encrypted content
     - `StreamFrame.ToolCallComplete(id: String?, name: String, content: String, index: Int?)` — complete tool invocation
 
     **End marker**:
@@ -315,7 +315,7 @@ Models that support reasoning (such as Claude Sonnet 4.5 or GPT-o1) emit reasoni
                 }
                 is StreamFrame.ReasoningComplete -> {
                     // Access complete reasoning
-                    println("\nComplete reasoning: ${frame.text.joinToString("")}")
+                    println("\nComplete reasoning: ${frame.content.joinToString("")}")
                     println("Summary: ${frame.summary?.joinToString("") ?: "N/A"}")
                 }
                 is StreamFrame.TextDelta -> print(frame.text)
@@ -381,7 +381,7 @@ Models that support reasoning (such as Claude Sonnet 4.5 or GPT-o1) emit reasoni
                 } else if (frame instanceof StreamFrame.ReasoningComplete complete) {
                     // Access complete reasoning
                     System.out.println("\nComplete reasoning: "
-                        + String.join("", complete.getText()));
+                        + String.join("", complete.getContent()));
                     System.out.println("Summary: "
                         + (complete.getSummary() != null
                             ? String.join("", complete.getSummary()) : "N/A"));
@@ -586,8 +586,8 @@ You can listen to stream events in [agent event handlers](features/agent-event-h
 You can transform a collected list of frames to standard message objects:
 
 - `toAssistantMessageOrNull()` — extracts `Message.Assistant` from text frames
-- `toReasoningMessageOrNull()` — extracts `Message.Reasoning` from reasoning frames
-- `toToolCallMessages()` — extracts `Message.Tool.Call` from tool call frames
+- `toReasoningMessageOrNull()` — extracts `MessagePart.Reasoning` from reasoning frames
+- `toToolCallMessages()` — extracts `MessagePart.Tool.Call` from tool call frames
 - `toMessageResponses()` — converts all complete frames to their corresponding `Message.Response` objects
 
 ## Examples

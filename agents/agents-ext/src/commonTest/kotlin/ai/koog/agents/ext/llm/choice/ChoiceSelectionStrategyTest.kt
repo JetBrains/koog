@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.streamFrameFlowOf
@@ -18,6 +19,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.js.JsName
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.time.Instant
 
 class ChoiceSelectionStrategyTest {
@@ -32,10 +34,10 @@ class ChoiceSelectionStrategyTest {
         val testPrompt = prompt("test") {}
 
         // Create two different choices
-        val firstChoice: LLMChoice =
-            listOf(Message.Assistant("First choice", metaInfo = ResponseMetaInfo.create(testClock)))
-        val secondChoice: LLMChoice =
-            listOf(Message.Assistant("Second choice", metaInfo = ResponseMetaInfo.create(testClock)))
+        val firstChoice =
+            Message.Assistant("First choice", metaInfo = ResponseMetaInfo.create(testClock))
+        val secondChoice =
+            Message.Assistant("Second choice", metaInfo = ResponseMetaInfo.create(testClock))
         val choices = listOf(firstChoice, secondChoice)
 
         // Act
@@ -54,12 +56,10 @@ class ChoiceSelectionStrategyTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
-            ): List<Message.Response> {
-                return listOf(
-                    Message.Assistant(
-                        "Default response",
-                        metaInfo = ResponseMetaInfo.create(testClock)
-                    )
+            ): Message.Assistant {
+                return Message.Assistant(
+                    "Default response",
+                    metaInfo = ResponseMetaInfo.create(testClock)
                 )
             }
 
@@ -74,11 +74,11 @@ class ChoiceSelectionStrategyTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
-            ): List<LLMChoice> {
+            ): LLMChoice {
                 val choice1 =
-                    listOf(Message.Assistant("Choice 1", metaInfo = ResponseMetaInfo.create(testClock)))
+                    Message.Assistant("Choice 1", metaInfo = ResponseMetaInfo.create(testClock))
                 val choice2 =
-                    listOf(Message.Assistant("Choice 2", metaInfo = ResponseMetaInfo.create(testClock)))
+                    Message.Assistant("Choice 2", metaInfo = ResponseMetaInfo.create(testClock))
                 return listOf(choice1, choice2)
             }
 
@@ -93,7 +93,7 @@ class ChoiceSelectionStrategyTest {
         }
 
         val mockStrategy = object : ChoiceSelectionStrategy {
-            override suspend fun choose(prompt: Prompt, choices: List<LLMChoice>): LLMChoice {
+            override suspend fun choose(prompt: Prompt, choices: List<Message.Assistant>): Message.Assistant {
                 // Always choose the second choice
                 return choices[1]
             }
@@ -104,10 +104,12 @@ class ChoiceSelectionStrategyTest {
         val testModel = OllamaModels.Meta.LLAMA_3_2
 
         val result = executor.execute(testPrompt, testModel, emptyList())
+        assertEquals(1, result.parts.size, "PromptExecutorChoice should return a single message")
+        val textPart = assertIs<MessagePart.Text>(result.parts.first())
 
         assertEquals(
             "Choice 2",
-            (result.first() as Message.Assistant).content,
+            textPart.text,
             "PromptExecutorChoice should delegate to strategy and return the chosen choice"
         )
     }

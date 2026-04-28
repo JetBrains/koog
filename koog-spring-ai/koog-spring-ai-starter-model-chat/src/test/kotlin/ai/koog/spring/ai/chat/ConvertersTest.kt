@@ -4,12 +4,15 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -33,57 +36,74 @@ class ConvertersTest {
 
     @Test
     fun `converts Koog System message to Spring AI SystemMessage`() {
-        val koogMsg = Message.System("You are a helpful assistant", requestMeta)
+        val koogMsg = listOf(Message.System("You are a helpful assistant", requestMeta))
         val springMsg = koogMessageToSpringMessage(koogMsg)
-        assertEquals(MessageType.SYSTEM, springMsg.messageType)
-        assertEquals("You are a helpful assistant", springMsg.text)
+        assertEquals(1, springMsg.size)
+        assertEquals(MessageType.SYSTEM, springMsg[0].messageType)
+        assertEquals("You are a helpful assistant", springMsg[0].text)
     }
 
     @Test
     fun `converts Koog User message to Spring AI UserMessage`() {
-        val koogMsg = Message.User("Hello", requestMeta)
+        val koogMsg = listOf(Message.User("Hello", requestMeta))
         val springMsg = koogMessageToSpringMessage(koogMsg)
-        assertEquals(MessageType.USER, springMsg.messageType)
-        assertEquals("Hello", springMsg.text)
+        assertEquals(1, springMsg.size)
+
+        assertEquals(MessageType.USER, springMsg[0].messageType)
+        assertEquals("Hello", springMsg[0].text)
     }
 
     @Test
     fun `converts Koog Assistant message to Spring AI AssistantMessage`() {
-        val koogMsg = Message.Assistant("Hi there", responseMeta)
+        val koogMsg = listOf(Message.Assistant("Hi there", responseMeta))
         val springMsg = koogMessageToSpringMessage(koogMsg)
-        assertEquals(MessageType.ASSISTANT, springMsg.messageType)
-        assertEquals("Hi there", springMsg.text)
+        assertEquals(1, springMsg.size)
+
+        assertEquals(MessageType.ASSISTANT, springMsg[0].messageType)
+        assertEquals("Hi there", springMsg[0].text)
     }
 
     @Test
     fun `converts Koog Tool Call to Spring AI AssistantMessage with tool calls`() {
-        val koogMsg = Message.Tool.Call(
-            id = "call-1",
-            tool = "get_weather",
-            content = """{"city": "London"}""",
-            metaInfo = responseMeta
-        )
-        val springMsg = koogMessageToSpringMessage(koogMsg)
-        assertEquals(MessageType.ASSISTANT, springMsg.messageType)
-        assertTrue(springMsg is AssistantMessage)
-        val toolCalls = (springMsg as AssistantMessage).toolCalls
+        val koogMsg =
+            Message.Assistant(
+                parts = listOf(
+                    MessagePart.Tool.Call(
+                        id = "call-1",
+                        tool = "get_weather",
+                        args = JsonObject(mapOf("city" to JsonPrimitive("London")))
+                    ),
+                ),
+                metaInfo = responseMeta
+            )
+        val springMsg = koogMessageToSpringMessage(listOf(koogMsg))
+        assertEquals(1, springMsg.size)
+        assertEquals(MessageType.ASSISTANT, springMsg[0].messageType)
+
+        val toolCalls = (springMsg[0] as AssistantMessage).toolCalls
         assertEquals(1, toolCalls.size)
         assertEquals("get_weather", toolCalls[0].name())
         assertEquals("call-1", toolCalls[0].id())
-        assertEquals("""{"city": "London"}""", toolCalls[0].arguments())
+        assertEquals("""{"city":"London"}""", toolCalls[0].arguments())
     }
 
     @Test
     fun `converts Koog Tool Result to Spring AI ToolResponseMessage`() {
-        val koogMsg = Message.Tool.Result(
-            id = "call-1",
-            tool = "get_weather",
-            content = "Sunny, 22C",
+        val koogMsg = Message.User(
+            parts = listOf(
+                MessagePart.Tool.Result(
+                    id = "call-1",
+                    tool = "get_weather",
+                    output = "Sunny, 22C",
+                ),
+            ),
             metaInfo = requestMeta
         )
-        val springMsg = koogMessageToSpringMessage(koogMsg)
-        assertTrue(springMsg is ToolResponseMessage)
-        val responses = (springMsg as ToolResponseMessage).responses
+
+        val springMsg = koogMessageToSpringMessage(listOf(koogMsg))
+        assertEquals(1, springMsg.size)
+        assertTrue(springMsg[0] is ToolResponseMessage)
+        val responses = (springMsg[0] as ToolResponseMessage).responses
         assertEquals(1, responses.size)
         assertEquals("call-1", responses[0].id())
         assertEquals("get_weather", responses[0].name())
@@ -92,7 +112,10 @@ class ConvertersTest {
 
     @Test
     fun `converts Koog Reasoning message to Spring AI AssistantMessage with reasoningContent metadata`() {
-        val koogMsg = Message.Reasoning(content = "step by step", metaInfo = responseMeta)
+        val koogMsg = Message.Assistant(
+            parts = listOf(MessagePart.Reasoning("step by step")),
+            metaInfo = responseMeta
+        )
         val springMsg = koogMessageToSpringMessage(koogMsg)
         assertTrue(springMsg is AssistantMessage)
         assertEquals(MessageType.ASSISTANT, springMsg.messageType)
@@ -105,23 +128,23 @@ class ConvertersTest {
     @Test
     fun `converts Spring AI Generation with text to Koog Assistant message`() {
         val generation = Generation(AssistantMessage("Hello from LLM"))
-        val responses = springGenerationToKoogResponses(generation)
-        assertEquals(1, responses.size)
-        assertTrue(responses[0] is Message.Assistant)
-        assertEquals("Hello from LLM", responses[0].content)
+        val response = springGenerationToKoogResponses(generation)
+        val textParts = response.parts.filterIsInstance<MessagePart.Text>()
+        assertEquals(1, textParts.size)
+        assertEquals("Hello from LLM", textParts[0].text)
     }
 
     @Test
     fun `converts Spring AI Generation with tool calls to Koog Tool Call messages`() {
         val toolCall = AssistantMessage.ToolCall("tc-1", "function", "search", """{"q":"test"}""")
         val generation = Generation(AssistantMessage.builder().toolCalls(listOf(toolCall)).build())
-        val responses = springGenerationToKoogResponses(generation)
-        assertEquals(1, responses.size)
-        assertTrue(responses[0] is Message.Tool.Call)
-        val call = responses[0] as Message.Tool.Call
+        val response = springGenerationToKoogResponses(generation)
+        val toolCallParts = response.parts.filterIsInstance<MessagePart.Tool.Call>()
+        assertEquals(1, toolCallParts.size)
+        val call = toolCallParts[0]
         assertEquals("tc-1", call.id)
         assertEquals("search", call.tool)
-        assertEquals("""{"q":"test"}""", call.content)
+        assertEquals("""{"q":"test"}""", call.args.toString())
     }
 
     @Test
@@ -132,9 +155,8 @@ class ConvertersTest {
             override fun getCompletionTokens(): Int = 20
             override fun getNativeUsage(): Any = emptyMap<String, Any>()
         }
-        val responses = springGenerationToKoogResponses(generation, usage = usage)
-        assertEquals(1, responses.size)
-        val metaInfo = (responses[0] as Message.Assistant).metaInfo
+        val response = springGenerationToKoogResponses(generation, usage = usage)
+        val metaInfo = response.metaInfo
         assertEquals(10, metaInfo.inputTokensCount)
         assertEquals(20, metaInfo.outputTokensCount)
         assertEquals(30, metaInfo.totalTokensCount)
@@ -149,13 +171,18 @@ class ConvertersTest {
                 .build()
         )
 
-        val responses = springGenerationToKoogResponses(generation)
+        val response = springGenerationToKoogResponses(generation)
 
-        assertEquals(2, responses.size)
-        assertTrue(responses[0] is Message.Reasoning)
-        assertEquals("hidden chain of thought", responses[0].content)
-        assertTrue(responses[1] is Message.Assistant)
-        assertEquals("Final answer", responses[1].content)
+        assertEquals(2, response.parts.size)
+
+        assertTrue(response.parts[0] is MessagePart.Reasoning)
+        val reasoningPart = response.parts[0] as MessagePart.Reasoning
+        assertEquals(1, reasoningPart.content.size)
+        assertEquals("hidden chain of thought", reasoningPart.content[0])
+
+        assertTrue(response.parts[1] is MessagePart.Text)
+        val textPart = response.parts[1] as MessagePart.Text
+        assertEquals("Final answer", textPart.text)
     }
 
     // ---- koogToolDescriptorToToolCallback ----
@@ -374,11 +401,13 @@ class ConvertersTest {
     @Test
     fun `converts User message with image URL attachment to UserMessage with media`() {
         val parts = listOf(
-            ContentPart.Text("Look at this image"),
-            ContentPart.Image(
-                content = AttachmentContent.URL("https://example.com/image.png"),
-                format = "png",
-                mimeType = "image/png"
+            MessagePart.Text("Look at this image"),
+            MessagePart.Attachment(
+                AttachmentSource.Image(
+                    content = AttachmentContent.URL("https://example.com/image.png"),
+                    format = "png",
+                    mimeType = "image/png"
+                )
             )
         )
         val koogMsg = Message.User(parts, requestMeta)
@@ -395,11 +424,13 @@ class ConvertersTest {
     fun `converts User message with binary image attachment to UserMessage with media`() {
         val imageBytes = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47) // PNG magic bytes
         val parts = listOf(
-            ContentPart.Text("Describe this"),
-            ContentPart.Image(
-                content = AttachmentContent.Binary.Bytes(imageBytes),
-                format = "png",
-                mimeType = "image/png"
+            MessagePart.Text("Describe this"),
+            MessagePart.Attachment(
+                AttachmentSource.Image(
+                    content = AttachmentContent.Binary.Bytes(imageBytes),
+                    format = "png",
+                    mimeType = "image/png"
+                )
             )
         )
         val koogMsg = Message.User(parts, requestMeta)
@@ -414,11 +445,13 @@ class ConvertersTest {
     fun `converts User message with base64 image attachment to UserMessage with media`() {
         val base64Content = "iVBORw0KGgo="
         val parts = listOf(
-            ContentPart.Text("What is this?"),
-            ContentPart.Image(
-                content = AttachmentContent.Binary.Base64(base64Content),
-                format = "jpeg",
-                mimeType = "image/jpeg"
+            MessagePart.Text("What is this?"),
+            MessagePart.Attachment(
+                AttachmentSource.Image(
+                    content = AttachmentContent.Binary.Base64(base64Content),
+                    format = "jpeg",
+                    mimeType = "image/jpeg"
+                )
             )
         )
         val koogMsg = Message.User(parts, requestMeta)
@@ -432,16 +465,20 @@ class ConvertersTest {
     @Test
     fun `converts User message with multiple attachments to UserMessage with multiple media`() {
         val parts = listOf(
-            ContentPart.Text("Compare these"),
-            ContentPart.Image(
-                content = AttachmentContent.URL("https://example.com/a.png"),
-                format = "png",
-                mimeType = "image/png"
+            MessagePart.Text("Compare these"),
+            MessagePart.Attachment(
+                AttachmentSource.Image(
+                    content = AttachmentContent.URL("https://example.com/a.png"),
+                    format = "png",
+                    mimeType = "image/png"
+                )
             ),
-            ContentPart.Image(
-                content = AttachmentContent.URL("https://example.com/b.jpg"),
-                format = "jpg",
-                mimeType = "image/jpeg"
+            MessagePart.Attachment(
+                AttachmentSource.Image(
+                    content = AttachmentContent.URL("https://example.com/b.jpg"),
+                    format = "jpg",
+                    mimeType = "image/jpeg"
+                )
             )
         )
         val koogMsg = Message.User(parts, requestMeta)
@@ -454,11 +491,13 @@ class ConvertersTest {
     @Test
     fun `converts User message with audio attachment to UserMessage with media`() {
         val parts = listOf(
-            ContentPart.Text("Transcribe this"),
-            ContentPart.Audio(
-                content = AttachmentContent.Binary.Bytes(byteArrayOf(0x00, 0x01, 0x02)),
-                format = "mp3",
-                mimeType = "audio/mp3"
+            MessagePart.Text("Transcribe this"),
+            MessagePart.Attachment(
+                AttachmentSource.Audio(
+                    content = AttachmentContent.Binary.Bytes(byteArrayOf(0x00, 0x01, 0x02)),
+                    format = "mp3",
+                    mimeType = "audio/mp3"
+                )
             )
         )
         val koogMsg = Message.User(parts, requestMeta)
@@ -472,11 +511,13 @@ class ConvertersTest {
     @Test
     fun `converts User message with file attachment with plain text content`() {
         val parts = listOf(
-            ContentPart.Text("Summarize this document"),
-            ContentPart.File(
-                content = AttachmentContent.PlainText("This is the document content"),
-                format = "txt",
-                mimeType = "text/plain"
+            MessagePart.Text("Summarize this document"),
+            MessagePart.Attachment(
+                AttachmentSource.File(
+                    content = AttachmentContent.PlainText("This is the document content"),
+                    format = "txt",
+                    mimeType = "text/plain"
+                )
             )
         )
         val koogMsg = Message.User(parts, requestMeta)

@@ -3,7 +3,7 @@ package ai.koog.prompt.executor.clients.mistralai
 import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.params.LLMParams
 import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
@@ -16,6 +16,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
@@ -212,9 +214,9 @@ class MistralAILLMClientTest {
         assertTrue(capturedUrl.endsWith("v1/chat/completions"))
         assertEquals(HttpMethod.Post, capturedMethod)
         assertEquals("Bearer $key", capturedAuth)
-        assertEquals(1, responses.size)
-        val text = (responses.first() as Message.Assistant).content
-        assertEquals(content, text)
+        assertEquals(1, responses.parts.size)
+        val textPart = assertIs<MessagePart.Text>(responses.parts.first())
+        assertEquals(content, textPart.text)
     }
 
     @Test
@@ -236,8 +238,13 @@ class MistralAILLMClientTest {
 
         val choices = client.executeMultipleChoices(prompt, MistralAIModels.Chat.MistralMedium31, tools = emptyList())
         assertEquals(2, choices.size, "Response should have two choices")
-        assertEquals(optionA, (choices[0].first() as Message.Assistant).content, "$optionA should be first")
-        assertEquals(optionB, (choices[1].first() as Message.Assistant).content, "$optionB should be second")
+        assertEquals(1, choices[0].parts.size, "First choice should have one part")
+        val firstChoice = assertIs<MessagePart.Text>(choices[0].parts.first())
+        assertEquals(optionA, firstChoice.text, "$optionA should be first")
+
+        assertEquals(1, choices[1].parts.size, "Second choice should have one part")
+        val secondChoice = assertIs<MessagePart.Text>(choices[1].parts.first())
+        assertEquals(optionB, secondChoice.text, "$optionB should be second")
     }
 
     @Test
@@ -275,12 +282,13 @@ class MistralAILLMClientTest {
         }
 
         val responses = client.execute(prompt, MistralAIModels.Chat.MistralMedium31)
-        assertEquals(1, responses.size, "Response should have one choice")
+        assertEquals(1, responses.parts.size, "Response should have one choice")
         assertNotNull(capturedBody, "Captured body should not be null")
         assertTrue(capturedBody.contains("\"response_format\""), "Response body should contain response_format")
         assertTrue(capturedBody.contains("\"type\":\"json_schema\""), "Response body should contain type:json_schema")
+        val textPart = assertIs<MessagePart.Text>(responses.parts.first())
         assertTrue(
-            responses.first().content.contains("{\"name\":\"Alice\"}"),
+            textPart.text.contains("{\"name\":\"Alice\"}"),
             "Response should contain JSON string [{\"name\":\"Alice\"}]"
         )
     }
@@ -314,13 +322,14 @@ class MistralAILLMClientTest {
 
         val responses = client.execute(prompt, MistralAIModels.Chat.MistralMedium31)
 
-        assertEquals(2, responses.size, "Response should contain reasoning and tool call")
-        assertIs<Message.Reasoning>(responses[0])
-        assertEquals("I should call the weather tool first.", responses[0].content)
-        val toolCall = assertIs<Message.Tool.Call>(responses[1])
-        assertEquals("call_weather", toolCall.id)
-        assertEquals("weather", toolCall.tool)
-        assertEquals("{\"city\":\"Boston\"}", toolCall.content)
+        assertEquals(2, responses.parts.size, "Response should contain reasoning and tool call")
+        val reasoningPart = assertIs<MessagePart.Reasoning>(responses.parts[0])
+        assertEquals(1, reasoningPart.content.size, "Reasoning should contain one message")
+        assertEquals("I should call the weather tool first.", reasoningPart.content.first())
+        val toolCallPart = assertIs<MessagePart.Tool.Call>(responses.parts[1])
+        assertEquals("call_weather", toolCallPart.id)
+        assertEquals("weather", toolCallPart.tool)
+        assertEquals(buildJsonObject { put("city", JsonPrimitive("Boston")) }, toolCallPart.argsJson)
     }
 
     @Test
@@ -380,10 +389,10 @@ class MistralAILLMClientTest {
             temperature = 0.2
         }
 
-        val responses = client.execute(prompt, MistralAIModels.Chat.MistralMedium31, tools = emptyList())
-        assertEquals(1, responses.size, "Response should have one response")
-        val response = responses.first()
-        assertIs<Message.Assistant>(response, "Response should be assistant message")
+        val response = client.execute(prompt, MistralAIModels.Chat.MistralMedium31, tools = emptyList())
+        assertEquals(1, response.parts.size, "Response should have one response")
+        val textPart = response.parts.first()
+        assertIs<MessagePart.Text>(textPart, "Response should be assistant message")
         assertEquals(35, response.metaInfo.inputTokensCount)
         assertEquals(191, response.metaInfo.outputTokensCount)
         assertEquals(226, response.metaInfo.totalTokensCount)

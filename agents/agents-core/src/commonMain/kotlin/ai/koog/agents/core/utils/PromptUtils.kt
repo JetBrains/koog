@@ -3,6 +3,7 @@ package ai.koog.agents.core.utils
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 
 /**
  * Escapes characters that have special meaning in XML (`<`, `>`, `&`, `"`, `'`) so that
@@ -42,17 +43,36 @@ internal fun buildPromptAsXml(
         append("<$historyWrapperTag>\n")
         messages.forEach { message ->
             when (message) {
-                is Message.System -> append("<system>\n${message.content.escapeXml()}\n</system>\n")
-                is Message.User -> append("<user>\n${message.content.escapeXml()}\n</user>\n")
-                is Message.Assistant -> append("<assistant>\n${message.content.escapeXml()}\n</assistant>\n")
-                is Message.Reasoning -> append("<thinking>\n${message.content.escapeXml()}\n</thinking>\n")
-                is Message.Tool.Call -> append(
-                    "<tool_call tool=\"${message.tool.escapeXml()}\">\n${message.content.escapeXml()}\n</tool_call>\n"
-                )
-
-                is Message.Tool.Result -> append(
-                    "<tool_result tool=\"${message.tool.escapeXml()}\">\n${message.content.escapeXml()}\n</tool_result>\n"
-                )
+                is Message.System -> {
+                    val text = message.parts.joinToString("\n") { it.text }.escapeXml()
+                    append("<system>\n$text\n</system>\n")
+                }
+                is Message.User -> {
+                    val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+                    if (textParts.isNotEmpty()) {
+                        val text = textParts.joinToString("\n") { it.text }.escapeXml()
+                        append("<user>\n$text\n</user>\n")
+                    }
+                    message.parts.forEach { part ->
+                        if (part is MessagePart.Tool.Result) {
+                            append("<tool_result tool=\"${part.tool.escapeXml()}\">\n${part.output.escapeXml()}\n</tool_result>\n")
+                        }
+                    }
+                }
+                is Message.Assistant -> {
+                    val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+                    if (textParts.isNotEmpty()) {
+                        val text = textParts.joinToString("\n") { it.text }.escapeXml()
+                        append("<assistant>\n$text\n</assistant>\n")
+                    }
+                    message.parts.forEach { part ->
+                        when (part) {
+                            is MessagePart.Tool.Call -> append("<tool_call tool=\"${part.tool.escapeXml()}\">\n${part.args.escapeXml()}\n</tool_call>\n")
+                            is MessagePart.Reasoning -> append("<thinking>\n${part.content.joinToString("\n").escapeXml()}\n</thinking>\n")
+                            else -> {}
+                        }
+                    }
+                }
             }
         }
         append("</$historyWrapperTag>\n")

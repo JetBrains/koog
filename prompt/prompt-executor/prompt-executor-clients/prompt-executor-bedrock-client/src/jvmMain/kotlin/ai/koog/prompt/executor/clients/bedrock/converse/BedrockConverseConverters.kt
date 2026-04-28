@@ -9,8 +9,10 @@ import ai.koog.prompt.executor.clients.bedrock.util.JsonDocumentConverters
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
+import ai.koog.prompt.message.MessagePart.ContentPart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.message.require
 import ai.koog.prompt.params.LLMParams
@@ -67,6 +69,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import aws.sdk.kotlin.services.bedrockruntime.model.Message as BedrockMessage
 import aws.sdk.kotlin.services.bedrockruntime.model.Tool as BedrockTool
@@ -133,75 +136,19 @@ internal object BedrockConverseConverters {
         prompt.messages.forEach { message ->
             when (message) {
                 is Message.System -> {
-                    systemMessages += message.parts.map { SystemContentBlock.Text(it.text) }
-                    message.cacheControl?.let { cc ->
-                        systemMessages += cc.require<BedrockCacheControl>().toBedrockSystemCachePoint()
+                    message.parts.forEach {
+                        systemMessages.add(SystemContentBlock.Text(it.text))
+                        it.cacheControl?.let { cc ->
+                            systemMessages += cc.require<BedrockCacheControl>().toBedrockSystemCachePoint()
+                        }
                     }
                 }
 
                 is Message.User ->
-                    messages += BedrockMessage {
-                        this.role = ConversationRole.User
-                        this.content = buildList {
-                            addAll(message.parts.map { it.toConverseContentBlock(model) })
-                            addAll(listOfNotNull(message.cacheControl?.require<BedrockCacheControl>()?.toBedrockCachePointContentBlock()))
-                        }
-                    }
+                    messages.add(message.toBedrockMessage(model))
 
                 is Message.Assistant ->
-                    messages += BedrockMessage {
-                        this.role = ConversationRole.Assistant
-                        this.content = buildList {
-                            addAll(message.parts.map { it.toConverseContentBlock(model) })
-                            addAll(listOfNotNull(message.cacheControl?.require<BedrockCacheControl>()?.toBedrockCachePointContentBlock()))
-                        }
-                    }
-
-                is Message.Reasoning ->
-                    messages += BedrockMessage {
-                        this.role = ConversationRole.Assistant
-
-                        this.content = listOf(
-                            ContentBlock.ReasoningContent(
-                                ReasoningContentBlock.ReasoningText(
-                                    ReasoningTextBlock {
-                                        this.text = message.content
-                                        this.signature = message.encrypted
-                                    }
-                                )
-                            )
-                        )
-                    }
-
-                is Message.Tool.Call ->
-                    messages += BedrockMessage {
-                        this.role = ConversationRole.Assistant
-
-                        this.content = listOf(
-                            ContentBlock.ToolUse(
-                                ToolUseBlock {
-                                    this.name = message.tool
-                                    this.toolUseId = message.id
-                                    this.input = JsonDocumentConverters.convertToDocument(message.contentJson)
-                                }
-                            )
-                        )
-                    }
-
-                is Message.Tool.Result ->
-                    messages += BedrockMessage {
-                        this.role = ConversationRole.User
-
-                        this.content = listOf(
-                            ContentBlock.ToolResult(
-                                ToolResultBlock {
-                                    this.toolUseId = message.id
-                                    // only text results are currently supported
-                                    this.content = message.parts.map { ToolResultContentBlock.Text(it.text) }
-                                }
-                            )
-                        )
-                    }
+                    messages.add(message.toBedrockMessage(model))
             }
         }
 
@@ -277,6 +224,79 @@ internal object BedrockConverseConverters {
         )
     }
 
+    private fun Message.User.toBedrockMessage(model: LLModel): BedrockMessage {
+        return BedrockMessage {
+            this.role = ConversationRole.User
+            this.content = buildList {
+                parts.forEach { part ->
+                    when (part) {
+                        is MessagePart.ContentPart -> {
+                            add(part.toConverseContentBlock(model))
+                            part.cacheControl?.let { cc ->
+                                add(cc.require<BedrockCacheControl>().toBedrockCachePointContentBlock())
+                            }
+                        }
+
+                        is MessagePart.Tool.Result -> {
+                            add(
+                                ContentBlock.ToolResult(
+                                    ToolResultBlock {
+                                        this.toolUseId = part.id
+                                        // only text results are currently supported
+                                        this.content = listOf(ToolResultContentBlock.Text(part.output))
+                                    }
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun Message.Assistant.toBedrockMessage(model: LLModel): BedrockMessage {
+        return BedrockMessage {
+            this.role = ConversationRole.Assistant
+            this.content = buildList {
+                parts.forEach { part ->
+                    when (part) {
+                        is MessagePart.ContentPart -> {
+                            add(part.toConverseContentBlock(model))
+                            part.cacheControl?.let { cc ->
+                                add(cc.require<BedrockCacheControl>().toBedrockCachePointContentBlock())
+                            }
+                        }
+                        is MessagePart.Reasoning -> {
+                            add(
+                                ContentBlock.ReasoningContent(
+                                    ReasoningContentBlock.ReasoningText(
+                                        ReasoningTextBlock {
+                                            this.text = part.content.singleOrNull()
+                                                ?: throw IllegalArgumentException("Reasoning content must have a single part")
+                                            this.signature = part.encrypted
+                                        }
+                                    )
+                                )
+                            )
+                        }
+
+                        is MessagePart.Tool.Call -> {
+                            add(
+                                ContentBlock.ToolUse(
+                                    ToolUseBlock {
+                                        this.name = part.tool
+                                        this.toolUseId = part.id
+                                        this.input = JsonDocumentConverters.convertToDocument(part.argsJson)
+                                    }
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Creates regular [ConverseRequest].
      */
@@ -345,7 +365,7 @@ internal object BedrockConverseConverters {
     fun convertConverseResponse(
         response: ConverseResponse,
         clock: KoogClock,
-    ): List<Message.Response> {
+    ): Message.Assistant {
         // Extract token count from the response
         val inputTokensCount = response.usage?.inputTokens
         val outputTokensCount = response.usage?.outputTokens
@@ -366,16 +386,15 @@ internal object BedrockConverseConverters {
 
         val content = response.output?.asMessageOrNull()?.content.orEmpty()
         // Convert content blocks to messages
-        val messages = content.map { contentBlock ->
+        val parts = content.map { contentBlock ->
             when (contentBlock) {
                 is ContentBlock.ReasoningContent -> when (val reasoningContent = contentBlock.value) {
                     is ReasoningContentBlock.ReasoningText -> {
                         val reasoningBlock = reasoningContent.value
 
-                        Message.Reasoning(
+                        MessagePart.Reasoning(
                             encrypted = reasoningBlock.signature,
                             content = reasoningBlock.text,
-                            metaInfo = metaInfo,
                         )
                     }
 
@@ -386,41 +405,28 @@ internal object BedrockConverseConverters {
                 is ContentBlock.ToolUse -> {
                     val toolUseBlock = contentBlock.value
 
-                    Message.Tool.Call(
+                    MessagePart.Tool.Call(
                         id = toolUseBlock.toolUseId,
                         tool = toolUseBlock.name,
-                        content = json.encodeToString(
-                            JsonDocumentConverters.convertToJsonElement(toolUseBlock.input)
-                        ),
-                        metaInfo = metaInfo,
+                        args = JsonDocumentConverters.convertToJsonElement(toolUseBlock.input).jsonObject,
                     )
                 }
 
-                else ->
-                    Message.Assistant(
-                        part = contentBlock.toContentPart(),
-                        metaInfo = metaInfo,
-                        finishReason = response.stopReason.value,
-                    )
+                else -> contentBlock.toContentPart()
             }
         }
 
-        return messages.ifEmpty {
-            // If no messages where returned, return an empty message and check stopReason
-            listOf(
-                Message.Assistant(
-                    content = "",
-                    finishReason = response.stopReason.value,
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = totalTokensCount,
-                        inputTokensCount = inputTokensCount,
-                        outputTokensCount = outputTokensCount,
-                        metadata = cacheMetadata,
-                    )
-                )
+        return Message.Assistant(
+            parts = parts,
+            finishReason = response.stopReason.value,
+            metaInfo = ResponseMetaInfo.create(
+                clock,
+                totalTokensCount = totalTokensCount,
+                inputTokensCount = inputTokensCount,
+                outputTokensCount = outputTokensCount,
+                metadata = cacheMetadata,
             )
-        }
+        )
     }
 
     /**
@@ -528,84 +534,88 @@ internal object BedrockConverseConverters {
      *
      * @throws IllegalArgumentException if the given [ContentPart] is not supported.
      */
-    private fun ContentPart.toConverseContentBlock(model: LLModel): ContentBlock {
+    private fun MessagePart.ContentPart.toConverseContentBlock(model: LLModel): ContentBlock {
         return when (val part = this) {
-            is ContentPart.Text ->
+            is MessagePart.Text ->
                 ContentBlock.Text(text)
 
-            is ContentPart.Audio ->
-                throw IllegalArgumentException("Bedrock Converse API doesn't support audio content.")
+            is MessagePart.Attachment -> {
+                when (val source = part.source) {
+                    is AttachmentSource.Audio ->
+                        throw IllegalArgumentException("Bedrock Converse API doesn't support audio content.")
 
-            is ContentPart.File -> {
-                require(model.supports(LLMCapability.Document)) {
-                    "${model.id} doesn't support documents"
-                }
-
-                ContentBlock.Document(
-                    DocumentBlock {
-                        this.format = DocumentFormat.fromValue(part.format)
-                        // Converse API requires no extension in file names
-                        this.name = part.fileName?.substringBefore('.')
-
-                        this.source = when (val content = part.content) {
-                            is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
-                                DocumentSource.Bytes(content.asBytes())
-
-                            is AttachmentContent.URL ->
-                                DocumentSource.S3Location(content.toS3Location())
-
-                            is AttachmentContent.PlainText ->
-                                // Even though DocumentSource.Text exists, Converse API requires bytes or s3 uri here
-                                DocumentSource.Bytes(content.text.encodeToByteArray())
+                    is AttachmentSource.File -> {
+                        require(model.supports(LLMCapability.Document)) {
+                            "${model.id} doesn't support documents"
                         }
+
+                        ContentBlock.Document(
+                            DocumentBlock {
+                                this.format = DocumentFormat.fromValue(source.format)
+                                // Converse API requires no extension in file names
+                                this.name = source.fileName?.substringBefore('.')
+
+                                this.source = when (val content = source.content) {
+                                    is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
+                                        DocumentSource.Bytes(content.asBytes())
+
+                                    is AttachmentContent.URL ->
+                                        DocumentSource.S3Location(content.toS3Location())
+
+                                    is AttachmentContent.PlainText ->
+                                        // Even though DocumentSource.Text exists, Converse API requires bytes or s3 uri here
+                                        DocumentSource.Bytes(content.text.encodeToByteArray())
+                                }
+                            }
+                        )
                     }
-                )
-            }
 
-            is ContentPart.Image -> {
-                require(model.supports(LLMCapability.Vision.Image)) {
-                    "${model.id} doesn't support images"
-                }
-
-                ContentBlock.Image(
-                    ImageBlock {
-                        this.format = ImageFormat.fromValue(part.format)
-
-                        this.source = when (val content = part.content) {
-                            is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
-                                ImageSource.Bytes(content.asBytes())
-
-                            is AttachmentContent.URL ->
-                                ImageSource.S3Location(content.toS3Location())
-
-                            is AttachmentContent.PlainText ->
-                                throw IllegalArgumentException("Image can't have plain text content")
+                    is AttachmentSource.Image -> {
+                        require(model.supports(LLMCapability.Vision.Image)) {
+                            "${model.id} doesn't support images"
                         }
+
+                        ContentBlock.Image(
+                            ImageBlock {
+                                this.format = ImageFormat.fromValue(source.format)
+
+                                this.source = when (val content = source.content) {
+                                    is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
+                                        ImageSource.Bytes(content.asBytes())
+
+                                    is AttachmentContent.URL ->
+                                        ImageSource.S3Location(content.toS3Location())
+
+                                    is AttachmentContent.PlainText ->
+                                        throw IllegalArgumentException("Image can't have plain text content")
+                                }
+                            }
+                        )
                     }
-                )
-            }
 
-            is ContentPart.Video -> {
-                require(model.supports(LLMCapability.Vision.Video)) {
-                    "${model.id} doesn't support videos"
-                }
-
-                ContentBlock.Video(
-                    VideoBlock {
-                        this.format = VideoFormat.fromValue(part.format)
-
-                        this.source = when (val content = part.content) {
-                            is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
-                                VideoSource.Bytes(content.asBytes())
-
-                            is AttachmentContent.URL ->
-                                VideoSource.S3Location(content.toS3Location())
-
-                            is AttachmentContent.PlainText ->
-                                throw IllegalArgumentException("Video can't have plain text content")
+                    is AttachmentSource.Video -> {
+                        require(model.supports(LLMCapability.Vision.Video)) {
+                            "${model.id} doesn't support videos"
                         }
+
+                        ContentBlock.Video(
+                            VideoBlock {
+                                this.format = VideoFormat.fromValue(source.format)
+
+                                this.source = when (val content = source.content) {
+                                    is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
+                                        VideoSource.Bytes(content.asBytes())
+
+                                    is AttachmentContent.URL ->
+                                        VideoSource.S3Location(content.toS3Location())
+
+                                    is AttachmentContent.PlainText ->
+                                        throw IllegalArgumentException("Video can't have plain text content")
+                                }
+                            }
+                        )
                     }
-                )
+                }
             }
         }
     }
@@ -618,10 +628,10 @@ internal object BedrockConverseConverters {
      *
      * @throws IllegalArgumentException if the given [ContentBlock] is not supported.
      */
-    private fun ContentBlock.toContentPart(): ContentPart {
+    private fun ContentBlock.toContentPart(): MessagePart.ContentPart {
         return when (val block = this) {
             is ContentBlock.Text ->
-                ContentPart.Text(block.value)
+                MessagePart.Text(block.value)
 
             is ContentBlock.Document -> {
                 val content = when (val source = block.value.source) {
@@ -640,11 +650,13 @@ internal object BedrockConverseConverters {
 
                 val format = block.value.format.value
 
-                ContentPart.File(
-                    content = content,
-                    fileName = "${block.value.name}.$format",
-                    format = format,
-                    mimeType = "" // Bedrock Converse API doesn't have mime type
+                MessagePart.Attachment(
+                    source = AttachmentSource.File(
+                        content = content,
+                        fileName = "${block.value.name}.$format",
+                        format = format,
+                        mimeType = "" // Bedrock Converse API doesn't have mime type
+                    )
                 )
             }
 
@@ -660,11 +672,13 @@ internal object BedrockConverseConverters {
                         throw IllegalArgumentException("Unsupported image source type from Bedrock Converse API: $source")
                 }
 
-                ContentPart.Image(
-                    content = content,
-                    format = block.value.format.value,
-                    fileName = "", // Bedrock Converse API doesn't have file name for images
-                    mimeType = "" // Bedrock Converse API doesn't have mime type
+                MessagePart.Attachment(
+                    AttachmentSource.Image(
+                        content = content,
+                        format = block.value.format.value,
+                        fileName = "", // Bedrock Converse API doesn't have file name for images
+                        mimeType = "" // Bedrock Converse API doesn't have mime type
+                    )
                 )
             }
 
@@ -680,11 +694,13 @@ internal object BedrockConverseConverters {
                         throw IllegalArgumentException("Unsupported video source type from Bedrock Converse API: $source")
                 }
 
-                ContentPart.Video(
-                    content = content,
-                    format = block.value.format.value,
-                    fileName = "", // Bedrock Converse API doesn't have file name for videos
-                    mimeType = "" // Bedrock Converse API doesn't have mime type
+                MessagePart.Attachment(
+                    AttachmentSource.Video(
+                        content = content,
+                        format = block.value.format.value,
+                        fileName = "", // Bedrock Converse API doesn't have file name for videos
+                        mimeType = "" // Bedrock Converse API doesn't have mime type
+                    )
                 )
             }
 

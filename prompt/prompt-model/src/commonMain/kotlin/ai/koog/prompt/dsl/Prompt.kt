@@ -101,8 +101,8 @@ public data class Prompt @JvmOverloads constructor(
     @get:JvmName("latestTokenUsage")
     public val latestTokenUsage: Int
         get() = messages
-            .lastOrNull { it is Message.Response }
-            ?.let { it as? Message.Response }
+            .lastOrNull { it is Message.Assistant }
+            ?.let { it as? Message.Assistant }
             ?.metaInfo?.totalTokensCount ?: 0
 
     /**

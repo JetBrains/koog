@@ -19,6 +19,7 @@ import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.message.MessagePart
 import ai.koog.spring.prompt.executor.MultiLLMAutoConfiguration
 import ai.koog.spring.prompt.executor.clients.anthropic.AnthropicLLMAutoConfiguration
 import ai.koog.spring.prompt.executor.clients.deepseek.DeepSeekLLMAutoConfiguration
@@ -129,7 +130,7 @@ class KoogAutoConfigurationTest {
                     assertEquals("/v1/chat/completions", requestPath.get())
                     assertEquals("Bearer some_api_key", authorization.get())
                     assertTrue(requestBody.get().contains("Hello from Spring?"))
-                    assertEquals("Spring says hi", responses.single().content)
+                    assertEquals("Spring says hi", (responses.parts.single() as MessagePart.Text).text)
                 }
         } finally {
             server.stop(0)
@@ -339,7 +340,12 @@ class KoogAutoConfigurationTest {
     @Test
     fun `should supply Anthropic executor bean with retry client and default config`() {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(AnthropicLLMAutoConfiguration::class.java))
+            .withConfiguration(
+                AutoConfigurations.of(
+                    AnthropicLLMAutoConfiguration::class.java,
+                    MultiLLMAutoConfiguration::class.java,
+                )
+            )
             .withPropertyValues(
                 "ai.koog.anthropic.api-key=some_api_key",
                 "ai.koog.anthropic.retry.enabled=true"
@@ -657,7 +663,7 @@ class KoogAutoConfigurationTest {
 
                     assertEquals("/api/chat", requestPath.get())
                     assertTrue(requestBody.get().contains("Hello from Spring?"))
-                    assertEquals("Ollama says hi", responses.single().content)
+                    assertEquals("Ollama says hi", (responses.parts.single() as MessagePart.Text).text)
                 }
         } finally {
             server.stop(0)
@@ -667,7 +673,12 @@ class KoogAutoConfigurationTest {
     @Test
     fun `should supply Ollama executor bean with retry client and default config`() {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(OllamaLLMAutoConfiguration::class.java))
+            .withConfiguration(
+                AutoConfigurations.of(
+                    OllamaLLMAutoConfiguration::class.java,
+                    MultiLLMAutoConfiguration::class.java,
+                )
+            )
             .withPropertyValues(
                 "ai.koog.ollama.enabled=true",
                 "ai.koog.ollama.base-url=https://some-url.com",

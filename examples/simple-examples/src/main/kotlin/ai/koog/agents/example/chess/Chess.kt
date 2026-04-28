@@ -1,14 +1,15 @@
 package ai.koog.agents.example.chess
 
-import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
-import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
+import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onToolCalls
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -23,17 +24,17 @@ suspend fun main() {
 
     val strategy = strategy<String, String>("chess_strategy") {
         val nodeCallLLM by nodeLLMRequest("sendInput")
-        val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
-        val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
-        val nodeTrimHistory by nodeTrimHistory<ReceivedToolResult>()
+        val nodeExecuteTool by nodeExecuteToolsAndGetResults("nodeExecuteTool")
+        val nodeSendToolResult by nodeSendToolReceivedResults("nodeSendToolResult")
+        val nodeTrimHistory by nodeTrimHistory<ReceivedToolResults>()
 
-        edge(nodeStart forwardTo nodeCallLLM)
-        edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
-        edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
+        edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
+        edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
+        edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
         edge(nodeExecuteTool forwardTo nodeTrimHistory)
         edge(nodeTrimHistory forwardTo nodeSendToolResult)
-        edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-        edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+        edge(nodeSendToolResult forwardTo nodeFinish onTextParts { true })
+        edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
     }
 
     simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->

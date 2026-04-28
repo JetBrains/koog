@@ -21,8 +21,9 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.io.SuitableForIO
 import ai.koog.utils.time.KoogClock
@@ -240,7 +241,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<Message.Response> {
+    ): Message.Assistant {
         logger.debug { "Executing prompt for model: ${model.id}" }
 
         model.requireCapability(LLMCapability.Completion, "Model ${model.id} does not support chat completions")
@@ -262,7 +263,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<Message.Response> {
+    ): Message.Assistant {
         val modelFamily = getBedrockModelFamily(model)
         val requestBody = createRequestBody(prompt, model, tools)
         val invokeRequest = InvokeModelRequest {
@@ -332,8 +333,9 @@ public class BedrockLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<Message.Response> {
-        val converseRequest = BedrockConverseConverters.createConverseRequest(prompt, model, tools, moderationGuardrailsSettings)
+    ): Message.Assistant {
+        val converseRequest =
+            BedrockConverseConverters.createConverseRequest(prompt, model, tools, moderationGuardrailsSettings)
 
         return withContext(Dispatchers.SuitableForIO) {
             try {
@@ -486,7 +488,8 @@ public class BedrockLLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
-        val converseRequest = BedrockConverseConverters.createConverseStreamRequest(prompt, model, tools, moderationGuardrailsSettings)
+        val converseRequest =
+            BedrockConverseConverters.createConverseStreamRequest(prompt, model, tools, moderationGuardrailsSettings)
 
         return channelFlow {
             withContext(Dispatchers.SuitableForIO) {
@@ -697,12 +700,8 @@ public class BedrockLLMClient @JvmOverloads constructor(
             "Can't moderate an empty prompt"
         }
 
-        val requestMessages = prompt.messages.filterIsInstance<Message.Request>()
-        val responseMessages = prompt.messages.filterIsInstance<Message.Response>()
-        logger.debug { "Moderating prompt with ${requestMessages.size} request messages and ${responseMessages.size} response messages" }
-
-        val inputGuardrailResponse = if (requestMessages.isNotEmpty()) {
-            requestGuardrails<Message.Request>(
+        val inputGuardrailResponse = if (prompt.messages.any { it is Message.User || it is Message.System }) {
+            requestGuardrails<Message.User>(
                 moderationGuardrailsSettings,
                 prompt,
                 GuardrailContentSource.Input
@@ -710,8 +709,8 @@ public class BedrockLLMClient @JvmOverloads constructor(
         } else {
             null
         }
-        val outputGuardrailResponse = if (responseMessages.isNotEmpty()) {
-            requestGuardrails<Message.Response>(
+        val outputGuardrailResponse = if (prompt.messages.any { it is Message.Assistant }) {
+            requestGuardrails<Message.Assistant>(
                 moderationGuardrailsSettings,
                 prompt,
                 GuardrailContentSource.Output
@@ -792,50 +791,59 @@ public class BedrockLLMClient @JvmOverloads constructor(
                 message.parts.forEachIndexed { partIndex, part ->
                     logger.debug { "Processing part $partIndex of type ${part::class.simpleName}" }
 
-                    val contentBlock = when (part) {
-                        is ContentPart.Text -> {
+                    when (part) {
+                        is MessagePart.Text -> {
                             logger.debug { "Creating text block with ${part.text.length} characters" }
-                            GuardrailContentBlock.Text(GuardrailTextBlock { text = part.text })
+                            add(GuardrailContentBlock.Text(GuardrailTextBlock { text = part.text }))
                         }
 
-                        is ContentPart.Image -> {
-                            logger.debug { "Creating image block with format ${part.format}" }
-                            GuardrailContentBlock.Image(
-                                GuardrailImageBlock {
-                                    format = when (part.format) {
-                                        "jpg", "jpeg", "JPG", "JPEG" -> GuardrailImageFormat.Jpeg
-                                        "png", "PNG" -> GuardrailImageFormat.Png
-                                        else -> GuardrailImageFormat.SdkUnknown(part.format)
-                                    }
-                                    source = when (val imageContent = part.content) {
-                                        is AttachmentContent.Binary.Base64 -> Bytes(imageContent.asBytes())
+                        is MessagePart.Attachment -> {
+                            when (val attachmentSource = part.source) {
+                                is AttachmentSource.Image -> {
+                                    logger.debug { "Creating image block with format ${attachmentSource.format}" }
+                                    add(
+                                        GuardrailContentBlock.Image(
+                                            GuardrailImageBlock {
+                                                format = when (attachmentSource.format) {
+                                                    "jpg", "jpeg", "JPG", "JPEG" -> GuardrailImageFormat.Jpeg
+                                                    "png", "PNG" -> GuardrailImageFormat.Png
+                                                    else -> GuardrailImageFormat.SdkUnknown(attachmentSource.format)
+                                                }
+                                                source = when (val imageContent = attachmentSource.content) {
+                                                    is AttachmentContent.Binary.Base64 -> Bytes(imageContent.asBytes())
 
-                                        is AttachmentContent.Binary.Bytes -> Bytes(imageContent.data)
+                                                    is AttachmentContent.Binary.Bytes -> Bytes(imageContent.data)
 
-                                        is AttachmentContent.PlainText ->
-                                            Bytes(imageContent.text.encodeToByteArray())
+                                                    is AttachmentContent.PlainText ->
+                                                        Bytes(imageContent.text.encodeToByteArray())
 
-                                        else -> {
-                                            throw LLMClientException(
-                                                clientName,
-                                                "Unsupported image content type: ${imageContent::class.simpleName}. " +
-                                                    "Bedrock Guardrails only supports Binary.Base64, Binary.Bytes, or PlainText content."
-                                            )
-                                        }
-                                    }
+                                                    else -> {
+                                                        throw LLMClientException(
+                                                            clientName,
+                                                            "Unsupported image content type: ${imageContent::class.simpleName}. " +
+                                                                "Bedrock Guardrails only supports Binary.Base64, Binary.Bytes, or PlainText content."
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        )
+                                    )
                                 }
-                            )
+
+                                else -> {
+                                    throw LLMClientException(
+                                        clientName,
+                                        "Unsupported attachment type: ${part::class.simpleName}"
+                                    )
+                                }
+                            }
                         }
 
                         else -> {
-                            throw LLMClientException(
-                                clientName,
-                                "Unsupported attachment type: ${part::class.simpleName}"
-                            )
+                            logger.warn { "Skipping part type: ${part::class.simpleName}" }
                         }
                     }
 
-                    add(contentBlock)
                     logger.debug { "Added content block ${this.size} to list" }
                 }
             }

@@ -3,6 +3,7 @@ package ai.koog.agents.core.agent.config
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 
 /**
  * Determines how the tool calls which are present in the prompt, but whose definitions are not present in the request,
@@ -25,17 +26,49 @@ public abstract class MissingToolsConversionStrategy(private val format: ToolCal
 
     /**
      * Converts the given message by formatting specific types of tool-related messages
-     * (e.g., `Message.Tool.Call` and `Message.Tool.Result`) into descriptive messages.
+     * (e.g., `MessagePart.Tool.Call` and `MessagePart.Tool.Result`) into descriptive messages.
      * If the message is not a tool-related message, it remains unchanged.
      *
      * @param message The input message to be converted.
+     * @param toolNames The list of tool names used to determine which tools are present in the call.
+     * If not, the message part should be converted.
      * @return The converted message, either modified if it's a tool-related message, or unchanged otherwise.
      */
-    public fun convertMessage(message: Message): Message {
-        return when (message) {
-            is Message.Tool.Call -> format.describeToolCall(message)
-            is Message.Tool.Result -> format.describeToolResult(message)
-            else -> message
+    public fun convertMessage(message: Message, toolNames: List<String>): Message {
+        when (message) {
+            is Message.User -> {
+                return message.copy(
+                    parts = message.parts.map { part ->
+                        when (part) {
+                            is MessagePart.Tool.Result -> {
+                                if (part.tool in toolNames) {
+                                    part
+                                } else {
+                                    MessagePart.Text(format.describeToolResult(part))
+                                }
+                            }
+                            else -> part
+                        }
+                    }
+                )
+            }
+            is Message.Assistant -> {
+                return message.copy(
+                    parts = message.parts.map { part ->
+                        when (part) {
+                            is MessagePart.Tool.Call -> {
+                                if (part.tool in toolNames) {
+                                    part
+                                } else {
+                                    MessagePart.Text(format.describeToolCall(part))
+                                }
+                            }
+                            else -> part
+                        }
+                    }
+                )
+            }
+            is Message.System -> return message
         }
     }
 
@@ -45,7 +78,7 @@ public abstract class MissingToolsConversionStrategy(private val format: ToolCal
      */
     public class All(format: ToolCallDescriber) : MissingToolsConversionStrategy(format) {
         override fun convertPrompt(prompt: Prompt, tools: List<ToolDescriptor>): Prompt {
-            return prompt.withMessages { messages -> messages.map { convertMessage(it) } }
+            return prompt.withMessages { messages -> messages.map { convertMessage(it, emptyList()) } }
         }
     }
 
@@ -59,11 +92,7 @@ public abstract class MissingToolsConversionStrategy(private val format: ToolCal
             val toolNames = tools.map { it.name }
             return prompt.withMessages { messages ->
                 messages.map { message ->
-                    if (message is Message.Tool && message.tool !in toolNames) {
-                        convertMessage(message)
-                    } else {
-                        message
-                    }
+                    convertMessage(message, toolNames)
                 }
             }
         }

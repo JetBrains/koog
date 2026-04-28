@@ -1,12 +1,12 @@
 package ai.koog.prompt.streaming
 
-import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNull
 
 internal class StreamFrameExtTest {
 
@@ -19,8 +19,9 @@ internal class StreamFrameExtTest {
         )
 
         val expectedFrames = listOf(
-            StreamFrame.TextDelta("Hello, World!"),
-            StreamFrame.TextComplete("Hello, World!"),
+            StreamFrame.TextDelta("Hello, World!", index = 0),
+            StreamFrame.TextComplete("Hello, World!", index = 0),
+            StreamFrame.End("stop", ResponseMetaInfo.Empty)
         )
 
         assertEquals(expectedFrames, message.toStreamFrames())
@@ -30,16 +31,18 @@ internal class StreamFrameExtTest {
     fun testMessageAssistantWithMultiplePartsToStreamFrames() {
         val message = Message.Assistant(
             parts = listOf(
-                ContentPart.Text("Hello"),
-                ContentPart.Text("World")
+                MessagePart.Text("Hello"),
+                MessagePart.Text("World")
             ),
             metaInfo = ResponseMetaInfo.Empty
         )
 
         val expectedFrames = listOf(
-            StreamFrame.TextDelta("Hello"),
-            StreamFrame.TextDelta("World"),
-            StreamFrame.TextComplete("Hello\nWorld"),
+            StreamFrame.TextDelta("Hello", index = 0),
+            StreamFrame.TextComplete("Hello", index = 0),
+            StreamFrame.TextDelta("World", index = 1),
+            StreamFrame.TextComplete("World", index = 1),
+            StreamFrame.End(null, ResponseMetaInfo.Empty)
         )
 
         assertEquals(expectedFrames, message.toStreamFrames())
@@ -47,79 +50,17 @@ internal class StreamFrameExtTest {
 
     @Test
     fun testMessageReasoningToStreamFrames() {
-        val message = Message.Reasoning(
+        val reasoningPart = MessagePart.Reasoning(
             id = "rs_123",
-            parts = listOf(
-                ContentPart.Text("Thinking step 1"),
-                ContentPart.Text("Thinking step 2")
-            ),
-            summary = listOf(
-                ContentPart.Text("Summary")
-            ),
+            content = listOf("Thinking step 1", "Thinking step 2"),
+            summary = listOf("Summary"),
             encrypted = "encrypted_content",
+        )
+
+        val message = Message.Assistant(
+            parts = listOf(reasoningPart),
+            finishReason = "stop",
             metaInfo = ResponseMetaInfo.Empty
-        )
-
-        val expectedFrames = listOf(
-            StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking step 1"),
-            StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking step 2"),
-            StreamFrame.ReasoningDelta(id = "rs_123", summary = "Summary"),
-            StreamFrame.ReasoningComplete(
-                id = "rs_123",
-                listOf("Thinking step 1", "Thinking step 2"),
-                listOf("Summary"),
-                "encrypted_content"
-            ),
-        )
-
-        assertEquals(expectedFrames, message.toStreamFrames())
-    }
-
-    @Test
-    fun testMessageToolCallToStreamFrames() {
-        val message = Message.Tool.Call(
-            id = "call_123",
-            tool = "calculator",
-            content = """{"operation": "add", "a": 1, "b": 2}""",
-            metaInfo = ResponseMetaInfo.Empty
-        )
-
-        val expectedFrames = listOf(
-            StreamFrame.ToolCallDelta("call_123", "calculator", """{"operation": "add", "a": 1, "b": 2}"""),
-            StreamFrame.ToolCallComplete("call_123", "calculator", """{"operation": "add", "a": 1, "b": 2}"""),
-        )
-
-        assertEquals(expectedFrames, message.toStreamFrames())
-    }
-
-    @Test
-    fun testListOfMessageResponsesToStreamFrames() {
-        val messages = listOf(
-            Message.Reasoning(
-                id = "rs_123",
-                parts = listOf(
-                    ContentPart.Text("Thinking step 1"),
-                    ContentPart.Text("Thinking step 2")
-                ),
-                summary = listOf(
-                    ContentPart.Text("Summary")
-                ),
-                encrypted = "encrypted_content",
-                metaInfo = ResponseMetaInfo.Empty
-            ),
-            Message.Assistant(
-                parts = listOf(
-                    ContentPart.Text("Hello"),
-                    ContentPart.Text("World")
-                ),
-                metaInfo = ResponseMetaInfo.Empty
-            ),
-            Message.Tool.Call(
-                id = "call_123",
-                tool = "calculator",
-                content = """{"operation": "add", "a": 1, "b": 2}""",
-                metaInfo = ResponseMetaInfo.Empty
-            )
         )
 
         val expectedFrames = listOf(
@@ -128,20 +69,87 @@ internal class StreamFrameExtTest {
             StreamFrame.ReasoningDelta(id = "rs_123", summary = "Summary", index = 0),
             StreamFrame.ReasoningComplete(
                 id = "rs_123",
-                listOf("Thinking step 1", "Thinking step 2"),
-                listOf("Summary"),
-                "encrypted_content",
-                0
+                content = listOf("Thinking step 1", "Thinking step 2"),
+                summary = listOf("Summary"),
+                encrypted = "encrypted_content",
+                index = 0
             ),
-            StreamFrame.TextDelta("Hello", 1),
-            StreamFrame.TextDelta("World", 1),
-            StreamFrame.TextComplete("Hello\nWorld", 1),
-            StreamFrame.ToolCallDelta("call_123", "calculator", """{"operation": "add", "a": 1, "b": 2}""", 2),
-            StreamFrame.ToolCallComplete("call_123", "calculator", """{"operation": "add", "a": 1, "b": 2}""", 2),
-            StreamFrame.End(null, ResponseMetaInfo.Empty)
+            StreamFrame.End("stop", ResponseMetaInfo.Empty)
         )
 
-        assertEquals(expectedFrames, messages.toStreamFrames())
+        assertEquals(expectedFrames, message.toStreamFrames())
+    }
+
+    @Test
+    fun testMessageToolCallToStreamFrames() {
+        val toolCallPart = MessagePart.Tool.Call(
+            id = "call_123",
+            tool = "calculator",
+            args = JsonObject(
+                mapOf("operation" to JsonPrimitive("add"), "a" to JsonPrimitive(1), "b" to JsonPrimitive(2))
+            ),
+        )
+
+        val message = Message.Assistant(
+            parts = listOf(toolCallPart),
+            finishReason = "tool_calls",
+            metaInfo = ResponseMetaInfo.Empty
+        )
+
+        val expectedFrames = listOf(
+            StreamFrame.ToolCallDelta("call_123", "calculator", """{"operation":"add","a":1,"b":2}""", index = 0),
+            StreamFrame.ToolCallComplete("call_123", "calculator", """{"operation":"add","a":1,"b":2}""", index = 0),
+            StreamFrame.End("tool_calls", ResponseMetaInfo.Empty)
+        )
+
+        assertEquals(expectedFrames, message.toStreamFrames())
+    }
+
+    @Test
+    fun testListOfMessageResponsesToStreamFrames() {
+        val message = Message.Assistant(
+            parts = listOf(
+                MessagePart.Reasoning(
+                    id = "rs_123",
+                    content = listOf("Thinking step 1", "Thinking step 2"),
+                    summary = listOf("Summary"),
+                    encrypted = "encrypted_content",
+                ),
+                MessagePart.Text("Hello"),
+                MessagePart.Text("World"),
+                MessagePart.Tool.Call(
+                    id = "call_123",
+                    tool = "calculator",
+                    args = JsonObject(
+                        mapOf("operation" to JsonPrimitive("add"), "a" to JsonPrimitive(1), "b" to JsonPrimitive(2))
+                    ),
+                )
+            ),
+            finishReason = "stop",
+            metaInfo = ResponseMetaInfo.Empty
+        )
+
+        val expectedFrames = listOf(
+            StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking step 1", index = 0),
+            StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking step 2", index = 0),
+            StreamFrame.ReasoningDelta(id = "rs_123", summary = "Summary", index = 0),
+            StreamFrame.ReasoningComplete(
+                id = "rs_123",
+                content = listOf("Thinking step 1", "Thinking step 2"),
+                summary = listOf("Summary"),
+                encrypted = "encrypted_content",
+                index = 0
+            ),
+            StreamFrame.TextDelta("Hello", 1),
+            StreamFrame.TextComplete("Hello", 1),
+            StreamFrame.TextDelta("World", 2),
+            StreamFrame.TextComplete("World", 2),
+            StreamFrame.ToolCallDelta("call_123", "calculator", """{"operation":"add","a":1,"b":2}""", 3),
+            StreamFrame.ToolCallComplete("call_123", "calculator", """{"operation":"add","a":1,"b":2}""", 3),
+            StreamFrame.End("stop", ResponseMetaInfo.Empty)
+        )
+
+        assertEquals(expectedFrames, message.toStreamFrames())
     }
 
     @Test
@@ -152,16 +160,15 @@ internal class StreamFrameExtTest {
             StreamFrame.End("stop", ResponseMetaInfo.Empty)
         )
 
-        val expectedMessages = listOf(
-            Message.Assistant(
-                parts = listOf(ContentPart.Text("Hello, World!")),
-                finishReason = "stop",
-                metaInfo = ResponseMetaInfo.Empty
-            )
+        val expectedMessages = Message.Assistant(
+            parts = listOf(MessagePart.Text("Hello, World!")),
+            finishReason = "stop",
+            metaInfo = ResponseMetaInfo.Empty
         )
-        val messages = frames.toMessageResponses()
 
-        assertEquals(expectedMessages, messages)
+        val message = frames.toMessageResponse()
+
+        assertEquals(expectedMessages, message)
     }
 
     @Test
@@ -173,15 +180,13 @@ internal class StreamFrameExtTest {
             StreamFrame.End(null, ResponseMetaInfo.Empty)
         )
 
-        val expectedMessages = listOf(
-            Message.Assistant(
-                parts = listOf(ContentPart.Text("Hello\nWorld")),
-                metaInfo = ResponseMetaInfo.Empty
-            )
+        val expected = Message.Assistant(
+            parts = listOf(MessagePart.Text("Hello\nWorld")),
+            metaInfo = ResponseMetaInfo.Empty
         )
-        val messages = frames.toMessageResponses()
+        val message = frames.toMessageResponse()
 
-        assertEquals(expectedMessages, messages)
+        assertEquals(expected, message)
     }
 
     @Test
@@ -199,45 +204,51 @@ internal class StreamFrameExtTest {
             StreamFrame.End(null, ResponseMetaInfo.Empty)
         )
 
-        val expectedMessages = listOf(
-            Message.Reasoning(
-                id = "rs_123",
-                parts = listOf(ContentPart.Text("Thinking step 1"), ContentPart.Text("Thinking step 2")),
-                summary = listOf(ContentPart.Text("Summary")),
-                encrypted = "encrypted_content",
-                metaInfo = ResponseMetaInfo.Empty
-            )
+        val expected = Message.Assistant(
+            parts = listOf(
+                MessagePart.Reasoning(
+                    id = "rs_123",
+                    content = listOf("Thinking step 1", "Thinking step 2"),
+                    summary = listOf("Summary"),
+                    encrypted = "encrypted_content",
+                )
+            ),
+            metaInfo = ResponseMetaInfo.Empty
         )
 
-        val messages = frames.toMessageResponses()
+        val message = frames.toMessageResponse()
 
-        assertEquals(expectedMessages, messages)
+        assertEquals(expected, message)
     }
 
     @Test
     fun testStreamFramesToMessageToolCall() {
         val frames = listOf(
-            StreamFrame.ToolCallDelta("call_123", "calculator", """{"operation": "add", "a": 1, "b": 2}"""),
-            StreamFrame.ToolCallComplete("call_123", "calculator", """{"operation": "add", "a": 1, "b": 2}"""),
+            StreamFrame.ToolCallDelta("call_123", "calculator", """{"operation":"add","a":1,"b":2}"""),
+            StreamFrame.ToolCallComplete("call_123", "calculator", """{"operation":"add","a":1,"b":2}"""),
             StreamFrame.End(null, ResponseMetaInfo.Empty)
         )
 
-        val expectedMessages = listOf(
-            Message.Tool.Call(
-                id = "call_123",
-                tool = "calculator",
-                content = """{"operation": "add", "a": 1, "b": 2}""",
-                metaInfo = ResponseMetaInfo.Empty
-            )
+        val expected = Message.Assistant(
+            parts = listOf(
+                MessagePart.Tool.Call(
+                    id = "call_123",
+                    tool = "calculator",
+                    args = JsonObject(
+                        mapOf("operation" to JsonPrimitive("add"), "a" to JsonPrimitive(1), "b" to JsonPrimitive(2))
+                    )
+                )
+            ),
+            metaInfo = ResponseMetaInfo.Empty
         )
 
-        val messages = frames.toMessageResponses()
+        val message = frames.toMessageResponse()
 
-        assertEquals(expectedMessages, messages)
+        assertEquals(expected, message)
     }
 
     @Test
-    fun testStreamFramesToListOfMessageResponses() {
+    fun testStreamFramesToMessageWithMixedParts() {
         val frames = listOf(
             StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking step 1", index = 0),
             StreamFrame.ReasoningDelta(id = "rs_123", text = "Thinking step 2", index = 0),
@@ -252,112 +263,39 @@ internal class StreamFrameExtTest {
             StreamFrame.TextDelta("Hello", 1),
             StreamFrame.TextDelta("World", 1),
             StreamFrame.TextComplete("Hello\nWorld", 1),
-            StreamFrame.ToolCallDelta("call_123", "calculator", """{"operation": "add", "a": 1, "b": 2}""", 2),
-            StreamFrame.ToolCallComplete("call_123", "calculator", """{"operation": "add", "a": 1, "b": 2}""", 2),
+            StreamFrame.ToolCallDelta("call_123", "calculator", """{"operation":"add","a":1,"b":2}""", 2),
+            StreamFrame.ToolCallComplete("call_123", "calculator", """{"operation":"add","a":1,"b":2}""", 2),
             StreamFrame.End("stop", ResponseMetaInfo.Empty)
         )
 
-        val expectedMessages = listOf(
-            Message.Reasoning(
-                id = "rs_123",
-                parts = listOf(ContentPart.Text("Thinking step 1"), ContentPart.Text("Thinking step 2")),
-                summary = listOf(ContentPart.Text("Summary")),
-                encrypted = "encrypted_content",
-                metaInfo = ResponseMetaInfo.Empty
-            ),
-            Message.Assistant(
-                parts = listOf(ContentPart.Text("Hello\nWorld")),
-                finishReason = "stop",
-                metaInfo = ResponseMetaInfo.Empty
-            ),
-            Message.Tool.Call(
-                id = "call_123",
-                tool = "calculator",
-                content = """{"operation": "add", "a": 1, "b": 2}""",
-                metaInfo = ResponseMetaInfo.Empty
-            )
-        )
-
-        val messages = frames.toMessageResponses()
-
-        assertEquals(expectedMessages, messages)
-    }
-
-    @Test
-    fun testToAssistantMessageOrNull() {
-        val framesWithAssistant = listOf(
-            StreamFrame.TextDelta("Hello"),
-            StreamFrame.TextComplete("Hello"),
-            StreamFrame.End(null, ResponseMetaInfo.Empty)
-        )
-
-        val assistant = framesWithAssistant.toAssistantMessageOrNull()
-
-        assertIs<Message.Assistant>(assistant)
-        assertEquals("Hello", assistant.content)
-    }
-
-    @Test
-    fun testToAssistantMessageOrNullReturnsNull() {
-        val framesWithoutAssistant = listOf(
-            StreamFrame.ToolCallComplete("call_1", "tool", "{}"),
-            StreamFrame.End(null, ResponseMetaInfo.Empty)
-        )
-
-        val assistant = framesWithoutAssistant.toAssistantMessageOrNull()
-
-        assertNull(assistant)
-    }
-
-    @Test
-    fun testToReasoningMessageOrNull() {
-        val framesWithReasoning = listOf(
-            StreamFrame.ReasoningComplete(id = "rs_123", listOf("Thinking")),
-            StreamFrame.End(null, ResponseMetaInfo.Empty)
-        )
-
-        val reasoning = framesWithReasoning.toReasoningMessageOrNull()
-
-        assertIs<Message.Reasoning>(reasoning)
-        assertEquals("Thinking", reasoning.content)
-    }
-
-    @Test
-    fun testToReasoningMessageOrNullReturnsNull() {
-        val framesWithoutReasoning = listOf(
-            StreamFrame.TextComplete("Hello"),
-            StreamFrame.End(null, ResponseMetaInfo.Empty)
-        )
-
-        val reasoning = framesWithoutReasoning.toReasoningMessageOrNull()
-
-        assertNull(reasoning)
-    }
-
-    @Test
-    fun testToMessageResponsesBuildsAssistantFromTextDeltasOnly() {
-        val frames = listOf(
-            StreamFrame.TextDelta("Hello"),
-            StreamFrame.TextDelta(", World"),
-            StreamFrame.End("stop", ResponseMetaInfo.Empty)
-        )
-
-        val messages = frames.toMessageResponses()
-
-        assertEquals(
-            listOf(
-                Message.Assistant(
-                    parts = listOf(ContentPart.Text("Hello, World")),
-                    finishReason = "stop",
-                    metaInfo = ResponseMetaInfo.Empty
+        val expected = Message.Assistant(
+            parts = listOf(
+                MessagePart.Reasoning(
+                    id = "rs_123",
+                    content = listOf("Thinking step 1", "Thinking step 2"),
+                    summary = listOf("Summary"),
+                    encrypted = "encrypted_content",
+                ),
+                MessagePart.Text("Hello\nWorld"),
+                MessagePart.Tool.Call(
+                    id = "call_123",
+                    tool = "calculator",
+                    args = JsonObject(
+                        mapOf("operation" to JsonPrimitive("add"), "a" to JsonPrimitive(1), "b" to JsonPrimitive(2))
+                    )
                 )
             ),
-            messages
+            finishReason = "stop",
+            metaInfo = ResponseMetaInfo.Empty
         )
+
+        val message = frames.toMessageResponse()
+
+        assertEquals(expected, message)
     }
 
     @Test
-    fun testToMessageResponsesSkipsEmptyTextCompleteFrames() {
+    fun testToMessageResponsesDoNotSkipsEmptyTextCompleteFrames() {
         val frames = listOf(
             StreamFrame.TextComplete("Hello", index = 0),
             StreamFrame.ToolCallComplete("call_1", "tool", "{}", index = 1),
@@ -367,51 +305,37 @@ internal class StreamFrameExtTest {
             StreamFrame.End("tool_calls", ResponseMetaInfo.Empty)
         )
 
-        val messages = frames.toMessageResponses()
+        val message = frames.toMessageResponse()
 
         assertEquals(
-            listOf(
-                Message.Assistant(
-                    parts = listOf(ContentPart.Text("Hello")),
-                    finishReason = "tool_calls",
-                    metaInfo = ResponseMetaInfo.Empty
+            Message.Assistant(
+                listOf(
+                    MessagePart.Text("Hello"),
+                    MessagePart.Tool.Call(
+                        id = "call_1",
+                        tool = "tool",
+                        args = "{}",
+                    ),
+                    MessagePart.Text(""),
+                    MessagePart.Tool.Call(
+                        id = "call_2",
+                        tool = "otherTool",
+                        args = """{"query":"test"}""",
+                    )
                 ),
-                Message.Tool.Call(
-                    id = "call_1",
-                    tool = "tool",
-                    content = "{}",
-                    metaInfo = ResponseMetaInfo.Empty
-                ),
-                Message.Tool.Call(
-                    id = "call_2",
-                    tool = "otherTool",
-                    content = """{"query":"test"}""",
-                    metaInfo = ResponseMetaInfo.Empty
-                )
+                finishReason = "tool_calls",
+                metaInfo = ResponseMetaInfo.Empty
             ),
-            messages
+            message
         )
-    }
-
-    @Test
-    fun testToMessageResponsesSkipsEmptyOnlyTextCompleteFrames() {
-        val frames = listOf(
-            StreamFrame.TextDelta(""),
-            StreamFrame.TextComplete(""),
-            StreamFrame.End("stop", ResponseMetaInfo.Empty)
-        )
-
-        val messages = frames.toMessageResponses()
-
-        assertEquals(emptyList(), messages)
     }
 
     @Test
     fun testToMessageResponsesWithEmptyFrames() {
         val frames = emptyList<StreamFrame>()
 
-        val messages = frames.toMessageResponses()
+        val message = frames.toMessageResponse()
 
-        assertEquals(0, messages.size)
+        assertEquals(0, message.parts.size)
     }
 }

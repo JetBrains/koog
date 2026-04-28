@@ -21,7 +21,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
@@ -171,10 +171,10 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         return preparedMessages
     }
 
-    override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<Message.Assistant> {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
         return response.choices.map {
-            it.message.toMessageResponses(
+            it.message.toMessageResponse(
                 it.finishReason,
                 createMetaInfo(response.usage),
             )

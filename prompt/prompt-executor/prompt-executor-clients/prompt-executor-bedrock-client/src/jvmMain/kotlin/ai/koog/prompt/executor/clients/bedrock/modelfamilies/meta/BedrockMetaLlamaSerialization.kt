@@ -4,6 +4,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.time.KoogClock
@@ -22,14 +23,20 @@ internal object BedrockMetaLlamaSerialization {
 
     // Meta Llama specific methods
     internal fun createLlamaRequest(prompt: Prompt, model: LLModel): LlamaRequest {
-        val promptText = prompt.messages.joinToString("\n") { msg ->
-            when (msg) {
-                is Message.System -> "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n${msg.content}<|eot_id|>"
-                is Message.User -> "<|start_header_id|>user<|end_header_id|>\n\n${msg.content}<|eot_id|>"
-                is Message.Assistant -> "<|start_header_id|>assistant<|end_header_id|>\n\n${msg.content}<|eot_id|>"
-                else -> ""
+        val messagesText = buildList {
+            prompt.messages.forEach { msg ->
+                val messageType = when (msg) {
+                    is Message.System -> "system"
+                    is Message.User -> "user"
+                    is Message.Assistant -> "assistant"
+                }
+                msg.parts.filterIsInstance<MessagePart.Text>().forEach { part ->
+                    add("<|start_header_id|>$messageType<|end_header_id|>\n\n${part.text}<|eot_id|>")
+                }
             }
-        } + "<|start_header_id|>assistant<|end_header_id|>\n\n"
+        }.joinToString("\n")
+
+        val promptText = "<|begin_of_text|>$messagesText<|start_header_id|>assistant<|end_header_id|>\n\n"
 
         return LlamaRequest(
             prompt = promptText,
@@ -42,21 +49,19 @@ internal object BedrockMetaLlamaSerialization {
         )
     }
 
-    internal fun parseLlamaResponse(responseBody: String, clock: KoogClock = KoogClock.System): List<Message.Response> {
+    internal fun parseLlamaResponse(responseBody: String, clock: KoogClock = KoogClock.System): Message.Assistant {
         val response = json.decodeFromString<LlamaResponse>(responseBody)
 
-        return listOf(
-            Message.Assistant(
-                content = response.generation,
-                finishReason = response.stopReason,
-                metaInfo = ResponseMetaInfo.Companion.create(
-                    clock = clock,
-                    inputTokensCount = response.promptTokenCount,
-                    outputTokensCount = response.generationTokenCount,
-                    totalTokensCount = response.promptTokenCount?.let { input ->
-                        response.generationTokenCount?.let { output -> input + output }
-                    }
-                )
+        return Message.Assistant(
+            content = response.generation,
+            finishReason = response.stopReason,
+            metaInfo = ResponseMetaInfo.Companion.create(
+                clock = clock,
+                inputTokensCount = response.promptTokenCount,
+                outputTokensCount = response.generationTokenCount,
+                totalTokensCount = response.promptTokenCount?.let { input ->
+                    response.generationTokenCount?.let { output -> input + output }
+                }
             )
         )
     }

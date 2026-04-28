@@ -7,6 +7,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrames
@@ -22,7 +23,6 @@ import kotlin.jvm.JvmStatic
 /**
  * A utility class for matching strings to associated responses based on different matching strategies.
  *
- * @param TResponse The type of the response associated with the matches.
  * @property partialMatches A map of strings to responses where the key partially matches an input string.
  * @property exactMatches A map of strings to responses where the key must match an input string exactly.
  * @property conditional A map of predicate functions to responses, where the response is determined
@@ -61,7 +61,7 @@ internal class ResponseMatcher<TResponse>(
  */
 public class MockPromptExecutor internal constructor(
     private val handleLastAssistantMessage: Boolean,
-    private val responseMatcher: ResponseMatcher<List<Message.Response>>,
+    private val responseMatcher: ResponseMatcher<Message.Assistant>,
     private val moderationResponseMatcher: ResponseMatcher<ModerationResult>,
     private val streamResponseMatcher: ResponseMatcher<Flow<StreamFrame>>,
     private val logger: KLogger = KotlinLogging.logger(MockPromptExecutor::class.simpleName.toString()),
@@ -83,7 +83,7 @@ public class MockPromptExecutor internal constructor(
      * @param tools The list of tools available for the execution
      * @return A list containing a single response
      */
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         logger.debug { "Executing prompt with tools: ${tools.map { it.name }}" }
 
         return handlePrompt(prompt)
@@ -136,6 +136,13 @@ public class MockPromptExecutor internal constructor(
             ?: moderationResponseMatcher.defaultResponse
     }
 
+    private val Message.textContent: String
+        get() {
+            val textParts = parts.filterIsInstance<MessagePart.Text>().map { it.text }
+            val toolResults = parts.filterIsInstance<MessagePart.Tool.Result>().map { it.output }
+            return (textParts + toolResults).joinToString("\n")
+        }
+
     private fun getLastMessage(prompt: Prompt): Message? {
         return if (handleLastAssistantMessage && prompt.messages.any { it is Message.Assistant }) {
             prompt.messages.lastOrNull { it is Message.Assistant }
@@ -156,96 +163,73 @@ public class MockPromptExecutor internal constructor(
      * @param prompt The prompt to handle
      * @return The appropriate response based on the configured matches
      */
-    private fun handlePrompt(prompt: Prompt): List<Message.Response> {
+    private fun handlePrompt(prompt: Prompt): Message.Assistant {
         logger.debug { "Handling prompt with messages:" }
-        prompt.messages.forEach { logger.debug { "Message content: ${it.content.take(300)}..." } }
+        prompt.messages.forEach { logger.debug { "Message content: ${it.textContent.take(300)}..." } }
 
         val lastMessage = getLastMessage(prompt) ?: return responseMatcher.defaultResponse
+        val lastMessageText = lastMessage.textContent
 
-        // Check the exact response match
+        // Check exact match first
         val exactMatchedResponse = findExactResponse(lastMessage, responseMatcher.exactMatches)
         if (exactMatchedResponse != null) {
             logger.debug { "Returning response for exact prompt match: $exactMatchedResponse" }
+            return updateTokenCounts(exactMatchedResponse, lastMessageText)
         }
 
-        // Check partial response match
-        val partiallyMatchedResponse =
-            if (exactMatchedResponse == null) {
-                findPartialResponse(lastMessage, responseMatcher.partialMatches)
-                    ?: listOf()
-            } else {
-                listOf()
-            }
-        if (partiallyMatchedResponse.any()) {
+        // Check partial match
+        val partiallyMatchedResponse = findPartialResponse(lastMessage, responseMatcher.partialMatches)
+        if (partiallyMatchedResponse != null) {
             logger.debug { "Returning response for partial prompt match: $partiallyMatchedResponse" }
+            return updateTokenCounts(partiallyMatchedResponse, lastMessageText)
         }
 
-        // Check request conditions
-        val conditionals = getConditionalResponse(lastMessage) ?: listOf()
-
-        val result = (exactMatchedResponse ?: listOf()) + partiallyMatchedResponse + conditionals
-        if (result.any()) {
-            return updateTokenCounts(result, lastMessage.content)
+        // Check conditional match
+        val conditionalResponse = getConditionalResponse(lastMessage)
+        if (conditionalResponse != null) {
+            return updateTokenCounts(conditionalResponse, lastMessageText)
         }
 
-        // Process the default LLM response
-        return updateTokenCounts(responseMatcher.defaultResponse, lastMessage.content)
+        // Fall back to default response
+        return updateTokenCounts(responseMatcher.defaultResponse, lastMessageText)
     }
 
-    private fun getConditionalResponse(
-        lastMessage: Message,
-    ): List<Message.Response>? = if (!responseMatcher.conditional.isNullOrEmpty()) {
-        responseMatcher.conditional.entries.firstOrNull { it.key(lastMessage.content) }?.let { (_, response) ->
-            logger.debug { "Returning response for conditional match: $response" }
-            response
-        }
-    } else {
-        emptyList()
-    }
+    private fun getConditionalResponse(lastMessage: Message): Message.Assistant? =
+        responseMatcher.conditional
+            ?.entries
+            ?.firstOrNull { it.key(lastMessage.textContent) }
+            ?.let { (_, response) ->
+                logger.debug { "Returning response for conditional match: $response" }
+                response
+            }
 
     /**
      * Updates the token counts in response metadata to use the input string.
      */
     private fun updateTokenCounts(
-        responses: List<Message.Response>,
+        response: Message.Assistant,
         input: String,
-    ): List<Message.Response> {
-        if (tokenizer == null) return responses
+    ): Message.Assistant {
+        if (tokenizer == null) return response
 
         val inputTokenCount = tokenizer.countTokens(input)
 
-        return responses.map { response ->
-            when (response) {
-                is Message.Assistant -> {
-                    val outputTokenCount = tokenizer.countTokens(response.content)
-                    val updatedMetaInfo = ResponseMetaInfo.create(
-                        clock = clock,
-                        inputTokensCount = inputTokenCount,
-                        outputTokensCount = outputTokenCount,
-                        totalTokensCount = inputTokenCount + outputTokenCount
-                    )
-                    Message.Assistant(response.content, updatedMetaInfo)
-                }
-
-                is Message.Tool.Call -> {
-                    val outputTokenCount = tokenizer.countTokens(response.content)
-                    val updatedMetaInfo = ResponseMetaInfo.create(
-                        clock = clock,
-                        inputTokensCount = inputTokenCount,
-                        outputTokensCount = outputTokenCount,
-                        totalTokensCount = inputTokenCount + outputTokenCount
-                    )
-                    Message.Tool.Call(
-                        id = response.id,
-                        tool = response.tool,
-                        content = response.content,
-                        metaInfo = updatedMetaInfo
-                    )
-                }
-
-                else -> response // Keep other response types unchanged
+        val outputContent = response.parts.joinToString("") { part ->
+            when (part) {
+                is MessagePart.Text -> part.text
+                is MessagePart.Tool.Call -> part.args
+                is MessagePart.Reasoning -> part.content.joinToString()
+                else -> ""
             }
         }
+        val outputTokenCount = tokenizer.countTokens(outputContent)
+        val updatedMetaInfo = ResponseMetaInfo.create(
+            clock = clock,
+            inputTokensCount = inputTokenCount,
+            outputTokensCount = outputTokenCount,
+            totalTokensCount = inputTokenCount + outputTokenCount
+        )
+        return response.copy(metaInfo = updatedMetaInfo)
     }
 
     /*
@@ -264,7 +248,7 @@ public class MockPromptExecutor internal constructor(
         partialMatches: Map<String, TResponse>?
     ): TResponse? {
         return partialMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
-            if (message.content.contains(pattern)) {
+            if (message.textContent.contains(pattern)) {
                 response
             } else {
                 null
@@ -284,7 +268,7 @@ public class MockPromptExecutor internal constructor(
         exactMatches: Map<String, TResponse>?
     ): TResponse? {
         return exactMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
-            if (message.content == pattern) {
+            if (message.textContent == pattern) {
                 response
             } else {
                 null

@@ -3,6 +3,7 @@ package ai.koog.agents.longtermmemory.retrieval.augmentation
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.search.Score
 import ai.koog.rag.base.storage.search.ScoreMetric
@@ -41,11 +42,23 @@ class PromptAugmenterTest {
         val systemMessages = augmentedPrompt.messages.filter { it is Message.System }
         assertEquals(2, systemMessages.size)
         // First system message should contain the context
-        assertTrue(systemMessages[0].content.contains("Kotlin was developed by JetBrains"))
-        assertTrue(systemMessages[0].content.contains("Kotlin is 100% interoperable with Java"))
-        assertTrue(systemMessages[0].content.contains("Relevant information"))
+        assertTrue(
+            systemMessages[0].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                .contains("Kotlin was developed by JetBrains")
+        )
+        assertTrue(
+            systemMessages[0].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                .contains("Kotlin is 100% interoperable with Java")
+        )
+        assertTrue(
+            systemMessages[0].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                .contains("Relevant information")
+        )
         // Second system message should be the original
-        assertEquals("You are a helpful assistant", systemMessages[1].content)
+        assertEquals(
+            "You are a helpful assistant",
+            systemMessages[1].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+        )
     }
 
     @Test
@@ -68,9 +81,15 @@ class PromptAugmenterTest {
         assertEquals(2, userMessages.size)
 
         // First user message should contain the context
-        assertTrue(userMessages[0].content.contains("Kotlin was developed by JetBrains"))
+        assertTrue(
+            userMessages[0].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                .contains("Kotlin was developed by JetBrains")
+        )
         // Second user message should be the original
-        assertEquals("What is Kotlin?", userMessages[1].content)
+        assertEquals(
+            "What is Kotlin?",
+            userMessages[1].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+        )
     }
 
     @Test
@@ -128,10 +147,19 @@ class PromptAugmenterTest {
         // Verify a new system message with the custom template was prepended
         val systemMessages = augmentedPrompt.messages.filter { it is Message.System }
         assertEquals(2, systemMessages.size)
-        assertTrue(systemMessages[0].content.contains("CUSTOM CONTEXT:"))
-        assertTrue(systemMessages[0].content.contains("Kotlin was developed by JetBrains"))
+        assertTrue(
+            systemMessages[0].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                .contains("CUSTOM CONTEXT:")
+        )
+        assertTrue(
+            systemMessages[0].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                .contains("Kotlin was developed by JetBrains")
+        )
         // Original system message should remain unchanged
-        assertEquals("You are a helpful assistant", systemMessages[1].content)
+        assertEquals(
+            "You are a helpful assistant",
+            systemMessages[1].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+        )
     }
 
     @Test
@@ -174,11 +202,23 @@ class PromptAugmenterTest {
 
         val systemMessages = augmentedPrompt.messages.filter { it is Message.System }
         assertEquals(2, systemMessages.size)
-        assertTrue(systemMessages[0].content.contains("[1] First context item"))
-        assertTrue(systemMessages[0].content.contains("[2] Second context item"))
-        assertTrue(systemMessages[0].content.contains("[3] Third context item"))
+        assertTrue(
+            systemMessages[0].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                .contains("[1] First context item")
+        )
+        assertTrue(
+            systemMessages[0].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                .contains("[2] Second context item")
+        )
+        assertTrue(
+            systemMessages[0].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                .contains("[3] Third context item")
+        )
         // Original system message should remain unchanged
-        assertEquals("You are a helpful assistant", systemMessages[1].content)
+        assertEquals(
+            "You are a helpful assistant",
+            systemMessages[1].parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+        )
     }
 
     @Test

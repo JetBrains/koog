@@ -4,7 +4,6 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.OutputOption
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
@@ -488,7 +487,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
     inputClass: Class<Input>,
     outputOption: OutputOption<Output>,
     private val defineTask: ContextualAction<Input, String>,
-    private var runMode: ToolCalls = ToolCalls.SEQUENTIAL,
+    private var parallelTools: Boolean = false,
     private var assistantResponseRepeatMax: Int? = null,
 ) : TypedAIAgentSubgraphBuilderBase<Input, Output, SubgraphWithTaskBuilder<Input, Output>>(
     name,
@@ -501,8 +500,8 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
 ) {
     /**
      * Configures the run mode for*/
-    public fun runMode(runMode: ToolCalls): SubgraphWithTaskBuilder<Input, Output> = this.apply {
-        this.runMode = runMode
+    public fun parallelTools(parallelTools: Boolean): SubgraphWithTaskBuilder<Input, Output> = this.apply {
+        this.parallelTools = parallelTools
     }
 
     /**
@@ -529,7 +528,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
                 toolSelectionStrategy = toolSelectionStrategy,
                 llmModel = llmModel,
                 llmParams = llmParams,
-                runMode = runMode,
+                parallelTools = parallelTools,
                 assistantResponseRepeatMax = assistantResponseRepeatMax,
                 responseProcessor = responseProcessor,
             ) { input ->
@@ -550,7 +549,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
                 finishTool = outputOption.finishTool,
                 llmModel = llmModel,
                 llmParams = llmParams,
-                runMode = runMode,
+                parallelTools = parallelTools,
                 assistantResponseRepeatMax = assistantResponseRepeatMax,
                 responseProcessor = responseProcessor,
             ) { input ->
@@ -570,7 +569,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
                 toolSelectionStrategy = toolSelectionStrategy,
                 llmModel = llmModel,
                 llmParams = llmParams,
-                runMode = runMode,
+                parallelTools = parallelTools,
                 assistantResponseRepeatMax = assistantResponseRepeatMax,
                 responseProcessor = responseProcessor,
             ) { input ->

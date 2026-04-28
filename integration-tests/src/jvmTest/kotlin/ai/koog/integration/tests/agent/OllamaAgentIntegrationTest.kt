@@ -1,7 +1,6 @@
 package ai.koog.integration.tests.agent
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.agentInput
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
@@ -9,11 +8,12 @@ import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
+import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
@@ -104,17 +104,17 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
                 }
             }
 
-            val callLLM by nodeLLMRequest(allowToolCalls = true)
-            val callTool by nodeExecuteTool()
-            val sendToolResult by nodeLLMSendToolResult()
+            val callLLM by nodeLLMRequest()
+            val callTool by nodeExecuteToolsAndGetResults()
+            val sendToolResult by nodeSendToolReceivedResults()
 
             edge(nodeStart forwardTo definePrompt transformed {})
-            edge(definePrompt forwardTo callLLM transformed { agentInput<String>() })
-            edge(callLLM forwardTo callTool onToolCall { true })
+            edge(definePrompt forwardTo callLLM transformed { agentInput<String>() } asUserMessage { it })
+            edge(callLLM forwardTo callTool onToolCalls { true })
             edge(callTool forwardTo sendToolResult)
-            edge(sendToolResult forwardTo callTool onToolCall { true })
-            edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
-            edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+            edge(sendToolResult forwardTo callTool onToolCalls { true })
+            edge(sendToolResult forwardTo nodeFinish onTextParts { true })
+            edge(callLLM forwardTo nodeFinish onTextParts { true })
         }
 
         val askVerifyAnswer by subgraph<String, String>("verify-answer") {
@@ -143,17 +143,17 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
                 }
             }
 
-            val callLLM by nodeLLMRequest(allowToolCalls = true)
-            val callTool by nodeExecuteTool()
-            val sendToolResult by nodeLLMSendToolResult()
+            val callLLM by nodeLLMRequest()
+            val callTool by nodeExecuteToolsAndGetResults()
+            val sendToolResult by nodeSendToolReceivedResults()
 
             edge(nodeStart forwardTo definePrompt transformed {})
-            edge(definePrompt forwardTo callLLM transformed { agentInput<String>() })
-            edge(callLLM forwardTo callTool onToolCall { true })
+            edge(definePrompt forwardTo callLLM transformed { agentInput<String>() } asUserMessage { it })
+            edge(callLLM forwardTo callTool onToolCalls { true })
             edge(callTool forwardTo sendToolResult)
-            edge(sendToolResult forwardTo callTool onToolCall { true })
-            edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
-            edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+            edge(sendToolResult forwardTo callTool onToolCalls { true })
+            edge(sendToolResult forwardTo nodeFinish onTextParts { true })
+            edge(callLLM forwardTo nodeFinish onTextParts { true })
         }
 
         nodeStart then askCapitalSubgraph then askVerifyAnswer then nodeFinish
@@ -283,7 +283,7 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
 
         val strategy = strategy<String, String>("ollama-subgraph-with-task") {
             val task by subgraphWithTask<String, Summary>(
-                runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+                parallelTools = false,
                 llmParams = LLMParams(
                     temperature = 0.0,
                     toolChoice = LLMParams.ToolChoice.Required

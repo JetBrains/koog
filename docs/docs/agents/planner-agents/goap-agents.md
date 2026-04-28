@@ -50,6 +50,7 @@ while the LLM performs the actual content generation within each action.
     import ai.koog.agents.planner.goap
     import ai.koog.agents.planner.goap.GoapAgentState
     import ai.koog.prompt.dsl.prompt
+    import ai.koog.prompt.message.MessagePart
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     -->
@@ -84,7 +85,7 @@ while the LLM performs the actual content generation within each action.
                 }
                 requestLLM()
             }
-            state.copy(hasOutline = true, outline = response.content)
+            state.copy(hasOutline = true, outline = response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text })
         }
 
         action(
@@ -100,7 +101,7 @@ while the LLM performs the actual content generation within each action.
                 }
                 requestLLM()
             }
-            state.copy(hasDraft = true, draft = response.content)
+            state.copy(hasDraft = true, draft = response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text })
         }
 
         action(
@@ -116,7 +117,7 @@ while the LLM performs the actual content generation within each action.
                 }
                 requestLLM()
             }
-            println("Review feedback: ${response.content}")
+            println("Review feedback: ${response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }}")
             state.copy(hasReview = true)
         }
 
@@ -168,6 +169,8 @@ while the LLM performs the actual content generation within each action.
     import ai.koog.agents.planner.goap.GoapAgentState;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
+    import ai.koog.prompt.message.MessagePart;
+    import java.util.stream.Collectors;
     class exampleGoapAgents01 {
     -->
     <!--- SUFFIX
@@ -227,7 +230,10 @@ while the LLM performs the actual content generation within each action.
                             prompt.user("Create a detailed outline for an article about: " + state.topic);
                             return null;
                         });
-                        return session.requestLLM().getContent();
+                        return session.requestLLM().getParts().stream()
+                            .filter(p -> p instanceof MessagePart.Text)
+                            .map(p -> ((MessagePart.Text) p).getText())
+                            .collect(Collectors.joining());
                     });
                     return state.copy(true, response, state.hasDraft, state.draft,
                                     state.hasReview, state.isPublished);
@@ -243,7 +249,10 @@ while the LLM performs the actual content generation within each action.
                             prompt.user("Write an article based on this outline:\n" + state.outline);
                             return null;
                         });
-                        return session.requestLLM().getContent();
+                        return session.requestLLM().getParts().stream()
+                            .filter(p -> p instanceof MessagePart.Text)
+                            .map(p -> ((MessagePart.Text) p).getText())
+                            .collect(Collectors.joining());
                     });
                     return state.copy(state.hasOutline, state.outline, true, response,
                                     state.hasReview, state.isPublished);
@@ -260,7 +269,10 @@ while the LLM performs the actual content generation within each action.
                             prompt.user("Review this article and suggest improvements:\n" + state.draft);
                             return null;
                         });
-                        return session.requestLLM().getContent();
+                        return session.requestLLM().getParts().stream()
+                            .filter(p -> p instanceof MessagePart.Text)
+                            .map(p -> ((MessagePart.Text) p).getText())
+                            .collect(Collectors.joining());
                     });
                     System.out.println("Review feedback: " + response);
                     return state.copy(state.hasOutline, state.outline, state.hasDraft,

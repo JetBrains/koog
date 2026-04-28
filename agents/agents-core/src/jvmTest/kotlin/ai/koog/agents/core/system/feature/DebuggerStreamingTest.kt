@@ -2,7 +2,8 @@ package ai.koog.agents.core.system.feature
 
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
+import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.feature.AIAgentFeatureTestAPI.testClock
 import ai.koog.agents.core.feature.debugger.Debugger
 import ai.koog.agents.core.feature.message.FeatureMessage
@@ -39,6 +40,7 @@ import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.collectText
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import io.ktor.http.URLProtocol
@@ -91,13 +93,13 @@ class DebuggerStreamingTest {
         )
 
         val expectedLLMCallPrompt = expectedPrompt.copy(
-            messages = expectedPrompt.messages
+            messages = expectedPrompt.messages + userMessage(userPrompt)
         )
 
         // Executor
         val testLLMResponse = "Default test response"
 
-        val mockExecutor = getMockExecutor(serializer) {
+        val mockExecutor = getMockExecutor(serializer, clock = testClock) {
             mockLLMAnswer(testLLMResponse).asDefaultResponse onUserRequestEquals userPrompt
         }
 
@@ -111,14 +113,10 @@ class DebuggerStreamingTest {
         // Server
         val serverJob = launch {
             val strategy = strategy<String, String>(strategyName) {
-                val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>(nodeLLMRequestStreamingName)
+                val streamAndCollect by nodeLLMRequestStreaming(nodeLLMRequestStreamingName)
 
-                edge(nodeStart forwardTo streamAndCollect)
-                edge(
-                    streamAndCollect forwardTo nodeFinish transformed { messages ->
-                        messages.firstOrNull()?.content ?: ""
-                    }
-                )
+                edge(nodeStart forwardTo streamAndCollect asUserMessage { it })
+                edge(streamAndCollect forwardTo nodeFinish transformed { it.collectText() })
             }
 
             createGraphAgent(
@@ -185,7 +183,7 @@ class DebuggerStreamingTest {
                     listOf(
                         LLMStreamingStartingEvent(
                             eventId = actualStreamingStartingEvent.eventId,
-                            executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
+                            executionInfo = agentExecutionInfo(agentId, strategyName),
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = mockLLModel.toModelInfo(),
@@ -194,7 +192,7 @@ class DebuggerStreamingTest {
                         ),
                         LLMStreamingFrameReceivedEvent(
                             eventId = actualStreamingStartingEvent.eventId,
-                            executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
+                            executionInfo = agentExecutionInfo(agentId, strategyName),
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = mockLLModel.toModelInfo(),
@@ -203,7 +201,7 @@ class DebuggerStreamingTest {
                         ),
                         LLMStreamingFrameReceivedEvent(
                             eventId = actualStreamingStartingEvent.eventId,
-                            executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
+                            executionInfo = agentExecutionInfo(agentId, strategyName),
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = mockLLModel.toModelInfo(),
@@ -212,16 +210,16 @@ class DebuggerStreamingTest {
                         ),
                         LLMStreamingFrameReceivedEvent(
                             eventId = actualStreamingStartingEvent.eventId,
-                            executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
+                            executionInfo = agentExecutionInfo(agentId, strategyName),
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = mockLLModel.toModelInfo(),
-                            frame = StreamFrame.End(null, ResponseMetaInfo.Empty),
+                            frame = StreamFrame.End(null, ResponseMetaInfo.create(testClock)),
                             timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         LLMStreamingCompletedEvent(
                             eventId = actualStreamingStartingEvent.eventId,
-                            executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
+                            executionInfo = agentExecutionInfo(agentId, strategyName),
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = mockLLModel.toModelInfo(),
@@ -281,7 +279,7 @@ class DebuggerStreamingTest {
         )
 
         val expectedLLMCallPrompt = expectedPrompt.copy(
-            messages = expectedPrompt.messages
+            messages = expectedPrompt.messages + userMessage(userPrompt)
         )
 
         // Executor
@@ -295,7 +293,9 @@ class DebuggerStreamingTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
-            ): List<Message.Response> = emptyList()
+            ): Message.Assistant {
+                TODO()
+            }
 
             override fun executeStreaming(
                 prompt: Prompt,
@@ -329,14 +329,10 @@ class DebuggerStreamingTest {
         // Server
         val serverJob = launch {
             val strategy = strategy<String, String>(strategyName) {
-                val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>(nodeLLMRequestStreamingName)
+                val streamAndCollect by nodeLLMRequestStreaming(nodeLLMRequestStreamingName)
 
-                edge(nodeStart forwardTo streamAndCollect)
-                edge(
-                    streamAndCollect forwardTo nodeFinish transformed { messages ->
-                        messages.firstOrNull()?.content ?: ""
-                    }
-                )
+                edge(nodeStart forwardTo streamAndCollect asUserMessage { it })
+                edge(streamAndCollect forwardTo nodeFinish transformed { it.collectText() })
             }
 
             val throwable = createGraphAgent(
@@ -407,7 +403,7 @@ class DebuggerStreamingTest {
                     listOf(
                         LLMStreamingStartingEvent(
                             eventId = actualStreamingStartingEvent.eventId,
-                            executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
+                            executionInfo = agentExecutionInfo(agentId, strategyName),
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = testModel.toModelInfo(),
@@ -416,7 +412,7 @@ class DebuggerStreamingTest {
                         ),
                         LLMStreamingFailedEvent(
                             eventId = actualStreamingStartingEvent.eventId,
-                            executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
+                            executionInfo = agentExecutionInfo(agentId, strategyName),
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = testModel.toModelInfo(),
@@ -430,7 +426,7 @@ class DebuggerStreamingTest {
                         ),
                         LLMStreamingCompletedEvent(
                             eventId = actualStreamingStartingEvent.eventId,
-                            executionInfo = agentExecutionInfo(agentId, strategyName, nodeLLMRequestStreamingName),
+                            executionInfo = agentExecutionInfo(agentId, strategyName),
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = testModel.toModelInfo(),

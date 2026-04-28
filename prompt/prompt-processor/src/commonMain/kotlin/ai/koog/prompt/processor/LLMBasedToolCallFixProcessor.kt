@@ -7,12 +7,11 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
-import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.jvm.JvmOverloads
-import kotlin.jvm.JvmStatic
 
 /**
  * A response processor that fixes incorrectly communicated tool calls.
@@ -23,7 +22,7 @@ import kotlin.jvm.JvmStatic
  * The first step is to identify if the corrections are needed.
  * It is done by
  *   (a) Asking the LLM if the message intends to call a tool if the message is [Message.Assistant]
- *   (b) Trying to parse the name and parameters if the message is [Message.Tool.Call]
+ *   (b) Trying to parse the name and parameters if the message is [MessagePart.Tool.Call]
  *
  * The main step is to fix the message (if needed).
  * The processor runs a loop asking the LLM to fix the message.
@@ -83,7 +82,6 @@ import kotlin.jvm.JvmStatic
  * @param invalidJsonFeedback The message sent to the LLM when tool call json is invalid
  * @param invalidNameFeedback The message sent to the LLM when the tool name is invalid
  * @param invalidArgumentsFeedback The message sent to the LLM when tool arguments are invalid
- * @param fallbackProcessor The fallback processor to use if LLM fails to fix a tool call.
  * Defaults to null, meaning that the original message is returned if the LLM fails to fix a tool call.
  * @param maxRetries The maximum number of iterations in the main loop
  */
@@ -91,7 +89,6 @@ public class LLMBasedToolCallFixProcessor @JvmOverloads constructor(
     toolRegistry: ToolRegistry,
     toolCallJsonConfig: ToolCallJsonConfig = ToolCallJsonConfig(),
     private val preprocessor: ResponseProcessor = ManualToolCallFixProcessor(toolRegistry, toolCallJsonConfig),
-    private val fallbackProcessor: ResponseProcessor? = null,
     private val assessToolCallIntentSystemMessage: String = Prompts.assessToolCallIntent,
     private val fixToolCallSystemMessage: String = Prompts.fixToolCall,
     private val invalidJsonFeedback: (List<ToolDescriptor>) -> String = Prompts::invalidJsonFeedback,
@@ -99,11 +96,6 @@ public class LLMBasedToolCallFixProcessor @JvmOverloads constructor(
     private val invalidArgumentsFeedback: (String, ToolDescriptor) -> String = Prompts::invalidArgumentsFeedback,
     private val maxRetries: Int = 3,
 ) : ToolJsonFixProcessor(toolRegistry, toolCallJsonConfig) {
-
-    private companion object {
-        @JvmStatic
-        private val logger = KotlinLogging.logger {}
-    }
 
     init {
         require(maxRetries > 0) { "numRetries must be greater than 0" }
@@ -114,40 +106,64 @@ public class LLMBasedToolCallFixProcessor @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        responses: List<Message.Response>,
+        response: Message.Assistant,
         serializer: JSONSerializer,
-    ): List<Message.Response> = responses.map processSingleMessage@{ response ->
-        logger.info { "Updating message: $response" }
+    ): Message.Assistant {
+        val response = preprocessor.process(executor, prompt, model, tools, response, serializer)
+        return Message.Assistant(
+            parts = response.parts.map { part ->
+                processMessagePart(executor, prompt, model, tools, part, serializer)
+            },
+            finishReason = response.finishReason,
+            metaInfo = response.metaInfo
+        )
+    }
 
-        var result = preprocessor.process(executor, prompt, model, tools, response, serializer)
-        if (!isToolCallRequired(prompt.params.toolChoice) && !isToolCallIntended(executor, prompt, model, result)) {
-            return@processSingleMessage result
-        }
-
-        var fixToolCallPrompt = prompt(prompt.withMessages { emptyList() }) {
-            system(fixToolCallSystemMessage)
+    private suspend fun processMessagePart(
+        executor: PromptExecutor,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        messagePart: MessagePart.ResponsePart,
+        serializer: JSONSerializer,
+    ): MessagePart.ResponsePart {
+        if (!isToolCallRequired(prompt.params.toolChoice) &&
+            !isToolCallIntended(executor, prompt, model, messagePart)
+        ) {
+            return messagePart
         }
 
         var i = 0
+        var toolPart = messagePart
 
         while (i++ < maxRetries) {
-            val feedback = getFeedback(result, tools, serializer) ?: return@processSingleMessage result
-            fixToolCallPrompt = prompt(fixToolCallPrompt) {
-                message(result)
+            val feedback = getFeedback(toolPart, tools, serializer) ?: return toolPart
+            val fixToolCallPrompt = prompt(prompt.withMessages { emptyList() }) {
+                system(fixToolCallSystemMessage)
+                assistant {
+                    when (toolPart) {
+                        is MessagePart.Text -> text((toolPart as MessagePart.Text).text)
+                        is MessagePart.Tool.Call -> toolCall(toolPart as MessagePart.Tool.Call)
+                        else -> {}
+                    }
+                }
                 user(feedback)
             }
-            result = executor.executeProcessed(
+
+            val processedResponse = executor.executeProcessed(
                 prompt = fixToolCallPrompt,
                 model = model,
                 tools = tools,
                 processorConfig = ResponseProcessorConfig(preprocessor, serializer)
-            ).first()
+            )
+
+            processedResponse.parts.firstOrNull { it is MessagePart.Tool.Call }?.let { return it }
+
+            toolPart = processedResponse.parts.firstOrNull { it is MessagePart.Text } as? MessagePart.Text
+                ?: return toolPart
         }
 
-        // use fallback with the initial prompt
-        fallbackProcessor?.process(executor, prompt, model, tools, response, serializer) ?: response
-    }.also {
-        logger.info { "Updated messages: $it" }
+        return toolPart
     }
 
     private fun isToolCallRequired(toolChoice: LLMParams.ToolChoice?) = when (toolChoice) {
@@ -163,31 +179,32 @@ public class LLMBasedToolCallFixProcessor @JvmOverloads constructor(
         executor: PromptExecutor,
         prompt: Prompt,
         model: LLModel,
-        response: Message.Response
+        response: MessagePart.ResponsePart
     ): Boolean {
-        if (response is Message.Tool.Call) return true
+        when (response) {
+            is MessagePart.Text -> {
+                val toolCallIntentPrompt = prompt(prompt.withMessages { emptyList() }) {
+                    system(assessToolCallIntentSystemMessage)
+                    user(response.text)
+                }
+                val decision = executor.execute(toolCallIntentPrompt, model, emptyList())
+                return decision.parts.any {
+                    it is MessagePart.Tool.Call ||
+                        (it is MessagePart.Text && it.text.contains(Prompts.INTENDED_TOOL_CALL, ignoreCase = true))
+                }
+            }
 
-        val toolCallIntentPrompt = prompt(prompt.withMessages { emptyList() }) {
-            system(assessToolCallIntentSystemMessage)
-            user(response.content)
+            else -> return true
         }
-
-        val decision = executor.execute(toolCallIntentPrompt, model, emptyList()).first()
-
-        return decision is Message.Tool.Call ||
-            decision.content.contains(
-                Prompts.INTENDED_TOOL_CALL,
-                ignoreCase = true
-            )
     }
 
     private fun getFeedback(
-        message: Message.Response,
+        messagePart: MessagePart.ResponsePart,
         tools: List<ToolDescriptor>,
         serializer: JSONSerializer,
     ): String? {
-        val toolName = (message as? Message.Tool.Call)?.tool
-            ?: getToolName(message.content)
+        val toolName = (messagePart as? MessagePart.Tool.Call)?.tool
+            ?: (messagePart as? MessagePart.Text)?.let { getToolName(it.text) }
             ?: return invalidJsonFeedback(tools)
 
         if (!tools.any { it.name == toolName }) {
@@ -201,7 +218,7 @@ public class LLMBasedToolCallFixProcessor @JvmOverloads constructor(
             return null
         }
         try {
-            tool.decodeArgs((message as Message.Tool.Call).contentJson.toKoogJSONObject(), serializer)
+            tool.decodeArgs((messagePart as MessagePart.Tool.Call).argsJson.toKoogJSONObject(), serializer)
         } catch (e: Exception) {
             val errorMessage = e.message ?: "Unknown error"
             return invalidArgumentsFeedback(errorMessage, tool.descriptor)

@@ -14,10 +14,8 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Message
 import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
@@ -64,23 +62,12 @@ class AnthropicCacheControlIntegrationTest {
             model: LLModel,
             tools: List<ToolDescriptor> = emptyList()
         ) {
-            val responseWithMetadata = executor.execute(prompt, model, tools)
-                .shouldNotBeNull()
-                .shouldNotBeEmpty()
-                .let { messages ->
-                    messages.filterIsInstance<Message.Assistant>().firstOrNull()
-                        ?: if (tools.isNotEmpty()) {
-                            messages.filterIsInstance<Message.Tool.Call>().firstOrNull()
-                        } else {
-                            null
-                        }
+            executor.execute(prompt, model, tools)
+                .let { message ->
+                    message.metaInfo.metadata
+                        .shouldNotBeNull()
+                        .assertCacheWasUsed()
                 }
-
-            responseWithMetadata.shouldNotBeNull {
-                metaInfo.metadata
-                    .shouldNotBeNull()
-                    .assertCacheWasUsed()
-            }
         }
 
         @JvmStatic

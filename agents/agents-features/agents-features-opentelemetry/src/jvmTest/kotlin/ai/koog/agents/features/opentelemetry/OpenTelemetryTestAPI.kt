@@ -8,11 +8,12 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
+import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.DEFAULT_AGENT_ID
@@ -34,6 +35,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.kotlinx.KotlinxSerializer
@@ -67,7 +69,8 @@ internal object OpenTelemetryTestAPI {
         internal const val SYSTEM_PROMPT = "You are the application that predicts weather"
 
         internal const val USER_PROMPT_PARIS = "What's the weather in Paris?"
-        internal const val MOCK_LLM_RESPONSE_PARIS = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
+        internal const val MOCK_LLM_RESPONSE_PARIS =
+            "The weather in Paris is rainy and overcast, with temperatures around 57°F"
 
         internal const val USER_PROMPT_LONDON = "What's the weather in London?"
         internal const val MOCK_LLM_RESPONSE_LONDON = "The weather in London is sunny, with temperatures around 65°F"
@@ -97,12 +100,13 @@ internal object OpenTelemetryTestAPI {
         internal val singleLLMCallGraphStrategy = strategy(Parameter.DEFAULT_STRATEGY_NAME) {
             val nodeSendInput by nodeLLMRequest("test-llm-call")
 
-            edge(nodeStart forwardTo nodeSendInput)
-            edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+            edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+            edge(nodeSendInput forwardTo nodeFinish onTextParts { true })
         }
         internal val singleLLMCallFunctionalStrategy =
             functionalStrategy<String, String>(Parameter.DEFAULT_STRATEGY_NAME) { input ->
-                requestLLM(input).content
+                this.requestLLM(input).parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }
             }
 
         fun getSingleLLMCallStrategy(agentType: AgentType) = when (agentType) {
@@ -112,25 +116,26 @@ internal object OpenTelemetryTestAPI {
 
         internal val singleToolCallGraphStrategy = strategy(Parameter.DEFAULT_STRATEGY_NAME) {
             val nodeCallLLM by nodeLLMRequest("test-llm-call")
-            val nodeExecuteTool by nodeExecuteTool("test-tool-call")
-            val nodeSendToolResult by nodeLLMSendToolResult("test-node-llm-send-tool-result")
+            val nodeExecuteTool by nodeExecuteToolsAndGetResults("test-tool-call")
+            val nodeSendToolResult by nodeSendToolReceivedResults("test-node-llm-send-tool-result")
 
-            edge(nodeStart forwardTo nodeCallLLM)
-            edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
-            edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
+            edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
+            edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
-            edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-            edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+            edge(nodeSendToolResult forwardTo nodeFinish onTextParts { true })
+            edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
         }
         internal val singleToolCallFunctionalStrategy =
             functionalStrategy<String, String>(Parameter.DEFAULT_STRATEGY_NAME) { input ->
-                var result = requestLLM(input)
+                var result = this.requestLLM(input)
 
-                while (result is Message.Tool.Call) {
-                    result = sendToolResult(executeTool(result))
+                while (result.parts.any { it is MessagePart.Tool.Call }) {
+                    val toolCall = result.parts.filterIsInstance<MessagePart.Tool.Call>().first()
+                    result = sendToolResult(executeTool(toolCall))
                 }
 
-                result.content
+                result.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
             }
 
         fun getSingleToolCallStrategy(agentType: AgentType) = when (agentType) {
@@ -352,8 +357,12 @@ internal object OpenTelemetryTestAPI {
 
     //region Messages
 
-    fun toolCallMessage(id: String, name: String, content: String) =
-        Message.Tool.Call(id, name, content, ResponseMetaInfo(timestamp = testClock.now()))
+    fun toolCallMessage(id: String, name: String, args: String) =
+        Message.Assistant(
+            parts = listOf(MessagePart.Tool.Call(id = id, tool = name, args = args)),
+            metaInfo = ResponseMetaInfo(timestamp = testClock.now()),
+            finishReason = "tool_call",
+        )
 
     fun assistantMessage(content: String, finishReason: String? = null) =
         Message.Assistant(content, ResponseMetaInfo(timestamp = testClock.now()), finishReason = finishReason)

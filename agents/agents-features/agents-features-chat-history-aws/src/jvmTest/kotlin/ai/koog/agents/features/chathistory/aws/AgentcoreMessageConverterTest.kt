@@ -1,8 +1,9 @@
 package ai.koog.agents.features.chathistory.aws
 
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.utils.time.KoogClock
@@ -60,14 +61,19 @@ class AgentcoreMessageConverterTest {
 
     @Test
     fun testToolCallMessageToPayloadReturnsNull() {
-        val message = Message.Tool.Call(id = "1", tool = "search", content = "{}", metaInfo = ResponseMetaInfo.Empty)
+        val message = Message.Assistant(
+            MessagePart.Tool.Call(id = "1", tool = "search", args = "{}"),
+            metaInfo = ResponseMetaInfo.Empty
+        )
         assertNull(AgentcoreMessageConverter.messageToPayload(message))
     }
 
     @Test
     fun testToolResultMessageToPayloadReturnsNull() {
-        val message =
-            Message.Tool.Result(id = "1", tool = "search", content = "result", metaInfo = RequestMetaInfo.Empty)
+        val message = Message.User(
+            MessagePart.Tool.Result(id = "1", tool = "search", output = "result"),
+            metaInfo = RequestMetaInfo.Empty
+        )
         assertNull(AgentcoreMessageConverter.messageToPayload(message))
     }
 
@@ -75,11 +81,13 @@ class AgentcoreMessageConverterTest {
     fun testUserMessageWithAttachmentsExtractsText() {
         val message = Message.User(
             parts = listOf(
-                ContentPart.Text("Hello with image"),
-                ContentPart.File(
-                    content = AttachmentContent.PlainText("file content"),
-                    format = "txt",
-                    mimeType = "text/plain"
+                MessagePart.Text("Hello with image"),
+                MessagePart.Attachment(
+                    AttachmentSource.File(
+                        content = AttachmentContent.PlainText("file content"),
+                        format = "txt",
+                        mimeType = "text/plain"
+                    )
                 )
             ),
             metaInfo = RequestMetaInfo.Empty
@@ -95,13 +103,15 @@ class AgentcoreMessageConverterTest {
     fun testAssistantMessageWithMultipleTextPartsAndAttachment() {
         val message = Message.Assistant(
             parts = listOf(
-                ContentPart.Text("Part one"),
-                ContentPart.File(
-                    content = AttachmentContent.PlainText("attachment"),
-                    format = "txt",
-                    mimeType = "text/plain"
+                MessagePart.Text("Part one"),
+                MessagePart.Attachment(
+                    AttachmentSource.File(
+                        content = AttachmentContent.PlainText("attachment"),
+                        format = "txt",
+                        mimeType = "text/plain"
+                    ),
                 ),
-                ContentPart.Text("Part two")
+                MessagePart.Text("Part two")
             ),
             metaInfo = ResponseMetaInfo.Empty
         )
@@ -120,10 +130,11 @@ class AgentcoreMessageConverterTest {
             role = Role.User
             content = Content.Text("Hello from user")
         }
-        val message = AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, KoogClock.System.now())
+        val message =
+            AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, KoogClock.System.now())
 
         assertIs<Message.User>(message)
-        assertEquals("Hello from user", message.content)
+        assertEquals("Hello from user", (message.parts[0] as MessagePart.Text).text)
     }
 
     @Test
@@ -132,10 +143,11 @@ class AgentcoreMessageConverterTest {
             role = Role.Assistant
             content = Content.Text("Hello from assistant")
         }
-        val message = AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, KoogClock.System.now())
+        val message =
+            AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, KoogClock.System.now())
 
         assertIs<Message.Assistant>(message)
-        assertEquals("Hello from assistant", message.content)
+        assertEquals("Hello from assistant", (message.parts[0] as MessagePart.Text).text)
     }
 
     @Test
@@ -144,7 +156,14 @@ class AgentcoreMessageConverterTest {
             role = Role.Tool
             content = Content.Text("tool output")
         }
-        assertNull(AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, KoogClock.System.now(), ignoreUnsupportedValues = true))
+        assertNull(
+            AgentcoreMessageConverter.conversationalToMessage(
+                conversational,
+                randomEventId,
+                KoogClock.System.now(),
+                ignoreUnsupportedValues = true
+            )
+        )
     }
 
     @Test
@@ -154,7 +173,12 @@ class AgentcoreMessageConverterTest {
             content = Content.Text("tool output")
         }
         assertFailsWith<IllegalStateException> {
-            AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, KoogClock.System.now(), ignoreUnsupportedValues = false)
+            AgentcoreMessageConverter.conversationalToMessage(
+                conversational,
+                randomEventId,
+                KoogClock.System.now(),
+                ignoreUnsupportedValues = false
+            )
         }
     }
 
@@ -164,7 +188,13 @@ class AgentcoreMessageConverterTest {
             role = Role.Other
             content = Content.Text("other")
         }
-        assertNull(AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, KoogClock.System.now()))
+        assertNull(
+            AgentcoreMessageConverter.conversationalToMessage(
+                conversational,
+                randomEventId,
+                KoogClock.System.now()
+            )
+        )
     }
 
     // --- eventId metadata tests ---
@@ -175,7 +205,11 @@ class AgentcoreMessageConverterTest {
             role = Role.User
             content = Content.Text("Hello")
         }
-        val message = AgentcoreMessageConverter.conversationalToMessage(conversational, eventId = "evt-123", KoogClock.System.now())
+        val message = AgentcoreMessageConverter.conversationalToMessage(
+            conversational,
+            eventId = "evt-123",
+            KoogClock.System.now()
+        )
 
         assertNotNull(message)
         assertEquals("evt-123", AgentcoreMessageConverter.getEventId(message))
@@ -193,20 +227,22 @@ class AgentcoreMessageConverterTest {
     fun testUserMessageRoundTrip() {
         val original = Message.User("round trip test", RequestMetaInfo.Empty)
         val payload = AgentcoreMessageConverter.messageToPayload(original)!!
-        val restored = AgentcoreMessageConverter.conversationalToMessage(payload.value, randomEventId, KoogClock.System.now())
+        val restored =
+            AgentcoreMessageConverter.conversationalToMessage(payload.value, randomEventId, KoogClock.System.now())
 
         assertIs<Message.User>(restored)
-        assertEquals(original.content, restored.content)
+        assertEquals((original.parts[0] as MessagePart.Text).text, (restored.parts[0] as MessagePart.Text).text)
     }
 
     @Test
     fun testAssistantMessageRoundTrip() {
         val original = Message.Assistant("round trip assistant", ResponseMetaInfo.Empty)
         val payload = AgentcoreMessageConverter.messageToPayload(original)!!
-        val restored = AgentcoreMessageConverter.conversationalToMessage(payload.value, randomEventId, KoogClock.System.now())
+        val restored =
+            AgentcoreMessageConverter.conversationalToMessage(payload.value, randomEventId, KoogClock.System.now())
 
         assertIs<Message.Assistant>(restored)
-        assertEquals(original.content, restored.content)
+        assertEquals((original.parts[0] as MessagePart.Text).text, (restored.parts[0] as MessagePart.Text).text)
     }
 
     @Test
@@ -215,17 +251,26 @@ class AgentcoreMessageConverterTest {
             Message.User("Hello", RequestMetaInfo.Empty),
             Message.System("system prompt", RequestMetaInfo.Empty),
             Message.Assistant("Hi!", ResponseMetaInfo.Empty),
-            Message.Tool.Call(id = "1", tool = "t", content = "{}", metaInfo = ResponseMetaInfo.Empty)
+            Message.Assistant(
+                MessagePart.Tool.Call(id = "1", tool = "t", args = "{}"),
+                metaInfo = ResponseMetaInfo.Empty
+            )
         )
 
         val payloads = originals.mapNotNull { AgentcoreMessageConverter.messageToPayload(it) }
         assertEquals(2, payloads.size)
 
-        val restored = payloads.mapNotNull { AgentcoreMessageConverter.conversationalToMessage(it.value, randomEventId, KoogClock.System.now()) }
+        val restored = payloads.mapNotNull {
+            AgentcoreMessageConverter.conversationalToMessage(
+                it.value,
+                randomEventId,
+                KoogClock.System.now()
+            )
+        }
         assertEquals(2, restored.size)
         assertIs<Message.User>(restored[0])
-        assertEquals("Hello", restored[0].content)
+        assertEquals("Hello", (restored[0].parts[0] as MessagePart.Text).text)
         assertIs<Message.Assistant>(restored[1])
-        assertEquals("Hi!", restored[1].content)
+        assertEquals("Hi!", (restored[1].parts[0] as MessagePart.Text).text)
     }
 }

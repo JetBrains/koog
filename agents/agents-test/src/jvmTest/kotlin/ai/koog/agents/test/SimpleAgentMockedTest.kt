@@ -14,7 +14,7 @@ import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.testing.feature.withTesting
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
@@ -97,7 +97,7 @@ class SimpleAgentMockedTest {
 
         onLLMCallCompleted { eventContext ->
             // Capture which tools the LLM requested (whether they exist or not)
-            eventContext.responses.filterIsInstance<Message.Tool.Call>().forEach { toolCall ->
+            eventContext.response?.parts?.filterIsInstance<MessagePart.Tool.Call>()?.forEach { toolCall ->
                 llmRequestedTools.add(toolCall.tool)
             }
         }

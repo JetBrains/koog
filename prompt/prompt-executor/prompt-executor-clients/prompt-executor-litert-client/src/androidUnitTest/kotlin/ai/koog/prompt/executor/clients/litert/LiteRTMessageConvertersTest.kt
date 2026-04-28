@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients.litert
 
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.utils.time.KoogClock
@@ -61,10 +62,12 @@ class LiteRTMessageConvertersTest {
 
     @Test
     fun testToolCallMapsToModelMessageWithToolCalls() {
-        val koog = Message.Tool.Call(
-            id = "c1",
-            tool = "search",
-            content = """{"query":"weather","limit":3}""",
+        val koog = Message.Assistant(
+            MessagePart.Tool.Call(
+                id = "c1",
+                tool = "search",
+                args = """{"query":"weather","limit":3}""",
+            ),
             metaInfo = ResponseMetaInfo.Empty,
         )
 
@@ -83,10 +86,12 @@ class LiteRTMessageConvertersTest {
 
     @Test
     fun testToolCallWithBlankContentProducesEmptyArguments() {
-        val koog = Message.Tool.Call(
-            id = null,
-            tool = "noop",
-            content = "",
+        val koog = Message.Assistant(
+            MessagePart.Tool.Call(
+                id = null,
+                tool = "noop",
+                args = "",
+            ),
             metaInfo = ResponseMetaInfo.Empty,
         )
 
@@ -99,10 +104,12 @@ class LiteRTMessageConvertersTest {
 
     @Test
     fun testToolCallWithUnparseableContentProducesEmptyArguments() {
-        val koog = Message.Tool.Call(
-            id = null,
-            tool = "broken",
-            content = "<<not json>>",
+        val koog = Message.Assistant(
+            MessagePart.Tool.Call(
+                id = null,
+                tool = "broken",
+                args = "<<not json>>",
+            ),
             metaInfo = ResponseMetaInfo.Empty,
         )
 
@@ -113,10 +120,12 @@ class LiteRTMessageConvertersTest {
 
     @Test
     fun testToolResultWithJsonObjectMapsToToolResponseContent() {
-        val koog = Message.Tool.Result(
-            id = "c1",
-            tool = "search",
-            content = """{"found":2,"items":["a","b"]}""",
+        val koog = Message.User(
+            MessagePart.Tool.Result(
+                id = "c1",
+                tool = "search",
+                output = """{"found":2,"items":["a","b"]}""",
+            ),
             metaInfo = RequestMetaInfo.Empty,
         )
 
@@ -134,10 +143,12 @@ class LiteRTMessageConvertersTest {
 
     @Test
     fun testToolResultWithNonJsonContentFallsBackToRawString() {
-        val koog = Message.Tool.Result(
-            id = null,
-            tool = "echo",
-            content = "plain text result",
+        val koog = Message.User(
+            MessagePart.Tool.Result(
+                id = null,
+                tool = "echo",
+                output = "plain text result",
+            ),
             metaInfo = RequestMetaInfo.Empty,
         )
 
@@ -150,10 +161,12 @@ class LiteRTMessageConvertersTest {
 
     @Test
     fun testToolResultWithBlankContentPreservesEmptyString() {
-        val koog = Message.Tool.Result(
-            id = null,
-            tool = "noop",
-            content = "",
+        val koog = Message.User(
+            MessagePart.Tool.Result(
+                id = null,
+                tool = "noop",
+                output = "",
+            ),
             metaInfo = RequestMetaInfo.Empty,
         )
 
@@ -166,10 +179,12 @@ class LiteRTMessageConvertersTest {
     @Test
     fun testToolResultIsNeverSentAsUserText() {
         // Regression guard: previously Tool.Result was forwarded as plain user text.
-        val koog = Message.Tool.Result(
-            id = "c1",
-            tool = "search",
-            content = "{}",
+        val koog = Message.User(
+            MessagePart.Tool.Result(
+                id = "c1",
+                tool = "search",
+                output = "{}",
+            ),
             metaInfo = RequestMetaInfo.Empty,
         )
 
@@ -186,16 +201,20 @@ class LiteRTMessageConvertersTest {
     @Test
     fun testToolCallAndToolResultProduceDifferentRoles() {
         // Regression guard for the converter previously collapsing both via role == Tool.
-        val call = Message.Tool.Call(
-            id = "c1",
-            tool = "search",
-            content = "{}",
+        val call = Message.Assistant(
+            MessagePart.Tool.Call(
+                id = "c1",
+                tool = "search",
+                args = "{}",
+            ),
             metaInfo = ResponseMetaInfo.Empty,
         ).toLitertMessage()
-        val result = Message.Tool.Result(
-            id = "c1",
-            tool = "search",
-            content = "{}",
+        val result = Message.User(
+            MessagePart.Tool.Result(
+                id = "c1",
+                tool = "search",
+                output = "{}",
+            ),
             metaInfo = RequestMetaInfo.Empty,
         ).toLitertMessage()
 
@@ -206,9 +225,9 @@ class LiteRTMessageConvertersTest {
     @Test
     fun multiToolCallsMustHaveStableIdsOrFail() {
         // LiteRT ToolCall does not expose a stable id, so Koog cannot correlate
-        // multiple Message.Tool.Result back to their Message.Tool.Call. Until proper
-        // support exists, the converter must fail fast instead of silently producing
-        // ambiguous tool calls with null ids.
+        // multiple MessagePart.Tool.Result back to their MessagePart.Tool.Call. Until
+        // proper support exists, the converter must fail fast instead of silently
+        // producing ambiguous tool calls with null ids.
         val litert = LitertMessage.model(
             contents = Contents.of(emptyList()),
             toolCalls = listOf(
@@ -218,7 +237,7 @@ class LiteRTMessageConvertersTest {
         )
 
         assertFailsWith<UnsupportedOperationException> {
-            litert.toKoogMessages(KoogClock.System)
+            litert.toKoogMessage(KoogClock.System)
         }
     }
 
@@ -232,9 +251,12 @@ class LiteRTMessageConvertersTest {
             toolCalls = listOf(ToolCall("search", mapOf("query" to "weather", "limit" to 3))),
         )
 
-        val koog = litert.toKoogMessages(KoogClock.System).single() as Message.Tool.Call
+        val toolCall = litert.toKoogMessage(KoogClock.System)
+            .parts
+            .filterIsInstance<MessagePart.Tool.Call>()
+            .single()
         // Must be parseable as a JSON object.
-        val parsed = kotlinx.serialization.json.Json.parseToJsonElement(koog.content)
+        val parsed = kotlinx.serialization.json.Json.parseToJsonElement(toolCall.args)
         assertTrue(parsed is kotlinx.serialization.json.JsonObject)
         assertEquals("weather", (parsed["query"] as kotlinx.serialization.json.JsonPrimitive).content)
         assertEquals("3", (parsed["limit"] as kotlinx.serialization.json.JsonPrimitive).content)
@@ -242,10 +264,12 @@ class LiteRTMessageConvertersTest {
 
     @Test
     fun testJsonNullInArgumentsBecomesNull() {
-        val koog = Message.Tool.Call(
-            id = null,
-            tool = "t",
-            content = """{"x":null}""",
+        val koog = Message.Assistant(
+            MessagePart.Tool.Call(
+                id = null,
+                tool = "t",
+                args = """{"x":null}""",
+            ),
             metaInfo = ResponseMetaInfo.Empty,
         )
 

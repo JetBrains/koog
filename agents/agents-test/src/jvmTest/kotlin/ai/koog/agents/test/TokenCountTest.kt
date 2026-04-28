@@ -10,10 +10,10 @@ import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.time.KoogClock
-import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -22,6 +22,8 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Disabled
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class TokenCountTest {
     private val serializer = KotlinxSerializer()
@@ -64,10 +66,7 @@ class TokenCountTest {
     }
 
     private val mockTokenizer = MockTokenizer()
-    private val responses = mutableListOf<Message.Response>()
-    private var inputTokens: Int? = null
-    private var outputTokens: Int? = null
-    private var totalTokens: Int? = null
+    private var response: Message.Assistant? = null
 
     private val clock = KoogClock.System
 
@@ -78,22 +77,13 @@ class TokenCountTest {
 
     private val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
         onLLMCallCompleted { eventContext ->
-            responses.addAll(eventContext.responses)
-
-            eventContext.responses.lastOrNull()?.metaInfo?.let { metaInfo ->
-                inputTokens = metaInfo.inputTokensCount
-                outputTokens = metaInfo.outputTokensCount
-                totalTokens = metaInfo.totalTokensCount
-            }
+            response = eventContext.response
         }
     }
 
     @AfterTest
     fun teardown() {
-        responses.clear()
-        inputTokens = null
-        outputTokens = null
-        totalTokens = null
+        response = null
         mockTokenizer.reset()
     }
 
@@ -116,12 +106,12 @@ class TokenCountTest {
             installFeatures = { install(EventHandler, eventHandlerConfig) }
         ).run("Test simple response")
 
-        responses.shouldNotBeEmpty()
+        val currentResponse = assertNotNull(response)
 
-        responses.filterIsInstance<Message.Assistant>().firstOrNull().shouldNotBeNull()
-        inputTokens.shouldNotBeNull { shouldBeEqual(4) } // "Test simple response" = 3 words + 1 = 4 tokens
-        outputTokens.shouldNotBeNull { shouldBeEqual(9) }
-        totalTokens.shouldNotBeNull { shouldBeEqual(inputTokens!! + outputTokens!!) }
+        assertEquals(listOf(MessagePart.Text("This is a test response with multiple words")), currentResponse.parts)
+        currentResponse.metaInfo.inputTokensCount.shouldNotBeNull { shouldBeEqual(4) } // "Test simple response" = 3 words + 1 = 4 tokens
+        currentResponse.metaInfo.outputTokensCount.shouldNotBeNull { shouldBeEqual(9) }
+        currentResponse.metaInfo.totalTokensCount.shouldNotBeNull { shouldBeEqual(currentResponse.metaInfo.inputTokensCount!! + currentResponse.metaInfo.outputTokensCount!!) }
     }
 
     @Test
@@ -130,13 +120,15 @@ class TokenCountTest {
             tool(TestTool)
         }
 
+        val responses = mutableListOf<Message.Assistant>()
+
         val testExecutor = getMockExecutor(
             serializer = serializer,
             tokenizer = mockTokenizer,
             clock = clock
         ) {
             mockLLMToolCall(TestTool, TestTool.Args("token count test")) onRequestEquals "Use test tool"
-            mockLLMAnswer("Task completed successfully") onRequestContains "Tool executed successfully"
+            mockLLMAnswer("Task completed successfully").asDefaultResponse
             mockTool(TestTool) alwaysReturns "Tool executed successfully with token tracking"
         }
 
@@ -147,15 +139,24 @@ class TokenCountTest {
             toolRegistry = toolRegistry,
             maxIterations = 5,
             promptExecutor = testExecutor,
-            installFeatures = { install(EventHandler, eventHandlerConfig) }
+            installFeatures = {
+                install(EventHandler) {
+                    onLLMCallCompleted { eventContext ->
+                        eventContext.response?.let { responses.add(it) }
+                    }
+                }
+            }
         ).run("Use test tool")
 
-        responses.shouldNotBeEmpty()
+        val currentResponse = assertNotNull(responses.firstOrNull())
 
-        responses.filterIsInstance<Message.Tool.Call>().firstOrNull().shouldNotBeNull()
-        inputTokens.shouldNotBeNull { shouldBeEqual(8) } // "Test tool executed with: token count test" = 7 words + 1 = 8 tokens
-        outputTokens.shouldNotBeNull { shouldBeEqual(2) }
-        totalTokens.shouldNotBeNull { shouldBeEqual(inputTokens!! + outputTokens!!) }
+        assertEquals(
+            listOf(MessagePart.Tool.Call(tool = "test_tool", args = """{"message":"token count test"}""")),
+            currentResponse.parts
+        )
+        currentResponse.metaInfo.inputTokensCount.shouldNotBeNull { shouldBeEqual(4) } // "Use test tool" = 3 words + 1 = 4 tokens
+        currentResponse.metaInfo.outputTokensCount.shouldNotBeNull { shouldBeEqual(4) } // {"message":"token count test"} = 3 words + 1 = 4 tokens
+        currentResponse.metaInfo.totalTokensCount.shouldNotBeNull { shouldBeEqual(currentResponse.metaInfo.inputTokensCount!! + currentResponse.metaInfo.outputTokensCount!!) }
     }
 
     @Test
@@ -165,6 +166,7 @@ class TokenCountTest {
         }
 
         val initialTokenCount = mockTokenizer.totalTokens
+        val responses = mutableListOf<Message.Assistant>()
 
         val testExecutor = getMockExecutor(
             serializer = serializer,
@@ -172,7 +174,7 @@ class TokenCountTest {
             clock = clock
         ) {
             mockLLMToolCall(SayToUser, SayToUser.Args("First message")) onRequestEquals "Send two messages"
-            mockLLMAnswer("All tasks completed successfully") onRequestContains "Message sent successfully"
+            mockLLMAnswer("All tasks completed successfully").asDefaultResponse
             mockTool(SayToUser) alwaysReturns "Message sent successfully"
         }
 
@@ -183,20 +185,25 @@ class TokenCountTest {
             toolRegistry = toolRegistry,
             maxIterations = 5,
             promptExecutor = testExecutor,
-            installFeatures = { install(EventHandler, eventHandlerConfig) }
+            installFeatures = {
+                install(EventHandler) {
+                    onLLMCallCompleted { eventContext ->
+                        eventContext.response?.let { responses.add(it) }
+                    }
+                }
+            }
         ).run("Send two messages")
 
-        responses.shouldNotBeEmpty()
+        val currentResponse = assertNotNull(responses.firstOrNull())
 
-        responses.filterIsInstance<Message.Assistant>().shouldNotBeNull()
-        responses.filterIsInstance<Message.Tool>().shouldNotBeNull()
-        inputTokens.shouldNotBeNull { shouldBeEqual(2) } // "DONE" (SayToUser tool result) = 1 word + 1 = 2 tokens
-        outputTokens.shouldNotBeNull { shouldBeEqual(2) }
-        totalTokens.shouldNotBeNull { shouldBeEqual(inputTokens!! + outputTokens!!) }
-
-        mockTokenizer.totalTokens.shouldNotBeNull {
-            shouldBeGreaterThan(initialTokenCount)
-        }
+        assertEquals(
+            listOf(MessagePart.Tool.Call(tool = "say_to_user", args = """{"message":"First message"}""")),
+            currentResponse.parts
+        )
+        currentResponse.metaInfo.inputTokensCount.shouldNotBeNull { shouldBeEqual(4) } // "Send two messages" = 3 words + 1 = 4 tokens
+        currentResponse.metaInfo.outputTokensCount.shouldNotBeNull { shouldBeEqual(3) } // {"message":"First message"} = 2 words + 1 = 3 tokens
+        currentResponse.metaInfo.totalTokensCount.shouldNotBeNull { shouldBeEqual(currentResponse.metaInfo.inputTokensCount!! + currentResponse.metaInfo.outputTokensCount!!) }
+        mockTokenizer.totalTokens shouldBeGreaterThan initialTokenCount
     }
 
     @Test
@@ -205,6 +212,8 @@ class TokenCountTest {
         val toolRegistry = ToolRegistry {
             tool(TestTool)
         }
+
+        val responses = mutableListOf<Message.Assistant>()
 
         val testExecutor = getMockExecutor(
             serializer = serializer,
@@ -226,15 +235,21 @@ class TokenCountTest {
             toolRegistry = toolRegistry,
             maxIterations = 5,
             promptExecutor = testExecutor,
-            installFeatures = { install(EventHandler, eventHandlerConfig) }
+            installFeatures = {
+                install(EventHandler) {
+                    onLLMCallCompleted { eventContext ->
+                        eventContext.response?.let { responses.add(it) }
+                    }
+                }
+            }
         ).run("Mixed response test")
 
-        responses.shouldNotBeEmpty()
+        val currentResponse = assertNotNull(responses.firstOrNull())
 
-        responses.filterIsInstance<Message.Assistant>().shouldNotBeNull()
-        responses.filterIsInstance<Message.Tool>().shouldNotBeNull()
-        inputTokens.shouldNotBeNull { shouldBeEqual(4) } // "Mixed response test" = 3 words + 1 = 4 tokens
-        outputTokens.shouldNotBeNull { shouldBeEqual(3) }
-        totalTokens.shouldNotBeNull { shouldBeEqual(inputTokens!! + outputTokens!!) }
+        assertNotNull(currentResponse.parts.filterIsInstance<MessagePart.Tool.Call>().firstOrNull())
+        assertNotNull(currentResponse.parts.filterIsInstance<MessagePart.Text>().firstOrNull())
+        currentResponse.metaInfo.inputTokensCount.shouldNotBeNull { shouldBeEqual(4) } // "Mixed response test" = 3 words + 1 = 4 tokens
+        currentResponse.metaInfo.outputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+        currentResponse.metaInfo.totalTokensCount.shouldNotBeNull { shouldBeEqual(currentResponse.metaInfo.inputTokensCount!! + currentResponse.metaInfo.outputTokensCount!!) }
     }
 }

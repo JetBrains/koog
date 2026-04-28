@@ -5,6 +5,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
@@ -12,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 
 class MultiLLMPromptExecutorTest {
 
@@ -29,9 +31,9 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model).single()
-
-        assertEquals("OpenAI response", response.content)
+        val response = executor.execute(prompt = prompt, model = model)
+        val textPart = assertIs<MessagePart.Text>(response.parts.single())
+        assertEquals("OpenAI response", textPart.text)
     }
 
     @Test
@@ -48,9 +50,9 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model).single()
-
-        assertEquals("Anthropic response", response.content)
+        val response = executor.execute(prompt = prompt, model = model)
+        val textPart = assertIs<MessagePart.Text>(response.parts.single())
+        assertEquals("Anthropic response", textPart.text)
     }
 
     @Test
@@ -67,9 +69,10 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model).single()
+        val response = executor.execute(prompt = prompt, model = model)
+        val textPart = assertIs<MessagePart.Text>(response.parts.single())
 
-        assertEquals("Google response", response.content)
+        assertEquals("Google response", textPart.text)
     }
 
     @Test

@@ -8,7 +8,7 @@ import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInv
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelContent
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelMessage
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
@@ -17,9 +17,11 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
-import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
@@ -79,7 +81,10 @@ class BedrockAnthropicClaudeSerializationTest {
         val userMessageActual2 = request.messages[2]
         val assistantMessage = request.messages[1]
         assertTrue(userMessageActual is BedrockAnthropicInvokeModelMessage.User)
-        assertEquals("Hello, who are you?", (userMessageActual.content[0] as BedrockAnthropicInvokeModelContent.Text).text)
+        assertEquals(
+            "Hello, who are you?",
+            (userMessageActual.content[0] as BedrockAnthropicInvokeModelContent.Text).text
+        )
 
         assertTrue(assistantMessage is BedrockAnthropicInvokeModelMessage.Assistant)
         assertEquals(
@@ -88,7 +93,10 @@ class BedrockAnthropicClaudeSerializationTest {
         )
 
         assertTrue(userMessageActual2 is BedrockAnthropicInvokeModelMessage.User)
-        assertEquals("Tell me about Paris.", (userMessageActual2.content[0] as BedrockAnthropicInvokeModelContent.Text).text)
+        assertEquals(
+            "Tell me about Paris.",
+            (userMessageActual2.content[0] as BedrockAnthropicInvokeModelContent.Text).text
+        )
     }
 
     @Test
@@ -163,6 +171,7 @@ class BedrockAnthropicClaudeSerializationTest {
 
     @Test
     fun `parseAnthropicResponse with text content`() {
+        val responseText = "Paris is the capital of France and one of the most visited cities in the world."
         val stopReason = "end_turn"
         val responseJson = """
             {
@@ -184,14 +193,13 @@ class BedrockAnthropicClaudeSerializationTest {
             }
         """.trimIndent()
 
-        val messages = BedrockAnthropicClaudeSerialization.parseAnthropicResponse(responseJson, mockClock)
+        val message = BedrockAnthropicClaudeSerialization.parseAnthropicResponse(responseJson, mockClock)
 
-        assertNotNull(messages)
-        assertEquals(1, messages.size)
+        assertNotNull(message)
+        assertEquals(1, message.parts.size)
 
-        val message = messages.first()
-        assertTrue(message is Message.Assistant)
-        assertContains(message.content, "Paris is the capital of France")
+        val textPart = assertIs<MessagePart.Text>(message.parts.first())
+        assertEquals(responseText, textPart.text)
 
         assertEquals(stopReason, message.finishReason)
 
@@ -227,17 +235,22 @@ class BedrockAnthropicClaudeSerializationTest {
             }
         """.trimIndent()
 
-        val messages = BedrockAnthropicClaudeSerialization.parseAnthropicResponse(responseJson, mockClock)
+        val message = BedrockAnthropicClaudeSerialization.parseAnthropicResponse(responseJson, mockClock)
 
-        assertNotNull(messages)
-        assertEquals(1, messages.size)
+        assertNotNull(message)
+        assertEquals(1, message.parts.size)
 
-        val message = messages.first()
-        assertTrue(message is Message.Tool.Call)
-        assertEquals(toolId, message.id)
-        assertEquals(toolName, message.tool)
-        assertContains(message.content, "Paris")
-        assertContains(message.content, "celsius")
+        val toolCall = assertIs<MessagePart.Tool.Call>(message.parts.first())
+
+        assertEquals(toolId, toolCall.id)
+        assertEquals(toolName, toolCall.tool)
+        assertEquals(
+            buildJsonObject {
+                put("city", JsonPrimitive("Paris"))
+                put("units", JsonPrimitive("celsius"))
+            },
+            toolCall.argsJson
+        )
 
         assertEquals(25, message.metaInfo.inputTokensCount)
         assertEquals(15, message.metaInfo.outputTokensCount)
@@ -246,7 +259,7 @@ class BedrockAnthropicClaudeSerializationTest {
 
     @Test
     fun `parseAnthropicResponse with multiple content blocks`() {
-        val message = "I'll check the weather for you."
+        val messageText = "I'll check the weather for you."
 
         val responseJson = """
             {
@@ -256,7 +269,7 @@ class BedrockAnthropicClaudeSerializationTest {
                 "content": [
                     {
                         "type": "text",
-                        "text": "$message"
+                        "text": "$messageText"
                     },
                     {
                         "type": "tool_use",
@@ -276,19 +289,19 @@ class BedrockAnthropicClaudeSerializationTest {
             }
         """.trimIndent()
 
-        val messages = BedrockAnthropicClaudeSerialization.parseAnthropicResponse(responseJson, mockClock)
+        val message = BedrockAnthropicClaudeSerialization.parseAnthropicResponse(responseJson, mockClock)
 
-        assertNotNull(messages)
-        assertEquals(2, messages.size)
+        assertNotNull(message)
+        assertEquals(2, message.parts.size)
 
-        val textMessage = messages[0]
-        assertTrue(textMessage is Message.Assistant)
-        assertEquals(message, textMessage.content)
+        val textPart = assertIs<MessagePart.Text>(message.parts.first())
+        assertEquals(messageText, textPart.text)
 
-        val toolMessage = messages[1]
-        assertTrue(toolMessage is Message.Tool.Call)
-        assertEquals(toolId, toolMessage.id)
-        assertEquals(toolName, toolMessage.tool)
+        val toolCall = assertIs<MessagePart.Tool.Call>(message.parts[1])
+
+        assertEquals(toolId, toolCall.id)
+        assertEquals(toolName, toolCall.tool)
+        assertEquals(buildJsonObject { put("city", JsonPrimitive("Paris")) }, toolCall.argsJson)
     }
 
     @Test

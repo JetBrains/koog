@@ -17,6 +17,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
@@ -54,15 +55,15 @@ class FunctionalAIAgentTest {
             systemPrompt = "You are helpful",
             promptExecutor = mockLLMApi,
             strategy = functionalStrategy { inputParam ->
-                var responses = requestLLMMultiple(inputParam)
+                var responses = requestLLM(inputParam)
 
-                while (responses.containsToolCalls()) {
-                    val tools = extractToolCalls(responses)
-                    val results = executeMultipleTools(tools)
-                    responses = sendMultipleToolResults(results)
+                while (responses.parts.any { it is MessagePart.Tool.Call }) {
+                    val tools = getToolCalls(responses)
+                    val results = executeTools(tools)
+                    responses = sendToolResults(results)
                 }
 
-                responses.single().asAssistantMessage().content
+                responses.parts.filterIsInstance<MessagePart.Text>().first().text
             },
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry
@@ -102,7 +103,7 @@ class FunctionalAIAgentTest {
                     appendPrompt { user(inputParam) }
                     requestLLM()
                 }
-                resp.content
+                resp.parts.filterIsInstance<MessagePart.Text>().first().text
             },
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry,
@@ -138,15 +139,15 @@ class FunctionalAIAgentTest {
             OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry,
             strategy = functionalStrategy { inputParam: String ->
-                var responses = requestLLMMultiple(inputParam)
+                var responses = requestLLM(inputParam)
 
-                while (responses.containsToolCalls()) {
-                    val tools = extractToolCalls(responses)
-                    val results = executeMultipleTools(tools)
-                    responses = sendMultipleToolResults(results)
+                while (responses.parts.any { it is MessagePart.Tool.Call }) {
+                    val tools = getToolCalls(responses)
+                    val results = executeTools(tools)
+                    responses = sendToolResults(results)
                 }
 
-                responses.single().asAssistantMessage().content
+                responses.parts.filterIsInstance<MessagePart.Text>().first().text
             }
         ) {
             install(EventHandler) {
@@ -504,13 +505,13 @@ class FunctionalAIAgentTest {
                         taskDescription = "Assemble the product: $assembly",
                         tools = AssemblyTools.tools,
                         llmModel = OllamaModels.Meta.LLAMA_4,
-                        runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+                        parallelTools = false
                     )
 
                     qaReport = subtask<FullQAReport>(
                         taskDescription = "Verify the product is built correctly: $product",
                         tools = QATools.tools,
-                        runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+                        parallelTools = false
                     )
 
                     if (qaReport.isCorrect) break
@@ -544,7 +545,7 @@ class FunctionalAIAgentTest {
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
         tools = BuildBodyTools.tools,
         llmModel = GoogleModels.Gemini2_0Flash,
-        runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+        parallelTools = false
     )
 
     private suspend fun AIAgentFunctionalContext.buildEngine(
@@ -555,7 +556,7 @@ class FunctionalAIAgentTest {
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
         tools = BuildEngineTools.tools,
         llmModel = AnthropicModels.Opus_4_6,
-        runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+        parallelTools = false
     )
 
     private suspend fun AIAgentFunctionalContext.designArchitecture(
@@ -566,7 +567,7 @@ class FunctionalAIAgentTest {
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
         tools = ArchitectureTools.tools,
         llmModel = OpenAIModels.Chat.GPT5,
-        runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+        parallelTools = false
     )
 
     @Test
@@ -591,7 +592,7 @@ class FunctionalAIAgentTest {
                 subtask<SimpleOut>(
                     taskDescription = "Do simple subtask: $input",
                     tools = null, // no extra tools
-                    runMode = ToolCalls.SEQUENTIAL
+                    parallelTools = false
                 )
             },
             systemPrompt = "You are helpful"
@@ -638,7 +639,7 @@ class FunctionalAIAgentTest {
                 subtask<SimpleOut>(
                     taskDescription = "Compose task with tool: $input",
                     tools = listOf(DummyTool),
-                    runMode = ToolCalls.SEQUENTIAL
+                    parallelTools = false
                 )
             },
             toolRegistry = testToolRegistry
@@ -677,7 +678,7 @@ class FunctionalAIAgentTest {
                 subtask<SimpleOut>(
                     taskDescription = "Parallel subtask: $input",
                     tools = null,
-                    runMode = ToolCalls.PARALLEL
+                    parallelTools = false
                 )
             }
         ) {
@@ -712,7 +713,7 @@ class FunctionalAIAgentTest {
                 subtask<SimpleOut>(
                     taskDescription = "Single-run subtask: $input",
                     tools = null,
-                    runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+                    parallelTools = false
                 )
             }
         ) {
@@ -747,7 +748,7 @@ class FunctionalAIAgentTest {
             strategy = functionalStrategy<String, CriticResult<String>> { input ->
                 subtaskWithVerification(
                     taskDescription = "Judge this: $input",
-                    runMode = ToolCalls.SEQUENTIAL
+                    parallelTools = false
                 )
             },
             systemPrompt = "You are helpful"

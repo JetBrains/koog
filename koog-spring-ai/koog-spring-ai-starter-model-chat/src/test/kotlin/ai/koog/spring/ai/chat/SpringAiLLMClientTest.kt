@@ -8,9 +8,8 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
@@ -121,11 +120,13 @@ class SpringAiLLMClientTest {
             Message.System("Be helpful.", requestMeta()),
             Message.User("Hi", requestMeta())
         )
-        val results = client.execute(prompt, testModel, emptyList())
+        val result = client.execute(prompt, testModel, emptyList())
 
-        assertEquals(1, results.size)
-        assertTrue(results[0] is Message.Assistant)
-        assertEquals("Hello!", results[0].content)
+        assertEquals(1, result.parts.size)
+        assertTrue(result.parts[0] is MessagePart.Text)
+        val textPart = result.parts[0] as MessagePart.Text
+
+        assertEquals("Hello!", textPart.text)
     }
 
     @Test
@@ -138,15 +139,15 @@ class SpringAiLLMClientTest {
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
         }).build()
         val prompt = createPrompt(Message.User("What's the weather?", requestMeta()))
-        val results = client.execute(prompt, testModel, emptyList())
+        val result = client.execute(prompt, testModel, emptyList())
 
-        assertEquals(1, results.size)
-        assertTrue(results[0] is Message.Tool.Call)
-        val call = results[0] as Message.Tool.Call
+        val toolCallParts = result.parts.filterIsInstance<MessagePart.Tool.Call>()
+        assertEquals(1, toolCallParts.size)
+        val call = toolCallParts[0]
         // Bug check: tool name and id must not be swapped
         assertEquals("id-1", call.id)
         assertEquals("get_weather", call.tool)
-        assertEquals("""{"city":"Paris"}""", call.content)
+        assertEquals("""{"city":"Paris"}""", call.args.toString())
     }
 
     @Test
@@ -164,9 +165,9 @@ class SpringAiLLMClientTest {
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
         }).build()
         val prompt = createPrompt(Message.User("Hello", requestMeta()))
-        val results = client.execute(prompt, testModel, emptyList())
+        val result = client.execute(prompt, testModel, emptyList())
 
-        val metaInfo = (results[0] as Message.Assistant).metaInfo
+        val metaInfo = result.metaInfo
         // Bug check: prompt tokens -> inputTokensCount, completion -> outputTokensCount (not swapped)
         assertEquals(5, metaInfo.inputTokensCount)
         assertEquals(15, metaInfo.outputTokensCount)
@@ -217,7 +218,7 @@ class SpringAiLLMClientTest {
     }
 
     @Test
-    fun `execute flattens multiple generations`() = runBlocking {
+    fun `execute returns first generation when multiple are present`() = runBlocking {
         val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = ChatResponse(
                 listOf(
@@ -229,11 +230,11 @@ class SpringAiLLMClientTest {
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
         }).build()
         val prompt = createPrompt(Message.User("Hello", requestMeta()))
-        val results = client.execute(prompt, testModel, emptyList())
+        val result = client.execute(prompt, testModel, emptyList())
 
-        assertEquals(2, results.size)
-        assertEquals("First", results[0].content)
-        assertEquals("Second", results[1].content)
+        val textParts = result.parts.filterIsInstance<MessagePart.Text>()
+        assertEquals(1, textParts.size)
+        assertEquals("First", textParts[0].text)
     }
 
     // ---- executeStreaming ----
@@ -350,34 +351,6 @@ class SpringAiLLMClientTest {
         } catch (e: UnsupportedOperationException) {
             // expected
         }
-    }
-
-    @Test
-    fun `moderate throws UnsupportedOperationException for multimodal prompt`() = runBlocking {
-        val moderationModel = object : org.springframework.ai.moderation.ModerationModel {
-            override fun call(request: org.springframework.ai.moderation.ModerationPrompt): org.springframework.ai.moderation.ModerationResponse =
-                throw AssertionError("Should not be called for multimodal prompts")
-        }
-        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
-            override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
-            override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
-        }).moderationModel(moderationModel).build()
-
-        val multimodalMessage = Message.User(
-            listOf(
-                ContentPart.Text("Describe this image"),
-                ContentPart.Image(
-                    content = AttachmentContent.Binary.Bytes(byteArrayOf(1, 2, 3)),
-                    format = "png"
-                )
-            ),
-            requestMeta()
-        )
-        val prompt = createPrompt(multimodalMessage)
-        val exception = assertThrows<UnsupportedOperationException> {
-            client.moderate(prompt, testModel)
-        }
-        assertTrue(exception.message!!.contains("non-text content"))
     }
 
     // ---- exception translation ----

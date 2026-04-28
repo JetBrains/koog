@@ -9,6 +9,7 @@ import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 
 class TestFeature(val events: MutableList<String>) {
 
@@ -172,7 +173,8 @@ class TestFeature(val events: MutableList<String>) {
                 config.addEvent(
                     event,
                     mapOf(
-                        "prompt" to event.prompt.messages.lastOrNull { it.role == Message.Role.User }?.content,
+                        "prompt" to event.prompt.messages.lastOrNull { it.role == Message.Role.User }
+                            ?.parts?.filterIsInstance<MessagePart.Text>()?.joinToString("\n") { it.text },
                         "tools" to "[${event.tools.joinToString { it.name }}]"
                     )
                 )
@@ -182,7 +184,7 @@ class TestFeature(val events: MutableList<String>) {
                 config.addEvent(
                     event,
                     mapOf(
-                        "responses" to "[${event.responses.joinToString(", ") { "${it.role.name}: ${it.content}" }}]"
+                        "responses" to "[${event.response?.let { "${it.role.name}: ${it.parts.filterIsInstance<MessagePart.Text>().joinToString("") { p -> p.text }}" } ?: ""}]"
                     )
                 )
             }

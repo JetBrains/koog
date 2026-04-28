@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.Json
@@ -197,12 +198,16 @@ class AnthropicToolSerializationTest {
         val requestJson = client.createAnthropicRequest(
             prompt = Prompt(
                 messages = listOf(
-                    Message.Tool.Result(
-                        id = "tool-call-1",
-                        tool = "my_tool",
-                        content = "Tool execution failed: something went wrong",
+                    Message.User(
+                        parts = listOf(
+                            MessagePart.Tool.Result(
+                                id = "tool-call-1",
+                                tool = "my_tool",
+                                output = "Tool execution failed: something went wrong",
+                                isError = true
+                            )
+                        ),
                         metaInfo = metaInfo,
-                        isError = true
                     )
                 ),
                 id = "id"
@@ -240,12 +245,16 @@ class AnthropicToolSerializationTest {
         val requestJson = client.createAnthropicRequest(
             prompt = Prompt(
                 messages = listOf(
-                    Message.Tool.Result(
-                        id = "tool-call-2",
-                        tool = "my_tool",
-                        content = "Success result",
+                    Message.User(
+                        parts = listOf(
+                            MessagePart.Tool.Result(
+                                id = "tool-call-2",
+                                tool = "my_tool",
+                                output = "Success result",
+                                isError = false
+                            )
+                        ),
                         metaInfo = metaInfo,
-                        isError = false
                     )
                 ),
                 id = "id"

@@ -10,6 +10,7 @@ import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -78,8 +79,9 @@ class AIAgentNodesHistoryCompressionTest {
         assertEquals(1, testExecutor.tldrCount, "WholeHistory strategy should create exactly one TLDR message")
 
         // Verify that the final messages include the TLDR
-        val tldrMessages = testExecutor.messages.filterIsInstance<Message.Assistant>()
-            .filter { it.content.startsWith("TLDR") }
+        val tldrMessages = testExecutor.messages.last().parts.filter {
+            it is MessagePart.Text && it.text.startsWith("TLDR")
+        }
         assertEquals(1, tldrMessages.size, "There should be exactly one TLDR message in the final history")
     }
 
@@ -130,8 +132,9 @@ class AIAgentNodesHistoryCompressionTest {
         assertEquals(1, testExecutor.tldrCount, "FromLastNMessages strategy should create exactly one TLDR message")
 
         // Verify that the final messages include the TLDR
-        val tldrMessages = testExecutor.messages.filterIsInstance<Message.Assistant>()
-            .filter { it.content.startsWith("TLDR") }
+        val tldrMessages = testExecutor.messages.last().parts.filter {
+            it is MessagePart.Text && it.text.startsWith("TLDR")
+        }
         assertEquals(1, tldrMessages.size, "There should be exactly one TLDR message in the final history")
     }
 
@@ -193,8 +196,9 @@ class AIAgentNodesHistoryCompressionTest {
         )
 
         // Verify that the final messages include the TLDRs
-        val tldrMessages = testExecutor.messages.filterIsInstance<Message.Assistant>()
-            .filter { it.content.startsWith("TLDR") }
+        val tldrMessages = testExecutor.messages.flatMap { it.parts }.filter { part ->
+            part is MessagePart.Text && part.text.startsWith("TLDR")
+        }
 
         assertEquals(8, testExecutor.tldrCount)
         assertEquals(
@@ -277,14 +281,20 @@ class AIAgentNodesHistoryCompressionTest {
         // The fact-extraction system prompts should reference all configured concept keywords.
         val systemMessages = testExecutor.messages.filterIsInstance<Message.System>()
         assertTrue(
-            concepts.all { c -> systemMessages.any { it.content.contains(c.keyword) } },
+            concepts.all { concept ->
+                systemMessages.any { message ->
+                    message.parts.any { it.text.contains(concept.keyword) }
+                }
+            },
             "Each configured concept keyword must appear in the fact-extraction system prompts"
         )
         // Each extraction request must wrap the conversation history in the dedicated XML tag.
         val userMessages = testExecutor.messages.filterIsInstance<Message.User>()
         assertEquals(
             concepts.size,
-            userMessages.count { it.content.contains("<conversation_to_extract_facts>") },
+            userMessages.count { message ->
+                message.parts.filterIsInstance<MessagePart.Text>().any { it.text.contains("<conversation_to_extract_facts>") }
+            },
             "Each concept must be extracted from a conversation wrapped in <conversation_to_extract_facts>"
         )
     }

@@ -10,6 +10,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.time.KoogClock
 import io.mockk.every
@@ -320,8 +321,8 @@ class FactRetrievalHistoryCompressionStrategyTest {
         // closing wrapper or raw concept payload.
         val finalPrompt = llmContext.writeSession { this.prompt }
         val restoration = finalPrompt.messages.filterIsInstance<Message.Assistant>()
-            .single { it.content.contains("[CONTEXT RESTORATION]") }
-            .content
+            .single { it.assistantText().contains("[CONTEXT RESTORATION]") }
+            .assistantText()
 
         // Only ONE legitimate closing tag must appear (the wrapper itself).
         val closingCount = Regex("</compressed_facts>").findAll(restoration).count()
@@ -377,8 +378,8 @@ class FactRetrievalHistoryCompressionStrategyTest {
 
         val finalPrompt = llmContext.writeSession { this.prompt }
         val restoration = finalPrompt.messages.filterIsInstance<Message.Assistant>()
-            .single { it.content.contains("[CONTEXT RESTORATION]") }
-            .content
+            .single { it.assistantText().contains("[CONTEXT RESTORATION]") }
+            .assistantText()
 
         // No Markdown heading form for KNOWN FACTS — concept metadata lives in <keyword>/<description>.
         assertFalse(
@@ -392,4 +393,7 @@ class FactRetrievalHistoryCompressionStrategyTest {
         assertTrue(restoration.contains("<description>plain</description>"))
         assertTrue(restoration.contains("<fact>value</fact>"))
     }
+
+    private fun Message.Assistant.assistantText(): String =
+        parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
 }

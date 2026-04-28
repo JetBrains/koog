@@ -20,7 +20,7 @@ import kotlin.jvm.JvmOverloads
  *
  * Constructor parameters allow you to predefine what each method should return.
  *
- * @property executeResponses The list of [Message.Response] to return from [execute].
+ * @property executeResponse The list of [Message.Assistant] to return from [execute].
  * @property streamingChunks The sequence of chunks to emit from [executeStreaming].
  * @property choices The list of [LLMChoice] to return from [executeMultipleChoices].
  * @property moderationResult The [ModerationResult] to return from [moderate].
@@ -29,9 +29,9 @@ import kotlin.jvm.JvmOverloads
  * @property llmProvider [LLMProvider] associated with the client or [LLMProvider.OpenAI], if not defined
  */
 public class CapturingLLMClient @JvmOverloads constructor(
-    private val executeResponses: List<Message.Response> = emptyList(),
+    private val executeResponse: Message.Assistant? = null,
     private val streamingChunks: List<StreamFrame> = emptyList(),
-    private val choices: List<LLMChoice> = emptyList(),
+    private val choices: LLMChoice? = null,
     private val moderationResult: ModerationResult = ModerationResult(isHarmful = false, categories = emptyMap()),
     private val embedResult: List<Double> = emptyList(),
     private val batchEmbedResult: List<List<Double>> = emptyList(),
@@ -84,17 +84,17 @@ public class CapturingLLMClient @JvmOverloads constructor(
 
     /**
      * Simulates a non-streaming LLM execution.
-     * Captures input parameters and returns the predefined [executeResponses].
+     * Captures input parameters and returns the predefined [executeResponse].
      */
     override suspend fun execute(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<Message.Response> {
+    ): Message.Assistant {
         lastExecutedPrompt = prompt
         lastExecutedModel = model
         lastExecutedTools = tools
-        return executeResponses
+        return executeResponse!!
     }
 
     /**
@@ -119,11 +119,11 @@ public class CapturingLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> {
+    ): LLMChoice {
         lastChoicesPrompt = prompt
         lastChoicesModel = model
         lastChoicesTools = tools
-        return choices
+        return choices!!
     }
 
     /**

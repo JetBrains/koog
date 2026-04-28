@@ -267,7 +267,8 @@ Start by validating the fundamental structure of your agent's graph:
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.core.environment.ReceivedToolResult
+    import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+    import ai.koog.agents.core.dsl.extension.ToolCalls
     import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.testing.feature.testGraph
@@ -303,8 +304,8 @@ Start by validating the fundamental structure of your agent's graph:
                 val finish = finishNode()
 
                 // Assert nodes by name
-                val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-                val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
+                val askLLM = assertNodeByName<String, Message.Assistant>("callLLM")
+                val callTool = assertNodeByName<ToolCalls, ReceivedToolResults>("executeTool")
 
                 // Assert node reachability
                 assertReachable(start, askLLM)
@@ -346,7 +347,9 @@ Start with simple input and output validations for individual nodes:
     import ai.koog.agents.example.exampleTesting03.CreateTool
     import ai.koog.agents.testing.feature.assistantMessage
     import ai.koog.agents.testing.feature.testGraph
-    import ai.koog.agents.testing.feature.toolCallMessage
+    import ai.koog.agents.testing.feature.toolCallMessagePart
+    import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+    import ai.koog.agents.core.dsl.extension.ToolCalls
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.message.Message
     val llmModel = OpenAIModels.Chat.GPT4o
@@ -359,7 +362,7 @@ Start with simple input and output validations for individual nodes:
         ) {
             testGraph<String, String>("test") {
                 assertNodes {
-                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
+                    val askLLM = assertNodeByName<String, Message.Assistant>("callLLM")
     -->
     <!--- SUFFIX
                 }
@@ -374,7 +377,7 @@ Start with simple input and output validations for individual nodes:
         askLLM withInput "Hello" outputs assistantMessage("Hello!")
 
         // Test tool call responses
-        askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
+        askLLM withInput "Solve task" outputs assistantMessage(CreateTool, CreateTool.Args("solve"))
     }
     ```
     <!--- KNIT example-testing-06.kt -->
@@ -410,7 +413,10 @@ You can also test nodes that run tools:
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.ext.tool.AskUser
     import ai.koog.agents.testing.feature.testGraph
-    import ai.koog.agents.testing.feature.toolCallMessage
+    import ai.koog.agents.testing.feature.assistantMessage
+    import ai.koog.agents.testing.feature.toolCallMessagePart
+    import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+    import ai.koog.agents.core.dsl.extension.ToolCalls
     import ai.koog.agents.testing.feature.toolResult
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.message.Message
@@ -441,7 +447,7 @@ You can also test nodes that run tools:
         ) {
             testGraph<String, String>("test") {
                 assertNodes {
-                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
+                    val callTool = assertNodeByName<ToolCalls, ReceivedToolResults>("executeTool")
     -->
     <!--- SUFFIX
                 }
@@ -452,10 +458,10 @@ You can also test nodes that run tools:
     ```kotlin
     assertNodes {
         // Test tool runs with specific arguments
-        callTool withInput toolCallMessage(
+        callTool withInput ToolCalls(listOf(toolCallMessagePart(
             SolveTool,
             SolveTool.Args("solve")
-        ) outputs toolResult(SolveTool, SolveTool.Args("solve"), "solved")
+        ))) outputs ReceivedToolResults(listOf(toolResult(SolveTool, SolveTool.Args("solve"), "solved")))
     }
     ```
     <!--- KNIT example-testing-07.kt -->
@@ -489,7 +495,9 @@ For more complex scenarios, you can test nodes with structured inputs and output
     import ai.koog.agents.ext.tool.AskUser
     import ai.koog.agents.testing.feature.assistantMessage
     import ai.koog.agents.testing.feature.testGraph
-    import ai.koog.agents.testing.feature.toolCallMessage
+    import ai.koog.agents.testing.feature.toolCallMessagePart
+    import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+    import ai.koog.agents.core.dsl.extension.ToolCalls
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.message.Message
     import ai.koog.serialization.typeToken
@@ -519,7 +527,7 @@ For more complex scenarios, you can test nodes with structured inputs and output
         ) {
             testGraph<String, String>("test") {
                 assertNodes {
-                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
+                    val askLLM = assertNodeByName<String, Message.Assistant>("callLLM")
     -->
     <!--- SUFFIX
                 }
@@ -533,7 +541,7 @@ For more complex scenarios, you can test nodes with structured inputs and output
         askLLM withInput "Simple query" outputs assistantMessage("Simple response")
 
         // Test with complex parameters
-        askLLM withInput "Complex query with parameters" outputs toolCallMessage(
+        askLLM withInput "Complex query with parameters" outputs assistantMessage(
             AnalyzeTool,
             AnalyzeTool.Args(query = "parameters", depth = 3)
         )
@@ -564,7 +572,10 @@ You can also test complex tool call scenarios with detailed result structures:
     import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.testing.feature.testGraph
-    import ai.koog.agents.testing.feature.toolCallMessage
+    import ai.koog.agents.testing.feature.assistantMessage
+    import ai.koog.agents.testing.feature.toolCallMessagePart
+    import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+    import ai.koog.agents.core.dsl.extension.ToolCalls
     import ai.koog.agents.testing.feature.toolResult
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.message.Message
@@ -604,7 +615,7 @@ You can also test complex tool call scenarios with detailed result structures:
         ) {
             testGraph<String, String>("test") {
                 assertNodes {
-                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
+                    val callTool = assertNodeByName<ToolCalls, ReceivedToolResults>("executeTool")
     -->
     <!--- SUFFIX
                 }
@@ -615,14 +626,14 @@ You can also test complex tool call scenarios with detailed result structures:
     ```kotlin
     assertNodes {
         // Test a complex tool call with a structured result
-        callTool withInput toolCallMessage(
+        callTool withInput ToolCalls(listOf(toolCallMessagePart(
             AnalyzeTool,
             AnalyzeTool.Args(query = "complex", depth = 5)
-        ) outputs toolResult(AnalyzeTool, AnalyzeTool.Args(query = "complex", depth = 5), AnalyzeTool.Result(
+        ))) outputs ReceivedToolResults(listOf(toolResult(AnalyzeTool, AnalyzeTool.Args(query = "complex", depth = 5), AnalyzeTool.Result(
             analysis = "Detailed analysis",
             confidence = 0.95,
             metadata = mapOf("source" to "database", "timestamp" to "2023-06-15")
-        ))
+        ))))
     }
     ```
     <!--- KNIT example-testing-09.kt -->
@@ -660,7 +671,9 @@ Start with simple edge connection tests:
     import ai.koog.agents.example.exampleTesting03.CreateTool
     import ai.koog.agents.testing.feature.assistantMessage
     import ai.koog.agents.testing.feature.testGraph
-    import ai.koog.agents.testing.feature.toolCallMessage
+    import ai.koog.agents.testing.feature.toolCallMessagePart
+    import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+    import ai.koog.agents.core.dsl.extension.ToolCalls
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.message.Message
     import kotlinx.serialization.KSerializer
@@ -675,9 +688,9 @@ Start with simple edge connection tests:
         ) {
             testGraph<String, String>("test") {
                 assertNodes {
-                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
-                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-                    val giveFeedback = assertNodeByName<String, Message.Response>("giveFeedback")
+                    val callTool = assertNodeByName<ToolCalls, ReceivedToolResults>("executeTool")
+                    val askLLM = assertNodeByName<String, Message.Assistant>("callLLM")
+                    val giveFeedback = assertNodeByName<String, Message.Assistant>("giveFeedback")
     -->
     <!--- SUFFIX
                 }
@@ -691,7 +704,7 @@ Start with simple edge connection tests:
         askLLM withOutput assistantMessage("Hello!") goesTo giveFeedback
 
         // Test tool call routing
-        askLLM withOutput toolCallMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
+        askLLM withOutput assistantMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
     }
     ```
     <!--- KNIT example-testing-10.kt -->
@@ -737,9 +750,9 @@ You can test a more complex routing logic based on the content of outputs:
         ) {
             testGraph<String, String>("test") {
                 assertNodes {
-                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
+                    val askLLM = assertNodeByName<String, Message.Assistant>("callLLM")
                     val askForInfo = assertNodeByName<String, ReceivedToolResult>("askForInfo")
-                    val processRequest = assertNodeByName<String, Message.Response>("processRequest")
+                    val processRequest = assertNodeByName<String, Message.Assistant>("processRequest")
     -->
     <!--- SUFFIX
                 }
@@ -776,7 +789,8 @@ For sophisticated agents, you can test conditional routing based on structured d
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.core.environment.ReceivedToolResult
+    import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+    import ai.koog.agents.core.dsl.extension.ToolCalls
     import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.example.exampleTesting09.AnalyzeTool
@@ -794,8 +808,8 @@ For sophisticated agents, you can test conditional routing based on structured d
         ) {
             testGraph<String, String>("test") {
                 assertNodes {
-                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
-                    val processResult = assertNodeByName<String, Message.Response>("processResult")
+                    val callTool = assertNodeByName<ToolCalls, ReceivedToolResults>("executeTool")
+                    val processResult = assertNodeByName<String, Message.Assistant>("processResult")
     -->
     <!--- SUFFIX
                 }
@@ -806,11 +820,11 @@ For sophisticated agents, you can test conditional routing based on structured d
     ```kotlin
     assertEdges {
         // Test routing based on tool result content
-        callTool withOutput toolResult(
+        callTool withOutput ReceivedToolResults(listOf(toolResult(
             AnalyzeTool,
             AnalyzeTool.Args(query = "parameters", depth = 3),
             AnalyzeTool.Result(analysis = "Needs more processing", confidence = 0.5)
-        ) goesTo processResult
+        ))) goesTo processResult
     }
     ```
     <!--- KNIT example-testing-12.kt -->
@@ -833,7 +847,8 @@ You can also test complex decision paths based on different result properties:
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.core.environment.ReceivedToolResult
+    import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+    import ai.koog.agents.core.dsl.extension.ToolCalls
     import ai.koog.agents.example.exampleTesting03.mockLLMApi
     import ai.koog.agents.example.exampleTesting02.toolRegistry
     import ai.koog.agents.example.exampleTesting09.AnalyzeTool
@@ -851,9 +866,9 @@ You can also test complex decision paths based on different result properties:
         ) {
             testGraph<String, String>("test") {
                 assertNodes {
-                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
-                    val finish = assertNodeByName<String, Message.Response>("finish")
-                    val verifyResult = assertNodeByName<String, Message.Response>("verifyResult")
+                    val callTool = assertNodeByName<ToolCalls, ReceivedToolResults>("executeTool")
+                    val finish = assertNodeByName<String, Message.Assistant>("finish")
+                    val verifyResult = assertNodeByName<String, Message.Assistant>("verifyResult")
     -->
     <!--- SUFFIX
                 }
@@ -864,17 +879,17 @@ You can also test complex decision paths based on different result properties:
     ```kotlin
     assertEdges {
         // Route to different nodes based on confidence level
-        callTool withOutput toolResult(
+        callTool withOutput ReceivedToolResults(listOf(toolResult(
             AnalyzeTool,
             AnalyzeTool.Args(query = "parameters", depth = 3),
             AnalyzeTool.Result(analysis = "Complete", confidence = 0.9)
-        ) goesTo finish
+        ))) goesTo finish
 
-        callTool withOutput toolResult(
+        callTool withOutput ReceivedToolResults(listOf(toolResult(
             AnalyzeTool,
             AnalyzeTool.Args(query = "parameters", depth = 3),
             AnalyzeTool.Result(analysis = "Uncertain", confidence = 0.3)
-        ) goesTo verifyResult
+        ))) goesTo verifyResult
     }
     ```
     <!--- KNIT example-testing-13.kt -->
@@ -1060,8 +1075,8 @@ For more complex agents with multiple subgraphs, you can also test the graph str
                 tools = listOf(DummyTool, CreateTool, SolveTool)
             ) {
                 val callLLM by nodeLLMRequest(allowToolCalls = false)
-                val executeTool by nodeExecuteTool()
-                val sendToolResult by nodeLLMSendToolResult()
+                val executeTool by nodeExecuteToolsAndGetResults()
+                val sendToolResult by nodeSendToolReceivedResults()
                 val giveFeedback by node<String, String> { input ->
                     llm.writeSession {
                         appendPrompt {
@@ -1071,12 +1086,11 @@ For more complex agents with multiple subgraphs, you can also test the graph str
                     input
                 }
 
-                edge(nodeStart forwardTo callLLM)
-                edge(callLLM forwardTo executeTool onToolCall { true })
-                edge(callLLM forwardTo giveFeedback onAssistantMessage { true })
-                edge(giveFeedback forwardTo giveFeedback onAssistantMessage { true })
-                edge(giveFeedback forwardTo executeTool onToolCall { true })
-                edge(executeTool forwardTo nodeFinish transformed { it.content })
+                edge(nodeStart forwardTo callLLM asUserMessage { it })
+                edge(callLLM forwardTo executeTool onToolCalls { true })
+                edge(callLLM forwardTo giveFeedback onTextParts { true })
+                edge(giveFeedback forwardTo giveFeedback transformed { it })
+                edge(executeTool forwardTo nodeFinish transformed { it.toolResults.first().output })
             }
 
             val secondSubgraph by subgraph<String, String>("second") {
@@ -1122,31 +1136,31 @@ For more complex agents with multiple subgraphs, you can also test the graph str
                     val start = startNode()
                     val finish = finishNode()
 
-                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-                    val callTool = assertNodeByName<Message.Tool.Call, ReceivedToolResult>("executeTool")
+                    val askLLM = assertNodeByName<String, Message.Assistant>("callLLM")
+                    val callTool = assertNodeByName<ToolCalls, ReceivedToolResults>("executeTool")
                     val giveFeedback = assertNodeByName<Any?, Any?>("giveFeedback")
 
                     assertReachable(start, askLLM)
                     assertReachable(askLLM, callTool)
 
                     assertNodes {
-                        askLLM withInput "Hello" outputs Message.Assistant("Hello!")
-                        askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
+                        askLLM withInput "Hello" outputs assistantMessage("Hello!")
+                        askLLM withInput "Solve task" outputs assistantMessage(CreateTool, CreateTool.Args("solve"))
 
-                        callTool withInput toolCallSignature(
+                        callTool withInput ToolCalls(listOf(toolCallMessagePart(
                             SolveTool,
                             SolveTool.Args("solve")
-                        ) outputs toolResult(SolveTool, "solved")
+                        ))) outputs ReceivedToolResults(listOf(toolResult(SolveTool, SolveTool.Args("solve"), "solved")))
 
-                        callTool withInput toolCallSignature(
+                        callTool withInput ToolCalls(listOf(toolCallMessagePart(
                             CreateTool,
                             CreateTool.Args("solve")
-                        ) outputs toolResult(CreateTool, "created")
+                        ))) outputs ReceivedToolResults(listOf(toolResult(CreateTool, CreateTool.Args("solve"), "created")))
                     }
 
                     assertEdges {
-                        askLLM withOutput Message.Assistant("Hello!") goesTo giveFeedback
-                        askLLM withOutput toolCallMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
+                        askLLM withOutput assistantMessage("Hello!") goesTo giveFeedback
+                        askLLM withOutput assistantMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
                     }
                 }
             }

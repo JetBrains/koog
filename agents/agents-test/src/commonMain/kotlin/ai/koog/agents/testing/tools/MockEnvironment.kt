@@ -7,7 +7,7 @@ import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 
@@ -61,7 +61,7 @@ public class MockEnvironment(
      * @param toolCalls The list of tool calls to execute
      * @return A list of [ReceivedToolResult] objects containing the results of the tool calls
      */
-    public override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
+    public override suspend fun executeTools(toolCalls: List<MessagePart.Tool.Call>): List<ReceivedToolResult> {
         return toolCalls.map {
             executeTool(it)
         }
@@ -78,7 +78,7 @@ public class MockEnvironment(
      * @param toolCall The tool call to execute
      * @return A [ReceivedToolResult] containing the result of the tool call
      */
-    override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+    override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult {
         if (promptExecutor is MockPromptExecutor) {
             promptExecutor.toolActions
                 .find { it.satisfies(toolCall) }
@@ -88,9 +88,9 @@ public class MockEnvironment(
                     return ReceivedToolResult(
                         id = toolCall.id,
                         tool = toolCall.tool,
-                        toolArgs = toolCall.contentJson.toKoogJSONObject(),
+                        toolArgs = toolCall.argsJson.toKoogJSONObject(),
                         toolDescription = tool.descriptor.description,
-                        content = content,
+                        output = content,
                         resultKind = ToolResultKind.Success,
                         result = tool.encodeResultUnsafe(result, serializer)
                     )
@@ -99,15 +99,15 @@ public class MockEnvironment(
 
         val tool = toolRegistry.getTool(toolCall.tool)
 
-        val args = tool.decodeArgs(toolCall.contentJson.toKoogJSONObject(), serializer)
+        val args = tool.decodeArgs(toolCall.argsJson.toKoogJSONObject(), serializer)
         val result = tool.executeUnsafe(args)
 
         return ReceivedToolResult(
             id = toolCall.id,
             tool = toolCall.tool,
-            toolArgs = toolCall.contentJson.toKoogJSONObject(),
+            toolArgs = toolCall.argsJson.toKoogJSONObject(),
             toolDescription = tool.descriptor.description,
-            content = tool.encodeResultToStringUnsafe(result, serializer),
+            output = tool.encodeResultToStringUnsafe(result, serializer),
             resultKind = ToolResultKind.Success,
             result = tool.encodeResultUnsafe(result, serializer)
         )

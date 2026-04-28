@@ -22,6 +22,7 @@ Here is an example:
     import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
     import ai.koog.prompt.executor.cached.CachedPromptExecutor
     import ai.koog.prompt.cache.files.FilePromptCache
+    import ai.koog.prompt.message.MessagePart
     import kotlin.system.measureTimeMillis
     import ai.koog.prompt.dsl.prompt
     import kotlin.io.path.Path
@@ -51,7 +52,8 @@ Here is an example:
     // This will perform an actual LLM request
     val firstTime = measureTimeMillis {
         val firstResponse = cachedExecutor.execute(prompt, OpenAIModels.Chat.GPT4o)
-        println("First response: ${firstResponse.first().content}")
+        val text = firstResponse.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
+        println("First response: $text")
     }
     println("First execution took: ${firstTime}ms")
 
@@ -59,7 +61,8 @@ Here is an example:
     // This will return the result immediately from the cache
     val secondTime = measureTimeMillis {
         val secondResponse = cachedExecutor.execute(prompt, OpenAIModels.Chat.GPT4o)
-        println("Second response: ${secondResponse.first().content}")
+        val text = secondResponse.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
+        println("Second response: $text")
     }
     println("Second execution took: ${secondTime}ms")
     ```

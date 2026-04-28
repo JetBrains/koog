@@ -2,7 +2,6 @@ package ai.koog.ktor
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -97,10 +96,10 @@ public suspend inline fun <reified Input, reified Output, Result> RoutingContext
  * Inside the [block] lambda you can use the agent to perform tasks, and calculate a result, such as [GraphAIAgent.run].
  */
 public suspend fun <Result> RoutingContext.aiAgent(
-    runMode: ToolCalls = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+    parallelTools: Boolean = false,
     model: LLModel,
     block: suspend (agent: AIAgent<String, String>) -> Result
-): Result = aiAgent(singleRunStrategy(runMode), model).use(block)
+): Result = aiAgent(singleRunStrategy(parallelTools), model).use(block)
 
 /**
  * A default `aiAgent` is an agent that runs using [singleRunStrategy], by default, it relies on sequential [ToolCalls].
@@ -109,5 +108,5 @@ public suspend fun <Result> RoutingContext.aiAgent(
 public suspend fun RoutingContext.aiAgent(
     input: String,
     model: LLModel,
-    runMode: ToolCalls = ToolCalls.SINGLE_RUN_SEQUENTIAL,
-): String = aiAgent(runMode, model) { it.run(input, null) }
+    parallelTools: Boolean = false,
+): String = aiAgent(parallelTools, model) { it.run(input, null) }

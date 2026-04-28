@@ -18,7 +18,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.serialization.typeToken
@@ -39,14 +39,14 @@ open class AgentTestBase {
             tool = "test-tool",
             toolArgs = JsonObject(mapOf("result" to JsonPrimitive("test-result"))).toKoogJSONObject(),
             toolDescription = null,
-            content = "Test tool result",
+            output = "Test tool result",
             resultKind = ToolResultKind.Success,
             result = JsonObject(mapOf("result" to JsonPrimitive("test-result"))).toKoogJSONObject(),
         )
     ): AIAgentEnvironment {
         return object : AIAgentEnvironment {
 
-            override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+            override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult {
                 return toolResult
             }
 

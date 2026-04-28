@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.example.ApiKeyService
@@ -199,7 +200,8 @@ suspend fun main() {
             )
         )
 
-        nodeStart then prepareRequest then getStructuredForecast
+        nodeStart then prepareRequest
+        edge(prepareRequest forwardTo getStructuredForecast asUserMessage { it })
         edge(getStructuredForecast forwardTo nodeFinish transformed { it.getOrThrow().data })
     }
 

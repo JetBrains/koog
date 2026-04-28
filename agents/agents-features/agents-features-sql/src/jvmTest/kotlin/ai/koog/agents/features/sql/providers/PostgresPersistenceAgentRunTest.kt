@@ -16,6 +16,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
@@ -110,7 +111,7 @@ class PostgresPersistenceAgentRunTest {
         name: String? = null,
     ): AIAgentNodeDelegate<String, String> = node(name) {
         return@node llm.readSession {
-            val history = this.prompt.messages.joinToString("\n") { it.content }
+            val history = this.prompt.messages.joinToString("\n") { msg -> msg.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text } }
             return@readSession "History: $history"
         }
     }

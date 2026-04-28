@@ -2,13 +2,13 @@ package ai.koog.agents.features.tracing.writer
 
 import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.FINISH_NODE_PREFIX
 import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.START_NODE_PREFIX
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
+import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.events.AgentClosingEvent
@@ -37,9 +37,11 @@ import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
 import ai.koog.agents.features.tracing.mock.assistantMessage
 import ai.koog.agents.features.tracing.mock.createAgent
 import ai.koog.agents.features.tracing.mock.receivedToolResult
+import ai.koog.agents.features.tracing.mock.receivedToolResultMessage
 import ai.koog.agents.features.tracing.mock.systemMessage
 import ai.koog.agents.features.tracing.mock.testClock
 import ai.koog.agents.features.tracing.mock.toolCallMessage
+import ai.koog.agents.features.tracing.mock.toolCallMessagePart
 import ai.koog.agents.features.tracing.mock.userMessage
 import ai.koog.agents.testing.agent.agentExecutionInfo
 import ai.koog.agents.testing.feature.message.findEvents
@@ -52,6 +54,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
@@ -127,8 +130,8 @@ class TraceFeatureMessageRemoteWriterTest {
                     val llmCallNode by nodeLLMRequest("test LLM call")
                     val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
-                    edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
-                    edge(llmCallNode forwardTo llmCallWithToolsNode transformed { "Test LLM call with tools prompt" })
+                    edge(nodeStart forwardTo llmCallNode asUserMessage { "Test LLM call prompt" })
+                    edge(llmCallNode forwardTo llmCallWithToolsNode asUserMessage { "Test LLM call with tools prompt" })
                     edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                 }
 
@@ -209,14 +212,14 @@ class TraceFeatureMessageRemoteWriterTest {
             messages = expectedPrompt.messages + listOf(
                 userMessage(content = userPrompt),
                 toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
-                receivedToolResult(
+                receivedToolResultMessage(
                     toolCallId = "0",
                     toolName = dummyTool.name,
                     toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                     toolDescription = dummyTool.descriptor.description,
                     content = dummyTool.encodeResultToString(dummyTool.result, serializer),
                     result = dummyTool.encodeResult(dummyTool.result, serializer)
-                ).toMessage(clock = testClock)
+                )
             )
         )
 
@@ -233,15 +236,15 @@ class TraceFeatureMessageRemoteWriterTest {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
                 val strategy = strategy(strategyName) {
                     val nodeSendInput by nodeLLMRequest("test-llm-call")
-                    val nodeExecuteTool by nodeExecuteTool("test-tool-call")
-                    val nodeSendToolResult by nodeLLMSendToolResult("test-node-llm-send-tool-result")
+                    val nodeExecuteTool by nodeExecuteToolsAndGetResults("test-tool-call")
+                    val nodeSendToolResult by nodeSendToolReceivedResults("test-node-llm-send-tool-result")
 
-                    edge(nodeStart forwardTo nodeSendInput)
-                    edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
-                    edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+                    edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+                    edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
+                    edge(nodeSendInput forwardTo nodeFinish onTextParts { true })
                     edge(nodeExecuteTool forwardTo nodeSendToolResult)
-                    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-                    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+                    edge(nodeSendToolResult forwardTo nodeFinish onTextParts { true })
+                    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
                 }
 
                 val mockExecutor = getMockExecutor(serializer, clock = testClock) {
@@ -282,7 +285,7 @@ class TraceFeatureMessageRemoteWriterTest {
             ).use { client ->
                 var runId = ""
 
-                val collectEventsJob = launch {
+                val collectEventsJob = launch collectEvents@{
                     client.receivedMessages.consumeAsFlow().collect { event ->
                         if (event is AgentStartingEvent) {
                             runId = event.runId
@@ -292,7 +295,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         logger.info { "[${actualClientEvents.size}] Received event: $event" }
 
                         if (event is AgentClosingEvent) {
-                            cancel()
+                            this@collectEvents.cancel()
                         }
                     }
                 }
@@ -330,8 +333,7 @@ class TraceFeatureMessageRemoteWriterTest {
                 val dummyToolName = dummyTool.name
                 val dummyToolDescription = dummyTool.descriptor.description
 
-                val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
-                serializer.encodeToJSONElement(
+                val dummyReceivedToolResultEncoded = serializer.encodeToJSONElement(
                     receivedToolResult(
                         toolCallId = "0",
                         toolName = dummyToolName,
@@ -394,11 +396,7 @@ class TraceFeatureMessageRemoteWriterTest {
                             executionInfo = agentExecutionInfo(agentId, strategyName, START_NODE_PREFIX),
                             runId = runId,
                             nodeName = START_NODE_PREFIX,
-                            input = @OptIn(InternalAgentsApi::class)
-                            serializer.encodeToJSONElement(
-                                userPrompt,
-                                typeToken<String>()
-                            ),
+                            input = serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -406,16 +404,8 @@ class TraceFeatureMessageRemoteWriterTest {
                             executionInfo = agentExecutionInfo(agentId, strategyName, START_NODE_PREFIX),
                             runId = runId,
                             nodeName = START_NODE_PREFIX,
-                            input = @OptIn(InternalAgentsApi::class)
-                            serializer.encodeToJSONElement(
-                                userPrompt,
-                                typeToken<String>()
-                            ),
-                            output = @OptIn(InternalAgentsApi::class)
-                            serializer.encodeToJSONElement(
-                                userPrompt,
-                                typeToken<String>()
-                            ),
+                            input = serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
+                            output = serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionStartingEvent(
@@ -423,11 +413,7 @@ class TraceFeatureMessageRemoteWriterTest {
                             executionInfo = agentExecutionInfo(agentId, strategyName, nodeSendLLMCallName),
                             runId = runId,
                             nodeName = nodeSendLLMCallName,
-                            input = @OptIn(InternalAgentsApi::class)
-                            serializer.encodeToJSONElement(
-                                userPrompt,
-                                typeToken<String>()
-                            ),
+                            input = serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         LLMCallStartingEvent(
@@ -445,7 +431,7 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             prompt = expectedLLMCallPrompt,
                             model = testModel.toModelInfo(),
-                            responses = listOf(toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString())),
+                            response = toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -453,15 +439,10 @@ class TraceFeatureMessageRemoteWriterTest {
                             executionInfo = agentExecutionInfo(agentId, strategyName, nodeSendLLMCallName),
                             runId = runId,
                             nodeName = nodeSendLLMCallName,
-                            input = @OptIn(InternalAgentsApi::class)
-                            serializer.encodeToJSONElement(
-                                userPrompt,
-                                typeToken<String>()
-                            ),
-                            output = @OptIn(InternalAgentsApi::class)
-                            serializer.encodeToJSONElement(
-                                toolCallMessage(
-                                    dummyTool.name,
+                            input = serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
+                            output = serializer.encodeToJSONElement(
+                                toolCallMessagePart(
+                                    toolName = dummyTool.name,
                                     content = """{"dummy":"$requestedDummyToolArgs"}"""
                                 ),
                                 typeToken<Message>()
@@ -473,10 +454,12 @@ class TraceFeatureMessageRemoteWriterTest {
                             executionInfo = agentExecutionInfo(agentId, strategyName, nodeExecuteToolName),
                             runId = runId,
                             nodeName = nodeExecuteToolName,
-                            input = @OptIn(InternalAgentsApi::class)
-                            serializer.encodeToJSONElement(
-                                toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
-                                typeToken<Message.Tool.Call>()
+                            input = serializer.encodeToJSONElement(
+                                toolCallMessagePart(
+                                    toolName = dummyTool.name,
+                                    content = dummyToolArgsEncoded.toString()
+                                ),
+                                typeToken<MessagePart.Tool.Call>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -505,10 +488,12 @@ class TraceFeatureMessageRemoteWriterTest {
                             executionInfo = agentExecutionInfo(agentId, strategyName, nodeExecuteToolName),
                             runId = runId,
                             nodeName = nodeExecuteToolName,
-                            input = @OptIn(InternalAgentsApi::class)
-                            serializer.encodeToJSONElement(
-                                toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
-                                typeToken<Message.Tool.Call>()
+                            input = serializer.encodeToJSONElement(
+                                toolCallMessagePart(
+                                    toolName = dummyTool.name,
+                                    content = dummyToolArgsEncoded.toString()
+                                ),
+                                typeToken<MessagePart.Tool.Call>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds(),
                             // Tool result is wrapped into an object with id, tool, content, and result fields
@@ -537,7 +522,7 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             prompt = expectedLLMCallWithToolsPrompt,
                             model = testModel.toModelInfo(),
-                            responses = listOf(assistantMessage(mockResponse)),
+                            response = assistantMessage(mockResponse),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -546,11 +531,7 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             nodeName = nodeSendToolResultName,
                             input = dummyReceivedToolResultEncoded,
-                            output = @OptIn(InternalAgentsApi::class)
-                            serializer.encodeToJSONElement(
-                                assistantMessage(mockResponse),
-                                typeToken<Message>()
-                            ),
+                            output = serializer.encodeToJSONElement(assistantMessage(mockResponse), typeToken<Message>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionStartingEvent(
@@ -558,11 +539,7 @@ class TraceFeatureMessageRemoteWriterTest {
                             executionInfo = agentExecutionInfo(agentId, strategyName, FINISH_NODE_PREFIX),
                             runId = runId,
                             nodeName = FINISH_NODE_PREFIX,
-                            input = @OptIn(InternalAgentsApi::class)
-                            serializer.encodeToJSONElement(
-                                mockResponse,
-                                typeToken<String>()
-                            ),
+                            input = serializer.encodeToJSONElement(mockResponse, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -570,16 +547,8 @@ class TraceFeatureMessageRemoteWriterTest {
                             executionInfo = agentExecutionInfo(agentId, strategyName, FINISH_NODE_PREFIX),
                             runId = runId,
                             nodeName = FINISH_NODE_PREFIX,
-                            input = @OptIn(InternalAgentsApi::class)
-                            serializer.encodeToJSONElement(
-                                mockResponse,
-                                typeToken<String>()
-                            ),
-                            output = @OptIn(InternalAgentsApi::class)
-                            serializer.encodeToJSONElement(
-                                mockResponse,
-                                typeToken<String>()
-                            ),
+                            input = serializer.encodeToJSONElement(mockResponse, typeToken<String>()),
+                            output = serializer.encodeToJSONElement(mockResponse, typeToken<String>()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         StrategyCompletedEvent(
@@ -654,16 +623,16 @@ class TraceFeatureMessageRemoteWriterTest {
                 }
             }
 
-            TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { remoteWriter ->
+            TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { _ ->
                 testFeatureWriter.use { testWriter ->
 
                     val strategy = strategy<String, String>(strategyName) {
                         val llmCallNode by nodeLLMRequest("test LLM call")
                         val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
-                        edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
+                        edge(nodeStart forwardTo llmCallNode asUserMessage { "Test LLM call prompt" })
                         edge(
-                            llmCallNode forwardTo llmCallWithToolsNode transformed {
+                            llmCallNode forwardTo llmCallWithToolsNode asUserMessage {
                                 "Test LLM call with tools prompt"
                             }
                         )
@@ -780,14 +749,14 @@ class TraceFeatureMessageRemoteWriterTest {
             messages = expectedPrompt.messages + listOf(
                 userMessage(content = userPrompt),
                 toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
-                receivedToolResult(
+                receivedToolResultMessage(
                     toolCallId = "0",
                     toolName = dummyTool.name,
                     toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                     toolDescription = dummyTool.descriptor.description,
                     content = dummyTool.encodeResultToString(dummyTool.result, serializer),
                     result = dummyTool.encodeResult(dummyTool.result, serializer)
-                ).toMessage(clock = testClock)
+                )
             )
         )
 
@@ -804,15 +773,15 @@ class TraceFeatureMessageRemoteWriterTest {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
                 val strategy = strategy(strategyName) {
                     val nodeSendInput by nodeLLMRequest(nodeSendInputName)
-                    val nodeExecuteTool by nodeExecuteTool(nodeExecuteToolName)
-                    val nodeSendToolResult by nodeLLMSendToolResult(nodeSendToolResultName)
+                    val nodeExecuteTool by nodeExecuteToolsAndGetResults(nodeExecuteToolName)
+                    val nodeSendToolResult by nodeSendToolReceivedResults(nodeSendToolResultName)
 
-                    edge(nodeStart forwardTo nodeSendInput)
-                    edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
-                    edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+                    edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+                    edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
+                    edge(nodeSendInput forwardTo nodeFinish onTextParts { true })
                     edge(nodeExecuteTool forwardTo nodeSendToolResult)
-                    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-                    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+                    edge(nodeSendToolResult forwardTo nodeFinish onTextParts { true })
+                    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
                 }
 
                 val mockExecutor = getMockExecutor(serializer, clock = testClock) {
@@ -853,7 +822,7 @@ class TraceFeatureMessageRemoteWriterTest {
             ).use { client ->
                 var runId = ""
 
-                val collectEventsJob = launch {
+                val collectEventsJob = launch collectEvents@{
                     client.receivedMessages.consumeAsFlow().collect { event ->
                         if (event is LLMCallStartingEvent) {
                             runId = event.runId
@@ -863,7 +832,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         logger.info { "[${actualClientEvents.size}] Received event: $event" }
 
                         if (actualClientEvents.size == 4) {
-                            cancel()
+                            this@collectEvents.cancel()
                         }
                     }
                 }
@@ -894,7 +863,7 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             prompt = expectedLLMCallPrompt,
                             model = testModel.toModelInfo(),
-                            responses = listOf(toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString())),
+                            response = toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         LLMCallStartingEvent(
@@ -912,7 +881,7 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             prompt = expectedLLMCallWithToolsPrompt,
                             model = testModel.toModelInfo(),
-                            responses = listOf(assistantMessage(mockResponse)),
+                            response = assistantMessage(mockResponse),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                     )

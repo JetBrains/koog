@@ -9,9 +9,9 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
-import ai.koog.agents.core.environment.result
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
@@ -19,14 +19,14 @@ import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.toMessageResponses
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.Serializable
 
 /**
@@ -41,7 +41,7 @@ public inline fun <reified T> nodeDoNothing(
     node(name) { input -> input }
 
 // ================
-// Simple LLM nodes
+// Prompt nodes
 // ================
 
 /**
@@ -81,211 +81,106 @@ public suspend fun <T> AIAgentGraphContextBase.appendPromptImpl(
     return input
 }
 
-/**
- * A node that adds messages to the LLM prompt using the provided prompt builder.
- * The input is passed as it is to the output.
- *
- * @param name Optional node name, defaults to delegate's property name.
- * @param body Lambda to modify the prompt using PromptBuilder.
- */
-@AIAgentBuilderDslMarker
-@Deprecated("Use nodeAppendPrompt instead", ReplaceWith("nodeAppendPrompt(name, body)"))
-public inline fun <reified T> nodeUpdatePrompt(
-    name: String? = null,
-    noinline body: PromptBuilder.() -> Unit
-): AIAgentNodeDelegate<T, T> = nodeAppendPrompt(name, body)
+// ================
+// LLM Request string nodes
+// ================
 
-/**
- * A node that appends a user message to the LLM prompt and gets a response where the LLM can only call tools.
- *
- * @param name Optional name for the node.
- */
+//region LLMRequest
+
 @AIAgentBuilderDslMarker
-public fun nodeLLMRequestOnlyCallingTools(
-    name: String? = null
-): AIAgentNodeDelegate<String, Message.Response> =
+public fun nodeLLMRequestWithUserText(
+    name: String? = null,
+): AIAgentNodeDelegate<String, Message.Assistant> =
     node(name) { message ->
         llm.writeSession {
             appendPrompt {
                 user(message)
             }
+            requestLLM()
+        }
+    }
 
+@AIAgentBuilderDslMarker
+public fun nodeLLMRequestOnlyCallingToolsWithUserText(
+    name: String? = null,
+): AIAgentNodeDelegate<String, Message.Assistant> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                user(message)
+            }
             requestLLMOnlyCallingTools()
         }
     }
 
-/**
- * A node that appends a user message to the LLM prompt and gets a response where the LLM can only call tools.
- *
- * @param name Optional name for the node.
- */
-@Deprecated(
-    "Please use nodeLLMRequestOnlyCallingTools instead.",
-    ReplaceWith("nodeLLMRequestOnlyCallingTools(name)")
-)
 @AIAgentBuilderDslMarker
-public fun nodeLLMSendMessageOnlyCallingTools(
-    name: String? = null
-): AIAgentNodeDelegate<String, Message.Response> =
-    nodeLLMRequestOnlyCallingTools(name)
-
-/**
- * A node that appends a user message to the LLM prompt and gets multiple LLM responses where the LLM can only call tools.
- *
- * @param name Optional name for the node.
- */
-@AIAgentBuilderDslMarker
-public fun nodeLLMRequestMultipleOnlyCallingTools(
-    name: String? = null
-): AIAgentNodeDelegate<String, List<Message.Response>> =
+public fun nodeLLMRequestWithoutToolsWithUserText(
+    name: String? = null,
+): AIAgentNodeDelegate<String, Message.Assistant> =
     node(name) { message ->
         llm.writeSession {
             appendPrompt {
                 user(message)
             }
-
-            requestLLMMultipleOnlyCallingTools()
+            requestLLMWithoutTools()
         }
     }
 
-/**
- * A node that that appends a user message to the LLM prompt and forces the LLM to use a specific tool.
- *
- * @param name Optional node name.
- * @param tool Tool descriptor the LLM is required to use.
- */
 @AIAgentBuilderDslMarker
-public fun nodeLLMRequestForceOneTool(
+public fun nodeLLMRequestForceOneToolWithUserText(
     name: String? = null,
     tool: ToolDescriptor
-): AIAgentNodeDelegate<String, Message.Response> =
+): AIAgentNodeDelegate<String, Message.Assistant> =
     node(name) { message ->
         llm.writeSession {
             appendPrompt {
                 user(message)
             }
-
             requestLLMForceOneTool(tool)
         }
     }
 
-/**
- * A node that that appends a user message to the LLM prompt and forces the LLM to use a specific tool.
- *
- * @param name Optional node name.
- * @param tool Tool descriptor the LLM is required to use.
- */
-@Deprecated(
-    "Please use nodeLLMRequestForceOneTool instead.",
-    ReplaceWith("nodeLLMRequestForceOneTool(name, tool)")
-)
 @AIAgentBuilderDslMarker
-public fun nodeLLMSendMessageForceOneTool(
+public fun nodeLLMRequestMultipleChoicesWithUserText(
     name: String? = null,
-    tool: ToolDescriptor
-): AIAgentNodeDelegate<String, Message.Response> =
-    nodeLLMRequestForceOneTool(name, tool)
-
-/**
- * A node that appends a user message to the LLM prompt and forces the LLM to use a specific tool.
- *
- * @param name Optional node name.
- * @param tool Tool the LLM is required to use.
- */
-@AIAgentBuilderDslMarker
-public fun nodeLLMRequestForceOneTool(
-    name: String? = null,
-    tool: Tool<*, *>
-): AIAgentNodeDelegate<String, Message.Response> =
-    nodeLLMRequestForceOneTool(name, tool.descriptor)
-
-/**
- * A node that appends a user message to the LLM prompt and forces the LLM to use a specific tool.
- *
- * @param name Optional node name.
- * @param tool Tool the LLM is required to use.
- */
-@Deprecated(
-    "Please use nodeLLMRequestForceOneTool instead.",
-    ReplaceWith("nodeLLMRequestForceOneTool(name, tool)")
-)
-@AIAgentBuilderDslMarker
-public fun nodeLLMSendMessageForceOneTool(
-    name: String? = null,
-    tool: Tool<*, *>
-): AIAgentNodeDelegate<String, Message.Response> =
-    nodeLLMRequestForceOneTool(name, tool)
-
-/**
- * A node that appends a user message to the LLM prompt and gets a response with optional tool usage.
- *
- * @param name Optional node name.
- * @param allowToolCalls Controls whether LLM can use tools (default: true).
- */
-@AIAgentBuilderDslMarker
-public fun nodeLLMRequest(
-    name: String? = null,
-    allowToolCalls: Boolean = true,
-): AIAgentNodeDelegate<String, Message.Response> =
+): AIAgentNodeDelegate<String, LLMChoice> =
     node(name) { message ->
         llm.writeSession {
             appendPrompt {
                 user(message)
             }
-
-            if (allowToolCalls) {
-                requestLLM()
-            } else {
-                requestLLMWithoutTools()
-            }
+            requestLLMMultipleChoices()
         }
     }
 
-/**
- * Represents a message that has undergone moderation and the result of the moderation.
- *
- * @property message The original message being moderated.
- * @property moderationResult The result of the moderation.
- * */
-@Serializable
-public data class ModeratedMessage(val message: Message, val moderationResult: ModerationResult)
+// Region Streaming
 
-/**
- * A node that moderates only a single input message using a specified language model.
- *
- * @param name Optional node name, defaults to delegate's property name.
- * @param moderatingModel The optional language model to be used for moderation.
- * If null, a default or previously defined model will be applied.
- * @param includeCurrentPrompt Should current prompt be included in the moderation requests or only the input message.
- */
-@OptIn(DetachedPromptExecutorAPI::class)
 @AIAgentBuilderDslMarker
-public fun nodeLLMModerateMessage(
+public fun <T> nodeLLMRequestStreamingWithUserText(
     name: String? = null,
-    moderatingModel: LLModel? = null,
-    includeCurrentPrompt: Boolean = false,
-): AIAgentNodeDelegate<Message, ModeratedMessage> =
-    node<Message, ModeratedMessage>(name) { message ->
-        val moderationPrompt = if (includeCurrentPrompt) {
-            prompt(llm.prompt) { message(message) }
-        } else {
-            prompt("single-message-moderation") { message(message) }
+    structureDefinition: StructureDefinition? = null,
+    transformStreamData: suspend (Flow<StreamFrame>) -> Flow<T>
+): AIAgentNodeDelegate<String, Flow<T>> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                user(message)
+            }
+            requestStreaming(structureDefinition, transformStreamData)
         }
-
-        val moderationResult = llm.promptExecutor.moderate(moderationPrompt, moderatingModel ?: llm.model)
-
-        ModeratedMessage(message, moderationResult)
     }
 
-/**
- * A node that appends a user message to the LLM prompt and requests structured data from the LLM with optional error
- * correction capabilities.
- *
- * @param name Optional node name.
- * @param config A configuration defining structures and behavior.
- */
 @AIAgentBuilderDslMarker
-public fun <T> nodeLLMRequestStructured(
+public fun nodeLLMRequestStreamingWithUserText(
+    name: String? = null,
+    structureDefinition: StructureDefinition? = null,
+): AIAgentNodeDelegate<String, Flow<StreamFrame>> =
+    nodeLLMRequestStreamingWithUserText(name, structureDefinition) { it }
+
+// Region Structured
+
+@AIAgentBuilderDslMarker
+public fun <T> nodeLLMRequestStructuredWithUserText(
     name: String? = null,
     config: StructuredRequestConfig<T>,
     fixingParser: StructureFixingParser? = null
@@ -300,23 +195,8 @@ public fun <T> nodeLLMRequestStructured(
         }
     }
 
-/**
- * A node that appends a user message to the LLM prompt and requests structured data from the LLM with optional error
- * correction capabilities.
- *
- * This is a simple version of the full `nodeLLMRequestStructured`. Unlike the full version, it does not require specifying
- * struct definitions and structured output modes manually. It attempts to find the best approach to provide a structured
- * output based on the defined model capabilities.
- *
- * @param name Optional node name.
- * @param examples Optional list of examples in case manual mode will be used. These examples might help the model to
- * understand the format better.
- * @param fixingParser Optional parser that handles malformed responses by using an auxiliary LLM to
- * intelligently fix parsing errors. When specified, parsing errors trigger additional
- * LLM calls with error context to attempt correction of the structure format.
- */
 @AIAgentBuilderDslMarker
-public inline fun <reified T> nodeLLMRequestStructured(
+public inline fun <reified T> nodeLLMRequestStructuredWithUserText(
     name: String? = null,
     examples: List<T> = emptyList(),
     fixingParser: StructureFixingParser? = null
@@ -333,78 +213,179 @@ public inline fun <reified T> nodeLLMRequestStructured(
     }
 }
 
+// ================
+// LLM Request message nodes
+// ================
+
+//region LLMRequest
+
+@AIAgentBuilderDslMarker
+public fun nodeLLMRequest(
+    name: String? = null,
+): AIAgentNodeDelegate<Message.User, Message.Assistant> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+            requestLLM()
+        }
+    }
+
+@AIAgentBuilderDslMarker
+public fun nodeLLMRequestOnlyCallingTools(
+    name: String? = null,
+): AIAgentNodeDelegate<Message.User, Message.Assistant> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+            requestLLMOnlyCallingTools()
+        }
+    }
+
+@AIAgentBuilderDslMarker
+public fun nodeLLMRequestWithoutTools(
+    name: String? = null,
+): AIAgentNodeDelegate<Message.User, Message.Assistant> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+            requestLLMWithoutTools()
+        }
+    }
+
+@AIAgentBuilderDslMarker
+public fun nodeLLMRequestForceOneTool(
+    name: String? = null,
+    tool: ToolDescriptor
+): AIAgentNodeDelegate<Message.User, Message.Assistant> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+            requestLLMForceOneTool(tool)
+        }
+    }
+
+@AIAgentBuilderDslMarker
+public fun nodeLLMRequestMultipleChoices(
+    name: String? = null,
+): AIAgentNodeDelegate<Message.User, LLMChoice> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+            requestLLMMultipleChoices()
+        }
+    }
+
+// Region Streaming
+
 /**
- * A node that appends a user message to the LLM prompt, streams LLM response and transforms the stream data.
+ * [InternalAgentsApi] method. Appends a message to the prompt and requests a streaming response from the LLM.
  *
- * @param name Optional node name.
- * @param structureDefinition Optional structure to guide the LLM response.
- * @param transformStreamData Function to process the streamed data.
+ * @param input The user message to append to the prompt.
+ * @param structureDefinition An optional structure definition to customize the streaming response.
+ * @param transformStreamData A suspend function that transforms the incoming [StreamFrame] flow into a flow of type [T].
+ * @return A [Flow] of [T] produced by the streaming LLM response after transformation.
  */
+@InternalAgentsApi
+public suspend fun <T> AIAgentGraphContextBase.requestStreamingImpl(
+    input: Message.User,
+    structureDefinition: StructureDefinition? = null,
+    transformStreamData: suspend (Flow<StreamFrame>) -> Flow<T>
+): Flow<T> = llm.writeSession {
+    appendPrompt { message(input) }
+    requestStreaming(structureDefinition, transformStreamData)
+}
+
 @AIAgentBuilderDslMarker
 public fun <T> nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructureDefinition? = null,
     transformStreamData: suspend (Flow<StreamFrame>) -> Flow<T>
-): AIAgentNodeDelegate<String, Flow<T>> =
+): AIAgentNodeDelegate<Message.User, Flow<T>> =
     node(name) { message ->
-        requestStreamingImpl(message, structureDefinition, transformStreamData)
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+            requestStreaming(structureDefinition, transformStreamData)
+        }
     }
 
-/**
- * [InternalAgentsApi] method. Performs LLM streaming and transforms the stream data.
- *
- * @param message The message string representing user input or instructions to be used in the prompt.
- * @param structureDefinition An optional structure definition that defines how the data should be structured
- *        during the language model request. Can be null if no specific structure is required.
- * @param transformStreamData A suspending function that takes a flow of raw streaming data ([StreamFrame])
- *        and returns a flow of the transformed data of type [T].
- * @return A flow of transformed data of type [T], resulting from the processing of the streaming request.
- */
-@InternalAgentsApi
-public suspend fun <T> AIAgentGraphContextBase.requestStreamingImpl(
-    message: String,
-    structureDefinition: StructureDefinition?,
-    transformStreamData: suspend (Flow<StreamFrame>) -> Flow<T>
-): Flow<T> = llm.writeSession {
-    appendPrompt {
-        user(message)
-    }
-
-    val stream = requestLLMStreaming(structureDefinition)
-
-    transformStreamData(stream)
-}
-
-/**
- * A node that appends a user message to the LLM prompt and streams LLM response without transformation.
- *
- * @param name Optional node name.
- * @param structureDefinition Optional structure to guide the LLM response.
- */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructureDefinition? = null,
-): AIAgentNodeDelegate<String, Flow<StreamFrame>> = nodeLLMRequestStreaming(name, structureDefinition) { it }
+): AIAgentNodeDelegate<Message.User, Flow<StreamFrame>> = nodeLLMRequestStreaming(name, structureDefinition) { it }
 
-/**
- * A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled.
- *
- * @param name Optional node name.
- */
+// Region Structured
+
 @AIAgentBuilderDslMarker
-public fun nodeLLMRequestMultiple(
-    name: String? = null
-): AIAgentNodeDelegate<String, List<Message.Response>> =
+public fun <T> nodeLLMRequestStructured(
+    name: String? = null,
+    config: StructuredRequestConfig<T>,
+    fixingParser: StructureFixingParser? = null
+): AIAgentNodeDelegate<Message.User, Result<StructuredResponse<T>>> =
     node(name) { message ->
         llm.writeSession {
             appendPrompt {
-                user(message)
+                message(message)
             }
 
-            requestLLMMultiple()
+            requestLLMStructured(config, fixingParser)
         }
     }
+
+@AIAgentBuilderDslMarker
+public inline fun <reified T> nodeLLMRequestStructured(
+    name: String? = null,
+    examples: List<T> = emptyList(),
+    fixingParser: StructureFixingParser? = null
+): AIAgentNodeDelegate<Message.User, Result<StructuredResponse<T>>> = node(name) { message ->
+    llm.writeSession {
+        appendPrompt {
+            message(message)
+        }
+
+        requestLLMStructured<T>(
+            examples = examples,
+            fixingParser = fixingParser
+        )
+    }
+}
+
+// Region Moderate
+
+@OptIn(DetachedPromptExecutorAPI::class)
+@AIAgentBuilderDslMarker
+public fun nodeLLMModerateMessage(
+    name: String? = null,
+    moderatingModel: LLModel? = null,
+    includeCurrentPrompt: Boolean = false,
+): AIAgentNodeDelegate<Message, ModerationResult> =
+    node<Message, ModerationResult>(name) { message ->
+        val moderationPrompt = if (includeCurrentPrompt) {
+            prompt(llm.prompt) { message(message) }
+        } else {
+            prompt("single-message-moderation") { message(message) }
+        }
+
+        val moderationResult = llm.promptExecutor.moderate(moderationPrompt, moderatingModel ?: llm.model)
+
+        moderationResult
+    }
+
+// ================
+// Compress history nodes
+// ================
 
 /**
  * A node that compresses the current LLM prompt (message history) into a summary, replacing messages with a TLDR.
@@ -455,87 +436,74 @@ public suspend fun <T> AIAgentGraphContextBase.llmCompressHistoryImpl(
     return input
 }
 
-/**
- * A node that performs LLM streaming, collects all stream frames, converts them to response messages,
- * and updates the prompt with the results.
- *
- * This node is useful when you want to:
- * - Stream responses from the LLM for real-time feedback
- * - Collect the complete streamed response as messages
- * - Automatically update the conversation history with the streamed responses
- *
- * The node will:
- * 1. Initiate a streaming request to the LLM
- * 2. Collect all stream frames (text, tool calls, etc.)
- * 3. Convert the collected frames into proper Message.Response objects
- * 4. Update the prompt with these messages for conversation continuity
- * 5. Return the collected messages
- *
- * @param T The type of input this node accepts (passed through without modification)
- * @param name Optional node name for identification in the agent graph
- * @param structureDefinition Optional structure definition to guide the LLM's response format
- * @return A node delegate that accepts input of type T and returns a list of response messages
- *
- * @see nodeLLMRequestStreaming for streaming without automatic prompt updates
- * @see ai.koog.agents.core.agent.session.AIAgentLLMWriteSession.requestLLMStreaming for the underlying streaming functionality
- */
-@AIAgentBuilderDslMarker
-public inline fun <reified T> nodeLLMRequestStreamingAndSendResults(
-    name: String? = null,
-    structureDefinition: StructureDefinition? = null
-): AIAgentNodeDelegate<T, List<Message.Response>> = node(name) { input ->
-    requestStreamingAndSendResultsImpl(structureDefinition)
+// ================
+// Execute Tool nodes
+// ================
+
+private suspend fun executeTools(
+    environment: AIAgentEnvironment,
+    toolCalls: List<MessagePart.Tool.Call>,
+    parallel: Boolean
+): List<ReceivedToolResult> {
+    return buildList {
+        if (parallel) {
+            addAll(environment.executeTools(toolCalls))
+        } else {
+            toolCalls.forEach { toolCall ->
+                val toolResult = environment.executeTool(toolCall)
+                add(toolResult)
+            }
+        }
+    }
 }
 
-/**
- * [InternalAgentsApi] method. Performs LLM streaming and sends the results to the prompt.
- *
- * @param structureDefinition The optional structure defining the format of the textual content
- *                             for the LLM streaming request. If null, a default structure is assumed.
- *                             This parameter facilitates the construction and customization of content
- *                             during the streaming process.
- * @return A list of [Message.Response] objects containing the processed results from the LLM streaming request.
- */
-@InternalAgentsApi
-public suspend fun AIAgentGraphContextBase.requestStreamingAndSendResultsImpl(structureDefinition: StructureDefinition?): List<Message.Response> =
-    llm.writeSession {
-        requestLLMStreaming(structureDefinition)
-            .toList()
-            .toMessageResponses()
-            .also { appendPrompt { messages(it) } }
+@Serializable
+public data class ToolCalls(
+    val toolCalls: List<MessagePart.Tool.Call>
+)
+
+@Serializable
+public data class ToolResults(
+    val toolCalls: List<MessagePart.Tool.Result>
+)
+
+@Serializable
+public data class ReceivedToolResults(
+    val toolResults: List<ReceivedToolResult>
+)
+
+@AIAgentBuilderDslMarker
+public fun nodeExecuteTools(
+    name: String? = null,
+    parallel: Boolean = false,
+): AIAgentNodeDelegate<ToolCalls, Message.User> =
+    node(name) {
+        val parts = executeTools(environment, it.toolCalls, parallel)
+        llm.writeSession {
+            userMessage(parts.map { toolResult -> toolResult.toMessagePart() })
+        }
     }
 
-// ==========
-// Tool nodes
-// ==========
+// Region ReceivedToolResult
 
-/**
- * A node that executes a tool call and returns its result.
- *
- * @param name Optional node name.
- */
 @AIAgentBuilderDslMarker
-public fun nodeExecuteTool(
-    name: String? = null
-): AIAgentNodeDelegate<Message.Tool.Call, ReceivedToolResult> =
-    node(name) { toolCall ->
-        environment.executeTool(toolCall)
+public fun nodeExecuteToolsAndGetResults(
+    name: String? = null,
+    parallel: Boolean = false,
+): AIAgentNodeDelegate<ToolCalls, ReceivedToolResults> =
+    node(name) {
+        ReceivedToolResults(executeTools(environment, it.toolCalls, parallel))
     }
 
-/**
- * A node that adds a tool result to the prompt and requests an LLM response.
- *
- * @param name Optional node name.
- */
 @AIAgentBuilderDslMarker
-public fun nodeLLMSendToolResult(
+public fun nodeSendToolReceivedResults(
     name: String? = null
-): AIAgentNodeDelegate<ReceivedToolResult, Message.Response> =
-    node(name) { result ->
+): AIAgentNodeDelegate<ReceivedToolResults, Message.Assistant> =
+    node(name) {
         llm.writeSession {
             appendPrompt {
-                tool {
-                    result(result)
+                user {
+                    it.toolResults.forEach { toolResult -> toolResult(toolResult.toMessagePart()) }
                 }
             }
 
@@ -543,120 +511,74 @@ public fun nodeLLMSendToolResult(
         }
     }
 
-/**
- * A node that adds a tool result to the prompt and gets an LLM response where the LLM can only call tools.
- *
- * @param name Optional node name.
- */
 @AIAgentBuilderDslMarker
-public fun nodeLLMSendToolResultOnlyCallingTools(
-    name: String? = null
-): AIAgentNodeDelegate<List<ReceivedToolResult>, Message.Response> =
-    node(name) { results ->
+public fun nodeSendToolReceivedResultsOnlyCallingTools(
+    name: String? = null,
+): AIAgentNodeDelegate<ReceivedToolResults, Message.Assistant> =
+    node(name) {
         llm.writeSession {
             appendPrompt {
-                tool {
-                    results.forEach { result(it) }
+                user {
+                    it.toolResults.forEach { toolResult -> toolResult(toolResult.toMessagePart()) }
                 }
             }
-
             requestLLMOnlyCallingTools()
         }
     }
 
-/**
- * A node that executes multiple tool calls. These calls can optionally be executed in parallel.
- *
- * @param name Optional node name.
- * @param parallelTools Specifies whether tools should be executed in parallel, defaults to false.
- */
 @AIAgentBuilderDslMarker
-public fun nodeExecuteMultipleTools(
+public fun nodeSendToolReceivedResultsWithoutTools(
     name: String? = null,
-    parallelTools: Boolean = false,
-): AIAgentNodeDelegate<List<Message.Tool.Call>, List<ReceivedToolResult>> =
-    node(name) { toolCalls ->
-        if (parallelTools) {
-            environment.executeTools(toolCalls)
-        } else {
-            toolCalls.map { environment.executeTool(it) }
+): AIAgentNodeDelegate<ReceivedToolResults, Message.Assistant> =
+    node(name) {
+        llm.writeSession {
+            appendPrompt {
+                user {
+                    it.toolResults.forEach { toolResult -> toolResult(toolResult.toMessagePart()) }
+                }
+            }
+            requestLLMWithoutTools()
         }
     }
 
-/**
- * Creates a node in the AI agent subgraph that processes a collection of tool calls,
- * executes them, and sends back the results to the downstream process. The tools can
- * be executed either in parallel or sequentially based on the provided configuration.
- *
- * @param name An optional name for the node to be created. If not provided, a default name is used.
- * @param parallelTools A flag to determine if the tool calls should be executed concurrently.
- *                       If true, all tool calls are executed in parallel; otherwise, they are
- *                       executed sequentially. Default value is false.
- * @return An instance of [AIAgentNodeDelegate] that takes a list of tool calls as input
- *         and returns the corresponding list of tool responses.
- */
-public fun nodeExecuteMultipleToolsAndSendResults(
+@AIAgentBuilderDslMarker
+public fun nodeSendToolReceivedResultsForceOneTool(
     name: String? = null,
-    parallelTools: Boolean = false,
-): AIAgentNodeDelegate<List<Message.Tool.Call>, List<Message.Response>> =
-    node(name) { toolCalls ->
-        val results = if (parallelTools) {
-            environment.executeTools(toolCalls)
-        } else {
-            toolCalls.map { environment.executeTool(it) }
-        }
-
+    tool: ToolDescriptor
+): AIAgentNodeDelegate<ReceivedToolResults, Message.Assistant> =
+    node(name) {
         llm.writeSession {
             appendPrompt {
-                tool {
-                    results.forEach { result(it) }
+                user {
+                    it.toolResults.forEach { toolResult -> toolResult(toolResult.toMessagePart()) }
                 }
             }
-
-            requestLLMMultiple()
+            requestLLMForceOneTool(tool)
         }
     }
 
-/**
- * A node that adds multiple tool results to the prompt and gets multiple LLM responses.
- *
- * @param name Optional node name.
- */
 @AIAgentBuilderDslMarker
-public fun nodeLLMSendMultipleToolResults(
-    name: String? = null
-): AIAgentNodeDelegate<List<ReceivedToolResult>, List<Message.Response>> =
-    node(name) { results ->
+public fun nodeSendToolReceivedResultsMultipleChoices(
+    name: String? = null,
+): AIAgentNodeDelegate<ReceivedToolResults, LLMChoice> =
+    node(name) {
         llm.writeSession {
             appendPrompt {
-                tool {
-                    results.forEach { result(it) }
+                user {
+                    it.toolResults.forEach { toolResult -> toolResult(toolResult.toMessagePart()) }
                 }
             }
-
-            requestLLMMultiple()
+            requestLLMMultipleChoices()
         }
     }
 
-/**
- * A node that adds multiple tool results to the prompt and gets multiple LLM responses where the LLM can only call tools.
- *
- * @param name Optional node name.
- */
 @AIAgentBuilderDslMarker
-public fun nodeLLMSendMultipleToolResultsOnlyCallingTools(
-    name: String? = null
-): AIAgentNodeDelegate<List<ReceivedToolResult>, List<Message.Response>> =
-    node(name) { results ->
-        llm.writeSession {
-            appendPrompt {
-                tool {
-                    results.forEach { result(it) }
-                }
-            }
-
-            requestLLMMultipleOnlyCallingTools()
-        }
+public fun nodeExecuteSingleTool(
+    name: String? = null,
+    parallel: Boolean = false,
+): AIAgentNodeDelegate<MessagePart.Tool.Call, ReceivedToolResult> =
+    node(name) {
+        environment.executeTool(it)
     }
 
 /**
@@ -705,7 +627,7 @@ public suspend fun <TResult, ToolArg> AIAgentGraphContextBase.executeSingleToolI
         }
     }
 
-    val toolResult = callTool<ToolArg, TResult>(tool, toolArgs)
+    val toolResult = callTool(tool, toolArgs)
 
     if (doAppendPrompt) {
         appendPrompt {

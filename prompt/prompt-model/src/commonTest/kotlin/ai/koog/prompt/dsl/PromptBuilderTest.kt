@@ -2,13 +2,18 @@ package ai.koog.prompt.dsl
 
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.text.text
 import io.kotest.matchers.equals.shouldBeEqual
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -20,17 +25,17 @@ class PromptBuilderTest {
             user("Hello, how are you?")
             user { +"Hello, how are you?" }
         }
-        val expectedText = ContentPart.Text("Hello, how are you?")
+        val expectedText = MessagePart.Text("Hello, how are you?")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -39,17 +44,17 @@ class PromptBuilderTest {
             user(text { +"Hello, how are you?" })
             user { text { +"Hello, how are you?" } }
         }
-        val expectedText = ContentPart.Text("Hello, how are you?")
+        val expectedText = MessagePart.Text("Hello, how are you?")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -58,17 +63,17 @@ class PromptBuilderTest {
             user(markdown { +"Hello, how are you?" })
             user { markdown { +"Hello, how are you?" } }
         }
-        val expectedText = ContentPart.Text("Hello, how are you?")
+        val expectedText = MessagePart.Text("Hello, how are you?")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -77,17 +82,17 @@ class PromptBuilderTest {
             user(markdown { h1("Test Header") })
             user { markdown { h1("Test Header") } }
         }
-        val expectedText = ContentPart.Text("# Test Header")
+        val expectedText = MessagePart.Text("# Test Header")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -96,17 +101,17 @@ class PromptBuilderTest {
             user(markdown { h2("Subtitle") })
             user { markdown { h2("Subtitle") } }
         }
-        val expectedText = ContentPart.Text("## Subtitle")
+        val expectedText = MessagePart.Text("## Subtitle")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -115,17 +120,17 @@ class PromptBuilderTest {
             user(markdown { bold("important") })
             user { markdown { bold("important") } }
         }
-        val expectedText = ContentPart.Text("**important**")
+        val expectedText = MessagePart.Text("**important**")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -134,17 +139,17 @@ class PromptBuilderTest {
             user(markdown { italic("emphasized") })
             user { markdown { italic("emphasized") } }
         }
-        val expectedText = ContentPart.Text("*emphasized*")
+        val expectedText = MessagePart.Text("*emphasized*")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -153,17 +158,17 @@ class PromptBuilderTest {
             user(markdown { strikethrough("deleted") })
             user { markdown { strikethrough("deleted") } }
         }
-        val expectedText = ContentPart.Text("~~deleted~~")
+        val expectedText = MessagePart.Text("~~deleted~~")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -172,17 +177,17 @@ class PromptBuilderTest {
             user(markdown { code("println()") })
             user { markdown { code("println()") } }
         }
-        val expectedText = ContentPart.Text("`println()`")
+        val expectedText = MessagePart.Text("`println()`")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -191,17 +196,17 @@ class PromptBuilderTest {
             user(markdown { codeblock("fun test() = 42", "kotlin") })
             user { markdown { codeblock("fun test() = 42", "kotlin") } }
         }
-        val expectedText = ContentPart.Text("```kotlin\nfun test() = 42\n```")
+        val expectedText = MessagePart.Text("```kotlin\nfun test() = 42\n```")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -210,17 +215,17 @@ class PromptBuilderTest {
             user(markdown { link("GitHub", "https://github.com") })
             user { markdown { link("GitHub", "https://github.com") } }
         }
-        val expectedText = ContentPart.Text("[GitHub](https://github.com)")
+        val expectedText = MessagePart.Text("[GitHub](https://github.com)")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -229,17 +234,17 @@ class PromptBuilderTest {
             user(markdown { image("Alt text", "https://example.com/image.png") })
             user { markdown { image("Alt text", "https://example.com/image.png") } }
         }
-        val expectedText = ContentPart.Text("![Alt text](https://example.com/image.png)")
+        val expectedText = MessagePart.Text("![Alt text](https://example.com/image.png)")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -248,17 +253,17 @@ class PromptBuilderTest {
             user(markdown { horizontalRule() })
             user { markdown { horizontalRule() } }
         }
-        val expectedText = ContentPart.Text("---")
+        val expectedText = MessagePart.Text("---")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -267,17 +272,17 @@ class PromptBuilderTest {
             user(markdown { blockquote("This is a quote") })
             user { markdown { blockquote("This is a quote") } }
         }
-        val expectedText = ContentPart.Text("> This is a quote")
+        val expectedText = MessagePart.Text("> This is a quote")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -297,17 +302,17 @@ class PromptBuilderTest {
                 }
             }
         }
-        val expectedText = ContentPart.Text("Text\n\n")
+        val expectedText = MessagePart.Text("Text\n\n")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have one text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have one text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have one text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have one text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -330,17 +335,17 @@ class PromptBuilderTest {
                 }
             }
         }
-        val expectedText = ContentPart.Text("- First item\n- Second item")
+        val expectedText = MessagePart.Text("- First item\n- Second item")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -363,17 +368,17 @@ class PromptBuilderTest {
                 }
             }
         }
-        val expectedText = ContentPart.Text("1. Step 1\n2. Step 2")
+        val expectedText = MessagePart.Text("1. Step 1\n2. Step 2")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -402,17 +407,18 @@ class PromptBuilderTest {
                 }
             }
         }
-        val expectedText = ContentPart.Text("| Name | Age |\n| :--- | :--- |\n| John | 25 |\n| Jane | 30 |")
+        val expectedText =
+            MessagePart.Text("| Name | Age |\n| :--- | :--- |\n| John | 25 |\n| Jane | 30 |")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -425,13 +431,14 @@ class PromptBuilderTest {
             }
         }
 
+        val expectedText = MessagePart.Text("Hello, how are you?\nGood, and you? Let's go to the beach!")
         assertEquals(1, prompt.messages.size, "Prompt should have one message")
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        val userMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
 
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
+        assertEquals(1, userMessage.parts.size, "Should have only text part")
         assertEquals(
-            ContentPart.Text("Hello, how are you?\nGood, and you? Let's go to the beach!"),
-            prompt.messages[0].parts[0],
+            expectedText,
+            userMessage.parts[0],
             "Should have same text"
         )
     }
@@ -449,36 +456,46 @@ class PromptBuilderTest {
             }
         }
 
+        val expectedText = MessagePart.Text("Hello, how are you?\nHere is my photo")
         assertEquals(1, prompt.messages.size, "Prompt should have one message")
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        val userMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
 
-        assertEquals(4, prompt.messages[0].parts.size, "Should have 4 parts")
+        assertEquals(4, userMessage.parts.size, "Should have 4 parts")
         assertEquals(
-            ContentPart.Text("Hello, how are you?\nHere is my photo"),
-            prompt.messages[0].parts[0],
+            expectedText,
+            userMessage.parts[0],
             "Should have same text"
         )
 
-        val expectedFirstImage = ContentPart.Image(
-            content = AttachmentContent.URL("https://example.com/photo1.jpg"),
-            format = "jpg",
-            mimeType = "image/jpg",
-            fileName = "photo1.jpg"
+        val expectedFirstImage = MessagePart.Attachment(
+            AttachmentSource.Image(
+                content = AttachmentContent.URL("https://example.com/photo1.jpg"),
+                format = "jpg",
+                mimeType = "image/jpg",
+                fileName = "photo1.jpg"
+            )
         )
-        assertEquals(expectedFirstImage, prompt.messages[0].parts[1], "Should have same image url")
+
         assertEquals(
-            ContentPart.Text("I'm good!\nAnd here is mine"),
-            prompt.messages[0].parts[2],
+            expectedFirstImage,
+            userMessage.parts[1],
+            "Should have same image url"
+        )
+        assertEquals(
+            MessagePart.Text("I'm good!\nAnd here is mine"),
+            userMessage.parts[2],
             "Should have same text"
         )
 
-        val expectedSecondImage = ContentPart.Image(
-            content = AttachmentContent.URL("https://example.com/photo2.jpg"),
-            format = "jpg",
-            mimeType = "image/jpg",
-            fileName = "photo2.jpg"
+        val expectedSecondImage = MessagePart.Attachment(
+            AttachmentSource.Image(
+                content = AttachmentContent.URL("https://example.com/photo2.jpg"),
+                format = "jpg",
+                mimeType = "image/jpg",
+                fileName = "photo2.jpg"
+            )
         )
-        assertEquals(expectedSecondImage, prompt.messages[0].parts[3], "Should have same image url")
+        assertEquals(expectedSecondImage, userMessage.parts[3], "Should have same image url")
     }
 
     @Test
@@ -487,7 +504,7 @@ class PromptBuilderTest {
             user {
                 text("Check this image")
                 image(
-                    ContentPart.Image(
+                    AttachmentSource.Image(
                         content = AttachmentContent.URL("https://example.com/test.png"),
                         format = "png",
                         mimeType = "image/png",
@@ -498,55 +515,19 @@ class PromptBuilderTest {
         }
 
         assertEquals(1, prompt.messages.size, "Prompt should have one message")
-        assertTrue(prompt.messages[0] is Message.User, "Message should be a User message")
-
-        val userMessage = prompt.messages[0] as Message.User
+        val userMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
         assertEquals(2, userMessage.parts.size, "Should have text part and image part")
 
-        val expectedText = ContentPart.Text("Check this image")
+        val expectedText = MessagePart.Text("Check this image")
         assertEquals(expectedText, userMessage.parts[0], "First part should be text")
 
-        val expectedImage = ContentPart.Image(
-            content = AttachmentContent.URL("https://example.com/test.png"),
-            format = "png",
-            mimeType = "image/png",
-            fileName = "test.png"
-        )
-        assertEquals(expectedImage, userMessage.parts[1], "Second part should match expected Image")
-    }
-
-    @Test
-    fun testUserMessageWithAttachmentsOldAPI() {
-        val prompt = Prompt.build("test") {
-            user {
-                text("Check this image")
-                attachments {
-                    image(
-                        ContentPart.Image(
-                            content = AttachmentContent.URL("https://example.com/test.png"),
-                            format = "png",
-                            mimeType = "image/png",
-                            fileName = "test.png"
-                        )
-                    )
-                }
-            }
-        }
-
-        assertEquals(1, prompt.messages.size, "Prompt should have one message")
-        assertTrue(prompt.messages[0] is Message.User, "Message should be a User message")
-
-        val userMessage = prompt.messages[0] as Message.User
-        assertEquals(2, userMessage.parts.size, "Should have text part and image part")
-
-        val expectedText = ContentPart.Text("Check this image")
-        assertEquals(expectedText, userMessage.parts[0], "First part should be text")
-
-        val expectedImage = ContentPart.Image(
-            content = AttachmentContent.URL("https://example.com/test.png"),
-            format = "png",
-            mimeType = "image/png",
-            fileName = "test.png"
+        val expectedImage = MessagePart.Attachment(
+            AttachmentSource.Image(
+                content = AttachmentContent.URL("https://example.com/test.png"),
+                format = "png",
+                mimeType = "image/png",
+                fileName = "test.png"
+            )
         )
         assertEquals(expectedImage, userMessage.parts[1], "Second part should match expected Image")
     }
@@ -562,28 +543,30 @@ class PromptBuilderTest {
         }
 
         assertEquals(1, prompt.messages.size, "Prompt should have one message")
-        assertTrue(prompt.messages[0] is Message.User, "Message should be a User message")
-
-        val userMessage = prompt.messages[0] as Message.User
+        val userMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
 
         assertEquals(3, userMessage.parts.size, "Should have text part, image part, and file part")
 
-        val expectedText = ContentPart.Text("Check these files")
+        val expectedText = MessagePart.Text("Check these files")
         assertEquals(expectedText, userMessage.parts[0], "First part should be text")
 
-        val expectedImage = ContentPart.Image(
-            content = AttachmentContent.URL("https://example.com/photo.jpg"),
-            format = "jpg",
-            mimeType = "image/jpg",
-            fileName = "photo.jpg"
+        val expectedImage = MessagePart.Attachment(
+            AttachmentSource.Image(
+                content = AttachmentContent.URL("https://example.com/photo.jpg"),
+                format = "jpg",
+                mimeType = "image/jpg",
+                fileName = "photo.jpg"
+            )
         )
         assertEquals(expectedImage, userMessage.parts[1], "Second part should match expected Image")
 
-        val expectedFile = ContentPart.File(
-            content = AttachmentContent.URL("https://example.com/report.pdf"),
-            format = "pdf",
-            mimeType = "application/pdf",
-            fileName = "report.pdf"
+        val expectedFile = MessagePart.Attachment(
+            AttachmentSource.File(
+                content = AttachmentContent.URL("https://example.com/report.pdf"),
+                format = "pdf",
+                mimeType = "application/pdf",
+                fileName = "report.pdf"
+            )
         )
         assertEquals(expectedFile, userMessage.parts[2], "Third part should match expected File")
     }
@@ -600,20 +583,20 @@ class PromptBuilderTest {
         }
 
         assertEquals(1, prompt.messages.size, "Prompt should have one message")
-        assertTrue(prompt.messages[0] is Message.User, "Message should be a User message")
-
-        val userMessage = prompt.messages[0] as Message.User
+        val userMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
 
         assertEquals(2, userMessage.parts.size, "Should have text part and image part")
 
-        val expectedText = ContentPart.Text("Here's my question:\nHow do I implement a binary search in Kotlin?")
+        val expectedText = MessagePart.Text("Here's my question:\nHow do I implement a binary search in Kotlin?")
         assertEquals(expectedText, userMessage.parts[0], "First part should be text")
 
-        val expectedImage = ContentPart.Image(
-            content = AttachmentContent.URL("https://example.com/screenshot.png"),
-            format = "png",
-            mimeType = "image/png",
-            fileName = "screenshot.png"
+        val expectedImage = MessagePart.Attachment(
+            AttachmentSource.Image(
+                content = AttachmentContent.URL("https://example.com/screenshot.png"),
+                format = "png",
+                mimeType = "image/png",
+                fileName = "screenshot.png"
+            )
         )
         assertEquals(expectedImage, userMessage.parts[1], "Second part should match expected Image")
     }
@@ -634,34 +617,40 @@ class PromptBuilderTest {
 
         assertEquals(1, prompt.messages.size, "Prompt should have 1 message")
 
-        val userMessage = prompt.messages.first() as Message.User
+        val userMessage = assertIs<Message.User>(prompt.messages.first(), "Message should be a User message")
 
         assertEquals(4, userMessage.parts.size, "Should have text part and three attachment parts")
 
-        val expectedText = ContentPart.Text("Please analyze these files")
+        val expectedText = MessagePart.Text("Please analyze these files")
         assertEquals(expectedText, userMessage.parts[0], "First part should be text")
 
-        val expectedImage = ContentPart.Image(
-            content = AttachmentContent.URL("https://example.com/chart.png"),
-            format = "png",
-            mimeType = "image/png",
-            fileName = "chart.png"
+        val expectedImage = MessagePart.Attachment(
+            AttachmentSource.Image(
+                content = AttachmentContent.URL("https://example.com/chart.png"),
+                format = "png",
+                mimeType = "image/png",
+                fileName = "chart.png"
+            )
         )
         assertEquals(expectedImage, userMessage.parts[1], "Second part should match expected Image")
 
-        val expectedPdfFile = ContentPart.File(
-            content = AttachmentContent.URL("https://example.com/data.pdf"),
-            format = "pdf",
-            mimeType = "application/pdf",
-            fileName = "data.pdf"
+        val expectedPdfFile = MessagePart.Attachment(
+            AttachmentSource.File(
+                content = AttachmentContent.URL("https://example.com/data.pdf"),
+                format = "pdf",
+                mimeType = "application/pdf",
+                fileName = "data.pdf"
+            )
         )
         assertEquals(expectedPdfFile, userMessage.parts[2], "Third part should match expected PDF File")
 
-        val expectedDocxFile = ContentPart.File(
-            content = AttachmentContent.URL("https://example.com/report.docx"),
-            format = "docx",
-            mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            fileName = "report.docx"
+        val expectedDocxFile = MessagePart.Attachment(
+            AttachmentSource.File(
+                content = AttachmentContent.URL("https://example.com/report.docx"),
+                format = "docx",
+                mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                fileName = "report.docx"
+            )
         )
         assertEquals(expectedDocxFile, userMessage.parts[3], "Fourth part should match expected DOCX File")
     }
@@ -695,62 +684,70 @@ class PromptBuilderTest {
                 text("```")
             }
 
-            tool {
-                call("tool_1", "code_analyzer", "Analyzing the code example...")
-                result("tool_1", "code_analyzer", "The code looks correct.")
+            assistant {
+                toolCall(
+                    id = "tool_1",
+                    tool = "code_analyzer",
+                    args = JsonObject(mapOf("language" to JsonPrimitive("kotlin")))
+                )
+            }
+
+            user {
+                toolResult("tool_1", "code_analyzer", "0 errors found")
             }
         }
 
         assertEquals(5, prompt.messages.size, "Prompt should have 5 messages")
 
-        assertTrue(prompt.messages[0] is Message.System, "First message should be a System message")
-        assertTrue(prompt.messages[1] is Message.User, "Second message should be a User message")
-        assertTrue(prompt.messages[2] is Message.Assistant, "Third message should be an Assistant message")
-        assertTrue(prompt.messages[3] is Message.Tool.Call, "Fourth message should be a Tool Call message")
-        assertTrue(prompt.messages[4] is Message.Tool.Result, "Fifth message should be a Tool Result message")
-
         // System message should have Text content
-        val systemMessage = prompt.messages[0] as Message.System
+        val systemMessage = assertIs<Message.System>(prompt.messages[0], "First message should be a System message")
         assertEquals(1, systemMessage.parts.size, "Should have only text part")
         val expectedSystemText =
-            ContentPart.Text("You are a helpful assistant. Please answer user questions accurately.")
+            MessagePart.Text("You are a helpful assistant. Please answer user questions accurately.")
         assertEquals(expectedSystemText, systemMessage.parts[0], "First part should be text")
 
         // User message should have Parts content (Text + Image)
-        val userMessage = prompt.messages[1] as Message.User
+        val userMessage = assertIs<Message.User>(prompt.messages[1], "Second message should be a User message")
         assertEquals(2, userMessage.parts.size, "Should have text part and image part")
 
         val expectedUserText =
-            ContentPart.Text("I have a question about programming.\nHow do I implement a binary search in Kotlin?")
+            MessagePart.Text("I have a question about programming.\nHow do I implement a binary search in Kotlin?")
         assertEquals(expectedUserText, userMessage.parts[0], "First part should be text")
 
-        val expectedUserImage = ContentPart.Image(
-            content = AttachmentContent.URL(
-                "https://example.com/code_example.png"
-            ),
-            format = "png",
-            mimeType = "image/png",
-            fileName = "code_example.png"
+        val expectedUserImage = MessagePart.Attachment(
+            source = AttachmentSource.Image(
+                content = AttachmentContent.URL(
+                    "https://example.com/code_example.png"
+                ),
+                format = "png",
+                mimeType = "image/png",
+                fileName = "code_example.png"
+            )
         )
         assertEquals(expectedUserImage, userMessage.parts[1], "Second part should match expected Image")
 
         // Assistant message should have Text content
-        val assistantMessage = prompt.messages[2] as Message.Assistant
+        val assistantMessage = assertIs<Message.Assistant>(prompt.messages[2], "Third message should be an Assistant message")
         assertEquals(1, assistantMessage.parts.size, "Should have text part")
-        val assistantText = assistantMessage.content
-        assertTrue(assistantText.contains("Here's how you can implement binary search in Kotlin:"))
-        assertTrue(assistantText.contains("```kotlin"))
+        val textPart = assertIs<MessagePart.Text>(assistantMessage.parts[0])
+        assertTrue(textPart.text.contains("Here's how you can implement binary search in Kotlin:"))
+        assertTrue(textPart.text.contains("```kotlin"))
 
-        // Tool messages should have Text content
-        val toolCallMessage = prompt.messages[3] as Message.Tool.Call
-        assertEquals("tool_1", toolCallMessage.id)
-        assertEquals("code_analyzer", toolCallMessage.tool)
-        assertEquals("Analyzing the code example...", toolCallMessage.content)
+        // Assistant messages should have Tool.Call part
+        val toolCallMessage = assertIs<Message.Assistant>(prompt.messages[3], "Fourth message should be an Assistant message")
+        assertEquals(1, toolCallMessage.parts.size, "Should have only Tool.Call part")
+        val toolCallPart = assertIs<MessagePart.Tool.Call>(toolCallMessage.parts[0])
+        assertEquals("tool_1", toolCallPart.id)
+        assertEquals("code_analyzer", toolCallPart.tool)
+        assertEquals(buildJsonObject { put("language", JsonPrimitive("kotlin")) }, toolCallPart.argsJson)
 
-        val toolResultMessage = prompt.messages[4] as Message.Tool.Result
-        assertEquals("tool_1", toolResultMessage.id)
-        assertEquals("code_analyzer", toolResultMessage.tool)
-        assertEquals("The code looks correct.", toolResultMessage.content)
+        val toolResultMessage = assertIs<Message.User>(prompt.messages[4], "Fifth message should be a User message")
+        assertEquals(1, toolResultMessage.parts.size, "Should have only Tool.Result part")
+        val toolResultPart = assertIs<MessagePart.Tool.Result>(toolResultMessage.parts[0])
+        assertEquals("tool_1", toolResultPart.id)
+        assertEquals("code_analyzer", toolResultPart.tool)
+        assertEquals("0 errors found", toolResultPart.output)
+        assertFalse(toolResultPart.isError)
     }
 
     @Test
@@ -770,17 +767,17 @@ class PromptBuilderTest {
             }
         }
 
-        val expectedText = ContentPart.Text("text followed by plain text")
+        val expectedText = MessagePart.Text("text followed by plain text")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -799,17 +796,17 @@ class PromptBuilderTest {
                 }
             }
         }
-        val expectedText = ContentPart.Text("text\n followed by textWithNewLine")
+        val expectedText = MessagePart.Text("text\n followed by textWithNewLine")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -832,17 +829,17 @@ class PromptBuilderTest {
                 }
             }
         }
-        val expectedText = ContentPart.Text("text\n  followed by padding")
+        val expectedText = MessagePart.Text("text\n  followed by padding")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -862,17 +859,17 @@ class PromptBuilderTest {
                 }
             }
         }
-        val expectedText = ContentPart.Text("text\n")
+        val expectedText = MessagePart.Text("text\n")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -907,17 +904,17 @@ class PromptBuilderTest {
             }
         }
         val expectedText =
-            ContentPart.Text("text\n## Header with h2\ntext followed by \n**bold**\n\ntext followed by \n*italic*")
+            MessagePart.Text("text\n## Header with h2\ntext followed by \n**bold**\n\ntext followed by \n*italic*")
 
         assertEquals(2, prompt.messages.size, "Prompt should have two messages")
 
-        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
-        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+        val firstUserMessage = assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, firstUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, firstUserMessage.parts[0], "Should have same text")
 
-        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
-        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
-        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+        val secondUserMessage = assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, secondUserMessage.parts.size, "Should have only text part")
+        assertEquals(expectedText, secondUserMessage.parts[0], "Should have same text")
     }
 
     @Test
@@ -928,6 +925,6 @@ class PromptBuilderTest {
             }
         }
 
-        prompt.messages[0].parts shouldBeEqual listOf(ContentPart.Text("Text\n"))
+        prompt.messages[0].parts shouldBeEqual listOf(MessagePart.Text("Text\n"))
     }
 }

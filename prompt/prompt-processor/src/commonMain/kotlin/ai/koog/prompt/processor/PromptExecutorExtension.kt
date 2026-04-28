@@ -26,10 +26,10 @@ public suspend fun PromptExecutor.executeProcessed(
     model: LLModel,
     tools: List<ToolDescriptor>,
     processorConfig: ResponseProcessorConfig? = null,
-): List<Message.Response> {
-    val responses = execute(prompt, model, tools)
+): Message.Assistant {
+    val response = execute(prompt, model, tools)
 
     return processorConfig
-        ?.let { it.responseProcessor.process(this, prompt, model, tools, responses, it.serializer) }
-        ?: responses
+        ?.let { it.responseProcessor.process(this, prompt, model, tools, response, it.serializer) }
+        ?: response
 }

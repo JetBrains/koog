@@ -1,19 +1,20 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.ToolCalls
+import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
+import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
+import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionEventContext
@@ -28,7 +29,9 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.collectText
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
@@ -43,9 +46,9 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
-import kotlin.time.Instant
 
 class EventHandlerTest {
+
     private val serializer = KotlinxSerializer()
 
     @Test
@@ -105,7 +108,7 @@ class EventHandlerTest {
         val strategy = strategy<String, String>(strategyName) {
             val llmCallNode by nodeLLMRequest("test LLM call")
 
-            edge(nodeStart forwardTo llmCallNode transformed { testLLMResponse })
+            edge(nodeStart forwardTo llmCallNode asUserMessage { testLLMResponse })
             edge(llmCallNode forwardTo nodeFinish transformed { agentResult })
         }
 
@@ -130,26 +133,31 @@ class EventHandlerTest {
 
         val runId = eventsCollector.runId
 
+        val expectedPromptString = StringBuilder()
+            .append("id: ").append(promptId)
+            .append(", messages: [")
+            .append(expectedMessage(Message.Role.System, systemPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, userPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.Assistant, assistantPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, testLLMResponse))
+            .append("]")
+            .append(", temperature: ").append(temperature)
+            .toString()
+
+        val expectedUserMessage =
+            "User(parts=[Text(text=$testLLMResponse, cacheControl=null)], metaInfo=RequestMetaInfo(timestamp=$ts, metadata=null), id=null)"
+        val expectedAssistantMessage =
+            "Assistant(parts=[Text(text=Default test response, cacheControl=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
+
         val expectedEvents = listOf(
             "OnAgentStarting (agent id: $agentId, run id: $runId)",
             "OnStrategyStarting (run id: $runId, strategy: $strategyName)",
             "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $agentInput)",
             "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
-            "OnNodeExecutionStarting (run id: $runId, node: test LLM call, input: $testLLMResponse)",
-            "OnLLMCallStarting (run id: $runId, prompt: id: $promptId, messages: [{" +
-                "role: ${Message.Role.System}, message: $systemPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
-                "role: ${Message.Role.User}, message: $testLLMResponse" +
-                "}], temperature: $temperature, tools: [])",
-            "OnLLMCallCompleted (run id: $runId, prompt: id: $promptId, messages: [{" +
-                "role: ${Message.Role.System}, message: $systemPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
-                "role: ${Message.Role.User}, message: $testLLMResponse" +
-                "}], temperature: $temperature, model: ${model.eventString}, tools: [], responses: [role: ${Message.Role.Assistant}, message: Default test response])",
-            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: $testLLMResponse, output: " +
-                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null, cacheControl=null))",
+            "OnNodeExecutionStarting (run id: $runId, node: test LLM call, input: $expectedUserMessage)",
+            "OnLLMCallStarting (run id: $runId, prompt: $expectedPromptString, tools: [])",
+            "OnLLMCallCompleted (run id: $runId, prompt: $expectedPromptString, model: ${model.eventString}, tools: [], responses: [${expectedMessage(Message.Role.Assistant, "Default test response").trim('{', '}')}])",
+            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: $expectedUserMessage, output: $expectedAssistantMessage)",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
@@ -179,15 +187,15 @@ class EventHandlerTest {
 
         val strategy = strategy(strategyName) {
             val nodeSendInput by nodeLLMRequest("test-llm-call")
-            val nodeExecuteTool by nodeExecuteTool("test-tool-call")
-            val nodeSendToolResult by nodeLLMSendToolResult("test-node-llm-send-tool-result")
+            val nodeExecuteTool by nodeExecuteToolsAndGetResults("test-tool-call")
+            val nodeSendToolResult by nodeSendToolReceivedResults("test-node-llm-send-tool-result")
 
-            edge(nodeStart forwardTo nodeSendInput)
-            edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
-            edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+            edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+            edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
+            edge(nodeSendInput forwardTo nodeFinish onTextParts { true })
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
-            edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-            edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+            edge(nodeSendToolResult forwardTo nodeFinish onTextParts { true })
+            edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
         }
 
         val dummyTool = DummyTool()
@@ -229,59 +237,70 @@ class EventHandlerTest {
             tool = dummyToolName,
             toolArgs = dummyToolArgsEncoded,
             toolDescription = dummyToolDescription,
-            content = dummyTool.result,
+            output = dummyTool.result,
             resultKind = ToolResultKind.Success,
             result = dummyToolResultEncoded,
             resultObject = "Dummy result"
         )
+
+        val toolCallPart = "{type: Call, tool: $dummyToolName, args: $dummyToolArgsEncoded}"
+        val toolResultPart = "{type: Result, tool: $dummyToolName, output: ${dummyTool.result}}"
+
+        val expectedPromptFirstCall = StringBuilder()
+            .append("id: ").append(promptId)
+            .append(", messages: [")
+            .append(expectedMessage(Message.Role.System, systemPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, userPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.Assistant, assistantPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, userPrompt))
+            .append("]")
+            .append(", temperature: ").append(temperature)
+            .toString()
+
+        val expectedPromptSecondCall = StringBuilder()
+            .append("id: ").append(promptId)
+            .append(", messages: [")
+            .append(expectedMessage(Message.Role.System, systemPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, userPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.Assistant, assistantPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, userPrompt)).append(", ")
+            .append("{role: ${Message.Role.Assistant}, parts: [$toolCallPart]}").append(", ")
+            .append("{role: ${Message.Role.User}, parts: [$toolResultPart]}")
+            .append("]")
+            .append(", temperature: ").append(temperature)
+            .toString()
+
+        val userPromptMessageObj =
+            "User(parts=[Text(text=$userPrompt, cacheControl=null)], metaInfo=RequestMetaInfo(timestamp=$ts, metadata=null), id=null)"
+        val toolCallAssistantObj =
+            "Assistant(parts=[Call(id=null, tool=$dummyToolName, args=$dummyToolArgsEncoded)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
+        val toolCallsInput = "ToolCalls(toolCalls=[Call(id=null, tool=$dummyToolName, args=$dummyToolArgsEncoded)])"
+        val receivedToolResults = "ReceivedToolResults(toolResults=[$dummyToolReceivedToolResult])"
+        val finalAssistantObj =
+            "Assistant(parts=[Text(text=$mockResponse, cacheControl=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
+
+        val toolCallResponseEntry =
+            "role: ${Message.Role.Assistant}, parts: [$toolCallPart]"
+        val finalResponseEntry =
+            expectedMessage(Message.Role.Assistant, mockResponse).trim('{', '}')
 
         val expectedEvents = listOf(
             "OnAgentStarting (agent id: $agentId, run id: $runId)",
             "OnStrategyStarting (run id: $runId, strategy: $strategyName)",
             "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $userPrompt)",
             "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $userPrompt, output: $userPrompt)",
-            "OnNodeExecutionStarting (run id: $runId, node: test-llm-call, input: $userPrompt)",
-            "OnLLMCallStarting (run id: $runId, prompt: id: $promptId, messages: [{" +
-                "role: ${Message.Role.System}, message: $systemPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt" +
-                "}], temperature: $temperature, tools: [${toolRegistry.tools.joinToString { it.name }}])",
-            "OnLLMCallCompleted (run id: $runId, prompt: id: $promptId, messages: [{" +
-                "role: ${Message.Role.System}, message: $systemPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt" +
-                "}], temperature: $temperature, model: ${model.eventString}, tools: [$dummyToolName], responses: [role: ${Message.Role.Tool}, message: {\"dummy\":\"test\"}])",
-            "OnNodeExecutionCompleted (run id: $runId, node: test-llm-call, input: $userPrompt, output: " +
-                "Call(id=null, tool=$dummyToolName, parts=[Text(text=$dummyToolArgsEncoded)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
-            "OnNodeExecutionStarting (run id: $runId, node: test-tool-call, input: " +
-                "Call(id=null, tool=$dummyToolName, parts=[Text(text=$dummyToolArgsEncoded)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
+            "OnNodeExecutionStarting (run id: $runId, node: test-llm-call, input: $userPromptMessageObj)",
+            "OnLLMCallStarting (run id: $runId, prompt: $expectedPromptFirstCall, tools: [$dummyToolName])",
+            "OnLLMCallCompleted (run id: $runId, prompt: $expectedPromptFirstCall, model: ${model.eventString}, tools: [$dummyToolName], responses: [$toolCallResponseEntry])",
+            "OnNodeExecutionCompleted (run id: $runId, node: test-llm-call, input: $userPromptMessageObj, output: $toolCallAssistantObj)",
+            "OnNodeExecutionStarting (run id: $runId, node: test-tool-call, input: $toolCallsInput)",
             "OnToolCallStarting (run id: $runId, tool: $dummyToolName, args: $dummyToolArgsEncoded)",
             "OnToolCallCompleted (run id: $runId, tool: $dummyToolName, args: $dummyToolArgsEncoded, result: $dummyToolResultEncoded)",
-            "OnNodeExecutionCompleted (run id: $runId, node: test-tool-call, input: " +
-                "Call(id=null, tool=$dummyToolName, parts=[Text(text=$dummyToolArgsEncoded)], " +
-                "metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)), output: $dummyToolReceivedToolResult)",
-            "OnNodeExecutionStarting (run id: $runId, node: test-node-llm-send-tool-result, input: $dummyToolReceivedToolResult)",
-            "OnLLMCallStarting (run id: $runId, prompt: id: $promptId, messages: [{" +
-                "role: ${Message.Role.System}, message: $systemPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Tool}, message: $dummyToolArgsEncoded, " +
-                "role: ${Message.Role.Tool}, message: ${dummyTool.result}" +
-                "}], temperature: $temperature, tools: [$dummyToolName])",
-            "OnLLMCallCompleted (run id: $runId, prompt: id: $promptId, messages: [{" +
-                "role: ${Message.Role.System}, message: $systemPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Tool}, message: $dummyToolArgsEncoded, " +
-                "role: ${Message.Role.Tool}, message: ${dummyTool.result}" +
-                "}], temperature: $temperature, model: openai:gpt-4o, tools: [$dummyToolName], responses: [role: ${Message.Role.Assistant}, message: Return test result])",
-            "OnNodeExecutionCompleted (run id: $runId, node: test-node-llm-send-tool-result, " +
-                "input: $dummyToolReceivedToolResult, " +
-                "output: Assistant(parts=[Text(text=$mockResponse)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null, cacheControl=null))",
+            "OnNodeExecutionCompleted (run id: $runId, node: test-tool-call, input: $toolCallsInput, output: $receivedToolResults)",
+            "OnNodeExecutionStarting (run id: $runId, node: test-node-llm-send-tool-result, input: $receivedToolResults)",
+            "OnLLMCallStarting (run id: $runId, prompt: $expectedPromptSecondCall, tools: [$dummyToolName])",
+            "OnLLMCallCompleted (run id: $runId, prompt: $expectedPromptSecondCall, model: ${model.eventString}, tools: [$dummyToolName], responses: [$finalResponseEntry])",
+            "OnNodeExecutionCompleted (run id: $runId, node: test-node-llm-send-tool-result, input: $receivedToolResults, output: $finalAssistantObj)",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $mockResponse)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $mockResponse, output: $mockResponse)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $mockResponse)",
@@ -314,8 +333,8 @@ class EventHandlerTest {
             val llmCallNode by nodeLLMRequest("test LLM call")
             val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
-            edge(nodeStart forwardTo llmCallNode transformed { testLLMResponse })
-            edge(llmCallNode forwardTo llmCallWithToolsNode transformed { llmCallWithToolsResponse })
+            edge(nodeStart forwardTo llmCallNode asUserMessage { testLLMResponse })
+            edge(llmCallNode forwardTo llmCallWithToolsNode asUserMessage { llmCallWithToolsResponse })
             edge(llmCallWithToolsNode forwardTo nodeFinish transformed { agentResult })
         }
 
@@ -339,46 +358,54 @@ class EventHandlerTest {
         agent.close()
 
         val runId = eventsCollector.runId
+        val defaultResponse = "Default test response"
+
+        val expectedPromptFirstCall = StringBuilder()
+            .append("id: ").append(promptId)
+            .append(", messages: [")
+            .append(expectedMessage(Message.Role.System, systemPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, userPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.Assistant, assistantPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, testLLMResponse))
+            .append("]")
+            .append(", temperature: ").append(temperature)
+            .toString()
+
+        val expectedPromptSecondCall = StringBuilder()
+            .append("id: ").append(promptId)
+            .append(", messages: [")
+            .append(expectedMessage(Message.Role.System, systemPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, userPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.Assistant, assistantPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, testLLMResponse)).append(", ")
+            .append(expectedMessage(Message.Role.Assistant, defaultResponse)).append(", ")
+            .append(expectedMessage(Message.Role.User, llmCallWithToolsResponse))
+            .append("]")
+            .append(", temperature: ").append(temperature)
+            .toString()
+
+        val expectedUserMessage = { text: String ->
+            "User(parts=[Text(text=$text, cacheControl=null)], metaInfo=RequestMetaInfo(timestamp=$ts, metadata=null), id=null)"
+        }
+        val expectedAssistantMessage =
+            "Assistant(parts=[Text(text=$defaultResponse, cacheControl=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
+
+        val expectedTools = toolRegistry.tools.joinToString { it.name }
+        val responseEntry = expectedMessage(Message.Role.Assistant, defaultResponse).trim('{', '}')
 
         val expectedEvents = listOf(
             "OnAgentStarting (agent id: test-agent-id, run id: $runId)",
             "OnStrategyStarting (run id: $runId, strategy: $strategyName)",
             "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $agentInput)",
             "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
-            "OnNodeExecutionStarting (run id: $runId, node: test LLM call, input: $testLLMResponse)",
-            "OnLLMCallStarting (run id: $runId, prompt: id: $promptId, messages: [{" +
-                "role: ${Message.Role.System}, message: $systemPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
-                "role: ${Message.Role.User}, message: $testLLMResponse" +
-                "}], temperature: $temperature, tools: [${toolRegistry.tools.joinToString { it.name }}])",
-            "OnLLMCallCompleted (run id: $runId, prompt: id: $promptId, messages: [{" +
-                "role: ${Message.Role.System}, message: $systemPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
-                "role: ${Message.Role.User}, message: $testLLMResponse" +
-                "}], temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}], responses: [role: ${Message.Role.Assistant}, message: Default test response])",
-            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: $testLLMResponse, output: " +
-                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null, cacheControl=null))",
-            "OnNodeExecutionStarting (run id: $runId, node: test LLM call with tools, input: $llmCallWithToolsResponse)",
-            "OnLLMCallStarting (run id: $runId, prompt: id: $promptId, messages: [{" +
-                "role: ${Message.Role.System}, message: $systemPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
-                "role: ${Message.Role.User}, message: Test LLM call prompt, " +
-                "role: ${Message.Role.Assistant}, message: Default test response, " +
-                "role: ${Message.Role.User}, message: $llmCallWithToolsResponse" +
-                "}], temperature: $temperature, tools: [${toolRegistry.tools.joinToString { it.name }}])",
-            "OnLLMCallCompleted (run id: $runId, prompt: id: $promptId, messages: [{" +
-                "role: ${Message.Role.System}, message: $systemPrompt, " +
-                "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
-                "role: ${Message.Role.User}, message: Test LLM call prompt, " +
-                "role: ${Message.Role.Assistant}, message: Default test response, " +
-                "role: ${Message.Role.User}, message: $llmCallWithToolsResponse" +
-                "}], temperature: $temperature, model: openai:gpt-4o, tools: [${toolRegistry.tools.joinToString { it.name }}], responses: [role: ${Message.Role.Assistant}, message: Default test response])",
-            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call with tools, input: $llmCallWithToolsResponse, output: " +
-                "Assistant(parts=[Text(text=Default test response)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null, cacheControl=null))",
+            "OnNodeExecutionStarting (run id: $runId, node: test LLM call, input: ${expectedUserMessage(testLLMResponse)})",
+            "OnLLMCallStarting (run id: $runId, prompt: $expectedPromptFirstCall, tools: [$expectedTools])",
+            "OnLLMCallCompleted (run id: $runId, prompt: $expectedPromptFirstCall, model: ${model.eventString}, tools: [$expectedTools], responses: [$responseEntry])",
+            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: ${expectedUserMessage(testLLMResponse)}, output: $expectedAssistantMessage)",
+            "OnNodeExecutionStarting (run id: $runId, node: test LLM call with tools, input: ${expectedUserMessage(llmCallWithToolsResponse)})",
+            "OnLLMCallStarting (run id: $runId, prompt: $expectedPromptSecondCall, tools: [$expectedTools])",
+            "OnLLMCallCompleted (run id: $runId, prompt: $expectedPromptSecondCall, model: ${model.eventString}, tools: [$expectedTools], responses: [$responseEntry])",
+            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call with tools, input: ${expectedUserMessage(llmCallWithToolsResponse)}, output: $expectedAssistantMessage)",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
@@ -501,7 +528,7 @@ class EventHandlerTest {
             val llmCallNode by nodeLLMRequest("test LLM call")
             val llmCallWithToolsNode by nodeException("test LLM call with tools")
 
-            edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
+            edge(nodeStart forwardTo llmCallNode asUserMessage { "Test LLM call prompt" })
             edge(llmCallNode forwardTo llmCallWithToolsNode transformed { "Test LLM call with tools prompt" })
             edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
         }
@@ -527,16 +554,17 @@ class EventHandlerTest {
         val systemPrompt = "Test system message"
         val userPrompt = "Test user message"
         val assistantPrompt = "Test assistant response"
+        val agentInput = "Test input"
         val temperature = 1.0
 
         val strategyName = "event-handler-streaming-success"
         val strategy = strategy<String, String>(strategyName) {
-            val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
+            val streamAndCollect by nodeLLMRequestStreaming("stream-and-collect")
 
-            edge(nodeStart forwardTo streamAndCollect)
+            edge(nodeStart forwardTo streamAndCollect asUserMessage { it })
             edge(
                 streamAndCollect forwardTo nodeFinish transformed { messages ->
-                    messages.firstOrNull()?.content ?: ""
+                    messages.collectText()
                 }
             )
         }
@@ -544,7 +572,7 @@ class EventHandlerTest {
         val toolRegistry = ToolRegistry { tool(DummyTool()) }
 
         val testLLMResponse = "Default test response"
-        val executor = getMockExecutor(serializer) {
+        val executor = getMockExecutor(serializer, clock = testClock) {
             mockLLMAnswer(testLLMResponse).asDefaultResponse onUserRequestEquals "Test user message"
         }
 
@@ -562,25 +590,30 @@ class EventHandlerTest {
         ) {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
         }.use { agent ->
-            agent.run("", null)
+            agent.run(agentInput, null)
         }
 
         val runId = eventsCollector.runId
 
         val actualEvents = eventsCollector.collectedEvents.filter { it.startsWith("OnLLMStreaming") }
 
-        val expectedPromptString = "id: $promptId, messages: [{" +
-            "role: ${Message.Role.System}, message: $systemPrompt, " +
-            "role: ${Message.Role.User}, message: $userPrompt, " +
-            "role: ${Message.Role.Assistant}, message: $assistantPrompt" +
-            "}]"
+        val expectedPromptString = StringBuilder()
+            .append("id: ").append(promptId)
+            .append(", messages: [")
+            .append(expectedMessage(Message.Role.System, systemPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, userPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.Assistant, assistantPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, agentInput))
+            .append("]")
+            .append(", temperature: ").append(temperature)
+            .toString()
 
         val expectedEvents = listOf(
-            "OnLLMStreamingStarting (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
+            "OnLLMStreamingStarting (run id: $runId, prompt: $expectedPromptString, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
             "OnLLMStreamingFrameReceived (run id: $runId, frame: TextDelta(text=$testLLMResponse, index=0))",
             "OnLLMStreamingFrameReceived (run id: $runId, frame: TextComplete(text=$testLLMResponse, index=0))",
-            "OnLLMStreamingFrameReceived (run id: $runId, frame: End(finishReason=null, metaInfo=ResponseMetaInfo(timestamp=${Instant.DISTANT_PAST}, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
-            "OnLLMStreamingCompleted (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
+            "OnLLMStreamingFrameReceived (run id: $runId, frame: End(finishReason=null, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null)))",
+            "OnLLMStreamingCompleted (run id: $runId, prompt: $expectedPromptString, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
         )
 
         assertEquals(expectedEvents.size, actualEvents.size)
@@ -595,18 +628,19 @@ class EventHandlerTest {
         val systemPrompt = "Test system message"
         val userPrompt = "Test user message"
         val assistantPrompt = "Test assistant response"
+        val agentInput = "Test input"
         val temperature = 1.0
 
         val model = OpenAIModels.Chat.GPT4o
 
         val strategyName = "event-handler-streaming-failure"
         val strategy = strategy<String, String>(strategyName) {
-            val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
+            val streamAndCollect by nodeLLMRequestStreaming("stream-and-collect")
 
-            edge(nodeStart forwardTo streamAndCollect)
+            edge(nodeStart forwardTo streamAndCollect asUserMessage { it })
             edge(
                 streamAndCollect forwardTo nodeFinish transformed { messages ->
-                    messages.firstOrNull()?.content ?: ""
+                    messages.collectText()
                 }
             )
         }
@@ -620,7 +654,9 @@ class EventHandlerTest {
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
                 tools: List<ToolDescriptor>
-            ): List<Message.Response> = emptyList()
+            ): Message.Assistant {
+                throw IllegalStateException(testStreamingErrorMessage)
+            }
 
             override fun executeStreaming(
                 prompt: Prompt,
@@ -653,7 +689,7 @@ class EventHandlerTest {
         ) {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
         }.use { agent ->
-            val throwable = assertThrows<IllegalStateException> { agent.run("", null) }
+            val throwable = assertThrows<IllegalStateException> { agent.run(agentInput, null) }
             assertEquals(testStreamingErrorMessage, throwable.message)
         }
 
@@ -661,16 +697,21 @@ class EventHandlerTest {
 
         val actualEvents = eventsCollector.collectedEvents.filter { it.startsWith("OnLLMStreaming") }
 
-        val expectedPromptString = "id: $promptId, messages: [{" +
-            "role: ${Message.Role.System}, message: $systemPrompt, " +
-            "role: ${Message.Role.User}, message: $userPrompt, " +
-            "role: ${Message.Role.Assistant}, message: $assistantPrompt" +
-            "}]"
+        val expectedPromptString = StringBuilder()
+            .append("id: ").append(promptId)
+            .append(", messages: [")
+            .append(expectedMessage(Message.Role.System, systemPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, userPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.Assistant, assistantPrompt)).append(", ")
+            .append(expectedMessage(Message.Role.User, agentInput))
+            .append("]")
+            .append(", temperature: ").append(temperature)
+            .toString()
 
         val expectedEvents = listOf(
-            "OnLLMStreamingStarting (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
+            "OnLLMStreamingStarting (run id: $runId, prompt: $expectedPromptString, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
             "OnLLMStreamingFailed (run id: $runId, error: $testStreamingErrorMessage)",
-            "OnLLMStreamingCompleted (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
+            "OnLLMStreamingCompleted (run id: $runId, prompt: $expectedPromptString, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
         )
 
         assertEquals(expectedEvents.size, actualEvents.size)
@@ -814,7 +855,7 @@ class EventHandlerTest {
             toolRegistry = ToolRegistry {
                 tool(GuesserTool)
             },
-            strategy = singleRunStrategy(runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL),
+            strategy = singleRunStrategy(parallelTools = false),
             llmModel = AnthropicModels.Sonnet_4_5
         ) {
             handleEvents {
@@ -823,21 +864,32 @@ class EventHandlerTest {
                 }
                 onNodeExecutionCompleted { ctx ->
                     if (ctx.node.name == "nodeExecuteTool") {
-                        val output = (ctx.output as ReceivedToolResult)
-                        events += "finished: nodeExecuteTool(receivedObject=${output.resultObject}, type=${output.resultObject!!::class.simpleName})"
+                        val toolResult = (ctx.output as Message.User).parts
+                            .filterIsInstance<MessagePart.Tool.Result>()
+                            .single()
+                        events += "finished: nodeExecuteTool(tool=${toolResult.tool}, output=${toolResult.output})"
                     }
                 }
                 onNodeExecutionStarting { ctx ->
                     val input = ctx.input
-                    if (input is Message.Tool.Call) {
-                        events += "started: nodeExecuteTool(tool=${input.tool}, content=${input.content})"
+                    if (input is ToolCalls) {
+                        val toolCall = input.toolCalls.single()
+                        events += "started: nodeExecuteTool(tool=${toolCall.tool}, content=${toolCall.args})"
                     }
                 }
                 onToolCallCompleted { ctx ->
                     events += "onToolCallCompleted(guesser, toolResult=${ctx.toolResult})"
                 }
                 onLLMCallStarting { ctx ->
-                    events += "onLLMCallStarting(${ctx.prompt.messages.last().content})"
+                    val lastText = (ctx.prompt.messages.last() as? Message.User)?.parts
+                        ?.joinToString(separator = "\n") { part ->
+                            when (part) {
+                                is MessagePart.Text -> part.text
+                                is MessagePart.Tool.Result -> part.output
+                                else -> ""
+                            }
+                        } ?: ""
+                    events += "onLLMCallStarting($lastText)"
                 }
             }
         }
@@ -850,7 +902,7 @@ class EventHandlerTest {
             "started: nodeExecuteTool(tool=guesser, content={\"question\":\"What is the secret value?\"})",
             "onToolCallStarting(guesser, args={\"question\":\"What is the secret value?\"})",
             "onToolCallCompleted(guesser, toolResult={\"x\":100500, \"y\":\"Hidden Value\"})",
-            "finished: nodeExecuteTool(receivedObject=CustomOutput(x=100500, y=Hidden Value), type=CustomOutput)",
+            "finished: nodeExecuteTool(tool=guesser, output=encoded_result(\"Hidden Value\"))",
             "onLLMCallStarting(encoded_result(\"Hidden Value\"))"
         )
 
@@ -860,8 +912,11 @@ class EventHandlerTest {
 
     //region Private Methods
 
-    private fun nodeException(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
+    private fun nodeException(name: String? = null): AIAgentNodeDelegate<String, Message.Assistant> =
         node(name) { throw IllegalStateException("Test exception") }
+
+    private fun expectedMessage(role: Message.Role, text: String): String =
+        "{role: $role, parts: [{type: ${MessagePart.Text::class.simpleName}, text: $text}]}"
 
     //endregion Private Methods
 }

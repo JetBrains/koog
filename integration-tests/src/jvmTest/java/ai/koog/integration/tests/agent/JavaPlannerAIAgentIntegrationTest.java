@@ -14,9 +14,13 @@ import ai.koog.integration.tests.utils.annotations.Retry;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,19 +45,22 @@ public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
 
         @Override
         protected String executeStep(AIAgentPlannerContext context, String state, String plan) {
-            Message.Response response = context.requestLLM(state, true);
+            Message.Assistant response = context.requestLLM(state);
 
             int maxIterations = 5;
-            for (int i = 0; i < maxIterations && response instanceof Message.Tool.Call; i++) {
-                response = context.sendToolResult(context.executeTool((Message.Tool.Call) response));
+            for (int i = 0; i < maxIterations; i++) {
+                Optional<MessagePart.Tool.Call> maybeToolCall = firstToolCall(response);
+                if (maybeToolCall.isEmpty()) {
+                    break;
+                }
+                response = context.sendToolResult(context.executeTool(maybeToolCall.get()));
             }
 
-            if (response instanceof Message.Assistant) {
-                return response.getContent();
-            } else if (response instanceof Message.Tool.Call) {
-                return "Max iterations reached, last tool: " + ((Message.Tool.Call) response).getTool();
+            Optional<MessagePart.Tool.Call> maybeToolCall = firstToolCall(response);
+            if (maybeToolCall.isPresent()) {
+                return "Max iterations reached, last tool: " + maybeToolCall.get().getTool();
             }
-            return response.getContent();
+            return assistantText(response);
         }
 
         @Override
@@ -142,7 +149,7 @@ public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
                 .execute((context, state) -> {
                     String result = context.llm().writeSession(session -> {
                         session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user("Formulate problem: " + state.text + ". Answer with the problem formulation in the form \"Problem: ...\"").build());
-                        return session.requestLLM().getContent();
+                        return assistantText(session.requestLLM());
                     });
                     return new TextualState(result);
                 })
@@ -153,7 +160,7 @@ public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
                 .execute((context, state) -> {
                     String result = context.llm().writeSession(session -> {
                         session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user("Find solution. " + state.text + ". Answer with the solution in the form \"Solution: ...\"").build());
-                        return session.requestLLM().getContent();
+                        return assistantText(session.requestLLM());
                     });
                     return new TextualState(result);
                 })
@@ -165,5 +172,19 @@ public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
             .build();
 
         testPlanner(planner);
+    }
+
+    private static String assistantText(Message.Assistant response) {
+        return response.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Text)
+            .map(p -> ((MessagePart.Text) p).getText())
+            .collect(Collectors.joining("\n"));
+    }
+
+    private static Optional<MessagePart.Tool.Call> firstToolCall(Message.Assistant response) {
+        return response.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Tool.Call)
+            .map(p -> (MessagePart.Tool.Call) p)
+            .findFirst();
     }
 }

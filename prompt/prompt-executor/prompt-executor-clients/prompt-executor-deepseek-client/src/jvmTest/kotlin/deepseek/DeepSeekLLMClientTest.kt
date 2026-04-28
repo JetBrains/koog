@@ -7,6 +7,7 @@ import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -21,6 +22,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
@@ -31,6 +34,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
 import kotlinx.serialization.json.Json as KotlinxJson
@@ -195,9 +199,9 @@ class DeepSeekLLMClientTest {
         assertTrue(capturedUrl.endsWith("chat/completions"))
         assertEquals(HttpMethod.Post, capturedMethod)
         assertEquals("Bearer $key", capturedAuth)
-        assertEquals(1, responses.size)
-        val text = (responses.first() as Message.Assistant).content
-        assertEquals(content, text)
+        assertEquals(1, responses.parts.size)
+        val textPart = assertIs<MessagePart.Text>(responses.parts.first())
+        assertEquals(content, textPart.text)
     }
 
     @Test
@@ -219,8 +223,13 @@ class DeepSeekLLMClientTest {
 
         val choices = client.executeMultipleChoices(prompt, DeepSeekModels.DeepSeekChat, tools = emptyList())
         assertEquals(2, choices.size, "Response should have two choices")
-        assertEquals(optionA, (choices[0].first() as Message.Assistant).content, "$optionA should be first")
-        assertEquals(optionB, (choices[1].first() as Message.Assistant).content, "$optionB should be second")
+        assertEquals(1, choices[0].parts.size, "First choice should have one part")
+        val firstChoice = assertIs<MessagePart.Text>(choices[0].parts.first())
+        assertEquals(optionA, firstChoice.text, "$optionA should be first")
+
+        assertEquals(1, choices[1].parts.size, "Second choice should have one part")
+        val secondChoice = assertIs<MessagePart.Text>(choices[1].parts.first())
+        assertEquals(optionB, secondChoice.text, "$optionB should be second")
     }
 
     @Test
@@ -251,12 +260,13 @@ class DeepSeekLLMClientTest {
         }
 
         val responses = client.execute(prompt, DeepSeekModels.DeepSeekChat)
-        assertEquals(1, responses.size, "Response should have one choice")
+        assertEquals(1, responses.parts.size, "Response should have one choice")
         assertNotNull(capturedBody, "Captured body should not be null")
         assertTrue(capturedBody.contains("\"response_format\""), "Response body should contain response_format")
         assertTrue(capturedBody.contains("\"json_object\""), "Response body should contain json_schema")
+        val textPart = assertIs<MessagePart.Text>(responses.parts.first())
         assertTrue(
-            responses.first().content.contains("{\"name\":\"Alice\"}"),
+            textPart.text.contains("{\"name\":\"Alice\"}"),
             "Response should contain JSON string [{\"name\":\"Alice\"}]"
         )
     }
@@ -290,13 +300,16 @@ class DeepSeekLLMClientTest {
 
         val responses = client.execute(prompt, DeepSeekModels.DeepSeekReasoner)
 
-        assertEquals(2, responses.size, "Response should contain reasoning and tool call")
-        assertIs<Message.Reasoning>(responses[0])
-        assertEquals("I should call the weather tool first.", responses[0].content)
-        val toolCall = assertIs<Message.Tool.Call>(responses[1])
-        assertEquals("call_weather", toolCall.id)
-        assertEquals("weather", toolCall.tool)
-        assertEquals("{\"city\":\"Boston\"}", toolCall.content)
+        assertEquals(2, responses.parts.size, "Response should contain reasoning and tool call")
+
+        val reasoningPart = assertIs<MessagePart.Reasoning>(responses.parts[0])
+        assertEquals(1, reasoningPart.content.size, "Reasoning should contain one message")
+        assertEquals("I should call the weather tool first.", reasoningPart.content.first())
+
+        val toolCallPart = assertIs<MessagePart.Tool.Call>(responses.parts[1])
+        assertEquals("call_weather", toolCallPart.id)
+        assertEquals("weather", toolCallPart.tool)
+        assertEquals(buildJsonObject { put("city", JsonPrimitive("Boston")) }, toolCallPart.argsJson)
     }
 
     @Test
@@ -314,28 +327,34 @@ class DeepSeekLLMClientTest {
         val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
 
         val prompt = Prompt(
+            id = "p-tool-history",
             messages = listOf(
                 Message.User("What's the weather in Boston?", RequestMetaInfo.Empty),
-                Message.Reasoning(
-                    content = "I should call the weather tool first.",
+                Message.Assistant(
+                    parts = listOf(
+                        MessagePart.Reasoning(
+                            content = listOf("I should call the weather tool first."),
+                        ),
+                        MessagePart.Tool.Call(
+                            id = "call_weather",
+                            tool = "weather",
+                            args = JsonObject(mapOf("city" to JsonPrimitive("Boston"))),
+                        ),
+                    ),
                     metaInfo = ResponseMetaInfo.Empty
                 ),
-                Message.Tool.Call(
-                    id = "call_weather",
-                    tool = "weather",
-                    content = "{\"city\":\"Boston\"}",
-                    metaInfo = ResponseMetaInfo.Empty
-                ),
-                Message.Tool.Result(
-                    id = "call_weather",
-                    tool = "weather",
-                    content = "{\"temperature\":72}",
+                Message.User(
+                    parts = listOf(
+                        MessagePart.Tool.Result(
+                            id = "call_weather",
+                            tool = "weather",
+                            output = "{\"temperature\":72}",
+                        )
+                    ),
                     metaInfo = RequestMetaInfo.Empty
-                )
-            ),
-            id = "p-tool-history"
+                ),
+            )
         )
-
         client.execute(prompt, DeepSeekModels.DeepSeekReasoner)
 
         assertNotNull(capturedBody, "Captured request body should not be null")
@@ -348,10 +367,7 @@ class DeepSeekLLMClientTest {
             "I should call the weather tool first.",
             assistantMessage["reasoning_content"]?.jsonPrimitive?.contentOrNull
         )
-        assertEquals(
-            "I should call the weather tool first.",
-            assistantMessage["content"]?.jsonPrimitive?.contentOrNull
-        )
+        assertNull(assistantMessage["content"])
         val toolCalls = assistantMessage["tool_calls"]!!.jsonArray
         assertEquals(1, toolCalls.size)
         assertEquals(
@@ -397,10 +413,9 @@ class DeepSeekLLMClientTest {
             temperature = 0.2
         }
 
-        val responses = client.execute(prompt, DeepSeekModels.DeepSeekChat, tools = emptyList())
-        assertEquals(1, responses.size, "Response should have once response")
-        val response = responses.first()
-        assertIs<Message.Assistant>(response, "Response should be assistant message")
+        val response = client.execute(prompt, DeepSeekModels.DeepSeekChat, tools = emptyList())
+        assertEquals(1, response.parts.size, "Response should have once response")
+        assertIs<MessagePart.Text>(response.parts[0], "Response should be assistant message")
         assertEquals(35, response.metaInfo.inputTokensCount)
         assertEquals(191, response.metaInfo.outputTokensCount)
         assertEquals(226, response.metaInfo.totalTokensCount)

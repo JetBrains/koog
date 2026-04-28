@@ -61,7 +61,7 @@ public class RetryingLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<Message.Response> = withRetry("execute") {
+    ): Message.Assistant = withRetry("execute") {
         delegate.execute(prompt, model, tools)
     }
 
@@ -107,7 +107,7 @@ public class RetryingLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> = withRetry("executeMultipleChoices") {
+    ): LLMChoice = withRetry("executeMultipleChoices") {
         delegate.executeMultipleChoices(prompt, model, tools)
     }
 

@@ -32,7 +32,8 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
@@ -153,7 +154,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         return json.encodeToString(MistralAIChatCompletionRequestSerializer, request)
     }
 
-    override fun processProviderChatResponse(response: MistralAIChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: MistralAIChatCompletionResponse): List<Message.Assistant> {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
         val usageInfo = OpenAIUsage(
             promptTokens = response.usage.promptTokens,
@@ -161,7 +162,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
             totalTokens = response.usage.totalTokens,
         )
         return response.choices.map {
-            it.message.toMessageResponses(
+            it.message.toMessageResponse(
                 it.finishReason,
                 createMetaInfo(usageInfo),
             )
@@ -278,10 +279,10 @@ public open class MistralAILLMClient @JvmOverloads constructor(
 
         val input = prompt.messages
             .map { message ->
-                require(!message.hasAttachments()) {
+                require(!message.parts.any { it !is MessagePart.Text }) {
                     "Only text input is supported for MistralAI moderation"
                 }
-                message.toMessageContent(model)
+                message.parts.filterIsInstance<MessagePart.Text>().toMessageContent(model)
             }
             .let { contents ->
                 when {

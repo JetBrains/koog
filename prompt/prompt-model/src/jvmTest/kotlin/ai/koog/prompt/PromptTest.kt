@@ -2,6 +2,7 @@ package ai.koog.prompt
 
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -9,6 +10,7 @@ import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -31,13 +33,17 @@ class PromptTest {
         val testReqMetaInfo = RequestMetaInfo.create(testClock)
 
         val promptId = "test-id"
-        val systemMessage = "You are a helpful assistant with many capabilities"
-        val assistantMessage = "I'm here to help!"
-        val userMessage = "Can you help me calculate 5 + 3?"
-        val speculationMessage = "The result is 8"
+        val systemMessageText = "You are a helpful assistant with many capabilities"
+        val assistantMessageText = "I'm here to help!"
+        val userMessageText = "Can you help me calculate 5 + 3?"
+        val speculationMessageText = "The result is 8"
         val toolCallId = "tool_call_123"
         val toolName = "calculator"
-        val toolCallContent = """{"operation": "add", "a": 5, "b": 3}"""
+        val toolCallContent = buildJsonObject {
+            put("operation", "add")
+            put("a", 5)
+            put("b", 3)
+        }
         val toolResultContent = "8"
         val finishReason = "stop"
         val schemaName = "test_schema"
@@ -54,18 +60,20 @@ class PromptTest {
         }
 
         val basicPrompt = Prompt.build("test", clock = testClock) {
-            system(systemMessage)
-            user(userMessage)
+            system(systemMessageText)
+            user(userMessageText)
             message(
                 Message.Assistant(
-                    content = assistantMessage,
+                    content = assistantMessageText,
                     metaInfo = testRespMetaInfo,
                     finishReason = finishReason
                 )
             )
-            tool {
-                call(toolCallId, toolName, toolCallContent)
-                result(toolCallId, toolName, toolResultContent)
+            assistant {
+                toolCall(id = toolCallId, tool = toolName, args = toolCallContent)
+            }
+            user {
+                toolResult(id = toolCallId, tool = toolName, output = toolResultContent)
             }
         }
 
@@ -97,33 +105,38 @@ class PromptTest {
         val assistantMessage = "Hi! How can I help you?"
         val toolCallId = "tool_call_dummy_123"
         val toolName = "search"
-        val toolContent = "Searching for information..."
-        val toolResult = "Found some results"
+        val toolArgs = Json.parseToJsonElement("""{"query": "Searching for information..."}""").jsonObject
+        val toolOutput = "Found some results"
 
         val prompt = Prompt.build("test") {
-            system(systemMessage)
-            user(userMessage)
+            system(systemMessageText)
+            user(userMessageText)
             assistant(assistantMessage)
-            tool {
-                call(toolCallId, toolName, toolContent)
-                result(toolCallId, toolName, toolResult)
-            }
+            assistant { toolCall(id = toolCallId, tool = toolName, args = toolArgs) }
+            user { toolResult(id = toolCallId, tool = toolName, output = toolOutput) }
         }
 
         assertEquals(5, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.System)
-        assertTrue(prompt.messages[1] is Message.User)
-        assertTrue(prompt.messages[2] is Message.Assistant)
-        assertTrue(prompt.messages[3] is Message.Tool.Call)
-        assertTrue(prompt.messages[4] is Message.Tool.Result)
+        val sysMsg = assertIs<Message.System>(prompt.messages[0])
+        val userMsg = assertIs<Message.User>(prompt.messages[1])
+        val assistantMsg = assertIs<Message.Assistant>(prompt.messages[2])
 
-        assertEquals(systemMessage, prompt.messages[0].content)
-        assertEquals(userMessage, prompt.messages[1].content)
-        assertEquals(assistantMessage, prompt.messages[2].content)
-        assertEquals(toolContent, prompt.messages[3].content)
-        assertEquals(toolResult, prompt.messages[4].content)
-        assertEquals(toolName, (prompt.messages[3] as Message.Tool.Call).tool)
-        assertEquals(toolName, (prompt.messages[4] as Message.Tool.Result).tool)
+        assertEquals(systemMessageText, assertIs<MessagePart.Text>(sysMsg.parts[0]).text)
+        assertEquals(userMessageText, assertIs<MessagePart.Text>(userMsg.parts[0]).text)
+        assertEquals(assistantMessage, assertIs<MessagePart.Text>(assistantMsg.parts[0]).text)
+
+        val toolCallMsg = assertIs<Message.Assistant>(prompt.messages[3])
+        assertEquals(1, toolCallMsg.parts.size)
+        val toolCallPart = assertIs<MessagePart.Tool.Call>(toolCallMsg.parts[0])
+        assertEquals(toolCallId, toolCallPart.id)
+        assertEquals(toolName, toolCallPart.tool)
+
+        val toolResultMsg = assertIs<Message.User>(prompt.messages[4])
+        assertEquals(1, toolResultMsg.parts.size)
+        val toolResultPart = assertIs<MessagePart.Tool.Result>(toolResultMsg.parts[0])
+        assertEquals(toolCallId, toolResultPart.id)
+        assertEquals(toolName, toolResultPart.tool)
+        assertEquals(toolOutput, toolResultPart.output)
     }
 
     @Test
@@ -142,7 +155,7 @@ class PromptTest {
     fun testPromptSerialization() {
         val prompt = basicPrompt.withUpdatedParams {
             temperature = 0.7
-            speculation = speculationMessage
+            speculation = speculationMessageText
             schema = LLMParams.Schema.JSON.Basic(simpleSchemaName, simpleSchema)
             toolChoice = LLMParams.ToolChoice.Auto
             user = "test_user"
@@ -154,36 +167,19 @@ class PromptTest {
         assertEquals(prompt, decodedPrompt)
         assertEquals(prompt.messages.size, decodedPrompt.messages.size)
         assertEquals(0.7, decodedPrompt.params.temperature)
-        assertEquals(speculationMessage, decodedPrompt.params.speculation)
-        assertTrue(decodedPrompt.params.schema is LLMParams.Schema.JSON)
+        assertEquals(speculationMessageText, decodedPrompt.params.speculation)
+        assertIs<LLMParams.Schema.JSON>(decodedPrompt.params.schema)
         assertEquals(simpleSchemaName, decodedPrompt.params.schema?.name)
-        assertTrue(decodedPrompt.params.toolChoice is LLMParams.ToolChoice.Auto)
+        assertIs<LLMParams.ToolChoice.Auto>(decodedPrompt.params.toolChoice)
         assertEquals("test_user", decodedPrompt.params.user)
 
         decodedPrompt.messages.forEachIndexed { index, decodedMessage ->
-            assertTrue(decodedMessage.role == prompt.messages[index].role)
-            assertTrue(decodedMessage.content == prompt.messages[index].content)
-            if (decodedMessage.role == Message.Role.Assistant) {
-                assertTrue(
-                    (decodedMessage as Message.Assistant).finishReason ==
-                        (prompt.messages[index] as Message.Assistant).finishReason
+            assertEquals(decodedMessage, prompt.messages[index])
+            if (decodedMessage is Message.Assistant) {
+                assertEquals(
+                    decodedMessage.finishReason,
+                    assertIs<Message.Assistant>(prompt.messages[index]).finishReason
                 )
-            }
-
-            if (decodedMessage.role == Message.Role.Tool) {
-                if (decodedMessage is Message.Tool.Call) {
-                    val originalToolMessage = prompt.messages[index] as Message.Tool.Call
-                    val decodedToolMessage = decodedMessage
-                    assertTrue(decodedToolMessage.id == originalToolMessage.id)
-                    assertTrue(decodedToolMessage.tool == originalToolMessage.tool)
-                    assertTrue(decodedToolMessage.content == originalToolMessage.content)
-                } else if (decodedMessage is Message.Tool.Result) {
-                    val originalToolMessage = prompt.messages[index] as Message.Tool.Result
-                    val decodedToolMessage = decodedMessage
-                    assertTrue(decodedToolMessage.id == originalToolMessage.id)
-                    assertTrue(decodedToolMessage.tool == originalToolMessage.tool)
-                    assertTrue(decodedToolMessage.content == originalToolMessage.content)
-                }
             }
         }
     }
@@ -204,8 +200,7 @@ class PromptTest {
         assertEquals(schemaName, decodedSchema.params.schema?.name)
 
         decodedSchema.messages.forEachIndexed { index, decodedMessage ->
-            assertTrue(decodedMessage.role == prompt.messages[index].role)
-            assertTrue(decodedMessage.content == prompt.messages[index].content)
+            assertEquals(decodedMessage, prompt.messages[index])
         }
     }
 
@@ -222,12 +217,11 @@ class PromptTest {
         assertEquals(prompt.messages.size, decodedToolChoice.messages.size)
         assertTrue(decodedToolChoice.params.toolChoice == toolChoiceOption)
         if (toolChoiceOption is LLMParams.ToolChoice.Named) {
-            assertEquals(toolName, (decodedToolChoice.params.toolChoice as LLMParams.ToolChoice.Named).name)
+            assertEquals(toolName, assertIs<LLMParams.ToolChoice.Named>(decodedToolChoice.params.toolChoice).name)
         }
 
         decodedToolChoice.messages.forEachIndexed { index, decodedMessage ->
-            assertTrue(decodedMessage.role == prompt.messages[index].role)
-            assertTrue(decodedMessage.content == prompt.messages[index].content)
+            assertEquals(decodedMessage, prompt.messages[index])
         }
     }
 
@@ -246,9 +240,9 @@ class PromptTest {
         val updatedPrompt = basicPrompt.withMessages { newMessages }
 
         assertEquals(3, updatedPrompt.messages.size)
-        assertEquals(systemMessage, updatedPrompt.messages[0].content)
-        assertEquals(userMessage, updatedPrompt.messages[1].content)
-        assertEquals(assistantMessage, updatedPrompt.messages[2].content)
+        assertEquals(systemMessage, assertIs<MessagePart.Text>(updatedPrompt.messages[0].parts[0]).text)
+        assertEquals(userMessage, assertIs<MessagePart.Text>(updatedPrompt.messages[1].parts[0]).text)
+        assertEquals(assistantMessage, assertIs<MessagePart.Text>(updatedPrompt.messages[2].parts[0]).text)
     }
 
     @Test
@@ -270,9 +264,9 @@ class PromptTest {
 
         assertEquals(0.7, updatedPrompt.params.temperature)
         assertEquals(speculation, updatedPrompt.params.speculation)
-        assertTrue(updatedPrompt.params.schema is LLMParams.Schema.JSON)
-        assertEquals(schemaName, updatedPrompt.params.schema?.name)
-        assertTrue(updatedPrompt.params.toolChoice is LLMParams.ToolChoice.Auto)
+        val schema = assertIs<LLMParams.Schema.JSON>(updatedPrompt.params.schema)
+        assertEquals(schemaName, schema.name)
+        assertIs<LLMParams.ToolChoice.Auto>(updatedPrompt.params.toolChoice)
         assertEquals("test_user", updatedPrompt.params.user)
     }
 
@@ -296,9 +290,9 @@ class PromptTest {
 
         assertEquals(0.8, updatedPrompt.params.temperature)
         assertEquals(newSpeculation, updatedPrompt.params.speculation)
-        assertTrue(updatedPrompt.params.schema is LLMParams.Schema.JSON)
-        assertEquals(schemaName, updatedPrompt.params.schema?.name)
-        assertTrue(updatedPrompt.params.toolChoice is LLMParams.ToolChoice.Required)
+        val schema = assertIs<LLMParams.Schema.JSON>(updatedPrompt.params.schema)
+        assertEquals(schemaName, schema.name)
+        assertIs<LLMParams.ToolChoice.Required>(updatedPrompt.params.toolChoice)
         assertEquals("updated_user", updatedPrompt.params.user)
     }
 
@@ -337,93 +331,90 @@ class PromptTest {
         val emptySystemMessage = Message.System("", testReqMetaInfo)
         val emptyUserMessage = Message.User("", testReqMetaInfo)
         val emptyAssistantMessage = Message.Assistant("", testRespMetaInfo)
-        val emptyToolCallMessage = Message.Tool.Call(toolCallId, toolName, "", testRespMetaInfo)
-        val emptyToolResultMessage = Message.Tool.Result(toolCallId, toolName, "", testReqMetaInfo)
 
-        assertEquals("", emptySystemMessage.content)
-        assertEquals("", emptyUserMessage.content)
-        assertEquals("", emptyAssistantMessage.content)
-        assertEquals("", emptyToolCallMessage.content)
-        assertEquals("", emptyToolResultMessage.content)
+        assertEquals("", assertIs<MessagePart.Text>(emptySystemMessage.parts[0]).text)
+        assertEquals("", assertIs<MessagePart.Text>(emptyUserMessage.parts[0]).text)
+        assertEquals("", assertIs<MessagePart.Text>(emptyAssistantMessage.parts[0]).text)
+
+        val emptyToolCallArgs = buildJsonObject { }
+        val emptyToolOutput = ""
 
         val prompt = Prompt.build(promptId) {
             system("")
             user("")
             assistant("")
-            tool {
-                call(toolCallId, toolName, "")
-                result(toolCallId, toolName, "")
-            }
+            assistant { toolCall(id = toolCallId, tool = toolName, args = emptyToolCallArgs) }
+            user { toolResult(id = toolCallId, tool = toolName, output = emptyToolOutput) }
         }
 
         assertEquals(5, prompt.messages.size)
-        prompt.messages.forEach { message ->
-            assertEquals("", message.content)
-        }
+        assertEquals("", assertIs<MessagePart.Text>(prompt.messages[0].parts[0]).text)
+        assertEquals("", assertIs<MessagePart.Text>(prompt.messages[1].parts[0]).text)
+        assertEquals("", assertIs<MessagePart.Text>(prompt.messages[2].parts[0]).text)
+        assertIs<MessagePart.Tool.Call>(assertIs<Message.Assistant>(prompt.messages[3]).parts[0])
+        assertIs<MessagePart.Tool.Result>(assertIs<Message.User>(prompt.messages[4]).parts[0])
 
         val json = Json.encodeToString(prompt)
         val decoded = Json.decodeFromString<Prompt>(json)
 
         assertEquals(prompt, decoded)
-        decoded.messages.forEach { message ->
-            assertEquals("", message.content)
-        }
     }
 
     @Test
     fun testToolMessagesWithNullId() {
-        val toolCallWithNullId = Message.Tool.Call(null, toolName, toolCallContent, testRespMetaInfo)
-        val toolResultWithNullId = Message.Tool.Result(null, toolName, toolCallContent, testReqMetaInfo)
+        val toolArgs = toolCallContent
+        val toolOutput = toolResultContent
 
-        assertNull(toolCallWithNullId.id)
-        assertNull(toolResultWithNullId.id)
+        val toolCallPart = MessagePart.Tool.Call(tool = toolName, args = toolArgs)
+        val toolResultPart = MessagePart.Tool.Result(tool = toolName, output = toolOutput)
+        assertNull(toolCallPart.id)
+        assertNull(toolResultPart.id)
 
         val prompt = Prompt.build(promptId) {
-            tool {
-                call(null, toolName, toolCallContent)
-                result(null, toolName, toolCallContent)
-            }
+            assistant { toolCall(id = null, tool = toolName, args = toolArgs) }
+            user { toolResult(id = null, tool = toolName, output = toolOutput) }
         }
 
         assertEquals(2, prompt.messages.size)
 
-        assertTrue(prompt.messages[0] is Message.Tool.Call)
-        assertTrue(prompt.messages[1] is Message.Tool.Result)
-        assertNull((prompt.messages[0] as Message.Tool.Call).id)
-        assertNull((prompt.messages[1] as Message.Tool.Result).id)
+        val callMsg = assertIs<Message.Assistant>(prompt.messages[0])
+        val resultMsg = assertIs<Message.User>(prompt.messages[1])
+        assertNull(assertIs<MessagePart.Tool.Call>(callMsg.parts[0]).id)
+        assertNull(assertIs<MessagePart.Tool.Result>(resultMsg.parts[0]).id)
 
         val json = Json.encodeToString(prompt)
         val decoded = Json.decodeFromString<Prompt>(json)
 
         assertEquals(prompt, decoded)
-        assertNull((decoded.messages[0] as Message.Tool.Call).id)
-        assertNull((decoded.messages[1] as Message.Tool.Result).id)
+        assertNull(assertIs<MessagePart.Tool.Call>(assertIs<Message.Assistant>(decoded.messages[0]).parts[0]).id)
+        assertNull(assertIs<MessagePart.Tool.Result>(assertIs<Message.User>(decoded.messages[1]).parts[0]).id)
     }
 
     @Test
     fun testAssistantMessageWithNullFinishReason() {
         val prompt = Prompt.build(promptId) {
-            message(Message.Assistant(assistantMessage, testRespMetaInfo))
+            message(Message.Assistant(assistantMessageText, testRespMetaInfo))
         }
 
         assertEquals(1, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.Assistant)
-        assertNull((prompt.messages[0] as Message.Assistant).finishReason)
+        val assistantMsg = assertIs<Message.Assistant>(prompt.messages[0])
+        assertNull(assistantMsg.finishReason)
 
         val json = Json.encodeToString(prompt)
         val decoded = Json.decodeFromString<Prompt>(json)
 
         assertEquals(prompt, decoded)
-        assertNull((decoded.messages[0] as Message.Assistant).finishReason)
+        assertNull(assertIs<Message.Assistant>(decoded.messages[0]).finishReason)
     }
 
     @Test
-    fun testInvalidToolCallJsonContent() {
-        // contentJson property is now on StreamFrame.ToolCallComplete, not Message.Tool.Call
-        // This test is no longer applicable for Message.Tool.Call
-        val toolCallWithInvalidJson = Message.Tool.Call(toolCallId, toolName, "invalid json", testRespMetaInfo)
-        // Just verify the content is stored as-is
-        assertEquals("invalid json", toolCallWithInvalidJson.content)
+    fun testToolCallPartWithValidJson() {
+        val toolArgs = toolCallContent
+        val toolCallPart = MessagePart.Tool.Call(id = toolCallId, tool = toolName, args = toolArgs)
+
+        assertEquals(toolCallId, toolCallPart.id)
+        assertEquals(toolName, toolCallPart.tool)
+        assertEquals(toolArgs, toolCallPart.argsJson)
     }
 
     @Test
@@ -462,15 +453,15 @@ class PromptTest {
             toolChoice = toolChoiceWithEmptyName
         }
 
-        assertTrue(prompt.params.toolChoice is LLMParams.ToolChoice.Named)
-        assertEquals(schemaName, (prompt.params.toolChoice as LLMParams.ToolChoice.Named).name)
+        val toolChoice = assertIs<LLMParams.ToolChoice.Named>(prompt.params.toolChoice)
+        assertEquals(schemaName, toolChoice.name)
 
         val json = Json.encodeToString(prompt)
         val decoded = Json.decodeFromString<Prompt>(json)
 
         assertEquals(prompt, decoded)
-        assertTrue(decoded.params.toolChoice is LLMParams.ToolChoice.Named)
-        assertEquals(schemaName, (decoded.params.toolChoice as LLMParams.ToolChoice.Named).name)
+        val decodedToolChoice = assertIs<LLMParams.ToolChoice.Named>(decoded.params.toolChoice)
+        assertEquals(schemaName, decodedToolChoice.name)
     }
 
     @Test
@@ -484,47 +475,41 @@ class PromptTest {
             schema = schemaWithEmptyName
         }
 
-        assertTrue(prompt.params.schema is LLMParams.Schema.JSON)
-        assertEquals(schemaName, prompt.params.schema?.name)
+        val schema = assertIs<LLMParams.Schema.JSON>(prompt.params.schema)
+        assertEquals(schemaName, schema.name)
 
         val json = Json.encodeToString(prompt)
         val decoded = Json.decodeFromString<Prompt>(json)
 
         assertEquals(prompt, decoded)
-        assertTrue(decoded.params.schema is LLMParams.Schema.JSON)
-        assertEquals(schemaName, decoded.params.schema?.name)
+        val decodedSchema = assertIs<LLMParams.Schema.JSON>(decoded.params.schema)
+        assertEquals(schemaName, decodedSchema.name)
     }
 
     @Test
-    fun testToolMessagesWithEmptyToolName() {
-        val toolCallWithEmptyName = Message.Tool.Call(toolCallId, schemaName, toolCallContent, testRespMetaInfo)
-        val toolResultWithEmptyName = Message.Tool.Result(toolCallId, schemaName, toolCallContent, testReqMetaInfo)
+    fun testToolMessagesWithSpecificToolName() {
+        val toolArgs = toolCallContent
+        val toolOutput = toolResultContent
 
         val prompt = Prompt.build(promptId) {
-            tool {
-                call(toolCallWithEmptyName)
-                result(toolResultWithEmptyName)
-            }
+            assistant { toolCall(id = toolCallId, tool = schemaName, args = toolArgs) }
+            user { toolResult(id = toolCallId, tool = schemaName, output = toolOutput) }
         }
 
         assertEquals(2, prompt.messages.size)
-        assertTrue(prompt.messages[0] is Message.Tool.Call)
-        assertTrue(prompt.messages[1] is Message.Tool.Result)
-        assertEquals(toolCallWithEmptyName.tool, (prompt.messages[0] as Message.Tool.Call).tool)
-        assertEquals(toolResultWithEmptyName.tool, (prompt.messages[1] as Message.Tool.Result).tool)
+        val callMsg = assertIs<Message.Assistant>(prompt.messages[0])
+        val resultMsg = assertIs<Message.User>(prompt.messages[1])
+        val callPart = assertIs<MessagePart.Tool.Call>(callMsg.parts[0])
+        val resultPart = assertIs<MessagePart.Tool.Result>(resultMsg.parts[0])
+        assertEquals(schemaName, callPart.tool)
+        assertEquals(schemaName, resultPart.tool)
 
         val json = Json.encodeToString(prompt)
         val decoded = Json.decodeFromString<Prompt>(json)
 
         assertEquals(prompt, decoded)
-        assertEquals(
-            (prompt.messages[0] as Message.Tool.Call).tool,
-            (decoded.messages[0] as Message.Tool.Call).tool
-        )
-        assertEquals(
-            (prompt.messages[1] as Message.Tool.Result).tool,
-            (decoded.messages[1] as Message.Tool.Result).tool
-        )
+        assertEquals(callPart.tool, assertIs<MessagePart.Tool.Call>(assertIs<Message.Assistant>(decoded.messages[0]).parts[0]).tool)
+        assertEquals(resultPart.tool, assertIs<MessagePart.Tool.Result>(assertIs<Message.User>(decoded.messages[1]).parts[0]).tool)
     }
 
     @Test
@@ -565,17 +550,17 @@ class PromptTest {
             schema = schemaWithEmptyJson
         }
 
-        assertTrue(prompt.params.schema is LLMParams.Schema.JSON)
-        assertEquals(emptySchemaName, prompt.params.schema?.name)
-        assertTrue((prompt.params.schema as LLMParams.Schema.JSON).schema.entries.isEmpty())
+        val schema = assertIs<LLMParams.Schema.JSON>(prompt.params.schema)
+        assertEquals(emptySchemaName, schema.name)
+        assertTrue(schema.schema.entries.isEmpty())
 
         val json = Json.encodeToString(prompt)
         val decoded = Json.decodeFromString<Prompt>(json)
 
         assertEquals(prompt, decoded)
-        assertTrue(decoded.params.schema is LLMParams.Schema.JSON)
-        assertEquals(emptySchemaName, decoded.params.schema?.name)
-        assertTrue((decoded.params.schema as LLMParams.Schema.JSON).schema.entries.isEmpty())
+        val decodedSchema = assertIs<LLMParams.Schema.JSON>(decoded.params.schema)
+        assertEquals(emptySchemaName, decodedSchema.name)
+        assertTrue(decodedSchema.schema.entries.isEmpty())
     }
 
     @Test

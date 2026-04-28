@@ -15,8 +15,9 @@ import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -364,12 +365,10 @@ class GoogleLLMClientTest {
             )
         )
 
-        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+        val response = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
 
-        responses shouldHaveSize 1
-        val assistantMessage = responses.single() as Message.Assistant
-        assistantMessage.parts shouldHaveSize 1
-        val imagePart = assistantMessage.parts.single() as ContentPart.Image
+        val attachmentPart = response.parts.single() as MessagePart.Attachment
+        val imagePart = attachmentPart.source as AttachmentSource.Image
         imagePart.format shouldBe "png"
         (imagePart.content as AttachmentContent.Binary.Bytes).asBytes() shouldBe imageData
     }
@@ -389,12 +388,10 @@ class GoogleLLMClientTest {
             )
         )
 
-        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+        val response = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
 
-        responses shouldHaveSize 1
-        val assistantMessage = responses.single() as Message.Assistant
-        assistantMessage.parts shouldHaveSize 1
-        val filePart = assistantMessage.parts.single() as ContentPart.File
+        val attachmentPart = response.parts.single() as MessagePart.Attachment
+        val filePart = attachmentPart.source as AttachmentSource.File
         filePart.mimeType shouldBe "application/pdf"
         (filePart.content as AttachmentContent.Binary.Bytes).asBytes() shouldBe fileData
     }
@@ -406,11 +403,21 @@ class GoogleLLMClientTest {
             Prompt(
                 messages = listOf(
                     Message.User("query", RequestMetaInfo.Empty),
-                    Message.Reasoning(encrypted = "sig", content = "", metaInfo = ResponseMetaInfo.Empty),
-                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
-                    Message.Tool.Call(id = "2", tool = "t2", content = "{}", metaInfo = ResponseMetaInfo.Empty),
-                    Message.Tool.Result(id = "1", tool = "t1", content = "r1", metaInfo = RequestMetaInfo.Empty),
-                    Message.Tool.Result(id = "2", tool = "t2", content = "r2", metaInfo = RequestMetaInfo.Empty),
+                    Message.Assistant(
+                        parts = listOf(
+                            MessagePart.Reasoning(encrypted = "sig", content = ""),
+                            MessagePart.Tool.Call(id = "1", tool = "t1", args = JsonObject(mapOf())),
+                            MessagePart.Tool.Call(id = "2", tool = "t2", args = JsonObject(mapOf())),
+                        ),
+                        metaInfo = ResponseMetaInfo.Empty
+                    ),
+                    Message.User(
+                        parts = listOf(
+                            MessagePart.Tool.Result(id = "1", tool = "t1", output = "r1"),
+                            MessagePart.Tool.Result(id = "2", tool = "t2", output = "r2")
+                        ),
+                        metaInfo = RequestMetaInfo.Empty
+                    )
                 ),
                 id = "id"
             ),
@@ -437,9 +444,14 @@ class GoogleLLMClientTest {
             Prompt(
                 messages = listOf(
                     Message.User("query", RequestMetaInfo.Empty),
-                    Message.Reasoning(encrypted = "my-sig", content = "", metaInfo = ResponseMetaInfo.Empty),
-                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
-                    Message.Tool.Call(id = "2", tool = "t2", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Assistant(
+                        parts = listOf(
+                            MessagePart.Reasoning(encrypted = "my-sig", content = emptyList()),
+                            MessagePart.Tool.Call(id = "1", tool = "t1", args = JsonObject(mapOf())),
+                            MessagePart.Tool.Call(id = "2", tool = "t2", args = JsonObject(mapOf())),
+                        ),
+                        metaInfo = ResponseMetaInfo.Empty
+                    ),
                 ),
                 id = "id"
             ),
@@ -468,7 +480,12 @@ class GoogleLLMClientTest {
             Prompt(
                 messages = listOf(
                     Message.User("query", RequestMetaInfo.Empty),
-                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Assistant(
+                        parts = listOf(
+                            MessagePart.Tool.Call(id = "1", tool = "t1", args = JsonObject(mapOf())),
+                        ),
+                        metaInfo = ResponseMetaInfo.Empty
+                    ),
                 ),
                 id = "id"
             ),
@@ -496,13 +513,13 @@ class GoogleLLMClientTest {
             finishReason = "STOP"
         )
 
-        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+        val response = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
 
-        responses shouldHaveSize 2
-        responses[0].shouldBeInstanceOf<Message.Reasoning>()
-        responses[1].shouldBeInstanceOf<Message.Tool.Call>()
-        (responses[0] as Message.Reasoning).encrypted shouldBe "sig-123"
-        (responses[0] as Message.Reasoning).content shouldBe ""
+        response.parts shouldHaveSize 2
+        response.parts[0].shouldBeInstanceOf<MessagePart.Reasoning>()
+        response.parts[1].shouldBeInstanceOf<MessagePart.Tool.Call>()
+        (response.parts[0] as MessagePart.Reasoning).encrypted shouldBe "sig-123"
+        (response.parts[0] as MessagePart.Reasoning).content shouldHaveSize 0
     }
 
     @Test
@@ -522,12 +539,12 @@ class GoogleLLMClientTest {
             finishReason = "STOP"
         )
 
-        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+        val response = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
 
-        responses shouldHaveSize 1
-        responses[0].shouldBeInstanceOf<Message.Reasoning>()
-        val reasoning = responses[0] as Message.Reasoning
-        reasoning.content shouldBe "I am thinking..."
+        response.parts shouldHaveSize 1
+        response.parts[0].shouldBeInstanceOf<MessagePart.Reasoning>()
+        val reasoning = response.parts[0] as MessagePart.Reasoning
+        reasoning.content.single() shouldBe "I am thinking..."
         reasoning.encrypted shouldBe "thought-sig"
     }
 
@@ -615,7 +632,7 @@ class GoogleLLMClientTest {
 
         frames shouldBe listOf(
             StreamFrame.ReasoningDelta(id = thoughtSignature, text = thoughtText, index = 0),
-            StreamFrame.ReasoningComplete(id = thoughtSignature, text = listOf(thoughtText), index = 0),
+            StreamFrame.ReasoningComplete(id = thoughtSignature, content = listOf(thoughtText), index = 0),
             StreamFrame.TextDelta(finalAnswer, 1),
             StreamFrame.TextComplete(finalAnswer, 1),
             StreamFrame.End(finishReason, ResponseMetaInfo.Empty),
@@ -629,11 +646,12 @@ class GoogleLLMClientTest {
             Prompt(
                 messages = listOf(
                     Message.User("query", RequestMetaInfo.Empty),
-                    Message.Reasoning(
-                        content = "Previous thought",
-                        encrypted = "prev-sig",
+                    Message.Assistant(
+                        parts = listOf(
+                            MessagePart.Reasoning(encrypted = "prev-sig", content = "Previous thought"),
+                        ),
                         metaInfo = ResponseMetaInfo.Empty
-                    )
+                    ),
                 ),
                 id = "id"
             ),
@@ -667,14 +685,14 @@ class GoogleLLMClientTest {
             finishReason = "STOP"
         )
 
-        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+        val response = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
 
-        responses shouldHaveSize 2
-        responses[0].shouldBeInstanceOf<Message.Reasoning>()
-        (responses[0] as Message.Reasoning).encrypted shouldBe "image-sig"
+        response.parts shouldHaveSize 2
+        response.parts[0].shouldBeInstanceOf<MessagePart.Reasoning>()
+        (response.parts[0] as MessagePart.Reasoning).encrypted shouldBe "image-sig"
 
-        responses[1].shouldBeInstanceOf<Message.Assistant>()
-        val filePart = (responses[1] as Message.Assistant).parts.single() as ContentPart.Image
+        response.parts[1].shouldBeInstanceOf<MessagePart.Attachment>()
+        val filePart = (response.parts[1] as MessagePart.Attachment).source as AttachmentSource.Image
         filePart.format shouldBe "png"
     }
 }

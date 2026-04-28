@@ -7,6 +7,8 @@ import ai.koog.agents.testing.tools.MockExecutorBuilder;
 import ai.koog.prompt.dsl.Prompt;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
+import java.util.stream.Collectors;
 import ai.koog.serialization.JSONSerializer;
 import ai.koog.serialization.jackson.JacksonSerializer;
 import org.junit.jupiter.api.Test;
@@ -83,11 +85,11 @@ public class JavaAPIAgentBuilderJavaTest {
             )
             .functionalStrategy("myStrategy", (AIAgentFunctionalContext context, String userInput) -> {
                 // just echo last LLM answer to ensure the pipeline works
-                Message.Response resp = context.requestLLM(userInput);
-                if (resp instanceof Message.Assistant) {
-                    return ((Message.Assistant) resp).getContent();
-                }
-                return "";
+                Message.Assistant resp = context.requestLLM(userInput);
+            return resp.getParts().stream()
+                .filter(p -> p instanceof MessagePart.Text)
+                .map(p -> ((MessagePart.Text) p).getText())
+                .collect(Collectors.joining(""));
             })
             .build();
 
@@ -106,11 +108,12 @@ public class JavaAPIAgentBuilderJavaTest {
             String content = context.llm().writeSession(session -> {
                 var original = session.getPrompt();
                 session.setPrompt(Prompt.builder("tmp").user("q").build());
-                Message.Response r = session.requestLLM();
-                // restore and return assistant content
+                Message.Assistant r = session.requestLLM();
                 session.setPrompt(original);
-                if (r instanceof Message.Assistant) return ((Message.Assistant) r).getContent();
-                return "";
+                return r.getParts().stream()
+                    .filter(p -> p instanceof MessagePart.Text)
+                    .map(p -> ((MessagePart.Text) p).getText())
+                    .collect(Collectors.joining(""));
             });
             return content + ":" + input;
         }

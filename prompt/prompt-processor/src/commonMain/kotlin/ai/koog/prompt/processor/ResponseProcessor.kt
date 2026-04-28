@@ -13,36 +13,16 @@ import ai.koog.serialization.JSONSerializer
 public abstract class ResponseProcessor {
 
     /**
-     * Processes the given LLM responses.
-     * These responses were received using [executor], [prompt], [model], [tools].
+     * Processes a single LLM response.
      */
     public abstract suspend fun process(
         executor: PromptExecutor,
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        responses: List<Message.Response>,
+        response: Message.Assistant,
         serializer: JSONSerializer,
-    ): List<Message.Response>
-
-    /**
-     * Processes a single LLM response.
-     */
-    public suspend fun process(
-        executor: PromptExecutor,
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>,
-        response: Message.Response,
-        serializer: JSONSerializer,
-    ): Message.Response = process(
-        executor = executor,
-        prompt = prompt,
-        model = model,
-        tools = tools,
-        responses = listOf(response),
-        serializer = serializer
-    ).first()
+    ): Message.Assistant
 
     /**
      * Chains multiple response processors together.
@@ -55,10 +35,10 @@ public abstract class ResponseProcessor {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>,
-            responses: List<Message.Response>,
+            response: Message.Assistant,
             serializer: JSONSerializer,
-        ): List<Message.Response> {
-            var result = responses
+        ): Message.Assistant {
+            var result = response
             for (processor in processors) {
                 result = processor.process(executor, prompt, model, tools, result, serializer)
             }

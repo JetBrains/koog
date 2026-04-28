@@ -4,8 +4,7 @@ import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.message.Message.Tool
-import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
@@ -55,11 +54,10 @@ class GenericAgentEnvironmentMetadataTest {
             serializer = serializer,
         )
 
-    private fun callFor(toolName: String, id: String = "1", value: String = "v"): Tool.Call = Tool.Call(
+    private fun callFor(toolName: String, id: String = "1", value: String = "v"): MessagePart.Tool.Call = MessagePart.Tool.Call(
         id = id,
         tool = toolName,
-        content = """{"value":"$value"}""",
-        metaInfo = ResponseMetaInfo.Empty,
+        args = """{"value":"$value"}""",
     )
 
     @Test
@@ -71,7 +69,7 @@ class GenericAgentEnvironmentMetadataTest {
         val result = environment.executeTool(callFor("metadata_aware", value = "hello"), metadata)
 
         assertEquals(ToolResultKind.Success, result.resultKind)
-        assertEquals("hello::span-1", result.content)
+        assertEquals("hello::span-1", result.output)
         assertEquals(listOf(metadata), tool.observedMetadata)
     }
 
@@ -83,7 +81,7 @@ class GenericAgentEnvironmentMetadataTest {
         val result = environment.executeTool(callFor("metadata_aware", value = "hello"))
 
         assertEquals(ToolResultKind.Success, result.resultKind)
-        assertEquals("hello::null", result.content)
+        assertEquals("hello::null", result.output)
         assertEquals(1, tool.observedMetadata.size)
         assertSame(ToolCallMetadata.EMPTY, tool.observedMetadata.single())
     }
@@ -103,7 +101,7 @@ class GenericAgentEnvironmentMetadataTest {
             metadata = metadata,
         )
 
-        assertEquals(listOf("a::batch-span", "b::batch-span", "c::batch-span"), results.map { it.content })
+        assertEquals(listOf("a::batch-span", "b::batch-span", "c::batch-span"), results.map { it.output })
         assertEquals(3, tool.observedMetadata.size)
         assertTrue(tool.observedMetadata.all { it == metadata })
     }
@@ -116,6 +114,6 @@ class GenericAgentEnvironmentMetadataTest {
         val result = environment.executeTool(callFor("legacy", value = "x"), metadata)
 
         assertEquals(ToolResultKind.Success, result.resultKind)
-        assertEquals("legacy:x", result.content)
+        assertEquals("legacy:x", result.output)
     }
 }

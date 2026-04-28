@@ -61,8 +61,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaLLMProvider
 import ai.koog.prompt.llm.OpenAILLMProvider
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -74,6 +74,7 @@ import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.booleans.shouldNotBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.collections.shouldNotContainAnyOf
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -85,6 +86,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import org.assertj.core.error.ShouldContainAnyOf.shouldContainAnyOf
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -193,14 +195,13 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(times = 3, testName = "integration_testExecute[${model.id}]") {
             getExecutor(model).execute(prompt, model) shouldNotBeNull {
-                shouldNotBeEmpty()
-                filterIsInstance<Message.Assistant>().firstOrNull().shouldNotBeNull {
-                    content.lowercase().shouldContain("paris")
-                    with(metaInfo) {
-                        inputTokensCount.shouldNotBeNull()
-                        outputTokensCount.shouldNotBeNull()
-                        totalTokensCount.shouldNotBeNull()
-                    }
+                parts.filterIsInstance<MessagePart.Text>().firstOrNull().shouldNotBeNull {
+                    text.lowercase().shouldContain("paris")
+                }
+                with(metaInfo) {
+                    inputTokensCount.shouldNotBeNull()
+                    outputTokensCount.shouldNotBeNull()
+                    totalTokensCount.shouldNotBeNull()
                 }
             }
         }
@@ -270,7 +271,6 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(times = 3, testName = "integration_testToolWithRequiredParams[${model.id}]") {
             with(getExecutor(model).execute(calculatorPrompt, model, listOf(CalculatorTool.descriptor))) {
-                shouldNotBeEmpty()
                 assertResponseContainsToolCall(this, CalculatorTool.name)
             }
         }
@@ -288,7 +288,6 @@ abstract class ExecutorIntegrationTestBase {
                     listOf(calculatorToolDescriptorOptionalParams)
                 )
             ) {
-                shouldNotBeEmpty()
                 assertResponseContainsToolCall(this, CalculatorTool.name)
             }
         }
@@ -300,7 +299,6 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(times = 3, testName = "integration_testToolWithOptionalParams[${model.id}]") {
             with(getExecutor(model).execute(calculatorPrompt, model, listOf(calculatorToolDescriptorOptionalParams))) {
-                shouldNotBeEmpty()
                 assertResponseContainsToolCall(this, CalculatorTool.name)
             }
         }
@@ -320,7 +318,6 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(times = 3, testName = "integration_testToolWithNoParams[${model.id}]") {
             with(getExecutor(model).execute(prompt, model, listOf(PickColorTool.descriptor))) {
-                shouldNotBeEmpty()
                 assertResponseContainsToolCall(this, PickColorTool.name)
             }
         }
@@ -340,7 +337,6 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(times = 3, testName = "integration_testToolWithListEnumParams[${model.id}]") {
             with(getExecutor(model).execute(prompt, model, listOf(PickColorFromListTool.descriptor))) {
-                shouldNotBeEmpty()
                 assertResponseContainsToolCall(this, PickColorFromListTool.name)
             }
         }
@@ -359,7 +355,6 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(times = 3, testName = "integration_testToolWithNestedListParams[${model.id}]") {
             with(getExecutor(model).execute(prompt, model, listOf(LotteryTool.descriptor))) {
-                shouldNotBeEmpty()
                 assertResponseContainsToolCall(this, LotteryTool.name)
             }
         }
@@ -384,8 +379,7 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(times = 3, testName = "integration_testToolsWithNullParams[${model.id}]") {
             with(getExecutor(model).execute(prompt, model, listOf(SimplePriceCalculatorTool.descriptor))) {
-                shouldNotBeEmpty()
-                first { it is Message.Tool.Call }.content.shouldContain("null")
+                parts.any { it is MessagePart.Tool.Call && it.args.contains("null") }
             }
         }
     }
@@ -405,8 +399,6 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(testName = "integration_testToolsWithAnyOfParams[${model.id}]") {
             with(getExecutor(model).execute(prompt, model, listOf(PriceCalculatorTool.descriptor))) {
-                shouldNotBeEmpty()
-                shouldForAny { it is Message.Tool.Call }
                 assertResponseContainsToolCall(this, PriceCalculatorTool.name)
             }
         }
@@ -460,8 +452,6 @@ abstract class ExecutorIntegrationTestBase {
                 try {
                     with(
                         getExecutor(model).execute(prompt, model)
-                            .filterIsInstance<Message.Assistant>()
-                            .toSingleMessage()
                     ) {
                         when (scenario) {
                             MarkdownTestScenario.MALFORMED_SYNTAX, MarkdownTestScenario.BROKEN_LINKS -> {
@@ -503,7 +493,7 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry {
                 try {
-                    checkExecutorMediaResponse(getExecutor(model).execute(prompt, model).single())
+                    checkExecutorMediaResponse(getExecutor(model).execute(prompt, model))
                 } catch (e: LLMClientException) {
                     // For some edge cases, exceptions are expected
                     when (scenario) {
@@ -561,7 +551,7 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry {
                 try {
-                    val response = getExecutor(model).execute(prompt, model).single()
+                    val response = getExecutor(model).execute(prompt, model)
                     checkExecutorMediaResponse(response)
                 } catch (e: LLMClientException) {
                     when (scenario) {
@@ -602,7 +592,7 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry(times = 3, testName = "integration_testAudioProcessingBasic[${model.id}]") {
                 try {
-                    checkExecutorMediaResponse(getExecutor(model).execute(prompt, model).single())
+                    checkExecutorMediaResponse(getExecutor(model).execute(prompt, model))
                 } catch (e: LLMClientException) {
                     if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
                         val message = e.message.shouldNotBeNull()
@@ -644,7 +634,6 @@ abstract class ExecutorIntegrationTestBase {
         withRetry {
             with(
                 getExecutor(model).execute(prompt, model)
-                    .first { it is Message.Assistant && it.content.isNotBlank() }
             ) {
                 checkImageAnalysisResponse(this)
             }
@@ -678,7 +667,7 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry {
-            with(getExecutor(model).execute(prompt, model).single()) {
+            with(getExecutor(model).execute(prompt, model)) {
                 checkImageAnalysisResponse(this)
             }
         }
@@ -797,7 +786,6 @@ abstract class ExecutorIntegrationTestBase {
                     listOf(CalculatorTool.descriptor)
                 )
             ) {
-                shouldNotBeEmpty()
                 assertResponseContainsToolCall(this, CalculatorTool.descriptor.name)
             }
         }
@@ -830,8 +818,7 @@ abstract class ExecutorIntegrationTestBase {
                     listOf(CalculatorTool.descriptor)
                 )
             ) {
-                shouldNotBeEmpty()
-                shouldNotContainAnyOf(Message.Tool.Call)
+                parts.shouldNotContainAnyOf(MessagePart.Tool.Call)
             }
         }
     }
@@ -863,7 +850,6 @@ abstract class ExecutorIntegrationTestBase {
                     listOf(CalculatorTool.descriptor, nothingTool)
                 )
             ) {
-                shouldNotBeEmpty()
                 assertResponseContainsToolCall(this, nothingTool.name)
             }
         }
@@ -909,8 +895,7 @@ abstract class ExecutorIntegrationTestBase {
             user("Respond with a short message.")
         }
         with(getLLMClient(model).execute(prompt, model)) {
-            shouldNotBeEmpty()
-            shouldForAny { it is Message.Assistant }
+            parts.shouldContainAnyOf(MessagePart.Text)
         }
     }
 
@@ -1034,8 +1019,7 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(times = 3, testName = "integration_testReasoningCapability[${model.id}]") {
             getLLMClient(model).execute(prompt, model) shouldNotBeNull {
-                shouldNotBeEmpty()
-                withClue("No reasoning messages found") { shouldForAny { it is Message.Reasoning } }
+                withClue("No reasoning messages found") { parts.shouldForAny { it is MessagePart.Reasoning } }
                 // Some Google models aren't providing meta info
                 assertResponseContainsReasoning(this, model.provider != LLMProvider.Google)
             }
@@ -1063,8 +1047,7 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(times = 3, testName = "integration_testReasoningWithEncryption[${model.id}]") {
             getLLMClient(model).execute(prompt, model) shouldNotBeNull {
-                shouldNotBeEmpty()
-                withClue("No reasoning messages found") { shouldForAny { it is Message.Reasoning } }
+                withClue("No reasoning messages found") { parts.shouldForAny { it is MessagePart.Reasoning } }
                 assertResponseContainsReasoningWithEncryption(this)
             }
         }
@@ -1086,12 +1069,12 @@ abstract class ExecutorIntegrationTestBase {
             client.execute(prompt1, model)
         }
 
-        response1.shouldForAny { it is Message.Reasoning }
+        response1.parts.shouldForAny { it is MessagePart.Reasoning }
 
         val prompt2 = Prompt(
             id = "reasoning-multistep-2",
             messages = prompt1.messages + response1 + Message.User(
-                ContentPart.Text("Multiply the result by 2."),
+                MessagePart.Text("Multiply the result by 2."),
                 metaInfo = RequestMetaInfo.Empty
             ),
             params = params
@@ -1099,9 +1082,13 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(times = 3, testName = "integration_testReasoningMultiStep_Turn2[${model.id}]") {
             val response2 = client.execute(prompt2, model)
-            response2.shouldNotBeEmpty()
-            val answer = response2.filter { it is Message.Assistant || it is Message.Reasoning }
-                .joinToString("") { it.content }
+            val answer = response2.parts.map {
+                when (it) {
+                    is MessagePart.Text -> it.text
+                    is MessagePart.Reasoning -> it.content
+                    else -> ""
+                }
+            }.joinToString("")
             answer.shouldContain("20")
         }
     }

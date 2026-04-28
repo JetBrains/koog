@@ -143,7 +143,7 @@ class RoundRobinRouterTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
+        ): Message.Assistant {
             throw NotImplementedError("Not implemented for test")
         }
 

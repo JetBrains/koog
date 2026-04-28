@@ -4,12 +4,16 @@ import ai.koog.agents.core.dsl.extension.FactRetrievalHistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.Concept
 import ai.koog.agents.core.dsl.extension.FactType
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.message.MessagePart
 
 /**
  * Triggers compression when history exceeds 200 messages OR 200k characters (~50k tokens).
  */
 val CODE_AGENT_HISTORY_TOO_BIG: (Prompt) -> Boolean = { prompt ->
-    prompt.messages.size > 200 || prompt.messages.sumOf { it.content.length } > 200_000
+    prompt.messages.size > 200 ||
+        prompt.messages.sumOf { msg ->
+            msg.parts.filterIsInstance<MessagePart.Text>().sumOf { it.text.length }
+        } > 200_000
 }
 
 /**

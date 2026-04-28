@@ -1,6 +1,7 @@
 package ai.koog.prompt
 
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.message.MessagePart
 import ai.koog.utils.time.KoogClock
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -113,7 +114,8 @@ class JavaAPIPromptTest {
 
         assertEquals(1, prompt1.messages.size)
         assertEquals(2, prompt2.messages.size)
-        assertEquals("System 1", prompt1.messages[0].content)
-        assertEquals("System 2", prompt2.messages[0].content)
+        assertEquals("System 1", (prompt1.messages[0].parts[0] as MessagePart.Text).text)
+        assertEquals("System 2", (prompt2.messages[0].parts[0] as MessagePart.Text).text)
+        assertEquals("User 2", (prompt2.messages[1].parts[0] as MessagePart.Text).text)
     }
 }

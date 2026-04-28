@@ -50,7 +50,8 @@ fun customWizardStrategy(
     }
 
     val verify by subgraphWithVerification(
-        verifyTools
+        tools = verifyTools,
+        parallelTools = false
     ) { input: String ->
         """
                 You have to check and verify that the created project in the current directory is not broken by calling appropriate tools.

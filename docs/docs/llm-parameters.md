@@ -70,9 +70,7 @@ For more information about prompt creation, see [Prompts](prompts/prompt-creatio
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.agents.core.agent.ToolCalls
     import ai.koog.agents.core.dsl.builder.strategy
-    import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.ext.tool.SayToUser
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.agents.ext.agent.subgraphWithTask
@@ -93,7 +91,7 @@ For more information about prompt creation, see [Prompts](prompts/prompt-creatio
             temperature = 0.7,
             maxTokens = 500
         ),
-        runMode = ToolCalls.SEQUENTIAL,
+        parallelTools = false,
         assistantResponseRepeatMax = 3,
     ) { userQuery ->
         """

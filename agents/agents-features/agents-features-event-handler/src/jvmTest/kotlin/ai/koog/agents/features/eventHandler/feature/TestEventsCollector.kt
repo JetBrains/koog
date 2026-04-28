@@ -135,7 +135,7 @@ class TestEventsCollector {
                     eventContext.tools.joinToString {
                         it.name
                     }
-                }], responses: [${eventContext.responses.joinToString { response -> response.traceString }}])"
+                }], responses: [${eventContext.response?.traceString}])"
             )
         }
 

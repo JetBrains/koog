@@ -3,13 +3,14 @@ package ai.koog.agents.example.tone
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
-import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
+import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onToolCalls
 
 /**
  * Creates a strategy for the tone analysis agent.
@@ -17,23 +18,23 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 fun toneStrategy(name: String): AIAgentGraphStrategy<String, String> {
     return strategy<String, String>(name) {
         val nodeSendInput by nodeLLMRequest()
-        val nodeExecuteTool by nodeExecuteTool()
-        val nodeSendToolResult by nodeLLMSendToolResult()
-        val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResult>()
+        val nodeExecuteTool by nodeExecuteToolsAndGetResults()
+        val nodeSendToolResult by nodeSendToolReceivedResults()
+        val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResults>()
 
         // Define the flow of the agent
-        edge(nodeStart forwardTo nodeSendInput)
+        edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
 
         // If the LLM responds with a message, finish
         edge(
             (nodeSendInput forwardTo nodeFinish)
-                onAssistantMessage { true }
+                onTextParts { true }
         )
 
         // If the LLM calls a tool, execute it
         edge(
             (nodeSendInput forwardTo nodeExecuteTool)
-                onToolCall { true }
+                onToolCalls { true }
         )
 
         // If the history gets too large, compress it
@@ -53,13 +54,13 @@ fun toneStrategy(name: String): AIAgentGraphStrategy<String, String> {
         // If the LLM calls another tool, execute it
         edge(
             (nodeSendToolResult forwardTo nodeExecuteTool)
-                onToolCall { true }
+                onToolCalls { true }
         )
 
         // If the LLM responds with a message, finish
         edge(
             (nodeSendToolResult forwardTo nodeFinish)
-                onAssistantMessage { true }
+                onTextParts { true }
         )
     }
 }
