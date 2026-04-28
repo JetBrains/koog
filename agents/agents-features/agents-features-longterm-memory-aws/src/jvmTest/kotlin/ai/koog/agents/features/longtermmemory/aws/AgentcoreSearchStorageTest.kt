@@ -22,7 +22,6 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlin.coroutines.cancellation.CancellationException
@@ -479,7 +478,9 @@ class AgentcoreSearchStorageTest {
         // One subrequest hangs forever, the other would succeed; we cancel the enclosing scope
         // and expect CancellationException to propagate rather than be swallowed as a retrieve failure.
         val neverCompletes = CompletableDeferred<RetrieveMemoryRecordsResponse>()
+        val subrequestStarted = CompletableDeferred<Unit>()
         coEvery { client.retrieveMemoryRecords(any<RetrieveMemoryRecordsRequest>()) } coAnswers {
+            subrequestStarted.complete(Unit)
             neverCompletes.await()
         }
         coEvery { client.listMemoryRecords(any<ListMemoryRecordsRequest>()) } returns ListMemoryRecordsResponse {
@@ -510,8 +511,8 @@ class AgentcoreSearchStorageTest {
                 throw e
             }
         }
-        // Give the subrequest a moment to start awaiting, then cancel.
-        delay(50)
+        // Wait until the subrequest has actually started before cancelling.
+        subrequestStarted.await()
         job.cancelAndJoin()
 
         assertNotNull(observed, "CancellationException must propagate out of searchComposite")
