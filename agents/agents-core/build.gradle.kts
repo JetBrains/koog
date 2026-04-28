@@ -65,6 +65,7 @@ kotlin {
             dependencies {
                 implementation(project(":integration-tests"))
                 implementation(project(":serialization:serialization-jackson"))
+                implementation(libs.mockk)
 
                 implementation(libs.ktor.client.cio)
             }

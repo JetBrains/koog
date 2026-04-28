@@ -35,6 +35,7 @@ private const val GCM_TAG_LENGTH = 128 // 128 bits
  *
  * @throws IllegalArgumentException if the provided secret key is invalid or does not meet the required size.
  */
+@Deprecated("The class will be removed in 1.0 release")
 public class Aes256GCMEncryptor(secretKey: String) : Encryption {
     internal val key: SecretKey
 

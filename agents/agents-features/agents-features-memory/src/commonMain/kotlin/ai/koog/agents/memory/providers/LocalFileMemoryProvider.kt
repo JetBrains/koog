@@ -1,9 +1,9 @@
 package ai.koog.agents.memory.providers
 
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.Fact
-import ai.koog.agents.memory.model.MemoryScope
-import ai.koog.agents.memory.model.MemorySubject
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.Fact
+import ai.koog.agents.core.dsl.extension.MemoryScope
+import ai.koog.agents.core.dsl.extension.MemorySubject
 import ai.koog.agents.memory.storage.Storage
 import ai.koog.rag.base.files.FileSystemProvider
 import io.github.oshai.kotlinlogging.KotlinLogging

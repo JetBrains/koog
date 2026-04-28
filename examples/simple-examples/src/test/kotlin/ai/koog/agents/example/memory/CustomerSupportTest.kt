@@ -1,14 +1,14 @@
 package ai.koog.agents.example.memory
 
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.Fact
+import ai.koog.agents.core.dsl.extension.MemoryScope
+import ai.koog.agents.core.dsl.extension.MemorySubject
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.Fact
-import ai.koog.agents.memory.model.MemoryScope
-import ai.koog.agents.memory.model.MemorySubject
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMToolCall

@@ -27,9 +27,9 @@ There are two types of facts:
 
 - **SingleFact**: a single value associated with a concept. For example, an IDE user's current preferred theme:
 <!--- INCLUDE
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.FactType
-import ai.koog.agents.memory.model.SingleFact
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
+import ai.koog.agents.core.dsl.extension.SingleFact
 import kotlin.time.Clock
 -->
 ```kotlin
@@ -46,9 +46,9 @@ val themeFact = SingleFact(
 <!--- KNIT example-agent-memory-01.kt -->
 - **MultipleFacts**: multiple values associated with a concept. For example, all languages that a user knows:
 <!--- INCLUDE
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.FactType
-import ai.koog.agents.memory.model.MultipleFacts
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
+import ai.koog.agents.core.dsl.extension.MultipleFacts
 import kotlin.time.Clock
 -->
 ```kotlin
@@ -86,7 +86,7 @@ There is a predefined `MemorySubject.Everything` that you may use as a default s
 In addition, you can define your own custom memory subjects by extending the `MemorySubject` abstract class:
 
 <!--- INCLUDE
-import ai.koog.agents.memory.model.MemorySubject
+import ai.koog.agents.core.dsl.extension.MemorySubject
 import kotlinx.serialization.Serializable
 -->
 ```kotlin
@@ -212,10 +212,10 @@ val memoryProvider = LocalFileMemoryProvider(
 <!--- INCLUDE
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.FactType
-import ai.koog.agents.memory.model.MemoryScope
-import ai.koog.agents.memory.model.SingleFact
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
+import ai.koog.agents.core.dsl.extension.MemoryScope
+import ai.koog.agents.core.dsl.extension.SingleFact
 import kotlin.time.Clock
 
 suspend fun main() {
@@ -240,9 +240,9 @@ memoryProvider.save(
 <!--- INCLUDE
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.FactType
-import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
+import ai.koog.agents.core.dsl.extension.MemoryScope
 
 suspend fun main() {
 -->
@@ -283,8 +283,8 @@ import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.memory.feature.nodes.nodeSaveToMemoryAutoDetectFacts
 import ai.koog.agents.memory.feature.withMemory
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.FactType
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
 -->
 ```kotlin
 val strategy = strategy("example-agent") {
@@ -340,10 +340,10 @@ the user's favorite programming language.
 <!--- INCLUDE
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.FactType
-import ai.koog.agents.memory.model.MemoryScope
-import ai.koog.agents.memory.model.SingleFact
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
+import ai.koog.agents.core.dsl.extension.MemoryScope
+import ai.koog.agents.core.dsl.extension.SingleFact
 import kotlin.time.Clock
 
 suspend fun main() {
@@ -376,9 +376,9 @@ import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.memory.feature.withMemory
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.FactType
-import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
+import ai.koog.agents.core.dsl.extension.MemoryScope
 
 fun main() {
     val strategy = strategy<Unit, Unit>("example-agent") {
@@ -453,10 +453,10 @@ In the example above, the LLM would search for the user-related facts and projec
 <!--- INCLUDE
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.FactType
-import ai.koog.agents.memory.model.MemoryScope
-import ai.koog.agents.memory.model.SingleFact
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
+import ai.koog.agents.core.dsl.extension.MemoryScope
+import ai.koog.agents.core.dsl.extension.SingleFact
 import kotlinx.coroutines.runBlocking
 import kotlin.time.Clock
 
@@ -526,10 +526,10 @@ API documentation for specific packages:
 To implement a custom memory provider, create a class that implements the `AgentMemoryProvider` interface:
 
 <!--- INCLUDE
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.Fact
-import ai.koog.agents.memory.model.MemoryScope
-import ai.koog.agents.memory.model.MemorySubject
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.Fact
+import ai.koog.agents.core.dsl.extension.MemoryScope
+import ai.koog.agents.core.dsl.extension.MemorySubject
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 
 /* 
@@ -571,8 +571,8 @@ Facts are prioritized based on subject specificity. When loading facts, if the s
 
 Yes, by using the `MultipleFacts` type. When defining a concept, set its `factType` to `FactType.MULTIPLE`:
 <!--- INCLUDE
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.FactType
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
 -->
 ```kotlin
 val concept = Concept(

@@ -1,6 +1,6 @@
 package ai.koog.agents.memory.config
 
-import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.core.dsl.extension.MemoryScope
 import kotlinx.serialization.Serializable
 
 /**

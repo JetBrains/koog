@@ -8,6 +8,13 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.Fact
+import ai.koog.agents.core.dsl.extension.FactType
+import ai.koog.agents.core.dsl.extension.MemoryScope
+import ai.koog.agents.core.dsl.extension.MemorySubject
+import ai.koog.agents.core.dsl.extension.MultipleFacts
+import ai.koog.agents.core.dsl.extension.SingleFact
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
@@ -19,13 +26,6 @@ import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.Fact
-import ai.koog.agents.memory.model.FactType
-import ai.koog.agents.memory.model.MemoryScope
-import ai.koog.agents.memory.model.MemorySubject
-import ai.koog.agents.memory.model.MultipleFacts
-import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.memory.providers.NoMemory
@@ -100,6 +100,7 @@ import kotlinx.serialization.Serializable
  * @see MemoryScopesProfile
  */
 @OptIn(InternalAgentsApi::class)
+@Deprecated("The feature will be removed in 1.0 release. Please switch to LongTermMemory")
 public class AgentMemory(
     @property:InternalAgentsApi
     public val agentMemory: AgentMemoryProvider,

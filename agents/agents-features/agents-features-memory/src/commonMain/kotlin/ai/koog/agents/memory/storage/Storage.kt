@@ -82,6 +82,7 @@ public interface Encryption {
  *
  * @param Path Platform-specific path type (e.g., java.nio.file.Path for JVM)
  */
+@Deprecated("The interface will be removed in 1.0 release.")
 public interface Storage<Path> {
     /**
      * Verifies the existence of a file or directory.

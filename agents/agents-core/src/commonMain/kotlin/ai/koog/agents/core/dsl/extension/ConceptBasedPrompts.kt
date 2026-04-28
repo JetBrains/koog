@@ -1,14 +1,12 @@
-package ai.koog.agents.memory.prompts
+package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.extension.Concept
-import ai.koog.agents.core.dsl.extension.MemorySubject
 
 /**
  * Collection of prompt for agent memory feature.
  */
 @InternalAgentsApi
-public object MemoryPrompts {
+public object ConceptBasedPrompts {
     /**
      * Tag to wrap history.
      */
@@ -25,16 +23,15 @@ public object MemoryPrompts {
         
         Critical extraction rules:
         1. Focus on THE MOST ESSENTIAL OUTCOME or ESTABLISHED INFORMATION
-        2. When you see tool calls/observations, extract only the most crucial discovered fact
+        2. When you see tool results/observations, extract only the most crucial discovered fact
         3. The fact must be self-contained - assume it will be the only available context later
         4. Choose the fact with the broadest impact on understanding this concept
         
         Output constraints:
         - Exactly one fact
-        - No explanations, formatting, or preamble
         - Must be a complete, self-contained statement
         
-        Output only the fact.
+        Respond with a JSON object containing a single "fact" field.
         """.trimIndent()
 
     /**
@@ -47,44 +44,14 @@ public object MemoryPrompts {
         
         Critical extraction rules:
         1. Focus on OUTCOMES and ESTABLISHED INFORMATION, not actions taken
-        2. When you see tool calls/observations, extract only the discovered facts, not the process
+        2. When you see tool results/observations, extract only the discovered facts, not the process
         3. Each fact must be self-contained - assume it will be the only available context later
         4. Combine related information into single, comprehensive facts when possible
         
         Output constraints:
-        - One fact per line
-        - No explanations, headers, numbering, or formatting
         - Facts must be complete statements that stand alone
         - Skip any fact that just describes what was attempted or checked
         
-        Output only the facts, nothing else.
+        Respond with a JSON object containing a "facts" array, where each element has a "fact" field.
         """.trimIndent()
-
-    /**
-     * Auto detect facts prompt.
-     */
-    public fun autoDetectFacts(subjects: List<MemorySubject>): String = """
-        Analyze the conversation history and identify important facts about:
-        ${
-        subjects.joinToString("\n") { subject ->
-            "        - [subject: \"${subject.name}\"] ${subject.promptDescription}"
-        }
-    }
-
-        For each fact:
-        1. Provide a relevant subject (USE SAME SUBJECTS AS DESCRIBED ABOVE!)
-        2. Provide a keyword (e.g., 'user-preference', 'project-requirement')
-        3. Write a description that helps identify similar information
-        4. Provide the actual fact value
-
-        Format your response as a JSON objects:
-        [
-            {
-                "subject": "string",
-                "keyword": "string",
-                "description": "string",
-                "value": "string"
-            }
-        ]
-    """.trimIndent()
 }

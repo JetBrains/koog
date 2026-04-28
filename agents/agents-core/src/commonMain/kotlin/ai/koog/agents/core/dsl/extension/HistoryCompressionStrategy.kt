@@ -17,7 +17,7 @@ import kotlin.time.Instant
  * - [HistoryCompressionStrategy.FromLastNMessages]
  * - [HistoryCompressionStrategy.FromTimestamp]
  * - [HistoryCompressionStrategy.Chunked]
- * - [ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory]
+ * - [ConceptBasedHistoryCompressionStrategy]
  */
 public abstract class HistoryCompressionStrategy {
     /**

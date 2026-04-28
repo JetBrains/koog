@@ -1,10 +1,10 @@
 package ai.koog.agents.memory.providers
 
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.FactType
-import ai.koog.agents.memory.model.MemoryScope
-import ai.koog.agents.memory.model.MemorySubject
-import ai.koog.agents.memory.model.SingleFact
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
+import ai.koog.agents.core.dsl.extension.MemoryScope
+import ai.koog.agents.core.dsl.extension.MemorySubject
+import ai.koog.agents.core.dsl.extension.SingleFact
 import ai.koog.agents.memory.storage.Aes256GCMEncryptor
 import ai.koog.agents.memory.storage.EncryptedStorage
 import ai.koog.agents.memory.storage.SimpleStorage

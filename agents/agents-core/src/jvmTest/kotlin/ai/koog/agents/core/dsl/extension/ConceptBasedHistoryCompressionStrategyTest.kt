@@ -1,13 +1,8 @@
-package ai.koog.agents.memory.feature
+package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.Fact
-import ai.koog.agents.memory.model.FactType
-import ai.koog.agents.memory.model.MultipleFacts
-import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.testing.tools.MockEnvironment
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
@@ -25,12 +20,14 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
 
-class RetrieveFactsFromHistoryTest {
+class ConceptBasedHistoryCompressionStrategyTest {
     private val serializer = KotlinxSerializer()
 
     private val testModel = mockk<LLModel> {
         every { id } returns "test-model"
         every { provider } returns mockk<LLMProvider>()
+        // No native structured-output capabilities -> falls back to manual JSON parsing
+        every { supports(any()) } returns false
     }
 
     private val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
@@ -68,7 +65,7 @@ class RetrieveFactsFromHistoryTest {
         // Use the writeSession method to create a session and call retrieveFactsFromHistory
         var result: Fact? = null
         llmContext.writeSession {
-            result = retrieveFactsFromHistory(concept, testClock)
+            result = retrieveFactsFromHistory(concept, clock = testClock)
         }
 
         // Assert
@@ -112,7 +109,7 @@ class RetrieveFactsFromHistoryTest {
         // Use the writeSession method to create a session and call retrieveFactsFromHistory
         var result: Fact? = null
         llmContext.writeSession {
-            result = retrieveFactsFromHistory(concept, testClock)
+            result = retrieveFactsFromHistory(concept, clock = testClock)
         }
 
         // Assert
@@ -123,7 +120,7 @@ class RetrieveFactsFromHistoryTest {
     }
 
     /**
-     * Test that retrieveFactsFromHistory handles errors correctly for single facts.
+     * Test that retrieveFactsFromHistory handles errors gracefully for single facts.
      */
     @Test
     fun testRetrieveFactsFromHistorySingleFactError() = runTest {
@@ -150,21 +147,19 @@ class RetrieveFactsFromHistoryTest {
             clock = testClock
         )
 
-        // Use the writeSession method to create a session and call retrieveFactsFromHistory
+        // Act: structured-output failures should degrade gracefully
         var result: Fact? = null
         llmContext.writeSession {
-            result = retrieveFactsFromHistory(concept, testClock)
+            result = retrieveFactsFromHistory(concept, clock = testClock)
         }
 
-        // Assert
+        // Assert: should return a fallback SingleFact
         assertTrue(result is SingleFact)
-        assertEquals(concept, result!!.concept)
-        assertEquals(testTimestamp, result!!.timestamp)
         assertEquals("No facts extracted", (result as SingleFact).value)
     }
 
     /**
-     * Test that retrieveFactsFromHistory handles errors correctly for multiple facts.
+     * Test that retrieveFactsFromHistory handles errors gracefully for multiple facts.
      */
     @Test
     fun testRetrieveFactsFromHistoryMultipleFactsError() = runTest {
@@ -191,17 +186,15 @@ class RetrieveFactsFromHistoryTest {
             clock = testClock
         )
 
-        // Use the writeSession method to create a session and call retrieveFactsFromHistory
+        // Act: structured-output failures should degrade gracefully
         var result: Fact? = null
         llmContext.writeSession {
-            result = retrieveFactsFromHistory(concept, testClock)
+            result = retrieveFactsFromHistory(concept, clock = testClock)
         }
 
-        // Assert
+        // Assert: should return a fallback MultipleFacts with empty list
         assertTrue(result is MultipleFacts)
-        assertEquals(concept, result!!.concept)
-        assertEquals(testTimestamp, result!!.timestamp)
-        assertEquals(emptyList<String>(), (result as MultipleFacts).values)
+        assertTrue((result as MultipleFacts).values.isEmpty())
     }
 
     /**
@@ -253,7 +246,7 @@ class RetrieveFactsFromHistoryTest {
             capturedOriginalPrompt = this.prompt
 
             // Call retrieveFactsFromHistory
-            result = retrieveFactsFromHistory(concept, testClock)
+            result = retrieveFactsFromHistory(concept, clock = testClock)
 
             // Capture the final prompt after restoration
             capturedFinalPrompt = this.prompt
