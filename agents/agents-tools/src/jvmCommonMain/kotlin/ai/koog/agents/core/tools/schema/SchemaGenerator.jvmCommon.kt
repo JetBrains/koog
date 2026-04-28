@@ -116,8 +116,8 @@ public fun getToolDescriptor(
     val schema = createReflectionFunctionGenerator(jsonSchemaConfig)
         .generateSchema(callable)
 
-    // All parameters for function calling are considered required
-    val requiredParameters = schema.parameters.properties
+    val requiredParameterNames = schema.parameters.required.orEmpty().toSet()
+    val (requiredParameters, optionalParameters) = schema.parameters.properties
         .orEmpty()
         .map { (name, property) ->
             val parameterInfo = property.toToolParameter(defs = null) // no defs in function calling schema
@@ -128,11 +128,13 @@ public fun getToolDescriptor(
                 type = parameterInfo.type
             )
         }
+        .partition { it.name in requiredParameterNames }
 
     return ToolDescriptor(
         name = toolName ?: schema.name,
         description = toolDescription ?: schema.description.orEmpty(),
         requiredParameters = requiredParameters,
+        optionalParameters = optionalParameters,
     )
 }
 

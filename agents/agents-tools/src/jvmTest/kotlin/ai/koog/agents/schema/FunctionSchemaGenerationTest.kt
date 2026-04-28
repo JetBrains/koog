@@ -76,6 +76,16 @@ class FunctionSchemaGenerationTest {
         return ""
     }
 
+    @LLMDescription("Function with default parameters")
+    fun functionWithDefaultParameters(
+        required: String,
+        nullableWithoutDefault: String?,
+        optionalString: String = "default",
+        optionalNullable: Int? = null,
+    ): String {
+        return ""
+    }
+
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testGeneratesToolDescriptorFromFunction() {
@@ -251,15 +261,6 @@ class FunctionSchemaGenerationTest {
                 "doubleProperty",
                 "floatProperty",
                 "booleanNullableProperty",
-                "nullableProperty",
-                "listProperty",
-                "mapProperty",
-                "nestedProperty",
-                "nestedListProperty",
-                "nestedMapProperty",
-                "polymorphicProperty",
-                "enumProperty",
-                "objectProperty",
             ),
             additionalProperties = false,
         )
@@ -273,6 +274,8 @@ class FunctionSchemaGenerationTest {
                     description = "Sample parameter",
                     type = ToolParameterType.String,
                 ),
+            ),
+            optionalParameters = listOf(
                 ToolParameterDescriptor(
                     name = "b",
                     description = "Another sample parameter",
@@ -293,6 +296,25 @@ class FunctionSchemaGenerationTest {
         )
 
         assertEquals(expectedDescriptor, actualDescriptor)
+    }
+
+    @OptIn(InternalAgentToolsApi::class)
+    @Test
+    fun testGeneratesOptionalParametersFromDefaultFunctionArguments() {
+        val actualDescriptor = getToolDescriptor(
+            callable = ::functionWithDefaultParameters,
+            toolName = "test_default_params",
+            toolDescription = "Test default parameters",
+        )
+
+        assertEquals(
+            listOf("required", "nullableWithoutDefault"),
+            actualDescriptor.requiredParameters.map { it.name },
+        )
+        assertEquals(
+            listOf("optionalString", "optionalNullable"),
+            actualDescriptor.optionalParameters.map { it.name },
+        )
     }
 
     @OptIn(InternalAgentToolsApi::class)
