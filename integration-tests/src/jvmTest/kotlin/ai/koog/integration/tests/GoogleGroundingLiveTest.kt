@@ -5,9 +5,11 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.message.Message
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -15,8 +17,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class GoogleGroundingLiveTest {
 
-    private val client = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
-    private val executor = SingleLLMPromptExecutor(client)
+    private val executor = MultiLLMPromptExecutor(GoogleLLMClient(readTestGoogleAIKeyFromEnv()))
 
     @Test
     fun `grounding enabled returns correct answer for 2026 ICC Cricket World Cup winner`() = runTest(timeout = 60.seconds) {
