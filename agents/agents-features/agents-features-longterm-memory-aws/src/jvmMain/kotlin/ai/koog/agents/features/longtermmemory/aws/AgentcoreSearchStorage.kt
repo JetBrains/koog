@@ -147,7 +147,7 @@ public class AgentcoreSearchStorage(
             this.namespace = namespace
             searchCriteria = SearchCriteria {
                 memoryStrategyId = agentcoreMemoryStrategyId
-//                metadataFilters = filterExpression // FIXME: parse the filterExpression to metadataFilters
+                metadataFilters = AgentcoreMemoryRecordConverter.parseFilterExpression(filterExpression)
                 this.searchQuery = searchQuery
                 this.topK = topK
             }
