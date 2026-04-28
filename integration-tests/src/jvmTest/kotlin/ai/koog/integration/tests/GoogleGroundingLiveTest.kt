@@ -19,23 +19,26 @@ class GoogleGroundingLiveTest {
     private val executor = SingleLLMPromptExecutor(client)
 
     @Test
-    fun `grounding returns non-empty response for Gemini 2_5 Flash`() = runTest(timeout = 60.seconds) {
-        val p = prompt("grounding-test", params = GoogleParams(groundingEnabled = true)) {
-            user("Iran vs US war 2026, what is happening?")
+    fun `grounding enabled returns correct answer for 2026 ICC Cricket World Cup winner`() = runTest(timeout = 60.seconds) {
+        val p = prompt("grounding-on-test", params = GoogleParams(groundingEnabled = true)) {
+            user("Who won the ICC Cricket World Cup 2026? Answer in one word.")
         }
         val response = executor.execute(p, GoogleModels.Gemini2_5Flash)
         response.shouldNotBeEmpty()
-        response.first().shouldBeInstanceOf<Message.Assistant>()
-        check((response.first() as Message.Assistant).content.isNotBlank())
+        val content = response.first().shouldBeInstanceOf<Message.Assistant>().content
+        content.shouldNotBeBlank()
+        content.lowercase() shouldContain "india"
     }
 
     @Test
-    fun `grounding with disabled flag returns response without search`() = runTest(timeout = 60.seconds) {
+    fun `grounding disabled answers from training data`() = runTest(timeout = 60.seconds) {
         val p = prompt("grounding-off-test", params = GoogleParams(groundingEnabled = false)) {
-            user("What is the capital of France?")
+            user("What is the capital of France? Answer in one word.")
         }
         val response = executor.execute(p, GoogleModels.Gemini2_5Flash)
         response.shouldNotBeEmpty()
-        response.first().shouldBeInstanceOf<Message.Assistant>()
+        val content = response.first().shouldBeInstanceOf<Message.Assistant>().content
+        content.shouldNotBeBlank()
+        content.lowercase() shouldContain "paris"
     }
 }
