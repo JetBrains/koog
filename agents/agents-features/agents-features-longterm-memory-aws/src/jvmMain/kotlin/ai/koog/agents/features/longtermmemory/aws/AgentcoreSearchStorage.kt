@@ -64,7 +64,13 @@ public class AgentcoreSearchStorage(
         request: AgentcoreSimilaritySearchRequest,
         namespace: String?,
     ): List<SearchResult<TextDocument>> = runRetrieve(request.memoryStrategyId, namespace) {
-        retrieveMemoryRecords(request.memoryStrategyId, request.limit, request.queryText, namespace)
+        retrieveMemoryRecords(
+            agentcoreMemoryStrategyId = request.memoryStrategyId,
+            topK = request.limit,
+            searchQuery = request.queryText,
+            filterExpression = request.filterExpression,
+            namespace = namespace
+        )
             .map { AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(it, request.strategyType) }
             .filter { it.score.value >= (request.minScore ?: 0.0) }
     }
@@ -73,7 +79,11 @@ public class AgentcoreSearchStorage(
         request: AgentcoreListingSearchRequest,
         namespace: String?,
     ): List<SearchResult<TextDocument>> = runRetrieve(request.memoryStrategyId, namespace) {
-        listMemoryRecords(request.memoryStrategyId, request.limit, namespace)
+        listMemoryRecords(
+            agentcoreMemoryStrategyId = request.memoryStrategyId,
+            maxResults = request.limit,
+            namespace = namespace
+        )
             .map { AgentcoreMemoryRecordConverter.memoryRecordSummaryToSearchResult(it, request.strategyType) }
     }
 
@@ -129,14 +139,15 @@ public class AgentcoreSearchStorage(
         agentcoreMemoryStrategyId: String,
         topK: Int,
         searchQuery: String?,
-        namespace: String?
+        filterExpression: String?,
+        namespace: String?,
     ): List<MemoryRecordSummary> {
         val request = RetrieveMemoryRecordsRequest {
             memoryId = agentcoreMemoryId
             this.namespace = namespace
             searchCriteria = SearchCriteria {
                 memoryStrategyId = agentcoreMemoryStrategyId
-//                metadataFilters = null // TODO: pass the filterExpression to metadataFilters
+//                metadataFilters = filterExpression // FIXME: parse the filterExpression to metadataFilters
                 this.searchQuery = searchQuery
                 this.topK = topK
             }

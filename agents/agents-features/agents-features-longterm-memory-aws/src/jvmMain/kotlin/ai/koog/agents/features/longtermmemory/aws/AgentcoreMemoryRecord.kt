@@ -4,7 +4,7 @@ import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemorySt
 import ai.koog.rag.base.TextDocument
 
 /**
- * Represents a memory record that can be stored in a vector database.
+ * A memory record retrieved from AWS Bedrock AgentCore, wrapping the content and metadata of a MemoryRecordSummary.
  *
  * @property content The main textual content to be embedded and searched
  * @property id Unique identifier for the record
@@ -25,6 +25,12 @@ public data class AgentcoreMemoryRecord(
      * Flexible key-value metadata for filtering and custom fields
      */
     override val metadata: Map<String, Any> = emptyMap(),
-
+    /**
+     * The AWS Bedrock AgentCore memory strategy that determines how this record is used
+     * during prompt augmentation (e.g. injected into the system message or used to rewrite
+     * the last user message).
+     *
+     * @see AgentcoreMemoryStrategy
+     */
     val strategy: AgentcoreMemoryStrategy
 ) : TextDocument

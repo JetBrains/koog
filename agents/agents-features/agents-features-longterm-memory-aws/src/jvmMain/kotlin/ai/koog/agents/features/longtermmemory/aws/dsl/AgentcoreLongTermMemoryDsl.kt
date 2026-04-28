@@ -7,6 +7,7 @@ import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceResolver
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceScope
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreSearchStorage
 import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemoryStrategy
+import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcorePromptAugmenter
 import ai.koog.agents.longtermmemory.feature.LongTermMemory
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
@@ -85,10 +86,13 @@ public class AgentcoreRetrievalBuilder internal constructor(
 
     /**
      * How the retrieved context is inserted into the prompt. Defaults to
-     * [SystemPromptAugmenter]; set to a [ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter]
-     * to treat retrieved records as query context rather than a system directive.
+     * [AgentcorePromptAugmenter], which routes each record to the appropriate augmentation
+     * pathway based on its [ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemoryStrategy]
+     * (system message injection for SEMANTIC/PREFERENCE/EPISODES/REFLECTIONS, user message
+     * rewrite for SUMMARY). Set to a [ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter]
+     * or [SystemPromptAugmenter] to override with a strategy-agnostic augmenter.
      */
-    public var augmenter: PromptAugmenter = SystemPromptAugmenter()
+    public var augmenter: PromptAugmenter = AgentcorePromptAugmenter()
 
     /**
      * Resolver used to build AgentCore namespaces for every helper in this block.
@@ -103,10 +107,10 @@ public class AgentcoreRetrievalBuilder internal constructor(
      */
     public var namespaceResolver: AgentcoreNamespaceResolver = AgentcoreNamespaceResolver.Default
 
-    private fun actorNs(strategyId: String, actorId: String): String =
+    private fun actorNamespace(strategyId: String, actorId: String): String =
         namespaceResolver.resolve(AgentcoreNamespaceScope.Actor(strategyId, actorId))
 
-    private fun sessionNs(strategyId: String, actorId: String, sessionId: String): String =
+    private fun sessionNamespace(strategyId: String, actorId: String, sessionId: String): String =
         namespaceResolver.resolve(AgentcoreNamespaceScope.Session(strategyId, actorId, sessionId))
 
     /**
@@ -124,7 +128,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
         subrequests += AgentcoreSearchSubrequest.similarity(
             strategyType = AgentcoreMemoryStrategy.SEMANTIC,
             memoryStrategyId = strategyId,
-            namespace = actorNs(strategyId, actorId),
+            namespace = actorNamespace(strategyId, actorId),
             limit = topK,
             minScore = minScore,
             filterExpression = filterExpression,
@@ -147,7 +151,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
         subrequests += AgentcoreSearchSubrequest.similarity(
             strategyType = AgentcoreMemoryStrategy.SUMMARY,
             memoryStrategyId = strategyId,
-            namespace = sessionNs(strategyId, actorId, sessionId),
+            namespace = sessionNamespace(strategyId, actorId, sessionId),
             limit = topK,
             minScore = minScore,
             filterExpression = filterExpression,
@@ -169,7 +173,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
         subrequests += AgentcoreSearchSubrequest.listing(
             strategyType = AgentcoreMemoryStrategy.PREFERENCE,
             memoryStrategyId = strategyId,
-            namespace = actorNs(strategyId, actorId),
+            namespace = actorNamespace(strategyId, actorId),
             limit = limit,
         )
     }
@@ -190,7 +194,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
         subrequests += AgentcoreSearchSubrequest.similarity(
             strategyType = AgentcoreMemoryStrategy.EPISODES,
             memoryStrategyId = strategyId,
-            namespace = sessionNs(strategyId, actorId, sessionId),
+            namespace = sessionNamespace(strategyId, actorId, sessionId),
             limit = topK,
             minScore = minScore,
             filterExpression = filterExpression,
@@ -212,7 +216,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
         subrequests += AgentcoreSearchSubrequest.similarity(
             strategyType = AgentcoreMemoryStrategy.REFLECTIONS,
             memoryStrategyId = strategyId,
-            namespace = actorNs(strategyId, actorId),
+            namespace = actorNamespace(strategyId, actorId),
             limit = topK,
             minScore = minScore,
             filterExpression = filterExpression,

@@ -6,11 +6,11 @@ import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceResolver
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceScope
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreSearchStorage
 import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemoryStrategy
+import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcorePromptAugmenter
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreCompositeSearchRequest
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreListingSearchRequest
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreSimilaritySearchRequest
 import ai.koog.agents.longtermmemory.feature.LongTermMemory
-import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter
 import aws.sdk.kotlin.services.bedrockagentcore.BedrockAgentCoreClient
 import io.mockk.mockk
@@ -98,11 +98,11 @@ class AgentcoreRetrievalDslTest {
     }
 
     @Test
-    fun testDefaultAugmenterIsSystemPromptAugmenter() {
+    fun testDefaultAugmenterIsAgentcorePromptAugmenter() {
         val settings = configure {
             semantic(strategyId = "sem-1", actorId = "alice")
         }
-        assertIs<SystemPromptAugmenter>(settings.promptAugmenter)
+        assertIs<AgentcorePromptAugmenter>(settings.promptAugmenter)
     }
 
     @Test

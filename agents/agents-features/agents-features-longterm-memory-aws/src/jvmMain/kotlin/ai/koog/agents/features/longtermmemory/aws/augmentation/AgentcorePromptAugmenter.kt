@@ -8,6 +8,26 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.search.SearchResult
 
+/**
+ * A [PromptAugmenter] that injects retrieved [AgentcoreMemoryRecord] documents into a prompt,
+ * routing each record to the appropriate augmentation pathway based on its [AgentcoreMemoryStrategy]:
+ *
+ * - [AgentcoreMemoryStrategy.SEMANTIC] and [AgentcoreMemoryStrategy.PREFERENCE] — content is
+ *   appended to the system message using [contextPrefix] as a header.
+ * - [AgentcoreMemoryStrategy.EPISODES] — content is appended to the system message under a
+ *   dedicated "[SECTION_EPISODES]" section.
+ * - [AgentcoreMemoryStrategy.REFLECTIONS] — content is appended to the system message under a
+ *   dedicated "[SECTION_REFLECTIONS]" section.
+ * - [AgentcoreMemoryStrategy.SUMMARY] — the last user message is rewritten to prepend the
+ *   retrieved summaries as query context.
+ *
+ * If no system message exists in the prompt, one is created. If no user message exists when
+ * handling [AgentcoreMemoryStrategy.SUMMARY] records, the summaries fall back to system-message
+ * augmentation.
+ *
+ * @param contextPrefix Header text prepended to SEMANTIC/PREFERENCE context blocks.
+ *   Defaults to [PromptAugmenter.DEFAULT_CONTEXT_PREFIX].
+ */
 public class AgentcorePromptAugmenter @JvmOverloads constructor(
     private val contextPrefix: String = PromptAugmenter.DEFAULT_CONTEXT_PREFIX,
 ) : PromptAugmenter {
@@ -52,8 +72,7 @@ public class AgentcorePromptAugmenter @JvmOverloads constructor(
 
         // 1) System-side content:
         //    - Episodic results are rendered as two distinct labelled sections
-        //      ("Relevant past interactions" / "Lessons learned") matching the Java advisor's
-        //      formatEpisodicContext; either section is omitted when its bucket is empty.
+        //      ("Relevant past interactions" / "Lessons learned"); either section is omitted when its bucket is empty.
         //    - Plain semantic/preference content follows, using the generic contextPrefix.
         val systemParts = buildList {
             if (episodesBucket.isNotEmpty()) {
