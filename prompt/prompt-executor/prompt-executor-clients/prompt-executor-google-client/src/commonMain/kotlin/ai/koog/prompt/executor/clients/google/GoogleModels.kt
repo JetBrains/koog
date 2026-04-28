@@ -66,11 +66,10 @@ public object GoogleModels : LLModelDefinitions {
     )
 
     /**
-     * Full capabilities including standard, multimodal, tools, native structured output, and grounding
+     * Full capabilities including standard, multimodal, tools, native structured output
      */
     private val fullCapabilities: List<LLMCapability> =
-        standardCapabilities + multimodalCapabilities + toolCapabilities + structuredOutputCapabilities +
-            listOf(LLMCapability.Grounding)
+        standardCapabilities + multimodalCapabilities + toolCapabilities + structuredOutputCapabilities
 
     /**
      * Specific version of Gemini 2.0 Flash-Lite

@@ -24,6 +24,7 @@ import ai.koog.prompt.executor.clients.google.models.GoogleModelsResponse
 import ai.koog.prompt.executor.clients.google.models.GooglePart
 import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
+import ai.koog.prompt.executor.clients.google.models.GoogleSearch
 import ai.koog.prompt.executor.clients.google.models.GoogleTool
 import ai.koog.prompt.executor.clients.google.models.GoogleToolConfig
 import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
@@ -402,28 +403,10 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             null -> null
         }
 
-        val groundingTool: GoogleTool? = googleParams.groundingConfig?.let { config ->
-            require(model.supports(LLMCapability.Grounding)) {
-                "Model ${model.id} does not support grounding"
-            }
-            when (config) {
-                is GoogleGroundingConfig.GoogleSearch -> GoogleTool(googleSearch = buildJsonObject {})
-                is GoogleGroundingConfig.GoogleSearchRetrieval -> GoogleTool(
-                    googleSearchRetrieval = buildJsonObject {
-                        if (config.dynamicThreshold != null) {
-                            put(
-                                "dynamicRetrievalConfig",
-                                buildJsonObject {
-                                    // MODE_DYNAMIC is required for the threshold to take effect;
-                                    // without it the API uses MODE_UNSPECIFIED and ignores the threshold.
-                                    put("mode", "MODE_DYNAMIC")
-                                    put("dynamicThreshold", config.dynamicThreshold)
-                                }
-                            )
-                        }
-                    }
-                )
-            }
+        val groundingTool: GoogleTool? = if (googleParams.groundingEnabled) {
+            GoogleTool(googleSearch = GoogleSearch())
+        } else {
+            null
         }
 
         val allTools = when {

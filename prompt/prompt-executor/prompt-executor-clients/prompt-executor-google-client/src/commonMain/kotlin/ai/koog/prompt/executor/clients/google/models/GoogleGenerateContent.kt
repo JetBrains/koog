@@ -250,11 +250,12 @@ internal sealed interface GoogleData {
  * the next model turn.
  */
 @Serializable
+internal class GoogleSearch
+
+@Serializable
 internal class GoogleTool(
     val functionDeclarations: List<GoogleFunctionDeclaration>? = null,
-    @SerialName("google_search")
-    val googleSearch: JsonObject? = null,
-    val googleSearchRetrieval: JsonObject? = null,
+    val googleSearch: GoogleSearch? = null,
 )
 
 /**

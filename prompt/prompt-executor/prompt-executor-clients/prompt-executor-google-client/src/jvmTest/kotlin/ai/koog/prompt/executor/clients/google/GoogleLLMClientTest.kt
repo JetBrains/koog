@@ -24,6 +24,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -697,7 +698,7 @@ class GoogleLLMClientTest {
     }
 
     @Test
-    fun `createGoogleRequest injects google_search tool when GoogleSearch grounding is set`() {
+    fun `createGoogleRequest injects googleSearch tool when groundingEnabled is true`() {
         val client = GoogleLLMClient(apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Flash
 
@@ -705,43 +706,16 @@ class GoogleLLMClientTest {
             prompt = Prompt(
                 messages = emptyList(),
                 id = "id",
-                params = GoogleParams(groundingConfig = GoogleGroundingConfig.GoogleSearch)
+                params = GoogleParams(groundingEnabled = true)
             ),
             model = model,
             tools = emptyList()
         )
 
-        val tools = request.tools
-        tools shouldNotBe null
-        tools!!.shouldHaveSize(1)
+        val tools = request.tools.shouldNotBeNull()
+        tools.shouldHaveSize(1)
         tools.first().googleSearch shouldNotBe null
         tools.first().functionDeclarations shouldBe null
-    }
-
-    @Test
-    fun `createGoogleRequest injects googleSearchRetrieval tool with threshold when set`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
-        val model = GoogleModels.Gemini2_5Flash
-
-        val request = client.createGoogleRequest(
-            prompt = Prompt(
-                messages = emptyList(),
-                id = "id",
-                params = GoogleParams(groundingConfig = GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = 0.3))
-            ),
-            model = model,
-            tools = emptyList()
-        )
-
-        val tools = request.tools
-        tools shouldNotBe null
-        tools!!.shouldHaveSize(1)
-        val retrieval = tools.first().googleSearchRetrieval
-        retrieval shouldNotBe null
-        val retrievalConfig = retrieval!!["dynamicRetrievalConfig"]?.jsonObject
-        retrievalConfig shouldNotBe null
-        retrievalConfig!!["mode"]?.jsonPrimitive?.content shouldBe "MODE_DYNAMIC"
-        retrievalConfig["dynamicThreshold"]?.jsonPrimitive?.content shouldBe "0.3"
     }
 
     @Test
@@ -755,58 +729,15 @@ class GoogleLLMClientTest {
             prompt = Prompt(
                 messages = emptyList(),
                 id = "id",
-                params = GoogleParams(groundingConfig = GoogleGroundingConfig.GoogleSearch)
+                params = GoogleParams(groundingEnabled = true)
             ),
             model = model,
             tools = listOf(tool)
         )
 
-        val tools = request.tools
-        tools shouldNotBe null
-        tools!!.shouldHaveSize(2)
-        val hasGrounding = tools.any { it.googleSearch != null }
-        val hasFunctions = tools.any { it.functionDeclarations != null }
-        hasGrounding shouldBe true
-        hasFunctions shouldBe true
-    }
-
-    @Test
-    fun `createGoogleRequest throws when grounding set on model that does not support it`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
-        val modelWithoutGrounding = GoogleModels.Embeddings.GeminiEmbedding001
-
-        val result = runCatching {
-            client.createGoogleRequest(
-                prompt = Prompt(
-                    messages = emptyList(),
-                    id = "id",
-                    params = GoogleParams(groundingConfig = GoogleGroundingConfig.GoogleSearch)
-                ),
-                model = modelWithoutGrounding,
-                tools = emptyList()
-            )
-        }
-        result.isFailure shouldBe true
-    }
-
-    @Test
-    fun `GoogleSearchRetrieval rejects dynamicThreshold above 1_0`() {
-        val result = runCatching { GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = 1.5) }
-        result.isFailure shouldBe true
-        result.exceptionOrNull()!!.message shouldBe "dynamicThreshold must be in [0.0, 1.0], but was 1.5"
-    }
-
-    @Test
-    fun `GoogleSearchRetrieval rejects negative dynamicThreshold`() {
-        val result = runCatching { GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = -0.1) }
-        result.isFailure shouldBe true
-    }
-
-    @Test
-    fun `GoogleSearchRetrieval accepts null and boundary dynamicThreshold values`() {
-        GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = null)
-        GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = 0.0)
-        GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = 1.0)
-        GoogleGroundingConfig.GoogleSearchRetrieval(dynamicThreshold = 0.5)
+        val tools = request.tools.shouldNotBeNull()
+        tools.shouldHaveSize(2)
+        tools.any { it.googleSearch != null } shouldBe true
+        tools.any { it.functionDeclarations != null } shouldBe true
     }
 }

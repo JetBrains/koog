@@ -201,18 +201,6 @@ public sealed class LLMCapability(public val id: String) {
     }
 
     /**
-     * Represents the ability to ground model responses using live web search results.
-     *
-     * Models with this capability can augment their responses with real-time information
-     * retrieved via Google Search. Enabled via [ai.koog.prompt.executor.clients.google.GoogleGroundingConfig]
-     * in [ai.koog.prompt.executor.clients.google.GoogleParams].
-     *
-     * Supported by Gemini 2.0+ models.
-     */
-    @Serializable
-    public data object Grounding : LLMCapability("grounding")
-
-    /**
      * Represents an OpenAI-related API endpoint for Large Language Model (LLM) operations.
      *
      * This sealed class serves as a specific capability type for OpenAI-based LLM. It provides predefined
