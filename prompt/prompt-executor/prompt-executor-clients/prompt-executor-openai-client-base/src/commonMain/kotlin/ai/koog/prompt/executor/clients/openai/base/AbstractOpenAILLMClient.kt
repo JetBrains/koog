@@ -32,6 +32,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.requireEndFrame
+import ai.koog.utils.time.AgentClock
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
@@ -41,7 +42,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIContent
@@ -67,12 +67,12 @@ public abstract class OpenAIBaseSettings(
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Must have authentication
  *   and other request defaults (base URL, timeouts, headers) already embedded. To use a Ktor-backed client
  *   with standard OpenAI-compatible defaults, use the secondary constructor that accepts an [HttpClient] and an API key.
- * @param clock Clock instance used for tracking response metadata timestamps. Defaults to Clock.System.
+ * @param clock [AgentClock] used for tracking response metadata timestamps. Defaults to [AgentClock.System].
  */
 public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse, TStreamResponse : OpenAIBaseLLMStreamResponse>(
     settings: OpenAIBaseSettings,
     protected val httpClient: KoogHttpClient,
-    protected val clock: Clock = Clock.System,
+    protected val clock: AgentClock = AgentClock.System,
     protected val logger: KLogger,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
 ) : LLMClient() {
@@ -99,7 +99,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         settings: OpenAIBaseSettings,
         baseClient: HttpClient = HttpClient(),
         clientName: String = "OpenAICompatibleClient",
-        clock: Clock = Clock.System,
+        clock: AgentClock = AgentClock.System,
         logger: KLogger,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
     ) : this(

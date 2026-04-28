@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlinx.serialization.json.JsonElement
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -48,7 +48,7 @@ class KoogAgentSession(
     override val sessionId: SessionId,
     private val promptExecutor: PromptExecutor,
     private val protocol: Protocol,
-    private val clock: Clock,
+    private val clock: AgentClock,
 ) : AgentSession {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -158,7 +158,7 @@ class KoogAgentSession(
  */
 class KoogAgentSupport(
     private val promptExecutor: PromptExecutor,
-    private val clock: Clock,
+    private val clock: AgentClock,
     private val protocol: Protocol,
 ) : AgentSupport {
     companion object {

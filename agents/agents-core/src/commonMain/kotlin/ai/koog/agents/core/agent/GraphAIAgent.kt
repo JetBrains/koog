@@ -23,7 +23,7 @@ import ai.koog.serialization.TypeToken
 import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.reflect.KType
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * Represents an implementation of an AI agent that provides functionalities to execute prompts,
@@ -57,7 +57,7 @@ public open class GraphAIAgent<Input, Output>(
     override val strategy: AIAgentGraphStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
-    public val clock: Clock = Clock.System,
+    public val clock: AgentClock = AgentClock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
 ) : AIAgentBase<Input, Output, AIAgentGraphContextBase>(
@@ -86,7 +86,7 @@ public open class GraphAIAgent<Input, Output>(
         strategy: AIAgentGraphStrategy<Input, Output>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         id: String? = null,
-        clock: Clock = Clock.System,
+        clock: AgentClock = AgentClock.System,
         installFeatures: FeatureContext.() -> Unit = {}
     ) : this(
         typeToken(inputType),

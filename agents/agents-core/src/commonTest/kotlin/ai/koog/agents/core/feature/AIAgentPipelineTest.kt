@@ -57,7 +57,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class AIAgentPipelineTest {
@@ -67,9 +67,7 @@ class AIAgentPipelineTest {
         private const val DEFAULT_ASSISTANT_RESPONSE = "Default test response"
     }
 
-    private val testClock: Clock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
+    private val testClock: AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     @Test
     @JsName("testPipelineInterceptorsForNodeEvents")

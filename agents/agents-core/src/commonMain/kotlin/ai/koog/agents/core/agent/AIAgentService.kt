@@ -22,7 +22,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.KSerializer
 import kotlin.jvm.JvmStatic
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * [AIAgentService] is a core interface for managing AI agents. The service allows creation, removal, and
@@ -201,7 +201,7 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         id: String? = null,
         additionalToolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         agentConfig: AIAgentConfig = this.agentConfig,
-        clock: Clock = Clock.System,
+        clock: AgentClock = AgentClock.System,
     ): TAgent
 
     /**
@@ -219,7 +219,7 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         id: String? = null,
         additionalToolRegistry: ToolRegistry = this.toolRegistry,
         agentConfig: AIAgentConfig = this.agentConfig,
-        clock: Clock = Clock.System,
+        clock: AgentClock = AgentClock.System,
     ): Output
 }
 
@@ -250,7 +250,7 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock
+        clock: AgentClock
     ): Output = createAgent(id, additionalToolRegistry, agentConfig, clock).run(agentInput, null)
 
     /**
@@ -267,7 +267,7 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
         id: String? = null,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock = Clock.System,
+        clock: AgentClock = AgentClock.System,
     ): TAgent
 
     /**
@@ -284,7 +284,7 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock
+        clock: AgentClock
     ): TAgent = managedAgentsMutex.withLock {
         val agent = createManagedAgent(id, additionalToolRegistry, agentConfig, clock)
         managedAgents[agent.id] = agent
@@ -353,7 +353,7 @@ public constructor(
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock,
+        clock: AgentClock,
     ): GraphAIAgent<Input, Output> = GraphAIAgent(
         inputType = inputType,
         outputType = outputType,
@@ -403,7 +403,7 @@ public constructor(
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock,
+        clock: AgentClock,
     ): FunctionalAIAgent<Input, Output> = FunctionalAIAgent(
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
@@ -448,7 +448,7 @@ public operator fun AIAgentService.Companion.invoke(
  * @param outputType Type token representing agent output.
  * @return A special tool that wraps the agent functionality.
  * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
- * @param clock The clock instance used to manage time-related operations. Defaults to `Clock.System`.
+ * @param clock The clock instance used to manage time-related operations. Defaults to `AgentClock.System`.
  * @return A tool instance configured with the provided parameters, representing the AI agent.
  */
 @OptIn(InternalAgentToolsApi::class)
@@ -459,7 +459,7 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     inputType: TypeToken = typeToken<Input>(),
     outputType: TypeToken = typeToken<Output>(),
     parentAgentId: String? = null,
-    clock: Clock = Clock.System
+    clock: AgentClock = AgentClock.System
 ): Tool<AgentToolInput<Input>, AgentToolResult<Output>> = AIAgentTool(
     agentService = this,
     agentName = agentName,
@@ -482,7 +482,7 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
  * @param outputSerializer Serializer to serialize agent output to a tool result.
  * @return A special tool that wraps the agent functionality.
  * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
- * @param clock The clock instance used to manage time-related operations. Defaults to `Clock.System`.
+ * @param clock The clock instance used to manage time-related operations. Defaults to `AgentClock.System`.
  * @return A tool instance configured with the provided parameters, representing the AI agent.
  */
 @Deprecated("Use createAgentTool with TypeToken instead of KSerializer")
@@ -494,7 +494,7 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     inputSerializer: KSerializer<Input>,
     outputSerializer: KSerializer<Output>,
     parentAgentId: String? = null,
-    clock: Clock = Clock.System
+    clock: AgentClock = AgentClock.System
 ): Tool<AgentToolInput<Input>, AgentToolResult<Output>> = createAgentTool(
     agentName = agentName,
     agentDescription = agentDescription,

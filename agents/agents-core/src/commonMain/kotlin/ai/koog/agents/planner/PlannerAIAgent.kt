@@ -20,7 +20,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.jvm.JvmStatic
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * Represents an instance of planner agent using [AIAgentPlannerStrategy].
@@ -40,7 +40,7 @@ public class PlannerAIAgent<Input, Output>(
     override val strategy: AIAgentPlannerStrategy<Input, Output, *>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
-    public val clock: Clock = Clock.System,
+    public val clock: AgentClock = AgentClock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
 ) : AIAgentBase<Input, Output, AIAgentPlannerContext>(

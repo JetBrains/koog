@@ -55,6 +55,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.utils.io.SuitableForIO
+import ai.koog.utils.time.AgentClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
@@ -66,7 +67,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIContent
@@ -103,7 +103,7 @@ public class OpenAIClientSettings(
 public open class OpenAILLMClient @JvmOverloads constructor(
     private val settings: OpenAIClientSettings = OpenAIClientSettings(),
     httpClient: KoogHttpClient,
-    clock: Clock = Clock.System,
+    clock: AgentClock = AgentClock.System,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
 ) : AbstractOpenAILLMClient<OpenAIChatCompletionResponse, OpenAIChatCompletionStreamResponse>(
     settings = settings,
@@ -118,7 +118,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: OpenAIClientSettings = OpenAIClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        clock: AgentClock = AgentClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ) : this(
         settings = settings,

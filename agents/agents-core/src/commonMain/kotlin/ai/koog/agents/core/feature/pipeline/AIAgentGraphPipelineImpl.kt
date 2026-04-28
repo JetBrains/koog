@@ -17,11 +17,11 @@ import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedCo
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
 import ai.koog.serialization.TypeToken
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 internal class AIAgentGraphPipelineImpl(
     agentConfig: AIAgentConfig,
-    clock: Clock = Clock.System,
+    clock: AgentClock = AgentClock.System,
     private val basePipelineDelegate: AIAgentPipelineImpl
 ) : AIAgentGraphPipelineAPI, AIAgentPipelineAPI by basePipelineDelegate {
 

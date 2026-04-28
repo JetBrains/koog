@@ -45,6 +45,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
+import ai.koog.utils.time.AgentClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.utils.io.CancellationException
@@ -59,7 +60,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicCacheControl as AnthropicCacheControlBlock
@@ -97,7 +97,7 @@ public class AnthropicClientSettings(
 public open class AnthropicLLMClient @JvmOverloads constructor(
     private val settings: AnthropicClientSettings = AnthropicClientSettings(),
     protected val httpClient: KoogHttpClient,
-    private val clock: Clock = Clock.System
+    private val clock: AgentClock = AgentClock.System
 ) : LLMClient() {
 
     private companion object {
@@ -140,7 +140,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: AnthropicClientSettings = AnthropicClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System
+        clock: AgentClock = AgentClock.System
     ) : this(
         settings = settings,
         httpClient = createConfiguredHttpClient(apiKey, settings, baseClient),

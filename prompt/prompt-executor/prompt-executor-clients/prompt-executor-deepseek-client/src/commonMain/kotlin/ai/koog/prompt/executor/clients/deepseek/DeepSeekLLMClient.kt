@@ -30,7 +30,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * Configuration settings for connecting to the DeepSeek API.
@@ -59,7 +59,7 @@ public class DeepSeekClientSettings(
 public class DeepSeekLLMClient @JvmOverloads constructor(
     private val settings: DeepSeekClientSettings = DeepSeekClientSettings(),
     httpClient: KoogHttpClient,
-    clock: Clock = Clock.System,
+    clock: AgentClock = AgentClock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DeepSeekChatCompletionResponse, DeepSeekChatCompletionStreamResponse>(
     settings = settings,
@@ -74,7 +74,7 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: DeepSeekClientSettings = DeepSeekClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        clock: AgentClock = AgentClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,

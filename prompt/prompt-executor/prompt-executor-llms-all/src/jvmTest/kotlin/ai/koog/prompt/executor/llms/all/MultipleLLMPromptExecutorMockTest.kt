@@ -23,7 +23,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class MultipleLLMPromptExecutorMockTest {
@@ -32,9 +32,7 @@ class MultipleLLMPromptExecutorMockTest {
         private const val API_KEY = "fake-key"
     }
 
-    val mockClock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
+    val mockClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     // Mock client for OpenAI
     private inner class MockOpenAILLMClient : OpenAILLMClient(API_KEY) {

@@ -10,7 +10,7 @@ import ai.koog.agents.features.opentelemetry.metric.BaseMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.GenAIMetrics
 import ai.koog.agents.features.opentelemetry.metric.HistogramMetricEvent
 import ai.koog.prompt.llm.LLModel
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 
@@ -21,7 +21,7 @@ import kotlin.time.DurationUnit
 internal fun AgentLifecycleEventContext.toTimestampedMetricEvent(): BaseMetricEvent {
     return BaseMetricEvent(
         id = this@toTimestampedMetricEvent.eventId,
-        timestamp = Clock.System.now(),
+        timestamp = AgentClock.System.now(),
         metricName = GenAIMetrics.Client.Operation.Duration.name,
         attributes = emptyList()
     )
@@ -41,7 +41,7 @@ internal fun LLMCallStartingContext.toLLMCallStartMetricEvent(): BaseMetricEvent
     )
     return BaseMetricEvent(
         id = eventId,
-        timestamp = Clock.System.now(),
+        timestamp = AgentClock.System.now(),
         metricName = GenAIMetrics.Client.Operation.Duration.name,
         attributes = attributes,
     )
@@ -63,7 +63,7 @@ internal fun createLLMCallDurationHistogramMetricEvent(
 
     return HistogramMetricEvent(
         id = id,
-        timestamp = Clock.System.now(),
+        timestamp = AgentClock.System.now(),
         metricName = GenAIMetrics.Client.Operation.Duration.name,
         attributes = attributes,
         value = duration.toDouble(DurationUnit.SECONDS)
@@ -81,7 +81,7 @@ internal fun BaseMetricEvent.toFailedDurationHistogramMetricEvent(
     val errorAttribute = error?.errorTypeAttribute() ?: CommonAttributes.Error.Type("_OTHER")
     return HistogramMetricEvent(
         id = id,
-        timestamp = Clock.System.now(),
+        timestamp = AgentClock.System.now(),
         metricName = metricName,
         attributes = attributes + errorAttribute,
         value = duration.toDouble(DurationUnit.SECONDS)
@@ -105,7 +105,7 @@ internal fun createExecuteToolDurationHistogramMetricEvent(
 
     return HistogramMetricEvent(
         id = id,
-        timestamp = Clock.System.now(),
+        timestamp = AgentClock.System.now(),
         metricName = GenAIMetrics.Client.Operation.Duration.name,
         attributes = attributes,
         value = duration.toDouble(DurationUnit.SECONDS)

@@ -14,7 +14,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * Common [AIAgentLLMContext] implementation shared across platforms.
@@ -28,7 +28,7 @@ public abstract class AIAgentLLMContextCommon internal constructor(
     initialPromptExecutor: PromptExecutor,
     initialEnvironment: AIAgentEnvironment,
     initialConfig: AIAgentConfig,
-    initialClock: Clock
+    initialClock: AgentClock
 ) {
     /**
      * A [ToolRegistry] that contains metadata about available tools.
@@ -63,7 +63,7 @@ public abstract class AIAgentLLMContextCommon internal constructor(
      */
     @get:JvmName("clock")
     @InternalAgentsApi
-    public val clock: Clock = initialClock
+    public val clock: AgentClock = initialClock
 
     /**
      * List of current tools associated with this agent context.
@@ -146,7 +146,7 @@ public abstract class AIAgentLLMContextCommon internal constructor(
         promptExecutor: PromptExecutor = this.promptExecutor,
         environment: AIAgentEnvironment = this.environment,
         config: AIAgentConfig = this.config,
-        clock: Clock = this.clock,
+        clock: AgentClock = this.clock,
     ): AIAgentLLMContext = rwLock.withReadLock {
         AIAgentLLMContext(
             tools = tools,
@@ -242,7 +242,7 @@ public abstract class AIAgentLLMContextCommon internal constructor(
         promptExecutor: PromptExecutor = this.promptExecutor,
         environment: AIAgentEnvironment = this.environment,
         config: AIAgentConfig = this.config,
-        clock: Clock = this.clock
+        clock: AgentClock = this.clock
     ): AIAgentLLMContext {
         return AIAgentLLMContext(
             tools,

@@ -114,7 +114,7 @@ Here is an example:
     import kotlinx.coroutines.flow.channelFlow
     import kotlinx.coroutines.sync.Mutex
     import kotlinx.coroutines.sync.withLock
-    import kotlin.time.Clock
+    import ai.koog.utils.time.AgentClock
     import kotlinx.serialization.json.JsonElement
     -->
     ```kotlin
@@ -122,7 +122,7 @@ Here is an example:
         override val sessionId: SessionId,
         private val promptExecutor: PromptExecutor,
         private val protocol: Protocol,
-        private val clock: Clock
+        private val clock: AgentClock
     ) : AgentSession {
     
         private var agentJob: Deferred<Unit>? = null
@@ -190,14 +190,14 @@ Here is an example:
     import com.agentclientprotocol.protocol.Protocol
     import kotlinx.coroutines.flow.Flow
     import kotlinx.serialization.json.JsonElement
-    import kotlin.time.Clock
+    import ai.koog.utils.time.AgentClock
     import kotlin.uuid.ExperimentalUuidApi
     import kotlin.uuid.Uuid
     class MyAgentSession(
         override val sessionId: SessionId,
         private val promptExecutor: PromptExecutor,
         private val protocol: Protocol,
-        private val clock: Clock
+        private val clock: AgentClock
     ): AgentSession {
         override suspend fun prompt(
             content: List<ContentBlock>,
@@ -210,7 +210,7 @@ Here is an example:
     ```kotlin
     class MyAgentSupport(
         private val promptExecutor: PromptExecutor,
-        private val clock: Clock,
+        private val clock: AgentClock,
         private val protocol: Protocol,
     ) : AgentSupport {
     
@@ -269,9 +269,9 @@ The `AgentSession` from the example defines a private function to extend the ini
 import ai.koog.agents.features.acp.toKoogMessage
 import ai.koog.prompt.dsl.Prompt
 import com.agentclientprotocol.model.ContentBlock
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
-val clock: Clock = Clock.System
+val clock: AgentClock = AgentClock.System
 -->
 ```kotlin
 private fun Prompt.appendPrompt(content: List<ContentBlock>): Prompt {
@@ -284,7 +284,7 @@ private fun Prompt.appendPrompt(content: List<ContentBlock>): Prompt {
 
 !!! note
 
-    A `Clock` instance is required to timestamp the message.
+    An `AgentClock` instance is required to timestamp the message.
 
 For more information, see [Converting messages](#converting-messages).
 

@@ -14,7 +14,7 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.ExperimentalTime
 
 /**
@@ -23,7 +23,7 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalTime::class)
 sealed interface WeatherTools {
     companion object {
-        private val CLOCK = Clock.System
+        private val CLOCK = AgentClock.System
         private val UTC_ZONE = TimeZone.UTC
     }
 
@@ -44,7 +44,7 @@ sealed interface WeatherTools {
      */
     class CurrentDatetimeTool(
         val defaultTimeZone: TimeZone = UTC_ZONE,
-        val clock: Clock = CLOCK,
+        val clock: AgentClock = CLOCK,
     ) : Tool<CurrentDatetimeTool.Args, CurrentDatetimeTool.Result>(
         argsType = typeToken<Args>(),
         resultType = typeToken<Result>(),
@@ -99,7 +99,7 @@ sealed interface WeatherTools {
      */
     class AddDatetimeTool(
         val defaultTimeZone: TimeZone = UTC_ZONE,
-        val clock: Clock = CLOCK,
+        val clock: AgentClock = CLOCK,
     ) : Tool<AddDatetimeTool.Args, AddDatetimeTool.Result>(
         argsType = typeToken<Args>(),
         resultType = typeToken<Result>(),
@@ -265,7 +265,7 @@ sealed interface WeatherTools {
             val daily = forecast.daily ?: return "No daily forecast data available"
 
             val startDate = date.ifBlank {
-                Clock.System.now().toLocalDateTime(defaultTimeZone).date.toString()
+                AgentClock.System.now().toLocalDateTime(defaultTimeZone).date.toString()
             }
 
             val startIndex = daily.time.indexOfFirst { it >= startDate }.coerceAtLeast(0)
@@ -294,7 +294,7 @@ sealed interface WeatherTools {
             val hourly = forecast.hourly ?: return "No hourly forecast data available"
 
             val startDate = date.ifBlank {
-                Clock.System.now().toLocalDateTime(defaultTimeZone).date.toString()
+                AgentClock.System.now().toLocalDateTime(defaultTimeZone).date.toString()
             }
 
             // Find the starting index for the requested date

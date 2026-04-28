@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -29,13 +29,13 @@ abstract class AbstractJdbcPersistenceStorageProviderTest {
         nodePath: String = "graph/subgraph/node1",
         version: Long = 1L,
         messages: List<Message> = listOf(
-            Message.System("You are a helpful assistant", RequestMetaInfo.create(Clock.System)),
-            Message.User("Hello", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Hi there!", ResponseMetaInfo.create(Clock.System))
+            Message.System("You are a helpful assistant", RequestMetaInfo.create(AgentClock.System)),
+            Message.User("Hello", RequestMetaInfo.create(AgentClock.System)),
+            Message.Assistant("Hi there!", ResponseMetaInfo.create(AgentClock.System))
         )
     ): AgentCheckpointData = AgentCheckpointData(
         checkpointId = checkpointId,
-        createdAt = Clock.System.now(),
+        createdAt = AgentClock.System.now(),
         nodePath = nodePath,
         lastOutput = JSONPrimitive("test-output"),
         messageHistory = messages,
@@ -141,20 +141,20 @@ abstract class AbstractJdbcPersistenceStorageProviderTest {
         p.migrate()
 
         val messages = listOf(
-            Message.System("System prompt", RequestMetaInfo.create(Clock.System)),
-            Message.User("User input", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Assistant response", ResponseMetaInfo.create(Clock.System)),
+            Message.System("System prompt", RequestMetaInfo.create(AgentClock.System)),
+            Message.User("User input", RequestMetaInfo.create(AgentClock.System)),
+            Message.Assistant("Assistant response", ResponseMetaInfo.create(AgentClock.System)),
             Message.Tool.Call(
                 id = "call-1",
                 tool = "searchTool",
                 content = """{"query": "test"}""",
-                metaInfo = ResponseMetaInfo.create(Clock.System)
+                metaInfo = ResponseMetaInfo.create(AgentClock.System)
             ),
             Message.Tool.Result(
                 id = "call-1",
                 tool = "searchTool",
                 content = """{"result": "found"}""",
-                metaInfo = RequestMetaInfo.create(Clock.System)
+                metaInfo = RequestMetaInfo.create(AgentClock.System)
             )
         )
 

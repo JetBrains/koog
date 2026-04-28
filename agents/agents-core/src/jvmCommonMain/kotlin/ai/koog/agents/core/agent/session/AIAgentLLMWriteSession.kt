@@ -30,7 +30,7 @@ import kotlinx.coroutines.jdk9.asPublisher
 import kotlinx.serialization.KSerializer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Flow.Publisher
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * JVM actual implementation of a mutable LLM session.
@@ -47,7 +47,7 @@ public actual class AIAgentLLMWriteSession actual constructor(
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
-    clock: Clock
+    clock: AgentClock
 ) : AIAgentLLMWriteSessionCommon(environment, executor, tools, toolRegistry, prompt, model, responseProcessor, config, clock) {
 
     /**

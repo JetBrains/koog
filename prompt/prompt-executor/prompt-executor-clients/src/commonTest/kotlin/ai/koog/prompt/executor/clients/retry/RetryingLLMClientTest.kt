@@ -29,7 +29,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.milliseconds
 
 class RetryingLLMClientTest {
@@ -46,7 +46,7 @@ class RetryingLLMClientTest {
         user("Test user message")
     }
 
-    private val testMetaInfo = ResponseMetaInfo.create(Clock.System)
+    private val testMetaInfo = ResponseMetaInfo.create(AgentClock.System)
 
     private val testResponse = listOf(
         Message.Assistant(

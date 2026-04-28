@@ -15,7 +15,7 @@ import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.TypeToken
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * Represents a configurational builder for setting up and customizing the execution parameters and
@@ -49,7 +49,7 @@ public class GraphAgentBuilder<Input, Output>(
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     config: AIAgentConfig,
-    clock: Clock = Clock.System,
+    clock: AgentClock = AgentClock.System,
     private var featureInstallers: MutableList<FeatureContext.() -> Unit> = mutableListOf(),
 ) : AIAgentBuilderBase<GraphAgentBuilder<Input, Output>>(
     promptExecutor = promptExecutor,
@@ -131,7 +131,7 @@ public class GraphAgentBuilder<Input, Output>(
  * @property toolRegistry A registry of tools available to the agent, by default set to `ToolRegistry.EMPTY`.
  * @property id An optional unique identifier for the agent.
  * @property config [AIAgentConfig] containing initial agent configuration for the builder
- * @property clock The clock instance used for time-related functionality, default is `Clock.System`.
+ * @property clock The clock instance used for time-related functionality, default is `AgentClock.System`.
  * @property featureInstallers A list of feature installation lambdas defining additional functionalities the agent should have.
  */
 public class FunctionalAgentBuilder<Input, Output>(
@@ -140,7 +140,7 @@ public class FunctionalAgentBuilder<Input, Output>(
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     config: AIAgentConfig,
-    clock: Clock = Clock.System,
+    clock: AgentClock = AgentClock.System,
     private var featureInstallers: MutableList<FunctionalAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) : AIAgentBuilderBase<FunctionalAgentBuilder<Input, Output>>(
     promptExecutor = promptExecutor,
@@ -213,7 +213,7 @@ public class PlannerAgentBuilder<Input, Output>(
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     config: AIAgentConfig,
-    clock: Clock = Clock.System,
+    clock: AgentClock = AgentClock.System,
     private var featureInstallers: MutableList<PlannerAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) : AIAgentBuilderBase<PlannerAgentBuilder<Input, Output>>(
     promptExecutor = promptExecutor,

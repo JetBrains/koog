@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 /**
@@ -48,7 +48,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     public val config: AIAgentConfig,
-    public val clock: Clock,
+    public val clock: AgentClock,
 ) : AutoCloseable {
     protected val readSession: AIAgentLLMReadSession
         get() = AIAgentLLMReadSession(

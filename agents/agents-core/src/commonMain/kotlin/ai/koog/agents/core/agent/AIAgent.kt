@@ -15,7 +15,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.io.Closeable
 import kotlin.jvm.JvmStatic
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.uuid.ExperimentalUuidApi
 
 /**
@@ -87,7 +87,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
             strategy: AIAgentGraphStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            clock: Clock = Clock.System,
+            clock: AgentClock = AgentClock.System,
             noinline installFeatures: FeatureContext.() -> Unit = {},
         ): AIAgent<Input, Output>
 
@@ -133,7 +133,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            clock: Clock = Clock.System,
+            clock: AgentClock = AgentClock.System,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
         ): FunctionalAIAgent<Input, Output>
 
@@ -179,7 +179,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @param responseProcessor The processor responsible for processing the model's responses.
          * @param toolRegistry An optional [ToolRegistry] specifying the tools available to the agent for execution. Defaults to `[ToolRegistry.EMPTY]`.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
-         * @param clock A `Clock` instance used for time-related operations. Defaults to `Clock.System`.
+         * @param clock A `Clock` instance used for time-related operations. Defaults to `AgentClock.System`.
          * @param systemPrompt Optional system prompt for the agent.
          * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0.
          * @param numberOfChoices The number of choices the model should generate per invocation. Defaults to `1`.
@@ -195,7 +195,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
             responseProcessor: ResponseProcessor? = null,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            clock: Clock = Clock.System,
+            clock: AgentClock = AgentClock.System,
             systemPrompt: String? = null,
             temperature: Double? = null,
             numberOfChoices: Int = 1,
@@ -284,7 +284,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
             strategy: AIAgentPlannerStrategy<Input, Output, *>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            clock: Clock = Clock.System,
+            clock: AgentClock = AgentClock.System,
             installFeatures: PlannerAIAgent.FeatureContext.() -> Unit = {},
         ): AIAgent<Input, Output>
     }

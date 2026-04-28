@@ -16,7 +16,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 class AIAgentServiceTest {
     private val serializer = KotlinxSerializer()
@@ -65,7 +65,7 @@ class AIAgentServiceTest {
         assertNotNull(service.toolRegistry)
 
         // create agent and run
-        val agent = service.createAgent(id = "id-1", clock = Clock.System)
+        val agent = service.createAgent(id = "id-1", clock = AgentClock.System)
         val out = agent.run("in", null)
         assertEquals("ok:in", out)
     }

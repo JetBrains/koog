@@ -12,7 +12,7 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.upsert
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * Abstract Exposed-based implementation of [SQLChatHistoryProvider] for managing
@@ -60,7 +60,7 @@ public abstract class ExposedChatHistoryProvider @JvmOverloads constructor(
             return
         }
 
-        val now = Clock.System.now().toEpochMilliseconds()
+        val now = AgentClock.System.now().toEpochMilliseconds()
 
         transaction {
             chatHistoryTable.deleteWhere {
@@ -71,7 +71,7 @@ public abstract class ExposedChatHistoryProvider @JvmOverloads constructor(
 
     override suspend fun store(conversationId: String, messages: List<Message>) {
         val messagesJson = json.encodeToString(ListSerializer(Message.serializer()), messages)
-        val now = Clock.System.now()
+        val now = AgentClock.System.now()
         val nowMillis = now.toEpochMilliseconds()
         val ttlTimestamp = calculateTtlTimestamp(now)
 
@@ -86,7 +86,7 @@ public abstract class ExposedChatHistoryProvider @JvmOverloads constructor(
     }
 
     override suspend fun load(conversationId: String): List<Message> {
-        val now = Clock.System.now().toEpochMilliseconds()
+        val now = AgentClock.System.now().toEpochMilliseconds()
 
         return transaction {
             chatHistoryTable

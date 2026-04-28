@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class RetrieveFactsFromHistoryTest {
@@ -33,9 +33,7 @@ class RetrieveFactsFromHistoryTest {
         every { provider } returns mockk<LLMProvider>()
     }
 
-    private val testClock: Clock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
+    private val testClock: AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
     private val testTimestamp = testClock.now().toEpochMilliseconds()
 
     /**

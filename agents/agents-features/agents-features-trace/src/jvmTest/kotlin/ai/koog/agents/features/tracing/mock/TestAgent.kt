@@ -17,12 +17,10 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
-internal val testClock: Clock = object : Clock {
-    override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-}
+internal val testClock: AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
 
 /**
  * Creates a user message with optional media attachments.

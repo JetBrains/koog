@@ -1,6 +1,6 @@
 package com.example;
 
-import kotlin.time.Clock;
+import ai.koog.utils.time.AgentClock;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -8,10 +8,9 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 public class Application {
 
-    // TODO: Make it work without requiring Kotlin Clock
     @Bean
-    kotlin.time.Clock kotlinClock() {
-        return Clock.System.System.INSTANCE;
+    AgentClock agentClock() {
+        return AgentClock.Companion.getSystem();
     }
 
     public static void main(String[] args) {

@@ -9,7 +9,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> actual constructor() {
     public actual abstract val promptExecutor: PromptExecutor
@@ -19,7 +19,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock
+        clock: AgentClock
     ): TAgent
 
     public actual abstract suspend fun createAgentAndRun(
@@ -27,7 +27,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock
+        clock: AgentClock
     ): Output
 
     public actual abstract suspend fun removeAgent(agent: TAgent): Boolean

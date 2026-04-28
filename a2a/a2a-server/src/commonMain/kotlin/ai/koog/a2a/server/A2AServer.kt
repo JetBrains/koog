@@ -213,7 +213,7 @@ import kotlinx.coroutines.launch
  *                     state = TaskState.Working,
  *                     // Mark this message as belonging to the created task
  *                     message = message.copy(taskId = context.taskId)
- *                     timestamp = Clock.System.now()
+ *                     timestamp = AgentClock.System.now()
  *                 ),
  *             )
  *         )
@@ -236,7 +236,7 @@ import kotlinx.coroutines.launch
  *                            TextPart("Task completed successfully!")
  *                        )
  *                    ),
- *                    timestamp = Clock.System.now()
+ *                    timestamp = AgentClock.System.now()
  *                 ),
  *                 final = true
  *             )

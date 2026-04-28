@@ -13,14 +13,12 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class BedrockMetaLlamaSerializationTest {
 
-    private val mockClock = object : Clock {
-        override fun now(): Instant = Clock.System.now()
-    }
+    private val mockClock = AgentClock { AgentClock.System.now() }
 
     private val model = BedrockModels.MetaLlama3_0_8BInstruct
     private val systemMessage = "You are a helpful assistant."

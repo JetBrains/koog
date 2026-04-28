@@ -12,7 +12,7 @@ import com.agentclientprotocol.model.SessionUpdate
 import com.agentclientprotocol.model.SessionUpdate.AgentMessageChunk
 import com.agentclientprotocol.model.ToolCallId
 import com.agentclientprotocol.model.ToolCallStatus
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /** Constant to use for an unknown content part format */
 public const val UNKNOWN_FORMAT: String = "unknown"
@@ -35,7 +35,7 @@ public const val UNKNOWN_TOOL_DESCRIPTION: String = "unknown"
 /**
  * Converts a list of [ContentBlock] of ACP prompt to a Koog [Message.User].
  */
-public fun List<ContentBlock>.toKoogMessage(clock: Clock): Message {
+public fun List<ContentBlock>.toKoogMessage(clock: AgentClock): Message {
     return Message.User(
         parts = this.map { it.toKoogContentPart() },
         metaInfo = RequestMetaInfo(clock.now())

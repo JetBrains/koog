@@ -9,7 +9,7 @@ import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 class AssistantMessageEventTest {
 
@@ -127,7 +127,7 @@ class AssistantMessageEventTest {
 
     private fun createTestAssistantMessage(content: String): Message.Response = Message.Assistant(
         content = content,
-        metaInfo = ResponseMetaInfo(Clock.System.now())
+        metaInfo = ResponseMetaInfo(AgentClock.System.now())
     )
 
     private fun createTestToolCallMessage(id: String, tool: String, content: String): Message.Tool.Call =
@@ -135,7 +135,7 @@ class AssistantMessageEventTest {
             id = id,
             tool = tool,
             content = content,
-            metaInfo = ResponseMetaInfo(Clock.System.now())
+            metaInfo = ResponseMetaInfo(AgentClock.System.now())
         )
 
     //endregion Private Methods

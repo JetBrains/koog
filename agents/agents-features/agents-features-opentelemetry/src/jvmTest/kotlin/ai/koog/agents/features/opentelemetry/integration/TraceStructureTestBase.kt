@@ -55,7 +55,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 abstract class TraceStructureTestBase(private val openTelemetryConfigurator: OpenTelemetryConfig.() -> Unit) {
     private val json = Json { allowStructuredMapKeys = true }
@@ -458,7 +458,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val agentId = "test-agent-id"
             val promptId = "test-prompt-id"
-            val testClock = Clock.System
+            val testClock = AgentClock.System
             val model = OpenAIModels.Chat.GPT4o
             val temperature = 0.4
 
@@ -786,7 +786,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 val moderate by node<String, String>("moderate-message") { input ->
                     llm.writeSession {
                         val moderationPrompt = prompt("single-message-moderation") {
-                            message(Message.User(input, RequestMetaInfo.create(Clock.System)))
+                            message(Message.User(input, RequestMetaInfo.create(AgentClock.System)))
                         }
                         llm.promptExecutor.moderate(moderationPrompt, OpenAIModels.Moderation.Omni)
                     }

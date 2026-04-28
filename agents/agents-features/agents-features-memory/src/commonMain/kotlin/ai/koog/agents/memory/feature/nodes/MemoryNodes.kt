@@ -16,7 +16,7 @@ import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.prompt.llm.LLModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 // ==========
 // Memory nodes
@@ -208,7 +208,7 @@ internal data class SubjectWithFact(
 @InternalAgentsApi
 public fun parseFactsFromResponse(
     content: String,
-    clock: Clock = Clock.System,
+    clock: AgentClock = AgentClock.System,
 ): List<Pair<MemorySubject, Fact>> {
     val parsedFacts = Json.decodeFromString<List<SubjectWithFact>>(content)
     val groupedFacts = parsedFacts.groupBy { it.subject to it.keyword }

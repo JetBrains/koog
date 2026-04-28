@@ -27,11 +27,11 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.utils.submitToMainDispatcher
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 public actual abstract class AIAgentPipeline actual constructor(
     agentConfig: AIAgentConfig,
-    clock: Clock
+    clock: AgentClock
 ) : AIAgentPipelineAPI by AIAgentPipelineImpl(agentConfig, clock) {
     // JVM Unique Interceptors
 

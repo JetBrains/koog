@@ -21,14 +21,12 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class BedrockAnthropicClaudeSerializationTest {
 
-    private val mockClock = object : Clock {
-        override fun now(): Instant = Instant.DISTANT_FUTURE
-    }
+    private val mockClock = AgentClock { Instant.DISTANT_FUTURE }
 
     private val systemMessage = "You are a helpful assistant."
     private val userMessage = "Tell me about Paris."

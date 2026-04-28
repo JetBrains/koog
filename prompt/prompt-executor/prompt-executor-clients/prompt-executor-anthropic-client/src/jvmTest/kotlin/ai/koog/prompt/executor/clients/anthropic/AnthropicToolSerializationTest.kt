@@ -18,7 +18,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 class AnthropicToolSerializationTest {
 
@@ -192,7 +192,7 @@ class AnthropicToolSerializationTest {
     fun testCreateAnthropicRequestIncludesIsErrorTrueForErrorToolResult() {
         val client = AnthropicLLMClient(apiKey = "test-key")
         val model = AnthropicModels.Sonnet_4
-        val metaInfo = RequestMetaInfo.create(Clock.System)
+        val metaInfo = RequestMetaInfo.create(AgentClock.System)
 
         val requestJson = client.createAnthropicRequest(
             prompt = Prompt(
@@ -235,7 +235,7 @@ class AnthropicToolSerializationTest {
     fun testCreateAnthropicRequestOmitsIsErrorForSuccessfulToolResult() {
         val client = AnthropicLLMClient(apiKey = "test-key")
         val model = AnthropicModels.Sonnet_4
-        val metaInfo = RequestMetaInfo.create(Clock.System)
+        val metaInfo = RequestMetaInfo.create(AgentClock.System)
 
         val requestJson = client.createAnthropicRequest(
             prompt = Prompt(

@@ -18,7 +18,7 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 @TestInstance(Lifecycle.PER_METHOD)
 @ExtendWith(DockerAvailableCondition::class)
@@ -97,13 +97,13 @@ class H2PersistenceStorageProviderTest {
     private fun createTestCheckpoint(id: String, version: Long): AgentCheckpointData {
         return AgentCheckpointData(
             checkpointId = id,
-            createdAt = Clock.System.now(),
+            createdAt = AgentClock.System.now(),
             nodePath = "test-node",
             lastOutput = JSONPrimitive("Test input"),
             messageHistory = listOf(
-                Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),
-                Message.User("Hello", RequestMetaInfo.create(Clock.System)),
-                Message.Assistant("Hi there!", ResponseMetaInfo.create(Clock.System))
+                Message.System("You are a test assistant", RequestMetaInfo.create(AgentClock.System)),
+                Message.User("Hello", RequestMetaInfo.create(AgentClock.System)),
+                Message.Assistant("Hi there!", ResponseMetaInfo.create(AgentClock.System))
             ),
             version = version
         )

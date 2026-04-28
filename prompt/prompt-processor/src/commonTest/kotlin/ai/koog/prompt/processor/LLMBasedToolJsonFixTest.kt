@@ -17,14 +17,12 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class LLMBasedToolJsonFixTest {
     private companion object {
-        private val testClock: Clock = object : Clock {
-            override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-        }
+        private val testClock: AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
 
         private val testMetaInfo = ResponseMetaInfo.create(testClock)
 

@@ -7,7 +7,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 class UserMessageEventTest {
 
@@ -60,7 +60,7 @@ class UserMessageEventTest {
 
     private fun createTestUserMessage(content: String): Message.User = Message.User(
         content = content,
-        metaInfo = RequestMetaInfo(Clock.System.now())
+        metaInfo = RequestMetaInfo(AgentClock.System.now())
     )
 
     //endregion Private Methods

@@ -17,7 +17,7 @@ import org.postgresql.ds.PGSimpleDataSource
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 @TestInstance(Lifecycle.PER_CLASS)
 @ExtendWith(DockerAvailableCondition::class)
@@ -65,17 +65,17 @@ class PostgresJdbcChatHistoryProviderTest : AbstractJdbcChatHistoryProviderTest(
         run1.store(
             "agent-alice",
             listOf(
-                Message.System("You help with math.", RequestMetaInfo.create(Clock.System)),
-                Message.User("What is 2+2?", RequestMetaInfo.create(Clock.System)),
-                Message.Assistant("4", ResponseMetaInfo.create(Clock.System))
+                Message.System("You help with math.", RequestMetaInfo.create(AgentClock.System)),
+                Message.User("What is 2+2?", RequestMetaInfo.create(AgentClock.System)),
+                Message.Assistant("4", ResponseMetaInfo.create(AgentClock.System))
             )
         )
         run1.store(
             "agent-bob",
             listOf(
-                Message.System("You help with history.", RequestMetaInfo.create(Clock.System)),
-                Message.User("When was the moon landing?", RequestMetaInfo.create(Clock.System)),
-                Message.Assistant("July 20, 1969.", ResponseMetaInfo.create(Clock.System))
+                Message.System("You help with history.", RequestMetaInfo.create(AgentClock.System)),
+                Message.User("When was the moon landing?", RequestMetaInfo.create(AgentClock.System)),
+                Message.Assistant("July 20, 1969.", ResponseMetaInfo.create(AgentClock.System))
             )
         )
         assertEquals(2, run1.getConversationCount())
@@ -86,16 +86,16 @@ class PostgresJdbcChatHistoryProviderTest : AbstractJdbcChatHistoryProviderTest(
         val aliceHistory = run2.load("agent-alice")
         assertEquals(3, aliceHistory.size)
         val aliceUpdated = aliceHistory + listOf(
-            Message.User("And 3+3?", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("6", ResponseMetaInfo.create(Clock.System))
+            Message.User("And 3+3?", RequestMetaInfo.create(AgentClock.System)),
+            Message.Assistant("6", ResponseMetaInfo.create(AgentClock.System))
         )
         run2.store("agent-alice", aliceUpdated)
 
         val bobHistory = run2.load("agent-bob")
         assertEquals(3, bobHistory.size)
         val bobUpdated = bobHistory + listOf(
-            Message.User("Who was the first person on the moon?", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Neil Armstrong.", ResponseMetaInfo.create(Clock.System))
+            Message.User("Who was the first person on the moon?", RequestMetaInfo.create(AgentClock.System)),
+            Message.Assistant("Neil Armstrong.", ResponseMetaInfo.create(AgentClock.System))
         )
         run2.store("agent-bob", bobUpdated)
 

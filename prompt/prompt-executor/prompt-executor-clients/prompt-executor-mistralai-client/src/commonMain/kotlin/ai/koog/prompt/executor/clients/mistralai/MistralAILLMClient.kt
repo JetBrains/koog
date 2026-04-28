@@ -42,7 +42,7 @@ import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * Represents the settings for configuring a Mistral AI client.
@@ -74,7 +74,7 @@ public class MistralAIClientSettings(
 public open class MistralAILLMClient @JvmOverloads constructor(
     private val settings: MistralAIClientSettings = MistralAIClientSettings(),
     httpClient: KoogHttpClient,
-    clock: Clock = Clock.System,
+    clock: AgentClock = AgentClock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<MistralAIChatCompletionResponse, MistralAIChatCompletionStreamResponse>(
     settings = settings,
@@ -89,7 +89,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: MistralAIClientSettings = MistralAIClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        clock: AgentClock = AgentClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,

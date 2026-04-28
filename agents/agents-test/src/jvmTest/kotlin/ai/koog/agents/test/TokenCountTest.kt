@@ -21,7 +21,7 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Disabled
 import kotlin.test.AfterTest
 import kotlin.test.Test
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 class TokenCountTest {
     private val serializer = KotlinxSerializer()
@@ -69,7 +69,7 @@ class TokenCountTest {
     private var outputTokens: Int? = null
     private var totalTokens: Int? = null
 
-    private val clock = Clock.System
+    private val clock = AgentClock.System
 
     private val systemPrompt = """
         You are a helpful assistant. Use tools when requested.

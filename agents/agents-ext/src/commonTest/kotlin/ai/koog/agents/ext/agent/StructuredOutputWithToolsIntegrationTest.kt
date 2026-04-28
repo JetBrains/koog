@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 class StructuredOutputWithToolsIntegrationTest {
 
@@ -201,7 +201,7 @@ class StructuredOutputWithToolsIntegrationTest {
         }
 
         val toolCallTimestamps = mutableMapOf<String, Long>()
-        val currentTime = Clock.System.now().toEpochMilliseconds()
+        val currentTime = AgentClock.System.now().toEpochMilliseconds()
 
         val mockExecutor = getMockExecutor(serializer) {
             // Return structured output

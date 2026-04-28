@@ -13,7 +13,7 @@ import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 class PersistenceRestoreStrategyTests {
     private val serializer = KotlinxSerializer()
@@ -27,10 +27,10 @@ class PersistenceRestoreStrategyTests {
 
         val checkpoint = AgentCheckpointData(
             checkpointId = "chk-1",
-            createdAt = Clock.System.now(),
+            createdAt = AgentClock.System.now(),
             nodePath = "$agentId/restore-strategy/Node2",
             lastInput = JSONPrimitive("input-for-node2"),
-            messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(Clock.System.now()))),
+            messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(AgentClock.System.now()))),
             version = 0L
         )
 

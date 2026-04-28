@@ -18,6 +18,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                api(project(":utils"))
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.coroutines.core)
                 implementation(project(":agents:agents-utils"))

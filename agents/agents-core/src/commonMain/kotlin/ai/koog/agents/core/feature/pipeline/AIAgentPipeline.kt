@@ -40,7 +40,7 @@ import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.TypeToken
 import kotlin.reflect.KClass
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * Pipeline for AI agent features that provides interception points for various agent lifecycle events.
@@ -60,13 +60,13 @@ import kotlin.time.Clock
  * @property clock Clock instance for time-related operations
  */
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: Clock) : AIAgentPipelineAPI {
+public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: AgentClock) : AIAgentPipelineAPI {
     /**
      * Provides access to a `Clock` instance representing the current system time.
      * The `Clock` can be used to retrieve the current time, create date-time instances,
      * or perform operations based on a specific moment in time.
      */
-    public override val clock: Clock
+    public override val clock: AgentClock
 
     /**
      * Represents the configuration settings for the AI agent.

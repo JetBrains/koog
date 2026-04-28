@@ -29,7 +29,7 @@ import java.util.concurrent.Flow.Publisher
 import java.util.concurrent.Flow.Subscriber
 import java.util.concurrent.Flow.Subscription
 import java.util.concurrent.TimeUnit
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(InternalAgentsApi::class)
@@ -62,7 +62,7 @@ object JavaUtils {
         HistoryCompressionStrategy.WholeHistory,
         HistoryCompressionStrategy.WholeHistoryMultipleSystemMessages,
         HistoryCompressionStrategy.FromLastNMessages(1),
-        HistoryCompressionStrategy.FromTimestamp(Clock.System.now().minus(1.seconds)),
+        HistoryCompressionStrategy.FromTimestamp(AgentClock.System.now().minus(1.seconds)),
         HistoryCompressionStrategy.Chunked(2)
     )
 

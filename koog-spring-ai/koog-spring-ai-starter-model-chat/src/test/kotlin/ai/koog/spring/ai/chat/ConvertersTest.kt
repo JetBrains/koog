@@ -22,12 +22,12 @@ import org.springframework.ai.chat.messages.ToolResponseMessage
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.chat.metadata.Usage
 import org.springframework.ai.chat.model.Generation
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 class ConvertersTest {
 
-    private val requestMeta = RequestMetaInfo.create(Clock.System)
-    private val responseMeta = ResponseMetaInfo.create(Clock.System)
+    private val requestMeta = RequestMetaInfo.create(AgentClock.System)
+    private val responseMeta = ResponseMetaInfo.create(AgentClock.System)
 
     // ---- koogMessageToSpringMessage ----
 

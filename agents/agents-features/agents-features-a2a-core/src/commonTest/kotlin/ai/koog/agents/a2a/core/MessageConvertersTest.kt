@@ -19,14 +19,12 @@ import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class MessageConvertersTest {
     private val fixedInstant: Instant = Instant.parse("2024-01-01T00:00:00Z")
-    private val fixedClock: Clock = object : Clock {
-        override fun now(): Instant = fixedInstant
-    }
+    private val fixedClock: AgentClock = AgentClock { fixedInstant }
 
     private val prettyJson = Json { prettyPrint = true }
 

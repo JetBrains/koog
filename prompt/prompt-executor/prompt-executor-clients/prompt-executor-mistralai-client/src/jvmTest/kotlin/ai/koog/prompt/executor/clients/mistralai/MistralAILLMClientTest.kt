@@ -22,12 +22,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class MistralAILLMClientTest {
 
-    object FixedClock : Clock {
+    object FixedClock : AgentClock {
         override fun now(): Instant = Instant.fromEpochMilliseconds(0)
     }
 

@@ -20,7 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
@@ -67,9 +67,7 @@ class HistoryCompressionStrategiesTest {
     companion object {
         private val dummyArgsContent = Json.encodeToString(DummyTool.Args("dummy"))
 
-        private fun testClock(delay: Duration): Clock = object : Clock {
-            override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z").plus(delay)
-        }
+        private fun testClock(delay: Duration): AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z").plus(delay) }
 
         val simpleHistory = listOf(
             Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),

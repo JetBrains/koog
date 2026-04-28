@@ -7,6 +7,7 @@ import ai.koog.prompt.message.Message;
 import ai.koog.prompt.message.Message.Response;
 import ai.koog.prompt.message.RequestMetaInfo;
 import ai.koog.prompt.params.LLMParams;
+import ai.koog.utils.time.AgentClock;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 @Service
 record AIService(
     @NonNull JavaPromptExecutor executor,
-    kotlin.time.Clock clock
+    AgentClock clock
 ) {
 
     private static final Logger log = LoggerFactory.getLogger(AIService.class);

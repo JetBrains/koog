@@ -4,7 +4,7 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONSerializer
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * A wrapper class designed to safely execute a tool within a given AI agent environment.
@@ -18,7 +18,7 @@ import kotlin.time.Clock
 public data class SafeTool<TArgs, TResult>(
     internal val tool: Tool<TArgs, TResult>,
     internal val environment: AIAgentEnvironment,
-    internal val clock: Clock
+    internal val clock: AgentClock
 ) {
     /**
      * Represents a sealed interface for results, which can either be a success or a failure.

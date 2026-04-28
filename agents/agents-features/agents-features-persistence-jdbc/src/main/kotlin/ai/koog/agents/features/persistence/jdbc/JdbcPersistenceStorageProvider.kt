@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.sql.Types
 import javax.sql.DataSource
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * Abstract pure JDBC implementation of [SQLPersistenceStorageProvider] for managing agent checkpoint
@@ -108,7 +108,7 @@ public abstract class JdbcPersistenceStorageProvider @JvmOverloads constructor(
         sessionId: String,
         filter: JdbcPersistenceFilter?
     ): List<AgentCheckpointData> {
-        val now = Clock.System.now().toEpochMilliseconds()
+        val now = AgentClock.System.now().toEpochMilliseconds()
 
         val checkpoints = withContext(ioDispatcher) {
             dataSource.connection.use { connection ->
@@ -135,7 +135,7 @@ public abstract class JdbcPersistenceStorageProvider @JvmOverloads constructor(
 
     override suspend fun saveCheckpoint(sessionId: String, agentCheckpointData: AgentCheckpointData) {
         val checkpointJson = serializeCheckpoint(agentCheckpointData)
-        val now = Clock.System.now()
+        val now = AgentClock.System.now()
         val ttlTimestamp = calculateTtlTimestamp(now)
 
         withContext(ioDispatcher) {
@@ -166,7 +166,7 @@ public abstract class JdbcPersistenceStorageProvider @JvmOverloads constructor(
             return getCheckpoints(sessionId, filter).maxByOrNull { it.version }
         }
 
-        val now = Clock.System.now().toEpochMilliseconds()
+        val now = AgentClock.System.now().toEpochMilliseconds()
 
         return withContext(ioDispatcher) {
             dataSource.connection.use { connection ->
@@ -192,7 +192,7 @@ public abstract class JdbcPersistenceStorageProvider @JvmOverloads constructor(
     override suspend fun cleanupExpired() {
         if (ttlSeconds == null) return
 
-        val now = Clock.System.now().toEpochMilliseconds()
+        val now = AgentClock.System.now().toEpochMilliseconds()
 
         withContext(ioDispatcher) {
             dataSource.connection.use { connection ->
@@ -228,7 +228,7 @@ public abstract class JdbcPersistenceStorageProvider @JvmOverloads constructor(
     }
 
     override suspend fun getCheckpointCount(agentId: String): Long {
-        val now = Clock.System.now().toEpochMilliseconds()
+        val now = AgentClock.System.now().toEpochMilliseconds()
 
         return withContext(ioDispatcher) {
             dataSource.connection.use { connection ->

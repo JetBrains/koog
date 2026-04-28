@@ -16,11 +16,11 @@ import ai.koog.agents.core.feature.handler.planner.PlanCreationStartingContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionStartingContext
 import ai.koog.agents.core.utils.submitToMainDispatcher
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor(
     agentConfig: AIAgentConfig,
-    clock: Clock,
+    clock: AgentClock,
     private val basePipelineDelegate: AIAgentPipelineImpl
 ) : AIAgentPipeline(agentConfig, clock), AIAgentPlannerPipelineAPI by AIAgentPlannerPipelineImpl(agentConfig, clock, basePipelineDelegate) {
 

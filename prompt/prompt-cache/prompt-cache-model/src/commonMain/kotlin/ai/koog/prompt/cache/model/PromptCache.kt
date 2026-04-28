@@ -11,7 +11,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlin.math.absoluteValue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 private val defaultJson = Json {
     ignoreUnknownKeys = true
@@ -216,7 +216,7 @@ public interface PromptCache {
 public suspend fun PromptCache.get(
     prompt: Prompt,
     tools: List<ToolDescriptor>,
-    clock: Clock = Clock.System
+    clock: AgentClock = AgentClock.System
 ): List<Message.Response>? {
     return get(PromptCache.Request.create(prompt, tools))?.let { messages ->
         val metaInfo = prompt

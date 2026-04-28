@@ -90,7 +90,7 @@ import kotlin.io.path.readBytes
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -148,7 +148,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 ),
                 Arguments.of(HistoryCompressionStrategy.FromLastNMessages(1), "FromLastNMessages(1)"),
                 Arguments.of(
-                    HistoryCompressionStrategy.FromTimestamp(Clock.System.now().minus(1.seconds)),
+                    HistoryCompressionStrategy.FromTimestamp(AgentClock.System.now().minus(1.seconds)),
                     "FromTimestamp"
                 ),
                 Arguments.of(HistoryCompressionStrategy.Chunked(2), "Chunked(2)")

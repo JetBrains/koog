@@ -47,16 +47,14 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 internal object OpenTelemetryTestAPI {
     private val serializer = KotlinxSerializer()
 
-    internal val testClock: Clock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
+    internal val testClock: AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     private val spansCollectionTimeout = 5.seconds
 

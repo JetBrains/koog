@@ -44,6 +44,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
+import ai.koog.utils.time.AgentClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.utils.io.CancellationException
@@ -58,7 +59,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -95,7 +95,7 @@ public class GoogleClientSettings(
 public open class GoogleLLMClient @JvmOverloads constructor(
     private val settings: GoogleClientSettings = GoogleClientSettings(),
     private val httpClient: KoogHttpClient,
-    private val clock: Clock = Clock.System
+    private val clock: AgentClock = AgentClock.System
 ) : LLMClient() {
 
     /**
@@ -111,7 +111,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: GoogleClientSettings = GoogleClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System
+        clock: AgentClock = AgentClock.System
     ) : this(
         settings,
         createConfiguredHttpClient(apiKey, settings, baseClient),

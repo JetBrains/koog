@@ -27,7 +27,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -48,9 +48,7 @@ class RedisPromptCacheTest {
         private val testTools = emptyList<ToolDescriptor>()
         private val testResponse = listOf(Message.Assistant("Hello, user!", ResponseMetaInfo.Empty))
 
-        private val testClock = object : Clock {
-            override fun now() = testResponse.first().metaInfo.timestamp
-        }
+        private val testClock = AgentClock { testResponse.first().metaInfo.timestamp }
     }
 
     @BeforeTest

@@ -17,7 +17,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlin.jvm.JvmStatic
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * A utility class for matching strings to associated responses based on different matching strategies.
@@ -66,7 +66,7 @@ public class MockPromptExecutor internal constructor(
     private val streamResponseMatcher: ResponseMatcher<Flow<StreamFrame>>,
     private val logger: KLogger = KotlinLogging.logger(MockPromptExecutor::class.simpleName.toString()),
     internal val toolActions: List<ToolCondition<*, *>> = emptyList(),
-    private val clock: Clock = Clock.System,
+    private val clock: AgentClock = AgentClock.System,
     private val tokenizer: Tokenizer? = null
 ) : PromptExecutor() {
     public companion object {

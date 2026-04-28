@@ -15,7 +15,7 @@ import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * Tests for checkpoint functionality in subgraphs.
@@ -181,7 +181,7 @@ class SubgraphCheckpointsTest {
 
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-1",
-            createdAt = Clock.System.now(),
+            createdAt = AgentClock.System.now(),
             nodePath = path(agentId, "repeated-subgraphs-test", "sg1", "sgNode1"),
             lastInput = JSONPrimitive("Input at checkpoint"),
             messageHistory = listOf(),

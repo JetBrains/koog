@@ -23,7 +23,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -119,7 +119,7 @@ class FileCheckpointsTests {
 
     @Test
     fun testRestoreFromSingleCheckpoint() = runTest {
-        val time = Clock.System.now()
+        val time = AgentClock.System.now()
         val agentId = "testAgentId"
         val sessionId = "testSessionId"
 
@@ -161,7 +161,7 @@ class FileCheckpointsTests {
 
     @Test
     fun testRestoreFromSingleCheckpointWithNodeOutput() = runTest {
-        val time = Clock.System.now()
+        val time = AgentClock.System.now()
         val agentId = "testAgentId"
         val sessionId = "testSessionId"
 
@@ -203,7 +203,7 @@ class FileCheckpointsTests {
 
     @Test
     fun testRestoreFromLatestCheckpoint() = runTest {
-        val time = Clock.System.now()
+        val time = AgentClock.System.now()
         val agentId = "testAgentId"
         val sessionId = "testSessionId"
 

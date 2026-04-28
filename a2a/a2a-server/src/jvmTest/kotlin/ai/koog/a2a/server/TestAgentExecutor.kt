@@ -17,7 +17,7 @@ import ai.koog.a2a.server.session.SessionEventProcessor
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -45,7 +45,7 @@ private suspend fun doTask(
         contextId = context.contextId,
         status = TaskStatus(
             state = TaskState.Submitted,
-            timestamp = Clock.System.now()
+            timestamp = AgentClock.System.now()
         ),
         history = listOf(context.params.message)
     )
@@ -67,7 +67,7 @@ private suspend fun doTask(
                     contextId = context.contextId,
                     taskId = context.taskId
                 ),
-                timestamp = Clock.System.now()
+                timestamp = AgentClock.System.now()
             ),
             final = false
         )
@@ -87,7 +87,7 @@ private suspend fun doTask(
                     contextId = context.contextId,
                     taskId = context.taskId
                 ),
-                timestamp = Clock.System.now()
+                timestamp = AgentClock.System.now()
             ),
             final = true
         )
@@ -103,7 +103,7 @@ private suspend fun doCancelableTask(
         contextId = context.contextId,
         status = TaskStatus(
             state = TaskState.Submitted,
-            timestamp = Clock.System.now()
+            timestamp = AgentClock.System.now()
         ),
         history = listOf(context.params.message)
     )
@@ -120,7 +120,7 @@ private suspend fun doLongRunningTask(
         contextId = context.contextId,
         status = TaskStatus(
             state = TaskState.Submitted,
-            timestamp = Clock.System.now()
+            timestamp = AgentClock.System.now()
         ),
         history = listOf(context.params.message)
     )
@@ -144,7 +144,7 @@ private suspend fun doLongRunningTask(
                         contextId = context.contextId,
                         taskId = context.taskId
                     ),
-                    timestamp = Clock.System.now()
+                    timestamp = AgentClock.System.now()
                 ),
                 final = false
             )
@@ -210,7 +210,7 @@ class TestAgentExecutor : AgentExecutor {
                         contextId = context.contextId,
                         taskId = context.taskId
                     ),
-                    timestamp = Clock.System.now()
+                    timestamp = AgentClock.System.now()
                 ),
                 final = true
             )

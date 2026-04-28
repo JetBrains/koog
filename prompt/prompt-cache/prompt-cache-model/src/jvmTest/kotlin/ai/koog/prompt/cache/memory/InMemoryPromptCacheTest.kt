@@ -16,7 +16,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.milliseconds
 
 class InMemoryPromptCacheTest {
@@ -38,13 +38,9 @@ class InMemoryPromptCacheTest {
         private val testPrompts = (1..5).map { iter -> Prompt.build(testPrompt) { user("Hello, world! $iter") } }
         private val testResponses = (1..5).map { iter -> listOf(createAssistantMessage("Hello, user $iter")) }
 
-        private val testClock = object : Clock {
-            override fun now() = testResponse.first().metaInfo.timestamp
-        }
+        private val testClock = AgentClock { testResponse.first().metaInfo.timestamp }
 
-        private val differentTestClock = object : Clock {
-            override fun now() = testClock.now().plus(1.milliseconds)
-        }
+        private val differentTestClock = AgentClock { testClock.now().plus(1.milliseconds) }
     }
 
     @BeforeTest

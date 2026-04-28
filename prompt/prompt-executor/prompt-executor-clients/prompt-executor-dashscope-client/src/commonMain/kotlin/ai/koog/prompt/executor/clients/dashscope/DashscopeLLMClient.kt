@@ -25,7 +25,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * Configuration settings for connecting to the DashScope API using OpenAI-compatible endpoints.
@@ -54,7 +54,7 @@ public class DashscopeClientSettings(
 public class DashscopeLLMClient @JvmOverloads constructor(
     private val settings: DashscopeClientSettings = DashscopeClientSettings(),
     httpClient: KoogHttpClient,
-    clock: Clock = Clock.System,
+    clock: AgentClock = AgentClock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DashscopeChatCompletionResponse, DashscopeChatCompletionStreamResponse>(
     settings = settings,
@@ -69,7 +69,7 @@ public class DashscopeLLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: DashscopeClientSettings = DashscopeClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        clock: AgentClock = AgentClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,

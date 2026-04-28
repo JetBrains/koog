@@ -15,7 +15,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlin.reflect.KClass
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * A session for managing interactions with a language learning model (LLM)
@@ -46,7 +46,7 @@ internal constructor(
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
-    clock: Clock
+    clock: AgentClock
 ) : AIAgentLLMWriteSessionCommon
 
 /**

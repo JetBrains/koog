@@ -21,7 +21,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
@@ -31,9 +31,7 @@ class FilePromptCacheTest {
 
     private lateinit var cache: FilePromptCache
 
-    private val testClock: Clock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
+    private val testClock: AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     @BeforeEach
     fun setUp() {

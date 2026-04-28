@@ -14,7 +14,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 class ContextWindowStrategyTest {
     @Test
@@ -135,7 +135,7 @@ class ContextWindowStrategyTest {
                     Message.Assistant(
                         "Dummy message",
                         metaInfo = ResponseMetaInfo(
-                            timestamp = Clock.System.now(),
+                            timestamp = AgentClock.System.now(),
                             totalTokensCount = 5000,
                         )
                     )

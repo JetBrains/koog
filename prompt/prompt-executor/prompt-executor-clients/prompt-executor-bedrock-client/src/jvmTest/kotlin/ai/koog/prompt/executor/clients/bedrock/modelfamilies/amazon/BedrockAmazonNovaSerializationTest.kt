@@ -19,14 +19,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class BedrockAmazonNovaSerializationTest {
 
-    private val mockClock = object : Clock {
-        override fun now(): Instant = Instant.DISTANT_FUTURE
-    }
+    private val mockClock = AgentClock { Instant.DISTANT_FUTURE }
 
     private val model = BedrockModels.AmazonNovaPro
     private val systemMessage = "You are a helpful assistant."

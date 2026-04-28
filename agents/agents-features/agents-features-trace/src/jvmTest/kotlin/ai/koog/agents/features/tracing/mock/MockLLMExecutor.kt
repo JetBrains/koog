@@ -11,14 +11,12 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrames
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class MockLLMExecutor : PromptExecutor() {
 
-    private val clock: Clock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
+    private val clock: AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         return listOf(handlePrompt(prompt))

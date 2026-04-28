@@ -14,14 +14,14 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 class OpenTelemetryResponseMetadataTest {
 
     private val tracer = MockTracer()
     private val provider = MockLLMProvider()
     private val model = LLModel(provider, "test-model")
-    private val clock = Clock.System
+    private val clock = AgentClock.System
 
     private fun createInferenceSpan(id: String) = startInferenceSpan(
         tracer = tracer,

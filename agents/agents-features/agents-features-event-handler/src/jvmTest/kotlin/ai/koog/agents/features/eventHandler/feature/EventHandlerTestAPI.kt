@@ -10,14 +10,12 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 val ts: Instant = Instant.parse("2023-01-01T00:00:00Z")
 
-val testClock: Clock = object : Clock {
-    override fun now(): Instant = ts
-}
+val testClock: AgentClock = AgentClock { ts }
 
 fun createAgent(
     strategy: AIAgentGraphStrategy<String, String>,

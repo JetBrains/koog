@@ -42,14 +42,14 @@ import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.TypeToken
 import kotlin.reflect.KClass
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 /**
  * Platform-agnostic API for agent pipelines. Implemented by both the expect/actual AIAgentPipeline
  * and the shared AIAgentPipelineImpl.
  */
 public interface AIAgentPipelineAPI {
-    public val clock: Clock
+    public val clock: AgentClock
 
     public val config: AIAgentConfig
 

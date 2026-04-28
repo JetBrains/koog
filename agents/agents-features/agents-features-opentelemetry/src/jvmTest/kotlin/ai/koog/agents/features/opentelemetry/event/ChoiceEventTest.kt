@@ -10,7 +10,7 @@ import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 class ChoiceEventTest {
 
@@ -167,7 +167,7 @@ class ChoiceEventTest {
     private fun createTestAssistantMessage(content: String, finishReason: String? = null): Message.Assistant =
         Message.Assistant(
             content = content,
-            metaInfo = ResponseMetaInfo(Clock.System.now()),
+            metaInfo = ResponseMetaInfo(AgentClock.System.now()),
             finishReason = finishReason
         )
 
@@ -176,7 +176,7 @@ class ChoiceEventTest {
             id = id,
             tool = tool,
             content = content,
-            metaInfo = ResponseMetaInfo(Clock.System.now())
+            metaInfo = ResponseMetaInfo(AgentClock.System.now())
         )
 
     //endregion Private Methods

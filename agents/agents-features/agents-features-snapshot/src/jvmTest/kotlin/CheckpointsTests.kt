@@ -64,7 +64,7 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 val databaseMap: MutableMap<String, String> = mutableMapOf()
@@ -387,7 +387,7 @@ class CheckpointsTests {
     @Test
     fun testRestoreFromSingleCheckpoint() = runTest {
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
-        val time = Clock.System.now()
+        val time = AgentClock.System.now()
         val convId = "testAgentId"
 
         val testCheckpoint = AgentCheckpointData(
@@ -428,7 +428,7 @@ class CheckpointsTests {
     @Test
     fun testRestoreFromLatestCheckpoint() = runTest {
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
-        val time = Clock.System.now()
+        val time = AgentClock.System.now()
         val sessionId = "testAgentId"
 
         val testCheckpoint2 = AgentCheckpointData(

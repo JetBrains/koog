@@ -13,7 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
 class FileAgentCheckpointStorageProviderTest {
     private lateinit var tempDir: java.nio.file.Path
@@ -37,10 +37,10 @@ class FileAgentCheckpointStorageProviderTest {
     fun testSaveAndRetrieveCheckpoint() = runTest {
         // Create a test checkpoint
         val checkpointId = "test-checkpoint"
-        val createdAt = Clock.System.now()
+        val createdAt = AgentClock.System.now()
         val nodeId = "test-node"
         val lastInput = JSONPrimitive("test-input")
-        val time = Clock.System.now()
+        val time = AgentClock.System.now()
         val messageHistory = listOf(
             Message.User("Hello", metaInfo = RequestMetaInfo(time)),
             Message.Assistant("Hi there!", metaInfo = ResponseMetaInfo(time))
@@ -88,7 +88,7 @@ class FileAgentCheckpointStorageProviderTest {
 
         // Create a second checkpoint with a later timestamp
         val laterCheckpointId = "later-checkpoint"
-        val laterCreatedAt = Clock.System.now()
+        val laterCreatedAt = AgentClock.System.now()
         val laterCheckpoint = AgentCheckpointData(
             checkpointId = laterCheckpointId,
             createdAt = laterCreatedAt,

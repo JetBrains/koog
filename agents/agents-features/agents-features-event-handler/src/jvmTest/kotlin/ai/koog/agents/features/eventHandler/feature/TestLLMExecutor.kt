@@ -11,9 +11,9 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrames
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 
-class TestLLMExecutor(val clock: Clock) : PromptExecutor() {
+class TestLLMExecutor(val clock: AgentClock) : PromptExecutor() {
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         return listOf(handlePrompt(prompt))
     }

@@ -37,7 +37,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
-import kotlin.time.Clock
+import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 @TestInstance(Lifecycle.PER_CLASS)
@@ -152,11 +152,11 @@ class PostgresPersistenceAgentRunTest {
 
     fun preSeedValidCheckpointChainTest(provider: PersistenceStorageProvider<*>) = runBlocking<Unit> {
         val agentId = "pg-agent-preseed-1"
-        val time = Clock.System.now()
+        val time = AgentClock.System.now()
 
         val cp1 = createTestCheckpoint("cp-1", time = time, version = 0, nodePath = path(agentId, "straight-forward", "Node2"))
         val cp2 = createTestCheckpoint("cp-2", version = cp1.version + 1, time = time, nodePath = path(agentId, "straight-forward", "Node2"))
-        val tomb = tombstoneCheckpoint(time = Clock.System.now(), version = cp2.version + 1)
+        val tomb = tombstoneCheckpoint(time = AgentClock.System.now(), version = cp2.version + 1)
 
         // Save in order: cp1 -> cp2 -> tombstone
         provider.saveCheckpoint(agentId, cp1)
@@ -195,11 +195,11 @@ class PostgresPersistenceAgentRunTest {
         val agentId = "pg-agent-preseed-2"
         val sessionId = "pg-agent-preseed-2"
         val stratName = "strategy"
-        val time = Clock.System.now()
+        val time = AgentClock.System.now()
 
         val cp1 = createTestCheckpoint("cp-1", version = 0, time = time, nodePath = path(agentId, stratName, "Node2"))
         val cp2 = createTestCheckpoint("cp-2", version = cp1.version + 1, time = time, nodePath = path(agentId, stratName, "Node2"))
-        val tomb = tombstoneCheckpoint(time = Clock.System.now(), version = cp2.version + 1)
+        val tomb = tombstoneCheckpoint(time = AgentClock.System.now(), version = cp2.version + 1)
         val cp3 = createTestCheckpoint("cp-3", version = tomb.version + 1, time = time, nodePath = path(agentId, stratName, "Node1"))
 
         // Save in order: cp1 -> cp2 -> tombstone -> cp3
@@ -244,7 +244,7 @@ class PostgresPersistenceAgentRunTest {
         val agentId = "pg-agent-preseed-3"
         val sessionId = "sessionid"
         val strategyId = "strategy"
-        val time = Clock.System.now()
+        val time = AgentClock.System.now()
 
         val cp1 = createTestCheckpoint("cp-1", version = 0, time = time, nodePath = path(sessionId, strategyId, "Node1"))
 
