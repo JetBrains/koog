@@ -138,18 +138,18 @@ class AgentcoreMemoryRecordConverterTest {
     }
 
     @Test
-    fun testParseFilterExpressionNullReturnsEmpty() {
-        assertEquals(emptyList(), AgentcoreMemoryRecordConverter.parseFilterExpression(null))
+    fun testParseFilterExpressionNullReturnsNull() {
+        assertNull(AgentcoreMemoryRecordConverter.parseFilterExpression(null))
     }
 
     @Test
-    fun testParseFilterExpressionBlankReturnsEmpty() {
-        assertEquals(emptyList(), AgentcoreMemoryRecordConverter.parseFilterExpression("   "))
+    fun testParseFilterExpressionBlankReturnsNull() {
+        assertNull(AgentcoreMemoryRecordConverter.parseFilterExpression("   "))
     }
 
     @Test
     fun testParseFilterExpressionEqualsTo() {
-        val result = AgentcoreMemoryRecordConverter.parseFilterExpression("topic = sports")
+        val result = AgentcoreMemoryRecordConverter.parseFilterExpression("topic = sports")!!
 
         assertEquals(1, result.size)
         val expr = result[0]
@@ -163,7 +163,7 @@ class AgentcoreMemoryRecordConverterTest {
 
     @Test
     fun testParseFilterExpressionExists() {
-        val result = AgentcoreMemoryRecordConverter.parseFilterExpression("topic EXISTS")
+        val result = AgentcoreMemoryRecordConverter.parseFilterExpression("topic EXISTS")!!
 
         assertEquals(1, result.size)
         val expr = result[0]
@@ -175,7 +175,7 @@ class AgentcoreMemoryRecordConverterTest {
 
     @Test
     fun testParseFilterExpressionNotExists() {
-        val result = AgentcoreMemoryRecordConverter.parseFilterExpression("topic NOT_EXISTS")
+        val result = AgentcoreMemoryRecordConverter.parseFilterExpression("topic NOT_EXISTS")!!
 
         assertEquals(1, result.size)
         val expr = result[0]
@@ -187,7 +187,7 @@ class AgentcoreMemoryRecordConverterTest {
 
     @Test
     fun testParseFilterExpressionOperatorKeywordsAreCaseInsensitive() {
-        val result = AgentcoreMemoryRecordConverter.parseFilterExpression("a exists, b not_exists")
+        val result = AgentcoreMemoryRecordConverter.parseFilterExpression("a exists, b not_exists")!!
 
         assertEquals(2, result.size)
         assertEquals(OperatorType.Exists, result[0].operator)
@@ -198,7 +198,7 @@ class AgentcoreMemoryRecordConverterTest {
     fun testParseFilterExpressionMultipleClauses() {
         val result = AgentcoreMemoryRecordConverter.parseFilterExpression(
             "topic = sports, author EXISTS, draft NOT_EXISTS"
-        )
+        )!!
 
         assertEquals(3, result.size)
         assertEquals(OperatorType.EqualsTo, result[0].operator)
@@ -212,7 +212,7 @@ class AgentcoreMemoryRecordConverterTest {
 
     @Test
     fun testParseFilterExpressionTrimsWhitespaceAndIgnoresEmptyClauses() {
-        val result = AgentcoreMemoryRecordConverter.parseFilterExpression("  topic   =   sports  , ,  author EXISTS  ")
+        val result = AgentcoreMemoryRecordConverter.parseFilterExpression("  topic   =   sports  , ,  author EXISTS  ")!!
 
         assertEquals(2, result.size)
         assertEquals("topic", (result[0].left as LeftExpression.MetadataKey).value)
@@ -225,7 +225,7 @@ class AgentcoreMemoryRecordConverterTest {
 
     @Test
     fun testParseFilterExpressionAllowsEmptyValueForEquals() {
-        val result = AgentcoreMemoryRecordConverter.parseFilterExpression("topic =")
+        val result = AgentcoreMemoryRecordConverter.parseFilterExpression("topic =")!!
 
         assertEquals(1, result.size)
         val value = (result[0].right as RightExpression.MetadataValue).value as MetadataValue.StringValue

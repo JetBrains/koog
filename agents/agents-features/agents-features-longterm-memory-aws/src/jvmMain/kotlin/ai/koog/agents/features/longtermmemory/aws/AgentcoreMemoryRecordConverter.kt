@@ -50,15 +50,15 @@ internal object AgentcoreMemoryRecordConverter {
      * - `key NOT_EXISTS`      → [OperatorType.NotExists] with the given metadata key (no right-hand value).
      *
      * Operator keywords (`EXISTS`, `NOT_EXISTS`) are matched case-insensitively. A blank or `null`
-     * input yields an empty list.
+     * input yields `null`, which signals to the caller that no metadata filtering should be applied.
      *
      * The metadata key must match `[a-zA-Z0-9\s._:/=+@-]{1,128}` and the value (when present) must
      * match `[a-zA-Z0-9\s._:/=+@-]{0,256}`, per the AgentCore API constraints.
      *
      * @throws IllegalArgumentException if a clause cannot be parsed or violates AgentCore constraints.
      */
-    internal fun parseFilterExpression(filterExpression: String?): List<MemoryMetadataFilterExpression> {
-        if (filterExpression.isNullOrBlank()) return emptyList()
+    internal fun parseFilterExpression(filterExpression: String?): List<MemoryMetadataFilterExpression>? {
+        if (filterExpression.isNullOrBlank()) return null
 
         return filterExpression.split(',')
             .map { it.trim() }
