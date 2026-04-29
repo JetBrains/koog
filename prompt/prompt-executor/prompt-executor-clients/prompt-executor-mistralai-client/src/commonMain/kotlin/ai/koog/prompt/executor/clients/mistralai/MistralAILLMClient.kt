@@ -1,6 +1,8 @@
 package ai.koog.prompt.executor.clients.mistralai
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientFactory
+import ai.koog.http.client.ktor.KtorHttpClientFactory
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -88,12 +90,43 @@ public open class MistralAILLMClient @JvmOverloads constructor(
     public constructor(
         apiKey: String,
         settings: MistralAIClientSettings = MistralAIClientSettings(),
+        httpClientFactory: KoogHttpClientFactory,
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
+    ) : this(
+        settings = settings,
+        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(
+            apiKey = apiKey,
+            settings = settings,
+            httpClientFactory = httpClientFactory,
+            clientName = MISTRALAI_CLIENT_NAME
+        ),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    @Deprecated(
+        "Use constructor with KoogHttpClientFactory",
+        ReplaceWith(
+            "MistralAILLMClient(apiKey, settings, KtorHttpClientFactory(), clock, toolsConverter)",
+            "ai.koog.http.client.ktor.KtorHttpClientFactory"
+        ),
+    )
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: MistralAIClientSettings = MistralAIClientSettings(),
         baseClient: HttpClient = HttpClient(),
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,
-        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = MISTRALAI_CLIENT_NAME),
+        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(
+            apiKey = apiKey,
+            settings = settings,
+            httpClientFactory = KtorHttpClientFactory(baseClient),
+            clientName = MISTRALAI_CLIENT_NAME
+        ),
         clock = clock,
         toolsConverter = toolsConverter
     )

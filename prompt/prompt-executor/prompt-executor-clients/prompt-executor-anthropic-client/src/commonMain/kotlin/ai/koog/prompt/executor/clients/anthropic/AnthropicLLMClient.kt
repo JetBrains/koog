@@ -4,7 +4,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.ktor.fromKtorClient
+import ai.koog.http.client.KoogHttpClientFactory
+import ai.koog.http.client.ktor.KtorHttpClientFactory
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -111,30 +112,45 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             explicitNulls = false
             namingStrategy = JsonNamingStrategy.SnakeCase
         }
+    }
 
-        private fun createConfiguredHttpClient(
-            apiKey: String,
-            settings: AnthropicClientSettings,
-            baseClient: HttpClient = HttpClient()
-        ): KoogHttpClient = KoogHttpClient.fromKtorClient(
+    /**
+     * Secondary constructor for creating an Anthropic client from an HTTP client factory.
+     */
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: AnthropicClientSettings = AnthropicClientSettings(),
+        httpClientFactory: KoogHttpClientFactory,
+        clock: Clock = Clock.System
+    ) : this(
+        settings = settings,
+        httpClient = httpClientFactory.create(
             clientName = ANTHROPIC_CLIENT_NAME,
-            logger = logger,
-            baseClient = baseClient,
             baseUrl = settings.baseUrl,
-            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis,
-            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
-            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
-            json = json,
             headers = mapOf(
                 "x-api-key" to apiKey,
                 "anthropic-version" to settings.apiVersion
             ),
-        )
-    }
+            queryParameters = emptyMap(),
+            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis,
+            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
+            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
+            json = json,
+        ),
+        clock = clock
+    )
 
     /**
      * Secondary constructor for creating an Anthropic client from a base Ktor HTTP client.
      */
+    @Deprecated(
+        "Use constructor with KoogHttpClientFactory",
+        ReplaceWith(
+            "AnthropicLLMClient(apiKey, settings, KtorHttpClientFactory(), clock)",
+            "ai.koog.http.client.ktor.KtorHttpClientFactory"
+        ),
+    )
     @JvmOverloads
     public constructor(
         apiKey: String,
@@ -142,8 +158,9 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         baseClient: HttpClient = HttpClient(),
         clock: KoogClock = KoogClock.System
     ) : this(
+        apiKey = apiKey,
         settings = settings,
-        httpClient = createConfiguredHttpClient(apiKey, settings, baseClient),
+        httpClientFactory = KtorHttpClientFactory(baseClient),
         clock = clock
     )
 

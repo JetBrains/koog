@@ -1,6 +1,8 @@
 package ai.koog.prompt.executor.clients.dashscope
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientFactory
+import ai.koog.http.client.ktor.KtorHttpClientFactory
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -68,12 +70,33 @@ public class DashscopeLLMClient @JvmOverloads constructor(
     public constructor(
         apiKey: String,
         settings: DashscopeClientSettings = DashscopeClientSettings(),
+        httpClientFactory: KoogHttpClientFactory,
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(apiKey, settings, httpClientFactory, clientName = DASHSCOPE_CLIENT_NAME),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    @Deprecated(
+        "Use constructor with KoogHttpClientFactory",
+        ReplaceWith(
+            "DashscopeLLMClient(apiKey, settings, KtorHttpClientFactory(), clock, toolsConverter)",
+            "ai.koog.http.client.ktor.KtorHttpClientFactory"
+        ),
+    )
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: DashscopeClientSettings = DashscopeClientSettings(),
         baseClient: HttpClient = HttpClient(),
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,
-        httpClient = createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = DASHSCOPE_CLIENT_NAME),
+        httpClient = createConfiguredHttpClient(apiKey, settings, KtorHttpClientFactory(baseClient), clientName = DASHSCOPE_CLIENT_NAME),
         clock = clock,
         toolsConverter = toolsConverter
     )

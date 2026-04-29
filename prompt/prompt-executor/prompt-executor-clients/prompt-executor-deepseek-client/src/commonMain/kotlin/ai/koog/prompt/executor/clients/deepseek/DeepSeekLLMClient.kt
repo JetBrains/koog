@@ -1,6 +1,8 @@
 package ai.koog.prompt.executor.clients.deepseek
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientFactory
+import ai.koog.http.client.ktor.KtorHttpClientFactory
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -73,12 +75,33 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
     public constructor(
         apiKey: String,
         settings: DeepSeekClientSettings = DeepSeekClientSettings(),
+        httpClientFactory: KoogHttpClientFactory,
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(apiKey, settings, httpClientFactory, clientName = DEEPSEEK_CLIENT_NAME),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    @Deprecated(
+        "Use constructor with KoogHttpClientFactory",
+        ReplaceWith(
+            "DeepSeekLLMClient(apiKey, settings, KtorHttpClientFactory(), clock, toolsConverter)",
+            "ai.koog.http.client.ktor.KtorHttpClientFactory"
+        ),
+    )
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: DeepSeekClientSettings = DeepSeekClientSettings(),
         baseClient: HttpClient = HttpClient(),
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,
-        httpClient = createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = DEEPSEEK_CLIENT_NAME),
+        httpClient = createConfiguredHttpClient(apiKey, settings, KtorHttpClientFactory(baseClient), clientName = DEEPSEEK_CLIENT_NAME),
         clock = clock,
         toolsConverter = toolsConverter
     )

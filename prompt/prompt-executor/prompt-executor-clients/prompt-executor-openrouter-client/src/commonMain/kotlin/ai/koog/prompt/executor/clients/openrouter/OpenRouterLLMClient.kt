@@ -1,6 +1,8 @@
 package ai.koog.prompt.executor.clients.openrouter
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientFactory
+import ai.koog.http.client.ktor.KtorHttpClientFactory
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -80,12 +82,43 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
     public constructor(
         apiKey: String,
         settings: OpenRouterClientSettings = OpenRouterClientSettings(),
+        httpClientFactory: KoogHttpClientFactory,
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
+    ) : this(
+        settings = settings,
+        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(
+            apiKey = apiKey,
+            settings = settings,
+            httpClientFactory = httpClientFactory,
+            clientName = OPENROUTER_CLIENT_NAME
+        ),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    @Deprecated(
+        "Use constructor with KoogHttpClientFactory",
+        ReplaceWith(
+            "OpenRouterLLMClient(apiKey, settings, KtorHttpClientFactory(), clock, toolsConverter)",
+            "ai.koog.http.client.ktor.KtorHttpClientFactory"
+        ),
+    )
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: OpenRouterClientSettings = OpenRouterClientSettings(),
         baseClient: HttpClient = HttpClient(),
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ) : this(
         settings = settings,
-        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = OPENROUTER_CLIENT_NAME),
+        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(
+            apiKey = apiKey,
+            settings = settings,
+            httpClientFactory = KtorHttpClientFactory(baseClient),
+            clientName = OPENROUTER_CLIENT_NAME
+        ),
         clock = clock,
         toolsConverter = toolsConverter
     )

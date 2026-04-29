@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
@@ -41,8 +43,13 @@ public class OkHttpKoogHttpClient internal constructor(
     override val clientName: String,
     private val logger: KLogger,
     private val okHttpClient: OkHttpClient,
-    private val json: Json
+    private val json: Json,
+    private val baseUrl: String = "",
+    headers: Map<String, String> = emptyMap(),
+    private val queryParameters: Map<String, String> = emptyMap(),
 ) : KoogHttpClient {
+
+    private val defaultHeaders: Headers = headers.toHeaders()
 
     private fun <R : Any> processResponse(response: Response, responseType: KClass<R>): R {
         if (response.isSuccessful) {
@@ -71,11 +78,19 @@ public class OkHttpKoogHttpClient internal constructor(
      * @return An [HttpUrl] object representing the constructed URL with any specified query parameters.
      */
     private fun buildUrl(path: String, parameters: Map<String, String>?): HttpUrl {
-        return path.toHttpUrl().newBuilder().apply {
-            parameters?.forEach { (key, value) ->
+        return resolvePath(path).toHttpUrl().newBuilder().apply {
+            (queryParameters + parameters.orEmpty()).forEach { (key, value) ->
                 addQueryParameter(key, value)
             }
         }.build()
+    }
+
+    private fun resolvePath(path: String): String {
+        if (path.startsWith("http://") || path.startsWith("https://") || baseUrl.isBlank()) {
+            return path
+        }
+
+        return "${baseUrl.trimEnd('/')}/${path.trimStart('/')}"
     }
 
     override suspend fun <R : Any> get(
@@ -85,6 +100,7 @@ public class OkHttpKoogHttpClient internal constructor(
     ): R = withContext(Dispatchers.SuitableForIO) {
         val httpRequest = Request.Builder()
             .url(buildUrl(path, parameters))
+            .headers(defaultHeaders)
             .get()
             .build()
 
@@ -105,6 +121,7 @@ public class OkHttpKoogHttpClient internal constructor(
 
         val httpRequest = Request.Builder()
             .url(buildUrl(path, parameters))
+            .headers(defaultHeaders)
             .post(requestBody)
             .build()
 
@@ -128,6 +145,7 @@ public class OkHttpKoogHttpClient internal constructor(
 
         val httpRequest = Request.Builder()
             .url(buildUrl(path, parameters))
+            .headers(defaultHeaders)
             .post(requestBody)
             .header("Accept", "text/event-stream")
             .header("Cache-Control", "no-cache")
@@ -207,10 +225,11 @@ public class OkHttpKoogHttpClient internal constructor(
 }
 
 /**
- * Creates a new instance of `KoogHttpClient` using an OkHttp-based HTTP client for performing HTTP operations.
+ * Creates a new instance of `KoogHttpClient` wrapping the given [OkHttpClient].
  *
- * This function allows configuring the underlying OkHttp `OkHttpClient` and provides enhanced logging,
- * flexibility, and customization in HTTP interactions.
+ * Use this function when you have a pre-configured [OkHttpClient] instance and want to wrap it
+ * in a [KoogHttpClient]. For standard use cases where the client should be built from
+ * configuration, prefer [OkHttpKoogClientFactory] instead.
  *
  * @param clientName The name of the client instance, used for identifying or logging client operations.
  * @param logger A `KLogger` instance used for logging client events and errors.

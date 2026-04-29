@@ -2,6 +2,8 @@ package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientFactory
+import ai.koog.http.client.ktor.KtorHttpClientFactory
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -117,6 +119,32 @@ public open class OpenAILLMClient @JvmOverloads constructor(
     public constructor(
         apiKey: String,
         settings: OpenAIClientSettings = OpenAIClientSettings(),
+        httpClientFactory: KoogHttpClientFactory,
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(
+            apiKey = apiKey,
+            settings = settings,
+            httpClientFactory = httpClientFactory,
+            clientName = OPENAI_CLIENT_NAME
+        ),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    @Deprecated(
+        "Use constructor with KoogHttpClientFactory",
+        ReplaceWith(
+            "OpenAILLMClient(apiKey, settings, KtorHttpClientFactory(), clock, toolsConverter)",
+            "ai.koog.http.client.ktor.KtorHttpClientFactory"
+        ),
+    )
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: OpenAIClientSettings = OpenAIClientSettings(),
         baseClient: HttpClient = HttpClient(),
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
@@ -125,8 +153,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         httpClient = createConfiguredHttpClient(
             apiKey = apiKey,
             settings = settings,
-            logger = staticLogger,
-            baseClient = baseClient,
+            httpClientFactory = KtorHttpClientFactory(baseClient),
             clientName = OPENAI_CLIENT_NAME
         ),
         clock = clock,

@@ -4,7 +4,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.ktor.fromKtorClient
+import ai.koog.http.client.KoogHttpClientFactory
+import ai.koog.http.client.ktor.KtorHttpClientFactory
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -99,6 +100,35 @@ public open class GoogleLLMClient @JvmOverloads constructor(
 ) : LLMClient() {
 
     /**
+     * Secondary constructor for creating a GoogleLLMClient backed by an HTTP client factory.
+     *
+     * @param apiKey The API key for the Google AI API
+     * @param settings Custom client settings, defaults to standard API endpoint and timeouts
+     * @param httpClientFactory Factory used to create an HTTP client for making API requests.
+     * @param clock Clock instance used for tracking response metadata timestamps.
+     */
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: GoogleClientSettings = GoogleClientSettings(),
+        httpClientFactory: KoogHttpClientFactory,
+        clock: Clock = Clock.System
+    ) : this(
+        settings,
+        httpClientFactory.create(
+            clientName = GOOGLE_CLIENT_NAME,
+            baseUrl = settings.baseUrl,
+            headers = emptyMap(),
+            queryParameters = mapOf("key" to apiKey),
+            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis,
+            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
+            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
+            json = json,
+        ),
+        clock
+    )
+
+    /**
      * Secondary constructor for creating a GoogleLLMClient backed with a Ktor HTTP client.
      *
      * @param apiKey The API key for the Google AI API
@@ -106,6 +136,13 @@ public open class GoogleLLMClient @JvmOverloads constructor(
      * @param baseClient Ktor HTTP client used for making API requests.
      * @param clock Clock instance used for tracking response metadata timestamps.
      */
+    @Deprecated(
+        "Use constructor with KoogHttpClientFactory",
+        ReplaceWith(
+            "GoogleLLMClient(apiKey, settings, KtorHttpClientFactory(), clock)",
+            "ai.koog.http.client.ktor.KtorHttpClientFactory"
+        ),
+    )
     @JvmOverloads
     public constructor(
         apiKey: String,
@@ -113,9 +150,10 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         baseClient: HttpClient = HttpClient(),
         clock: KoogClock = KoogClock.System
     ) : this(
-        settings,
-        createConfiguredHttpClient(apiKey, settings, baseClient),
-        clock
+        apiKey = apiKey,
+        settings = settings,
+        httpClientFactory = KtorHttpClientFactory(baseClient),
+        clock = clock
     )
 
     @OptIn(InternalStructuredOutputApi::class)
@@ -129,22 +167,6 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             encodeDefaults = true
             explicitNulls = false
         }
-
-        private fun createConfiguredHttpClient(
-            apiKey: String,
-            settings: GoogleClientSettings,
-            baseClient: HttpClient = HttpClient()
-        ): KoogHttpClient = KoogHttpClient.fromKtorClient(
-            clientName = GOOGLE_CLIENT_NAME,
-            logger = logger,
-            baseClient = baseClient,
-            baseUrl = settings.baseUrl,
-            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis,
-            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
-            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
-            json = json,
-            queryParameters = mapOf("key" to apiKey),
-        )
     }
 
     override fun getBasicJsonSchemaGenerator(): GoogleBasicJsonSchemaGenerator {
