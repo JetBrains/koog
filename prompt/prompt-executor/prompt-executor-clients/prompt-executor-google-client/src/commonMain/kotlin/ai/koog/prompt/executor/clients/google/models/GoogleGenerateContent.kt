@@ -256,8 +256,8 @@ internal class GoogleSearch(
 
 @Serializable
 internal class Interval(
-    val startTime: String? = null,
-    val endTime: String? = null,
+    val startTime: String,
+    val endTime: String,
 )
 
 @Serializable
