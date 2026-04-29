@@ -250,7 +250,15 @@ internal sealed interface GoogleData {
  * the next model turn.
  */
 @Serializable
-internal class GoogleSearch
+internal class GoogleSearch(
+    val timeRangeFilter: Interval? = null,
+)
+
+@Serializable
+internal class Interval(
+    val startTime: String? = null,
+    val endTime: String? = null,
+)
 
 @Serializable
 internal class GoogleTool(

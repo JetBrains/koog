@@ -27,6 +27,7 @@ import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleSearch
 import ai.koog.prompt.executor.clients.google.models.GoogleTool
 import ai.koog.prompt.executor.clients.google.models.GoogleToolConfig
+import ai.koog.prompt.executor.clients.google.models.Interval
 import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.google.structure.GoogleResponseFormat
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
@@ -404,7 +405,12 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         }
 
         val groundingTool: GoogleTool? = if (googleParams.groundingEnabled) {
-            GoogleTool(googleSearch = GoogleSearch())
+            val interval = if (googleParams.groundingStartTime != null && googleParams.groundingEndTime != null) {
+                Interval(startTime = googleParams.groundingStartTime, endTime = googleParams.groundingEndTime)
+            } else {
+                null
+            }
+            GoogleTool(googleSearch = GoogleSearch(timeRangeFilter = interval))
         } else {
             null
         }

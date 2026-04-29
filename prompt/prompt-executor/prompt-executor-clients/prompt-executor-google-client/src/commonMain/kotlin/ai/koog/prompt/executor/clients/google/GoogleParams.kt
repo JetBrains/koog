@@ -52,6 +52,8 @@ public class GoogleParams(
     public val topK: Int? = null,
     public val thinkingConfig: GoogleThinkingConfig? = null,
     public val groundingEnabled: Boolean = false,
+    public val groundingStartTime: String? = null,
+    public val groundingEndTime: String? = null,
 ) : LLMParams(
     temperature,
     maxTokens,
@@ -71,6 +73,9 @@ public class GoogleParams(
         }
         require(topK == null || topK >= 0) {
             "topK must be >= 0, but was $topK"
+        }
+        require((groundingStartTime == null) == (groundingEndTime == null)) {
+            "Both groundingStartTime and groundingEndTime must be set together, or both must be null"
         }
     }
 
@@ -96,6 +101,8 @@ public class GoogleParams(
         topK = topK,
         thinkingConfig = thinkingConfig,
         groundingEnabled = groundingEnabled,
+        groundingStartTime = groundingStartTime,
+        groundingEndTime = groundingEndTime,
     )
 
     /**
@@ -114,6 +121,8 @@ public class GoogleParams(
         topK: Int? = this.topK,
         thinkingConfig: GoogleThinkingConfig? = this.thinkingConfig,
         groundingEnabled: Boolean = this.groundingEnabled,
+        groundingStartTime: String? = this.groundingStartTime,
+        groundingEndTime: String? = this.groundingEndTime,
     ): GoogleParams = GoogleParams(
         temperature = temperature,
         maxTokens = maxTokens,
@@ -127,6 +136,8 @@ public class GoogleParams(
         topK = topK,
         thinkingConfig = thinkingConfig,
         groundingEnabled = groundingEnabled,
+        groundingStartTime = groundingStartTime,
+        groundingEndTime = groundingEndTime,
     )
 
     override fun equals(other: Any?): Boolean = when {
@@ -144,13 +155,15 @@ public class GoogleParams(
                 topP == other.topP &&
                 topK == other.topK &&
                 thinkingConfig == other.thinkingConfig &&
-                groundingEnabled == other.groundingEnabled
+                groundingEnabled == other.groundingEnabled &&
+                groundingStartTime == other.groundingStartTime &&
+                groundingEndTime == other.groundingEndTime
     }
 
     override fun hashCode(): Int = listOf(
         temperature, maxTokens, numberOfChoices,
         speculation, schema, toolChoice, user,
-        additionalProperties, topP, topK, thinkingConfig, groundingEnabled
+        additionalProperties, topP, topK, thinkingConfig, groundingEnabled, groundingStartTime, groundingEndTime
     ).fold(0) { acc, element ->
         31 * acc + (element?.hashCode() ?: 0)
     }
@@ -169,6 +182,8 @@ public class GoogleParams(
         append(", topK=$topK")
         append(", thinkingConfig=$thinkingConfig")
         append(", groundingEnabled=$groundingEnabled")
+        append(", groundingStartTime=$groundingStartTime")
+        append(", groundingEndTime=$groundingEndTime")
         append(")")
     }
 }
