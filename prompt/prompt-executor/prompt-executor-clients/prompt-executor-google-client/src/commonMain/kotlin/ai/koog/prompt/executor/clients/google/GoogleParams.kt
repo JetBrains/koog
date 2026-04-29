@@ -6,9 +6,39 @@ import kotlinx.serialization.json.JsonElement
 import kotlin.time.Instant
 
 public data class GoogleSearchConfig(
+    val groundingEnabled: Boolean = false,
+    val groundingStartTime: String? = null,
+    val groundingEndTime: String? = null,
     val webSearch: Boolean = false,
     val imageSearch: Boolean = false,
-)
+) {
+    init {
+        require(
+            groundingEnabled ||
+                (groundingStartTime == null && groundingEndTime == null && !webSearch && !imageSearch)
+        ) {
+            "groundingEnabled must be true when groundingStartTime/groundingEndTime/searchTypes are configured"
+        }
+        require((groundingStartTime == null) == (groundingEndTime == null)) {
+            "Both groundingStartTime and groundingEndTime must be set together, or both must be null"
+        }
+        if (groundingStartTime != null && groundingEndTime != null) {
+            val start = parseRfc3339("groundingStartTime", groundingStartTime)
+            val end = parseRfc3339("groundingEndTime", groundingEndTime)
+            require(start <= end) {
+                "groundingStartTime must be <= groundingEndTime, but was $groundingStartTime > $groundingEndTime"
+            }
+        }
+    }
+
+    private companion object {
+        private fun parseRfc3339(fieldName: String, value: String): Instant = try {
+            Instant.parse(value)
+        } catch (_: IllegalArgumentException) {
+            throw IllegalArgumentException("$fieldName must be a valid RFC3339 timestamp, but was $value")
+        }
+    }
+}
 
 internal fun LLMParams.toGoogleParams(): GoogleParams {
     if (this is GoogleParams) return this
@@ -41,8 +71,8 @@ internal fun LLMParams.toGoogleParams(): GoogleParams {
  * @property topK The maximum number of tokens to consider when sampling.
  * @property thinkingConfig Controls whether the model should expose its chain-of-thought
  * and how many tokens it may spend on it (see [GoogleThinkingConfig]).
- * @property groundingEnabled Enables grounding with Google Search to augment responses with
- * real-time information. Supported by Gemini 2.0+ models.
+ * @property groundingSearchConfig Google Search grounding configuration.
+ * Set [GoogleSearchConfig.groundingEnabled] to true to enable grounding.
  */
 @Suppress("LongParameterList")
 public class GoogleParams(
@@ -57,9 +87,6 @@ public class GoogleParams(
     public val topP: Double? = null,
     public val topK: Int? = null,
     public val thinkingConfig: GoogleThinkingConfig? = null,
-    public val groundingEnabled: Boolean = false,
-    public val groundingStartTime: String? = null,
-    public val groundingEndTime: String? = null,
     public val groundingSearchConfig: GoogleSearchConfig? = null,
 ) : LLMParams(
     temperature,
@@ -80,19 +107,6 @@ public class GoogleParams(
         }
         require(topK == null || topK >= 0) {
             "topK must be >= 0, but was $topK"
-        }
-        require((groundingStartTime == null) == (groundingEndTime == null)) {
-            "Both groundingStartTime and groundingEndTime must be set together, or both must be null"
-        }
-        if (groundingStartTime != null && groundingEndTime != null) {
-            val start = parseRfc3339("groundingStartTime", groundingStartTime)
-            val end = parseRfc3339("groundingEndTime", groundingEndTime)
-            require(start <= end) {
-                "groundingStartTime must be <= groundingEndTime, but was $groundingStartTime > $groundingEndTime"
-            }
-        }
-        require(groundingSearchConfig == null || groundingEnabled) {
-            "groundingSearchConfig requires groundingEnabled = true"
         }
     }
 
@@ -117,9 +131,6 @@ public class GoogleParams(
         topP = topP,
         topK = topK,
         thinkingConfig = thinkingConfig,
-        groundingEnabled = groundingEnabled,
-        groundingStartTime = groundingStartTime,
-        groundingEndTime = groundingEndTime,
         groundingSearchConfig = groundingSearchConfig,
     )
 
@@ -138,9 +149,6 @@ public class GoogleParams(
         topP: Double? = this.topP,
         topK: Int? = this.topK,
         thinkingConfig: GoogleThinkingConfig? = this.thinkingConfig,
-        groundingEnabled: Boolean = this.groundingEnabled,
-        groundingStartTime: String? = this.groundingStartTime,
-        groundingEndTime: String? = this.groundingEndTime,
         groundingSearchConfig: GoogleSearchConfig? = this.groundingSearchConfig,
     ): GoogleParams = GoogleParams(
         temperature = temperature,
@@ -154,9 +162,6 @@ public class GoogleParams(
         topP = topP,
         topK = topK,
         thinkingConfig = thinkingConfig,
-        groundingEnabled = groundingEnabled,
-        groundingStartTime = groundingStartTime,
-        groundingEndTime = groundingEndTime,
         groundingSearchConfig = groundingSearchConfig,
     )
 
@@ -175,16 +180,13 @@ public class GoogleParams(
                 topP == other.topP &&
                 topK == other.topK &&
                 thinkingConfig == other.thinkingConfig &&
-                groundingEnabled == other.groundingEnabled &&
-                groundingStartTime == other.groundingStartTime &&
-                groundingEndTime == other.groundingEndTime &&
                 groundingSearchConfig == other.groundingSearchConfig
     }
 
     override fun hashCode(): Int = listOf(
         temperature, maxTokens, numberOfChoices,
         speculation, schema, toolChoice, user,
-        additionalProperties, topP, topK, thinkingConfig, groundingEnabled, groundingStartTime, groundingEndTime,
+        additionalProperties, topP, topK, thinkingConfig,
         groundingSearchConfig
     ).fold(0) { acc, element ->
         31 * acc + (element?.hashCode() ?: 0)
@@ -203,18 +205,7 @@ public class GoogleParams(
         append(", topP=$topP")
         append(", topK=$topK")
         append(", thinkingConfig=$thinkingConfig")
-        append(", groundingEnabled=$groundingEnabled")
-        append(", groundingStartTime=$groundingStartTime")
-        append(", groundingEndTime=$groundingEndTime")
         append(", groundingSearchConfig=$groundingSearchConfig")
         append(")")
-    }
-
-    private companion object {
-        private fun parseRfc3339(fieldName: String, value: String): Instant = try {
-            Instant.parse(value)
-        } catch (_: IllegalArgumentException) {
-            throw IllegalArgumentException("$fieldName must be a valid RFC3339 timestamp, but was $value")
-        }
     }
 }

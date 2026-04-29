@@ -699,7 +699,7 @@ class GoogleLLMClientTest {
     }
 
     @Test
-    fun `createGoogleRequest injects googleSearch tool when groundingEnabled is true`() {
+    fun `createGoogleRequest injects googleSearch tool when groundingSearchConfig is enabled`() {
         val client = GoogleLLMClient(apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Flash
 
@@ -707,7 +707,7 @@ class GoogleLLMClientTest {
             prompt = Prompt(
                 messages = emptyList(),
                 id = "id",
-                params = GoogleParams(groundingEnabled = true)
+                params = GoogleParams(groundingSearchConfig = GoogleSearchConfig(groundingEnabled = true))
             ),
             model = model,
             tools = emptyList()
@@ -720,12 +720,30 @@ class GoogleLLMClientTest {
     }
 
     @Test
+    fun `createGoogleRequest does not inject googleSearch tool when groundingSearchConfig is absent`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Flash
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams()),
+            model = model,
+            tools = emptyList()
+        )
+
+        request.tools shouldBe null
+    }
+
+    @Test
     fun `createGoogleRequest googleSearch has no timeRangeFilter when no times are provided`() {
         val client = GoogleLLMClient(apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Flash
 
         val request = client.createGoogleRequest(
-            prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams(groundingEnabled = true)),
+            prompt = Prompt(
+                messages = emptyList(),
+                id = "id",
+                params = GoogleParams(groundingSearchConfig = GoogleSearchConfig(groundingEnabled = true))
+            ),
             model = model,
             tools = emptyList()
         )
@@ -744,9 +762,11 @@ class GoogleLLMClientTest {
                 messages = emptyList(),
                 id = "id",
                 params = GoogleParams(
-                    groundingEnabled = true,
-                    groundingStartTime = "2025-01-01T00:00:00Z",
-                    groundingEndTime = "2025-07-01T00:00:00Z"
+                    groundingSearchConfig = GoogleSearchConfig(
+                        groundingEnabled = true,
+                        groundingStartTime = "2025-01-01T00:00:00Z",
+                        groundingEndTime = "2025-07-01T00:00:00Z"
+                    )
                 )
             ),
             model = model,
@@ -760,26 +780,26 @@ class GoogleLLMClientTest {
     }
 
     @Test
-    fun `GoogleParams throws when only one of groundingStartTime or groundingEndTime is set`() {
+    fun `GoogleSearchConfig throws when only one of groundingStartTime or groundingEndTime is set`() {
         shouldThrow<IllegalArgumentException> {
-            GoogleParams(groundingEnabled = true, groundingStartTime = "2025-01-01T00:00:00Z")
+            GoogleSearchConfig(groundingEnabled = true, groundingStartTime = "2025-01-01T00:00:00Z")
         }
         shouldThrow<IllegalArgumentException> {
-            GoogleParams(groundingEnabled = true, groundingEndTime = "2025-07-01T00:00:00Z")
+            GoogleSearchConfig(groundingEnabled = true, groundingEndTime = "2025-07-01T00:00:00Z")
         }
     }
 
     @Test
-    fun `GoogleParams throws when grounding times are not valid RFC3339`() {
+    fun `GoogleSearchConfig throws when grounding times are not valid RFC3339`() {
         shouldThrow<IllegalArgumentException> {
-            GoogleParams(
+            GoogleSearchConfig(
                 groundingEnabled = true,
                 groundingStartTime = "2025-01-01 00:00:00",
                 groundingEndTime = "2025-07-01T00:00:00Z"
             )
         }
         shouldThrow<IllegalArgumentException> {
-            GoogleParams(
+            GoogleSearchConfig(
                 groundingEnabled = true,
                 groundingStartTime = "2025-01-01T00:00:00Z",
                 groundingEndTime = "not-a-timestamp"
@@ -788,9 +808,19 @@ class GoogleLLMClientTest {
     }
 
     @Test
-    fun `GoogleParams throws when groundingStartTime is after groundingEndTime`() {
+    fun `GoogleSearchConfig throws when grounding options are set while grounding is disabled`() {
         shouldThrow<IllegalArgumentException> {
-            GoogleParams(
+            GoogleSearchConfig(webSearch = true)
+        }
+        shouldThrow<IllegalArgumentException> {
+            GoogleSearchConfig(groundingStartTime = "2025-01-01T00:00:00Z", groundingEndTime = "2025-07-01T00:00:00Z")
+        }
+    }
+
+    @Test
+    fun `GoogleSearchConfig throws when groundingStartTime is after groundingEndTime`() {
+        shouldThrow<IllegalArgumentException> {
+            GoogleSearchConfig(
                 groundingEnabled = true,
                 groundingStartTime = "2025-07-01T00:00:00Z",
                 groundingEndTime = "2025-01-01T00:00:00Z"
@@ -809,7 +839,7 @@ class GoogleLLMClientTest {
             prompt = Prompt(
                 messages = emptyList(),
                 id = "id",
-                params = GoogleParams(groundingEnabled = true)
+                params = GoogleParams(groundingSearchConfig = GoogleSearchConfig(groundingEnabled = true))
             ),
             model = model,
             tools = listOf(tool)

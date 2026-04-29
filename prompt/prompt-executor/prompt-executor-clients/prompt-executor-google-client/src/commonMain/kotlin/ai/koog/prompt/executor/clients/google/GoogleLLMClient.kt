@@ -407,17 +407,20 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             null -> null
         }
 
-        val groundingTool: GoogleTool? = if (googleParams.groundingEnabled) {
-            val interval = if (googleParams.groundingStartTime != null && googleParams.groundingEndTime != null) {
-                Interval(startTime = googleParams.groundingStartTime, endTime = googleParams.groundingEndTime)
+        val groundingConfig = googleParams.groundingSearchConfig
+        val groundingTool: GoogleTool? = if (groundingConfig?.groundingEnabled == true) {
+            val interval = if (groundingConfig.groundingStartTime != null && groundingConfig.groundingEndTime != null) {
+                Interval(startTime = groundingConfig.groundingStartTime, endTime = groundingConfig.groundingEndTime)
             } else {
                 null
             }
-            val searchTypes = googleParams.groundingSearchConfig?.let { cfg ->
+            val searchTypes = if (groundingConfig.webSearch || groundingConfig.imageSearch) {
                 SearchTypes(
-                    webSearch = if (cfg.webSearch) WebSearch() else null,
-                    imageSearch = if (cfg.imageSearch) ImageSearch() else null,
+                    webSearch = if (groundingConfig.webSearch) WebSearch() else null,
+                    imageSearch = if (groundingConfig.imageSearch) ImageSearch() else null,
                 )
+            } else {
+                null
             }
             GoogleTool(googleSearch = GoogleSearch(timeRangeFilter = interval, searchTypes = searchTypes))
         } else {

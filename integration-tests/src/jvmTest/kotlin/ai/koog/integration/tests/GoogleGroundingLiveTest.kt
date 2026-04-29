@@ -4,6 +4,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
+import ai.koog.prompt.executor.clients.google.GoogleSearchConfig
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.message.Message
 import io.kotest.matchers.collections.shouldNotBeEmpty
@@ -31,7 +32,10 @@ class GoogleGroundingLiveTest {
 
     @Test
     fun `grounding enabled returns correct answer for 2026 ICC Cricket World Cup winner`() = runTest(timeout = 60.seconds) {
-        val p = prompt("grounding-on-test", params = GoogleParams(groundingEnabled = true)) {
+        val p = prompt(
+            "grounding-on-test",
+            params = GoogleParams(groundingSearchConfig = GoogleSearchConfig(groundingEnabled = true))
+        ) {
             user("Who won the ICC Cricket World Cup 2026? Answer in one word.")
         }
         val response = executor.execute(p, GoogleModels.Gemini2_5Flash)
@@ -43,7 +47,7 @@ class GoogleGroundingLiveTest {
 
     @Test
     fun `grounding disabled answers from training data`() = runTest(timeout = 60.seconds) {
-        val p = prompt("grounding-off-test", params = GoogleParams(groundingEnabled = false)) {
+        val p = prompt("grounding-off-test", params = GoogleParams()) {
             user("What is the capital of France? Answer in one word.")
         }
         val response = executor.execute(p, GoogleModels.Gemini2_5Flash)
