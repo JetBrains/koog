@@ -357,6 +357,56 @@ internal class StreamFrameExtTest {
     }
 
     @Test
+    fun testToMessageResponsesSkipsEmptyTextCompleteFrames() {
+        val frames = listOf(
+            StreamFrame.TextComplete("Hello", index = 0),
+            StreamFrame.ToolCallComplete("call_1", "tool", "{}", index = 1),
+            StreamFrame.TextDelta("", index = 2),
+            StreamFrame.TextComplete("", index = 2),
+            StreamFrame.ToolCallComplete("call_2", "otherTool", """{"query":"test"}""", index = 3),
+            StreamFrame.End("tool_calls", ResponseMetaInfo.Empty)
+        )
+
+        val messages = frames.toMessageResponses()
+
+        assertEquals(
+            listOf(
+                Message.Assistant(
+                    parts = listOf(ContentPart.Text("Hello")),
+                    finishReason = "tool_calls",
+                    metaInfo = ResponseMetaInfo.Empty
+                ),
+                Message.Tool.Call(
+                    id = "call_1",
+                    tool = "tool",
+                    content = "{}",
+                    metaInfo = ResponseMetaInfo.Empty
+                ),
+                Message.Tool.Call(
+                    id = "call_2",
+                    tool = "otherTool",
+                    content = """{"query":"test"}""",
+                    metaInfo = ResponseMetaInfo.Empty
+                )
+            ),
+            messages
+        )
+    }
+
+    @Test
+    fun testToMessageResponsesSkipsEmptyOnlyTextCompleteFrames() {
+        val frames = listOf(
+            StreamFrame.TextDelta(""),
+            StreamFrame.TextComplete(""),
+            StreamFrame.End("stop", ResponseMetaInfo.Empty)
+        )
+
+        val messages = frames.toMessageResponses()
+
+        assertEquals(emptyList(), messages)
+    }
+
+    @Test
     fun testToMessageResponsesWithEmptyFrames() {
         val frames = emptyList<StreamFrame>()
 

@@ -102,7 +102,7 @@ public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
                 )
             )
         }
-        textMessagesCompleteFrames.forEach {
+        textMessagesCompleteFrames.filterNot { it.text.isEmpty() }.forEach {
             add(
                 Message.Assistant(
                     content = it.text,
