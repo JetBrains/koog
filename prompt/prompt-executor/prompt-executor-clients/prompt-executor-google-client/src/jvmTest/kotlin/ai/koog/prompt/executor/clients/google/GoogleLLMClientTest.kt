@@ -770,6 +770,35 @@ class GoogleLLMClientTest {
     }
 
     @Test
+    fun `GoogleParams throws when grounding times are not valid RFC3339`() {
+        shouldThrow<IllegalArgumentException> {
+            GoogleParams(
+                groundingEnabled = true,
+                groundingStartTime = "2025-01-01 00:00:00",
+                groundingEndTime = "2025-07-01T00:00:00Z"
+            )
+        }
+        shouldThrow<IllegalArgumentException> {
+            GoogleParams(
+                groundingEnabled = true,
+                groundingStartTime = "2025-01-01T00:00:00Z",
+                groundingEndTime = "not-a-timestamp"
+            )
+        }
+    }
+
+    @Test
+    fun `GoogleParams throws when groundingStartTime is after groundingEndTime`() {
+        shouldThrow<IllegalArgumentException> {
+            GoogleParams(
+                groundingEnabled = true,
+                groundingStartTime = "2025-07-01T00:00:00Z",
+                groundingEndTime = "2025-01-01T00:00:00Z"
+            )
+        }
+    }
+
+    @Test
     fun `createGoogleRequest merges grounding tool with function tools`() {
         val client = GoogleLLMClient(apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Flash

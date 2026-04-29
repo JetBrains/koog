@@ -3,6 +3,12 @@ package ai.koog.prompt.executor.clients.google
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.json.JsonElement
+import kotlin.time.Instant
+
+public data class GoogleSearchConfig(
+    val webSearch: Boolean = false,
+    val imageSearch: Boolean = false,
+)
 
 internal fun LLMParams.toGoogleParams(): GoogleParams {
     if (this is GoogleParams) return this
@@ -54,6 +60,7 @@ public class GoogleParams(
     public val groundingEnabled: Boolean = false,
     public val groundingStartTime: String? = null,
     public val groundingEndTime: String? = null,
+    public val groundingSearchConfig: GoogleSearchConfig? = null,
 ) : LLMParams(
     temperature,
     maxTokens,
@@ -76,6 +83,16 @@ public class GoogleParams(
         }
         require((groundingStartTime == null) == (groundingEndTime == null)) {
             "Both groundingStartTime and groundingEndTime must be set together, or both must be null"
+        }
+        if (groundingStartTime != null && groundingEndTime != null) {
+            val start = parseRfc3339("groundingStartTime", groundingStartTime)
+            val end = parseRfc3339("groundingEndTime", groundingEndTime)
+            require(start <= end) {
+                "groundingStartTime must be <= groundingEndTime, but was $groundingStartTime > $groundingEndTime"
+            }
+        }
+        require(groundingSearchConfig == null || groundingEnabled) {
+            "groundingSearchConfig requires groundingEnabled = true"
         }
     }
 
@@ -103,6 +120,7 @@ public class GoogleParams(
         groundingEnabled = groundingEnabled,
         groundingStartTime = groundingStartTime,
         groundingEndTime = groundingEndTime,
+        groundingSearchConfig = groundingSearchConfig,
     )
 
     /**
@@ -123,6 +141,7 @@ public class GoogleParams(
         groundingEnabled: Boolean = this.groundingEnabled,
         groundingStartTime: String? = this.groundingStartTime,
         groundingEndTime: String? = this.groundingEndTime,
+        groundingSearchConfig: GoogleSearchConfig? = this.groundingSearchConfig,
     ): GoogleParams = GoogleParams(
         temperature = temperature,
         maxTokens = maxTokens,
@@ -138,6 +157,7 @@ public class GoogleParams(
         groundingEnabled = groundingEnabled,
         groundingStartTime = groundingStartTime,
         groundingEndTime = groundingEndTime,
+        groundingSearchConfig = groundingSearchConfig,
     )
 
     override fun equals(other: Any?): Boolean = when {
@@ -157,13 +177,15 @@ public class GoogleParams(
                 thinkingConfig == other.thinkingConfig &&
                 groundingEnabled == other.groundingEnabled &&
                 groundingStartTime == other.groundingStartTime &&
-                groundingEndTime == other.groundingEndTime
+                groundingEndTime == other.groundingEndTime &&
+                groundingSearchConfig == other.groundingSearchConfig
     }
 
     override fun hashCode(): Int = listOf(
         temperature, maxTokens, numberOfChoices,
         speculation, schema, toolChoice, user,
-        additionalProperties, topP, topK, thinkingConfig, groundingEnabled, groundingStartTime, groundingEndTime
+        additionalProperties, topP, topK, thinkingConfig, groundingEnabled, groundingStartTime, groundingEndTime,
+        groundingSearchConfig
     ).fold(0) { acc, element ->
         31 * acc + (element?.hashCode() ?: 0)
     }
@@ -184,6 +206,15 @@ public class GoogleParams(
         append(", groundingEnabled=$groundingEnabled")
         append(", groundingStartTime=$groundingStartTime")
         append(", groundingEndTime=$groundingEndTime")
+        append(", groundingSearchConfig=$groundingSearchConfig")
         append(")")
+    }
+
+    private companion object {
+        private fun parseRfc3339(fieldName: String, value: String): Instant = try {
+            Instant.parse(value)
+        } catch (_: IllegalArgumentException) {
+            throw IllegalArgumentException("$fieldName must be a valid RFC3339 timestamp, but was $value")
+        }
     }
 }

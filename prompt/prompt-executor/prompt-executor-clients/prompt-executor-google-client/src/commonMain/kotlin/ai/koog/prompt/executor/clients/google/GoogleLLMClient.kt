@@ -27,7 +27,10 @@ import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleSearch
 import ai.koog.prompt.executor.clients.google.models.GoogleTool
 import ai.koog.prompt.executor.clients.google.models.GoogleToolConfig
+import ai.koog.prompt.executor.clients.google.models.ImageSearch
 import ai.koog.prompt.executor.clients.google.models.Interval
+import ai.koog.prompt.executor.clients.google.models.SearchTypes
+import ai.koog.prompt.executor.clients.google.models.WebSearch
 import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.google.structure.GoogleResponseFormat
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
@@ -410,7 +413,13 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             } else {
                 null
             }
-            GoogleTool(googleSearch = GoogleSearch(timeRangeFilter = interval))
+            val searchTypes = googleParams.groundingSearchConfig?.let { cfg ->
+                SearchTypes(
+                    webSearch = if (cfg.webSearch) WebSearch() else null,
+                    imageSearch = if (cfg.imageSearch) ImageSearch() else null,
+                )
+            }
+            GoogleTool(googleSearch = GoogleSearch(timeRangeFilter = interval, searchTypes = searchTypes))
         } else {
             null
         }

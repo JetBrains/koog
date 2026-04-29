@@ -252,6 +252,7 @@ internal sealed interface GoogleData {
 @Serializable
 internal class GoogleSearch(
     val timeRangeFilter: Interval? = null,
+    val searchTypes: SearchTypes? = null,
 )
 
 @Serializable
@@ -259,6 +260,18 @@ internal class Interval(
     val startTime: String,
     val endTime: String,
 )
+
+@Serializable
+internal class SearchTypes(
+    val webSearch: WebSearch? = null,
+    val imageSearch: ImageSearch? = null,
+)
+
+@Serializable
+internal class WebSearch
+
+@Serializable
+internal class ImageSearch
 
 @Serializable
 internal class GoogleTool(
