@@ -169,9 +169,9 @@ object SQLPersistentAgentExample {
     private fun createSampleCheckpoint(checkpointId: String, version: Long): AgentCheckpointData {
         return AgentCheckpointData(
             checkpointId = checkpointId,
-            createdAt = AgentAgentClock.System.now(),
+            createdAt = AgentClock.System.now(),
             nodePath = "example-node",
-            lastInput = JsonPrimitive("Sample input for $checkpointId"),
+            lastInput = JsonPrimitive("даваSample input for $checkpointId"),
             messageHistory = listOf(
                 Message.System("You are a helpful assistant", RequestMetaInfo.create(AgentClock.System)),
                 Message.User("Hello, agent!", RequestMetaInfo.create(AgentClock.System)),

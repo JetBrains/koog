@@ -8,7 +8,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import ai.koog.utils.time.AgentClock
+import kotlin.time.Clock
 import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.buffered
@@ -40,7 +40,7 @@ suspend fun main() = coroutineScope {
                 KoogAgentSupport(
                     protocol = agentProtocol,
                     promptExecutor = promptExecutor,
-                    clock = AgentClock.System,
+                    clock = Clock.System,
                 )
             )
 

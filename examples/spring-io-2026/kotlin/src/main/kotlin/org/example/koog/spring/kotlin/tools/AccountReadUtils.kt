@@ -6,7 +6,7 @@ import ai.koog.agents.core.tools.reflect.ToolSet
 import org.example.koog.spring.kotlin.structs.Transaction
 import org.example.koog.spring.kotlin.structs.UserAccountInfo
 import kotlin.time.Instant
-import ai.koog.utils.time.AgentClock
+import kotlin.time.Clock
 
 class AccountReadUtils(private val userId: String?) : ToolSet {
     @Tool
@@ -36,8 +36,8 @@ class AccountReadUtils(private val userId: String?) : ToolSet {
             "",
             "",
             100500,
-            AgentClock.System.now(),
-            AgentClock.System.now()
+            Clock.System.now(),
+            Clock.System.now()
         )
     }
 }
