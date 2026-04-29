@@ -22,6 +22,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -716,6 +717,56 @@ class GoogleLLMClientTest {
         tools.shouldHaveSize(1)
         tools.first().googleSearch shouldNotBe null
         tools.first().functionDeclarations shouldBe null
+    }
+
+    @Test
+    fun `createGoogleRequest googleSearch has no timeRangeFilter when no times are provided`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Flash
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams(groundingEnabled = true)),
+            model = model,
+            tools = emptyList()
+        )
+
+        val tools = request.tools.shouldNotBeNull()
+        tools.first().googleSearch.shouldNotBeNull().timeRangeFilter shouldBe null
+    }
+
+    @Test
+    fun `createGoogleRequest googleSearch includes timeRangeFilter when both times are provided`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Flash
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(
+                messages = emptyList(),
+                id = "id",
+                params = GoogleParams(
+                    groundingEnabled = true,
+                    groundingStartTime = "2025-01-01T00:00:00Z",
+                    groundingEndTime = "2025-07-01T00:00:00Z"
+                )
+            ),
+            model = model,
+            tools = emptyList()
+        )
+
+        val googleSearch = request.tools.shouldNotBeNull().first().googleSearch.shouldNotBeNull()
+        val interval = googleSearch.timeRangeFilter.shouldNotBeNull()
+        interval.startTime shouldBe "2025-01-01T00:00:00Z"
+        interval.endTime shouldBe "2025-07-01T00:00:00Z"
+    }
+
+    @Test
+    fun `GoogleParams throws when only one of groundingStartTime or groundingEndTime is set`() {
+        shouldThrow<IllegalArgumentException> {
+            GoogleParams(groundingEnabled = true, groundingStartTime = "2025-01-01T00:00:00Z")
+        }
+        shouldThrow<IllegalArgumentException> {
+            GoogleParams(groundingEnabled = true, groundingEndTime = "2025-07-01T00:00:00Z")
+        }
     }
 
     @Test
