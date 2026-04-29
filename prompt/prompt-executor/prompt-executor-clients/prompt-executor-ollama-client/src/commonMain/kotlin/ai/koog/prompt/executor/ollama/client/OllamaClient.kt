@@ -553,10 +553,20 @@ public class OllamaClient @JvmOverloads constructor(
                 setBody(OllamaPullModelRequestDTO(name = name, stream = false))
             }.body<OllamaPullModelResponseDTO>()
 
-            if ("success" !in response.status) throw LLMClientException(clientName, "Failed to pull model: '$name'")
+            response.error?.let { error ->
+                throw LLMClientException(clientName, "Failed to pull model '$name': $error")
+            }
+
+            val status = response.status
+                ?: throw LLMClientException(clientName, "Failed to pull model '$name': Ollama response did not contain status")
+
+            if ("success" !in status) throw LLMClientException(clientName, "Failed to pull model '$name': $status")
 
             logger.info { "Pulled model '$name'" }
         } catch (e: CancellationException) {
+            throw e
+        } catch (e: LLMClientException) {
+            logger.error(e) { e.message }
             throw e
         } catch (e: Exception) {
             val exception = LLMClientException(
