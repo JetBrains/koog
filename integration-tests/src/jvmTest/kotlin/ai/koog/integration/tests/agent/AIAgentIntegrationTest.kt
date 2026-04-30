@@ -960,12 +960,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         @Suppress("DEPRECATION")
         val checkpoint = AgentCheckpointData(
             checkpointId = "last-input-checkpoint",
-            createdAt = Clock.System.now(),
+            createdAt = AgentClock.System.now(),
             nodePath = path(sessionId, strategyName, node2Name),
             lastInput = JSONPrimitive("Node 1 output"),
             messageHistory = listOf(
-                Message.User("Restored user message", metaInfo = RequestMetaInfo(Clock.System.now())),
-                Message.Assistant("Restored assistant message", metaInfo = ResponseMetaInfo(Clock.System.now()))
+                Message.User("Restored user message", metaInfo = RequestMetaInfo(AgentClock.System.now())),
+                Message.Assistant("Restored assistant message", metaInfo = ResponseMetaInfo(AgentClock.System.now()))
             ),
             version = 0
         )
@@ -1009,7 +1009,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         val checkpoint = AgentCheckpointData(
             checkpointId = "invalid-checkpoint",
-            createdAt = Clock.System.now(),
+            createdAt = AgentClock.System.now(),
             nodePath = path(sessionId, strategyName, "MissingNode"),
             lastOutput = JSONPrimitive("missing"),
             messageHistory = emptyList(),
