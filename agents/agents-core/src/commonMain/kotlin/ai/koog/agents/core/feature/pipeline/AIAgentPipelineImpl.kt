@@ -49,10 +49,10 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.TypeToken
+import ai.koog.utils.time.AgentClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
-import ai.koog.utils.time.AgentClock
 
 /**
  * Default implementation of [AIAgentPipelineAPI]

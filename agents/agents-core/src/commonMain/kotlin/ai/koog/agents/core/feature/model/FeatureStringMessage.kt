@@ -1,8 +1,8 @@
 package ai.koog.agents.core.feature.model
 
 import ai.koog.agents.core.feature.message.FeatureMessage
-import kotlinx.serialization.Serializable
 import ai.koog.utils.time.AgentClock
+import kotlinx.serialization.Serializable
 
 /**
  * Represents a detailed implementation of [ai.koog.agents.core.feature.message.FeatureMessage] that encapsulates a string message.

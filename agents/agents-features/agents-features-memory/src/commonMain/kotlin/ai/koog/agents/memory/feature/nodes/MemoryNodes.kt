@@ -14,9 +14,9 @@ import ai.koog.agents.memory.model.MultipleFacts
 import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.prompt.llm.LLModel
+import ai.koog.utils.time.AgentClock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import ai.koog.utils.time.AgentClock
 
 // ==========
 // Memory nodes

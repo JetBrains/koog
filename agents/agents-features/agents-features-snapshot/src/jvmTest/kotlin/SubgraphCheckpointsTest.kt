@@ -12,10 +12,10 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import ai.koog.utils.time.AgentClock
 
 /**
  * Tests for checkpoint functionality in subgraphs.

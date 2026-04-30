@@ -3,8 +3,8 @@ package ai.koog.agents.chatMemory
 import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.jackson.JacksonSerializer
-import java.util.function.Consumer
 import ai.koog.utils.time.AgentClock
+import java.util.function.Consumer
 
 /**
  * Helper functions to simplify Java test interop with Kotlin APIs

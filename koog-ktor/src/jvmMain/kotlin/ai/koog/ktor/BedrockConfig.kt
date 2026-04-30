@@ -5,8 +5,8 @@ import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.clients.bedrock.StaticBearerTokenProvider
 import ai.koog.prompt.llm.LLMProvider
-import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 import ai.koog.utils.time.AgentClock
+import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 
 /**
  * Configuration to create a new Bedrock LLM client configured with the specified identity provider and settings.

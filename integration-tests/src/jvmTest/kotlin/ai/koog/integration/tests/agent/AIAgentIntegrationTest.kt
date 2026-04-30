@@ -58,6 +58,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.typeToken
+import ai.koog.utils.time.AgentClock
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -90,7 +91,6 @@ import kotlin.io.path.readBytes
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 

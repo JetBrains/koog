@@ -18,9 +18,9 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.utils.time.AgentClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.jvm.JvmStatic
-import ai.koog.utils.time.AgentClock
 
 /**
  * Represents an instance of planner agent using [AIAgentPlannerStrategy].

@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.utils.time.AgentClock
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 import aws.sdk.kotlin.services.bedrockruntime.model.ApplyGuardrailRequest
@@ -65,7 +66,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.milliseconds
 import aws.sdk.kotlin.services.bedrockruntime.model.Message as BedrockMessage
 

@@ -21,9 +21,9 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.typeToken
+import ai.koog.utils.time.AgentClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.reflect.KType
-import ai.koog.utils.time.AgentClock
 
 /**
  * Represents an implementation of an AI agent that provides functionalities to execute prompts,

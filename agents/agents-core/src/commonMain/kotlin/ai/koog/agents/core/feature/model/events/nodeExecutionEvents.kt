@@ -4,8 +4,8 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONPrimitive
-import kotlinx.serialization.Serializable
 import ai.koog.utils.time.AgentClock
+import kotlinx.serialization.Serializable
 
 /**
  * Represents an event triggered when the execution of a specific AI agent node starts.

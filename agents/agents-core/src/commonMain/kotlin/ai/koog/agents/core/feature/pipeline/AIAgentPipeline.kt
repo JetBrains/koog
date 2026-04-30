@@ -39,8 +39,8 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.TypeToken
-import kotlin.reflect.KClass
 import ai.koog.utils.time.AgentClock
+import kotlin.reflect.KClass
 
 /**
  * Pipeline for AI agent features that provides interception points for various agent lifecycle events.

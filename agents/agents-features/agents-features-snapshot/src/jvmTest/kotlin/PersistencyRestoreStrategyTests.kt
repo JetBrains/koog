@@ -10,10 +10,10 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import ai.koog.utils.time.AgentClock
 
 class PersistenceRestoreStrategyTests {
     private val serializer = KotlinxSerializer()

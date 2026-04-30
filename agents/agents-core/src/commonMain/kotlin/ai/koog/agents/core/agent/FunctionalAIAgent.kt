@@ -17,8 +17,8 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
-import io.github.oshai.kotlinlogging.KotlinLogging
 import ai.koog.utils.time.AgentClock
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * Represents the core AI agent for processing input and generating output using

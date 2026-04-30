@@ -14,8 +14,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.io.Closeable
-import kotlin.jvm.JvmStatic
 import ai.koog.utils.time.AgentClock
+import kotlin.jvm.JvmStatic
 import kotlin.uuid.ExperimentalUuidApi
 
 /**

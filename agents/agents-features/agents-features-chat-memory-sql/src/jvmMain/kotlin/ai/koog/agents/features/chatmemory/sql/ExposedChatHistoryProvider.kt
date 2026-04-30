@@ -1,6 +1,7 @@
 package ai.koog.agents.features.chatmemory.sql
 
 import ai.koog.prompt.message.Message
+import ai.koog.utils.time.AgentClock
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
@@ -12,7 +13,6 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.upsert
-import ai.koog.utils.time.AgentClock
 
 /**
  * Abstract Exposed-based implementation of [SQLChatHistoryProvider] for managing

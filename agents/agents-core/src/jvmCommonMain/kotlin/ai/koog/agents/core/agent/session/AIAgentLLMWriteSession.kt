@@ -25,12 +25,12 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.jdk9.asPublisher
 import kotlinx.serialization.KSerializer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Flow.Publisher
-import ai.koog.utils.time.AgentClock
 
 /**
  * JVM actual implementation of a mutable LLM session.

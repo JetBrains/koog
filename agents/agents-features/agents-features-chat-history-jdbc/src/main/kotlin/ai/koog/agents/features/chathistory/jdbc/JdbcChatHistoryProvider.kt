@@ -3,6 +3,7 @@ package ai.koog.agents.features.chathistory.jdbc
 import ai.koog.agents.features.chatmemory.sql.SQLChatHistoryProvider
 import ai.koog.agents.features.chatmemory.sql.SQLChatHistorySchemaMigrator
 import ai.koog.prompt.message.Message
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -10,7 +11,6 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import java.sql.Types
 import javax.sql.DataSource
-import ai.koog.utils.time.AgentClock
 
 /**
  * Abstract pure JDBC implementation of [SQLChatHistoryProvider] for managing chat conversation

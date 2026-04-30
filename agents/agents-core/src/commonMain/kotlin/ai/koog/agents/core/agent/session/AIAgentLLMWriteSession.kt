@@ -14,8 +14,8 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlin.reflect.KClass
 import ai.koog.utils.time.AgentClock
+import kotlin.reflect.KClass
 
 /**
  * A session for managing interactions with a language learning model (LLM)

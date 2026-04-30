@@ -18,6 +18,7 @@ import ai.koog.prompt.streaming.streamFrameFlow
 import ai.koog.prompt.streaming.streamFrameFlowOf
 import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
@@ -29,7 +30,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
-import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.milliseconds
 
 class RetryingLLMClientTest {

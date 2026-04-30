@@ -6,6 +6,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.test.utils.DockerAvailableCondition
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -19,7 +20,6 @@ import org.postgresql.ds.PGSimpleDataSource
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
-import ai.koog.utils.time.AgentClock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 

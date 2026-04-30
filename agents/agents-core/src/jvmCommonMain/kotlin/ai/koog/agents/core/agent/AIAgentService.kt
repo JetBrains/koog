@@ -12,8 +12,8 @@ import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
-import java.util.concurrent.ExecutorService
 import ai.koog.utils.time.AgentClock
+import java.util.concurrent.ExecutorService
 
 public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> {
     public actual abstract val promptExecutor: PromptExecutor

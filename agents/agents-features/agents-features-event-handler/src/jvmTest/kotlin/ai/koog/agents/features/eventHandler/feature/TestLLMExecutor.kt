@@ -9,9 +9,9 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrames
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import ai.koog.utils.time.AgentClock
 
 class TestLLMExecutor(val clock: AgentClock) : PromptExecutor() {
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {

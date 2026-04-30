@@ -6,6 +6,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.test.utils.DockerAvailableCondition
+import ai.koog.utils.time.AgentClock
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.delay
@@ -18,7 +19,6 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import ai.koog.utils.time.AgentClock
 
 @TestInstance(Lifecycle.PER_METHOD)
 @ExtendWith(DockerAvailableCondition::class)

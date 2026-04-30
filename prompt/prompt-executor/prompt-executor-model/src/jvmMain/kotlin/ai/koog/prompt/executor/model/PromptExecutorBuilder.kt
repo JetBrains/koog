@@ -29,8 +29,8 @@ import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.executor.ollama.tools.json.OllamaToolDescriptorSchemaGenerator
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import io.ktor.client.HttpClient
 import ai.koog.utils.time.AgentClock
+import io.ktor.client.HttpClient
 
 /**
  * Builder for constructing a [PromptExecutor] that automatically selects the appropriate executor

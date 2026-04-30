@@ -12,9 +12,9 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.utils.time.AgentClock
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
-import ai.koog.utils.time.AgentClock
 
 /**
  * Common [AIAgentLLMContext] implementation shared across platforms.

@@ -5,6 +5,7 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.utils.time.AgentClock
 import aws.sdk.kotlin.services.bedrockagentcore.model.Content
 import aws.sdk.kotlin.services.bedrockagentcore.model.Conversational
 import aws.sdk.kotlin.services.bedrockagentcore.model.PayloadType
@@ -16,7 +17,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import ai.koog.utils.time.AgentClock
 
 class AgentcoreMessageConverterTest {
 

@@ -39,6 +39,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -47,7 +48,6 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.assertTrue
-import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 

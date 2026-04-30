@@ -6,6 +6,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.test.utils.DockerAvailableCondition
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.AfterAll
@@ -21,7 +22,6 @@ import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import ai.koog.utils.time.AgentClock
 
 @TestInstance(Lifecycle.PER_CLASS)
 @ExtendWith(DockerAvailableCondition::class)

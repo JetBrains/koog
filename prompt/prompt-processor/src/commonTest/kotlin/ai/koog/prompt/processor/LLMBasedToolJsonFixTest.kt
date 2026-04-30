@@ -12,12 +12,12 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
-import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class LLMBasedToolJsonFixTest {

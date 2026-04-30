@@ -14,10 +14,10 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
-import ai.koog.utils.time.AgentClock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 

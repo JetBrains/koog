@@ -11,6 +11,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.utils.time.AgentClock
 import com.agentclientprotocol.agent.Agent
 import com.agentclientprotocol.agent.AgentInfo
 import com.agentclientprotocol.agent.AgentSession
@@ -58,7 +59,6 @@ import kotlinx.io.buffered
 import kotlinx.serialization.json.JsonElement
 import java.nio.channels.Channels
 import java.nio.channels.Pipe
-import ai.koog.utils.time.AgentClock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 

@@ -3,6 +3,7 @@ package ai.koog.agents.features.persistence.jdbc
 import ai.koog.agents.features.sql.providers.SQLPersistenceSchemaMigrator
 import ai.koog.agents.features.sql.providers.SQLPersistenceStorageProvider
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -10,7 +11,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.sql.Types
 import javax.sql.DataSource
-import ai.koog.utils.time.AgentClock
 
 /**
  * Abstract pure JDBC implementation of [SQLPersistenceStorageProvider] for managing agent checkpoint

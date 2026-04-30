@@ -12,8 +12,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.typeToken
-import kotlin.jvm.JvmStatic
 import ai.koog.utils.time.AgentClock
+import kotlin.jvm.JvmStatic
 import kotlin.uuid.ExperimentalUuidApi
 
 @PublishedApi

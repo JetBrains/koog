@@ -12,9 +12,9 @@ import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmName
-import ai.koog.utils.time.AgentClock
 
 /**
  * Represents a condition for a tool call and its corresponding result.

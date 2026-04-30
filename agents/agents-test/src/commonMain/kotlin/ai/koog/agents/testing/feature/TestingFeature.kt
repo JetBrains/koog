@@ -39,8 +39,8 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.TypeToken
-import org.jetbrains.annotations.TestOnly
 import ai.koog.utils.time.AgentClock
+import org.jetbrains.annotations.TestOnly
 
 /**
  * Represents a reference to a specific type of node within an AI agent subgraph. This sealed class

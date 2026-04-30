@@ -7,6 +7,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.utils.time.AgentClock
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -15,7 +16,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class CheckpointSerializationTest {

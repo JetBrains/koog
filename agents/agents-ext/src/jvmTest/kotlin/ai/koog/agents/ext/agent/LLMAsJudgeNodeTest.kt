@@ -21,6 +21,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import ai.koog.serialization.typeToken
+import ai.koog.utils.time.AgentClock
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -29,7 +30,6 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
-import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 class LLMAsJudgeNodeTest {

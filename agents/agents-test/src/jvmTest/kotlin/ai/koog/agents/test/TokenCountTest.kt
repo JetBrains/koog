@@ -12,6 +12,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.utils.time.AgentClock
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
@@ -21,7 +22,6 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Disabled
 import kotlin.test.AfterTest
 import kotlin.test.Test
-import ai.koog.utils.time.AgentClock
 
 class TokenCountTest {
     private val serializer = KotlinxSerializer()

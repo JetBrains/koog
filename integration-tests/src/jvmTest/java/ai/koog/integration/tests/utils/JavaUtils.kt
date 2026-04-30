@@ -21,6 +21,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.utils.time.AgentClock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.util.concurrent.CopyOnWriteArrayList
@@ -29,7 +30,6 @@ import java.util.concurrent.Flow.Publisher
 import java.util.concurrent.Flow.Subscriber
 import java.util.concurrent.Flow.Subscription
 import java.util.concurrent.TimeUnit
-import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(InternalAgentsApi::class)

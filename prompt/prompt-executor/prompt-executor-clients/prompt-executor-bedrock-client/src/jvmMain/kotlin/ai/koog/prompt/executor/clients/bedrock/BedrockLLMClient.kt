@@ -25,6 +25,7 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.io.SuitableForIO
+import ai.koog.utils.time.AgentClock
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 import aws.sdk.kotlin.services.bedrockruntime.applyGuardrail
 import aws.sdk.kotlin.services.bedrockruntime.model.ApplyGuardrailResponse
@@ -58,7 +59,6 @@ import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.jetbrains.annotations.VisibleForTesting
-import ai.koog.utils.time.AgentClock
 import kotlin.time.Duration.Companion.milliseconds
 
 /**

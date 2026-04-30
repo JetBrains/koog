@@ -5,6 +5,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.utils.time.AgentClock
 import com.agentclientprotocol.common.Event.SessionUpdateEvent
 import com.agentclientprotocol.model.ContentBlock
 import com.agentclientprotocol.model.EmbeddedResourceResource
@@ -12,7 +13,6 @@ import com.agentclientprotocol.model.SessionUpdate
 import com.agentclientprotocol.model.SessionUpdate.AgentMessageChunk
 import com.agentclientprotocol.model.ToolCallId
 import com.agentclientprotocol.model.ToolCallStatus
-import ai.koog.utils.time.AgentClock
 
 /** Constant to use for an unknown content part format */
 public const val UNKNOWN_FORMAT: String = "unknown"

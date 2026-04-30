@@ -22,6 +22,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.test.utils.DockerAvailableCondition
+import ai.koog.utils.time.AgentClock
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
@@ -37,7 +38,6 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
-import ai.koog.utils.time.AgentClock
 import kotlin.time.Instant
 
 @TestInstance(Lifecycle.PER_CLASS)

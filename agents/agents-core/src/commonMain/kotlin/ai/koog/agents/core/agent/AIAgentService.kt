@@ -18,11 +18,11 @@ import ai.koog.serialization.KSerializerTypeToken
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.annotations.InternalKoogSerializationApi
 import ai.koog.serialization.typeToken
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.KSerializer
 import kotlin.jvm.JvmStatic
-import ai.koog.utils.time.AgentClock
 
 /**
  * [AIAgentService] is a core interface for managing AI agents. The service allows creation, removal, and

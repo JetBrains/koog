@@ -14,6 +14,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.utils.time.AgentClock
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -28,7 +29,6 @@ import org.springframework.ai.chat.model.ChatResponse
 import org.springframework.ai.chat.model.Generation
 import org.springframework.ai.model.tool.ToolCallingChatOptions
 import reactor.core.publisher.Flux
-import ai.koog.utils.time.AgentClock
 import org.springframework.ai.chat.prompt.Prompt as SpringPrompt
 
 class SpringAiLLMClientTest {
