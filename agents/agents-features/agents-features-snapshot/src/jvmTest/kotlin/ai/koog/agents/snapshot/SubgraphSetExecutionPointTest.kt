@@ -1,3 +1,5 @@
+package ai.koog.agents.snapshot
+
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.execution.path

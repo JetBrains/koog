@@ -3,24 +3,43 @@
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.planner.PlannerAgentExecutionPoint
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONNull
 
 @InternalAgentsApi
-public class AgentContextData(
-    internal val messageHistory: List<Message>,
+public sealed class AgentContextData {
+    internal abstract val messageHistory: List<Message>
+    internal abstract val rollbackStrategy: RollbackStrategy
+    internal abstract val additionalRollbackActions: suspend (AIAgentContext) -> Unit
+}
+
+@InternalAgentsApi
+public class GraphAgentContextData(
+    override val messageHistory: List<Message>,
     internal val nodePath: String,
     @Deprecated("Use lastOutput instead, lastOutput will be removed in future versions")
-    internal val lastInput: JSONElement? = null,
-    internal val lastOutput: JSONElement? = null,
-    internal val rollbackStrategy: RollbackStrategy,
-    internal val additionalRollbackActions: suspend (AIAgentContext) -> Unit = {}
-) {
+    internal val lastInput: JSONElement = JSONNull,
+    internal val lastOutput: JSONElement = JSONNull,
+    override val rollbackStrategy: RollbackStrategy,
+    override val additionalRollbackActions: suspend (AIAgentContext) -> Unit = {}
+) : AgentContextData() {
     init {
-        require(lastInput == null || lastOutput == null) { "`lastInput` and `lastOutput` cannot be both set" }
-        require(lastInput != null || lastOutput != null) { "`lastInput` (until 0.6.0) or `lastOutput` (since 0.6.1) must be set" }
+        require(lastInput == JSONNull || lastOutput == JSONNull) { "`lastInput` and `lastOutput` cannot be both set" }
+        require(lastInput == JSONNull || lastOutput == JSONNull) { "`lastInput` (until 0.6.0) or `lastOutput` (since 0.6.1) must be set" }
     }
 }
+
+@InternalAgentsApi
+public class PlannerAgentContextData(
+    override val messageHistory: List<Message>,
+    internal val state: JSONElement,
+    internal val plan: JSONElement,
+    internal val executionPoint: PlannerAgentExecutionPoint,
+    override val rollbackStrategy: RollbackStrategy,
+    override val additionalRollbackActions: suspend (AIAgentContext) -> Unit = {}
+) : AgentContextData()
 
 public enum class RollbackStrategy {
     /**

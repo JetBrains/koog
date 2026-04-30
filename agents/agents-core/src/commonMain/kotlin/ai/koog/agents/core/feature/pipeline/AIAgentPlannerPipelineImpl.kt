@@ -12,6 +12,7 @@ import ai.koog.agents.core.feature.handler.planner.PlanCreationCompletedContext
 import ai.koog.agents.core.feature.handler.planner.PlanCreationStartingContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionStartingContext
+import ai.koog.serialization.TypeToken
 import ai.koog.utils.time.KoogClock
 
 /**
@@ -32,12 +33,14 @@ public class AIAgentPlannerPipelineImpl(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any?,
+        planType: TypeToken?,
         stepIndex: Int,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.BuildPlanStarting,
-            context = PlanCreationStartingContext(eventId, executionInfo, context, state, plan, stepIndex)
+            context = PlanCreationStartingContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex)
         )
     }
 
@@ -47,13 +50,15 @@ public class AIAgentPlannerPipelineImpl(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any?,
+        planType: TypeToken?,
         stepIndex: Int,
         updatedPlan: Any,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.BuildPlanCompleted,
-            context = PlanCreationCompletedContext(eventId, executionInfo, context, state, plan, stepIndex, updatedPlan)
+            context = PlanCreationCompletedContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex, updatedPlan)
         )
     }
 
@@ -63,12 +68,14 @@ public class AIAgentPlannerPipelineImpl(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any,
+        planType: TypeToken?,
         stepIndex: Int
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.ExecuteStepStarting,
-            context = StepExecutionStartingContext(eventId, executionInfo, context, state, plan, stepIndex)
+            context = StepExecutionStartingContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex)
         )
     }
 
@@ -78,12 +85,14 @@ public class AIAgentPlannerPipelineImpl(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any,
+        planType: TypeToken?,
         stepIndex: Int,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.ExecuteStepCompleted,
-            context = StepExecutionCompletedContext(eventId, executionInfo, context, state, plan, stepIndex)
+            context = StepExecutionCompletedContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex)
         )
     }
 
@@ -93,12 +102,14 @@ public class AIAgentPlannerPipelineImpl(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any,
+        planType: TypeToken?,
         stepIndex: Int,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.IsPlanCompletedStarting,
-            context = PlanCompletionEvaluationStartingContext(eventId, executionInfo, context, state, plan, stepIndex)
+            context = PlanCompletionEvaluationStartingContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex)
         )
     }
 
@@ -108,13 +119,15 @@ public class AIAgentPlannerPipelineImpl(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any,
+        planType: TypeToken?,
         stepIndex: Int,
         isCompleted: Boolean,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.IsPlanCompletedCompleted,
-            context = PlanCompletionEvaluationCompletedContext(eventId, executionInfo, context, state, plan, stepIndex, isCompleted)
+            context = PlanCompletionEvaluationCompletedContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex, isCompleted)
         )
     }
 

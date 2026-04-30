@@ -92,7 +92,10 @@ public open class FilePersistenceStorageProvider<Path> @JvmOverloads constructor
 
     override suspend fun saveCheckpoint(sessionId: String, agentCheckpointData: AgentCheckpointData) {
         val checkpointPath = checkpointPath(sessionId, agentCheckpointData.checkpointId)
-        val serialized = json.encodeToString(AgentCheckpointData.serializer(), agentCheckpointData)
+        val serialized = json.encodeToString(
+            AgentCheckpointData.serializer(),
+            agentCheckpointData
+        )
         fs.writeText(checkpointPath, serialized)
     }
 

@@ -24,6 +24,7 @@ public open class SimpleLLMPlanner @JvmOverloads constructor(
     private val historyCompressionStrategy: HistoryCompressionStrategy = HistoryCompressionStrategy.NoCompression
 ) : AIAgentPlanner<String, SimplePlan>(
     stateType = typeToken<String>(),
+    planType = typeToken<SimplePlan>(),
 ) {
     override suspend fun buildPlan(
         context: AIAgentPlannerContext,

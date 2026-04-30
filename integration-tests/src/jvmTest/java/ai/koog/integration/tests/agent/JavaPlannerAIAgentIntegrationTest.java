@@ -109,8 +109,12 @@ public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
         public String text;
 
         public TextualState(String text) {
-            super(text);
             this.text = text;
+        }
+
+        @Override
+        public String getAgentInput() {
+            return text;
         }
 
         @Override

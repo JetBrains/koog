@@ -1,13 +1,14 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.RollbackStrategy
-import ai.koog.agents.core.agent.context.agentContextDataAdditionalKey
+import ai.koog.agents.core.agent.context.graphAgentContextDataAdditionalKey
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistence
+import ai.koog.agents.snapshot.straightForwardGraphNoCheckpoint
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
@@ -306,6 +307,6 @@ class RunFromCheckpointTest {
             checkpoint = checkpoint,
         )
 
-        assertNull(session.context().storage.get(agentContextDataAdditionalKey))
+        assertNull(session.context().storage.get(graphAgentContextDataAdditionalKey))
     }
 }

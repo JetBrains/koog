@@ -63,7 +63,8 @@ while the LLM performs the actual content generation within each action.
         val draft: String = "",
         val hasReview: Boolean = false,
         val isPublished: Boolean = false
-    ): GoapAgentState<String, String>(topic) {
+    ): GoapAgentState<String, String>() {
+        override val agentInput = topic
         override fun provideOutput(): String = draft
     }
 
@@ -184,8 +185,12 @@ while the LLM performs the actual content generation within each action.
         public boolean isPublished = false;
     
         public ContentState(String topic) {
-            super(topic);
             this.topic = topic;
+        }
+
+        @Override
+        public String getAgentInput() {
+            return topic;
         }
 
         public ContentState copy(boolean hasOutline, String outline, boolean hasDraft,
@@ -309,7 +314,8 @@ you can define custom cost functions for actions and goals to guide the planner:
         val topic: String,
         val operationDone: Boolean = true,
         val hasOptimization: Boolean = true
-    ): GoapAgentState<String, String>(topic) {
+    ): GoapAgentState<String, String>() {
+        override val agentInput = topic
         override fun provideOutput(): String = ""
     }
     val planner = AIAgentPlannerStrategy.goap("content-planner", ::MyState) {
@@ -347,8 +353,11 @@ you can define custom cost functions for actions and goals to guide the planner:
             public boolean operationDone = false;
             public boolean hasOptimization = true;
             public MyState(String topic) {
-                super(topic);
                 this.topic = topic;
+            }
+            @Override
+            public String getAgentInput() {
+                return topic;
             }
             public MyState copy(boolean operationDone) {
                 MyState state = new MyState(topic);
@@ -404,7 +413,8 @@ This allows the planner to make plans based on expected outcomes while handling 
         val topic: String,
         val taskComplete: Boolean = true,
         val attempts: Int = 0
-    ): GoapAgentState<String, String>(topic) {
+    ): GoapAgentState<String, String>() {
+        override val agentInput = topic
         override fun provideOutput(): String = ""
     }
     fun performComplexTask(): Boolean = true
@@ -447,8 +457,11 @@ This allows the planner to make plans based on expected outcomes while handling 
             public boolean taskComplete = false;
             public int attempts = 0;
             public MyState(String topic) {
-                super(topic);
                 this.topic = topic;
+            }
+            @Override
+            public String getAgentInput() {
+                return topic;
             }
             public MyState copy(boolean taskComplete, int attempts) {
                 MyState state = new MyState(topic);

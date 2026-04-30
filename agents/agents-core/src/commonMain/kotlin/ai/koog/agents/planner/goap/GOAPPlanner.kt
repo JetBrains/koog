@@ -3,12 +3,16 @@ package ai.koog.agents.planner.goap
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.planner.AIAgentPlanner
 import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
 
 /**
  * Goal-Oriented Action Planning (GOAP) implementation for AI agents.
  *
  * GOAP is a planning system that uses goals, actions with preconditions and effects,
  * and a search algorithm to find the optimal sequence of actions to achieve a goal.
+ *
+ * The plan is represented as a list of action names, which makes it serializable and
+ * suitable for persistence. Actions are resolved by name from the planner's action list at runtime.
  *
  * @param State The type of the state.
  * @param actions The list of defined actions.
@@ -19,34 +23,36 @@ public open class GOAPPlanner<State : Any> internal constructor(
     private val actions: List<Action<State>>,
     private val goals: List<Goal<State>>,
     stateType: TypeToken? = null,
-) : AIAgentPlanner<State, GOAPPlan<State>>(
+) : AIAgentPlanner<State, List<String>>(
     stateType = stateType,
+    planType = typeToken<List<String>>(),
 ) {
     override suspend fun buildPlan(
         context: AIAgentPlannerContext,
         state: State,
-        plan: GOAPPlan<State>?
-    ): GOAPPlan<State> = goals
+        plan: List<String>?
+    ): List<String> = goals
         .mapNotNull { goal -> buildPlanForGoal(state, goal) }
-        .minByOrNull { plan -> plan.value }
+        .minByOrNull { it.value }
+        ?.actions?.map { it.name }
         ?: throw IllegalStateException("No valid plan found for state: $state")
 
     override suspend fun executeStep(
         context: AIAgentPlannerContext,
         state: State,
-        plan: GOAPPlan<State>
+        plan: List<String>
     ): State {
-        for (availableAction in actions) {
-            if (plan.actions.first() == availableAction) return availableAction.execute(context, state)
-        }
-        throw IllegalStateException("Action is not available: ${plan.actions.first()}")
+        val actionName = plan.firstOrNull() ?: return state
+        val action = actions.firstOrNull { it.name == actionName }
+            ?: throw IllegalStateException("Action is not available: $actionName")
+        return action.execute(context, state)
     }
 
     override suspend fun isPlanCompleted(
         context: AIAgentPlannerContext,
         state: State,
-        plan: GOAPPlan<State>
-    ): Boolean = plan.goal.condition(state)
+        plan: List<String>
+    ): Boolean = goals.any { it.condition(state) }
 
     //region A-star path search
     private class AStarStep<State>(

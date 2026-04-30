@@ -35,7 +35,7 @@ public class InMemoryPersistenceStorageProvider() : PersistenceStorageProvider<A
                 return snapshotMap[sessionId]?.filter { filter.check(it) }?.maxByOrNull { it.createdAt }
             }
 
-            return snapshotMap[sessionId]?.maxBy { it.version }
+            return snapshotMap[sessionId]?.maxByOrNull { it.version }
         }
     }
 

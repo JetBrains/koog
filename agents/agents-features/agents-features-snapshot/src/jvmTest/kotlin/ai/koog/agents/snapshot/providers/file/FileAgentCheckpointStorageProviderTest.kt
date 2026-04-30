@@ -4,6 +4,7 @@ import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
@@ -49,10 +50,14 @@ class FileAgentCheckpointStorageProviderTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = checkpointId,
             createdAt = createdAt,
-            nodePath = nodeId,
-            lastOutput = lastInput,
             messageHistory = messageHistory,
-            version = 0L
+            version = 0L,
+            properties = JSONObject(
+                mapOf(
+                    "nodePath" to JSONPrimitive(nodeId),
+                    "lastOutput" to lastInput
+                )
+            )
         )
 
         val agentId = "testAgentId"
@@ -67,8 +72,9 @@ class FileAgentCheckpointStorageProviderTest {
         val retrievedCheckpoint = checkpoints.first()
         assertEquals(checkpointId, retrievedCheckpoint.checkpointId)
         assertEquals(createdAt, retrievedCheckpoint.createdAt)
-        assertEquals(nodeId, retrievedCheckpoint.nodePath)
-        assertEquals(lastInput, retrievedCheckpoint.lastOutput)
+        val retrievedNodePath = retrievedCheckpoint.properties?.entries?.get("nodePath") as? JSONPrimitive
+        assertEquals(nodeId, retrievedNodePath?.content)
+        assertEquals(lastInput, retrievedCheckpoint.properties?.entries?.get("lastOutput"))
         assertEquals(messageHistory.size, retrievedCheckpoint.messageHistory.size)
 
         // Check first message (User)
@@ -92,10 +98,14 @@ class FileAgentCheckpointStorageProviderTest {
         val laterCheckpoint = AgentCheckpointData(
             checkpointId = laterCheckpointId,
             createdAt = laterCreatedAt,
-            nodePath = nodeId,
-            lastOutput = lastInput,
             messageHistory = messageHistory,
-            version = checkpoint.version.plus(1)
+            version = checkpoint.version.plus(1),
+            properties = JSONObject(
+                mapOf(
+                    "nodePath" to JSONPrimitive(nodeId),
+                    "lastOutput" to lastInput
+                )
+            )
         )
 
         // Save the later checkpoint

@@ -1,5 +1,7 @@
 @file:Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
 
+package ai.koog.agents.snapshot
+
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.GraphAIAgentService
@@ -41,6 +43,7 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONElement
@@ -393,13 +396,17 @@ class CheckpointsTests {
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodePath = path(convId, "straight-forward", "Node2"),
-            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            version = 0
+            version = 0,
+            properties = JSONObject(
+                mapOf(
+                    "nodePath" to JSONPrimitive(path(convId, "straight-forward", "Node2")),
+                    "lastInput" to JSONPrimitive("Test input")
+                )
+            )
         )
 
         checkpointStorageProvider.saveCheckpoint(convId, testCheckpoint)
@@ -434,25 +441,33 @@ class CheckpointsTests {
         val testCheckpoint2 = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node1"),
-            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            version = 0
+            version = 0,
+            properties = JSONObject(
+                mapOf(
+                    "nodePath" to JSONPrimitive(path(sessionId, "straight-forward", "Node1")),
+                    "lastInput" to JSONPrimitive("Test input")
+                )
+            )
         )
 
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node2"),
-            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            version = testCheckpoint2.version + 1
+            version = testCheckpoint2.version + 1,
+            properties = JSONObject(
+                mapOf(
+                    "nodePath" to JSONPrimitive(path(sessionId, "straight-forward", "Node2")),
+                    "lastInput" to JSONPrimitive("Test input")
+                )
+            )
         )
 
         checkpointStorageProvider.saveCheckpoint(sessionId, testCheckpoint2)
@@ -709,13 +724,15 @@ class CheckpointsTests {
             lastMessageHistory
         )
 
+        val nodePath = lastCheckpoint.properties?.entries?.get("nodePath") as? JSONPrimitive
         assertTrue(
-            lastCheckpoint.nodePath.endsWith("executeTool"),
+            nodePath?.content?.endsWith("executeTool") == true,
             message = "Last checkpoint node should be `executeTool`"
         )
 
+        val lastOutput = lastCheckpoint.properties?.entries?.get("lastOutput")
         assertTrue(
-            lastCheckpoint.lastOutput.toString().contains("Ferdinand Magellan"),
+            lastOutput.toString().contains("Ferdinand Magellan"),
             message = "Last checkpointed node should be an `executeTool` with \"Ferdinand Magellan\" as an output (already calculated)"
         )
 
@@ -882,31 +899,38 @@ class CheckpointsTests {
         )
 
         checkpointStorage.removeCheckpoints()
+
+        val nodePathStr = (lastCheckpoint.properties?.entries?.get("nodePath") as? JSONPrimitive)?.content
         checkpointStorage.saveCheckpoint(
             agent.id,
             lastCheckpoint.copy(
                 version = 0,
-                lastOutput = null,
-                lastInput = Json.encodeToJsonElement(
-                    Message.Tool.Call(
-                        id = "call-1",
-                        tool = "ask",
-                        content = "{\"message\":\"Who discovered this?\"}",
-                        metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-02T22:35:01+01:00"))
+                properties = JSONObject(
+                    mapOf(
+                        "nodePath" to JSONPrimitive(nodePathStr),
+                        "lastInput" to Json.encodeToJsonElement(
+                            Message.Tool.Call(
+                                id = "call-1",
+                                tool = "ask",
+                                content = "{\"message\":\"Who discovered this?\"}",
+                                metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-02T22:35:01+01:00"))
+                            )
+                        ).toKoogJSONElement()
                     )
-                ).toKoogJSONElement()
+                )
             )
         )
 
         println(checkpointStorage.getLatestCheckpoint(agent.id))
 
         assertTrue(
-            lastCheckpoint.nodePath.endsWith("executeTool"),
+            nodePathStr?.endsWith("executeTool") == true,
             message = "Last checkpoint node should be `executeTool`"
         )
 
+        val lastOutput = lastCheckpoint.properties?.entries?.get("lastOutput")
         assertTrue(
-            lastCheckpoint.lastOutput.toString().contains("Ferdinand Magellan"),
+            lastOutput.toString().contains("Ferdinand Magellan"),
             message = "Last checkpointed node should be an `executeTool` with \"Ferdinand Magellan\" as an output (already calculated)"
         )
 
