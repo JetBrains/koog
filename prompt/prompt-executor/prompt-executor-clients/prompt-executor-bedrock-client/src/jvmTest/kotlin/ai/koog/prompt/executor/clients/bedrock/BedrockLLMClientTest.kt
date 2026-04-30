@@ -1205,7 +1205,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = AgentClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1230,7 +1230,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = AgentClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1270,7 +1270,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = AgentClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1295,7 +1295,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = AgentClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1348,7 +1348,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = AgentClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1373,7 +1373,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = AgentClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1444,7 +1444,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = AgentClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1469,7 +1469,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = AgentClock.System
         )
 
         val prompt = Prompt.build("test") {
