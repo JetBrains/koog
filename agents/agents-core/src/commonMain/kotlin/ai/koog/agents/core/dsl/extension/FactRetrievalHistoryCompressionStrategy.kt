@@ -91,14 +91,25 @@ private fun multipleFactsPrompt(concept: Concept): String =
     """.trimIndent()
 
 /**
- * A history compression strategy for retrieving and incorporating factual knowledge about specific concepts from past
- * session activity or stored memory.
+ * A history compression strategy that extracts structured facts about predefined concepts from the
+ * current conversation history using an LLM, then replaces the full history with a compact assistant
+ * message containing those extracted facts.
  *
- * This class leverages a list of `Concept` objects, each encapsulating a specific domain or unit of knowledge, to
- * extract and organize related facts within the session history. These facts are structured into messages for
- * inclusion in the session prompt.
+ * For each [Concept] in [concepts], the strategy issues a separate structured LLM request against a
+ * snapshot of the current conversation (wrapped in XML tags) to extract either a single fact
+ * ([FactType.SINGLE]) or multiple facts ([FactType.MULTIPLE]). The original prompt and model are
+ * restored after each extraction so that the session state is not mutated.
  *
- * @param concepts A list of `Concept` objects that define the domains of knowledge for which facts need to be retrieved.
+ * The resulting compressed prompt contains:
+ * - All original system messages
+ * - The first user message (if present)
+ * - Any provided [memoryMessages]
+ * - A single assistant message with a `[CONTEXT RESTORATION]` block listing the extracted facts
+ *   and the approximate number of tool interactions that occurred before compression
+ *
+ * If no facts are extracted for any concept, the prompt is left unchanged.
+ *
+ * @param concepts A list of [Concept] objects that define the topics for which facts should be extracted.
  */
 public class FactRetrievalHistoryCompressionStrategy(public val concepts: List<Concept>) : HistoryCompressionStrategy() {
     /**
@@ -110,12 +121,11 @@ public class FactRetrievalHistoryCompressionStrategy(public val concepts: List<C
     public constructor(vararg concepts: Concept) : this(concepts.toList())
 
     /**
-     * Compresses historical memory and retrieves facts about predefined concepts to construct
-     * a prompt containing the relevant information. This method generates fact messages for
-     * each concept and appends them to the composed prompt.
+     * Extracts facts about each configured [Concept] from the current conversation history and
+     * replaces the prompt with a compressed version containing those facts.
      *
-     * @param llmSession The local LLM write session used to retrieve facts and manage prompts.
-     * @param memoryMessages A list of existing memory-related messages to be included in the prompt.
+     * @param llmSession The LLM write session used to issue fact-extraction requests and update the prompt.
+     * @param memoryMessages A list of memory messages to be preserved in the compressed prompt.
      */
     override suspend fun compress(
         llmSession: AIAgentLLMWriteSession,

@@ -223,7 +223,19 @@ public abstract class HistoryCompressionStrategy {
         public fun Chunked(chunkSize: Int): HistoryCompressionStrategy = ChunkedHistoryCompressionStrategy(chunkSize)
 
         /**
-         * FIXME
+         * A strategy for compressing history by extracting structured facts about predefined concepts
+         * from the current conversation history using an LLM, then replacing the full history with a
+         * compact assistant message that contains those extracted facts.
+         *
+         * This strategy preserves all system messages as well as the first user message
+         * (if present) and memory messages (if provided), then appends a single assistant message
+         * summarising the extracted facts and the approximate number of tool interactions that occurred.
+         *
+         * [System, User, Assistant, ToolCall, ToolResult, Assistant]
+         * ->
+         * [System, User, Memory, Assistant([CONTEXT RESTORATION] facts about configured concepts)]
+         *
+         * @param concepts The list of [Concept] objects that define which topics to extract facts about.
          */
         @JvmStatic
         @KtLintIgnoreNaming
