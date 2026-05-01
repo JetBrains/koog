@@ -15,7 +15,7 @@ kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
 kotlinx-serialization = "1.11.0"
 ktlint = "14.2.0"
-ktor = "3.4.2"
+ktor = "3.4.3"
 markdown-renderer = "0.39.2"
 
 [libraries]
