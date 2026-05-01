@@ -7,7 +7,7 @@ import ai.koog.agents.features.opentelemetry.metric.GenAIMetrics
 import ai.koog.agents.features.opentelemetry.metric.HistogramMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.KoogMetrics
 import ai.koog.prompt.llm.LLModel
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 
 internal fun createLLMInputTokensMetricEvent(
     id: String,
@@ -24,7 +24,7 @@ internal fun createLLMInputTokensMetricEvent(
 
     return HistogramMetricEvent(
         id = id,
-        timestamp = AgentClock.System.now(),
+        timestamp = KoogClock.System.now(),
         metricName = GenAIMetrics.Client.Token.Usage.name,
         value = inputTokens.toDouble(),
         attributes = attributes
@@ -46,7 +46,7 @@ internal fun createLLMOutputTokensMetricEvent(
 
     return HistogramMetricEvent(
         id = id,
-        timestamp = AgentClock.System.now(),
+        timestamp = KoogClock.System.now(),
         metricName = GenAIMetrics.Client.Token.Usage.name,
         value = outputTokens.toDouble(),
         attributes = attributes
@@ -67,7 +67,7 @@ internal fun createToolCallCounterMetricEvent(
 
     return CounterMetricEvent(
         id = id,
-        timestamp = AgentClock.System.now(),
+        timestamp = KoogClock.System.now(),
         metricName = KoogMetrics.Client.Tool.Call.Count.name,
         attributes = attributes,
         value = 1L

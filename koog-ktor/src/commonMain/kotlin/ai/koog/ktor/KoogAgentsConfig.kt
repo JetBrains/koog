@@ -30,7 +30,7 @@ import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.Serializable
@@ -402,7 +402,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
         public fun prompt(
             name: String = "agent",
             llmParams: LLMParams = LLMParams(),
-            clock: AgentClock = AgentClock.System,
+            clock: KoogClock = KoogClock.System,
             build: PromptBuilder.() -> Unit
         ) {
             prompt = koogPrompt(name, llmParams, clock, build)

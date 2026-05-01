@@ -1,7 +1,7 @@
 package ai.koog.agents.core.feature.model
 
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
 
 /**
@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class FeatureStringMessage(
     val message: String,
-    override val timestamp: Long = AgentClock.System.now().toEpochMilliseconds()
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
 ) : FeatureMessage {
 
     /**

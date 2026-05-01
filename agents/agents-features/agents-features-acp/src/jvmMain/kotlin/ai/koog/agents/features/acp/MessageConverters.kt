@@ -5,7 +5,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import com.agentclientprotocol.common.Event.SessionUpdateEvent
 import com.agentclientprotocol.model.ContentBlock
 import com.agentclientprotocol.model.EmbeddedResourceResource
@@ -35,7 +35,7 @@ public const val UNKNOWN_TOOL_DESCRIPTION: String = "unknown"
 /**
  * Converts a list of [ContentBlock] of ACP prompt to a Koog [Message.User].
  */
-public fun List<ContentBlock>.toKoogMessage(clock: AgentClock): Message {
+public fun List<ContentBlock>.toKoogMessage(clock: KoogClock): Message {
     return Message.User(
         parts = this.map { it.toKoogContentPart() },
         metaInfo = RequestMetaInfo(clock.now())

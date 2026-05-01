@@ -18,7 +18,7 @@ import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedCo
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
 import ai.koog.serialization.TypeToken
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 
 /**
  * Represents a pipeline for AI agent graph execution, extending the functionality of `AIAgentPipeline`.
@@ -28,7 +28,7 @@ import ai.koog.utils.time.AgentClock
  */
 public expect open class AIAgentGraphPipeline(
     agentConfig: AIAgentConfig,
-    clock: AgentClock = AgentClock.System,
+    clock: KoogClock = KoogClock.System,
     basePipelineDelegate: AIAgentPipelineImpl = AIAgentPipelineImpl(agentConfig, clock)
 ) : AIAgentPipeline, AIAgentGraphPipelineAPI {
 

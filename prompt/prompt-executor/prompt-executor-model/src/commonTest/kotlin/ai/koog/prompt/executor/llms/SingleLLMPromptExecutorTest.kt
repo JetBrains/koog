@@ -12,7 +12,7 @@ import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -22,7 +22,7 @@ import kotlin.time.Instant
 
 class SingleLLMPromptExecutorTest {
 
-    private val mockClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
+    private val mockClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     private val mockModel: LLModel = LLModel(
         provider = LLMProvider.OpenAI,

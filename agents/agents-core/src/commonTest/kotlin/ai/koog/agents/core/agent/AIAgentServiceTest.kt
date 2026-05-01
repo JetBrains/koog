@@ -9,7 +9,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -65,7 +65,7 @@ class AIAgentServiceTest {
         assertNotNull(service.toolRegistry)
 
         // create agent and run
-        val agent = service.createAgent(id = "id-1", clock = AgentClock.System)
+        val agent = service.createAgent(id = "id-1", clock = KoogClock.System)
         val out = agent.run("in", null)
         assertEquals("ok:in", out)
     }

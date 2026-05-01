@@ -5,7 +5,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -25,7 +25,7 @@ class PromptTest {
     companion object {
         val ts: Instant = Instant.parse("2023-01-01T00:00:00Z")
 
-        val testClock: AgentClock = AgentClock { ts }
+        val testClock: KoogClock = KoogClock { ts }
 
         val testRespMetaInfo = ResponseMetaInfo.create(testClock)
         val testReqMetaInfo = RequestMetaInfo.create(testClock)

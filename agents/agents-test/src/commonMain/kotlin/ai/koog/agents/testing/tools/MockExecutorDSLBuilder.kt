@@ -12,7 +12,7 @@ import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmName
 
@@ -80,7 +80,7 @@ public class ToolCondition<Args, Result>(
  * @param tokenizer Optional tokenizer that will be used to estimate token counts in mock messages
  */
 public class MockExecutorDSLBuilder(
-    private val clock: AgentClock,
+    private val clock: KoogClock,
     private val serializer: JSONSerializer,
     private val tokenizer: Tokenizer? = null
 ) {
@@ -1091,7 +1091,7 @@ public fun MockExecutorDSLBuilder.mockLLMStream(stream: Flow<StreamFrame>): Stre
  */
 public fun getMockExecutor(
     serializer: JSONSerializer = KotlinxSerializer(),
-    clock: AgentClock = AgentClock.System,
+    clock: KoogClock = KoogClock.System,
     tokenizer: Tokenizer? = null,
     handleLastAssistantMessage: Boolean = false,
     init: MockExecutorDSLBuilder.() -> Unit

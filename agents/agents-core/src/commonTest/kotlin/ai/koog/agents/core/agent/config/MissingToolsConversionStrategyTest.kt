@@ -5,7 +5,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -13,7 +13,7 @@ import kotlin.time.Instant.Companion.fromEpochMilliseconds
 
 class MissingToolsConversionStrategyTest {
     private companion object {
-        private val testClock = object : AgentClock {
+        private val testClock = object : KoogClock {
             override fun now() = fromEpochMilliseconds(123)
         }
 

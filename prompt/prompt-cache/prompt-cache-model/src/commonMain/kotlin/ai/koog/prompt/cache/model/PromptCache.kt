@@ -5,7 +5,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -216,7 +216,7 @@ public interface PromptCache {
 public suspend fun PromptCache.get(
     prompt: Prompt,
     tools: List<ToolDescriptor>,
-    clock: AgentClock = AgentClock.System
+    clock: KoogClock = KoogClock.System
 ): List<Message.Response>? {
     return get(PromptCache.Request.create(prompt, tools))?.let { messages ->
         val metaInfo = prompt

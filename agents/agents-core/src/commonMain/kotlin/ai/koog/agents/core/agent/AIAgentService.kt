@@ -18,7 +18,7 @@ import ai.koog.serialization.KSerializerTypeToken
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.annotations.InternalKoogSerializationApi
 import ai.koog.serialization.typeToken
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.KSerializer
@@ -201,7 +201,7 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         id: String? = null,
         additionalToolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         agentConfig: AIAgentConfig = this.agentConfig,
-        clock: AgentClock = AgentClock.System,
+        clock: KoogClock = KoogClock.System,
     ): TAgent
 
     /**
@@ -219,7 +219,7 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         id: String? = null,
         additionalToolRegistry: ToolRegistry = this.toolRegistry,
         agentConfig: AIAgentConfig = this.agentConfig,
-        clock: AgentClock = AgentClock.System,
+        clock: KoogClock = KoogClock.System,
     ): Output
 }
 
@@ -250,7 +250,7 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: AgentClock
+        clock: KoogClock
     ): Output = createAgent(id, additionalToolRegistry, agentConfig, clock).run(agentInput, null)
 
     /**
@@ -267,7 +267,7 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
         id: String? = null,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: AgentClock = AgentClock.System,
+        clock: KoogClock = KoogClock.System,
     ): TAgent
 
     /**
@@ -284,7 +284,7 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: AgentClock
+        clock: KoogClock
     ): TAgent = managedAgentsMutex.withLock {
         val agent = createManagedAgent(id, additionalToolRegistry, agentConfig, clock)
         managedAgents[agent.id] = agent
@@ -353,7 +353,7 @@ public constructor(
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: AgentClock,
+        clock: KoogClock,
     ): GraphAIAgent<Input, Output> = GraphAIAgent(
         inputType = inputType,
         outputType = outputType,
@@ -403,7 +403,7 @@ public constructor(
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: AgentClock,
+        clock: KoogClock,
     ): FunctionalAIAgent<Input, Output> = FunctionalAIAgent(
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
@@ -459,7 +459,7 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     inputType: TypeToken = typeToken<Input>(),
     outputType: TypeToken = typeToken<Output>(),
     parentAgentId: String? = null,
-    clock: AgentClock = AgentClock.System
+    clock: KoogClock = KoogClock.System
 ): Tool<AgentToolInput<Input>, AgentToolResult<Output>> = AIAgentTool(
     agentService = this,
     agentName = agentName,
@@ -494,7 +494,7 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     inputSerializer: KSerializer<Input>,
     outputSerializer: KSerializer<Output>,
     parentAgentId: String? = null,
-    clock: AgentClock = AgentClock.System
+    clock: KoogClock = KoogClock.System
 ): Tool<AgentToolInput<Input>, AgentToolResult<Output>> = createAgentTool(
     agentName = agentName,
     agentDescription = agentDescription,

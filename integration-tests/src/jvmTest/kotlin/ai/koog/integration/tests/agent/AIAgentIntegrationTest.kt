@@ -58,7 +58,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.typeToken
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -148,7 +148,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 ),
                 Arguments.of(HistoryCompressionStrategy.FromLastNMessages(1), "FromLastNMessages(1)"),
                 Arguments.of(
-                    HistoryCompressionStrategy.FromTimestamp(AgentClock.System.now().minus(1.seconds)),
+                    HistoryCompressionStrategy.FromTimestamp(KoogClock.System.now().minus(1.seconds)),
                     "FromTimestamp"
                 ),
                 Arguments.of(HistoryCompressionStrategy.Chunked(2), "Chunked(2)")
@@ -960,12 +960,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         @Suppress("DEPRECATION")
         val checkpoint = AgentCheckpointData(
             checkpointId = "last-input-checkpoint",
-            createdAt = AgentClock.System.now(),
+            createdAt = KoogClock.System.now(),
             nodePath = path(sessionId, strategyName, node2Name),
             lastInput = JSONPrimitive("Node 1 output"),
             messageHistory = listOf(
-                Message.User("Restored user message", metaInfo = RequestMetaInfo(AgentClock.System.now())),
-                Message.Assistant("Restored assistant message", metaInfo = ResponseMetaInfo(AgentClock.System.now()))
+                Message.User("Restored user message", metaInfo = RequestMetaInfo(KoogClock.System.now())),
+                Message.Assistant("Restored assistant message", metaInfo = ResponseMetaInfo(KoogClock.System.now()))
             ),
             version = 0
         )
@@ -1009,7 +1009,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         val checkpoint = AgentCheckpointData(
             checkpointId = "invalid-checkpoint",
-            createdAt = AgentClock.System.now(),
+            createdAt = KoogClock.System.now(),
             nodePath = path(sessionId, strategyName, "MissingNode"),
             lastOutput = JSONPrimitive("missing"),
             messageHistory = emptyList(),

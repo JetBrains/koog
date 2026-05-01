@@ -12,7 +12,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.streamFrameFlowOf
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
 import kotlin.js.JsName
@@ -22,7 +22,7 @@ import kotlin.time.Instant
 
 class ChoiceSelectionStrategyTest {
 
-    private val testClock: AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
+    private val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     @Test
     @JsName("DummyChoiceStrategy_should_return_first_choice")

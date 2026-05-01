@@ -3,7 +3,7 @@ package ai.koog.agents.features.chathistory.aws
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import aws.sdk.kotlin.services.bedrockagentcore.BedrockAgentCoreClient
 import aws.sdk.kotlin.services.bedrockagentcore.model.Content
 import aws.sdk.kotlin.services.bedrockagentcore.model.Conversational
@@ -638,7 +638,7 @@ class AgentcoreChatHistoryProviderTest {
         return Message.User(
             text,
             RequestMetaInfo(
-                timestamp = AgentClock.System.now(),
+                timestamp = KoogClock.System.now(),
                 metadata = JsonObject(mapOf(EVENT_ID_METADATA_KEY to JsonPrimitive(eventId)))
             )
         )
@@ -648,7 +648,7 @@ class AgentcoreChatHistoryProviderTest {
         return Message.Assistant(
             text,
             ResponseMetaInfo(
-                timestamp = AgentClock.System.now(),
+                timestamp = KoogClock.System.now(),
                 metadata = JsonObject(mapOf(EVENT_ID_METADATA_KEY to JsonPrimitive(eventId)))
             )
         )

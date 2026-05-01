@@ -14,7 +14,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlin.reflect.KClass
 
 /**
@@ -46,7 +46,7 @@ internal constructor(
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
-    clock: AgentClock
+    clock: KoogClock
 ) : AIAgentLLMWriteSessionCommon
 
 /**

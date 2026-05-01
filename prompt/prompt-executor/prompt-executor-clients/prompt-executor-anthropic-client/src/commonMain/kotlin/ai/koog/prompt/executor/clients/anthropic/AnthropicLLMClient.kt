@@ -45,7 +45,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.utils.io.CancellationException
@@ -97,7 +97,7 @@ public class AnthropicClientSettings(
 public open class AnthropicLLMClient @JvmOverloads constructor(
     private val settings: AnthropicClientSettings = AnthropicClientSettings(),
     protected val httpClient: KoogHttpClient,
-    private val clock: AgentClock = AgentClock.System
+    private val clock: KoogClock = KoogClock.System
 ) : LLMClient() {
 
     private companion object {
@@ -140,7 +140,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: AnthropicClientSettings = AnthropicClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: AgentClock = AgentClock.System
+        clock: KoogClock = KoogClock.System
     ) : this(
         settings = settings,
         httpClient = createConfiguredHttpClient(apiKey, settings, baseClient),

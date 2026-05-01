@@ -21,7 +21,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.util.concurrent.CopyOnWriteArrayList
@@ -62,7 +62,7 @@ object JavaUtils {
         HistoryCompressionStrategy.WholeHistory,
         HistoryCompressionStrategy.WholeHistoryMultipleSystemMessages,
         HistoryCompressionStrategy.FromLastNMessages(1),
-        HistoryCompressionStrategy.FromTimestamp(AgentClock.System.now().minus(1.seconds)),
+        HistoryCompressionStrategy.FromTimestamp(KoogClock.System.now().minus(1.seconds)),
         HistoryCompressionStrategy.Chunked(2)
     )
 

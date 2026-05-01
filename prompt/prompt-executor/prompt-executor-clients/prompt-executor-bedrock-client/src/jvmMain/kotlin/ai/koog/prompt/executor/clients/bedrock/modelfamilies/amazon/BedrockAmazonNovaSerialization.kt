@@ -8,7 +8,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -115,7 +115,7 @@ internal object BedrockAmazonNovaSerialization {
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    internal fun parseNovaResponse(responseBody: String, clock: AgentClock = AgentClock.System): List<Message.Response> {
+    internal fun parseNovaResponse(responseBody: String, clock: KoogClock = KoogClock.System): List<Message.Response> {
         val response = json.decodeFromString<NovaResponse>(responseBody)
         val metaInfo = parseMetaInfo(clock, response.usage)
 
@@ -139,7 +139,7 @@ internal object BedrockAmazonNovaSerialization {
         }
     }
 
-    internal fun parseNovaStreamChunk(chunkJsonString: String, clock: AgentClock = AgentClock.System): List<StreamFrame> {
+    internal fun parseNovaStreamChunk(chunkJsonString: String, clock: KoogClock = KoogClock.System): List<StreamFrame> {
         val chunk = json.decodeFromString<NovaStreamChunk>(chunkJsonString)
         return buildList {
             chunk.contentBlockDelta?.delta?.text?.let(StreamFrame::TextDelta)?.let(::add)
@@ -155,7 +155,7 @@ internal object BedrockAmazonNovaSerialization {
     }
 
     private fun parseMetaInfo(
-        clock: AgentClock,
+        clock: KoogClock,
         novaUsage: NovaUsage?
     ): ResponseMetaInfo = ResponseMetaInfo.create(
         clock = clock,

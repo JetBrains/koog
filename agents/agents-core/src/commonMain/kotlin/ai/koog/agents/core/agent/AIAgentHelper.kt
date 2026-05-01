@@ -12,7 +12,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.typeToken
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlin.jvm.JvmStatic
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -50,7 +50,7 @@ internal object AIAgentHelper {
         strategy: AIAgentGraphStrategy<Input, Output>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         id: String? = null,
-        clock: AgentClock = AgentClock.System,
+        clock: KoogClock = KoogClock.System,
         noinline installFeatures: FeatureContext.() -> Unit = {},
     ): AIAgent<Input, Output> {
         return GraphAIAgent(
@@ -94,7 +94,7 @@ internal object AIAgentHelper {
         toolRegistry = toolRegistry,
         strategy = strategy,
         id = id,
-        clock = AgentClock.System,
+        clock = KoogClock.System,
         installFeatures = installFeatures
     )
 
@@ -117,7 +117,7 @@ internal object AIAgentHelper {
         strategy: AIAgentFunctionalStrategy<Input, Output>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         id: String? = null,
-        clock: AgentClock = AgentClock.System,
+        clock: KoogClock = KoogClock.System,
         installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
     ): FunctionalAIAgent<Input, Output> {
         return FunctionalAIAgent(
@@ -208,7 +208,7 @@ internal object AIAgentHelper {
         responseProcessor: ResponseProcessor? = null,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         id: String? = null,
-        clock: AgentClock = AgentClock.System,
+        clock: KoogClock = KoogClock.System,
         systemPrompt: String? = null,
         temperature: Double? = null,
         numberOfChoices: Int = 1,
@@ -326,7 +326,7 @@ internal object AIAgentHelper {
         strategy: AIAgentPlannerStrategy<Input, Output, *>,
         toolRegistry: ToolRegistry,
         id: String?,
-        clock: AgentClock,
+        clock: KoogClock,
         installFeatures: PlannerAIAgent.FeatureContext.() -> Unit
     ): AIAgent<Input, Output> = PlannerAIAgent(
         promptExecutor = promptExecutor,

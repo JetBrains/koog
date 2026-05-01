@@ -2,7 +2,6 @@ package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -14,7 +13,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.params.ParameterizedTest
@@ -67,7 +66,7 @@ class HistoryCompressionStrategiesTest {
     companion object {
         private val dummyArgsContent = Json.encodeToString(DummyTool.Args("dummy"))
 
-        private fun testClock(delay: Duration): AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z").plus(delay) }
+        private fun testClock(delay: Duration): KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z").plus(delay) }
 
         val simpleHistory = listOf(
             Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),

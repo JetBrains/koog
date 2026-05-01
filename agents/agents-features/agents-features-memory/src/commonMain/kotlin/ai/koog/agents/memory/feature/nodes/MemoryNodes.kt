@@ -14,7 +14,7 @@ import ai.koog.agents.memory.model.MultipleFacts
 import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.prompt.llm.LLModel
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -208,7 +208,7 @@ internal data class SubjectWithFact(
 @InternalAgentsApi
 public fun parseFactsFromResponse(
     content: String,
-    clock: AgentClock = AgentClock.System,
+    clock: KoogClock = KoogClock.System,
 ): List<Pair<MemorySubject, Fact>> {
     val parsedFacts = Json.decodeFromString<List<SubjectWithFact>>(content)
     val groupedFacts = parsedFacts.groupBy { it.subject to it.keyword }

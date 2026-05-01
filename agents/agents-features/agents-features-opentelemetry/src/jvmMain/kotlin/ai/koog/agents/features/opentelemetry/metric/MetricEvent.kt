@@ -1,7 +1,7 @@
 package ai.koog.agents.features.opentelemetry.metric
 
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlin.time.Duration
 import kotlin.time.Instant
 
@@ -14,7 +14,7 @@ internal sealed interface MetricEvent<T : MetricEvent<T>> {
     fun withAttributes(attributes: List<Attribute>): T
 }
 
-internal fun MetricEvent<*>.duration(): Duration = AgentClock.System.now() - timestamp
+internal fun MetricEvent<*>.duration(): Duration = KoogClock.System.now() - timestamp
 
 internal open class BaseMetricEvent(
     override val id: String,

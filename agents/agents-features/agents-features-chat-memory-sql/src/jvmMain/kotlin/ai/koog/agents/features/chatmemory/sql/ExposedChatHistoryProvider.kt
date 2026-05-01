@@ -1,7 +1,7 @@
 package ai.koog.agents.features.chatmemory.sql
 
 import ai.koog.prompt.message.Message
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
@@ -60,7 +60,7 @@ public abstract class ExposedChatHistoryProvider @JvmOverloads constructor(
             return
         }
 
-        val now = AgentClock.System.now().toEpochMilliseconds()
+        val now = KoogClock.System.now().toEpochMilliseconds()
 
         transaction {
             chatHistoryTable.deleteWhere {
@@ -71,7 +71,7 @@ public abstract class ExposedChatHistoryProvider @JvmOverloads constructor(
 
     override suspend fun store(conversationId: String, messages: List<Message>) {
         val messagesJson = json.encodeToString(ListSerializer(Message.serializer()), messages)
-        val now = AgentClock.System.now()
+        val now = KoogClock.System.now()
         val nowMillis = now.toEpochMilliseconds()
         val ttlTimestamp = calculateTtlTimestamp(now)
 
@@ -86,7 +86,7 @@ public abstract class ExposedChatHistoryProvider @JvmOverloads constructor(
     }
 
     override suspend fun load(conversationId: String): List<Message> {
-        val now = AgentClock.System.now().toEpochMilliseconds()
+        val now = KoogClock.System.now().toEpochMilliseconds()
 
         return transaction {
             chatHistoryTable

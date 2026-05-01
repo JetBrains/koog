@@ -7,7 +7,6 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.functionalStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -39,7 +38,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -54,7 +53,7 @@ import kotlin.time.Instant
 internal object OpenTelemetryTestAPI {
     private val serializer = KotlinxSerializer()
 
-    internal val testClock: AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
+    internal val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     private val spansCollectionTimeout = 5.seconds
 

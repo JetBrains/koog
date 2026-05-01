@@ -9,7 +9,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -30,7 +30,7 @@ class JavaAPIAgentBuilderTest {
     companion object {
         val ts: Instant = Instant.parse("2023-01-01T00:00:00Z")
 
-        val testClock: AgentClock = AgentClock { ts }
+        val testClock: KoogClock = KoogClock { ts }
     }
 
     @Test

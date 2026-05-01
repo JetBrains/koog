@@ -7,7 +7,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.anthropic.models.CacheTtl
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.RequestMetaInfo
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -28,7 +28,7 @@ class AnthropicCacheControlTest {
 
     private val client = AnthropicLLMClient(apiKey = "test-key")
     private val model = AnthropicModels.Sonnet_4
-    private val metaInfo = RequestMetaInfo.create(AgentClock.System)
+    private val metaInfo = RequestMetaInfo.create(KoogClock.System)
 
     // --- toAnthropicCacheControl conversion ---
 

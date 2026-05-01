@@ -6,7 +6,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -31,7 +31,7 @@ class FilePromptCacheTest {
 
     private lateinit var cache: FilePromptCache
 
-    private val testClock: AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
+    private val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     @BeforeEach
     fun setUp() {

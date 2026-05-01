@@ -8,7 +8,7 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -26,8 +26,8 @@ import org.springframework.ai.chat.model.Generation
 
 class ConvertersTest {
 
-    private val requestMeta = RequestMetaInfo.create(AgentClock.System)
-    private val responseMeta = ResponseMetaInfo.create(AgentClock.System)
+    private val requestMeta = RequestMetaInfo.create(KoogClock.System)
+    private val responseMeta = ResponseMetaInfo.create(KoogClock.System)
 
     // ---- koogMessageToSpringMessage ----
 

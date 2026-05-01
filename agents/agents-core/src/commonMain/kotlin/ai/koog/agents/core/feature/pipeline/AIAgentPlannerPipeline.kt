@@ -15,7 +15,7 @@ import ai.koog.agents.core.feature.handler.planner.PlanCreationCompletedContext
 import ai.koog.agents.core.feature.handler.planner.PlanCreationStartingContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionStartingContext
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 
 /**
  * Represents a specific implementation of an AI agent pipeline that uses a planner approach.
@@ -24,7 +24,7 @@ import ai.koog.utils.time.AgentClock
  */
 public expect open class AIAgentPlannerPipeline(
     agentConfig: AIAgentConfig,
-    clock: AgentClock = AgentClock.System,
+    clock: KoogClock = KoogClock.System,
     basePipelineDelegate: AIAgentPipelineImpl = AIAgentPipelineImpl(agentConfig, clock)
 ) : AIAgentPipeline, AIAgentPlannerPipelineAPI {
     /**

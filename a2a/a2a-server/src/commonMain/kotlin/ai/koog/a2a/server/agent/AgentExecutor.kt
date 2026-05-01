@@ -42,7 +42,7 @@ public interface AgentExecutor {
      *             state = TaskState.Working,
      *             // Mark this message as belonging to the created task
      *             message = userMessage.copy(taskId = context.taskId)
-     *             timestamp = AgentClock.System.now()
+     *             timestamp = Clock.System.now()
      *         ),
      *     )
      * )
@@ -65,7 +65,7 @@ public interface AgentExecutor {
      *                    TextPart("Task completed successfully!")
      *                )
      *            ),
-     *            timestamp = AgentClock.System.now()
+     *            timestamp = Clock.System.now()
      *         ),
      *         final = true
      *     )

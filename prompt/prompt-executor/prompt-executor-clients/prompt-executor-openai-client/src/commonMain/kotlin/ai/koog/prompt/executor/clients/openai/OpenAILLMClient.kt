@@ -55,7 +55,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.utils.io.SuitableForIO
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
@@ -103,7 +103,7 @@ public class OpenAIClientSettings(
 public open class OpenAILLMClient @JvmOverloads constructor(
     private val settings: OpenAIClientSettings = OpenAIClientSettings(),
     httpClient: KoogHttpClient,
-    clock: AgentClock = AgentClock.System,
+    clock: KoogClock = KoogClock.System,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
 ) : AbstractOpenAILLMClient<OpenAIChatCompletionResponse, OpenAIChatCompletionStreamResponse>(
     settings = settings,
@@ -118,7 +118,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: OpenAIClientSettings = OpenAIClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: AgentClock = AgentClock.System,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ) : this(
         settings = settings,

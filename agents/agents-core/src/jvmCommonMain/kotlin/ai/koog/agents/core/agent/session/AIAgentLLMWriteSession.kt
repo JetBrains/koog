@@ -25,7 +25,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.jdk9.asPublisher
 import kotlinx.serialization.KSerializer
@@ -47,7 +47,7 @@ public actual class AIAgentLLMWriteSession actual constructor(
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
-    clock: AgentClock
+    clock: KoogClock
 ) : AIAgentLLMWriteSessionCommon(environment, executor, tools, toolRegistry, prompt, model, responseProcessor, config, clock) {
 
     /**

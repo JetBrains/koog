@@ -45,7 +45,7 @@ import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONElement
 import ai.koog.serialization.typeToken
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -387,7 +387,7 @@ class CheckpointsTests {
     @Test
     fun testRestoreFromSingleCheckpoint() = runTest {
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
-        val time = AgentClock.System.now()
+        val time = KoogClock.System.now()
         val convId = "testAgentId"
 
         val testCheckpoint = AgentCheckpointData(
@@ -428,7 +428,7 @@ class CheckpointsTests {
     @Test
     fun testRestoreFromLatestCheckpoint() = runTest {
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
-        val time = AgentClock.System.now()
+        val time = KoogClock.System.now()
         val sessionId = "testAgentId"
 
         val testCheckpoint2 = AgentCheckpointData(

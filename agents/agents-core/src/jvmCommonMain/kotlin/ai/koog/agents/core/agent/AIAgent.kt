@@ -17,7 +17,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.io.Closeable
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import java.util.concurrent.ExecutorService
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -59,7 +59,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             strategy: AIAgentGraphStrategy<Input, Output>,
             toolRegistry: ToolRegistry,
             id: String?,
-            clock: AgentClock,
+            clock: KoogClock,
             noinline installFeatures: GraphAIAgent.FeatureContext.() -> Unit
         ): AIAgent<Input, Output> =
             AIAgentHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, id, clock, installFeatures)
@@ -88,7 +88,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             toolRegistry: ToolRegistry,
             id: String?,
-            clock: AgentClock,
+            clock: KoogClock,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit
         ): FunctionalAIAgent<Input, Output> =
             AIAgentHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, id, clock, installFeatures)
@@ -128,7 +128,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             responseProcessor: ResponseProcessor?,
             toolRegistry: ToolRegistry,
             id: String?,
-            clock: AgentClock,
+            clock: KoogClock,
             systemPrompt: String?,
             temperature: Double?,
             numberOfChoices: Int,
@@ -207,7 +207,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             strategy: AIAgentPlannerStrategy<Input, Output, *>,
             toolRegistry: ToolRegistry,
             id: String?,
-            clock: AgentClock,
+            clock: KoogClock,
             installFeatures: PlannerAIAgent.FeatureContext.() -> Unit
         ): AIAgent<Input, Output> =
             AIAgentHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, id, clock, installFeatures)

@@ -3,7 +3,7 @@ package ai.koog.agents.core.feature.pipeline
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 
 /**
  * Represents a specific implementation of an AI agent pipeline
@@ -16,7 +16,7 @@ import ai.koog.utils.time.AgentClock
  */
 public class AIAgentFunctionalPipeline(
     agentConfig: AIAgentConfig,
-    clock: AgentClock = AgentClock.System
+    clock: KoogClock = KoogClock.System
 ) : AIAgentPipeline(agentConfig, clock) {
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.

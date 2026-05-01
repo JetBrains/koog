@@ -2,7 +2,7 @@ package ai.koog.prompt.executor.clients.openrouter
 
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -18,7 +18,7 @@ import kotlin.time.Instant
 
 class OpenRouterLLMClientTest {
 
-    object FixedClock : AgentClock {
+    object FixedClock : KoogClock {
         override fun now(): Instant = Instant.fromEpochMilliseconds(0)
     }
 

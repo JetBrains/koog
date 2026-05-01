@@ -15,7 +15,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
 import java.nio.file.Path
@@ -119,7 +119,7 @@ class FileCheckpointsTests {
 
     @Test
     fun testRestoreFromSingleCheckpoint() = runTest {
-        val time = AgentClock.System.now()
+        val time = KoogClock.System.now()
         val agentId = "testAgentId"
         val sessionId = "testSessionId"
 
@@ -161,7 +161,7 @@ class FileCheckpointsTests {
 
     @Test
     fun testRestoreFromSingleCheckpointWithNodeOutput() = runTest {
-        val time = AgentClock.System.now()
+        val time = KoogClock.System.now()
         val agentId = "testAgentId"
         val sessionId = "testSessionId"
 
@@ -203,7 +203,7 @@ class FileCheckpointsTests {
 
     @Test
     fun testRestoreFromLatestCheckpoint() = runTest {
-        val time = AgentClock.System.now()
+        val time = KoogClock.System.now()
         val agentId = "testAgentId"
         val sessionId = "testSessionId"
 

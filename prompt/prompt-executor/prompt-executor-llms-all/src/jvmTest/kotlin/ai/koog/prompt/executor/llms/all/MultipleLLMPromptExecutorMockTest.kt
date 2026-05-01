@@ -15,7 +15,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.filterTextOnly
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -32,7 +32,7 @@ class MultipleLLMPromptExecutorMockTest {
         private const val API_KEY = "fake-key"
     }
 
-    val mockClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
+    val mockClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     // Mock client for OpenAI
     private inner class MockOpenAILLMClient : OpenAILLMClient(API_KEY) {

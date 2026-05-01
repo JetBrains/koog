@@ -4,7 +4,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -18,7 +18,7 @@ class JavaAPIPromptBuilderTest {
     companion object {
         val ts: Instant = Instant.parse("2023-01-01T00:00:00Z")
 
-        val testClock: AgentClock = AgentClock { ts }
+        val testClock: KoogClock = KoogClock { ts }
 
         const val promptId = "test-id"
         const val systemMessage = "You are a helpful assistant"

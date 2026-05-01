@@ -4,7 +4,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -27,7 +27,7 @@ import kotlin.time.Instant
 
 class MistralAILLMClientTest {
 
-    object FixedClock : AgentClock {
+    object FixedClock : KoogClock {
         override fun now(): Instant = Instant.fromEpochMilliseconds(0)
     }
 

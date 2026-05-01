@@ -4,7 +4,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -86,8 +86,8 @@ class PromptTokenizerTest {
         // Reset tokenizer to count individual messages separately
         mockTokenizer.reset()
 
-        val requestMetainfo = RequestMetaInfo.create(AgentClock.System)
-        val responseMetainfo = ResponseMetaInfo.create(AgentClock.System)
+        val requestMetainfo = RequestMetaInfo.create(KoogClock.System)
+        val responseMetainfo = ResponseMetaInfo.create(KoogClock.System)
         // Count tokens for individual messages
         val systemTokens = promptTokenizer.tokenCountFor(
             Message.System("You are a helpful assistant.", requestMetainfo)

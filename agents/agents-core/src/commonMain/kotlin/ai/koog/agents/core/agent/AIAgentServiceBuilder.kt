@@ -13,7 +13,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.TypeToken
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 
 /**
  * Builder for creating AIAgentService instances.
@@ -55,7 +55,7 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
     toolRegistry = toolRegistry,
     id = null,
     config = config,
-    clock = AgentClock.System,
+    clock = KoogClock.System,
 ) {
     override fun self(): GraphAgentServiceBuilder<Input, Output> = this
 
@@ -127,7 +127,7 @@ public class FunctionalAgentServiceBuilder<Input, Output> internal constructor(
     toolRegistry = toolRegistry,
     id = null,
     config = config,
-    clock = AgentClock.System,
+    clock = KoogClock.System,
 ) {
     override fun self(): FunctionalAgentServiceBuilder<Input, Output> = this
 

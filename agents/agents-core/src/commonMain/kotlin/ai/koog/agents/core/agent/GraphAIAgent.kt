@@ -21,7 +21,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.typeToken
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.reflect.KType
 
@@ -57,7 +57,7 @@ public open class GraphAIAgent<Input, Output>(
     override val strategy: AIAgentGraphStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
-    public val clock: AgentClock = AgentClock.System,
+    public val clock: KoogClock = KoogClock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
 ) : AIAgentBase<Input, Output, AIAgentGraphContextBase>(
@@ -86,7 +86,7 @@ public open class GraphAIAgent<Input, Output>(
         strategy: AIAgentGraphStrategy<Input, Output>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         id: String? = null,
-        clock: AgentClock = AgentClock.System,
+        clock: KoogClock = KoogClock.System,
         installFeatures: FeatureContext.() -> Unit = {}
     ) : this(
         typeToken(inputType),

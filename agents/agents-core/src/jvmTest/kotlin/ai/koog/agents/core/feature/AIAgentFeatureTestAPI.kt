@@ -41,12 +41,12 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlin.time.Instant
 
 internal object AIAgentFeatureTestAPI {
 
-    internal val testClock: AgentClock = AgentClock { Instant.parse("2023-01-01T00:00:00Z") }
+    internal val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     internal val mockLLModel = LLModel(
         provider = MockLLMProvider(),

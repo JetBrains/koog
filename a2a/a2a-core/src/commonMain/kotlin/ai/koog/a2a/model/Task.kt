@@ -1,10 +1,10 @@
 package ai.koog.a2a.model
 
-import ai.koog.utils.time.AgentClock
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlin.time.Clock
 import kotlin.time.Instant
 
 /**
@@ -43,7 +43,7 @@ public data class Task(
 public data class TaskStatus(
     public val state: TaskState,
     public val message: Message? = null,
-    public val timestamp: Instant? = AgentClock.System.now(),
+    public val timestamp: Instant? = Clock.System.now(),
 )
 
 /**

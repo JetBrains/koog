@@ -26,7 +26,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.Flow
@@ -59,7 +59,7 @@ public class DeepSeekClientSettings(
 public class DeepSeekLLMClient @JvmOverloads constructor(
     private val settings: DeepSeekClientSettings = DeepSeekClientSettings(),
     httpClient: KoogHttpClient,
-    clock: AgentClock = AgentClock.System,
+    clock: KoogClock = KoogClock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DeepSeekChatCompletionResponse, DeepSeekChatCompletionStreamResponse>(
     settings = settings,
@@ -74,7 +74,7 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: DeepSeekClientSettings = DeepSeekClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: AgentClock = AgentClock.System,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,

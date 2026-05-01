@@ -14,11 +14,11 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
-import ai.koog.utils.time.AgentClock
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -71,7 +71,7 @@ class TckAgentExecutor : AgentExecutor {
                         contextId = context.contextId,
                         taskId = taskId
                     ),
-                    timestamp = AgentClock.System.now()
+                    timestamp = Clock.System.now()
                 ),
                 final = true
             )
@@ -94,7 +94,7 @@ class TckAgentExecutor : AgentExecutor {
             taskId = taskId,
             status = TaskStatus(
                 state = TaskState.Canceled,
-                timestamp = AgentClock.System.now()
+                timestamp = Clock.System.now()
             ),
             final = true
         )
@@ -112,7 +112,7 @@ class TckAgentExecutor : AgentExecutor {
             contextId = context.contextId,
             status = TaskStatus(
                 state = TaskState.Submitted,
-                timestamp = AgentClock.System.now()
+                timestamp = Clock.System.now()
             ),
             history = listOf(userMessage)
         )
@@ -129,7 +129,7 @@ class TckAgentExecutor : AgentExecutor {
             taskId = task.id,
             status = TaskStatus(
                 state = TaskState.Working,
-                timestamp = AgentClock.System.now()
+                timestamp = Clock.System.now()
             ),
             final = false
         )
@@ -170,7 +170,7 @@ class TckAgentExecutor : AgentExecutor {
                     contextId = context.contextId,
                     taskId = task.id
                 ),
-                timestamp = AgentClock.System.now()
+                timestamp = Clock.System.now()
             ),
             final = true
         )
@@ -189,7 +189,7 @@ class TckAgentExecutor : AgentExecutor {
                 contextId = context.contextId,
                 status = TaskStatus(
                     state = TaskState.Working,
-                    timestamp = AgentClock.System.now(),
+                    timestamp = Clock.System.now(),
                     message = userMessage
                 ),
                 final = false
@@ -204,7 +204,7 @@ class TckAgentExecutor : AgentExecutor {
                 contextId = context.contextId,
                 status = TaskStatus(
                     state = TaskState.Completed,
-                    timestamp = AgentClock.System.now(),
+                    timestamp = Clock.System.now(),
                     message = Message(
                         messageId = Uuid.random().toString(),
                         role = Role.Agent,

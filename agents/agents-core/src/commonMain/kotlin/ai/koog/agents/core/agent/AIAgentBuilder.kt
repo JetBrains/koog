@@ -15,7 +15,7 @@ import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.TypeToken
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 
 /**
  * Represents a configurational builder for setting up and customizing the execution parameters and
@@ -49,7 +49,7 @@ public class GraphAgentBuilder<Input, Output>(
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     config: AIAgentConfig,
-    clock: AgentClock = AgentClock.System,
+    clock: KoogClock = KoogClock.System,
     private var featureInstallers: MutableList<FeatureContext.() -> Unit> = mutableListOf(),
 ) : AIAgentBuilderBase<GraphAgentBuilder<Input, Output>>(
     promptExecutor = promptExecutor,
@@ -140,7 +140,7 @@ public class FunctionalAgentBuilder<Input, Output>(
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     config: AIAgentConfig,
-    clock: AgentClock = AgentClock.System,
+    clock: KoogClock = KoogClock.System,
     private var featureInstallers: MutableList<FunctionalAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) : AIAgentBuilderBase<FunctionalAgentBuilder<Input, Output>>(
     promptExecutor = promptExecutor,
@@ -213,7 +213,7 @@ public class PlannerAgentBuilder<Input, Output>(
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     config: AIAgentConfig,
-    clock: AgentClock = AgentClock.System,
+    clock: KoogClock = KoogClock.System,
     private var featureInstallers: MutableList<PlannerAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) : AIAgentBuilderBase<PlannerAgentBuilder<Input, Output>>(
     promptExecutor = promptExecutor,

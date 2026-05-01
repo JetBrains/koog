@@ -2,7 +2,7 @@ package ai.koog.agents.core.feature.model.events
 
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.model.AIAgentError
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
 
 /**
@@ -23,7 +23,7 @@ public data class AgentStartingEvent(
     override val executionInfo: AgentExecutionInfo,
     val agentId: String,
     val runId: String,
-    override val timestamp: Long = AgentClock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -69,7 +69,7 @@ public data class AgentCompletedEvent(
     val agentId: String,
     val runId: String,
     val result: String?,
-    override val timestamp: Long = AgentClock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -117,7 +117,7 @@ public data class AgentExecutionFailedEvent(
     val agentId: String,
     val runId: String,
     val error: AIAgentError?,
-    override val timestamp: Long = AgentClock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -158,7 +158,7 @@ public data class AgentClosingEvent(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val agentId: String,
-    override val timestamp: Long = AgentClock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**

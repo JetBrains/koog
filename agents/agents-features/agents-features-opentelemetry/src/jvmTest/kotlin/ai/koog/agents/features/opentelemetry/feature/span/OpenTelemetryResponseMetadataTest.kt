@@ -8,7 +8,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
@@ -21,7 +21,7 @@ class OpenTelemetryResponseMetadataTest {
     private val tracer = MockTracer()
     private val provider = MockLLMProvider()
     private val model = LLModel(provider, "test-model")
-    private val clock = AgentClock.System
+    private val clock = KoogClock.System
 
     private fun createInferenceSpan(id: String) = startInferenceSpan(
         tracer = tracer,

@@ -8,7 +8,7 @@ import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.PromptTokenizer
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -135,7 +135,7 @@ class ContextWindowStrategyTest {
                     Message.Assistant(
                         "Dummy message",
                         metaInfo = ResponseMetaInfo(
-                            timestamp = AgentClock.System.now(),
+                            timestamp = KoogClock.System.now(),
                             totalTokensCount = 5000,
                         )
                     )

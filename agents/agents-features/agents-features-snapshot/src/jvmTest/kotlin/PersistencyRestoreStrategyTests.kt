@@ -10,7 +10,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -27,10 +27,10 @@ class PersistenceRestoreStrategyTests {
 
         val checkpoint = AgentCheckpointData(
             checkpointId = "chk-1",
-            createdAt = AgentClock.System.now(),
+            createdAt = KoogClock.System.now(),
             nodePath = "$agentId/restore-strategy/Node2",
             lastInput = JSONPrimitive("input-for-node2"),
-            messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(AgentClock.System.now()))),
+            messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(KoogClock.System.now()))),
             version = 0L
         )
 

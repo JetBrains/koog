@@ -5,7 +5,7 @@ import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.clients.bedrock.StaticBearerTokenProvider
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 
 /**
@@ -26,7 +26,7 @@ public class BedrockClientConfig {
     /**
      * Override the clock used for time-based operations.
      */
-    public var clock: AgentClock = AgentClock.System
+    public var clock: KoogClock = KoogClock.System
 }
 
 /**
@@ -39,7 +39,7 @@ public class BedrockClientConfig {
  */
 public fun KoogAgentsConfig.bedrock(
     apiKey: String,
-    clock: AgentClock = AgentClock.System,
+    clock: KoogClock = KoogClock.System,
     moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
     configure: BedrockRuntimeClient.Config.Builder.() -> Unit = {}
 ) {
@@ -65,7 +65,7 @@ public fun KoogAgentsConfig.bedrock(
  * @param configure A lambda receiver to customize the OpenAI configuration such as base URL, timeout settings, and paths.
  */
 public fun KoogAgentsConfig.bedrock(
-    clock: AgentClock = AgentClock.System,
+    clock: KoogClock = KoogClock.System,
     moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
     configure: BedrockRuntimeClient.Config.Builder.() -> Unit
 ) {

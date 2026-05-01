@@ -7,7 +7,7 @@ import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.kotlinx.toKoogJSONElement
 import ai.koog.serialization.kotlinx.toKoogJSONObject
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -55,10 +55,10 @@ public data class ReceivedToolResult(
     /**
      * Converts the current `ReceivedToolResult` instance into a `Message.Tool.Result` object.
      *
-     * @param clock The clock to use for generating the timestamp in the metadata. Defaults to [AgentClock.System].
+     * @param clock The clock to use for generating the timestamp in the metadata. Defaults to [KoogClock.System].
      * @return A `Message.Tool.Result` instance representing the tool result with the current data and metadata.
      */
-    public fun toMessage(clock: AgentClock = AgentClock.System): Message.Tool.Result = Message.Tool.Result(
+    public fun toMessage(clock: KoogClock = KoogClock.System): Message.Tool.Result = Message.Tool.Result(
         id = id,
         tool = tool,
         content = content,

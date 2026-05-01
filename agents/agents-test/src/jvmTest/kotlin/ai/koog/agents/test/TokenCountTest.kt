@@ -12,7 +12,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
@@ -69,7 +69,7 @@ class TokenCountTest {
     private var outputTokens: Int? = null
     private var totalTokens: Int? = null
 
-    private val clock = AgentClock.System
+    private val clock = KoogClock.System
 
     private val systemPrompt = """
         You are a helpful assistant. Use tools when requested.

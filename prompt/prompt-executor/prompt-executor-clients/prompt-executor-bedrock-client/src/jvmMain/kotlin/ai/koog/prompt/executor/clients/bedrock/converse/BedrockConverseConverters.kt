@@ -15,7 +15,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.message.require
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.buildStreamFrameFlow
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import aws.sdk.kotlin.services.bedrockruntime.model.AnyToolChoice
 import aws.sdk.kotlin.services.bedrockruntime.model.AutoToolChoice
 import aws.sdk.kotlin.services.bedrockruntime.model.CachePointBlock
@@ -344,7 +344,7 @@ internal object BedrockConverseConverters {
      */
     fun convertConverseResponse(
         response: ConverseResponse,
-        clock: AgentClock,
+        clock: KoogClock,
     ): List<Message.Response> {
         // Extract token count from the response
         val inputTokensCount = response.usage?.inputTokens
@@ -428,7 +428,7 @@ internal object BedrockConverseConverters {
      */
     fun transformConverseStreamChunks(
         chunkFlow: Flow<ConverseStreamOutput>,
-        clock: AgentClock = AgentClock.System,
+        clock: KoogClock = KoogClock.System,
     ) = buildStreamFrameFlow {
         var finishReason: String? = null
 

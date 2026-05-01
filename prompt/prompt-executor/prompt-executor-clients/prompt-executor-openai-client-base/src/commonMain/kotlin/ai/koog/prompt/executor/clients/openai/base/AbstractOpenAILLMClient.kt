@@ -32,7 +32,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.requireEndFrame
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
@@ -67,12 +67,12 @@ public abstract class OpenAIBaseSettings(
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Must have authentication
  *   and other request defaults (base URL, timeouts, headers) already embedded. To use a Ktor-backed client
  *   with standard OpenAI-compatible defaults, use the secondary constructor that accepts an [HttpClient] and an API key.
- * @param clock [AgentClock] used for tracking response metadata timestamps. Defaults to [AgentClock.System].
+ * @param clock [KoogClock] used for tracking response metadata timestamps. Defaults to [KoogClock.System].
  */
 public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse, TStreamResponse : OpenAIBaseLLMStreamResponse>(
     settings: OpenAIBaseSettings,
     protected val httpClient: KoogHttpClient,
-    protected val clock: AgentClock = AgentClock.System,
+    protected val clock: KoogClock = KoogClock.System,
     protected val logger: KLogger,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
 ) : LLMClient() {
@@ -99,7 +99,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         settings: OpenAIBaseSettings,
         baseClient: HttpClient = HttpClient(),
         clientName: String = "OpenAICompatibleClient",
-        clock: AgentClock = AgentClock.System,
+        clock: KoogClock = KoogClock.System,
         logger: KLogger,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
     ) : this(

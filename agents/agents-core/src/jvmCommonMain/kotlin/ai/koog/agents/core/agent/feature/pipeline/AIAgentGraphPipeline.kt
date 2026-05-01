@@ -15,11 +15,11 @@ import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedCo
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
 import ai.koog.agents.core.utils.submitToMainDispatcher
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 
 public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
     agentConfig: AIAgentConfig,
-    clock: AgentClock,
+    clock: KoogClock,
     private val basePipelineDelegate: AIAgentPipelineImpl
 ) : AIAgentPipeline(agentConfig, clock),
     AIAgentGraphPipelineAPI by AIAgentGraphPipelineImpl(agentConfig, clock, basePipelineDelegate) {

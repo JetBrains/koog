@@ -5,7 +5,7 @@ import ai.koog.agents.utils.ModelInfo
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
 
 /**
@@ -33,7 +33,7 @@ public data class LLMCallStartingEvent(
     val prompt: Prompt,
     val model: ModelInfo,
     val tools: List<String>,
-    override val timestamp: Long = AgentClock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -50,7 +50,7 @@ public data class LLMCallStartingEvent(
         model: String,
         tools: List<String>,
         eventId: String = LLMCallStartingEvent::class.simpleName.toString(),
-        timestamp: Long = AgentClock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = eventId,
         executionInfo = AgentExecutionInfo(
@@ -100,7 +100,7 @@ public data class LLMCallCompletedEvent(
     val model: ModelInfo,
     val responses: List<Message.Response>,
     val moderationResponse: ModerationResult? = null,
-    override val timestamp: Long = AgentClock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -118,7 +118,7 @@ public data class LLMCallCompletedEvent(
         responses: List<Message.Response>,
         moderationResponse: ModerationResult? = null,
         eventId: String = LLMCallCompletedEvent::class.simpleName.toString(),
-        timestamp: Long = AgentClock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = eventId,
         executionInfo = AgentExecutionInfo(

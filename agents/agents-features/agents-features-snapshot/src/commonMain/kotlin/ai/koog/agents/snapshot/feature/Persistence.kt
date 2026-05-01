@@ -27,7 +27,7 @@ import ai.koog.serialization.JSONElement
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.kotlinx.toKoogJSONElement
 import ai.koog.serialization.kotlinx.toKoogJSONObject
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonElement
 import kotlin.coroutines.cancellation.CancellationException
@@ -77,7 +77,7 @@ public typealias Persistency = Persistence
 @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class, InternalAgentsApi::class)
 public class Persistence(
     private val persistenceStorageProvider: PersistenceStorageProvider<*>,
-    internal val clock: AgentClock = AgentClock.System,
+    internal val clock: KoogClock = KoogClock.System,
 ) {
     /**
      * Determines the strategy to use during rollback operations for the agent's state.
@@ -280,7 +280,7 @@ public class Persistence(
                 messageHistory = prompt.messages,
                 nodePath = agentContext.executionInfo.path(),
                 lastInput = inputJson,
-                createdAt = AgentClock.System.now(),
+                createdAt = KoogClock.System.now(),
                 version = version,
             )
         }
@@ -328,7 +328,7 @@ public class Persistence(
                 messageHistory = prompt.messages,
                 nodePath = agentContext.executionInfo.path(),
                 lastOutput = outputJson,
-                createdAt = AgentClock.System.now(),
+                createdAt = KoogClock.System.now(),
                 version = version,
             )
         }

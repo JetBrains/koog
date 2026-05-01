@@ -5,7 +5,7 @@ import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
@@ -167,7 +167,7 @@ class ChoiceEventTest {
     private fun createTestAssistantMessage(content: String, finishReason: String? = null): Message.Assistant =
         Message.Assistant(
             content = content,
-            metaInfo = ResponseMetaInfo(AgentClock.System.now()),
+            metaInfo = ResponseMetaInfo(KoogClock.System.now()),
             finishReason = finishReason
         )
 
@@ -176,7 +176,7 @@ class ChoiceEventTest {
             id = id,
             tool = tool,
             content = content,
-            metaInfo = ResponseMetaInfo(AgentClock.System.now())
+            metaInfo = ResponseMetaInfo(KoogClock.System.now())
         )
 
     //endregion Private Methods

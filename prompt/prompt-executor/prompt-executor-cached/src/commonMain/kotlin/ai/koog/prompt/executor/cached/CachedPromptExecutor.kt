@@ -13,7 +13,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrames
 import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.flow
 public class CachedPromptExecutor(
     private val cache: PromptCache,
     private val nested: PromptExecutor,
-    private val clock: AgentClock = AgentClock.System
+    private val clock: KoogClock = KoogClock.System
 ) : PromptExecutor() {
 
     override suspend fun execute(

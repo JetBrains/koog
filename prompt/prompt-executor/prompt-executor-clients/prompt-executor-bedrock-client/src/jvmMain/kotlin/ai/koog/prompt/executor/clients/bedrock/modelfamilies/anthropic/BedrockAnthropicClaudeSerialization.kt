@@ -19,7 +19,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
@@ -203,7 +203,7 @@ internal object BedrockAnthropicClaudeSerialization {
         )
     }
 
-    internal fun parseAnthropicResponse(responseBody: String, clock: AgentClock = AgentClock.System): List<Message.Response> {
+    internal fun parseAnthropicResponse(responseBody: String, clock: KoogClock = KoogClock.System): List<Message.Response> {
         val response = json.decodeFromString<BedrockAnthropicResponse>(responseBody)
 
         val inputTokens = response.usage?.inputTokens
@@ -244,7 +244,7 @@ internal object BedrockAnthropicClaudeSerialization {
 
     internal fun transformAnthropicStreamChunks(
         chunkJsonStringFlow: Flow<String>,
-        clock: AgentClock = AgentClock.System
+        clock: KoogClock = KoogClock.System
     ): Flow<StreamFrame> = buildStreamFrameFlow {
         var inputTokens: Int? = null
         var outputTokens: Int? = null

@@ -9,7 +9,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.coroutines
@@ -48,7 +48,7 @@ class RedisPromptCacheTest {
         private val testTools = emptyList<ToolDescriptor>()
         private val testResponse = listOf(Message.Assistant("Hello, user!", ResponseMetaInfo.Empty))
 
-        private val testClock = AgentClock { testResponse.first().metaInfo.timestamp }
+        private val testClock = KoogClock { testResponse.first().metaInfo.timestamp }
     }
 
     @BeforeTest

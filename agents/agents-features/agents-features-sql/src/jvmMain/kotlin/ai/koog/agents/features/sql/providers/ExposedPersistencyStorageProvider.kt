@@ -2,7 +2,7 @@ package ai.koog.agents.features.sql.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistenceUtils
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SortOrder
@@ -89,7 +89,7 @@ public abstract class ExposedPersistenceStorageProvider @JvmOverloads constructo
             return
         }
 
-        val now = AgentClock.System.now().toEpochMilliseconds()
+        val now = KoogClock.System.now().toEpochMilliseconds()
 
         // Skip cleanup if we've cleaned up recently
         if (now - lastCleanupTime < cleanupConfig.intervalMs) {
@@ -105,7 +105,7 @@ public abstract class ExposedPersistenceStorageProvider @JvmOverloads constructo
             return
         }
 
-        val now = AgentClock.System.now().toEpochMilliseconds()
+        val now = KoogClock.System.now().toEpochMilliseconds()
 
         transaction {
             val deletedCount = checkpointsTable.deleteWhere {
@@ -120,7 +120,7 @@ public abstract class ExposedPersistenceStorageProvider @JvmOverloads constructo
     @JvmOverloads
     override suspend fun getCheckpoints(sessionId: String, filter: ExposedPersistenceFilter?): List<AgentCheckpointData> {
         if (filter == null) {
-            val now = AgentClock.System.now().toEpochMilliseconds()
+            val now = KoogClock.System.now().toEpochMilliseconds()
             return transaction {
                 checkpointsTable.select(checkpointsTable.checkpointJson).where {
                     (checkpointsTable.persistenceId eq sessionId) and
@@ -161,7 +161,7 @@ public abstract class ExposedPersistenceStorageProvider @JvmOverloads constructo
 
     override suspend fun getLatestCheckpoint(sessionId: String, filter: ExposedPersistenceFilter?): AgentCheckpointData? {
         if (filter == null) {
-            val now = AgentClock.System.now().toEpochMilliseconds()
+            val now = KoogClock.System.now().toEpochMilliseconds()
             return transaction {
                 checkpointsTable
                     .select(checkpointsTable.checkpointJson)

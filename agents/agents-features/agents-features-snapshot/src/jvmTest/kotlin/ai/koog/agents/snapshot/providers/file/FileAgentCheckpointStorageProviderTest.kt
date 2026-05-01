@@ -5,7 +5,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
 import kotlin.test.AfterTest
@@ -37,10 +37,10 @@ class FileAgentCheckpointStorageProviderTest {
     fun testSaveAndRetrieveCheckpoint() = runTest {
         // Create a test checkpoint
         val checkpointId = "test-checkpoint"
-        val createdAt = AgentClock.System.now()
+        val createdAt = KoogClock.System.now()
         val nodeId = "test-node"
         val lastInput = JSONPrimitive("test-input")
-        val time = AgentClock.System.now()
+        val time = KoogClock.System.now()
         val messageHistory = listOf(
             Message.User("Hello", metaInfo = RequestMetaInfo(time)),
             Message.Assistant("Hi there!", metaInfo = ResponseMetaInfo(time))
@@ -88,7 +88,7 @@ class FileAgentCheckpointStorageProviderTest {
 
         // Create a second checkpoint with a later timestamp
         val laterCheckpointId = "later-checkpoint"
-        val laterCreatedAt = AgentClock.System.now()
+        val laterCreatedAt = KoogClock.System.now()
         val laterCheckpoint = AgentCheckpointData(
             checkpointId = laterCheckpointId,
             createdAt = laterCreatedAt,

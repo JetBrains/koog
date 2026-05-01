@@ -6,7 +6,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.test.utils.DockerAvailableCondition
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.delay
@@ -97,13 +97,13 @@ class H2PersistenceStorageProviderTest {
     private fun createTestCheckpoint(id: String, version: Long): AgentCheckpointData {
         return AgentCheckpointData(
             checkpointId = id,
-            createdAt = AgentClock.System.now(),
+            createdAt = KoogClock.System.now(),
             nodePath = "test-node",
             lastOutput = JSONPrimitive("Test input"),
             messageHistory = listOf(
-                Message.System("You are a test assistant", RequestMetaInfo.create(AgentClock.System)),
-                Message.User("Hello", RequestMetaInfo.create(AgentClock.System)),
-                Message.Assistant("Hi there!", ResponseMetaInfo.create(AgentClock.System))
+                Message.System("You are a test assistant", RequestMetaInfo.create(KoogClock.System)),
+                Message.User("Hello", RequestMetaInfo.create(KoogClock.System)),
+                Message.Assistant("Hi there!", ResponseMetaInfo.create(KoogClock.System))
             ),
             version = version
         )

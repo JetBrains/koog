@@ -9,7 +9,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -36,7 +36,7 @@ import kotlinx.serialization.json.Json as KotlinxJson
 
 class DeepSeekLLMClientTest {
 
-    object FixedClock : AgentClock {
+    object FixedClock : KoogClock {
         override fun now(): Instant = Instant.fromEpochMilliseconds(0)
     }
 

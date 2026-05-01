@@ -44,7 +44,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import kotlinx.coroutines.runBlocking
@@ -458,7 +458,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val agentId = "test-agent-id"
             val promptId = "test-prompt-id"
-            val testClock = AgentClock.System
+            val testClock = KoogClock.System
             val model = OpenAIModels.Chat.GPT4o
             val temperature = 0.4
 
@@ -786,7 +786,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 val moderate by node<String, String>("moderate-message") { input ->
                     llm.writeSession {
                         val moderationPrompt = prompt("single-message-moderation") {
-                            message(Message.User(input, RequestMetaInfo.create(AgentClock.System)))
+                            message(Message.User(input, RequestMetaInfo.create(KoogClock.System)))
                         }
                         llm.promptExecutor.moderate(moderationPrompt, OpenAIModels.Moderation.Omni)
                     }

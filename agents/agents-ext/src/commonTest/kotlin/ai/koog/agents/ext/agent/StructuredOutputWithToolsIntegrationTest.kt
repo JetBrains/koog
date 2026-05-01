@@ -13,7 +13,7 @@ import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -201,7 +201,7 @@ class StructuredOutputWithToolsIntegrationTest {
         }
 
         val toolCallTimestamps = mutableMapOf<String, Long>()
-        val currentTime = AgentClock.System.now().toEpochMilliseconds()
+        val currentTime = KoogClock.System.now().toEpochMilliseconds()
 
         val mockExecutor = getMockExecutor(serializer) {
             // Return structured output
