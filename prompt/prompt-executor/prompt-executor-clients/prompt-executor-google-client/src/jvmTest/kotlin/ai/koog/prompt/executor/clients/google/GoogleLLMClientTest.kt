@@ -504,6 +504,157 @@ class GoogleLLMClientTest {
     }
 
     @Test
+    fun `processGoogleCandidate keeps Assistant text alongside Tool Call`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.Text("Let me check the weather"),
+                    GooglePart.FunctionCall(
+                        functionCall = GoogleData.FunctionCall(
+                            name = "getWeather",
+                            args = buildJsonObject { }
+                        )
+                    )
+                )
+            ),
+            finishReason = "STOP"
+        )
+
+        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        responses shouldHaveSize 2
+        responses[0].shouldBeInstanceOf<Message.Assistant>()
+        (responses[0] as Message.Assistant).content shouldBe "Let me check the weather"
+        responses[1].shouldBeInstanceOf<Message.Tool.Call>()
+        (responses[1] as Message.Tool.Call).tool shouldBe "getWeather"
+    }
+
+    @Test
+    fun `processGoogleCandidate keeps Reasoning, Assistant text, and Tool Call together`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.Text(
+                        text = "Thinking step",
+                        thought = true,
+                        thoughtSignature = "sig-1"
+                    ),
+                    GooglePart.Text("Calling weather tool"),
+                    GooglePart.FunctionCall(
+                        functionCall = GoogleData.FunctionCall(
+                            name = "getWeather",
+                            args = buildJsonObject { }
+                        )
+                    )
+                )
+            ),
+            finishReason = "STOP"
+        )
+
+        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        responses shouldHaveSize 3
+        responses[0].shouldBeInstanceOf<Message.Reasoning>()
+        (responses[0] as Message.Reasoning).content shouldBe "Thinking step"
+        responses[1].shouldBeInstanceOf<Message.Assistant>()
+        (responses[1] as Message.Assistant).content shouldBe "Calling weather tool"
+        responses[2].shouldBeInstanceOf<Message.Tool.Call>()
+    }
+
+    @Test
+    fun `createGoogleRequest merges Assistant text with following Tool Call into single model content`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val request = client.createGoogleRequest(
+            Prompt(
+                messages = listOf(
+                    Message.User("query", RequestMetaInfo.Empty),
+                    Message.Assistant("Let me check the weather", ResponseMetaInfo.Empty),
+                    Message.Tool.Call(id = "1", tool = "getWeather", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                ),
+                id = "id"
+            ),
+            GoogleModels.Gemini2_5Flash,
+            emptyList()
+        )
+
+        request.contents shouldHaveSize 2
+        request.contents[0].role shouldBe "user"
+        request.contents[1].role shouldBe "model"
+        val modelParts = request.contents[1].parts!!
+        modelParts shouldHaveSize 2
+        (modelParts[0] as GooglePart.Text).text shouldBe "Let me check the weather"
+        (modelParts[1] as GooglePart.FunctionCall).functionCall.name shouldBe "getWeather"
+    }
+
+    @Test
+    fun `createGoogleRequest preserves model-user-model order across tool round-trip`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val request = client.createGoogleRequest(
+            Prompt(
+                messages = listOf(
+                    Message.User("what's the weather?", RequestMetaInfo.Empty),
+                    Message.Assistant("Let me check", ResponseMetaInfo.Empty),
+                    Message.Tool.Call(id = "1", tool = "getWeather", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Result(id = "1", tool = "getWeather", content = "sunny", metaInfo = RequestMetaInfo.Empty),
+                    Message.Assistant("It's sunny.", ResponseMetaInfo.Empty),
+                ),
+                id = "id"
+            ),
+            GoogleModels.Gemini2_5Flash,
+            emptyList()
+        )
+
+        request.contents shouldHaveSize 4
+        request.contents[0].role shouldBe "user"
+        request.contents[1].role shouldBe "model"
+        request.contents[2].role shouldBe "user"
+        request.contents[3].role shouldBe "model"
+
+        val firstModelParts = request.contents[1].parts!!
+        firstModelParts shouldHaveSize 2
+        (firstModelParts[0] as GooglePart.Text).text shouldBe "Let me check"
+        (firstModelParts[1] as GooglePart.FunctionCall).functionCall.name shouldBe "getWeather"
+
+        val toolResultParts = request.contents[2].parts!!
+        toolResultParts shouldHaveSize 1
+        toolResultParts[0].shouldBeInstanceOf<GooglePart.FunctionResponse>()
+
+        val secondModelParts = request.contents[3].parts!!
+        secondModelParts shouldHaveSize 1
+        (secondModelParts[0] as GooglePart.Text).text shouldBe "It's sunny."
+    }
+
+    @Test
+    fun `createGoogleRequest carries thought signature from Reasoning between Assistant text and Tool Call`() {
+        val client = GoogleLLMClient(apiKey = "test")
+        val request = client.createGoogleRequest(
+            Prompt(
+                messages = listOf(
+                    Message.User("query", RequestMetaInfo.Empty),
+                    Message.Assistant("Let me check", ResponseMetaInfo.Empty),
+                    Message.Reasoning(encrypted = "carried-sig", content = "", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                ),
+                id = "id"
+            ),
+            GoogleModels.Gemini3_Pro_Preview,
+            emptyList()
+        )
+
+        request.contents shouldHaveSize 2
+        val modelParts = request.contents[1].parts!!
+        modelParts shouldHaveSize 2
+        (modelParts[0] as GooglePart.Text).text shouldBe "Let me check"
+        val call = modelParts[1] as GooglePart.FunctionCall
+        call.functionCall.name shouldBe "t1"
+        call.thoughtSignature shouldBe "carried-sig"
+    }
+
+    @Test
     fun `processGoogleCandidate creates Reasoning from Text with thought=true`() {
         val client = GoogleLLMClient(apiKey = "test")
         val candidate = GoogleCandidate(
