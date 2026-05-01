@@ -662,7 +662,7 @@ You can use it as follows:
     ```
     <!--- KNIT exampleHistoryCompressionJava08.java -->
 
-### ConceptBasedHistoryCompressionStrategy
+### FactRetrievalHistoryCompressionStrategy
 
 The strategy searches for specific facts relevant to the provided list of concepts in the history and retrieves them.
 It changes the whole history to just these facts and leaves them as context for future LLM requests.
@@ -679,7 +679,7 @@ You can use it as follows:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.subgraph
     import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
-    import ai.koog.agents.core.dsl.extension.ConceptBasedHistoryCompressionStrategy
+    import ai.koog.agents.core.dsl.extension.FactRetrievalHistoryCompressionStrategy
     import ai.koog.agents.core.dsl.extension.Concept
     import ai.koog.agents.core.dsl.extension.FactType
     typealias ProcessedInput = String
@@ -692,7 +692,7 @@ You can use it as follows:
     -->
     ```kotlin
     val compressHistory by nodeLLMCompressHistory<ProcessedInput>(
-        strategy = ConceptBasedHistoryCompressionStrategy(
+        strategy = FactRetrievalHistoryCompressionStrategy(
             Concept(
                 keyword = "user_preferences",
                 // Description to the LLM -- what specifically to search for
@@ -725,7 +725,7 @@ You can use it as follows:
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.agents.core.environment.ReceivedToolResult;
-    import ai.koog.agents.core.dsl.extension.ConceptBasedHistoryCompressionStrategy;
+    import ai.koog.agents.core.dsl.extension.FactRetrievalHistoryCompressionStrategy;
     import ai.koog.agents.core.dsl.extension.Concept;
     import ai.koog.agents.core.dsl.extension.FactType;
     class exampleHistoryCompressionJava06 {
@@ -739,11 +739,11 @@ You can use it as follows:
     }
     -->
     ```java
-    // Using ConceptBasedHistoryCompressionStrategy strategy to extract specific facts
+    // Using FactRetrievalHistoryCompressionStrategy strategy to extract specific facts
     var compressHistory = AIAgentNode
         .llmCompressHistory("compressHistory")
         .withInput(ReceivedToolResult.class)
-        .compressionStrategy(new ConceptBasedHistoryCompressionStrategy(
+        .compressionStrategy(new FactRetrievalHistoryCompressionStrategy(
             new Concept(
                 "user_preferences",
                 "User's preferences for the recommendation system, including the preferred conversation style, theme in the application, etc.",
@@ -775,7 +775,7 @@ You can use it as follows:
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.subgraph
-    import ai.koog.agents.core.dsl.extension.ConceptBasedHistoryCompressionStrategy
+    import ai.koog.agents.core.dsl.extension.FactRetrievalHistoryCompressionStrategy
     import ai.koog.agents.core.dsl.extension.Concept
     import ai.koog.agents.core.dsl.extension.FactType
     typealias ProcessedInput = String
@@ -789,7 +789,7 @@ You can use it as follows:
     ```kotlin
     llm.writeSession {
         replaceHistoryWithTLDR(
-            strategy = ConceptBasedHistoryCompressionStrategy(
+            strategy = FactRetrievalHistoryCompressionStrategy(
                 Concept(
                     keyword = "user_preferences", 
                     // Description to the LLM -- what specifically to search for
@@ -824,7 +824,7 @@ You can use it as follows:
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
     import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
-    import ai.koog.agents.core.dsl.extension.ConceptBasedHistoryCompressionStrategy;
+    import ai.koog.agents.core.dsl.extension.FactRetrievalHistoryCompressionStrategy;
     import ai.koog.agents.core.dsl.extension.Concept;
     import ai.koog.agents.core.dsl.extension.FactType;
     class exampleHistoryCompressionJava11 {
@@ -846,7 +846,7 @@ You can use it as follows:
     -->
     ```java
     ctx.getLlm().writeSession(session -> {
-        session.replaceHistoryWithTLDR(new ConceptBasedHistoryCompressionStrategy(
+        session.replaceHistoryWithTLDR(new FactRetrievalHistoryCompressionStrategy(
                 new Concept(
                     "user_preferences", 
                     // Description to the LLM -- what specifically to search for

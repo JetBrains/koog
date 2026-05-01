@@ -13,6 +13,8 @@ import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
@@ -151,7 +153,19 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     HistoryCompressionStrategy.FromTimestamp(KoogClock.System.now().minus(1.seconds)),
                     "FromTimestamp"
                 ),
-                Arguments.of(HistoryCompressionStrategy.Chunked(2), "Chunked(2)")
+                Arguments.of(HistoryCompressionStrategy.Chunked(2), "Chunked(2)"),
+                Arguments.of(
+                    HistoryCompressionStrategy.FactRetrieval(
+                        listOf(
+                            Concept(
+                                keyword = "user-identity",
+                                description = "Who the user is, including any self-description they have provided.",
+                                factType = FactType.MULTIPLE
+                            )
+                        )
+                    ),
+                    "FactRetrieval"
+                )
             )
         }
     }

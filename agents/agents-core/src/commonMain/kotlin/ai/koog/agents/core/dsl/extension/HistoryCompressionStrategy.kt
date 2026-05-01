@@ -17,7 +17,7 @@ import kotlin.time.Instant
  * - [HistoryCompressionStrategy.FromLastNMessages]
  * - [HistoryCompressionStrategy.FromTimestamp]
  * - [HistoryCompressionStrategy.Chunked]
- * - [ConceptBasedHistoryCompressionStrategy]
+ * - [HistoryCompressionStrategy.FactRetrieval]
  */
 public abstract class HistoryCompressionStrategy {
     /**
@@ -221,5 +221,12 @@ public abstract class HistoryCompressionStrategy {
         @JvmStatic
         @KtLintIgnoreNaming
         public fun Chunked(chunkSize: Int): HistoryCompressionStrategy = ChunkedHistoryCompressionStrategy(chunkSize)
+
+        /**
+         * FIXME
+         */
+        @JvmStatic
+        @KtLintIgnoreNaming
+        public fun FactRetrieval(concepts: List<Concept>): HistoryCompressionStrategy = FactRetrievalHistoryCompressionStrategy(concepts)
     }
 }

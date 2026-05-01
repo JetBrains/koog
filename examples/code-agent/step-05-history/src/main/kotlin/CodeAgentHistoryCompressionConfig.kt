@@ -1,6 +1,6 @@
 package ai.koog.agents.example.codeagent.step05
 
-import ai.koog.agents.core.dsl.extension.ConceptBasedHistoryCompressionStrategy
+import ai.koog.agents.core.dsl.extension.FactRetrievalHistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.Concept
 import ai.koog.agents.core.dsl.extension.FactType
 import ai.koog.prompt.dsl.Prompt
@@ -16,7 +16,7 @@ val CODE_AGENT_HISTORY_TOO_BIG: (Prompt) -> Boolean = { prompt ->
  * Extracts key facts from conversation history.
  * LLM answers these questions, and the answers become the compressed history.
  */
-val CODE_AGENT_COMPRESSION_STRATEGY = ConceptBasedHistoryCompressionStrategy(
+val CODE_AGENT_COMPRESSION_STRATEGY = FactRetrievalHistoryCompressionStrategy(
     Concept(
         "project-structure",
         "What is the structure of this project?",

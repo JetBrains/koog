@@ -20,7 +20,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
 
-class ConceptBasedHistoryCompressionStrategyTest {
+class FactRetrievalHistoryCompressionStrategyTest {
     private val serializer = KotlinxSerializer()
 
     private val testModel = mockk<LLModel> {
