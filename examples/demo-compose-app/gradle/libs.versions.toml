@@ -16,7 +16,7 @@ kotlinx-datetime = "0.7.1-0.6.x-compat"
 kotlinx-serialization = "1.11.0"
 ktlint = "14.2.0"
 ktor = "3.4.2"
-markdown-renderer = "0.39.2"
+markdown-renderer = "0.40.2"
 
 [libraries]
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
