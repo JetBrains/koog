@@ -1,5 +1,5 @@
 @file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
-@file:OptIn(InternalAgentsApi::class)
+@file:OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
 
 package ai.koog.agents.core.feature.pipeline
 
@@ -15,7 +15,8 @@ import ai.koog.agents.core.feature.handler.planner.PlanCreationCompletedContext
 import ai.koog.agents.core.feature.handler.planner.PlanCreationStartingContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionStartingContext
-import ai.koog.agents.core.utils.submitToMainDispatcher
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.withContextReentrant
 import ai.koog.utils.time.KoogClock
 
 public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor(
@@ -59,7 +60,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         handle: Interceptor<PlanCreationStartingContext>
     ) {
         interceptPlanCreationStarting(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -77,7 +78,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         handle: Interceptor<PlanCreationCompletedContext>
     ) {
         interceptPlanCreationCompleted(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -101,7 +102,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         handle: Interceptor<StepExecutionStartingContext>
     ) {
         interceptStepExecutionStarting(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -125,7 +126,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         handle: Interceptor<StepExecutionCompletedContext>
     ) {
         interceptStepExecutionCompleted(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -143,7 +144,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         handle: Interceptor<PlanCompletionEvaluationStartingContext>
     ) {
         interceptPlanCompletionEvaluationStarting(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -167,7 +168,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         handle: Interceptor<PlanCompletionEvaluationCompletedContext>
     ) {
         interceptPlanCompletionEvaluationCompleted(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }

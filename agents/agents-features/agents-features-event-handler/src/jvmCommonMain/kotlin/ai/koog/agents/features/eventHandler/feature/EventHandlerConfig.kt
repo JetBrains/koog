@@ -27,13 +27,14 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.feature.pipeline.Interceptor
-import ai.koog.agents.core.utils.submitToMainDispatcher
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.withContextReentrant
 
 /**
  * JVM implementation of event-handler configuration with Java-friendly handler registration methods.
  */
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-@OptIn(InternalAgentsApi::class)
+@OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
 public actual open class EventHandlerConfig actual constructor() : EventHandlerConfigCommon() {
     // Java Specific Handlers:
     /**
@@ -47,7 +48,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onSubgraphExecutionStarting")
     public fun javaApiOnSubgraphExecutionStarting(handler: Interceptor<SubgraphExecutionStartingContext>) {
         onSubgraphExecutionStarting { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -64,7 +65,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onSubgraphExecutionCompleted")
     public fun javaApiOnSubgraphExecutionCompleted(handler: Interceptor<SubgraphExecutionCompletedContext>) {
         onSubgraphExecutionCompleted { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -79,7 +80,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onSubgraphExecutionFailed")
     public fun javaApiOnSubgraphExecutionFailed(handler: Interceptor<SubgraphExecutionFailedContext>) {
         onSubgraphExecutionFailed { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -92,7 +93,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onAgentStarting")
     public fun javaApiOnAgentStarting(handler: Interceptor<AgentStartingContext>) {
         onAgentStarting { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -105,7 +106,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onAgentCompleted")
     public fun javaApiOnAgentCompleted(handler: Interceptor<AgentCompletedContext>) {
         onAgentCompleted { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -118,7 +119,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onAgentExecutionFailed")
     public fun javaApiOnAgentExecutionFailed(handler: Interceptor<AgentExecutionFailedContext>) {
         onAgentExecutionFailed { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -132,7 +133,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onAgentClosing")
     public fun javaApiOnAgentClosing(handler: Interceptor<AgentClosingContext>) {
         onAgentClosing { eventContext ->
-            eventContext.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -145,7 +146,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onStrategyStarting")
     public fun javaApiOnStrategyStarting(handler: Interceptor<StrategyStartingContext>) {
         onStrategyStarting { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -158,7 +159,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onStrategyCompleted")
     public fun javaApiOnStrategyCompleted(handler: Interceptor<StrategyCompletedContext>) {
         onStrategyCompleted { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -171,7 +172,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onNodeExecutionStarting")
     public fun javaApiOnNodeExecutionStarting(handler: Interceptor<NodeExecutionStartingContext>) {
         onNodeExecutionStarting { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -184,7 +185,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onNodeExecutionCompleted")
     public fun javaApiOnNodeExecutionCompleted(handler: Interceptor<NodeExecutionCompletedContext>) {
         onNodeExecutionCompleted { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -197,7 +198,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onNodeExecutionFailed")
     public fun javaApiOnNodeExecutionFailed(handler: Interceptor<NodeExecutionFailedContext>) {
         onNodeExecutionFailed { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -210,7 +211,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onLLMCallStarting")
     public fun javaApiOnLLMCallStarting(handler: Interceptor<LLMCallStartingContext>) {
         onLLMCallStarting { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -223,7 +224,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onLLMCallCompleted")
     public fun javaApiOnLLMCallCompleted(handler: Interceptor<LLMCallCompletedContext>) {
         onLLMCallCompleted { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -236,7 +237,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onToolCallStarting")
     public fun javaApiOnToolCallStarting(handler: Interceptor<ToolCallStartingContext>) {
         onToolCallStarting { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -249,7 +250,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onToolValidationFailed")
     public fun javaApiOnToolValidationFailed(handler: Interceptor<ToolValidationFailedContext>) {
         onToolValidationFailed { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -262,7 +263,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onToolCallFailed")
     public fun javaApiOnToolCallFailed(handler: Interceptor<ToolCallFailedContext>) {
         onToolCallFailed { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -275,7 +276,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onToolCallCompleted")
     public fun javaApiOnToolCallCompleted(handler: Interceptor<ToolCallCompletedContext>) {
         onToolCallCompleted { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -288,7 +289,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onLLMStreamingStarting")
     public fun javaApiOnLLMStreamingStarting(handler: Interceptor<LLMStreamingStartingContext>) {
         onLLMStreamingStarting { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -301,7 +302,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onLLMStreamingFrameReceived")
     public fun javaApiOnLLMStreamingFrameReceived(handler: Interceptor<LLMStreamingFrameReceivedContext>) {
         onLLMStreamingFrameReceived { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -314,7 +315,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onLLMStreamingFailed")
     public fun javaApiOnLLMStreamingFailed(handler: Interceptor<LLMStreamingFailedContext>) {
         onLLMStreamingFailed { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -327,7 +328,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onLLMStreamingCompleted")
     public fun javaApiOnLLMStreamingCompleted(handler: Interceptor<LLMStreamingCompletedContext>) {
         onLLMStreamingCompleted { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }

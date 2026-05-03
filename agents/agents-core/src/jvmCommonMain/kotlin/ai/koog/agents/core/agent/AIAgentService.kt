@@ -1,5 +1,4 @@
 @file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
-@file:OptIn(InternalAgentsApi::class)
 
 package ai.koog.agents.core.agent
 
@@ -8,13 +7,14 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
+import ai.koog.agents.utils.runBlockingOnStrategyDispatcher
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.time.KoogClock
 import java.util.concurrent.ExecutorService
 
+@OptIn(InternalAgentsApi::class)
 public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> {
     public actual abstract val promptExecutor: PromptExecutor
     public actual abstract val agentConfig: AIAgentConfig
@@ -56,7 +56,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         agentConfig: AIAgentConfig = this.agentConfig,
         executorService: ExecutorService? = null,
         clock: KoogClock = KoogClock.System
-    ): TAgent = agentConfig.runOnStrategyDispatcher(executorService) {
+    ): TAgent = agentConfig.runBlockingOnStrategyDispatcher(executorService) {
         createAgent(id, additionalToolRegistry, agentConfig, clock)
     }
 
@@ -98,7 +98,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
     public fun removeAgent(
         agent: TAgent,
         executorService: ExecutorService? = null
-    ): Boolean = agentConfig.runOnStrategyDispatcher(executorService) {
+    ): Boolean = agentConfig.runBlockingOnStrategyDispatcher(executorService) {
         removeAgent(agent)
     }
 
@@ -114,7 +114,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
     public fun removeAgentWithId(
         id: String,
         executorService: ExecutorService? = null
-    ): Boolean = agentConfig.runOnStrategyDispatcher(executorService) {
+    ): Boolean = agentConfig.runBlockingOnStrategyDispatcher(executorService) {
         removeAgentWithId(id)
     }
 
@@ -133,57 +133,8 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
     public fun agentById(
         id: String,
         executorService: ExecutorService? = null
-    ): TAgent? = agentConfig.runOnStrategyDispatcher(executorService) {
+    ): TAgent? = agentConfig.runBlockingOnStrategyDispatcher(executorService) {
         agentById(id)
-    }
-
-    /**
-     * Lists all currently active agents using the configured strategy dispatcher.
-     *
-     * If an optional `executorService` is provided, it will be used as the execution context
-     * for running the operation. Otherwise, a default executor service or dispatcher is utilized.
-     *
-     * @param executorService The optional `ExecutorService` to use for task execution. Defaults to `null`.
-     * @return A list of currently active agents of type `TAgent`.
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun listActiveAgents(
-        executorService: ExecutorService? = null
-    ): List<TAgent> = agentConfig.runOnStrategyDispatcher(executorService) {
-        listActiveAgents()
-    }
-
-    /**
-     * Retrieves a list of all inactive agents.
-     *
-     * This method utilizes the provided `ExecutorService` for dispatching, if specified.
-     * If no `ExecutorService` is provided, a default strategy-specific executor will be used.
-     *
-     * @param executorService An optional `ExecutorService` to execute the operation.
-     *                        If `null`, the default executor service of the agent's configuration is used.
-     * @return A list of `TAgent` objects representing the inactive agents.
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun listInactiveAgents(
-        executorService: ExecutorService? = null
-    ): List<TAgent> = agentConfig.runOnStrategyDispatcher(executorService) {
-        listInactiveAgents()
-    }
-
-    /**
-     * Retrieves a list of finished agents.
-     *
-     * @param executorService The optional executor service to be used for the operation. If no executor service is provided, a default one will be used.
-     * @return A list of finished agents.
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun listFinishedAgents(
-        executorService: ExecutorService? = null
-    ): List<TAgent> = agentConfig.runOnStrategyDispatcher(executorService) {
-        listFinishedAgents()
     }
 
     public actual companion object {

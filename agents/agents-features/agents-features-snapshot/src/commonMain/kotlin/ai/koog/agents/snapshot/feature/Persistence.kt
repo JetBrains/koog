@@ -42,9 +42,9 @@ import kotlin.uuid.Uuid
 /**
  * Bridges a suspending [block] into a blocking call for Java interop.
  *
- * On JVM/Android this dispatches through `AIAgentConfig.runOnStrategyDispatcher`; on non-JVM
- * targets this throws [UnsupportedOperationException] because Kotlin lacks a portable blocking
- * primitive.
+ * On JVM/Android this dispatches through [AIAgentConfig.strategyDispatcher] via
+ * [runBlockingReentrant]; on non-JVM targets this throws [UnsupportedOperationException]
+ * because Kotlin lacks a portable blocking primitive.
  */
 internal expect fun <T> runBlockingOnStrategy(
     agentConfig: AIAgentConfig,

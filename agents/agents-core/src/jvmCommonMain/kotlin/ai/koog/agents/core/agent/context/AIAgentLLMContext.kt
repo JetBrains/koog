@@ -1,5 +1,5 @@
 @file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-@file:OptIn(InternalAgentsApi::class)
+@file:OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
 
 package ai.koog.agents.core.agent.context
 
@@ -11,12 +11,12 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
-import ai.koog.agents.core.utils.submitToMainDispatcher
+import ai.koog.agents.utils.runBlockingOnStrategyDispatcher
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.time.KoogClock
 import java.util.function.Function
 
@@ -67,11 +67,9 @@ public actual open class AIAgentLLMContext actual constructor(
      * @return The result produced by the provided block of code.
      */
     @JavaAPI
-    public fun <T> writeSession(block: Function<AIAgentLLMWriteSession, T>): T = config.runOnStrategyDispatcher {
+    public fun <T> writeSession(block: Function<AIAgentLLMWriteSession, T>): T = config.runBlockingOnStrategyDispatcher {
         writeSession {
-            config.submitToMainDispatcher {
-                block.apply(this)
-            }
+            block.apply(this)
         }
     }
 
@@ -85,11 +83,9 @@ public actual open class AIAgentLLMContext actual constructor(
      * @return The result of executing the provided block within the `AIAgentLLMReadSession` context.
      */
     @JavaAPI
-    public fun <T> readSession(block: Function<AIAgentLLMReadSession, T>): T = config.runOnStrategyDispatcher {
+    public fun <T> readSession(block: Function<AIAgentLLMReadSession, T>): T = config.runBlockingOnStrategyDispatcher {
         readSession {
-            config.submitToMainDispatcher {
-                block.apply(this)
-            }
+            block.apply(this)
         }
     }
 

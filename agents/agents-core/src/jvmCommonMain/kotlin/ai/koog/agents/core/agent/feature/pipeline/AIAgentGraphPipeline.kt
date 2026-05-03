@@ -1,5 +1,5 @@
 @file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-@file:OptIn(InternalAgentsApi::class)
+@file:OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
 
 package ai.koog.agents.core.feature.pipeline
 
@@ -14,7 +14,8 @@ import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
-import ai.koog.agents.core.utils.submitToMainDispatcher
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.withContextReentrant
 import ai.koog.utils.time.KoogClock
 
 public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
@@ -58,7 +59,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<NodeExecutionStartingContext>
     ) {
         interceptNodeExecutionStarting(feature) {
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(it)
             }
         }
@@ -85,7 +86,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<NodeExecutionCompletedContext>
     ) {
         interceptNodeExecutionCompleted(feature) {
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(it)
             }
         }
@@ -112,7 +113,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<NodeExecutionFailedContext>
     ) {
         interceptNodeExecutionFailed(feature) {
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(it)
             }
         }
@@ -139,7 +140,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<SubgraphExecutionStartingContext>
     ) {
         interceptSubgraphExecutionStarting(feature) {
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(it)
             }
         }
@@ -166,7 +167,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<SubgraphExecutionCompletedContext>
     ) {
         interceptSubgraphExecutionCompleted(feature) {
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(it)
             }
         }
@@ -193,7 +194,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<SubgraphExecutionFailedContext>
     ) {
         interceptSubgraphExecutionFailed(feature) {
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(it)
             }
         }

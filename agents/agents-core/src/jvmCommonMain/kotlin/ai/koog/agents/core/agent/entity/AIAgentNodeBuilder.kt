@@ -1,4 +1,4 @@
-@file:OptIn(InternalAgentsApi::class)
+@file:OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
 
 package ai.koog.agents.core.agent.entity
 
@@ -11,9 +11,6 @@ import ai.koog.agents.core.dsl.extension.appendPromptImpl
 import ai.koog.agents.core.dsl.extension.llmCompressHistoryImpl
 import ai.koog.agents.core.dsl.extension.requestStreamingAndSendResultsImpl
 import ai.koog.agents.core.dsl.extension.setStructuredOutputImpl
-import ai.koog.agents.core.utils.runOnLLMDispatcher
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
-import ai.koog.agents.core.utils.submitToMainDispatcher
 import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.agents.ext.agent.setupLLMAsAJudge
 import ai.koog.prompt.dsl.PromptBuilder
@@ -23,7 +20,9 @@ import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.typeToken
-import io.ktor.utils.io.core.Output
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.runBlockingReentrant
+import ai.koog.utils.concurrency.withContextReentrant
 import kotlin.random.Random
 
 /**
@@ -310,16 +309,15 @@ public class TypedAIAgentNodeBuilder<Input : Any, Output : Any>(
     internal fun executeOnLLMDispatcher(
         asyncAction: suspend AIAgentGraphContextBase.(Input) -> Output
     ): AIAgentNode<Input, Output> = withAction { input, ctx ->
-        ctx.config.runOnLLMDispatcher {
+        runBlockingReentrant(ctx.config.llmRequestDispatcher) {
             ctx.asyncAction(input)
         }
     }.build()
 
-    @OptIn(InternalAgentsApi::class)
     internal fun executeOnStrategyDispatcher(
         asyncAction: suspend AIAgentGraphContextBase.(Input) -> Output
     ): AIAgentNode<Input, Output> = withAction { input, ctx ->
-        ctx.config.runOnStrategyDispatcher {
+        runBlockingReentrant(ctx.config.strategyDispatcher) {
             ctx.asyncAction(input)
         }
     }.build()
@@ -357,7 +355,7 @@ public class DefinedAIAgentNodeBuilder<Input : Any, Output : Any>(
             inputTypeToken,
             outputTypeToken
         ) { input ->
-            this.config.submitToMainDispatcher {
+            withContextReentrant(this.config.strategyDispatcher) {
                 nodeAction.execute(input, this)
             }
         }

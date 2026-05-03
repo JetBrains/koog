@@ -10,12 +10,13 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
+import ai.koog.agents.utils.runBlockingOnLLMDispatcher
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.io.Closeable
 import ai.koog.utils.time.KoogClock
 import java.util.concurrent.ExecutorService
@@ -37,6 +38,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
      *                        If not provided, the default coroutine context is used.
      * @return The output resulting from the execution of the AI agent with the given input.
      */
+    @OptIn(InternalKoogUtils::class)
     @JavaAPI
     @JvmOverloads
     @JvmName("run")
@@ -44,7 +46,9 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
         agentInput: Input,
         sessionId: String? = null,
         executorService: ExecutorService? = null
-    ): Output = agentConfig.runOnStrategyDispatcher(executorService) { run(agentInput, sessionId) }
+    ): Output = agentConfig.runBlockingOnLLMDispatcher(executorService) {
+        run(agentInput, sessionId)
+    }
 
     // Common (multiplatform) methods:
     public actual abstract suspend fun run(agentInput: Input, sessionId: String?): Output

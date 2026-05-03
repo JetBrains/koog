@@ -1,5 +1,5 @@
 @file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
-@file:OptIn(InternalAgentsApi::class)
+@file:OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
 
 package ai.koog.agents.core.feature.pipeline
 
@@ -26,7 +26,8 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
-import ai.koog.agents.core.utils.submitToMainDispatcher
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.withContextReentrant
 import ai.koog.utils.time.KoogClock
 
 public actual abstract class AIAgentPipeline actual constructor(
@@ -81,7 +82,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<AgentStartingContext>
     ) {
         interceptAgentStarting(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -106,7 +107,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<AgentCompletedContext>
     ) {
         interceptAgentCompleted(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -131,7 +132,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<AgentExecutionFailedContext>
     ) {
         interceptAgentExecutionFailed(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -156,7 +157,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<AgentClosingContext>
     ) {
         interceptAgentClosing(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -181,7 +182,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<StrategyStartingContext>
     ) {
         interceptStrategyStarting(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -206,7 +207,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<StrategyCompletedContext>
     ) {
         interceptStrategyCompleted(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -231,7 +232,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMCallStartingContext>
     ) {
         interceptLLMCallStarting(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -256,7 +257,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMCallCompletedContext>
     ) {
         interceptLLMCallCompleted(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -282,7 +283,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMCallFailedContext>
     ) {
         interceptLLMCallFailed(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -307,7 +308,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMStreamingStartingContext>
     ) {
         interceptLLMStreamingStarting(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -332,7 +333,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMStreamingFrameReceivedContext>
     ) {
         interceptLLMStreamingFrameReceived(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -357,7 +358,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMStreamingFailedContext>
     ) {
         interceptLLMStreamingFailed(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -382,7 +383,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMStreamingCompletedContext>
     ) {
         interceptLLMStreamingCompleted(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -407,7 +408,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<ToolCallStartingContext>
     ) {
         interceptToolCallStarting(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -432,7 +433,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<ToolValidationFailedContext>
     ) {
         interceptToolValidationFailed(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -457,7 +458,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<ToolCallFailedContext>
     ) {
         interceptToolCallFailed(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -482,7 +483,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<ToolCallCompletedContext>
     ) {
         interceptToolCallCompleted(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }

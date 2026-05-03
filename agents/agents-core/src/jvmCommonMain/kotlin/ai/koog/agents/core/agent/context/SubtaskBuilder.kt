@@ -5,11 +5,12 @@ import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.agents.ext.agent.CriticResult
+import ai.koog.agents.utils.runBlockingOnStrategyDispatcher
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.utils.annotations.InternalKoogUtils
 import java.util.concurrent.ExecutorService
 
 /**
@@ -179,8 +180,8 @@ public class SubtaskBuilderWithOutput<Output : Any>(
      * The method handles different output options (`OutputOption.ByClass` and `OutputOption.ByFinishTool`)
      * and executes subtasks using the provided input, tools, and configuration parameters.
      */
-    @OptIn(InternalAgentsApi::class)
-    public fun run(): Output = context.config.runOnStrategyDispatcher(executorService) {
+    @OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
+    public fun run(): Output = context.config.runBlockingOnStrategyDispatcher(executorService) {
         @Suppress("UNCHECKED_CAST")
         when (output) {
             is OutputOption.ByClass<Output> -> {
