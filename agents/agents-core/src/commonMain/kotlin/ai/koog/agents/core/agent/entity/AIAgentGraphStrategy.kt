@@ -123,6 +123,13 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
         agentContext.llm.withPrompt {
             this.withMessages { (data.messageHistory) }
         }
+
+        // Restore user-defined storage entries (intermediate state, retry counters, cached data, etc.).
+        // Identity-based key equality means entries are written under the original key instances supplied
+        // by the caller, so existing reads via those keys keep working after resume.
+        if (data.storageEntries.isNotEmpty()) {
+            agentContext.storage.putAll(data.storageEntries)
+        }
     }
 
     private fun setExecutionPointImpl(pathSegments: List<String>, node: AIAgentNodeBase<*, *>, input: Any?) {

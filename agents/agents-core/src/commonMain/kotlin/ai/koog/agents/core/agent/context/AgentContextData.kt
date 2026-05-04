@@ -2,6 +2,7 @@
 
 package ai.koog.agents.core.agent.context
 
+import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement
@@ -14,7 +15,8 @@ public class AgentContextData(
     internal val lastInput: JSONElement? = null,
     internal val lastOutput: JSONElement? = null,
     internal val rollbackStrategy: RollbackStrategy,
-    internal val additionalRollbackActions: suspend (AIAgentContext) -> Unit = {}
+    internal val additionalRollbackActions: suspend (AIAgentContext) -> Unit = {},
+    internal val storageEntries: Map<AIAgentStorageKey<*>, Any> = emptyMap(),
 ) {
     init {
         require(lastInput == null || lastOutput == null) { "`lastInput` and `lastOutput` cannot be both set" }
