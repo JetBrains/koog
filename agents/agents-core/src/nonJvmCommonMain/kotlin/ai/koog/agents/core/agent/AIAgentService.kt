@@ -41,14 +41,27 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         @OptIn(markerClass = [InternalAgentsApi::class])
         public actual inline fun <reified Input, reified Output> fromAgent(
             agent: GraphAIAgent<Input, Output>
-        ): AIAgentService<Input, Output, GraphAIAgent<Input, Output>> = AIAgentServiceHelper.fromAgent(agent)
+        ): AIAgentService<Input, Output, GraphAIAgent<Input, Output>> = AIAgentService(
+            promptExecutor = agent.promptExecutor,
+            agentConfig = agent.agentConfig,
+            strategy = agent.strategy,
+            toolRegistry = agent.toolRegistry,
+            installFeatures = agent.installFeatures
+        )
 
         @OptIn(markerClass = [InternalAgentsApi::class])
         public actual fun <Input, Output> fromAgent(
             agent: FunctionalAIAgent<Input, Output>
-        ): AIAgentService<Input, Output, FunctionalAIAgent<Input, Output>> = AIAgentServiceHelper.fromAgent(agent)
+        ): AIAgentService<Input, Output, FunctionalAIAgent<Input, Output>> = AIAgentService(
+            promptExecutor = agent.promptExecutor,
+            agentConfig = agent.agentConfig,
+            strategy = agent.strategy,
+            toolRegistry = agent.toolRegistry,
+            installFeatures = agent.installFeatures
+        )
 
         @OptIn(markerClass = [InternalAgentsApi::class])
+        @Deprecated("Use AIAgentService(...)")
         public actual inline operator fun <reified Input, reified Output> invoke(
             promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
@@ -56,8 +69,9 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
             toolRegistry: ToolRegistry,
             noinline installFeatures: GraphAIAgent.FeatureContext.() -> Unit
         ): GraphAIAgentService<Input, Output> =
-            AIAgentServiceHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, installFeatures)
+            AIAgentService(promptExecutor, agentConfig, strategy, toolRegistry, installFeatures)
 
+        @Deprecated("Use AIAgentService(...)")
         public actual operator fun invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
@@ -69,7 +83,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
             numberOfChoices: Int,
             maxIterations: Int,
             installFeatures: GraphAIAgent.FeatureContext.() -> Unit
-        ): GraphAIAgentService<String, String> = AIAgentServiceHelper.invoke(
+        ): GraphAIAgentService<String, String> = AIAgentService(
             promptExecutor,
             llmModel,
             responseProcessor,
@@ -83,6 +97,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         )
 
         @OptIn(markerClass = [InternalAgentsApi::class])
+        @Deprecated("Use AIAgentService(...)")
         public actual operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
@@ -90,6 +105,6 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
             toolRegistry: ToolRegistry,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit
         ): FunctionalAIAgentService<Input, Output> =
-            AIAgentServiceHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, installFeatures)
+            AIAgentService(promptExecutor, agentConfig, strategy, toolRegistry, installFeatures)
     }
 }

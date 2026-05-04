@@ -40,11 +40,11 @@ public abstract class AIAgentServiceBuilderCommon<Self : AIAgentServiceBuilderCo
      * Convenience build for GraphAIAgentService<String, String> using singleRunStrategy.
      */
     public fun build(): GraphAIAgentService<String, String> {
-        return AIAgentServiceHelper(
+        return AIAgentService(
             promptExecutor = validatedPromptExecutor,
             agentConfig = config,
             strategy = singleRunStrategy(),
             toolRegistry = toolRegistry,
-        ) {}
+        )
     }
 }

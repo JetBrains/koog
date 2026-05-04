@@ -51,7 +51,7 @@ class ParallelNodesMergeContextTest {
             promptExecutor = testExecutor,
             strategy = strategy,
             agentConfig = agentConfig,
-            toolRegistry = ToolRegistry.Companion {
+            toolRegistry = ToolRegistry {
                 tool(DummyTool())
             }
         )

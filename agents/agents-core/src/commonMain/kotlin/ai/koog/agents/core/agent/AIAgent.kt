@@ -21,7 +21,7 @@ import kotlin.uuid.ExperimentalUuidApi
 /**
  * Represents a basic interface for AI agent.
  */
-public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
+public expect abstract class AIAgent<Input, Output>() : Closeable {
 
     /**
      * Represents the unique identifier for the AI agent.
@@ -53,14 +53,13 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
     public abstract fun createSession(sessionId: String? = null): AIAgentRunSession<Input, Output, out AIAgentContext>
 
     /**
-     * The companion object for the AIAgent class, providing functionality to instantiate an AI agent
-     * with a flexible configuration, input/output types, and execution strategy.
+     * Companion object with builder for [AIAgent]
      */
     public companion object {
         /**
          * Creates and returns a new instance of the [AIAgentBuilder] class to configure and construct an AI agent.
          *
-         * @return An instance of `Builder` for configuring an AI agent.
+         * @return An instance of [AIAgentBuilder] for configuring an AI agent.
          */
         @JvmStatic
         public fun builder(): AIAgentBuilder
@@ -81,6 +80,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @return An instance of an AI agent configured with the specified parameters and capable of executing its logic.
          */
         @OptIn(ExperimentalUuidApi::class)
+        @Deprecated("Use AIAgent(...)")
         public inline operator fun <reified Input, reified Output> invoke(
             promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
@@ -103,6 +103,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @return An instance of AIAgent configured with the graph strategy.
          */
         @OptIn(ExperimentalUuidApi::class)
+        @Deprecated("Use AIAgent(...)")
         public operator fun invoke(
             promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
@@ -127,6 +128,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @return A `FunctionalAIAgent` instance configured with the provided parameters and execution strategy.
          */
         @OptIn(ExperimentalUuidApi::class)
+        @Deprecated("Use AIAgent(...)")
         public operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
@@ -154,6 +156,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @return An instance of [AIAgent] configured with the provided parameters.
          */
         @OptIn(ExperimentalUuidApi::class)
+        @Deprecated("Use AIAgent(...)")
         public operator fun invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
@@ -188,6 +191,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @return A configured [AIAgent] instance that can process inputs and generate outputs using the specified strategy and model.
          */
         @OptIn(ExperimentalUuidApi::class)
+        @Deprecated("Use AIAgent(...)")
         public inline operator fun <reified Input, reified Output> invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
@@ -222,6 +226,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @param installFeatures A lambda to configure and install features in the agent's context.
          * @return An AI agent instance configured with the provided parameters and ready to execute the specified strategy.
          */
+        @Deprecated("Use AIAgent(...)")
         public operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
@@ -252,6 +257,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @param installFeatures A lambda for configuring additional features in the agent.
          * @return An AI agent instance configured with the provided parameters.
          */
+        @Deprecated("Use AIAgent(...)")
         public operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
@@ -278,6 +284,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @param installFeatures A lambda function used to install additional features into the agent's feature context.
          * @return An instance of an AI agent configured with the provided parameters that maps a world state to another world state.
          */
+        @Deprecated("Use AIAgent(...)")
         public operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,

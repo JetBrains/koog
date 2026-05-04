@@ -27,6 +27,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
 
     public actual companion object {
         @OptIn(markerClass = [ExperimentalUuidApi::class])
+        @Deprecated("Use AIAgent(...)")
         public actual inline operator fun <reified Input, reified Output> invoke(
             promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
@@ -36,9 +37,10 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             clock: KoogClock,
             noinline installFeatures: GraphAIAgent.FeatureContext.() -> Unit
         ): AIAgent<Input, Output> =
-            AIAgentHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, id, clock, installFeatures)
+            AIAgent(promptExecutor, agentConfig, strategy, toolRegistry, id, clock, installFeatures)
 
         @OptIn(markerClass = [ExperimentalUuidApi::class])
+        @Deprecated("Use AIAgent(...)")
         public actual operator fun invoke(
             promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
@@ -46,7 +48,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             toolRegistry: ToolRegistry,
             id: String?,
             installFeatures: GraphAIAgent.FeatureContext.() -> Unit
-        ): GraphAIAgent<String, String> = AIAgentHelper.invoke(
+        ): GraphAIAgent<String, String> = AIAgent(
             promptExecutor,
             agentConfig,
             strategy,
@@ -56,6 +58,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
         )
 
         @OptIn(markerClass = [ExperimentalUuidApi::class])
+        @Deprecated("Use AIAgent(...)")
         public actual operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
@@ -65,9 +68,10 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             clock: KoogClock,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit
         ): FunctionalAIAgent<Input, Output> =
-            AIAgentHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, id, clock, installFeatures)
+            AIAgent(promptExecutor, agentConfig, strategy, toolRegistry, id, clock, installFeatures)
 
         @OptIn(markerClass = [ExperimentalUuidApi::class])
+        @Deprecated("Use AIAgent(...)")
         public actual operator fun invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
@@ -80,7 +84,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             numberOfChoices: Int,
             maxIterations: Int,
             installFeatures: GraphAIAgent.FeatureContext.() -> Unit
-        ): AIAgent<String, String> = AIAgentHelper.invoke(
+        ): AIAgent<String, String> = AIAgent(
             promptExecutor,
             llmModel,
             responseProcessor,
@@ -95,6 +99,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
         )
 
         @OptIn(markerClass = [ExperimentalUuidApi::class])
+        @Deprecated("Use AIAgent(...)")
         public actual inline operator fun <reified Input, reified Output> invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
@@ -108,7 +113,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             numberOfChoices: Int,
             maxIterations: Int,
             noinline installFeatures: GraphAIAgent.FeatureContext.() -> Unit
-        ): AIAgent<Input, Output> = AIAgentHelper.invoke(
+        ): AIAgent<Input, Output> = AIAgent(
             promptExecutor,
             llmModel,
             strategy,
@@ -123,6 +128,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             installFeatures
         )
 
+        @Deprecated("Use AIAgent(...)")
         public actual operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
@@ -135,7 +141,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             numberOfChoices: Int,
             maxIterations: Int,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit
-        ): AIAgent<Input, Output> = AIAgentHelper.invoke(
+        ): AIAgent<Input, Output> = AIAgent(
             promptExecutor,
             llmModel,
             responseProcessor,
@@ -149,6 +155,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             installFeatures
         )
 
+        @Deprecated("Use AIAgent(...)")
         public actual operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
@@ -161,7 +168,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             numberOfChoices: Int,
             maxIterations: Int,
             installFeatures: PlannerAIAgent.FeatureContext.() -> Unit
-        ): AIAgent<Input, Output> = AIAgentHelper.invoke(
+        ): AIAgent<Input, Output> = AIAgent(
             promptExecutor,
             llmModel,
             responseProcessor,
@@ -175,6 +182,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             installFeatures
         )
 
+        @Deprecated("Use AIAgent(...)")
         public actual operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
@@ -184,7 +192,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             clock: KoogClock,
             installFeatures: PlannerAIAgent.FeatureContext.() -> Unit
         ): AIAgent<Input, Output> =
-            AIAgentHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, id, clock, installFeatures)
+            AIAgent(promptExecutor, agentConfig, strategy, toolRegistry, id, clock, installFeatures)
 
         public actual fun builder(): AIAgentBuilder = AIAgentBuilder()
     }

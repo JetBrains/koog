@@ -48,7 +48,7 @@ class McpServerTest {
 
         val (server, connectors) = startSseMcpServer(
             factory = Netty,
-            tools = ToolRegistry.Companion {
+            tools = ToolRegistry {
                 tool(randomNumberTool)
             },
         )

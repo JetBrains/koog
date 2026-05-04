@@ -72,7 +72,7 @@ class OllamaSimpleAgentIntegrationTest : AIAgentTestBase() {
     @Test
     fun ollama_simpleTest() = runTest(timeout = 600.seconds) {
         val giveMeWordTool = GiveMeWordTool("give_me_word_tool")
-        val toolRegistry = ToolRegistry.Companion {
+        val toolRegistry = ToolRegistry {
             tool(giveMeWordTool)
         }
 

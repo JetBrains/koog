@@ -31,6 +31,13 @@ import kotlin.jvm.JvmStatic
  */
 public class ToolRegistry internal constructor(tools: List<Tool<*, *>> = emptyList()) {
 
+    /**
+     * Creates a new ToolRegistry using the provided builder initialization block.
+     *
+     * @param init A lambda that configures the registry by adding tools
+     */
+    public constructor(init: ToolRegistryBuilder.() -> Unit) : this(ToolRegistryBuilder().apply(init).build().tools)
+
     private val _tools: MutableList<Tool<*, *>> = tools.toMutableList()
 
     /**
@@ -141,6 +148,7 @@ public class ToolRegistry internal constructor(tools: List<Tool<*, *>> = emptyLi
          * @param init A lambda that configures the registry by adding tools
          * @return A new ToolRegistry instance configured according to the initialization block
          */
+        @Deprecated("Use ToolRegistry(...)")
         public operator fun invoke(init: ToolRegistryBuilder.() -> Unit): ToolRegistry = ToolRegistryBuilder().apply(init).build()
 
         /**

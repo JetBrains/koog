@@ -369,7 +369,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             runWithTracking { eventHandlerConfig, state ->
                 val executor = getExecutor(model)
 
-                val agent = AIAgent.invoke(
+                val agent = AIAgent(
                     promptExecutor = executor,
                     systemPrompt = systemPrompt + "JUST CALL THE TOOLS, NO QUESTIONS ASKED!",
                     strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),

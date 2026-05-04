@@ -39,7 +39,7 @@ class HistoryCompressionStrategiesTest {
         )
     }
 
-    private fun createToolRegistry() = ToolRegistry.Companion {
+    private fun createToolRegistry() = ToolRegistry {
         tool(DummyTool())
     }
 
@@ -371,7 +371,7 @@ class HistoryCompressionStrategiesTest {
         originalMessages: List<Message>,
         compressedMessages: List<Message>
     ) {
-        val agent = AIAgent.Companion(
+        val agent = AIAgent(
             promptExecutor = createMockExecutor(),
             strategy = createHistoryCompressionStrategy(
                 strategy,
