@@ -8,7 +8,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.runBlocking
-import ai.koog.utils.time.AgentClock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.JsonPrimitive
 import org.jetbrains.exposed.sql.Database
 
@@ -169,13 +169,13 @@ object SQLPersistentAgentExample {
     private fun createSampleCheckpoint(checkpointId: String, version: Long): AgentCheckpointData {
         return AgentCheckpointData(
             checkpointId = checkpointId,
-            createdAt = AgentClock.System.now(),
+            createdAt = KoogClock.System.now(),
             nodePath = "example-node",
             lastInput = JsonPrimitive("даваSample input for $checkpointId"),
             messageHistory = listOf(
-                Message.System("You are a helpful assistant", RequestMetaInfo.create(AgentClock.System)),
-                Message.User("Hello, agent!", RequestMetaInfo.create(AgentClock.System)),
-                Message.Assistant("Hello! How can I help you today?", ResponseMetaInfo.create(AgentClock.System))
+                Message.System("You are a helpful assistant", RequestMetaInfo.create(KoogClock.System)),
+                Message.User("Hello, agent!", RequestMetaInfo.create(KoogClock.System)),
+                Message.Assistant("Hello! How can I help you today?", ResponseMetaInfo.create(KoogClock.System))
             ),
             version = version
         )
