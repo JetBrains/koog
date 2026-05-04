@@ -131,7 +131,7 @@ public class GraphAgentBuilder<Input, Output>(
  * @property toolRegistry A registry of tools available to the agent, by default set to `ToolRegistry.EMPTY`.
  * @property id An optional unique identifier for the agent.
  * @property config [AIAgentConfig] containing initial agent configuration for the builder
- * @property clock The clock instance used for time-related functionality, default is `AgentClock.System`.
+ * @property clock The clock instance used for time-related functionality, default is `KoogClock.System`.
  * @property featureInstallers A list of feature installation lambdas defining additional functionalities the agent should have.
  */
 public class FunctionalAgentBuilder<Input, Output>(

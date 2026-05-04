@@ -9,7 +9,7 @@ import kotlin.time.Instant
  * Implement this interface (or use [KoogClock.System]) anywhere a clock is required.
  * Being a functional interface, simple test doubles can be written as lambdas:
  * ```
- * val fixed = AgentClock { Instant.fromEpochSeconds(1_700_000_000) }
+ * val fixed = KoogClock { Instant.fromEpochSeconds(1_700_000_000) }
  * ```
  */
 public fun interface KoogClock {

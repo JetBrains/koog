@@ -191,7 +191,7 @@ internal object AIAgentHelper {
      * @param strategy The agent strategy [AIAgentGraphStrategy] defining how the agent processes inputs and outputs.
      * @param toolRegistry An optional [ToolRegistry] specifying the tools available to the agent for execution. Defaults to `[ToolRegistry.EMPTY]`.
      * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
-     * @param clock A `Clock` instance used for time-related operations. Defaults to `AgentClock.System`.
+     * @param clock A `Clock` instance used for time-related operations. Defaults to `KoogClock.System`.
      * @param systemPrompt A string representing the system-level prompt for the agent. Defaults to an empty string.
      * @param temperature A double value controlling the randomness of the model's output. Defaults to `1.0`.
      * @param numberOfChoices The number of choices the model should generate per invocation. Defaults to `1`.

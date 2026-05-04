@@ -179,7 +179,7 @@ public expect abstract class AIAgent<Input, Output> constructor() : Closeable {
          * @param responseProcessor The processor responsible for processing the model's responses.
          * @param toolRegistry An optional [ToolRegistry] specifying the tools available to the agent for execution. Defaults to `[ToolRegistry.EMPTY]`.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
-         * @param clock A `Clock` instance used for time-related operations. Defaults to `AgentClock.System`.
+         * @param clock A `Clock` instance used for time-related operations. Defaults to `KoogClock.System`.
          * @param systemPrompt Optional system prompt for the agent.
          * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0.
          * @param numberOfChoices The number of choices the model should generate per invocation. Defaults to `1`.

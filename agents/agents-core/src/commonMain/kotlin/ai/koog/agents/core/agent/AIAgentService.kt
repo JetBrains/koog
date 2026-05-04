@@ -448,7 +448,7 @@ public operator fun AIAgentService.Companion.invoke(
  * @param outputType Type token representing agent output.
  * @return A special tool that wraps the agent functionality.
  * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
- * @param clock The clock instance used to manage time-related operations. Defaults to `AgentClock.System`.
+ * @param clock The clock instance used to manage time-related operations. Defaults to `KoogClock.System`.
  * @return A tool instance configured with the provided parameters, representing the AI agent.
  */
 @OptIn(InternalAgentToolsApi::class)
@@ -482,7 +482,7 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
  * @param outputSerializer Serializer to serialize agent output to a tool result.
  * @return A special tool that wraps the agent functionality.
  * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
- * @param clock The clock instance used to manage time-related operations. Defaults to `AgentClock.System`.
+ * @param clock The clock instance used to manage time-related operations. Defaults to `KoogClock.System`.
  * @return A tool instance configured with the provided parameters, representing the AI agent.
  */
 @Deprecated("Use createAgentTool with TypeToken instead of KSerializer")
