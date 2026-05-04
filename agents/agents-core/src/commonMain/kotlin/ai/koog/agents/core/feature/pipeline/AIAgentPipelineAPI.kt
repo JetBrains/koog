@@ -19,6 +19,7 @@ import ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingCon
 import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallFailedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
@@ -30,7 +31,6 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
-import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
@@ -93,7 +93,7 @@ public interface AIAgentPipelineAPI {
         executionInfo: AgentExecutionInfo,
         agentId: String,
         runId: String,
-        throwable: Throwable,
+        error: Throwable,
         context: AIAgentContext
     )
 
@@ -162,6 +162,17 @@ public interface AIAgentPipelineAPI {
         context: AIAgentContext
     )
 
+    public suspend fun onLLMCallFailed(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext,
+        error: Throwable,
+    )
+
     //endregion Trigger LLM Handlers
 
     //region Trigger Tool Handlers
@@ -188,7 +199,7 @@ public interface AIAgentPipelineAPI {
         toolDescription: String?,
         toolArgs: JSONObject,
         message: String,
-        error: AIAgentError,
+        error: Throwable,
         context: AIAgentContext
     )
 
@@ -202,7 +213,7 @@ public interface AIAgentPipelineAPI {
         toolDescription: String?,
         toolArgs: JSONObject,
         message: String,
-        error: AIAgentError?,
+        error: Throwable?,
         context: AIAgentContext
     )
 
@@ -272,7 +283,7 @@ public interface AIAgentPipelineAPI {
         runId: String,
         prompt: Prompt,
         model: LLModel,
-        throwable: Throwable,
+        error: Throwable,
         context: AIAgentContext
     )
 
@@ -331,6 +342,11 @@ public interface AIAgentPipelineAPI {
     public fun interceptLLMCallCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallCompletedContext) -> Unit
+    )
+
+    public fun interceptLLMCallFailed(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: LLMCallFailedContext) -> Unit
     )
 
     public fun interceptLLMStreamingStarting(

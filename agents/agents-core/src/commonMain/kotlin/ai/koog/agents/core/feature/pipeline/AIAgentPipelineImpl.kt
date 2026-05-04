@@ -25,6 +25,7 @@ import ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingCon
 import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallFailedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
@@ -36,7 +37,6 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
-import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.system.getEnvironmentVariableOrNull
 import ai.koog.agents.core.system.getVMOptionOrNull
 import ai.koog.agents.core.tools.ToolCallMetadata
@@ -203,12 +203,12 @@ public class AIAgentPipelineImpl(
         executionInfo: AgentExecutionInfo,
         agentId: String,
         runId: String,
-        throwable: Throwable,
+        error: Throwable,
         context: AIAgentContext
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.AgentExecutionFailed,
-            context = AgentExecutionFailedContext(eventId, executionInfo, agentId, runId, throwable, context)
+            context = AgentExecutionFailedContext(eventId, executionInfo, agentId, runId, error, context)
         )
     }
 
@@ -308,6 +308,22 @@ public class AIAgentPipelineImpl(
         )
     }
 
+    override suspend fun onLLMCallFailed(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext,
+        error: Throwable
+    ) {
+        invokeRegisteredHandlersForEvent(
+            eventType = AgentLifecycleEventType.LLMCallFailed,
+            context = LLMCallFailedContext(eventId, executionInfo, runId, prompt, model, tools, context, error)
+        )
+    }
+
     //endregion Invoke LLM Call Handlers
 
     //region Invoke Tool Call Handlers
@@ -348,7 +364,7 @@ public class AIAgentPipelineImpl(
         toolDescription: String?,
         toolArgs: JSONObject,
         message: String,
-        error: AIAgentError,
+        error: Throwable,
         context: AIAgentContext
     ) {
         invokeRegisteredHandlersForEvent(
@@ -378,7 +394,7 @@ public class AIAgentPipelineImpl(
         toolDescription: String?,
         toolArgs: JSONObject,
         message: String,
-        error: AIAgentError?,
+        error: Throwable?,
         context: AIAgentContext
     ) {
         invokeRegisteredHandlersForEvent(
@@ -500,12 +516,12 @@ public class AIAgentPipelineImpl(
         runId: String,
         prompt: Prompt,
         model: LLModel,
-        throwable: Throwable,
+        error: Throwable,
         context: AIAgentContext
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.LLMStreamingFailed,
-            context = LLMStreamingFailedContext(eventId, executionInfo, runId, prompt, model, throwable, context)
+            context = LLMStreamingFailedContext(eventId, executionInfo, runId, prompt, model, error, context)
         )
     }
 
@@ -633,6 +649,18 @@ public class AIAgentPipelineImpl(
         addHandlerForFeature(
             featureKey = feature.key,
             eventType = AgentLifecycleEventType.LLMCallCompleted,
+            handler = createConditionalHandler(feature, handle)
+        )
+    }
+
+    @OptIn(InternalAgentsApi::class)
+    public override fun interceptLLMCallFailed(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: LLMCallFailedContext) -> Unit
+    ) {
+        addHandlerForFeature(
+            featureKey = feature.key,
+            eventType = AgentLifecycleEventType.LLMCallFailed,
             handler = createConditionalHandler(feature, handle)
         )
     }

@@ -226,7 +226,7 @@ public class EventHandler {
  *
  *     // Handle errors
  *     onAgentExecutionFailed { eventContext ->
- *         logger.error("Agent error: ${eventContext.throwable.message}")
+ *         logger.error("Agent error: ${eventContext.error.message}")
  *     }
  * }
  * ```

@@ -306,6 +306,7 @@ class DebuggerSubgraphTest {
                                 message = nodeSubgraphErrorMessage,
                                 stackTrace = actualFailedEvent.error.stackTrace,
                                 cause = actualFailedEvent.error.cause,
+                                type = actualFailedEvent.error.type,
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),

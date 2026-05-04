@@ -1,6 +1,5 @@
-package ai.koog.agents.core.utils
+package ai.koog.agents.exception
 
-import ai.koog.agents.core.utils.ExceptionExtractor.rootCause
 import kotlinx.coroutines.CancellationException
 import kotlin.test.Test
 import kotlin.test.assertNull

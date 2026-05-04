@@ -4,6 +4,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.boolean
@@ -42,8 +44,10 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
      * @return A ToolDescriptor representing the MCP tool.
      */
     override fun parse(sdkTool: SDKTool): ToolDescriptor {
+        val defs = sdkTool.inputSchema.defs
+
         // Parse all parameters from the input schema
-        val parameters = parseParameters(sdkTool.inputSchema.properties ?: EmptyJsonObject)
+        val parameters = parseParameters(sdkTool.inputSchema.properties ?: EmptyJsonObject, defs)
 
         // Get the list of required parameters
         val requiredParameters = sdkTool.inputSchema.required ?: emptyList()
@@ -57,7 +61,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         )
     }
 
-    private fun parseParameterType(element: JsonObject, depth: Int = 0): ToolParameterType {
+    private fun parseParameterType(element: JsonObject, defs: JsonObject?, depth: Int = 0): ToolParameterType {
         if (depth > MAX_DEPTH) {
             throw IllegalArgumentException(
                 "Maximum recursion depth ($MAX_DEPTH) exceeded. " +
@@ -65,8 +69,15 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
             )
         }
 
-        // Extract the type string from the JSON object
-        val typeStr = element["type"]?.jsonPrimitive?.content
+        // Handle $ref resolution
+        val ref = element["\$ref"]?.jsonPrimitive?.content
+        if (ref != null) {
+            val resolved = resolveRef(ref, defs)
+            return parseParameterType(resolved, defs, depth + 1)
+        }
+
+        // Extract the type - can be a string or an array of strings (JSON Schema type-array)
+        val (typeStr, isNullableTypeArray) = parseTypeInfo(element["type"])
 
         if (typeStr == null) {
             val anyOf = element["anyOf"]?.jsonArray
@@ -89,7 +100,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                         ToolParameterDescriptor(
                             name = "",
                             description = it["description"]?.jsonPrimitive?.content.orEmpty(),
-                            type = parseParameterType(it.jsonObject)
+                            type = parseParameterType(it.jsonObject, defs)
                         )
                     }.toTypedArray()
                 )
@@ -110,7 +121,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
              */
             val enum = element["enum"]?.jsonArray
             if (enum != null && enum.isNotEmpty()) {
-                return ToolParameterType.Enum(enum.map { it.jsonPrimitive.content }.toTypedArray())
+                return ToolParameterType.Enum(enum.map(::enumEntryToString).toTypedArray())
             }
 
             val title =
@@ -119,7 +130,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         }
 
         // Convert the type string to a ToolParameterType
-        return when (typeStr.lowercase()) {
+        val parsedType = when (typeStr.lowercase()) {
             // Primitive types
             "string" -> ToolParameterType.String
 
@@ -130,7 +141,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
             "boolean" -> ToolParameterType.Boolean
 
             "enum" -> ToolParameterType.Enum(
-                element.getValue("enum").jsonArray.map { it.jsonPrimitive.content }.toTypedArray()
+                element.getValue("enum").jsonArray.map(::enumEntryToString).toTypedArray()
             )
 
             // Array type
@@ -138,7 +149,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                 val items = element["items"]?.jsonObject
                     ?: throw IllegalArgumentException("Array type parameters must have items property")
 
-                val itemType = parseParameterType(items, depth + 1)
+                val itemType = parseParameterType(items, defs, depth + 1)
 
                 ToolParameterType.List(itemsType = itemType)
             }
@@ -150,7 +161,11 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                     rawProperties.map { (name, property) ->
                         // Description is optional
                         val description = property.jsonObject["description"]?.jsonPrimitive?.content.orEmpty()
-                        ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject, depth + 1))
+                        ToolParameterDescriptor(
+                            name,
+                            description,
+                            parseParameterType(property.jsonObject, defs, depth + 1)
+                        )
                     }
                 } ?: emptyList()
 
@@ -167,11 +182,10 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                 }
 
                 val additionalPropertiesType = if ("additionalProperties" in element) {
-                    when (element.getValue("additionalProperties")) {
-                        is JsonObject -> parseParameterType(
-                            element.getValue("additionalProperties").jsonObject,
-                            depth + 1
-                        )
+                    when (val ap = element.getValue("additionalProperties")) {
+                        // Empty schema `{}` is equivalent to `true`: allow any additional property
+                        // without a type constraint. Recursing would fail on missing `type`.
+                        is JsonObject -> if (ap.isEmpty()) null else parseParameterType(ap, defs, depth + 1)
 
                         else -> null
                     }
@@ -192,9 +206,71 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
             // Unsupported type
             else -> throw IllegalArgumentException("Unsupported parameter type: $typeStr")
         }
+
+        // Wrap in AnyOf(Null, type) for type-arrays containing "null", e.g. ["integer", "null"]
+        return if (isNullableTypeArray && parsedType != ToolParameterType.Null) {
+            ToolParameterType.AnyOf(
+                types = arrayOf(
+                    ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Null),
+                    ToolParameterDescriptor(name = "", description = "", type = parsedType),
+                )
+            )
+        } else {
+            parsedType
+        }
     }
 
-    private fun parseParameters(properties: JsonObject): List<ToolParameterDescriptor> {
+    /**
+     * Parses the JSON Schema `type` keyword, which can be either a single string
+     * (e.g. `"string"`) or an array of strings (e.g. `["string", "null"]`).
+     *
+     * @return the primary non-null type name (or `"null"` if the array contains only `"null"`,
+     *   or `null` if no type is specified), and a flag indicating whether the type-array
+     *   included `"null"` (meaning the parameter is nullable).
+     */
+    private fun parseTypeInfo(typeElement: JsonElement?): TypeInfo = when (typeElement) {
+        is JsonPrimitive -> TypeInfo(typeStr = typeElement.content, isNullableTypeArray = false)
+        is JsonArray -> {
+            val types = typeElement.map { it.jsonPrimitive.content }
+            val nonNullTypes = types.filter { it != "null" }
+            TypeInfo(
+                typeStr = if (nonNullTypes.isEmpty()) "null" else nonNullTypes.first(),
+                isNullableTypeArray = types.size != nonNullTypes.size,
+            )
+        }
+        else -> TypeInfo(typeStr = null, isNullableTypeArray = false)
+    }
+
+    private data class TypeInfo(val typeStr: String?, val isNullableTypeArray: Boolean)
+
+    /**
+     * Converts an individual JSON Schema `enum` entry to its [String] representation.
+     *
+     * JSON Schema allows mixed value types in `enum` (strings, numbers, booleans, `null`, arrays, objects).
+     * Since [ToolParameterType.Enum] stores entries as strings, non-string primitives and composite
+     * values are serialized to their canonical JSON form (e.g. `42`, `null`, `["a","b"]`, `{"k":"v"}`),
+     * and string primitives are returned unquoted so they remain directly usable.
+     */
+    private fun enumEntryToString(element: JsonElement): String = when (element) {
+        is JsonPrimitive -> if (element.isString) element.content else element.toString()
+        else -> element.toString()
+    }
+
+    /**
+     * Resolves a JSON Schema `$ref` reference against the `$defs` (or `definitions`) block.
+     * Only local references (starting with `#/`) are supported.
+     */
+    private fun resolveRef(ref: String, defs: JsonObject?): JsonObject {
+        val path = ref.removePrefix("#/").split("/")
+        require(path.size == 2 && path[0] in listOf("\$defs", "definitions")) {
+            "Unsupported \$ref format: $ref. Only local references like #/\$defs/TypeName are supported."
+        }
+        val defName = path[1]
+        return defs?.get(defName)?.jsonObject
+            ?: throw IllegalArgumentException("Definition '$defName' not found in \$defs for \$ref: $ref")
+    }
+
+    private fun parseParameters(properties: JsonObject, defs: JsonObject?): List<ToolParameterDescriptor> {
         return properties.mapNotNull { (name, element) ->
             require(element is JsonObject) { "Parameter $name must be a JSON object" }
 
@@ -202,7 +278,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
             val description = element["description"]?.jsonPrimitive?.content.orEmpty()
 
             // Parse the parameter type
-            val type = parseParameterType(element)
+            val type = parseParameterType(element, defs)
 
             // Create a ToolParameterDescriptor
             ToolParameterDescriptor(

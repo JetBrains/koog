@@ -1,5 +1,3 @@
-@file:OptIn(DetachedPromptExecutorAPI::class, InternalAgentsApi::class)
-
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -9,7 +7,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.RWLock
+import ai.koog.agents.lock.RWLock
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -115,10 +113,9 @@ public abstract class AIAgentLLMContextCommon internal constructor(
      * internal write lock. Callers waiting for read or write access will be suspended until the transformation
      * completes.
      *
-     * Concurrency caveats:
+     * Concurrency warnings:
      * - Must not be invoked from inside another [withPrompt], [writeSession], or [readSession] on the same
-     *   context — the underlying lock is **not reentrant** and doing so will deadlock (see
-     *   [ai.koog.agents.core.utils.RWLock]).
+     *   context — the underlying lock is **not reentrant** and doing so will deadlock (see [RWLock]).
      * - [block] should be a pure, fast transformation; it runs while holding the write lock and will block all
      *   concurrent readers and writers until it returns.
      *
@@ -134,10 +131,11 @@ public abstract class AIAgentLLMContextCommon internal constructor(
      * concurrent [writeSession] / [withPrompt] will serialize against them.
      *
      * Concurrency caveat: must not be invoked from inside a [writeSession] or [withPrompt] on the same
-     * context — the underlying lock is not reentrant (see [ai.koog.agents.core.utils.RWLock]).
+     * context — the underlying lock is not reentrant (see [RWLock]).
      *
      * @return A new instance of [AIAgentLLMContext] with deep copies of mutable properties.
      */
+    @OptIn(DetachedPromptExecutorAPI::class, InternalAgentsApi::class)
     @JvmOverloads
     public open suspend fun copy(
         tools: List<ToolDescriptor> = this.tools,
@@ -170,14 +168,13 @@ public abstract class AIAgentLLMContextCommon internal constructor(
      *
      * Concurrency caveats:
      * - The underlying lock is **not reentrant**. Do not call [writeSession], [readSession], [withPrompt] or
-     *   [copy] on the same context from inside [block] — doing so will deadlock (see
-     *   [ai.koog.agents.core.utils.RWLock]).
+     *   [copy] on the same context from inside [block] — doing so will deadlock (see [RWLock]).
      * - [block] runs while holding the write lock; keep it as short as possible and avoid launching
      *   long-running child coroutines that need to re-acquire this lock.
      * - Cancellation inside [block] is propagated; partial mutations made on the session before cancellation
      *   will not be committed to the outer context.
      */
-    @OptIn(ExperimentalStdlibApi::class)
+    @OptIn(ExperimentalStdlibApi::class, InternalAgentsApi::class, DetachedPromptExecutorAPI::class)
     public open suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T =
         rwLock.withWriteLock {
             val session =
@@ -211,11 +208,11 @@ public abstract class AIAgentLLMContextCommon internal constructor(
      * Concurrency caveats:
      * - The underlying lock is **not reentrant for writers**: nested [readSession] calls from the same
      *   coroutine are safe, but calling [writeSession] or [withPrompt] from inside a [readSession] will
-     *   deadlock (see [ai.koog.agents.core.utils.RWLock]).
+     *   deadlock (see [RWLock]).
      * - Mutations performed on fields exposed through the session are not persisted back to this context
      *   (unlike [writeSession]).
      */
-    @OptIn(ExperimentalStdlibApi::class)
+    @OptIn(ExperimentalStdlibApi::class, DetachedPromptExecutorAPI::class, InternalAgentsApi::class)
     public open suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T = rwLock.withReadLock {
         val session = AIAgentLLMReadSession(tools, promptExecutor, prompt, model, responseProcessor, config)
         session.use { block(it) }
@@ -236,6 +233,7 @@ public abstract class AIAgentLLMContextCommon internal constructor(
      * @param clock The [Clock] to use, or the current clock if not specified.
      * @return A new [AIAgentLLMContext] instance with the specified overrides applied.
      */
+    @OptIn(DetachedPromptExecutorAPI::class, InternalAgentsApi::class)
     public open fun copy(
         tools: List<ToolDescriptor> = this.tools,
         prompt: Prompt = this.prompt,

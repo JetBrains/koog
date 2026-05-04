@@ -7,6 +7,7 @@ import io.ktor.server.engine.embeddedServer
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcp
+import io.modelcontextprotocol.kotlin.sdk.server.mcpStreamableHttp
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
@@ -19,6 +20,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -26,14 +28,33 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+
+/**
+ * Transport mode for the test MCP server.
+ */
+enum class TestTransportMode {
+    SSE,
+    StreamableHttp,
+}
 
 /**
  * A simple MCP server for testing purposes.
  * This server provides a simple tool that returns a greeting message.
+ *
+ * Pass [port] = 0 (default) to let the OS allocate a free port; read [resolvedPort] after [start].
  */
-class TestMcpServer(private val port: Int) {
+class TestMcpServer(
+    private val port: Int = 0,
+    private val transportMode: TestTransportMode = TestTransportMode.SSE,
+) {
     private var serverJob: Job? = null
+    private var embeddedServer: EmbeddedServer<*, *>? = null
     private var isRunning = false
+
+    /** The actual port the server is listening on. Valid after [start] returns. */
+    var resolvedPort: Int = 0
+        private set
 
     /**
      * Configures the MCP server with a simple greeting tool.
@@ -98,29 +119,39 @@ class TestMcpServer(private val port: Int) {
     }
 
     /**
-     * Starts the MCP server on the specified port.
+     * Starts the MCP server and blocks until it is listening.
      */
     fun start() = runBlocking {
         if (isRunning) return@runBlocking
 
-        var embeddedServer: EmbeddedServer<*, *>? = null
         serverJob = CoroutineScope(Dispatchers.SuitableForIO).launch {
-            embeddedServer = embeddedServer(CIO, host = "0.0.0.0", port = port) {
-                mcp {
-                    return@mcp configureServer()
+            val emb = embeddedServer(CIO, host = "0.0.0.0", port = port) {
+                when (transportMode) {
+                    TestTransportMode.SSE -> mcp { configureServer() }
+                    TestTransportMode.StreamableHttp -> mcpStreamableHttp { configureServer() }
                 }
             }
-            embeddedServer.start(wait = true)
+            embeddedServer = emb
+            emb.start(wait = true)
             isRunning = false
         }
 
-        while (embeddedServer == null || !embeddedServer.application.isActive) {
-            println("Waiting for the server to start...")
-            delay(100.milliseconds)
+        withTimeout(10.seconds) {
+            while (embeddedServer == null || !embeddedServer!!.application.isActive) {
+                delay(100.milliseconds)
+            }
+            while (isActive) {
+                val connectors = embeddedServer!!.engine.resolvedConnectors()
+                if (connectors.isNotEmpty()) {
+                    resolvedPort = connectors.first().port
+                    break
+                }
+                delay(50.milliseconds)
+            }
         }
 
         isRunning = true
-        println("Test MCP server started on port $port")
+        println("Test MCP server started on port $resolvedPort (transport: $transportMode)")
     }
 
     /**
@@ -129,8 +160,10 @@ class TestMcpServer(private val port: Int) {
     fun stop() {
         if (!isRunning) return
 
+        embeddedServer?.stop(gracePeriodMillis = 1000, timeoutMillis = 1000)
         serverJob?.cancel()
         serverJob = null
+        embeddedServer = null
         isRunning = false
         println("Test MCP server stopped")
     }

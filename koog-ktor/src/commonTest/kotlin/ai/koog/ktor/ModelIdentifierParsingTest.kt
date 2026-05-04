@@ -336,6 +336,18 @@ class ModelIdentifierParsingTest {
     // DeepSeek model identifier tests
     @Test
     fun testDeepSeekModels() = runTest {
+        // Test DeepSeek V4 Flash
+        val deepSeekV4Flash = getModelFromIdentifier("deepseek.deepseek-v4-flash")
+        assertNotNull(deepSeekV4Flash)
+        assertEquals(LLMProvider.DeepSeek, deepSeekV4Flash.provider)
+        assertEquals(DeepSeekModels.DeepSeekV4Flash, deepSeekV4Flash)
+
+        // Test DeepSeek V4 Pro
+        val deepSeekV4Pro = getModelFromIdentifier("deepseek.deepseek-v4-pro")
+        assertNotNull(deepSeekV4Pro)
+        assertEquals(LLMProvider.DeepSeek, deepSeekV4Pro.provider)
+        assertEquals(DeepSeekModels.DeepSeekV4Pro, deepSeekV4Pro)
+
         // Test DeepSeek Chat
         val deepSeekChat = getModelFromIdentifier("deepseek.deepseek-chat")
         assertNotNull(deepSeekChat)

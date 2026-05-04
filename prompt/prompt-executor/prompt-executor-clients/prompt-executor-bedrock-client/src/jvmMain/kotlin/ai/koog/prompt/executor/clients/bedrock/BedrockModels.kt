@@ -290,6 +290,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-micro-v1:0",
             capabilities = novaCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 5_000,
         ),
     ).effectiveModel
 
@@ -310,6 +311,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-lite-v1:0",
             capabilities = novaCapabilities,
             contextLength = 300_000,
+            maxOutputTokens = 5_000,
         ),
     ).effectiveModel
 
@@ -330,6 +332,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-pro-v1:0",
             capabilities = novaCapabilities,
             contextLength = 300_000,
+            maxOutputTokens = 5_000,
         ),
     ).effectiveModel
 
@@ -350,6 +353,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-premier-v1:0",
             capabilities = novaCapabilities,
             contextLength = 1_000_000,
+            maxOutputTokens = 25_000,
         ),
     ).effectiveModel
 
@@ -370,6 +374,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-8b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 8_000,
+            maxOutputTokens = 8_192,
         ),
     ).effectiveModel
 
@@ -390,6 +395,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-70b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 8_000,
+            maxOutputTokens = 8_192,
         ),
     ).effectiveModel
 
@@ -410,6 +416,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-1-8b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -430,6 +437,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-1-70b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -450,6 +458,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-1-405b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -470,6 +479,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-2-1b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -490,6 +500,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-2-3b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -510,6 +521,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-2-11b-instruct-v1:0",
             capabilities = fullCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -530,6 +542,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-2-90b-instruct-v1:0",
             capabilities = fullCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -550,6 +563,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-3-70b-instruct-v1:0",
             capabilities = standardCapabilities + toolCapabilities,
             contextLength = 128_000,
+            maxOutputTokens = 4_096,
         ),
     ).effectiveModel
 
@@ -579,6 +593,182 @@ public object BedrockModels : LLModelDefinitions {
             id = "moonshot.kimi-k2-thinking",
             capabilities = standardCapabilities + toolCapabilities,
             contextLength = 256_000,
+            maxOutputTokens = 16_384,
+        ),
+        inferenceProfilePrefix = null
+    ).effectiveModel
+
+    /**
+     * Moonshot Kimi K2.5 - Multimodal model with improved reasoning, coding, and multilingual capabilities
+     *
+     * Features:
+     * - 256K context window
+     * - Multimodal: text and image inputs
+     * - Tool calling with dual-mode reasoning
+     * - Strong multilingual capabilities
+     *
+     * Important: This model requires the Bedrock Converse API (apiMethod = BedrockAPIMethod.Converse).
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-moonshot-ai-kimi-k2-5.html">
+     */
+    public val MoonshotKimiK2_5: LLModel = BedrockModel(
+        LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "moonshotai.kimi-k2.5",
+            capabilities = standardCapabilities + toolCapabilities + listOf(LLMCapability.Vision.Image),
+            contextLength = 256_000,
+            maxOutputTokens = 16_384,
+        ),
+        inferenceProfilePrefix = null
+    ).effectiveModel
+
+    /**
+     * MiniMax M2.5 - Agent-native frontier model optimized for efficient reasoning and task decomposition
+     *
+     * Features:
+     * - 1M token context window
+     * - Trained for efficient reasoning and optimal task decomposition
+     * - Strong tool calling (76.9% on Berkeley Function Calling Leaderboard)
+     * - High inference throughput with token-efficient reasoning
+     *
+     * Important: This model requires the Bedrock Converse API (apiMethod = BedrockAPIMethod.Converse).
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-minimax-minimax-m2-5.html">
+     */
+    public val MiniMaxM2_5: LLModel = BedrockModel(
+        LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "minimax.minimax-m2.5",
+            capabilities = standardCapabilities + toolCapabilities,
+            contextLength = 1_000_000,
+            maxOutputTokens = 8_192,
+        ),
+        inferenceProfilePrefix = null
+    ).effectiveModel
+
+    /**
+     * OpenAI GPT-OSS 120B - Mixture-of-Experts model for complex reasoning tasks
+     *
+     * Features:
+     * - 128K context window
+     * - MoE architecture: 117B total params, 5.1B active per token
+     * - Strong at coding, mathematics, and agentic tool use
+     * - Structured output support
+     * - Adjustable reasoning levels (low/medium/high)
+     *
+     * Important: This model requires the Bedrock Converse API (apiMethod = BedrockAPIMethod.Converse).
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-oss-120b.html">
+     */
+    public val OpenAIGptOss120B: LLModel = BedrockModel(
+        LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "openai.gpt-oss-120b-1:0",
+            capabilities = standardCapabilities + toolCapabilities + listOf(LLMCapability.Schema.JSON.Standard),
+            contextLength = 128_000,
+            maxOutputTokens = 16_384,
+        ),
+        inferenceProfilePrefix = null
+    ).effectiveModel
+
+    /**
+     * OpenAI GPT-OSS 20B - Efficient Mixture-of-Experts model for speed-sensitive applications
+     *
+     * Features:
+     * - 128K context window
+     * - MoE architecture: 21B total params, 3.6B active per token
+     * - Runs on edge devices with 16 GB memory
+     * - Structured output support
+     * - Matches o3-mini performance
+     *
+     * Important: This model requires the Bedrock Converse API (apiMethod = BedrockAPIMethod.Converse).
+     *
+     * @see <a href="https://openai.com/index/introducing-gpt-oss/">
+     */
+    public val OpenAIGptOss20B: LLModel = BedrockModel(
+        LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "openai.gpt-oss-20b-1:0",
+            capabilities = standardCapabilities + toolCapabilities + listOf(LLMCapability.Schema.JSON.Standard),
+            contextLength = 128_000,
+            maxOutputTokens = 16_384,
+        ),
+        inferenceProfilePrefix = null
+    ).effectiveModel
+
+    /**
+     * Google Gemma 3 4B IT - Compact instruction-tuned model for on-device and edge deployment
+     *
+     * Features:
+     * - 128K context window
+     * - 4 billion parameters
+     * - Multimodal: text and image inputs
+     * - Tool calling support
+     * - Multilingual support (140+ languages)
+     *
+     * Important: This model requires the Bedrock Converse API (apiMethod = BedrockAPIMethod.Converse).
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-google-gemma-3-4b-it.html">
+     */
+    public val GoogleGemma3_4BIt: LLModel = BedrockModel(
+        LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "google.gemma-3-4b-it",
+            capabilities = standardCapabilities + toolCapabilities + listOf(LLMCapability.Vision.Image),
+            contextLength = 128_000,
+            maxOutputTokens = 8_192,
+        ),
+        inferenceProfilePrefix = null
+    ).effectiveModel
+
+    /**
+     * Google Gemma 3 12B IT - Instruction-tuned model with multimodal and structured output support
+     *
+     * Features:
+     * - 128K context window
+     * - 12 billion parameters
+     * - Multimodal: text and image inputs
+     * - Structured output support
+     * - Tool calling support
+     * - Multilingual support (140+ languages)
+     *
+     * Important: This model requires the Bedrock Converse API (apiMethod = BedrockAPIMethod.Converse).
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-google-gemma-3-12b-it.html">
+     */
+    public val GoogleGemma3_12BIt: LLModel = BedrockModel(
+        LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "google.gemma-3-12b-it",
+            capabilities = fullCapabilities + listOf(LLMCapability.Schema.JSON.Standard),
+            contextLength = 128_000,
+            maxOutputTokens = 8_192,
+        ),
+        inferenceProfilePrefix = null
+    ).effectiveModel
+
+    /**
+     * Google Gemma 3 27B IT - Largest Gemma 3 model with full multimodal and structured output support
+     *
+     * Features:
+     * - 128K context window
+     * - 27 billion parameters
+     * - Multimodal: text and image inputs
+     * - Structured output support
+     * - Tool calling support
+     * - Multilingual support (140+ languages)
+     *
+     * Important: This model requires the Bedrock Converse API (apiMethod = BedrockAPIMethod.Converse).
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-google-gemma-3-27b-it.html">
+     */
+    public val GoogleGemma3_27BIt: LLModel = BedrockModel(
+        LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "google.gemma-3-27b-it",
+            capabilities = fullCapabilities + listOf(LLMCapability.Schema.JSON.Standard),
+            contextLength = 128_000,
+            maxOutputTokens = 8_192,
         ),
         inferenceProfilePrefix = null
     ).effectiveModel
@@ -655,6 +845,21 @@ public object BedrockModels : LLModelDefinitions {
             ),
             inferenceProfilePrefix = null
         ).effectiveModel
+
+        /**
+         * Cohere Embed v4
+         * Multimodal embedding model supporting text, images, and complex documents.
+         * Input: Text (image/document embedding not yet supported by this client)
+         * Output: Embedding (1536 dimensions by default, configurable: 256, 512, 1024, 1536)
+         */
+        public val CohereEmbedV4: LLModel = BedrockModel(
+            LLModel(
+                provider = LLMProvider.Bedrock,
+                id = "cohere.embed-v4:0",
+                capabilities = embedCapabilities,
+                contextLength = 512,
+            ),
+        ).effectiveModel
     }
 
     /**
@@ -704,9 +909,23 @@ public object BedrockModels : LLModelDefinitions {
         Embeddings.AmazonTitanEmbedTextV2,
         Embeddings.CohereEmbedEnglishV3,
         Embeddings.CohereEmbedMultilingualV3,
+        Embeddings.CohereEmbedV4,
 
-        // Moonshot Kimi K2 Thinking
+        // Moonshot Kimi Series
         MoonshotKimiK2Thinking,
+        MoonshotKimiK2_5,
+
+        // MiniMax
+        MiniMaxM2_5,
+
+        // OpenAI GPT-OSS Series
+        OpenAIGptOss120B,
+        OpenAIGptOss20B,
+
+        // Google Gemma 3 Series
+        GoogleGemma3_4BIt,
+        GoogleGemma3_12BIt,
+        GoogleGemma3_27BIt,
     )
 
     /**

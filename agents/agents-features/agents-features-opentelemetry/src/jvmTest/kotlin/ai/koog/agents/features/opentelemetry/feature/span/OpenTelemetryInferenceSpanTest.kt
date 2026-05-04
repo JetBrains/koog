@@ -1,6 +1,8 @@
 package ai.koog.agents.features.opentelemetry.feature.span
 
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.START_NODE_PREFIX
+import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -17,22 +19,38 @@ import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.runAgentWithSi
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.runAgentWithStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.testClock
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.toolCallMessage
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestData
 import ai.koog.agents.features.opentelemetry.assertSpans
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Operation.OperationNameType
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Response.FinishReasonType
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryTestBase
+import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.utils.HiddenString
+import ai.koog.http.client.KoogHttpClientException
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import io.ktor.client.HttpClient
+import io.ktor.client.request.HttpRequestPipeline
+import io.opentelemetry.sdk.trace.data.SpanData
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
     private val serializer = KotlinxSerializer()
@@ -109,6 +127,17 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         )
 
         assertSpans(expectedSpans, actualSpans)
+
+        val expectedInvokeAgentAttrs = setOf(
+            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
+        )
+        collectedTestData.filterAgentInvokeSpans().single().let { actual ->
+            assertEquals(
+                expected = expectedInvokeAgentAttrs,
+                actual = actual.asKeyValue().intersect(expectedInvokeAgentAttrs),
+                message = "invoke_agent span missing finish_reasons=[stop]:\nActual:${actual.asKeyValue()}"
+            )
+        }
     }
 
     @ParameterizedTest
@@ -628,5 +657,74 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         )
 
         assertSpans(expectedSpans, actualSpans)
+    }
+
+    @Test
+    fun `expected spans on llm call failed`() = runTest {
+        // Http client that fails each request
+        val failingHttpClient = HttpClient {
+            install("FailingInterceptor") {
+                requestPipeline.intercept(HttpRequestPipeline.Before) {
+                    throw KoogHttpClientException("openai", statusCode = 429)
+                }
+            }
+        }
+
+        val spanExporter = MockSpanExporter()
+        val testData = OpenTelemetryTestData()
+        val result = runCatching {
+            AIAgent(
+                promptExecutor = MultiLLMPromptExecutor(OpenAILLMClient("fake-key", baseClient = failingHttpClient)),
+                llmModel = OpenTelemetryTestAPI.Parameter.defaultModel,
+                strategy = singleRunStrategy(),
+                systemPrompt = OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT
+            ) {
+                install(OpenTelemetry) {
+                    addSpanExporter(spanExporter)
+                }
+            }.run(OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS)
+        }
+        val exception = result.exceptionOrNull()
+        assertNotNull(exception, "Unexpected successful result $result")
+        assertFalse(exception is CancellationException, "Unexpected cancellation exception")
+
+        testData.collectedSpans = withTimeout(10.seconds) {
+            spanExporter.isCollected.first()
+            spanExporter.collectedSpans
+        }
+
+        // CHECKS
+        // We are expecting to provide the root cause of LLMClientException
+        val expectedSpans = setOf(
+            "error.type" to "KoogHttpClientException-openai-httpCode=429",
+        )
+        testData.filterInferenceSpans().single().let { actual ->
+            assertEquals(
+                expected = expectedSpans,
+                actual = actual.asKeyValue().intersect(expectedSpans),
+                message = "Unexpected inference spans:\nExpected:${expectedSpans}\nActual:${actual.asKeyValue()}"
+            )
+        }
+        testData.filterNodeExecutionSpans().filter { span ->
+            // KoogAttributes.Koog.Node.Id
+            "koog.node.id" to START_NODE_PREFIX !in span.asKeyValue()
+        }.forEach { actual ->
+            assertEquals(
+                expected = expectedSpans,
+                actual = actual.asKeyValue().intersect(expectedSpans),
+                message = "Unexpected node execution spans:\nExpected:${expectedSpans}\nActual:${actual.asKeyValue()}"
+            )
+        }
+        testData.filterAgentInvokeSpans().single().let { actual ->
+            assertEquals(
+                expected = expectedSpans,
+                actual = actual.asKeyValue().intersect(expectedSpans),
+                message = "Unexpected create agent spans:\nExpected:${expectedSpans}\nActual:${actual.asKeyValue()}"
+            )
+        }
+    }
+
+    private fun SpanData.asKeyValue(): List<Pair<String, Any>> {
+        return attributes.asMap().map { it.key.key!! to it.value }
     }
 }

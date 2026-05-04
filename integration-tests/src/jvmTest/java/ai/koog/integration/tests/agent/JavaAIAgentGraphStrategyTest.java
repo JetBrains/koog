@@ -1,6 +1,7 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
+import ai.koog.agents.core.agent.context.RollbackStrategy;
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase;
 import ai.koog.agents.core.agent.entity.AIAgentEdge;
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
@@ -27,7 +28,10 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.llm.LLMCapability;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.RequestMetaInfo;
+import ai.koog.prompt.message.ResponseMetaInfo;
 import ai.koog.serialization.TypeToken;
+import ai.koog.serialization.JSONElementKt;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Timeout;
@@ -46,7 +50,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static ai.koog.agents.core.utils.CoroutineUtilsKt.runBlockingIfRequired;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
@@ -561,6 +564,128 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             () -> assertEquals(1, checkpoints.size(), "Rollback should not delete the existing checkpoint"),
             () -> assertTrue(checkpoints.get(0).getNodePath().endsWith("/checkpoint-node"), "Rollback should preserve the checkpoint at checkpoint-node, but was: " + checkpoints.get(0).getNodePath())
         );
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
+    public void integration_RunFromCheckpointRestoresFromLastInput(LLModel model) {
+        Models.assumeAvailable(model.getProvider());
+
+        String sessionId = "java-last-input-checkpoint";
+        String strategyName = "java-last-input-graph";
+
+        var graph = AIAgentGraphStrategy.builder(strategyName)
+            .withInput(String.class)
+            .withOutput(String.class);
+
+        var node1 = AIAgentNode.builder("Node1")
+            .withInput(String.class)
+            .withOutput(String.class)
+            .withAction((input, ctx) -> "Node 1 output")
+            .build();
+
+        var node2 = AIAgentNode.builder("Node2")
+            .withInput(String.class)
+            .withOutput(String.class)
+            .withAction((input, ctx) -> input + " -> Node 2 output")
+            .build();
+
+        var finalNode = AIAgentNode.builder("Final")
+            .withInput(String.class)
+            .withOutput(String.class)
+            .withAction((input, ctx) -> "Final: " + input)
+            .build();
+
+        graph.edge(graph.nodeStart, node1);
+        graph.edge(node1, node2);
+        graph.edge(node2, finalNode);
+        graph.edge(AIAgentEdge.builder().from(finalNode).to(graph.nodeFinish).build());
+
+        AIAgent<String, String> agent = AIAgent.builder()
+            .graphStrategy(graph.build())
+            .promptExecutor(createExecutor(model))
+            .llmModel(model)
+            .systemPrompt("You are a helpful assistant.")
+            .build();
+
+        var now = kotlin.time.Clock.System.INSTANCE.now();
+        AgentCheckpointData checkpoint = new AgentCheckpointData(
+            "java-last-input-checkpoint",
+            now,
+            sessionId + "/" + strategyName + "/Node2",
+            JSONElementKt.JSONPrimitive("Node 1 output"),
+            null,
+            List.of(
+                new Message.User("Restored user message", new RequestMetaInfo(now, null)),
+                new Message.Assistant("Restored assistant message", new ResponseMetaInfo(now, null, null, null))
+            ),
+            0L,
+            null
+        );
+
+        String result = Persistence.runFromCheckpoint(
+            agent,
+            "ignored",
+            checkpoint,
+            RollbackStrategy.Default,
+            sessionId
+        );
+
+        assertEquals("Final: Node 1 output -> Node 2 output", result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
+    public void integration_RunFromCheckpointFailsForUnknownNodePath(LLModel model) {
+        Models.assumeAvailable(model.getProvider());
+
+        String sessionId = "java-invalid-checkpoint";
+        String strategyName = "java-invalid-checkpoint-graph";
+
+        var graph = AIAgentGraphStrategy.builder(strategyName)
+            .withInput(String.class)
+            .withOutput(String.class);
+
+        var validNode = AIAgentNode.builder("ValidNode")
+            .withInput(String.class)
+            .withOutput(String.class)
+            .withAction((input, ctx) -> "ok")
+            .build();
+
+        graph.edge(graph.nodeStart, validNode);
+        graph.edge(AIAgentEdge.builder().from(validNode).to(graph.nodeFinish).build());
+
+        AIAgent<String, String> agent = AIAgent.builder()
+            .graphStrategy(graph.build())
+            .promptExecutor(createExecutor(model))
+            .llmModel(model)
+            .systemPrompt("You are a helpful assistant.")
+            .build();
+
+        var now = kotlin.time.Clock.System.INSTANCE.now();
+        AgentCheckpointData checkpoint = new AgentCheckpointData(
+            "java-invalid-checkpoint",
+            now,
+            sessionId + "/" + strategyName + "/MissingNode",
+            null,
+            JSONElementKt.JSONPrimitive("missing"),
+            List.of(),
+            0L,
+            null
+        );
+
+        IllegalStateException error = assertThrows(
+            IllegalStateException.class,
+            () -> Persistence.runFromCheckpoint(
+                agent,
+                "ignored",
+                checkpoint,
+                RollbackStrategy.Default,
+                sessionId
+            )
+        );
+
+        assertTrue(error.getMessage().contains("MissingNode"));
     }
 
     private AIAgent<String, String> buildPersistenceAgent(

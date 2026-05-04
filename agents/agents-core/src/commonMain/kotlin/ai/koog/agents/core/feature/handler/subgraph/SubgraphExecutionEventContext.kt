@@ -64,7 +64,7 @@ public data class SubgraphExecutionCompletedContext(
  * @property context The context in which the subgraph failed to execute.
  * @property input The input data for the subgraph execution.
  * @property inputType The type of the input data for the subgraph execution.
- * @property throwable The exception that caused the subgraph execution to fail.
+ * @property error The exception that caused the subgraph execution to fail.
  */
 public data class SubgraphExecutionFailedContext(
     override val eventId: String,
@@ -73,7 +73,7 @@ public data class SubgraphExecutionFailedContext(
     val context: AIAgentGraphContextBase,
     val input: Any?,
     val inputType: TypeToken,
-    val throwable: Throwable
+    val error: Throwable
 ) : SubgraphExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.SubgraphExecutionFailed
 }

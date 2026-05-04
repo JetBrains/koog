@@ -252,7 +252,7 @@ suspend fun main() {
         ) {
             handleEvents {
                 onAgentExecutionFailed { ctx ->
-                    println("An error occurred: ${ctx.throwable.message}\n${ctx.throwable.stackTraceToString()}")
+                    println("An error occurred: ${ctx.error.message}\n${ctx.error.stackTraceToString()}")
                 }
             }
         }

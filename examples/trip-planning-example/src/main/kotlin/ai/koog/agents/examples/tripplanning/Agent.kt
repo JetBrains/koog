@@ -3,17 +3,13 @@ package ai.koog.agents.examples.tripplanning
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.createStorageKey
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
-import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTool
-import ai.koog.agents.core.tools.reflect.asTools
-import ai.koog.agents.core.tools.reflect.tool
-import ai.koog.agents.core.tools.reflect.tools
 import ai.koog.agents.examples.tripplanning.api.OpenMeteoClient
 import ai.koog.agents.examples.tripplanning.tools.UserTools
 import ai.koog.agents.examples.tripplanning.tools.WeatherTools
@@ -60,9 +56,9 @@ fun createSimplePlannerAgent(
         maxIterations = 200
     ) {
         handleEvents {
-            onToolCall { ctx ->
+            onToolCallStarting { ctx ->
                 onToolCallEvent(
-                    "Tool ${ctx.tool.name}, args ${
+                    "Tool ${ctx.toolName}, args ${
                         ctx.toolArgs.toString().replace('\n', ' ').take(100)
                     }..."
                 )
@@ -122,9 +118,9 @@ fun createPlannerAgent(
         toolRegistry = toolRegistry,
     ) {
         handleEvents {
-            onToolCall { ctx ->
+            onToolCallStarting { ctx ->
                 onToolCallEvent(
-                    "Tool ${ctx.tool.name}, args ${
+                    "Tool ${ctx.toolName}, args ${
                         ctx.toolArgs.toString().replace('\n', ' ').take(100)
                     }..."
                 )
@@ -132,7 +128,6 @@ fun createPlannerAgent(
         }
     }
 }
-
 
 private fun plannerStrategy(
     googleMapsTools: List<Tool<*, *>>,
@@ -148,7 +143,7 @@ private fun plannerStrategy(
     // Set additional system instructions
     val setup by node<UserInput, String> { userInput ->
         llm.writeSession {
-            updatePrompt {
+            appendPrompt {
                 system {
                     +"Today's date is ${userInput.currentDate}."
                     // +"User's timezone is ${userInput.timezone}."
@@ -292,13 +287,13 @@ private fun plannerStrategy(
 
     edge(
         processUserFeedback forwardTo createPlanCorrectionRequest
-            transformed { it.getOrThrow().structure }
+            transformed { it.getOrThrow().data }
             onCondition { !it.isAccepted }
             transformed { it.message }
     )
     edge(
         processUserFeedback forwardTo nodeFinish
-            transformed { it.getOrThrow().structure }
+            transformed { it.getOrThrow().data }
             onCondition { it.isAccepted }
             transformed { storage.getValue(prevSuggestedPlanKey) }
     )

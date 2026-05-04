@@ -25,7 +25,7 @@ import kotlinx.serialization.json.JsonElement
  * @property think Determines whether the LLM interaction enforces thoughtfulness, potentially impacting behavior or
  * processing strategies.
  */
-public class OllamaChatParams(
+public class OllamaParams(
     temperature: Double? = null,
     maxTokens: Int? = null,
     numberOfChoices: Int? = null,
@@ -50,7 +50,7 @@ public class OllamaChatParams(
         if (other == null || this::class != other::class) return false
         if (!super.equals(other)) return false
 
-        other as OllamaChatParams
+        other as OllamaParams
 
         return think == other.think
     }
@@ -78,8 +78,8 @@ public class OllamaChatParams(
         user: String? = this.user,
         additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
         think: Boolean? = this.think,
-    ): OllamaChatParams {
-        return OllamaChatParams(
+    ): OllamaParams {
+        return OllamaParams(
             temperature = temperature,
             maxTokens = maxTokens,
             numberOfChoices = numberOfChoices,

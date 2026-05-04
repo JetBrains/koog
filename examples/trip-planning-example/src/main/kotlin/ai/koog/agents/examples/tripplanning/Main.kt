@@ -2,6 +2,7 @@ package ai.koog.agents.examples.tripplanning
 
 import ai.koog.agents.examples.tripplanning.api.OpenMeteoClient
 import ai.koog.agents.mcp.McpToolRegistryProvider
+import ai.koog.agents.mcp.defaultStdioTransport
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
@@ -9,9 +10,9 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import io.modelcontextprotocol.kotlin.sdk.client.StdioClientTransport
 import kotlinx.coroutines.delay
-import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 
 suspend fun main() {
     val openAiKey = System.getenv("OPENAI_API_KEY")
@@ -65,8 +66,11 @@ suspend fun main() {
 private suspend fun createGoogleMapsMcp(googleMapsKey: String): StdioClientTransport {
     // Start MCP server
     val process = ProcessBuilder(
-        "docker", "run", "-i",
-        "-e", "GOOGLE_MAPS_API_KEY=$googleMapsKey",
+        "docker",
+        "run",
+        "-i",
+        "-e",
+        "GOOGLE_MAPS_API_KEY=$googleMapsKey",
         "mcp/google-maps"
     ).start()
 

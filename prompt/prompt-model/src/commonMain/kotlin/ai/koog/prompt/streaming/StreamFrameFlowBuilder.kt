@@ -195,10 +195,11 @@ public class StreamFrameFlowBuilder(
     ) {
         tryEmitPendingText()
         tryEmitPendingReasoning()
+        val sanitizedId = id?.takeUnless { it.isBlank() }
         val previous: PendingToolCall? = pendingToolCallRef.load()
-        val new: PendingToolCall = if (id != null || index != previous?.index) {
+        val new: PendingToolCall = if (sanitizedId != null || index != previous?.index) {
             tryEmitPendingToolCall()
-            PendingToolCall(id, name, args, index)
+            PendingToolCall(sanitizedId, name, args, index)
         } else {
             when {
                 previous == null ->
@@ -212,7 +213,7 @@ public class StreamFrameFlowBuilder(
             }
         }
         pendingToolCallRef.store(new)
-        flowCollector.emitToolCallDelta(id, name, args, index)
+        flowCollector.emitToolCallDelta(sanitizedId, name, args, index)
     }
 
     /**

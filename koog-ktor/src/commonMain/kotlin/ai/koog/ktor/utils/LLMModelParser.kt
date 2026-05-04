@@ -317,6 +317,8 @@ private val OPENROUTER_MODELS_MAP = mapOf(
 )
 
 private val DEEPSEEK_MODELS_MAP = mapOf(
+    "deepseek-v4-flash" to DeepSeekModels.DeepSeekV4Flash,
+    "deepseek-v4-pro" to DeepSeekModels.DeepSeekV4Pro,
     "deepseek-chat" to DeepSeekModels.DeepSeekChat,
     "deepseek-reasoner" to DeepSeekModels.DeepSeekReasoner,
 )

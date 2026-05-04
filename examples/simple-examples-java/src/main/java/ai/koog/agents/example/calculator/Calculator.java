@@ -180,7 +180,7 @@ public class Calculator {
                         System.out.println("Tool called: " + ctx.getToolName()
                                            + ", args: " + ctx.getToolArgs()));
                     config.onAgentExecutionFailed(ctx ->
-                        System.out.println("An error occurred: " + ctx.getThrowable().getMessage()));
+                        System.out.println("An error occurred: " + ctx.getError().getMessage()));
                     config.onAgentCompleted(ctx ->
                         System.out.println("Result: " + ctx.getResult()));
                 })

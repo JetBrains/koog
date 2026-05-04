@@ -1,4 +1,4 @@
-package ai.koog.a2a.utils
+package ai.koog.agents.lock
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -10,7 +10,7 @@ import kotlin.contracts.contract
  * A keyed, suspend-friendly mutex for Kotlin Multiplatform.
  *
  * Guarantees mutual exclusion per key, without blocking threads.
- * API mirrors kotlinx.coroutines Mutex:
+ * API mirrors the `kotlinx.coroutines` Mutex:
  * - lock(key, owner)
  * - tryLock(key, owner)
  * - unlock(key, owner)
@@ -47,7 +47,7 @@ public class KeyedMutex<K> {
         try {
             entry.mutex.lock(owner)
         } catch (t: Throwable) {
-            // If lock failed/cancelled before acquiring, roll back the ref and maybe cleanup.
+            // If lock failed/canceled before acquiring, roll back the ref and maybe cleanup.
             mapMutex.withLock {
                 entry.refs -= 1
                 if (entry.refs == 0 && !entry.mutex.isLocked && entries[key] == entry) {
@@ -60,7 +60,7 @@ public class KeyedMutex<K> {
 
     /**
      * Attempts to acquire the lock for [key] without suspension.
-     * Returns true if lock was acquired.
+     * Returns true if a lock was acquired.
      */
     public suspend fun tryLock(key: K, owner: Any? = null): Boolean {
         return mapMutex.withLock {
@@ -98,7 +98,7 @@ public class KeyedMutex<K> {
             entries[key] ?: throw IllegalStateException("Unlock requested for key without active entry")
         }
 
-        // Perform the actual unlock; may throw if not locked or wrong owner.
+        // Perform the actual unlocking; may throw if not locked or wrong owner.
         entry.mutex.unlock(owner)
 
         // Decrement refs and cleanup if safe.

@@ -118,7 +118,12 @@ public data class ToolValidationFailedEvent(
         toolArgs = toolArgs,
         toolDescription = null,
         message = error,
-        error = AIAgentError(error, "", null)
+        error = AIAgentError(
+            message = error,
+            stackTrace = "",
+            cause = null,
+            type = null
+        )
     )
 }
 

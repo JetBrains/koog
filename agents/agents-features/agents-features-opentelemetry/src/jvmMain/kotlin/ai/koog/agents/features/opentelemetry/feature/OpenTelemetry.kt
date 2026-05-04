@@ -8,7 +8,6 @@ import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.handler.tool.ToolCallEventContext
-import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
@@ -22,6 +21,8 @@ import ai.koog.agents.features.opentelemetry.event.ModerationResponseEvent
 import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
+import ai.koog.agents.features.opentelemetry.extension.lastResponse
+import ai.koog.agents.features.opentelemetry.extension.toFinishReason
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.integration.mcp.McpMethod
 import ai.koog.agents.features.opentelemetry.metric.MetricCollector
@@ -168,7 +169,7 @@ public class OpenTelemetry {
                 endNodeExecuteSpan(
                     span = nodeExecuteSpan,
                     nodeOutput = null,
-                    error = eventContext.throwable,
+                    error = eventContext.error,
                     verbose = config.isVerbose
                 )
                 spanCollector.removeSpan(
@@ -247,7 +248,7 @@ public class OpenTelemetry {
                 endSubgraphExecuteSpan(
                     span = subgraphExecuteSpan,
                     subgraphOutput = null,
-                    error = eventContext.throwable,
+                    error = eventContext.error,
                     verbose = config.isVerbose
                 )
                 spanCollector.removeSpan(
@@ -355,6 +356,12 @@ public class OpenTelemetry {
                     spanType = SpanType.INVOKE_AGENT
                 ) ?: return@intercept
 
+                eventContext.context.llm.prompt.messages.lastResponse()?.let { response ->
+                    invokeAgentSpan.addAttribute(
+                        GenAIAttributes.Response.FinishReasons(reasons = listOf(response.toFinishReason()))
+                    )
+                }
+
                 spanAdapter?.onBeforeSpanFinished(invokeAgentSpan)
                 endInvokeAgentSpan(
                     span = invokeAgentSpan,
@@ -373,7 +380,7 @@ public class OpenTelemetry {
 
                 // Record any pending operation-duration metric events (e.g., an LLM call that
                 // started but never completed) as failed measurements per GenAI semconv.
-                metricCollector.flushPendingAsErrors(eventContext.throwable)
+                metricCollector.flushPendingAsErrors(eventContext.error)
 
                 // Stop all unfinished spans, except InvokeAgentSpan and AgentCreateSpan
                 endUnfinishedSpans(spanCollector, config.isVerbose) { span ->
@@ -390,18 +397,12 @@ public class OpenTelemetry {
                     spanType = SpanType.INVOKE_AGENT
                 ) ?: return@intercept
 
-                invokeAgentSpan.addAttribute(
-                    attribute = GenAIAttributes.Response.FinishReasons(
-                        listOf(GenAIAttributes.Response.FinishReasonType.Error)
-                    )
-                )
-
                 spanAdapter?.onBeforeSpanFinished(invokeAgentSpan)
                 endInvokeAgentSpan(
                     span = invokeAgentSpan,
                     messages = eventContext.context.config.prompt.messages.toList(),
                     model = eventContext.context.config.model,
-                    error = eventContext.throwable,
+                    error = eventContext.error,
                     verbose = config.isVerbose
                 )
                 spanCollector.removeSpan(
@@ -612,18 +613,10 @@ public class OpenTelemetry {
                 inferenceSpan.addEvents(eventsToAdd)
 
                 // Finish Reasons Attribute
-                eventContext.responses.lastOrNull()?.let { message ->
-                    val finishReasonsAttribute = when (message) {
-                        is Message.Assistant, is Message.Reasoning -> {
-                            GenAIAttributes.Response.FinishReasons(reasons = listOf(GenAIAttributes.Response.FinishReasonType.Stop))
-                        }
-
-                        is Message.Tool.Call -> {
-                            GenAIAttributes.Response.FinishReasons(reasons = listOf(GenAIAttributes.Response.FinishReasonType.ToolCalls))
-                        }
-                    }
-
-                    inferenceSpan.addAttribute(finishReasonsAttribute)
+                eventContext.responses.lastOrNull()?.let { response ->
+                    inferenceSpan.addAttribute(
+                        GenAIAttributes.Response.FinishReasons(reasons = listOf(response.toFinishReason()))
+                    )
                 }
 
                 // Stop InferenceSpan
@@ -669,6 +662,34 @@ public class OpenTelemetry {
                         )
                     )
                 }
+            }
+
+            pipeline.interceptLLMCallFailed(this) intercept@{ eventContext ->
+                logger.debug { "Execute OpenTelemetry LLM call failure handler" }
+
+                // Find the current span (Inference Span)
+                val patchedExecutionInfo = eventContext.executionInfo
+                    .appendRunId(eventContext.runId)
+                    .appendId(eventContext.eventId)
+
+                val inferenceSpan = spanCollector.getStartedSpan(
+                    executionInfo = patchedExecutionInfo,
+                    eventId = eventContext.eventId,
+                    spanType = SpanType.INFERENCE
+                ) ?: return@intercept
+
+                spanAdapter?.onBeforeSpanFinished(inferenceSpan)
+                endInferenceSpan(
+                    span = inferenceSpan,
+                    messages = emptyList(),
+                    model = eventContext.model,
+                    verbose = config.isVerbose,
+                    error = eventContext.error
+                )
+                spanCollector.removeSpan(
+                    span = inferenceSpan,
+                    path = patchedExecutionInfo
+                )
             }
 
             //endregion LLM Call
@@ -936,7 +957,7 @@ public class OpenTelemetry {
             spanAdapter: SpanAdapter?,
             spanCollector: SpanCollector,
             eventContext: ToolCallEventContext,
-            error: AIAgentError? = null,
+            error: Throwable? = null,
         ) {
             val path = eventContext.executionInfo.appendRunId(eventContext.runId).appendId(eventContext.eventId)
             val span = spanCollector.getStartedSpan(

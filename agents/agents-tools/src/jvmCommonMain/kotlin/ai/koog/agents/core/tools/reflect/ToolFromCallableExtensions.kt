@@ -65,7 +65,8 @@ public fun <T : Any> KClass<out T>.asTools(
     return this.functions.filter { m ->
         m.getPreferredToolAnnotation() != null
     }.map {
-        it.asTool(thisRef = thisRef)
+        val customName = it.getPreferredToolAnnotation()?.customName?.ifEmpty { null }
+        it.asTool(thisRef = thisRef, name = customName)
     }.apply {
         require(isNotEmpty()) { "No tools found in ${this@asTools}" }
     }

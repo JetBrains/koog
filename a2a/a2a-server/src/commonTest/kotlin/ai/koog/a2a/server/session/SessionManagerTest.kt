@@ -11,7 +11,7 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
-import ai.koog.a2a.utils.KeyedMutex
+import ai.koog.agents.lock.KeyedMutex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay

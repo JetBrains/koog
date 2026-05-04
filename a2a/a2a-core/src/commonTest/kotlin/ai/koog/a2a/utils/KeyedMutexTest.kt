@@ -1,5 +1,7 @@
 package ai.koog.a2a.utils
 
+import ai.koog.agents.lock.KeyedMutex
+import ai.koog.agents.lock.withLock
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay

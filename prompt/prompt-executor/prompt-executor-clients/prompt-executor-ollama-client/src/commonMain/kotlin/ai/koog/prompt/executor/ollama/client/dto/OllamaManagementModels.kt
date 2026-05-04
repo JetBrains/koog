@@ -87,7 +87,8 @@ internal data class OllamaPullModelRequestDTO(
  */
 @Serializable
 internal data class OllamaPullModelResponseDTO(
-    val status: String,
+    val status: String? = null,
+    val error: String? = null,
     val digest: String? = null,
     val total: Long? = null,
     val completed: Long? = null

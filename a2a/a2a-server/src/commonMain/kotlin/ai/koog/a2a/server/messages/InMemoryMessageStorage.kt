@@ -3,7 +3,7 @@ package ai.koog.a2a.server.messages
 import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.server.exceptions.MessageOperationException
-import ai.koog.a2a.utils.RWLock
+import ai.koog.agents.lock.RWLock
 
 /**
  * In-memory implementation of [MessageStorage] using a thread-safe map.

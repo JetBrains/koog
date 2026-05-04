@@ -1,11 +1,12 @@
 package ai.koog.agents.examples.tripplanning.api
 
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -18,10 +19,12 @@ import kotlinx.serialization.json.Json
 class OpenMeteoClient {
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                coerceInputValues = true
-            })
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    coerceInputValues = true
+                }
+            )
         }
     }
 
@@ -35,7 +38,7 @@ class OpenMeteoClient {
             parameter("format", "json")
             parameter("language", "en")
         }.body()
-        
+
         return response.results ?: emptyList()
     }
 

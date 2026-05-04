@@ -3,8 +3,11 @@ package ai.koog.integration.tests.agent
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.functionalStrategy
+import ai.koog.agents.core.agent.session.AdditionalInputs
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.node
@@ -21,6 +24,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.withPersistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
@@ -48,8 +52,11 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.typeToken
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.shouldForAny
@@ -81,6 +88,7 @@ import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.readBytes
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
@@ -875,6 +883,162 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 shouldForAny { it.shouldContain(bye) }
             }
         }
+    }
+
+    @ParameterizedTest
+    @MethodSource("latestModels")
+    fun integration_AIAgentSessionStorageDoesNotLeakBetweenRuns(model: LLModel) = runTest(timeout = 180.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val greetingKey = AIAgentStorageKey<String>("integration-session-greeting")
+        val counterKey = AIAgentStorageKey<Int>("integration-session-counter")
+
+        val storageStrategy = strategy<String, String>("integration-session-storage-strategy") {
+            val readNode by node<String, String>("readStorage") {
+                val greeting = storage.get(greetingKey)
+                val counter = storage.get(counterKey)
+                "greeting=$greeting, counter=$counter"
+            }
+
+            edge(nodeStart forwardTo readNode)
+            edge(readNode forwardTo nodeFinish)
+        }
+
+        val agent = AIAgent(
+            promptExecutor = getExecutor(model),
+            strategy = storageStrategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("integration-session-storage-test") {
+                    system("You are a helpful assistant.")
+                },
+                model = model,
+                maxAgentIterations = 10
+            ),
+            toolRegistry = ToolRegistry {},
+        )
+
+        val initialStorage = AIAgentStorage().apply {
+            set(greetingKey, "hello-from-session-inputs")
+            set(counterKey, 7)
+        }
+
+        val session = agent.createSession("integration-session-storage")
+        val firstResult = session.run(
+            input = "ignored",
+            sessionInputs = AdditionalInputs.Storage(initialStorage),
+        )
+        val secondResult = session.run("ignored")
+
+        firstResult shouldBe "greeting=hello-from-session-inputs, counter=7"
+        secondResult shouldBe "greeting=null, counter=null"
+        initialStorage.get(greetingKey) shouldBe "hello-from-session-inputs"
+        initialStorage.get(counterKey) shouldBe 7
+    }
+
+    @ParameterizedTest
+    @MethodSource("latestModels")
+    fun integration_AIAgentRunFromCheckpointRestoresFromLastInput(model: LLModel) = runTest(timeout = 180.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val sessionId = "integration-last-input-checkpoint"
+        val strategyName = "integration-last-input-strategy"
+        val node1Name = "Node1"
+        val node2Name = "Node2"
+        val finalName = "Final"
+
+        val strategy = strategy<String, String>(strategyName) {
+            val node1 by node<String, String>(node1Name) { "Node 1 output" }
+            val node2 by node<String, String>(node2Name) { input -> "$input -> Node 2 output" }
+            val finalNode by node<String, String>(finalName) { input -> "Final: $input" }
+
+            edge(nodeStart forwardTo node1)
+            edge(node1 forwardTo node2)
+            edge(node2 forwardTo finalNode)
+            edge(finalNode forwardTo nodeFinish)
+        }
+
+        @Suppress("DEPRECATION")
+        val checkpoint = AgentCheckpointData(
+            checkpointId = "last-input-checkpoint",
+            createdAt = Clock.System.now(),
+            nodePath = path(sessionId, strategyName, node2Name),
+            lastInput = JSONPrimitive("Node 1 output"),
+            messageHistory = listOf(
+                Message.User("Restored user message", metaInfo = RequestMetaInfo(Clock.System.now())),
+                Message.Assistant("Restored assistant message", metaInfo = ResponseMetaInfo(Clock.System.now()))
+            ),
+            version = 0
+        )
+
+        val agent = AIAgent(
+            promptExecutor = getExecutor(model),
+            strategy = strategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("integration-last-input-checkpoint-test") {
+                    system("You are a helpful assistant.")
+                },
+                model = model,
+                maxAgentIterations = 10
+            ),
+            toolRegistry = ToolRegistry {},
+        )
+
+        val result = Persistence.runFromCheckpoint(
+            agent = agent,
+            agentInput = "ignored",
+            checkpoint = checkpoint,
+            sessionId = sessionId,
+        )
+
+        result shouldBe "Final: Node 1 output -> Node 2 output"
+    }
+
+    @ParameterizedTest
+    @MethodSource("latestModels")
+    fun integration_AIAgentRunFromCheckpointFailsForUnknownNodePath(model: LLModel) = runTest(timeout = 180.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val sessionId = "integration-invalid-checkpoint"
+        val strategyName = "integration-invalid-checkpoint-strategy"
+
+        val strategy = strategy<String, String>(strategyName) {
+            val validNode by node<String, String>("ValidNode") { "ok" }
+            edge(nodeStart forwardTo validNode)
+            edge(validNode forwardTo nodeFinish)
+        }
+
+        val checkpoint = AgentCheckpointData(
+            checkpointId = "invalid-checkpoint",
+            createdAt = Clock.System.now(),
+            nodePath = path(sessionId, strategyName, "MissingNode"),
+            lastOutput = JSONPrimitive("missing"),
+            messageHistory = emptyList(),
+            version = 0
+        )
+
+        val agent = AIAgent(
+            promptExecutor = getExecutor(model),
+            strategy = strategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("integration-invalid-checkpoint-test") {
+                    system("You are a helpful assistant.")
+                },
+                model = model,
+                maxAgentIterations = 10
+            ),
+            toolRegistry = ToolRegistry {},
+        )
+
+        val error = assertFailsWith<IllegalStateException> {
+            Persistence.runFromCheckpoint(
+                agent = agent,
+                agentInput = "ignored",
+                checkpoint = checkpoint,
+                sessionId = sessionId,
+            )
+        }
+
+        error.message shouldContain "MissingNode"
     }
 
     @ParameterizedTest

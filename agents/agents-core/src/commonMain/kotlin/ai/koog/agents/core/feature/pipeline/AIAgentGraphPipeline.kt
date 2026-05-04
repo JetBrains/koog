@@ -103,7 +103,7 @@ public expect open class AIAgentGraphPipeline(
      * @param context The context associated with the AI agent executing the node.
      * @param input The input data provided to the node.
      * @param inputType The type of the input data provided to the node.
-     * @param throwable The exception or error that occurred during node execution.
+     * @param error The exception or error that occurred during node execution.
      */
     @InternalAgentsApi
     public open override suspend fun onNodeExecutionFailed(
@@ -113,7 +113,7 @@ public expect open class AIAgentGraphPipeline(
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: TypeToken,
-        throwable: Throwable
+        error: Throwable
     )
 
     //endregion Trigger Node Handlers
@@ -173,7 +173,7 @@ public expect open class AIAgentGraphPipeline(
      * @param context The agent context in which the subgraph execution occurred.
      * @param input The input data that was provided to the subgraph when it failed.
      * @param inputType The type of the input data provided to the subgraph.
-     * @param throwable The exception or error that caused the subgraph execution to fail.
+     * @param error The exception or error that caused the subgraph execution to fail.
      */
     @InternalAgentsApi
     public open override suspend fun onSubgraphExecutionFailed(
@@ -183,7 +183,7 @@ public expect open class AIAgentGraphPipeline(
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: TypeToken,
-        throwable: Throwable
+        error: Throwable
     )
 
     //endregion Trigger Subgraph Handlers
@@ -235,7 +235,7 @@ public expect open class AIAgentGraphPipeline(
      * Example:
      * ```
      * pipeline.interceptNodeExecutionFailed(feature) { eventContext ->
-     *     logger.error("Node ${eventContext.node.name} execution failed with error: ${eventContext.throwable}")
+     *     logger.error("Node ${eventContext.node.name} execution failed with error: ${eventContext.error}")
      * }
      * ```
      */
@@ -290,7 +290,7 @@ public expect open class AIAgentGraphPipeline(
      * Example:
      * ```
      * pipeline.interceptSubgraphExecutionFailed(feature) { eventContext ->
-     *     logger.error("Subgraph ${eventContext.subgraph.name} execution failed with error: ${eventContext.throwable}")
+     *     logger.error("Subgraph ${eventContext.subgraph.name} execution failed with error: ${eventContext.error}")
      * }
      * ```
      */

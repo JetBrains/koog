@@ -183,11 +183,13 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         response.collect { chunk ->
             chunk.choices.firstOrNull()?.let { choice ->
                 choice.delta.content?.let { emitTextDelta(it) }
+                choice.delta.reasoning?.let { emitReasoningDelta(text = it) }
 
-                choice.delta.toolCalls?.forEachIndexed { index, openAIToolCall ->
-                    val id = openAIToolCall.id
-                    val name = openAIToolCall.function.name
-                    val arguments = openAIToolCall.function.arguments
+                choice.delta.toolCalls?.forEach { streamToolCall ->
+                    val index = streamToolCall.index
+                    val id = streamToolCall.id
+                    val name = streamToolCall.function?.name
+                    val arguments = streamToolCall.function?.arguments
                     emitToolCallDelta(id, name, arguments, index)
                 }
 

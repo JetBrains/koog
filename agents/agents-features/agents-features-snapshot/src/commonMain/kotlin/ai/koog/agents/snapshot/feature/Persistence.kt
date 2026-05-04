@@ -1,16 +1,21 @@
 package ai.koog.agents.snapshot.feature
 
+import ai.koog.agents.annotations.JavaAPI
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
+import ai.koog.agents.core.agent.context.agentContextDataAdditionalKey
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.agent.session.AIAgentRunSession
+import ai.koog.agents.core.agent.session.AdditionalInputs
 import ai.koog.agents.core.agent.session.feature
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -25,11 +30,26 @@ import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonElement
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmOverloads
+import kotlin.jvm.JvmStatic
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+
+/**
+ * Bridges a suspending [block] into a blocking call for Java interop.
+ *
+ * On JVM/Android this dispatches through `AIAgentConfig.runOnStrategyDispatcher`; on non-JVM
+ * targets this throws [UnsupportedOperationException] because Kotlin lacks a portable blocking
+ * primitive.
+ */
+internal expect fun <T> runBlockingOnStrategy(
+    agentConfig: AIAgentConfig,
+    block: suspend () -> T,
+): T
 
 @Deprecated(
     "`Persistency` has been renamed to `Persistence`",
@@ -148,6 +168,71 @@ public class Persistence(
             }
 
             return persistence
+        }
+
+        /**
+         * Runs the agent from a previously saved checkpoint.
+         *
+         * Creates a new session and injects the checkpoint data into the session's storage so that the agent's
+         * graph strategy restores execution from the checkpoint's position. The [Persistence] feature does
+         * **not** need to be installed on the agent for this to work.
+         *
+         * @param agent The agent to run.
+         * @param agentInput The input to provide to the agent.
+         * @param checkpoint The checkpoint data to restore from.
+         * @param rollbackStrategy The strategy to use when restoring state. Defaults to [RollbackStrategy.Default].
+         * @param sessionId Optional session identifier. A random UUID is generated if not provided.
+         * @return The output produced by the agent after resuming from the checkpoint.
+         */
+        public suspend fun <Input, Output> runFromCheckpoint(
+            agent: AIAgent<Input, Output>,
+            agentInput: Input,
+            checkpoint: AgentCheckpointData,
+            rollbackStrategy: RollbackStrategy = RollbackStrategy.Default,
+            sessionId: String? = null,
+        ): Output = runFromCheckpoint(agent.createSession(sessionId), agentInput, checkpoint, rollbackStrategy)
+
+        /**
+         * Runs the session from a previously saved checkpoint.
+         *
+         * Injects the checkpoint data into the session's storage so that the agent's graph strategy
+         * restores execution from the checkpoint's position. The [Persistence] feature does **not** need
+         * to be installed on the agent for this to work.
+         *
+         * @param session The session to run.
+         * @param input The input to provide to the session.
+         * @param checkpoint The checkpoint data to restore from.
+         * @param rollbackStrategy The strategy to use when restoring state. Defaults to [RollbackStrategy.Default].
+         * @return The output produced by the session after resuming from the checkpoint.
+         */
+        public suspend fun <Input, Output, TContext : AIAgentContext> runFromCheckpoint(
+            session: AIAgentRunSession<Input, Output, TContext>,
+            input: Input,
+            checkpoint: AgentCheckpointData,
+            rollbackStrategy: RollbackStrategy = RollbackStrategy.Default,
+        ): Output {
+            val storage = AIAgentStorage()
+            storage.set(agentContextDataAdditionalKey, checkpoint.toAgentContextData(rollbackStrategy))
+            return session.run(input, AdditionalInputs.Storage(storage))
+        }
+
+        /**
+         * Blocking variant of [runFromCheckpoint] intended for Java callers. Only available on JVM/Android.
+         *
+         * @see runFromCheckpoint
+         */
+        @JavaAPI
+        @JvmStatic
+        @JvmOverloads
+        @JvmName("runFromCheckpoint")
+        public fun <Input, Output> runFromCheckpointBlocking(
+            agent: AIAgent<Input, Output>,
+            agentInput: Input,
+            checkpoint: AgentCheckpointData,
+            rollbackStrategy: RollbackStrategy = RollbackStrategy.Default,
+            sessionId: String? = null,
+        ): Output = runBlockingOnStrategy(agent.agentConfig) {
+            runFromCheckpoint(agent, agentInput, checkpoint, rollbackStrategy, sessionId)
         }
     }
 
@@ -297,7 +382,7 @@ public class Persistence(
     }
 
     @Deprecated("Use setExecutionPoint with JSONElement instead of JsonElement")
-    public fun setExecutionPoint(
+    public suspend fun setExecutionPoint(
         agentContext: AIAgentContext,
         nodePath: String,
         messageHistory: List<Message>,
@@ -317,7 +402,7 @@ public class Persistence(
      * @param messageHistory The message history to set for the agent
      * @param input The input data to set for the agent
      */
-    public fun setExecutionPoint(
+    public suspend fun setExecutionPoint(
         agentContext: AIAgentContext,
         nodePath: String,
         messageHistory: List<Message>,
@@ -334,7 +419,7 @@ public class Persistence(
     }
 
     @Deprecated("Use setExecutionPointAfterNode with JSONElement instead of JsonElement")
-    public fun setExecutionPointAfterNode(
+    public suspend fun setExecutionPointAfterNode(
         agentContext: AIAgentContext,
         nodePath: String,
         messageHistory: List<Message>,
@@ -354,7 +439,7 @@ public class Persistence(
      * @param messageHistory The sequence of messages representing the agent's prior interactions.
      * @param output The output data to associate with the specified execution point.
      */
-    public fun setExecutionPointAfterNode(
+    public suspend fun setExecutionPointAfterNode(
         agentContext: AIAgentContext,
         nodePath: String,
         messageHistory: List<Message>,

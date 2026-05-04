@@ -122,9 +122,19 @@ internal data class EmbeddingBatchRequestDTO(
  */
 @Serializable
 internal data class EmbeddingBatchResponseDTO(
-    @SerialName("embeddings") val embeddings: List<List<Double>>,
+    @SerialName("embeddings") val embeddings: List<List<Double>>? = null,
+    @SerialName("embedding") val embedding: List<Double>? = null,
     @SerialName("model") val modelId: String? = null
-)
+) {
+    /**
+     * Normalizes Ollama's two embedding response shapes into a single batch representation.
+     *
+     * Returning `List<List<Double>>` lets the rest of the embedding pipeline treat single-item and
+     * multi-item requests the same way, which keeps downstream similarity/search code independent
+     * from transport-specific response details.
+     */
+    fun normalizedEmbeddings(): List<List<Double>> = embeddings ?: embedding?.let(::listOf) ?: emptyList()
+}
 
 /**
  * Represents a request to generate an embedding using a specific model.

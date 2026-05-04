@@ -493,3 +493,86 @@ In the tables below:
     | Gemini2_5FlashLite  | ✓           | Full        | ✓          | ✓           | ✓     | ✓           | ✓              |
     | Gemini2_5Flash      | ✓           | Full        | ✓          | ✓           | ✓     | ✓           | ✓              |
     | Gemini2_5Pro        | ✓           | Full        | ✓          | ✓           | ✓     | ✓           | ✓              |
+
+??? "Bedrock models"
+    #### Bedrock models
+
+    Bedrock models are accessed through AWS Bedrock and use either the InvokeModel or Converse API.
+    Models marked with **(C)** are Converse-only and require `BedrockAPIMethod.Converse`.
+
+    ##### Anthropic Claude (via Bedrock)
+
+    | Model                       | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) | Document |
+    |-----------------------------|-------------|-------------|------------|-------|-------------|----------------|----------|
+    | AnthropicClaude47Opus       | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | AnthropicClaude46Opus       | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | AnthropicClaude45Opus       | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | AnthropicClaude41Opus       | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | AnthropicClaude4Opus        | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | AnthropicClaude4_6Sonnet    | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | AnthropicClaude4_5Sonnet    | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | AnthropicClaude4Sonnet      | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | AnthropicClaude4_5Haiku     | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | AnthropicClaude3Haiku       | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
+
+    ##### Amazon Nova
+
+    | Model            | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) | Document |
+    |------------------|-------------|-------------|------------|-------|-------------|----------------|----------|
+    | AmazonNovaMicro  | ✓           | -           | ✓          | ✓     | -           | -              | -        |
+    | AmazonNovaLite   | ✓           | -           | ✓          | ✓     | -           | -              | -        |
+    | AmazonNovaPro    | ✓           | -           | ✓          | ✓     | -           | -              | -        |
+    | AmazonNovaPremier| ✓           | -           | ✓          | ✓     | -           | -              | -        |
+
+    ##### Meta Llama (via Bedrock)
+
+    | Model                    | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) | Document |
+    |--------------------------|-------------|-------------|------------|-------|-------------|----------------|----------|
+    | MetaLlama3_3_70BInstruct | ✓           | -           | ✓          | ✓     | ✓           | -              | -        |
+    | MetaLlama3_2_90BInstruct | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | MetaLlama3_2_11BInstruct | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | MetaLlama3_2_3BInstruct  | ✓           | -           | ✓          | -     | -           | -              | -        |
+    | MetaLlama3_2_1BInstruct  | ✓           | -           | ✓          | -     | -           | -              | -        |
+    | MetaLlama3_1_405BInstruct| ✓           | -           | ✓          | -     | -           | -              | -        |
+    | MetaLlama3_1_70BInstruct | ✓           | -           | ✓          | -     | -           | -              | -        |
+    | MetaLlama3_1_8BInstruct  | ✓           | -           | ✓          | -     | -           | -              | -        |
+    | MetaLlama3_0_70BInstruct | ✓           | -           | ✓          | -     | -           | -              | -        |
+    | MetaLlama3_0_8BInstruct  | ✓           | -           | ✓          | -     | -           | -              | -        |
+
+    ##### Moonshot Kimi (Converse-only)
+
+    | Model                          | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) | Document |
+    |--------------------------------|-------------|-------------|------------|-------|-------------|----------------|----------|
+    | MoonshotKimiK2_5 **(C)**       | ✓           | -           | ✓          | ✓     | ✓           | ✓              | -        |
+    | MoonshotKimiK2Thinking **(C)** | ✓           | -           | ✓          | ✓     | ✓           | -              | -        |
+
+    ##### MiniMax (Converse-only)
+
+    | Model               | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) | Document |
+    |---------------------|-------------|-------------|------------|-------|-------------|----------------|----------|
+    | MiniMaxM2_5 **(C)** | ✓           | -           | ✓          | ✓     | ✓           | -              | -        |
+
+    ##### OpenAI GPT-OSS (Converse-only)
+
+    | Model                    | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) | Document |
+    |--------------------------|-------------|-------------|------------|-------|-------------|----------------|----------|
+    | OpenAIGptOss120B **(C)** | ✓           | Full        | ✓          | ✓     | ✓           | -              | -        |
+    | OpenAIGptOss20B **(C)**  | ✓           | Full        | ✓          | ✓     | ✓           | -              | -        |
+
+    ##### Google Gemma 3 (Converse-only)
+
+    | Model                      | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) | Document |
+    |----------------------------|-------------|-------------|------------|-------|-------------|----------------|----------|
+    | GoogleGemma3_27BIt **(C)** | ✓           | Full        | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | GoogleGemma3_12BIt **(C)** | ✓           | Full        | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | GoogleGemma3_4BIt **(C)**  | ✓           | -           | ✓          | ✓     | ✓           | ✓              | -        |
+
+    ##### Embedding Models
+
+    | Model                      | Embed |
+    |----------------------------|-------|
+    | CohereEmbedV4              | ✓     |
+    | CohereEmbedEnglishV3       | ✓     |
+    | CohereEmbedMultilingualV3  | ✓     |
+    | AmazonTitanEmbedTextV2     | ✓     |
+    | AmazonTitanEmbedText       | ✓     |

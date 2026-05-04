@@ -1,8 +1,8 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
+import ai.koog.agents.features.opentelemetry.extension.addCommonErrorAttributes
 import ai.koog.agents.features.opentelemetry.extension.toSpanEndStatus
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.Tracer
@@ -71,9 +71,7 @@ internal fun endSubgraphExecuteSpan(
     }
 
     // error.type
-    error?.javaClass?.typeName?.let { typeName ->
-        span.addAttribute(CommonAttributes.Error.Type(typeName))
-    }
+    span.addCommonErrorAttributes(error)
 
     subgraphOutput?.let { output ->
         span.addAttribute(KoogAttributes.Koog.Subgraph.Output(output))

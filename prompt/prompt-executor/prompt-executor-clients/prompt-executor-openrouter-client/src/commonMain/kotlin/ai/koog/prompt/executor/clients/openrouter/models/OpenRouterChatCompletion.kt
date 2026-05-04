@@ -6,8 +6,8 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMStreamRes
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamToolCall
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
-import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolCall
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
 import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
@@ -134,7 +134,7 @@ public class OpenRouterStreamChoice(
 public class OpenRouterStreamDelta(
     public val content: String? = null,
     public val role: String? = null,
-    public val toolCalls: List<OpenAIToolCall>? = null,
+    public val toolCalls: List<OpenAIStreamToolCall>? = null,
     public val reasoning: String? = null,
     @SerialName("reasoning_details")
     public val reasoningDetails: List<JsonElement>? = null

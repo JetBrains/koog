@@ -151,6 +151,10 @@ public class OllamaClient @JvmOverloads constructor(
         }
         install(ContentNegotiation) {
             json(ollamaJson)
+            // Ollama sometimes returns non-streaming responses with `Content-Type: text/plain`
+            // (see https://github.com/JetBrains/koog/issues/1237). Register the same JSON
+            // deserializer for that content type so the body is still parsed correctly.
+            json(ollamaJson, ContentType.Text.Plain)
         }
         install(HttpTimeout) {
             requestTimeoutMillis = timeoutConfig.requestTimeoutMillis
@@ -159,9 +163,9 @@ public class OllamaClient @JvmOverloads constructor(
         }
     }
 
-    internal fun LLMParams.toOllamaChatParams(): OllamaChatParams {
-        if (this is OllamaChatParams) return this
-        return OllamaChatParams(
+    internal fun LLMParams.toOllamaChatParams(): OllamaParams {
+        if (this is OllamaParams) return this
+        return OllamaParams(
             temperature = temperature,
             maxTokens = maxTokens,
             numberOfChoices = numberOfChoices,
@@ -285,7 +289,7 @@ public class OllamaClient @JvmOverloads constructor(
                     content = content,
                     metaInfo = responseMetadata
                 )
-                listOf(assistantMessage) + toolCallMessages
+                toolCallMessages + listOf(assistantMessage)
             }
         }
     }
@@ -387,7 +391,7 @@ public class OllamaClient @JvmOverloads constructor(
         }
 
         val embeddingResponse = response.body<EmbeddingBatchResponseDTO>()
-        return embeddingResponse.embeddings.first()
+        return embeddingResponse.normalizedEmbeddings().firstOrNull() ?: emptyList()
     }
 
     /**
@@ -414,7 +418,7 @@ public class OllamaClient @JvmOverloads constructor(
         }
 
         val embeddingResponse = response.body<EmbeddingBatchResponseDTO>()
-        return embeddingResponse.embeddings
+        return embeddingResponse.normalizedEmbeddings()
     }
 
     /**
@@ -549,10 +553,20 @@ public class OllamaClient @JvmOverloads constructor(
                 setBody(OllamaPullModelRequestDTO(name = name, stream = false))
             }.body<OllamaPullModelResponseDTO>()
 
-            if ("success" !in response.status) throw LLMClientException(clientName, "Failed to pull model: '$name'")
+            response.error?.let { error ->
+                throw LLMClientException(clientName, "Failed to pull model '$name': $error")
+            }
+
+            val status = response.status
+                ?: throw LLMClientException(clientName, "Failed to pull model '$name': Ollama response did not contain status")
+
+            if ("success" !in status) throw LLMClientException(clientName, "Failed to pull model '$name': $status")
 
             logger.info { "Pulled model '$name'" }
         } catch (e: CancellationException) {
+            throw e
+        } catch (e: LLMClientException) {
+            logger.error(e) { e.message }
             throw e
         } catch (e: Exception) {
             val exception = LLMClientException(

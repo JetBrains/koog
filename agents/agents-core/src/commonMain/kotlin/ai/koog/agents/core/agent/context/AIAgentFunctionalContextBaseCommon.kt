@@ -59,12 +59,15 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
     override val parentContext: AIAgentContext? = null
 ) : AIAgentContext {
 
+    @Suppress("DEPRECATION")
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
         storeMap[key] = value
     }
 
+    @Suppress("DEPRECATION")
     override fun <T> get(key: AIAgentStorageKey<*>): T? = storeMap[key] as T?
 
+    @Suppress("DEPRECATION")
     override fun remove(key: AIAgentStorageKey<*>): Boolean = storeMap.remove(key) != null
 
     override suspend fun getHistory(): List<Message> {

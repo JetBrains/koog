@@ -197,7 +197,7 @@ public class AcpAgent(
             }
 
             pipeline.interceptAgentExecutionFailed(this@Feature) { ctx ->
-                when (ctx.throwable) {
+                when (ctx.error) {
                     is AIAgentMaxNumberOfIterationsReachedException -> {
                         logger.debug { "Emitting PromptResponseEvent with StopReason.MAX_TURN_REQUESTS" }
                         sendEvent(

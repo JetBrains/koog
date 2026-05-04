@@ -30,7 +30,6 @@ import ai.koog.integration.tests.utils.tools.GeographyQueryTool
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
@@ -76,11 +75,11 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
 
     private val toolCalls = mutableListOf<String>()
 
-    private fun createTestStrategy() = strategy<String, String>("test-ollama") {
+    private fun createTestStrategy(llmModel: LLModel = model) = strategy<String, String>("test-ollama") {
         val askCapitalSubgraph by subgraph<String, String>("ask-capital") {
             val definePrompt by node<Unit, Unit> {
                 llm.writeSession {
-                    model = OllamaModels.Meta.LLAMA_3_2
+                    model = llmModel
                     rewritePrompt {
                         prompt("test-ollama") {
                             system(
@@ -121,7 +120,7 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
         val askVerifyAnswer by subgraph<String, String>("verify-answer") {
             val definePrompt by node<Unit, Unit> {
                 llm.writeSession {
-                    model = OllamaModels.Meta.LLAMA_3_2
+                    model = llmModel
                     appendPrompt {
                         system(
                             """"

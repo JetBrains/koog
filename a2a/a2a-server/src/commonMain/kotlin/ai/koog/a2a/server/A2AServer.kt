@@ -37,8 +37,8 @@ import ai.koog.a2a.transport.Request
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.Response
 import ai.koog.a2a.transport.ServerCallContext
-import ai.koog.a2a.utils.KeyedMutex
-import ai.koog.a2a.utils.withLock
+import ai.koog.agents.lock.KeyedMutex
+import ai.koog.agents.lock.withLock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableJob

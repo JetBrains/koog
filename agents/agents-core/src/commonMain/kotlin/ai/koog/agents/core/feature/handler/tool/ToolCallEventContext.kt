@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
-import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 
@@ -66,7 +65,7 @@ public data class ToolCallStartingContext(
  *
  * @property executionInfo The execution information containing parentId and current execution path;
  * @property message A message describing the validation error.
- * @property error The [AIAgentError] error describing the validation issue.
+ * @property error The exception describing the validation issue.
  */
 public data class ToolValidationFailedContext(
     override val eventId: String,
@@ -77,7 +76,7 @@ public data class ToolValidationFailedContext(
     override val toolDescription: String?,
     override val toolArgs: JSONObject,
     val message: String,
-    val error: AIAgentError,
+    val error: Throwable,
     override val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolValidationFailed
@@ -88,7 +87,7 @@ public data class ToolValidationFailedContext(
  *
  * @property executionInfo The execution information containing parentId and current execution path;
  * @property message A message describing the failure that occurred.
- * @property error The [AIAgentError] instance describing the tool call failure.
+ * @property error The exception describing the tool call failure, or `null` if no exception is available.
  */
 public data class ToolCallFailedContext(
     override val eventId: String,
@@ -99,7 +98,7 @@ public data class ToolCallFailedContext(
     override val toolDescription: String?,
     override val toolArgs: JSONObject,
     val message: String,
-    val error: AIAgentError?,
+    val error: Throwable?,
     override val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallFailed

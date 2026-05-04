@@ -62,14 +62,14 @@ public data class AgentCompletedContext(
  * @property executionInfo The execution information containing parentId and current execution path;
  * @property agentId The unique identifier of the agent associated with the error.
  * @property runId The identifier for the session during which the error occurred.
- * @property throwable The exception or error thrown during the execution.
+ * @property error The exception or error thrown during the execution.
  */
 public data class AgentExecutionFailedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val agentId: String,
     val runId: String,
-    val throwable: Throwable,
+    val error: Throwable,
     public val context: AIAgentContext,
 ) : AgentEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentExecutionFailed

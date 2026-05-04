@@ -94,7 +94,8 @@ internal object AIAgentFeatureTestAPI {
         error = AIAgentError(
             message = "test-error-message",
             stackTrace = "test-error-stacktrace",
-            cause = "test-error-cause"
+            cause = "test-error-cause",
+            type = "test-error-type"
         ),
         timestamp = testClock.now().toEpochMilliseconds()
     )
@@ -173,7 +174,8 @@ internal object AIAgentFeatureTestAPI {
             error = AIAgentError(
                 message = "test-error-message",
                 stackTrace = "test-error-stacktrace",
-                cause = "test-error-cause"
+                cause = "test-error-cause",
+                type = "test-error-type"
             ),
             timestamp = testClock.now().toEpochMilliseconds()
         )
@@ -215,7 +217,8 @@ internal object AIAgentFeatureTestAPI {
             error = AIAgentError(
                 message = "test-error-message",
                 stackTrace = "test-error-stacktrace",
-                cause = "test-error-cause"
+                cause = "test-error-cause",
+                type = "test-error-type"
             ),
             timestamp = testClock.now().toEpochMilliseconds()
         )
@@ -240,7 +243,12 @@ internal object AIAgentFeatureTestAPI {
         toolArgs = JSONObject(mapOf("test-argument-key" to JSONPrimitive("test-argument-value"))),
         toolDescription = "test-tool-description",
         message = "test-error-message",
-        error = AIAgentError("test-error-message", "test-error-stacktrace", "test-error-cause"),
+        error = AIAgentError(
+            message = "test-error-message",
+            stackTrace = "test-error-stacktrace",
+            cause = "test-error-cause",
+            type = "test-error-type"
+        ),
         timestamp = testClock.now().toEpochMilliseconds()
     )
 
@@ -255,7 +263,8 @@ internal object AIAgentFeatureTestAPI {
         error = AIAgentError(
             message = "test-error-message",
             stackTrace = "test-error-stacktrace",
-            cause = "test-error-cause"
+            cause = "test-error-cause",
+            type = "test-error-type"
         ),
         timestamp = testClock.now().toEpochMilliseconds()
     )
@@ -371,7 +380,8 @@ internal object AIAgentFeatureTestAPI {
         error = AIAgentError(
             message = "test-error-message",
             stackTrace = "test-error-stacktrace",
-            cause = "test-error-cause"
+            cause = "test-error-cause",
+            type = "test-error-type"
         ),
         timestamp = testClock.now().toEpochMilliseconds(),
     )

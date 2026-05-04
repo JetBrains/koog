@@ -21,6 +21,16 @@ class OpenAILLMClientTest {
                 OpenAIChatParams::class,
             ),
             Arguments.of(
+                LLMParams(),
+                OpenAIModels.Chat.GPT5_5,
+                OpenAIChatParams::class,
+            ),
+            Arguments.of(
+                LLMParams(),
+                OpenAIModels.Chat.GPT5_5Pro,
+                OpenAIResponsesParams::class,
+            ),
+            Arguments.of(
                 OpenAIChatParams(),
                 OpenAIModels.Chat.GPT4o,
                 OpenAIChatParams::class,

@@ -55,22 +55,17 @@ public class ContextualPromptExecutor(
             prompt
         }
 
-        val responses = executor.execute(effectivePrompt, model, tools)
+        try {
+            val responses = executor.execute(effectivePrompt, model, tools)
+            logger.trace { "Finished LLM call (event id: $eventId) with responses: [${responses.joinToString { "${it.role}: ${it.content}" }}]" }
 
-        logger.trace { "Finished LLM call (event id: $eventId) with responses: [${responses.joinToString { "${it.role}: ${it.content}" }}]" }
-        context.pipeline.onLLMCallCompleted(
-            eventId,
-            context.executionInfo,
-            context.runId,
-            effectivePrompt,
-            model,
-            tools,
-            responses,
-            null,
-            context
-        )
-
-        return responses
+            context.pipeline.onLLMCallCompleted(eventId, context.executionInfo, context.runId, effectivePrompt, model, tools, responses, moderationResponse = null, context)
+            return responses
+        } catch (e: Throwable) {
+            logger.debug(e) { "Error in executing LLM call (event id: $eventId): $e" }
+            context.pipeline.onLLMCallFailed(eventId, context.executionInfo, context.runId, prompt, model, tools, context, error = e)
+            throw e
+        }
     }
 
     /**
@@ -102,15 +97,7 @@ public class ContextualPromptExecutor(
             val promptBeforeInterceptors = context.llm.prompt // because onLLMStreamingStarting might change it
 
             logger.debug { "Starting LLM streaming call (event id: $eventId)" }
-            context.pipeline.onLLMStreamingStarting(
-                eventId,
-                context.executionInfo,
-                context.runId,
-                prompt,
-                model,
-                tools,
-                context
-            )
+            context.pipeline.onLLMStreamingStarting(eventId, context.executionInfo, context.runId, prompt, model, tools, context)
 
             effectivePrompt = if (context.llm.prompt !== promptBeforeInterceptors) {
                 logger.debug { "Executing LLM streaming call with modified prompt (event id: $eventId, prompt: ${context.llm.prompt}, tools: [${tools.joinToString { it.name }}])" }
@@ -126,40 +113,19 @@ public class ContextualPromptExecutor(
         }
             .onEach { frame ->
                 logger.trace { "Received frame from LLM streaming call (event id: $eventId): $frame" }
-                context.pipeline.onLLMStreamingFrameReceived(
-                    eventId,
-                    context.executionInfo,
-                    context.runId,
-                    effectivePrompt,
-                    model,
-                    frame,
-                    context
-                )
+                context.pipeline.onLLMStreamingFrameReceived(eventId, context.executionInfo, context.runId, prompt = effectivePrompt, model, streamFrame = frame, context)
             }
             .catch { error ->
                 logger.debug(error) { "Error in LLM streaming call (event id: $eventId): $error" }
-                context.pipeline.onLLMStreamingFailed(
-                    eventId,
-                    context.executionInfo,
-                    context.runId,
-                    effectivePrompt,
-                    model,
-                    error,
-                    context
-                )
+                context.pipeline.onLLMStreamingFailed(eventId, context.executionInfo, context.runId, prompt = effectivePrompt, model, error = error, context)
+
                 throw error
             }
             .onCompletion { error ->
                 logger.debug(error) { "Finished LLM streaming call (event id: $eventId): $error" }
-                context.pipeline.onLLMStreamingCompleted( // Note: it will be executed in any case (even if error is null)
-                    eventId,
-                    context.executionInfo,
-                    context.runId,
-                    effectivePrompt,
-                    model,
-                    tools,
-                    context
-                )
+
+                // Note: it will be executed in any case (even if error is null)
+                context.pipeline.onLLMStreamingCompleted(eventId, context.executionInfo, context.runId, prompt = effectivePrompt, model, tools, context)
             }
     }
 
@@ -195,20 +161,11 @@ public class ContextualPromptExecutor(
     ): ModerationResult {
         @OptIn(ExperimentalUuidApi::class)
         val eventId = Uuid.random().toString()
-
         val promptBeforeInterceptors = context.llm.prompt
 
         logger.debug { "Starting moderation LLM request (event id: $eventId, prompt: $prompt)" }
 
-        context.pipeline.onLLMCallStarting(
-            eventId,
-            context.executionInfo,
-            context.runId,
-            prompt,
-            model,
-            tools = emptyList(),
-            context
-        )
+        context.pipeline.onLLMCallStarting(eventId, context.executionInfo, context.runId, prompt, model, tools = emptyList(), context)
 
         val effectivePrompt = if (context.llm.prompt !== promptBeforeInterceptors) {
             logger.debug { "Executing moderation LLM request with modified prompt (event id: $eventId, prompt: ${context.llm.prompt})" }
@@ -218,22 +175,18 @@ public class ContextualPromptExecutor(
             prompt
         }
 
-        val result = executor.moderate(effectivePrompt, model)
-        logger.trace { "Finished moderation LLM request (event id: $eventId) with response: $result" }
+        try {
+            val result = executor.moderate(effectivePrompt, model)
+            logger.trace { "Finished moderation LLM request (event id: $eventId) with response: $result" }
 
-        context.pipeline.onLLMCallCompleted(
-            eventId,
-            context.executionInfo,
-            context.runId,
-            effectivePrompt,
-            model,
-            tools = emptyList(),
-            responses = emptyList(),
-            moderationResponse = result,
-            context = context
-        )
+            context.pipeline.onLLMCallCompleted(eventId, context.executionInfo, context.runId, effectivePrompt, model, tools = emptyList(), responses = emptyList(), moderationResponse = result, context)
+            return result
+        } catch (e: Throwable) {
+            logger.debug(e) { "Error in moderation LLM request (event id: $eventId): $e" }
+            context.pipeline.onLLMCallFailed(eventId, context.executionInfo, context.runId, prompt, model, tools = emptyList(), context, error = e)
 
-        return result
+            throw e
+        }
     }
 
     override suspend fun models(): List<LLModel> {

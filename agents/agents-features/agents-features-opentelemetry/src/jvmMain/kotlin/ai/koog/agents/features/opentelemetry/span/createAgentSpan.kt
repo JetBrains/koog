@@ -1,8 +1,9 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
+import ai.koog.agents.features.opentelemetry.extension.addCommonErrorAttributes
+import ai.koog.agents.features.opentelemetry.extension.systemMessages
 import ai.koog.agents.features.opentelemetry.extension.toSpanEndStatus
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -58,7 +59,7 @@ internal fun startCreateAgentSpan(
     // server.port - Ignore. Not supported in Koog
     // server.address - Ignore. Not supported in Koog
     // gen_ai.system_instructions
-    val systemMessages = messages.filterIsInstance<Message.System>()
+    val systemMessages = messages.systemMessages()
     if (systemMessages.isNotEmpty()) {
         builder.addAttribute(GenAIAttributes.SystemInstructions(systemMessages))
     }
@@ -87,9 +88,6 @@ internal fun endCreateAgentSpan(
     }
 
     // error.type
-    error?.javaClass?.typeName?.let { typeName ->
-        span.addAttribute(CommonAttributes.Error.Type(typeName))
-    }
-
+    span.addCommonErrorAttributes(error)
     span.end(error.toSpanEndStatus(), verbose)
 }

@@ -23,14 +23,16 @@ requirements.
 
 #### Chat Models
 
-| Model       | Speed     | Context | Input Support           | Output Support | Pricing (per 1M tokens) | APIs Support    |
-|-------------|-----------|---------|-------------------------|----------------|-------------------------|-----------------|
-| GPT-4o      | Medium    | 128K    | Text, Images, Tools     | Text, Tools    | $2.5-$10                | Chat, Responses |
-| GPT-4.1     | Medium    | 1M      | Text, Images, Tools     | Text, Tools    | $2-$8                   | Chat, Responses |
-| GPT-5       | Medium    | 400K    | Text, Images, Documents | Text, Tools    | $1.25-$10               | Chat, Responses |
-| GPT-5 Mini  | Fast      | 400K    | Text, Images, Documents | Text, Tools    | $0.25-$2                | Chat, Responses |
-| GPT-5 Nano  | Very fast | 400K    | Text, Images, Documents | Text, Tools    | $0.05-$0.4              | Chat, Responses |
-| GPT-5 Codex | Medium    | 400K    | Text, Images, Documents | Text, Tools    | $1.25-$10               | Responses       |
+| Model       | Speed     | Context | Input Support                  | Output Support | Pricing (per 1M tokens) | APIs Support    |
+|-------------|-----------|---------|--------------------------------|----------------|-------------------------|-----------------|
+| GPT-4o      | Medium    | 128K    | Text, Images, Tools            | Text, Tools    | $2.5-$10                | Chat, Responses |
+| GPT-4.1     | Medium    | 1M      | Text, Images, Tools            | Text, Tools    | $2-$8                   | Chat, Responses |
+| GPT-5       | Medium    | 400K    | Text, Images, Documents        | Text, Tools    | $1.25-$10               | Chat, Responses |
+| GPT-5 Mini  | Fast      | 400K    | Text, Images, Documents        | Text, Tools    | $0.25-$2                | Chat, Responses |
+| GPT-5 Nano  | Very fast | 400K    | Text, Images, Documents        | Text, Tools    | $0.05-$0.4              | Chat, Responses |
+| GPT-5 Codex | Medium    | 400K    | Text, Images, Documents        | Text, Tools    | $1.25-$10               | Responses       |
+| GPT-5.5     | Fast      | 1.05M   | Text, Images, Tools, Documents | Text, Tools    | $5-$30                  | Chat, Responses |
+| GPT-5.5 pro | Slowest   | 1.05M   | Text, Images, Tools, Documents | Text, Tools    | $30-$180                | Responses only  |
 
 #### Audio Models
 
@@ -119,6 +121,11 @@ The client now supports both OpenAI API endpoints:
 
 - **Chat Completions API**: Traditional chat completions with streaming support
 - **Responses API**: Enhanced API with background processing, built-in tools, and structured outputs
+
+For the latest OpenAI model details, see the official model pages:
+
+- [GPT-5.5](https://developers.openai.com/api/docs/models/gpt-5.5)
+- [GPT-5.5 pro](https://developers.openai.com/api/docs/models/gpt-5.5-pro)
 
 ### Using in your project
 

@@ -3,7 +3,6 @@ package ai.koog.agents.core.environment
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONObject
@@ -72,7 +71,7 @@ public class ContextualAgentEnvironment(
                 toolDescription = toolDescription,
                 toolArgs = toolArgs,
                 message = message,
-                error = e.toAgentError(),
+                error = e,
                 context = context
             )
             return ReceivedToolResult(
@@ -81,7 +80,7 @@ public class ContextualAgentEnvironment(
                 toolArgs = toolArgs,
                 toolDescription = null,
                 content = message,
-                resultKind = ToolResultKind.ValidationError(e.toAgentError()),
+                resultKind = ToolResultKind.ValidationError(e),
                 result = null
             )
         }

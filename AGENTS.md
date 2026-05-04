@@ -70,6 +70,9 @@ koog/
 - Document public APIs with KDoc comments
 - NEVER suppress compiler warnings without a good reason
 
+## Quality Gates
+Read and follow the Quality Gates section in /TESTING.md before considering any code change complete.
+
 ## Architecture
 
 ### Core Framework Components

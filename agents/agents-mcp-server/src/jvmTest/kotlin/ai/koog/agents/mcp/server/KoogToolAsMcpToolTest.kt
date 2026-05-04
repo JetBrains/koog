@@ -11,6 +11,8 @@ import ai.koog.agents.testing.tools.RandomNumberTool
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.sse.SSE
 import io.ktor.server.cio.CIO
 import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
@@ -47,7 +49,7 @@ class KoogToolAsMcpToolTest {
 
         logger.info { "Result: ${mcpTool.encodeResultToString(result, serializer)}" }
 
-        val content = result?.content?.first() as TextContent
+        val content = result.content.first() as TextContent
         assertEquals("${origin.last}", content.text)
     }
 
@@ -64,7 +66,7 @@ class KoogToolAsMcpToolTest {
 
         logger.info { "Result: ${mcpTool.encodeResultToString(result, serializer)}" }
 
-        val content = result?.content?.first() as TextContent
+        val content = result.content.first() as TextContent
         assertEquals("${origin.last}", content.text)
     }
 
@@ -80,7 +82,7 @@ class KoogToolAsMcpToolTest {
                 }
             }
 
-            assertTrue(errorResult?.isError ?: false)
+            assertTrue(errorResult.isError ?: false)
         }
 
         // check that the server is still working
@@ -95,7 +97,7 @@ class KoogToolAsMcpToolTest {
 
             logger.info { "Result: ${mcpTool.encodeResultToString(result, serializer)}" }
 
-            val content = result?.content?.first() as TextContent
+            val content = result.content.first() as TextContent
             assertEquals("${origin.last}", content.text)
         }
     }
@@ -117,7 +119,7 @@ class KoogToolAsMcpToolTest {
                     }
                 }
 
-                assertTrue(errorResult?.isError ?: false)
+                assertTrue(errorResult.isError ?: false)
 
                 val last = origin.last
                 assertNotNull(last)
@@ -144,6 +146,23 @@ class KoogToolAsMcpToolTest {
         }
     }
 
+    @Test
+    fun testKoogToolAsMcpToolViaStreamableHttp() = testMcpToolStreamableHttp(RandomNumberTool()) { mcpTool, origin ->
+        val args = buildJsonObject { put("seed", "42") }
+
+        val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(20.seconds) {
+                mcpTool.execute(args.toKoogJSONObject())
+            }
+        }
+
+        logger.info { "Result (Streamable HTTP): ${mcpTool.encodeResultToString(result, serializer)}" }
+
+        val content = result.content.first() as TextContent
+        assertEquals("${origin.last}", content.text)
+    }
+
+    @Suppress("DEPRECATION")
     private fun <T : Tool<*, *>> testMcpTool(
         tool: T,
         block: suspend (McpTool, T) -> Unit,
@@ -176,6 +195,65 @@ class KoogToolAsMcpToolTest {
             block(mcpTool, tool)
         } finally {
             server.close()
+
+            withContext(Dispatchers.Default.limitedParallelism(1)) {
+                var result = Result.success(Unit)
+
+                for (attempt in 1..3) {
+                    result = runCatching {
+                        assertTrue(isPortAvailable(port), "Port $port should be available")
+                    }
+
+                    if (result.isSuccess) {
+                        break
+                    } else {
+                        delay(1.seconds)
+                    }
+                }
+
+                result.getOrThrow()
+            }
+        }
+    }
+
+    private fun <T : Tool<*, *>> testMcpToolStreamableHttp(
+        tool: T,
+        block: suspend (McpTool, T) -> Unit,
+    ) = runTest(timeout = 30.seconds) {
+        assertIsNot<McpTool>(tool)
+
+        val (server, connectors) = startMcpServer(
+            factory = CIO,
+            tools = ToolRegistry {
+                tool(tool)
+            },
+        )
+
+        val port = connectors.firstOrNull()?.port ?: 0
+        assertNotEquals(0, port, "Port should not be 0")
+
+        val httpClient = HttpClient { install(SSE) }
+
+        try {
+            val toolRegistry = withContext(Dispatchers.Default.limitedParallelism(1)) {
+                withTimeout(20.seconds) {
+                    McpToolRegistryProvider.streamableHttp {
+                        url = "http://localhost:$port/mcp"
+                        this.httpClient = httpClient
+                    }
+                }
+            }
+
+            assertEquals(
+                listOf(tool.descriptor),
+                toolRegistry.tools.map { it.descriptor },
+            )
+
+            val mcpTool = toolRegistry.getTool(tool.name) as McpTool
+            block(mcpTool, tool)
+        } finally {
+            server.close()
+            httpClient.close()
 
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 var result = Result.success(Unit)

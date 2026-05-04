@@ -64,11 +64,11 @@ internal class AIAgentGraphPipelineImpl(
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: TypeToken,
-        throwable: Throwable
+        error: Throwable
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.NodeExecutionFailed,
-            context = NodeExecutionFailedContext(eventId, executionInfo, node, context, input, inputType, throwable)
+            context = NodeExecutionFailedContext(eventId, executionInfo, node, context, input, inputType, error)
         )
     }
 
@@ -122,11 +122,11 @@ internal class AIAgentGraphPipelineImpl(
         context: AIAgentGraphContextBase,
         input: Any?,
         inputType: TypeToken,
-        throwable: Throwable
+        error: Throwable
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.SubgraphExecutionFailed,
-            context = SubgraphExecutionFailedContext(eventId, executionInfo, subgraph, context, input, inputType, throwable)
+            context = SubgraphExecutionFailedContext(eventId, executionInfo, subgraph, context, input, inputType, error)
         )
     }
 

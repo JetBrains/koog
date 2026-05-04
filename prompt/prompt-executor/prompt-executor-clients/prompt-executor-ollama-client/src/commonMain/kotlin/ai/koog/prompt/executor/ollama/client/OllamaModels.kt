@@ -135,7 +135,7 @@ public object OllamaModels : LLModelDefinitions {
          * @see <a href="https://ollama.com/library/llama4">
          */
         @JvmField
-        public val LLAMA_4_SCOUT: LLModel = LLModel(
+        public val LLAMA_4_LATEST: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "llama4:latest",
             capabilities = listOf(
@@ -154,8 +154,26 @@ public object OllamaModels : LLModelDefinitions {
          *
          * @see <a href="https://ollama.com/library/llama4">
          */
-        @JvmField
-        public val LLAMA_4: LLModel = LLAMA_4_SCOUT
+        public val LLAMA_4_SCOUT: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "llama4:scout",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Tools
+            ),
+            contextLength = 10_485_760,
+        )
+
+        /**
+         * Represents the LLAMA version 4 model provided by Meta.
+         *
+         * The LLAMA 4 collection of models is natively multimodal AI models that enable text and multimodal experiences.
+         * These two models leverage a mixture-of-experts (MoE) architecture and support native multimodality (image input).
+         *
+         * @see <a href="https://ollama.com/library/llama4">
+         */
+        public val LLAMA_4: LLModel = LLAMA_4_LATEST
 
         /**
          * Represents the llama-guard model version3 provided by Meta.
@@ -533,6 +551,7 @@ public object OllamaModels : LLModelDefinitions {
         Meta.LLAMA_3_2,
         Meta.LLAMA_3_2_3B,
         Meta.LLAMA_4,
+        Meta.LLAMA_4_SCOUT,
         Meta.LLAMA_GUARD_3,
         Alibaba.QWEN_2_5_05B,
         Alibaba.QWEN_3_06B,

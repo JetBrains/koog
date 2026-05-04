@@ -101,6 +101,11 @@ public sealed interface AgentLifecycleEventType {
      */
     public object LLMCallCompleted : AgentLifecycleEventType
 
+    /**
+     * Represents an event triggered when a language model call fails.
+     */
+    public object LLMCallFailed : AgentLifecycleEventType
+
     //endregion LLM
 
     //region Tool

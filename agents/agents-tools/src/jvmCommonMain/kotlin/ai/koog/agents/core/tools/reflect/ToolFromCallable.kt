@@ -8,6 +8,7 @@ import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.KotlinTypeToken
 import ai.koog.serialization.typeToken
+import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KCallable
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.callSuspendBy
@@ -91,7 +92,11 @@ public class ToolFromCallable<TResult>(
             putAll(args.parameters)
         }
 
-        return callable.callSuspendBy(argsMap)
+        return try {
+            callable.callSuspendBy(argsMap)
+        } catch (e: InvocationTargetException) {
+            throw e.cause ?: e
+        }
     }
 }
 

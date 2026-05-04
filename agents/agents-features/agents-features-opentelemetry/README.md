@@ -185,7 +185,7 @@ The OpenTelemetry feature creates different types of spans for various operation
         - `gen_ai.agent.id`
         - `gen_ai.conversation.id`
         - `gen_ai.system` (LLM provider)
-        - `gen_ai.response.finish_reasons` (on error)
+        - `gen_ai.response.finish_reasons` (derived from the final response in the session prompt: `Stop` for Assistant/Reasoning, `ToolCalls` for Tool.Call)
 
 3. **Strategy Span**
     - Purpose: Execution of a strategy within an agent run.
@@ -227,6 +227,7 @@ The OpenTelemetry feature creates different types of spans for various operation
         - `gen_ai.usage.output_tokens` (when available)
         - `gen_ai.usage.total_tokens` (when available)
         - `gen_ai.response.finish_reasons` (Stop, ToolCalls, etc.)
+        - `error.type` (on LLM call failure)
         - `gen_ai.response.metadata` (when `ResponseMetaInfo.metadata` is present — serialized JSON containing free-form provider or application metadata)
 
 6. **Execute Tool Span**

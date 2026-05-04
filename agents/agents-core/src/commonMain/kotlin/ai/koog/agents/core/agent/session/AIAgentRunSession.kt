@@ -1,9 +1,28 @@
 package ai.koog.agents.core.agent.session
 
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import kotlin.reflect.KClass
+
+/**
+ * Additional inputs that can be provided when running an [AIAgentRunSession].
+ *
+ * This sealed hierarchy is an extensible container for optional parameters that influence
+ * session execution beyond the primary input.
+ */
+public sealed interface AdditionalInputs {
+    /**
+     * No additional inputs are provided for the session.
+     */
+    public data object None : AdditionalInputs
+
+    /**
+     * Pre-populated [storage] to merge into the session's storage before execution.
+     */
+    public data class Storage(val storage: AIAgentStorage) : AdditionalInputs
+}
 
 /**
  * Represents a session for running an [ai.koog.agents.core.agent.AIAgent].
@@ -32,10 +51,12 @@ public interface AIAgentRunSession<Input, Output, TContext : AIAgentContext> {
      * Executes the agent pipeline with the given context and input, producing an output.
      *
      * @param input The input provided to the pipeline during execution.
+     * @param sessionInputs Optional additional inputs for the session execution.
      * @return The output produced by the pipeline execution.
      */
     public suspend fun run(
-        input: Input
+        input: Input,
+        sessionInputs: AdditionalInputs = AdditionalInputs.None,
     ): Output
 
     /**

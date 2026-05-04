@@ -1,4 +1,4 @@
-package ai.koog.agents.core.utils
+package ai.koog.agents.lock
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay

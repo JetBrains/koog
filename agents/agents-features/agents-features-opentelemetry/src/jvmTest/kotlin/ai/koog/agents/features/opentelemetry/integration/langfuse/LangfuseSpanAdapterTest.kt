@@ -55,6 +55,12 @@ class LangfuseSpanAdapterTest {
             messages = emptyList()
         )
 
+        adapter.onBeforeSpanStarted(createAgentSpan)
+
+        traceAttributes.forEach { attribute ->
+            assertEquals(attribute.value, createAgentSpan.attributes.requireValue(attribute.key))
+        }
+
         val invokeAgentSpanId = "invoke-agent-span-id"
         val runId = "run-id"
 

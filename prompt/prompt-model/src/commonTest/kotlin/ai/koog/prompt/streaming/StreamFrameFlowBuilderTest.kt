@@ -182,6 +182,25 @@ class StreamFrameFlowBuilderTest {
     }
 
     @Test
+    fun testEmitToolCallDeltaWithBlankIdAppendsToExisting() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitToolCallDelta(id = "call_abc123", name = "my_tool", args = "{\"param\":", index = 0)
+            emitToolCallDelta(id = "", args = " \"value\"}", index = 0)
+            emitEnd()
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ToolCallDelta("call_abc123", "my_tool", "{\"param\":", 0),
+                StreamFrame.ToolCallDelta(null, null, " \"value\"}", 0),
+                StreamFrame.ToolCallComplete("call_abc123", "my_tool", "{\"param\": \"value\"}", 0),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
+    @Test
     fun testEmitToolCallDeltaWithIdCreatesNewPendingToolCall() = runTest {
         val frames = buildStreamFrameFlow {
             emitToolCallDelta(id = "call_1", name = "calculator", args = "{\"a\":", index = 0)

@@ -887,6 +887,51 @@ class BedrockLLMClientTest {
             contextLength = 256_000
         )
         assertEquals(BedrockModelFamilies.MoonshotKimi, client.getBedrockModelFamily(kimiModel))
+
+        // Kimi K2.5 (moonshotai prefix)
+        val kimiK25Model = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "moonshotai.kimi-k2.5",
+            capabilities = listOf(LLMCapability.Completion, LLMCapability.Tools),
+            contextLength = 256_000
+        )
+        assertEquals(BedrockModelFamilies.MoonshotKimi, client.getBedrockModelFamily(kimiK25Model))
+
+        // Google Gemma
+        val gemmaModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "google.gemma-3-12b-it",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 128_000
+        )
+        assertEquals(BedrockModelFamilies.GoogleGemma, client.getBedrockModelFamily(gemmaModel))
+
+        // MiniMax
+        val minimaxModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "minimax.minimax-m2.5",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 1_000_000
+        )
+        assertEquals(BedrockModelFamilies.MiniMax, client.getBedrockModelFamily(minimaxModel))
+
+        // OpenAI GPT-OSS
+        val gptOssModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "openai.gpt-oss-120b-1:0",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 128_000
+        )
+        assertEquals(BedrockModelFamilies.OpenAI, client.getBedrockModelFamily(gptOssModel))
+
+        // Cohere Embed v4 (with inference profile prefix)
+        val cohereV4Model = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "us.cohere.embed-v4:0",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 512
+        )
+        assertEquals(BedrockModelFamilies.Cohere, client.getBedrockModelFamily(cohereV4Model))
     }
 
     @Test
@@ -1131,5 +1176,352 @@ class BedrockLLMClientTest {
         assertFalse(model.id.startsWith("eu."))
         assertFalse(model.id.startsWith("global."))
         assertEquals("moonshot.kimi-k2-thinking", model.id)
+    }
+
+    // --- Kimi K2.5 ---
+
+    @Test
+    fun `MoonshotKimiK2_5 model has correct properties`() {
+        val model = BedrockModels.MoonshotKimiK2_5
+
+        assertEquals("moonshotai.kimi-k2.5", model.id)
+        assertEquals(LLMProvider.Bedrock, model.provider)
+        assertEquals(256_000, model.contextLength)
+        val capabilities = assertNotNull(model.capabilities)
+        assertTrue(capabilities.contains(LLMCapability.Completion))
+        assertTrue(capabilities.contains(LLMCapability.Tools))
+        assertTrue(capabilities.contains(LLMCapability.Temperature))
+        assertTrue(capabilities.contains(LLMCapability.Vision.Image))
+    }
+
+    @Test
+    fun `Kimi K2_5 model requires Converse API for execute`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                apiMethod = BedrockAPIMethod.InvokeModel
+            ),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("Hello!")
+        }
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.execute(prompt, BedrockModels.MoonshotKimiK2_5, emptyList())
+        }
+
+        assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
+    }
+
+    @Test
+    fun `Kimi K2_5 model requires Converse API for executeStreaming`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                apiMethod = BedrockAPIMethod.InvokeModel
+            ),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("Hello!")
+        }
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.executeStreaming(prompt, BedrockModels.MoonshotKimiK2_5, emptyList()).toList()
+        }
+
+        assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
+    }
+
+    // --- MiniMax M2.5 ---
+
+    @Test
+    fun `MiniMaxM2_5 model has correct properties`() {
+        val model = BedrockModels.MiniMaxM2_5
+
+        assertEquals("minimax.minimax-m2.5", model.id)
+        assertEquals(LLMProvider.Bedrock, model.provider)
+        assertEquals(1_000_000, model.contextLength)
+        val capabilities = assertNotNull(model.capabilities)
+        assertTrue(capabilities.contains(LLMCapability.Completion))
+        assertTrue(capabilities.contains(LLMCapability.Tools))
+        assertTrue(capabilities.contains(LLMCapability.ToolChoice))
+    }
+
+    @Test
+    fun `MiniMax M2_5 model requires Converse API for execute`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                apiMethod = BedrockAPIMethod.InvokeModel
+            ),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("Hello!")
+        }
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.execute(prompt, BedrockModels.MiniMaxM2_5, emptyList())
+        }
+
+        assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
+    }
+
+    @Test
+    fun `MiniMax M2_5 model requires Converse API for executeStreaming`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                apiMethod = BedrockAPIMethod.InvokeModel
+            ),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("Hello!")
+        }
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.executeStreaming(prompt, BedrockModels.MiniMaxM2_5, emptyList()).toList()
+        }
+
+        assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
+    }
+
+    // --- GPT-OSS ---
+
+    @Test
+    fun `OpenAIGptOss120B model has correct properties`() {
+        val model = BedrockModels.OpenAIGptOss120B
+
+        assertEquals("openai.gpt-oss-120b-1:0", model.id)
+        assertEquals(LLMProvider.Bedrock, model.provider)
+        assertEquals(128_000, model.contextLength)
+        val capabilities = assertNotNull(model.capabilities)
+        assertTrue(capabilities.contains(LLMCapability.Completion))
+        assertTrue(capabilities.contains(LLMCapability.Tools))
+        assertTrue(capabilities.contains(LLMCapability.Schema.JSON.Standard))
+    }
+
+    @Test
+    fun `OpenAIGptOss20B model has correct properties`() {
+        val model = BedrockModels.OpenAIGptOss20B
+
+        assertEquals("openai.gpt-oss-20b-1:0", model.id)
+        assertEquals(LLMProvider.Bedrock, model.provider)
+        assertEquals(128_000, model.contextLength)
+        val capabilities = assertNotNull(model.capabilities)
+        assertTrue(capabilities.contains(LLMCapability.Completion))
+        assertTrue(capabilities.contains(LLMCapability.Tools))
+        assertTrue(capabilities.contains(LLMCapability.Schema.JSON.Standard))
+    }
+
+    @Test
+    fun `GPT-OSS model requires Converse API for execute`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                apiMethod = BedrockAPIMethod.InvokeModel
+            ),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("Hello!")
+        }
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.execute(prompt, BedrockModels.OpenAIGptOss120B, emptyList())
+        }
+
+        assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
+    }
+
+    @Test
+    fun `GPT-OSS model requires Converse API for executeStreaming`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                apiMethod = BedrockAPIMethod.InvokeModel
+            ),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("Hello!")
+        }
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.executeStreaming(prompt, BedrockModels.OpenAIGptOss120B, emptyList()).toList()
+        }
+
+        assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
+    }
+
+    // --- Google Gemma 3 ---
+
+    @Test
+    fun `GoogleGemma3_4BIt model has correct properties`() {
+        val model = BedrockModels.GoogleGemma3_4BIt
+
+        assertEquals("google.gemma-3-4b-it", model.id)
+        assertEquals(LLMProvider.Bedrock, model.provider)
+        assertEquals(128_000, model.contextLength)
+        val capabilities = assertNotNull(model.capabilities)
+        assertTrue(capabilities.contains(LLMCapability.Completion))
+        assertTrue(capabilities.contains(LLMCapability.Tools))
+        assertTrue(capabilities.contains(LLMCapability.Vision.Image))
+        assertFalse(capabilities.contains(LLMCapability.Schema.JSON.Standard))
+    }
+
+    @Test
+    fun `GoogleGemma3_12BIt model has correct properties`() {
+        val model = BedrockModels.GoogleGemma3_12BIt
+
+        assertEquals("google.gemma-3-12b-it", model.id)
+        assertEquals(LLMProvider.Bedrock, model.provider)
+        assertEquals(128_000, model.contextLength)
+        val capabilities = assertNotNull(model.capabilities)
+        assertTrue(capabilities.contains(LLMCapability.Completion))
+        assertTrue(capabilities.contains(LLMCapability.Tools))
+        assertTrue(capabilities.contains(LLMCapability.Vision.Image))
+        assertTrue(capabilities.contains(LLMCapability.Document))
+        assertTrue(capabilities.contains(LLMCapability.Schema.JSON.Standard))
+    }
+
+    @Test
+    fun `GoogleGemma3_27BIt model has correct properties`() {
+        val model = BedrockModels.GoogleGemma3_27BIt
+
+        assertEquals("google.gemma-3-27b-it", model.id)
+        assertEquals(LLMProvider.Bedrock, model.provider)
+        assertEquals(128_000, model.contextLength)
+        val capabilities = assertNotNull(model.capabilities)
+        assertTrue(capabilities.contains(LLMCapability.Completion))
+        assertTrue(capabilities.contains(LLMCapability.Tools))
+        assertTrue(capabilities.contains(LLMCapability.Vision.Image))
+        assertTrue(capabilities.contains(LLMCapability.Document))
+        assertTrue(capabilities.contains(LLMCapability.Schema.JSON.Standard))
+    }
+
+    @Test
+    fun `Google Gemma model requires Converse API for execute`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                apiMethod = BedrockAPIMethod.InvokeModel
+            ),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("Hello!")
+        }
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.execute(prompt, BedrockModels.GoogleGemma3_12BIt, emptyList())
+        }
+
+        assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
+    }
+
+    @Test
+    fun `Google Gemma model requires Converse API for executeStreaming`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                apiMethod = BedrockAPIMethod.InvokeModel
+            ),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("Hello!")
+        }
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.executeStreaming(prompt, BedrockModels.GoogleGemma3_27BIt, emptyList()).toList()
+        }
+
+        assertTrue(exception.message!!.contains("requires the Bedrock Converse API"))
+    }
+
+    // --- Cohere Embed v4 ---
+
+    @Test
+    fun `CohereEmbedV4 model has correct properties`() {
+        val model = BedrockModels.Embeddings.CohereEmbedV4
+
+        assertEquals("us.cohere.embed-v4:0", model.id)
+        assertEquals(LLMProvider.Bedrock, model.provider)
+        assertEquals(512, model.contextLength)
+        val capabilities = assertNotNull(model.capabilities)
+        assertTrue(capabilities.contains(LLMCapability.Embed))
+    }
+
+    // --- No inference profile prefix for third-party models ---
+
+    @Test
+    fun `new third-party chat models have no inference profile prefix`() {
+        val models = listOf(
+            BedrockModels.MoonshotKimiK2_5 to "moonshotai.kimi-k2.5",
+            BedrockModels.MiniMaxM2_5 to "minimax.minimax-m2.5",
+            BedrockModels.OpenAIGptOss120B to "openai.gpt-oss-120b-1:0",
+            BedrockModels.OpenAIGptOss20B to "openai.gpt-oss-20b-1:0",
+            BedrockModels.GoogleGemma3_4BIt to "google.gemma-3-4b-it",
+            BedrockModels.GoogleGemma3_12BIt to "google.gemma-3-12b-it",
+            BedrockModels.GoogleGemma3_27BIt to "google.gemma-3-27b-it",
+        )
+
+        for ((model, expectedId) in models) {
+            assertFalse(model.id.startsWith("us."), "Model ${model.id} should not have US prefix")
+            assertFalse(model.id.startsWith("eu."), "Model ${model.id} should not have EU prefix")
+            assertFalse(model.id.startsWith("global."), "Model ${model.id} should not have global prefix")
+            assertEquals(expectedId, model.id)
+        }
+    }
+
+    @Test
+    fun `CohereEmbedV4 has inference profile prefix`() {
+        val model = BedrockModels.Embeddings.CohereEmbedV4
+        assertTrue(model.id.startsWith("us."), "Cohere Embed v4 should have US inference profile prefix")
+        assertEquals("us.cohere.embed-v4:0", model.id)
     }
 }

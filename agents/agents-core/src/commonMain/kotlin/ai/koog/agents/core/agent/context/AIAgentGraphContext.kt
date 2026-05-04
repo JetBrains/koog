@@ -9,7 +9,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.utils.RWLock
+import ai.koog.agents.lock.RWLock
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.TypeToken
 
@@ -226,15 +226,18 @@ public class AIAgentGraphContext(
      */
     private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
 
+    @Suppress("DEPRECATION")
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
         storeMap[key] = value
     }
 
+    @Suppress("DEPRECATION")
     override fun <T> get(key: AIAgentStorageKey<*>): T? {
         @Suppress("UNCHECKED_CAST")
         return storeMap[key] as T?
     }
 
+    @Suppress("DEPRECATION")
     override fun remove(key: AIAgentStorageKey<*>): Boolean {
         return storeMap.remove(key) != null
     }
@@ -320,8 +323,8 @@ public val agentContextDataAdditionalKey: AIAgentStorageKey<AgentContextData> =
  * @param data The context-specific data to be stored for later retrieval or use within the agent context.
  */
 @InternalAgentsApi
-public fun AIAgentContext.store(data: AgentContextData) {
-    this.rootContext().store(agentContextDataAdditionalKey, data)
+public suspend fun AIAgentContext.store(data: AgentContextData) {
+    this.rootContext().storage.set(agentContextDataAdditionalKey, data)
 }
 
 /**
@@ -336,8 +339,8 @@ public fun AIAgentContext.store(data: AgentContextData) {
  * @return The agent context data, or null if no context data is associated.
  */
 @InternalAgentsApi
-public fun AIAgentContext.getAgentContextData(): AgentContextData? {
-    return this.rootContext().get(agentContextDataAdditionalKey)
+public suspend fun AIAgentContext.getAgentContextData(): AgentContextData? {
+    return this.rootContext().storage.get(agentContextDataAdditionalKey)
 }
 
 /**
@@ -348,6 +351,6 @@ public fun AIAgentContext.getAgentContextData(): AgentContextData? {
  * @return `true` if the agent context data was successfully removed, or `false` if no data was found to remove.
  */
 @OptIn(InternalAgentsApi::class)
-public fun AIAgentContext.removeAgentContextData(): Boolean {
-    return this.rootContext().remove(agentContextDataAdditionalKey)
+public suspend fun AIAgentContext.removeAgentContextData(): Boolean {
+    return this.rootContext().storage.remove(agentContextDataAdditionalKey) != null
 }

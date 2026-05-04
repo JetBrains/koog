@@ -64,7 +64,7 @@ public data class NodeExecutionCompletedContext(
  * @property context The stage context in which the node experienced the error.
  * @property input The input data for the node execution.
  * @property inputType [TypeToken] representing the type of the [input].
- * @property throwable The exception or error that occurred during node execution.
+ * @property error The exception or error that occurred during node execution.
  */
 public data class NodeExecutionFailedContext(
     override val eventId: String,
@@ -73,7 +73,7 @@ public data class NodeExecutionFailedContext(
     val context: AIAgentGraphContextBase,
     val input: Any?,
     val inputType: TypeToken,
-    val throwable: Throwable
+    val error: Throwable
 ) : NodeExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.NodeExecutionFailed
 }

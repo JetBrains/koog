@@ -290,10 +290,6 @@ internal object GenAIAttributes {
                 override val id = "content_filter"
             }
 
-            object Error : FinishReasonType {
-                override val id = "error"
-            }
-
             object Length : FinishReasonType {
                 override val id = "length"
             }

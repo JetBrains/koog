@@ -1,9 +1,13 @@
 package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
+import ai.koog.agents.features.opentelemetry.extension.addCommonErrorAttributes
+import ai.koog.agents.features.opentelemetry.extension.mergedResponseMetadata
+import ai.koog.agents.features.opentelemetry.extension.sumInputTokens
+import ai.koog.agents.features.opentelemetry.extension.sumOutputTokens
+import ai.koog.agents.features.opentelemetry.extension.systemMessages
 import ai.koog.agents.features.opentelemetry.extension.toSpanEndStatus
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -11,7 +15,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.Tracer
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -109,7 +112,7 @@ internal fun startInferenceSpan(
     }
 
     // gen_ai.system_instructions
-    val systemMessages = messages.filterIsInstance<Message.System>()
+    val systemMessages = messages.systemMessages()
     if (systemMessages.isNotEmpty()) {
         builder.addAttribute(GenAIAttributes.SystemInstructions(systemMessages))
     }
@@ -152,9 +155,7 @@ internal fun endInferenceSpan(
     }
 
     // error.type
-    error?.javaClass?.typeName?.let { typeName ->
-        span.addAttribute(CommonAttributes.Error.Type(typeName))
-    }
+    span.addCommonErrorAttributes(error)
 
     // gen_ai.response.finish_reasons - Ignore. Not supported in Koog
     // gen_ai.response.id - Ignore. Not supported in Koog
@@ -162,29 +163,16 @@ internal fun endInferenceSpan(
     span.addAttribute(GenAIAttributes.Response.Model(model))
 
     // gen_ai.response.metadata
-    val responseMetadata = messages.filterIsInstance<Message.Response>()
-        .mapNotNull { message -> message.metaInfo.metadata }
-        .fold(mutableMapOf<String, JsonElement>()) { acc, jsonObject ->
-            acc.putAll(jsonObject)
-            acc
-        }
+    val responseMetadata = messages.mergedResponseMetadata()
     if (responseMetadata.isNotEmpty()) {
         span.addAttribute(GenAIAttributes.Response.Metadata(JsonObject(responseMetadata).toString()))
     }
 
     // gen_ai.usage.input_tokens
-    span.addAttribute(
-        GenAIAttributes.Usage.InputTokens(
-            messages.filterIsInstance<Message.Response>().sumOf { message -> message.metaInfo.inputTokensCount ?: 0 }
-        )
-    )
+    span.addAttribute(GenAIAttributes.Usage.InputTokens(messages.sumInputTokens()))
 
     // gen_ai.usage.output_tokens
-    span.addAttribute(
-        GenAIAttributes.Usage.OutputTokens(
-            messages.filterIsInstance<Message.Response>().sumOf { message -> message.metaInfo.outputTokensCount ?: 0 }
-        )
-    )
+    span.addAttribute(GenAIAttributes.Usage.OutputTokens(messages.sumOutputTokens()))
 
     // gen_ai.output.messages
     if (messages.isNotEmpty()) {

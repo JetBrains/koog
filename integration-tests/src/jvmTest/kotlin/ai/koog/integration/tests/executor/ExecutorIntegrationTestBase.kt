@@ -1187,13 +1187,8 @@ abstract class ExecutorIntegrationTestBase {
             model != GoogleModels.Gemini3_Pro_Preview,
             "KG-768 GoogleLLMClient.executeStreaming() may hang because the stream never completes with End frame"
         )
-        assumeTrue(
-            model.provider !== LLMProvider.OpenRouter,
-            "KG-626 Error from OpenRouter on a streaming with a tool call"
-        )
 
         val executor = getExecutor(model)
-
         val params = when (model.provider) {
             LLMProvider.OpenAI ->
                 if (model.supports(LLMCapability.OpenAIEndpoint.Responses)) {

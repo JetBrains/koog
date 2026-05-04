@@ -75,7 +75,7 @@ private suspend fun runCalculatorExample(runMode: RunMode) {
 
                 onAgentExecutionFailed { eventContext ->
                     println(
-                        "An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}"
+                        "An error occurred: ${eventContext.error.message}\n${eventContext.error.stackTraceToString()}"
                     )
                 }
 

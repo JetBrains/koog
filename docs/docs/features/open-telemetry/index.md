@@ -458,7 +458,7 @@ takes a key and a value as its arguments.
 The OpenTelemetry feature captures the following agent activity:
 
 - **Agent lifecycle events**: agent start, stop, errors
-- **LLM interactions**: prompts, responses, token usage, latency
+- **LLM interactions**: prompts, responses, token usage, latency, and failures (spans are marked with span status `ERROR` and `error.type` when an LLM call throws)
 - **Tool calls**: execution traces for tool invocations
 - **System context**: metadata such as model name, environment, Koog version
 
