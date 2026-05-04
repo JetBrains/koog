@@ -14,6 +14,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.typeToken
+import kotlin.jvm.JvmName
 import kotlin.time.Clock
 
 /**
@@ -66,12 +67,17 @@ public inline fun <reified Input, reified Output> AIAgent(
  * @param installFeatures Lambda function for installing additional features into the feature context. Defaults to an empty lambda.
  * @return An instance of AIAgent configured with the graph strategy.
  */
+// this is a workaround for clashing jvm signatures.
+// these factories are not supposed to be used from java,
+// so this fix should not bring any issues
+@JvmName("AIAgentWithDefaultStrategy")
 public fun AIAgent(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfig,
     strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
+    clock: Clock = Clock.System,
     installFeatures: FeatureContext.() -> Unit = {},
 ): GraphAIAgent<String, String> = GraphAIAgent(
     inputType = typeToken<String>(),
@@ -81,7 +87,7 @@ public fun AIAgent(
     toolRegistry = toolRegistry,
     strategy = strategy,
     id = id,
-    clock = Clock.System,
+    clock = clock,
     installFeatures = installFeatures
 )
 
@@ -249,14 +255,15 @@ public inline fun <reified Input, reified Output> AIAgent(
 public fun <Input, Output> AIAgent(
     promptExecutor: PromptExecutor,
     llmModel: LLModel,
-    responseProcessor: ResponseProcessor? = null,
-    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     strategy: AIAgentFunctionalStrategy<Input, Output>,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    responseProcessor: ResponseProcessor? = null,
     id: String? = null,
     systemPrompt: String? = null,
     temperature: Double? = null,
     numberOfChoices: Int = 1,
     maxIterations: Int = 50,
+    clock: Clock = Clock.System,
     installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
 ): AIAgent<Input, Output> = FunctionalAIAgent(
     promptExecutor = promptExecutor,
@@ -278,7 +285,7 @@ public fun <Input, Output> AIAgent(
     toolRegistry = toolRegistry,
     strategy = strategy,
     id = id,
-    clock = Clock.System
+    clock = clock
 )
 
 /**
@@ -300,14 +307,15 @@ public fun <Input, Output> AIAgent(
 public fun <Input, Output> AIAgent(
     promptExecutor: PromptExecutor,
     llmModel: LLModel,
-    responseProcessor: ResponseProcessor? = null,
-    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     strategy: AIAgentPlannerStrategy<Input, Output, *>,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    responseProcessor: ResponseProcessor? = null,
     id: String? = null,
     systemPrompt: String? = null,
     temperature: Double? = null,
     numberOfChoices: Int = 1,
     maxIterations: Int = 50,
+    clock: Clock = Clock.System,
     installFeatures: PlannerAIAgent.FeatureContext.() -> Unit = {},
 ): AIAgent<Input, Output> = PlannerAIAgent(
     promptExecutor = promptExecutor,
@@ -329,7 +337,7 @@ public fun <Input, Output> AIAgent(
     toolRegistry = toolRegistry,
     strategy = strategy,
     id = id,
-    clock = Clock.System
+    clock = clock
 )
 
 /**

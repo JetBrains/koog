@@ -13,6 +13,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.typeToken
+import kotlin.jvm.JvmName
 
 /**
  * Factory functions for creating AIAgentService instances.
@@ -132,8 +133,14 @@ public fun <Input, Output> AIAgentService(
  * @param promptExecutor The executor responsible for handling prompts during the agent's operation.
  * @param agentConfig The configuration object for the AI agent.
  * @param strategy The strategy defining how the agent processes tasks and connections within the graph. Defaults to `singleRunStrategy`.
- * @param toolRegistry The registry containing tools available for the agent to use. Defaults to an empty*/
+ * @param toolRegistry The registry containing tools available for the agent to use. Defaults to an empty tool registry.
+ * @param installFeatures A lambda function to install additional features into the agent's feature context.
+ */
 @OptIn(InternalAgentsApi::class)
+// this is a workaround for clashing jvm signatures.
+// these factories are not supposed to be used from java,
+// so this fix should not bring any issues
+@JvmName("AIAgentServiceWithDefaultStrategy")
 public fun AIAgentService(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfig,
