@@ -262,7 +262,7 @@ class AgentcoreSearchStorageTest {
     fun testRetrieveMemoryRecordsExceptionIsWrappedInRetrieveException() = runTest {
         coEvery { client.retrieveMemoryRecords(any<RetrieveMemoryRecordsRequest>()) } throws RuntimeException("AWS error")
 
-        assertFailsWith<AgentcoreMemoryException.RetrieveException> {
+        assertFailsWith<AgentcoreLongTermMemoryException.RetrieveException> {
             storage.search(
                 AgentcoreSimilaritySearchRequest(
                     strategyType = AgentcoreMemoryStrategy.SEMANTIC,
@@ -278,7 +278,7 @@ class AgentcoreSearchStorageTest {
     fun testListMemoryRecordsExceptionIsWrappedInRetrieveException() = runTest {
         coEvery { client.listMemoryRecords(any<ListMemoryRecordsRequest>()) } throws RuntimeException("AWS list error")
 
-        assertFailsWith<AgentcoreMemoryException.RetrieveException> {
+        assertFailsWith<AgentcoreLongTermMemoryException.RetrieveException> {
             storage.search(
                 AgentcoreListingSearchRequest(
                     strategyType = AgentcoreMemoryStrategy.PREFERENCE,

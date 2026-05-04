@@ -42,10 +42,10 @@ class AgentcoreChatHistoryProviderTest {
 
     @Test
     fun testBlankMemoryIdThrows() {
-        assertFailsWith<AgentcoreMemoryException.ConfigurationException> {
+        assertFailsWith<AgentcoreShortTermMemoryException.ConfigurationException> {
             AgentcoreChatHistoryProvider(client, memoryId = "")
         }
-        assertFailsWith<AgentcoreMemoryException.ConfigurationException> {
+        assertFailsWith<AgentcoreShortTermMemoryException.ConfigurationException> {
             AgentcoreChatHistoryProvider(client, memoryId = "   ")
         }
     }
@@ -510,7 +510,7 @@ class AgentcoreChatHistoryProviderTest {
         coEvery { client.createEvent(any<CreateEventRequest>()) } throws
             aws.smithy.kotlin.runtime.ServiceException("AWS error")
 
-        assertFailsWith<AgentcoreMemoryException.WriteException> {
+        assertFailsWith<AgentcoreShortTermMemoryException.WriteException> {
             provider.store("actor:session", listOf(Message.User("hi", RequestMetaInfo.Empty)))
         }
     }
@@ -522,7 +522,7 @@ class AgentcoreChatHistoryProviderTest {
         coEvery { client.listEvents(any<ListEventsRequest>()) } throws
             aws.smithy.kotlin.runtime.ServiceException("AWS error")
 
-        assertFailsWith<AgentcoreMemoryException.ReadException> {
+        assertFailsWith<AgentcoreShortTermMemoryException.ReadException> {
             provider.load("actor:session")
         }
     }

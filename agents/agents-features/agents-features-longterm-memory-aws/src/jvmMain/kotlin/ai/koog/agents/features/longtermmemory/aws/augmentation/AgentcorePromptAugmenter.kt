@@ -27,9 +27,15 @@ import ai.koog.rag.base.storage.search.SearchResult
  *
  * @param contextPrefix Header text prepended to SEMANTIC/PREFERENCE context blocks.
  *   Defaults to [PromptAugmenter.DEFAULT_CONTEXT_PREFIX].
+ * @param sectionEpisodes Section header for EPISODES records. Defaults to [SECTION_EPISODES].
+ * @param sectionReflections Section header for REFLECTIONS records. Defaults to [SECTION_REFLECTIONS].
+ * @param sectionSeparator Separator string between sections. Defaults to [SECTION_SEPARATOR].
  */
 public class AgentcorePromptAugmenter @JvmOverloads constructor(
     private val contextPrefix: String = PromptAugmenter.DEFAULT_CONTEXT_PREFIX,
+    private val sectionEpisodes: String = SECTION_EPISODES,
+    private val sectionReflections: String = SECTION_REFLECTIONS,
+    private val sectionSeparator: String = SECTION_SEPARATOR,
 ) : PromptAugmenter {
 
     public companion object {
@@ -40,7 +46,7 @@ public class AgentcorePromptAugmenter @JvmOverloads constructor(
         public const val SECTION_REFLECTIONS: String = "Lessons learned"
 
         /** Trailing newline separator between sections. */
-        private const val SECTION_SEPARATOR: String = "\n\n"
+        public const val SECTION_SEPARATOR: String = "\n\n"
     }
 
     override fun augment(
@@ -76,14 +82,14 @@ public class AgentcorePromptAugmenter @JvmOverloads constructor(
         //    - Plain semantic/preference content follows, using the generic contextPrefix.
         val systemParts = buildList {
             if (episodesBucket.isNotEmpty()) {
-                add(PromptAugmenter.formatContext(episodesBucket, "$SECTION_EPISODES:\n"))
+                add(PromptAugmenter.formatContext(episodesBucket, "$sectionEpisodes:\n"))
             }
             if (reflectionsBucket.isNotEmpty()) {
-                add(PromptAugmenter.formatContext(reflectionsBucket, "$SECTION_REFLECTIONS:\n"))
+                add(PromptAugmenter.formatContext(reflectionsBucket, "$sectionReflections:\n"))
             }
             if (systemBucket.isNotEmpty()) add(formatPlain(systemBucket))
         }
-        val systemText = systemParts.joinToString(SECTION_SEPARATOR)
+        val systemText = systemParts.joinToString(sectionSeparator)
         val afterSystem =
             if (systemText.isNotBlank()) augmentSystemMessage(originalPrompt, systemText) else originalPrompt
 
@@ -104,7 +110,7 @@ public class AgentcorePromptAugmenter @JvmOverloads constructor(
         return prompt.withMessages { messages ->
             if (systemIndex >= 0) {
                 val existing = messages[systemIndex] as Message.System
-                val mergedContent = existing.content + SECTION_SEPARATOR + contextText
+                val mergedContent = existing.content + sectionSeparator + contextText
                 val merged = Message.System(mergedContent, existing.metaInfo, existing.cacheControl)
                 messages.toMutableList().also { it[systemIndex] = merged }
             } else {
@@ -121,9 +127,8 @@ public class AgentcorePromptAugmenter @JvmOverloads constructor(
     ): Prompt {
         val userIndex = prompt.messages.indexOfLast { it is Message.User }
         if (userIndex < 0) {
-            // No user message to rewrite — fall back to system-message augmentation so the
-            // retrieved summaries are still delivered to the model.
-            return augmentSystemMessage(prompt, formatPlain(context))
+            // No user message to augment — return the current prompt.
+            return prompt
         }
         val contextText = formatPlain(context)
         if (contextText.isBlank()) return prompt

@@ -106,7 +106,7 @@ public class AgentcoreSearchStorage(
                         search(subrequest.request, subrequest.namespace)
                     } catch (e: CancellationException) {
                         throw e
-                    } catch (e: AgentcoreMemoryException.RetrieveException) {
+                    } catch (e: AgentcoreLongTermMemoryException.RetrieveException) {
                         logger.warn(
                             "Composite subrequest failed for strategyId=${subrequest.request.memoryStrategyId}, " +
                                 "namespace=${subrequest.namespace}; skipping this subrequest.",
@@ -129,7 +129,7 @@ public class AgentcoreSearchStorage(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        throw AgentcoreMemoryException.RetrieveException(
+        throw AgentcoreLongTermMemoryException.RetrieveException(
             "Failed to search memory records: memoryId=$agentcoreMemoryId, strategyId=$strategyId, namespace=$namespace",
             e,
         )

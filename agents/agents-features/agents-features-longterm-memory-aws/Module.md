@@ -1,133 +1,66 @@
 # Module features-longterm-memory-aws
 
 AWS Bedrock AgentCore integration for the `LongTermMemory` feature.
-Provides an `agentcore { }` DSL extension on `LongTermMemory.RetrievalSettingsBuilder` that wires
-an `AgentcoreSearchStorage` and an `AgentcoreCompositeSearchStrategy` into the feature in one step.
+Provides storage, retrieval strategy, prompt augmentation, and namespace resolution
+components that wire the AgentCore memory service into the long-term memory pipeline.
 
-## Setup
+## Package ai.koog.agents.features.longtermmemory.aws
 
-Add the dependency and create a `BedrockAgentCoreClient`, then install `LongTermMemory` with an
-`agentcore { }` retrieval block.
+### AgentcoreSearchStorage
 
-```kotlin
-val client = BedrockAgentCoreClient { region = "us-east-1" }
+A `SearchStorage` implementation backed by AWS Bedrock AgentCore memory. Dispatches three
+kinds of search requests to the AgentCore API: similarity search (`RetrieveMemoryRecords`),
+listing (`ListMemoryRecords`), and composite search that fans out multiple subrequests
+concurrently, isolating individual failures so that other subrequests still return results.
 
-install(LongTermMemory) {
-    retrieval {
-        agentcore(client, memoryId = "mem-abc123") {
-            // one or more subrequest helpers go here
-        }
-    }
-}
-```
+### AgentcoreCompositeSearchStrategy
 
-## Use-case 1 — Combining two strategies (USER_PREFERENCE + SEMANTIC)
+A `SearchStrategy` that holds a fixed list of `AgentcoreSearchSubrequest` templates and
+produces an `AgentcoreCompositeSearchRequest` at retrieval time. Supports mixing different
+AgentCore strategy types (e.g. PREFERENCE listing together with SEMANTIC similarity) and
+different namespace scopes (e.g. session-scoped episodes together with actor-scoped
+reflections) in a single composite call.
 
-Use `userPreferences` and `semantic` helpers together inside one `agentcore { }` block.
-Both subrequests are sent in a single composite call; results are merged and injected into the
-system prompt before every LLM call.
+### AgentcoreCompositeSearchStrategy.AgentcoreSearchSubrequest
 
-```kotlin
-install(LongTermMemory) {
-    retrieval {
-        agentcore(client, memoryId = "mem-abc123") {
-            // Retrieve stored user preferences (listing, actor-scoped)
-            userPreferences(strategyId = "user-pref-strategy", actorId = "alice", limit = 50)
+A sealed template for one entry inside an `AgentcoreCompositeSearchStrategy`. Two variants
+exist: `Similarity` (injects the per-turn query into a `RetrieveMemoryRecords` subrequest)
+and `Listing` (produces a query-free `ListMemoryRecords` subrequest). Templates are resolved
+into concrete requests at strategy creation time.
 
-            // Retrieve semantically similar past interactions (similarity, actor-scoped)
-            semantic(strategyId = "semantic-strategy", actorId = "alice", topK = 5)
-        }
-    }
-}
-```
+### AgentcoreMemoryRecord
 
-## Use-case 2 — Single EPISODIC strategy querying two namespaces
+A `TextDocument` that carries a single memory record retrieved from AgentCore, including its
+textual content, optional unique identifier, key-value metadata, and the
+`AgentcoreMemoryStrategy` that governs how the record is injected into the prompt.
 
-The `episodic` helper appends two subrequests under the same `strategyId`: extracted episodes
-(session-scoped namespace) and long-term reflections (actor-scoped namespace).
-AgentCore distinguishes them purely by namespace, so a single strategy id is sufficient.
+### AgentcoreMemoryStrategy
 
-```kotlin
-install(LongTermMemory) {
-    retrieval {
-        agentcore(client, memoryId = "mem-abc123") {
-            episodic(
-                strategyId       = "episodic-strategy",
-                actorId          = "alice",
-                sessionId        = "session-42",
-                episodesTopK     = 3,   // recent session episodes
-                reflectionsTopK  = 2,   // actor-level reflections
-            )
-        }
-    }
-}
-```
+An enum that classifies AgentCore memory strategy kinds and drives the augmentation pathway
+used by `AgentcorePromptAugmenter`: `SEMANTIC` and `PREFERENCE` records are folded into the
+system message; `EPISODES` and `REFLECTIONS` records are placed under dedicated labelled
+sections in the system message; `SUMMARY` records rewrite the last user message to prepend
+retrieved context.
 
-If the episodes and reflections are stored under different strategy ids, pass
-`reflectionsStrategyId` explicitly:
+### AgentcorePromptAugmenter
 
-```kotlin
-episodic(
-    strategyId            = "episodic-episodes-strategy",
-    reflectionsStrategyId = "episodic-reflections-strategy",
-    actorId               = "alice",
-    sessionId             = "session-42",
-)
-```
+A `PromptAugmenter` that routes each retrieved `AgentcoreMemoryRecord` to the correct
+injection point based on its `AgentcoreMemoryStrategy`. SEMANTIC and PREFERENCE content is
+appended to the system message; EPISODES and REFLECTIONS are rendered as distinct labelled
+sections in the system message; SUMMARY content rewrites the last user message. A system
+message is created automatically when none is present.
 
-Alternatively, call `episodes` and `reflections` separately for full control:
+### AgentcoreNamespaceScope
 
-```kotlin
-agentcore(client, memoryId = "mem-abc123") {
-    episodes(strategyId = "episodic-strategy", actorId = "alice", sessionId = "session-42", topK = 3)
-    reflections(strategyId = "episodic-strategy", actorId = "alice", topK = 2)
-}
-```
+A sealed descriptor passed to `AgentcoreNamespaceResolver` to identify the memory "folder"
+targeted by a retrieval or ingestion operation. `Actor` scope covers strategies that are
+actor-scoped (PREFERENCE, SEMANTIC, REFLECTIONS); `Session` scope additionally carries a
+session identifier for strategies that partition memory per conversation (SUMMARY, EPISODES).
 
-## Use-case 3 — Custom namespace layout
+### AgentcoreNamespaceResolver
 
-By default every helper (`semantic`, `summary`, `userPreferences`, `episodes`, `reflections`,
-`episodic`) produces AgentCore's documented namespace layout:
-
-```
-actor-scoped:   /strategies/{strategyId}/actors/{actorId}/
-session-scoped: /strategies/{strategyId}/actors/{actorId}/sessions/{sessionId}/
-```
-
-If your memory store was created with a different namespace pattern, override the
-`namespaceResolver` once at the top of the block — the helpers will route all namespace
-construction through it. For most cases `AgentcoreNamespaceResolver.template(...)` is
-enough:
-
-```kotlin
-agentcore(client, memoryId = "mem-abc123") {
-    namespaceResolver = AgentcoreNamespaceResolver.template(
-        actorScoped   = "/tenants/acme/users/{actorId}/{strategyId}/",
-        sessionScoped = "/tenants/acme/users/{actorId}/{strategyId}/sessions/{sessionId}/",
-    )
-
-    userPreferences(strategyId = "user-pref-strategy", actorId = "alice", limit = 50)
-    semantic(strategyId = "semantic-strategy", actorId = "alice", topK = 5)
-}
-```
-
-For fully custom logic, provide an `AgentcoreNamespaceResolver` directly (it's a `fun interface`,
-so a lambda works):
-
-```kotlin
-agentcore(client, memoryId = "mem-abc123") {
-    namespaceResolver = AgentcoreNamespaceResolver { scope ->
-        when (scope) {
-            is AgentcoreNamespaceScope.Actor ->
-                "/tenants/$tenantId/users/${scope.actorId}/${scope.strategyId}/"
-            is AgentcoreNamespaceScope.Session ->
-                "/tenants/$tenantId/users/${scope.actorId}/${scope.strategyId}/sessions/${scope.sessionId}/"
-        }
-    }
-    semantic(strategyId = "semantic-strategy", actorId = "alice", topK = 5)
-}
-```
-
-The `subrequest(...)` escape hatch is unaffected by the resolver — raw subrequest templates
-keep their own namespace verbatim. Java callers can configure the resolver the same way via
-`AgentcoreRetrieval.builder(...).namespaceResolver(...)`.
+A functional interface that converts an `AgentcoreNamespaceScope` into an AgentCore namespace
+string. The built-in `Default` implementation reproduces AWS's documented layout
+(`/strategies/{strategyId}/actors/{actorId}/` and the session-scoped variant). A
+`template(...)` factory allows overriding the layout via placeholder strings without
+implementing the interface directly.
