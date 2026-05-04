@@ -52,6 +52,8 @@ dependencies {
     implementation(project(":serialization:serialization-jackson"))
     api(libs.opentelemetry.exporter.logging)
     api(libs.opentelemetry.exporter.otlp)
+    implementation(kotlin("test-junit5"))
+    implementation(libs.mockk)
 }
 
 dokka {

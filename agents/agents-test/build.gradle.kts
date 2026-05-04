@@ -17,6 +17,8 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
                 api(project(":prompt:prompt-tokenizer"))
 
+                api(project(":agents:agents-utils"))
+
                 api(kotlin("test"))
 
                 api(libs.jetbrains.annotations)
