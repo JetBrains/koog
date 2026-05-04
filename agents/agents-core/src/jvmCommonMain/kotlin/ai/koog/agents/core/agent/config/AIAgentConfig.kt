@@ -6,7 +6,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.JSONSerializer
-import ai.koog.serialization.jackson.JacksonSerializer
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import java.util.concurrent.ExecutorService
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
@@ -47,7 +47,7 @@ public actual class AIAgentConfig actual constructor(
         missingToolsConversionStrategy: MissingToolsConversionStrategy =
             MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
         responseProcessor: ResponseProcessor? = null,
-        serializer: JSONSerializer = JacksonSerializer()
+        serializer: JSONSerializer = KotlinxSerializer()
     ) : this(prompt, model, maxAgentIterations, missingToolsConversionStrategy, responseProcessor, serializer) {
         this.strategyExecutorService = agentStrategyExecutorService
         this.llmRequestExecutorService = llmRequestExecutorService
@@ -130,10 +130,11 @@ public actual class AIAgentConfig actual constructor(
             public var responseProcessor: ResponseProcessor? = null,
             internal var strategyExecutorService: ExecutorService? = null,
             internal var llmRequestExecutorService: ExecutorService? = null,
-            internal var serializer: JSONSerializer = JacksonSerializer()
+            internal var serializer: JSONSerializer? = null
         ) {
             /**
-             * Sets serializer for underlying tool calls and LLM requests
+             * Sets serializer for underlying tool calls and LLM requests.
+             * If not called, the default from [AIAgentConfig] is used (kotlinx serialization).
              *
              * @param serializer The JSON serializer to configure the AI agent with.
              * @return The updated instance of [Companion.AIAgentConfigBuilder]
@@ -204,17 +205,22 @@ public actual class AIAgentConfig actual constructor(
              *
              * @return a fully constructed and validated [AIAgentConfig] instance
              */
-            public fun build(): AIAgentConfig = AIAgentConfig(
-                model = model,
-                prompt = prompt ?: Prompt.Empty,
-                maxAgentIterations = maxAgentIterations ?: 100,
-                missingToolsConversionStrategy = missingToolsConversionStrategy
-                    ?: MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
-                responseProcessor = responseProcessor,
-                agentStrategyExecutorService = strategyExecutorService,
-                llmRequestExecutorService = llmRequestExecutorService,
-                serializer = serializer
-            )
+            public fun build(): AIAgentConfig {
+                // Construct without serializer so the constructor default (KotlinxSerializer)
+                // is used when the caller never called .serializer(...). This keeps the default
+                // in one place — the secondary constructor — rather than duplicating it here.
+                val config = AIAgentConfig(
+                    model = model,
+                    prompt = prompt ?: Prompt.Empty,
+                    maxAgentIterations = maxAgentIterations ?: 100,
+                    missingToolsConversionStrategy = missingToolsConversionStrategy
+                        ?: MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
+                    responseProcessor = responseProcessor,
+                    agentStrategyExecutorService = strategyExecutorService,
+                    llmRequestExecutorService = llmRequestExecutorService,
+                )
+                return serializer?.let { config.copy(serializer = it) } ?: config
+            }
         }
     }
 }
