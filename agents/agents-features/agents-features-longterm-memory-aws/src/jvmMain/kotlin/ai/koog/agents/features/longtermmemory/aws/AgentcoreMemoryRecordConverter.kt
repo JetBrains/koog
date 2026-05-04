@@ -5,12 +5,12 @@ import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.search.Score
 import ai.koog.rag.base.storage.search.ScoreMetric
 import ai.koog.rag.base.storage.search.SearchResult
-import aws.sdk.kotlin.services.bedrockagentcore.model.LeftExpression
 import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryMetadataFilterExpression
+import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordLeftExpression
+import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordMetadataValue
+import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordOperatorType
+import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordRightExpression
 import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordSummary
-import aws.sdk.kotlin.services.bedrockagentcore.model.MetadataValue
-import aws.sdk.kotlin.services.bedrockagentcore.model.OperatorType
-import aws.sdk.kotlin.services.bedrockagentcore.model.RightExpression
 
 /**
  * Converts AWS Bedrock AgentCore memory record types to the framework's internal representations.
@@ -35,9 +35,17 @@ internal object AgentcoreMemoryRecordConverter {
         )
     }
 
-    private fun mapMetadata(agentcoreMetadata: Map<String, MetadataValue>?): Map<String, Any> {
+    private fun mapMetadata(agentcoreMetadata: Map<String, MemoryRecordMetadataValue>?): Map<String, Any> {
         if (agentcoreMetadata.isNullOrEmpty()) return emptyMap()
-        return agentcoreMetadata.mapValues { (_, v) -> v.asStringValueOrNull() ?: "" }
+        return agentcoreMetadata.mapValues { (_, v) -> mapMetadataValue(v) }
+    }
+
+    private fun mapMetadataValue(v: MemoryRecordMetadataValue): Any = when (v) {
+        is MemoryRecordMetadataValue.DateTimeValue -> v.value
+        is MemoryRecordMetadataValue.NumberValue -> v.value
+        is MemoryRecordMetadataValue.StringListValue -> v.value
+        is MemoryRecordMetadataValue.StringValue -> v.value
+        is MemoryRecordMetadataValue.SdkUnknown -> ""
     }
 
     /**
@@ -45,9 +53,9 @@ internal object AgentcoreMemoryRecordConverter {
      * for the Bedrock AgentCore `RetrieveMemoryRecords` API.
      *
      * Supported grammar (clauses are separated by commas; whitespace around tokens is ignored):
-     * - `key = value`         → [OperatorType.EqualsTo] with the given metadata key and string value.
-     * - `key EXISTS`          → [OperatorType.Exists] with the given metadata key (no right-hand value).
-     * - `key NOT_EXISTS`      → [OperatorType.NotExists] with the given metadata key (no right-hand value).
+     * - `key = value`         → [MemoryRecordOperatorType.EqualsTo] with the given metadata key and string value.
+     * - `key EXISTS`          → [MemoryRecordOperatorType.Exists] with the given metadata key (no right-hand value).
+     * - `key NOT_EXISTS`      → [MemoryRecordOperatorType.NotExists] with the given metadata key (no right-hand value).
      *
      * Operator keywords (`EXISTS`, `NOT_EXISTS`) are matched case-insensitively. A blank or `null`
      * input yields `null`, which signals to the caller that no metadata filtering should be applied.
@@ -82,9 +90,9 @@ internal object AgentcoreMemoryRecordConverter {
                 "Invalid metadata value '$rawValue' in filter expression clause: '$clause'"
             }
             return MemoryMetadataFilterExpression {
-                left = LeftExpression.MetadataKey(rawKey)
-                operator = OperatorType.EqualsTo
-                right = RightExpression.MetadataValue(MetadataValue.StringValue(rawValue))
+                left = MemoryRecordLeftExpression.MetadataKey(rawKey)
+                operator = MemoryRecordOperatorType.EqualsTo
+                right = MemoryRecordRightExpression.MetadataValue(MemoryRecordMetadataValue.StringValue(rawValue))
             }
         }
 
@@ -99,15 +107,15 @@ internal object AgentcoreMemoryRecordConverter {
             "Invalid metadata key '$rawKey' in filter expression clause: '$clause'"
         }
         val operatorType = when (op) {
-            "EXISTS" -> OperatorType.Exists
-            "NOT_EXISTS" -> OperatorType.NotExists
+            "EXISTS" -> MemoryRecordOperatorType.Exists
+            "NOT_EXISTS" -> MemoryRecordOperatorType.NotExists
             else -> throw IllegalArgumentException(
                 "Unknown operator '$op' in filter expression clause: '$clause' " +
                     "(supported: '=', 'EXISTS', 'NOT_EXISTS')"
             )
         }
         return MemoryMetadataFilterExpression {
-            left = LeftExpression.MetadataKey(rawKey)
+            left = MemoryRecordLeftExpression.MetadataKey(rawKey)
             operator = operatorType
         }
     }

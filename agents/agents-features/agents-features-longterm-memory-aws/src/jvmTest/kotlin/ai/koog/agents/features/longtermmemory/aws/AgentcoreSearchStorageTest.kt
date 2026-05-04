@@ -9,8 +9,8 @@ import aws.sdk.kotlin.services.bedrockagentcore.BedrockAgentCoreClient
 import aws.sdk.kotlin.services.bedrockagentcore.model.ListMemoryRecordsRequest
 import aws.sdk.kotlin.services.bedrockagentcore.model.ListMemoryRecordsResponse
 import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryContent
+import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordMetadataValue
 import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordSummary
-import aws.sdk.kotlin.services.bedrockagentcore.model.MetadataValue
 import aws.sdk.kotlin.services.bedrockagentcore.model.RetrieveMemoryRecordsRequest
 import aws.sdk.kotlin.services.bedrockagentcore.model.RetrieveMemoryRecordsResponse
 import aws.smithy.kotlin.runtime.time.Instant
@@ -46,7 +46,7 @@ class AgentcoreSearchStorageTest {
         id: String = "record-1",
         text: String = "Some memory content",
         score: Double = 0.9,
-        metadata: Map<String, MetadataValue>? = null,
+        metadata: Map<String, MemoryRecordMetadataValue>? = null,
     ): MemoryRecordSummary = MemoryRecordSummary {
         memoryRecordId = id
         memoryStrategyId = strategyId
@@ -317,8 +317,8 @@ class AgentcoreSearchStorageTest {
             memoryRecordSummaries = listOf(
                 makeMemoryRecordSummary(
                     metadata = mapOf(
-                        "source" to MetadataValue.StringValue("chat"),
-                        "lang" to MetadataValue.StringValue("en")
+                        "source" to MemoryRecordMetadataValue.StringValue("chat"),
+                        "lang" to MemoryRecordMetadataValue.StringValue("en")
                     )
                 )
             )

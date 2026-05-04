@@ -2,12 +2,12 @@ package ai.koog.agents.features.longtermmemory.aws
 
 import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemoryStrategy
 import ai.koog.rag.base.storage.search.ScoreMetric
-import aws.sdk.kotlin.services.bedrockagentcore.model.LeftExpression
 import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryContent
+import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordLeftExpression
+import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordMetadataValue
+import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordOperatorType
+import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordRightExpression
 import aws.sdk.kotlin.services.bedrockagentcore.model.MemoryRecordSummary
-import aws.sdk.kotlin.services.bedrockagentcore.model.MetadataValue
-import aws.sdk.kotlin.services.bedrockagentcore.model.OperatorType
-import aws.sdk.kotlin.services.bedrockagentcore.model.RightExpression
 import aws.smithy.kotlin.runtime.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,7 +23,7 @@ class AgentcoreMemoryRecordConverterTest {
         strategyId: String = "strategy-1",
         text: String? = "Some memory content",
         score: Double? = 0.9,
-        metadata: Map<String, MetadataValue>? = null,
+        metadata: Map<String, MemoryRecordMetadataValue>? = null,
     ): MemoryRecordSummary = MemoryRecordSummary {
         memoryRecordId = id
         memoryStrategyId = strategyId
@@ -78,8 +78,8 @@ class AgentcoreMemoryRecordConverterTest {
     fun testMetadataStringValuesAreMapped() {
         val summary = makeMemoryRecordSummary(
             metadata = mapOf(
-                "key1" to MetadataValue.StringValue("value1"),
-                "key2" to MetadataValue.StringValue("value2")
+                "key1" to MemoryRecordMetadataValue.StringValue("value1"),
+                "key2" to MemoryRecordMetadataValue.StringValue("value2")
             )
         )
 
@@ -116,7 +116,7 @@ class AgentcoreMemoryRecordConverterTest {
     @Test
     fun testUnknownMetadataValueBecomesEmptyString() {
         val summary = makeMemoryRecordSummary(
-            metadata = mapOf("key" to MetadataValue.SdkUnknown)
+            metadata = mapOf("key" to MemoryRecordMetadataValue.SdkUnknown)
         )
 
         val result =
@@ -153,11 +153,11 @@ class AgentcoreMemoryRecordConverterTest {
 
         assertEquals(1, result.size)
         val expr = result[0]
-        assertEquals(OperatorType.EqualsTo, expr.operator)
-        val left = assertIs<LeftExpression.MetadataKey>(expr.left)
+        assertEquals(MemoryRecordOperatorType.EqualsTo, expr.operator)
+        val left = assertIs<MemoryRecordLeftExpression.MetadataKey>(expr.left)
         assertEquals("topic", left.value)
-        val right = assertIs<RightExpression.MetadataValue>(expr.right)
-        val value = assertIs<MetadataValue.StringValue>(right.value)
+        val right = assertIs<MemoryRecordRightExpression.MetadataValue>(expr.right)
+        val value = assertIs<MemoryRecordMetadataValue.StringValue>(right.value)
         assertEquals("sports", value.value)
     }
 
@@ -167,8 +167,8 @@ class AgentcoreMemoryRecordConverterTest {
 
         assertEquals(1, result.size)
         val expr = result[0]
-        assertEquals(OperatorType.Exists, expr.operator)
-        val left = assertIs<LeftExpression.MetadataKey>(expr.left)
+        assertEquals(MemoryRecordOperatorType.Exists, expr.operator)
+        val left = assertIs<MemoryRecordLeftExpression.MetadataKey>(expr.left)
         assertEquals("topic", left.value)
         assertNull(expr.right)
     }
@@ -179,8 +179,8 @@ class AgentcoreMemoryRecordConverterTest {
 
         assertEquals(1, result.size)
         val expr = result[0]
-        assertEquals(OperatorType.NotExists, expr.operator)
-        val left = assertIs<LeftExpression.MetadataKey>(expr.left)
+        assertEquals(MemoryRecordOperatorType.NotExists, expr.operator)
+        val left = assertIs<MemoryRecordLeftExpression.MetadataKey>(expr.left)
         assertEquals("topic", left.value)
         assertNull(expr.right)
     }
@@ -190,8 +190,8 @@ class AgentcoreMemoryRecordConverterTest {
         val result = AgentcoreMemoryRecordConverter.parseFilterExpression("a exists, b not_exists")!!
 
         assertEquals(2, result.size)
-        assertEquals(OperatorType.Exists, result[0].operator)
-        assertEquals(OperatorType.NotExists, result[1].operator)
+        assertEquals(MemoryRecordOperatorType.Exists, result[0].operator)
+        assertEquals(MemoryRecordOperatorType.NotExists, result[1].operator)
     }
 
     @Test
@@ -201,13 +201,13 @@ class AgentcoreMemoryRecordConverterTest {
         )!!
 
         assertEquals(3, result.size)
-        assertEquals(OperatorType.EqualsTo, result[0].operator)
-        assertEquals(OperatorType.Exists, result[1].operator)
-        assertEquals(OperatorType.NotExists, result[2].operator)
+        assertEquals(MemoryRecordOperatorType.EqualsTo, result[0].operator)
+        assertEquals(MemoryRecordOperatorType.Exists, result[1].operator)
+        assertEquals(MemoryRecordOperatorType.NotExists, result[2].operator)
 
-        assertEquals("topic", (result[0].left as LeftExpression.MetadataKey).value)
-        assertEquals("author", (result[1].left as LeftExpression.MetadataKey).value)
-        assertEquals("draft", (result[2].left as LeftExpression.MetadataKey).value)
+        assertEquals("topic", (result[0].left as MemoryRecordLeftExpression.MetadataKey).value)
+        assertEquals("author", (result[1].left as MemoryRecordLeftExpression.MetadataKey).value)
+        assertEquals("draft", (result[2].left as MemoryRecordLeftExpression.MetadataKey).value)
     }
 
     @Test
@@ -215,12 +215,12 @@ class AgentcoreMemoryRecordConverterTest {
         val result = AgentcoreMemoryRecordConverter.parseFilterExpression("  topic   =   sports  , ,  author EXISTS  ")!!
 
         assertEquals(2, result.size)
-        assertEquals("topic", (result[0].left as LeftExpression.MetadataKey).value)
+        assertEquals("topic", (result[0].left as MemoryRecordLeftExpression.MetadataKey).value)
         assertEquals(
             "sports",
-            ((result[0].right as RightExpression.MetadataValue).value as MetadataValue.StringValue).value
+            ((result[0].right as MemoryRecordRightExpression.MetadataValue).value as MemoryRecordMetadataValue.StringValue).value
         )
-        assertEquals("author", (result[1].left as LeftExpression.MetadataKey).value)
+        assertEquals("author", (result[1].left as MemoryRecordLeftExpression.MetadataKey).value)
     }
 
     @Test
@@ -228,7 +228,7 @@ class AgentcoreMemoryRecordConverterTest {
         val result = AgentcoreMemoryRecordConverter.parseFilterExpression("topic =")!!
 
         assertEquals(1, result.size)
-        val value = (result[0].right as RightExpression.MetadataValue).value as MetadataValue.StringValue
+        val value = (result[0].right as MemoryRecordRightExpression.MetadataValue).value as MemoryRecordMetadataValue.StringValue
         assertEquals("", value.value)
     }
 
