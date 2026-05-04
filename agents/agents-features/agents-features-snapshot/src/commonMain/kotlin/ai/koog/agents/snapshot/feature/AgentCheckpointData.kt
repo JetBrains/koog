@@ -5,6 +5,7 @@ package ai.koog.agents.snapshot.feature
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
+import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.prompt.message.Message
@@ -14,12 +15,17 @@ import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.toKoogJSONElement
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.serialization.kotlinx.toKotlinxJsonElement
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlin.jvm.JvmOverloads
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+
+private val logger = KotlinLogging.logger { }
 
 /**
  * Represents the checkpoint data for an agent's state during a session.
@@ -31,10 +37,15 @@ import kotlin.uuid.Uuid
  * @property lastOutput Serialized output received from node with [nodePath]
  * @property properties Additional data associated with the checkpoint. This can be used to store additional information about the agent's state.
  * @property createdAt The timestamp when the checkpoint was created.
- * @property version The version of the checkpoint data structure
+ * @property version The version of the checkpoint data structure.
+ * @property storage Encoded `AIAgentContext.storage` entries opted in via
+ *  [PersistenceFeatureConfig.persistedKeys]. Keys are the storage key names and values are the
+ *  serialized form produced with the registered [kotlinx.serialization.KSerializer]. `null` (the
+ *  default) means no storage was captured, which is what older checkpoints look like - they keep
+ *  deserializing without a structure version bump.
  */
 @Serializable
-public data class AgentCheckpointData(
+public data class AgentCheckpointData @JvmOverloads constructor(
     val checkpointId: String,
     val createdAt: Instant,
     val nodePath: String,
@@ -43,7 +54,8 @@ public data class AgentCheckpointData(
     val lastOutput: JSONElement? = null,
     val messageHistory: List<Message>,
     val version: Long,
-    val properties: JSONObject? = null
+    val properties: JSONObject? = null,
+    val storage: JSONObject? = null,
 ) {
     /**
      * Constructs an instance of the class with the specified parameters.
@@ -70,14 +82,15 @@ public data class AgentCheckpointData(
         version: Long,
         properties: JsonObject? = null
     ) : this(
-        checkpointId,
-        createdAt,
-        nodePath,
-        lastInput?.toKoogJSONElement(),
-        lastOutput?.toKoogJSONElement(),
-        messageHistory,
-        version,
-        properties?.toKoogJSONObject()
+        checkpointId = checkpointId,
+        createdAt = createdAt,
+        nodePath = nodePath,
+        lastInput = lastInput?.toKoogJSONElement(),
+        lastOutput = lastOutput?.toKoogJSONElement(),
+        messageHistory = messageHistory,
+        version = version,
+        properties = properties?.toKoogJSONObject(),
+        storage = null,
     )
 
     init {
@@ -100,7 +113,8 @@ public data class AgentCheckpointData(
             eq(lastOutput, other.lastOutput) &&
             messageHistory == other.messageHistory &&
             version == other.version &&
-            properties == other.properties
+            properties == other.properties &&
+            storage == other.storage
     }
 }
 
@@ -131,15 +145,26 @@ public fun tombstoneCheckpoint(time: Instant, version: Long): AgentCheckpointDat
 /**
  * Converts an instance of [AgentCheckpointData] to [AgentContextData].
  *
- * The conversion maps the `messageHistory`, `nodeId`, and `lastOutput` properties of
- * [AgentCheckpointData] directly to a new [AgentContextData] instance.
+ * In addition to the execution-position fields (`messageHistory`, `nodePath`, `lastInput`/`lastOutput`),
+ * any [storage] entries whose key name matches an entry in [persistedKeys] are decoded with the
+ * registered [kotlinx.serialization.KSerializer] and surfaced through [AgentContextData.storageEntries],
+ * so the strategy can write them back into the agent's storage under the original key instances.
  *
- * @return A new [AgentContextData] instance containing the message history, node ID,
- * and last input from the [AgentCheckpointData].
+ * Entries in [storage] without a matching registration are dropped with a warning - that case usually
+ * means the user removed a key from [PersistenceFeatureConfig.persistedKeys] but still has older
+ * checkpoints around. Decoding errors are also dropped per-entry rather than failing the whole resume,
+ * because losing one piece of intermediate state is usually preferable to losing the whole session.
+ *
+ * @param rollbackStrategy How execution state should be rolled back when restoring.
+ * @param additionalRollbackAction Optional extra cleanup (for example, side-effecting tool rollbacks).
+ * @param persistedKeys Storage keys to restore. Defaults to empty for callers that don't use storage
+ *  persistence; pass the same list registered with [PersistenceFeatureConfig.persistedKeys] when
+ *  resuming an agent that captured storage entries.
  */
 public fun AgentCheckpointData.toAgentContextData(
     rollbackStrategy: RollbackStrategy,
-    additionalRollbackAction: suspend (AIAgentContext) -> Unit = {}
+    additionalRollbackAction: suspend (AIAgentContext) -> Unit = {},
+    persistedKeys: List<PersistableStorageKey<*>> = emptyList(),
 ): AgentContextData {
     @Suppress("DEPRECATION")
     return AgentContextData(
@@ -147,9 +172,78 @@ public fun AgentCheckpointData.toAgentContextData(
         nodePath = nodePath,
         lastInput = lastInput,
         lastOutput = lastOutput,
-        rollbackStrategy,
-        additionalRollbackAction
+        rollbackStrategy = rollbackStrategy,
+        additionalRollbackActions = additionalRollbackAction,
+        storageEntries = decodeStorageEntries(storage, persistedKeys),
     )
+}
+
+/**
+ * Decodes [encodedStorage] into a typed map keyed by the original [AIAgentStorageKey] instances
+ * supplied through [persistedKeys]. Returns an empty map if there is nothing to decode.
+ */
+private fun decodeStorageEntries(
+    encodedStorage: JSONObject?,
+    persistedKeys: List<PersistableStorageKey<*>>,
+): Map<AIAgentStorageKey<*>, Any> {
+    if (encodedStorage == null || encodedStorage.entries.isEmpty()) return emptyMap()
+    if (persistedKeys.isEmpty()) {
+        logger.warn {
+            "Checkpoint contains ${encodedStorage.entries.size} persisted storage entr" +
+                "${if (encodedStorage.entries.size == 1) "y" else "ies"} but no PersistableStorageKey is " +
+                "registered for restore - storage will not be restored."
+        }
+        return emptyMap()
+    }
+    val keysByName = persistedKeys.associateBy { it.key.name }
+    val json = PersistenceUtils.defaultCheckpointJson
+    val result = mutableMapOf<AIAgentStorageKey<*>, Any>()
+    for ((name, encoded) in encodedStorage.entries) {
+        val persistable = keysByName[name]
+        if (persistable == null) {
+            logger.warn {
+                "Checkpoint contains storage entry '$name' with no matching PersistableStorageKey - skipping."
+            }
+            continue
+        }
+        val decoded = try {
+            json.decodeFromJsonElement(persistable.serializer, encoded.toKotlinxJsonElement())
+        } catch (e: Exception) {
+            logger.warn(e) { "Failed to decode persisted storage entry '$name', skipping." }
+            null
+        }
+        if (decoded != null) {
+            result[persistable.key] = decoded
+        }
+    }
+    return result
+}
+
+/**
+ * Encodes the storage entries that match [persistedKeys] into a [JSONObject] suitable for
+ * [AgentCheckpointData.storage]. Entries whose key is not in [storageMap] are omitted; encoding
+ * failures are logged and skipped per-entry rather than failing the whole snapshot.
+ *
+ * Returns `null` when no entries were encoded so the field is omitted from the serialized form.
+ */
+internal fun encodeStorageEntries(
+    storageMap: Map<AIAgentStorageKey<*>, Any>,
+    persistedKeys: List<PersistableStorageKey<*>>,
+): JSONObject? {
+    if (persistedKeys.isEmpty() || storageMap.isEmpty()) return null
+    val json = PersistenceUtils.defaultCheckpointJson
+    val encoded = mutableMapOf<String, JSONElement>()
+    for (persistable in persistedKeys) {
+        val value = storageMap[persistable.key] ?: continue
+        try {
+            @Suppress("UNCHECKED_CAST")
+            val serializer = persistable.serializer as kotlinx.serialization.KSerializer<Any>
+            encoded[persistable.key.name] = json.encodeToJsonElement(serializer, value).toKoogJSONElement()
+        } catch (e: Exception) {
+            logger.warn(e) { "Failed to encode persisted storage entry '${persistable.key.name}', skipping." }
+        }
+    }
+    return if (encoded.isEmpty()) null else JSONObject(encoded)
 }
 
 /**

@@ -51,4 +51,26 @@ public class PersistenceFeatureConfig : FeatureConfig() {
      * Configure it during Persistence installation. Do not mutate later in withPersistence.
      */
     public var rollbackToolRegistry: RollbackToolRegistry = RollbackToolRegistry.EMPTY
+
+    /**
+     * Storage keys whose values should be captured in checkpoints and restored on resume.
+     *
+     * Each entry pairs an [ai.koog.agents.core.agent.entity.AIAgentStorageKey] with a kotlinx
+     * [kotlinx.serialization.KSerializer] for its value type; build them with the [persisted] helper.
+     * Only registered keys participate in persistence; everything else (including framework-internal
+     * storage entries such as the per-feature state) is left untouched, so existing storage usage
+     * keeps working without change.
+     *
+     * Example:
+     * ```kotlin
+     * install(Persistence) {
+     *     storage = InMemoryPersistenceStorageProvider()
+     *     persistedKeys = listOf(
+     *         persisted(RetryCounterKey, Int.serializer()),
+     *         persisted(PendingHumanInputKey, PendingHumanInput.serializer()),
+     *     )
+     * }
+     * ```
+     */
+    public var persistedKeys: List<PersistableStorageKey<*>> = emptyList()
 }

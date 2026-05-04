@@ -8,6 +8,7 @@ import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.agent.context.agentContextDataAdditionalKey
 import ai.koog.agents.core.agent.context.featureOrThrow
+import ai.koog.agents.core.agent.context.rootContext
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorage
@@ -104,6 +105,14 @@ public class Persistence(
     public var rollbackToolRegistry: RollbackToolRegistry = RollbackToolRegistry {}
 
     /**
+     * Storage keys included in checkpoints. Mirrors [PersistenceFeatureConfig.persistedKeys] and is
+     * threaded through every snapshot/restore call site so that values stored under these keys survive
+     * resume. Empty by default - callers that don't opt in keep the pre-existing behavior of not
+     * persisting storage at all.
+     */
+    public var persistedKeys: List<PersistableStorageKey<*>> = emptyList()
+
+    /**
      * Companion object implementing agent feature, handling [Persistence] creation and installation.
      */
     public companion object Feature : AIAgentGraphFeature<PersistenceFeatureConfig, Persistence> {
@@ -122,6 +131,7 @@ public class Persistence(
             val persistence = Persistence(config.storage)
             persistence.rollbackStrategy = config.rollbackStrategy
             persistence.rollbackToolRegistry = config.rollbackToolRegistry
+            persistence.persistedKeys = config.persistedKeys
 
             pipeline.interceptStrategyStarting(this) { ctx ->
                 val strategy = ctx.strategy as AIAgentGraphStrategy<*, *>
@@ -182,6 +192,9 @@ public class Persistence(
          * @param checkpoint The checkpoint data to restore from.
          * @param rollbackStrategy The strategy to use when restoring state. Defaults to [RollbackStrategy.Default].
          * @param sessionId Optional session identifier. A random UUID is generated if not provided.
+         * @param persistedKeys Storage keys to restore from [AgentCheckpointData.storage]. Must use the same
+         *  [AIAgentStorageKey] instances as the live agent code so identity-based key lookups keep working.
+         *  Defaults to empty, matching the original behavior of not restoring storage.
          * @return The output produced by the agent after resuming from the checkpoint.
          */
         public suspend fun <Input, Output> runFromCheckpoint(
@@ -190,7 +203,14 @@ public class Persistence(
             checkpoint: AgentCheckpointData,
             rollbackStrategy: RollbackStrategy = RollbackStrategy.Default,
             sessionId: String? = null,
-        ): Output = runFromCheckpoint(agent.createSession(sessionId), agentInput, checkpoint, rollbackStrategy)
+            persistedKeys: List<PersistableStorageKey<*>> = emptyList(),
+        ): Output = runFromCheckpoint(
+            session = agent.createSession(sessionId),
+            input = agentInput,
+            checkpoint = checkpoint,
+            rollbackStrategy = rollbackStrategy,
+            persistedKeys = persistedKeys,
+        )
 
         /**
          * Runs the session from a previously saved checkpoint.
@@ -203,6 +223,9 @@ public class Persistence(
          * @param input The input to provide to the session.
          * @param checkpoint The checkpoint data to restore from.
          * @param rollbackStrategy The strategy to use when restoring state. Defaults to [RollbackStrategy.Default].
+         * @param persistedKeys Storage keys to restore from [AgentCheckpointData.storage]. Must use the same
+         *  [AIAgentStorageKey] instances as the live agent code so identity-based key lookups keep working.
+         *  Defaults to empty, matching the original behavior of not restoring storage.
          * @return The output produced by the session after resuming from the checkpoint.
          */
         public suspend fun <Input, Output, TContext : AIAgentContext> runFromCheckpoint(
@@ -210,9 +233,13 @@ public class Persistence(
             input: Input,
             checkpoint: AgentCheckpointData,
             rollbackStrategy: RollbackStrategy = RollbackStrategy.Default,
+            persistedKeys: List<PersistableStorageKey<*>> = emptyList(),
         ): Output {
             val storage = AIAgentStorage()
-            storage.set(agentContextDataAdditionalKey, checkpoint.toAgentContextData(rollbackStrategy))
+            storage.set(
+                agentContextDataAdditionalKey,
+                checkpoint.toAgentContextData(rollbackStrategy, persistedKeys = persistedKeys),
+            )
             return session.run(input, AdditionalInputs.Storage(storage))
         }
 
@@ -231,8 +258,9 @@ public class Persistence(
             checkpoint: AgentCheckpointData,
             rollbackStrategy: RollbackStrategy = RollbackStrategy.Default,
             sessionId: String? = null,
+            persistedKeys: List<PersistableStorageKey<*>> = emptyList(),
         ): Output = runBlockingOnStrategy(agent.agentConfig) {
-            runFromCheckpoint(agent, agentInput, checkpoint, rollbackStrategy, sessionId)
+            runFromCheckpoint(agent, agentInput, checkpoint, rollbackStrategy, sessionId, persistedKeys)
         }
     }
 
@@ -322,6 +350,8 @@ public class Persistence(
             return null
         }
 
+        val storageJson = encodeStorageEntries(agentContext.rootContext().storage.toMap(), persistedKeys)
+
         val checkpoint = agentContext.llm.readSession {
             return@readSession AgentCheckpointData(
                 checkpointId = checkpointId ?: Uuid.random().toString(),
@@ -330,6 +360,7 @@ public class Persistence(
                 lastOutput = outputJson,
                 createdAt = Clock.System.now(),
                 version = version,
+                storage = storageJson,
             )
         }
 
@@ -476,29 +507,33 @@ public class Persistence(
         val checkpoint: AgentCheckpointData? = getCheckpointById(agentContext.runId, checkpointId)
         if (checkpoint != null) {
             agentContext.store(
-                checkpoint.toAgentContextData(rollbackStrategy) { context ->
-                    messageHistoryDiff(
-                        currentMessages = context.llm.prompt.messages,
-                        checkpointMessages = checkpoint.messageHistory
-                    )
-                        .filterIsInstance<Message.Tool.Call>()
-                        .reversed()
-                        .forEach { toolCall ->
-                            rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
-                                val toolArgs = try {
-                                    toolCall.contentJsonResult
-                                        .getOrNull()
-                                        ?.toKoogJSONObject()
-                                        ?.let { rollbackTool.decodeArgs(it, agentContext.config.serializer) }
-                                } catch (e: CancellationException) {
-                                    throw e
-                                } catch (_: Exception) {
-                                    null
+                checkpoint.toAgentContextData(
+                    rollbackStrategy,
+                    additionalRollbackAction = { context ->
+                        messageHistoryDiff(
+                            currentMessages = context.llm.prompt.messages,
+                            checkpointMessages = checkpoint.messageHistory
+                        )
+                            .filterIsInstance<Message.Tool.Call>()
+                            .reversed()
+                            .forEach { toolCall ->
+                                rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
+                                    val toolArgs = try {
+                                        toolCall.contentJsonResult
+                                            .getOrNull()
+                                            ?.toKoogJSONObject()
+                                            ?.let { rollbackTool.decodeArgs(it, agentContext.config.serializer) }
+                                    } catch (e: CancellationException) {
+                                        throw e
+                                    } catch (_: Exception) {
+                                        null
+                                    }
+                                    rollbackTool.executeUnsafe(toolArgs)
                                 }
-                                rollbackTool.executeUnsafe(toolArgs)
                             }
-                        }
-                }
+                    },
+                    persistedKeys = persistedKeys,
+                )
             )
         }
 
@@ -543,7 +578,7 @@ public class Persistence(
             return null
         }
 
-        agentContext.store(checkpoint.toAgentContextData(rollbackStrategy))
+        agentContext.store(checkpoint.toAgentContextData(rollbackStrategy, persistedKeys = persistedKeys))
         return checkpoint
     }
 }
