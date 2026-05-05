@@ -284,10 +284,10 @@ class MyVectorDbStorage : SearchStorage<TextDocument, SearchRequest>, WriteStora
 
     override suspend fun add(
         records: List<TextDocument>, namespace: String?
-    ) {
-        // Upsert into your vector DB
+    ): List<String> {
+        // Upsert into your vector DB and return the IDs of added records
     }
 }
 ```
 
-For testing, use the built-in `InMemoryRecordStorage` which keeps records in memory. It accepts both `KeywordSearchRequest` and `SimilaritySearchRequest`, but implements both as simple case-insensitive substring matching (no vector embeddings).
+For testing, use the built-in `InMemoryRecordStorage` which keeps records in memory. It only supports `KeywordSearchRequest` and implements it as simple case-insensitive substring matching (no vector embeddings).
