@@ -1,5 +1,8 @@
 package ai.koog.agents.core.environment
 
+import ai.koog.agents.core.agent.AIAgentContextAwareTool
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolException
@@ -11,16 +14,25 @@ import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KLogger
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
- * Represents base agent environment with generic abstractions.
+ * Default [AIAgentEnvironment] implementation.
+ *
+ * Decodes arguments, dispatches tools (including [AIAgentContextAwareTool]s), and emits
+ * pipeline lifecycle events (`onToolCallStarting` / `onToolCallCompleted` / `onToolCallFailed` /
+ * `onToolValidationFailed`) using the supplied [context].
  */
+@OptIn(InternalAgentsApi::class)
 public class GenericAgentEnvironment(
-    private val agentId: String,
     private val logger: KLogger,
     private val toolRegistry: ToolRegistry,
     private val serializer: JSONSerializer,
+    @property:InternalAgentsApi public val context: AIAgentContext,
 ) : AIAgentEnvironment {
+
+    private val agentId: String get() = context.agentId
 
     override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
         logger.info {
@@ -43,38 +55,78 @@ public class GenericAgentEnvironment(
         throw exception
     }
 
-    @OptIn(InternalAgentToolsApi::class)
+    @OptIn(InternalAgentToolsApi::class, InternalAgentsApi::class, ExperimentalUuidApi::class)
     private suspend fun processToolCall(toolCall: Message.Tool.Call): ReceivedToolResult {
         logger.debug { "Handling tool call sent by server..." }
 
-        // Tool
-        val id = toolCall.id
+        val eventId = Uuid.random().toString()
+        val callId = toolCall.id
         val toolName = toolCall.tool
+
+        // Step 1: parse raw JSON args.
         val toolArgsJson = try {
             toolCall.contentJson.toKoogJSONObject()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            val message = "Failed to parse tool arguments: ${e.message}"
+            context.pipeline.onToolValidationFailed(
+                eventId = eventId,
+                executionInfo = context.executionInfo,
+                runId = context.runId,
+                toolCallId = callId,
+                toolName = toolName,
+                toolDescription = null,
+                toolArgs = JSONObject(emptyMap()),
+                message = message,
+                error = e.toAgentError(),
+                context = context,
+            )
             return ReceivedToolResult(
-                id = id,
+                id = callId,
                 tool = toolName,
                 toolArgs = JSONObject(emptyMap()),
                 toolDescription = null,
-                content = "Tool with name '$toolName' failed to parse arguments due to the error: ${e.message}",
+                content = message,
                 resultKind = ToolResultKind.Failure(e.toAgentError()),
                 result = null,
             )
         }
 
-        val tool = toolRegistry.getToolOrNull(toolName)
+        // Step 2: look up the tool.
+        @Suppress("UNCHECKED_CAST")
+        val tool = (toolRegistry.getToolOrNull(toolName) as? Tool<Any?, Any?>)
             ?: run {
                 logger.error { formatLog("Tool with name '$toolName' not found in the tool registry.") }
+                val message = "Tool with name '$toolName' not found in the tool registry. Use one of the available tools."
+                context.pipeline.onToolCallStarting(
+                    eventId = eventId,
+                    executionInfo = context.executionInfo,
+                    runId = context.runId,
+                    toolCallId = callId,
+                    toolName = toolName,
+                    toolDescription = null,
+                    toolArgs = toolArgsJson,
+                    context = context,
+                )
+                context.pipeline.onToolCallFailed(
+                    eventId = eventId,
+                    executionInfo = context.executionInfo,
+                    runId = context.runId,
+                    toolCallId = callId,
+                    toolName = toolName,
+                    toolDescription = null,
+                    toolArgs = toolArgsJson,
+                    message = message,
+                    error = null,
+                    context = context,
+                )
                 return ReceivedToolResult(
-                    id = id,
+                    id = callId,
                     tool = toolName,
                     toolArgs = toolArgsJson,
                     toolDescription = null,
-                    content = "Tool with name '$toolName' not found in the tool registry. Use one of the available tools.",
+                    content = message,
                     resultKind = ToolResultKind.Failure(null),
                     result = null,
                 )
@@ -82,32 +134,83 @@ public class GenericAgentEnvironment(
 
         val toolDescription = tool.descriptor.description
 
-        // Tool Args
+        // Step 3: decode typed args.
         val toolArgs = try {
             tool.decodeArgs(toolArgsJson, serializer)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             logger.error(e) { formatLog("Tool with name '$toolName' failed to parse arguments: $toolArgsJson") }
+            val message = "Tool with name '$toolName' failed to parse arguments due to the error: ${e.message}"
+            context.pipeline.onToolCallStarting(
+                eventId = eventId,
+                executionInfo = context.executionInfo,
+                runId = context.runId,
+                toolCallId = callId,
+                toolName = toolName,
+                toolDescription = toolDescription,
+                toolArgs = toolArgsJson,
+                context = context,
+            )
+            context.pipeline.onToolCallFailed(
+                eventId = eventId,
+                executionInfo = context.executionInfo,
+                runId = context.runId,
+                toolCallId = callId,
+                toolName = toolName,
+                toolDescription = toolDescription,
+                toolArgs = toolArgsJson,
+                message = message,
+                error = e.toAgentError(),
+                context = context,
+            )
             return ReceivedToolResult(
-                id = id,
+                id = callId,
                 tool = toolName,
                 toolArgs = toolArgsJson,
                 toolDescription = toolDescription,
-                content = "Tool with name '$toolName' failed to parse arguments due to the error: ${e.message}",
+                content = message,
                 resultKind = ToolResultKind.Failure(e.toAgentError()),
                 result = null,
             )
         }
 
+        // Step 4: fire start, dispatch tool (context-aware if applicable).
+        context.pipeline.onToolCallStarting(
+            eventId = eventId,
+            executionInfo = context.executionInfo,
+            runId = context.runId,
+            toolCallId = callId,
+            toolName = toolName,
+            toolDescription = toolDescription,
+            toolArgs = toolArgsJson,
+            context = context,
+        )
+
         val toolResult = try {
-            @Suppress("UNCHECKED_CAST")
-            (tool as Tool<Any?, Any?>).execute(toolArgs)
+            if (tool is AIAgentContextAwareTool<*, *>) {
+                @Suppress("UNCHECKED_CAST")
+                (tool as AIAgentContextAwareTool<Any?, Any?>).execute(toolArgs, context)
+            } else {
+                tool.execute(toolArgs)
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: ToolException) {
+            context.pipeline.onToolValidationFailed(
+                eventId = eventId,
+                executionInfo = context.executionInfo,
+                runId = context.runId,
+                toolCallId = callId,
+                toolName = toolName,
+                toolDescription = toolDescription,
+                toolArgs = toolArgsJson,
+                message = e.message,
+                error = e.toAgentError(),
+                context = context,
+            )
             return ReceivedToolResult(
-                id = id,
+                id = callId,
                 tool = toolName,
                 toolArgs = toolArgsJson,
                 toolDescription = toolDescription,
@@ -117,20 +220,33 @@ public class GenericAgentEnvironment(
             )
         } catch (e: Exception) {
             logger.error(e) { "Tool with name '$toolName' failed to execute with arguments: $toolArgs" }
-
+            val message = "Tool with name '$toolName' failed to execute due to the error: ${e.message}!"
+            context.pipeline.onToolCallFailed(
+                eventId = eventId,
+                executionInfo = context.executionInfo,
+                runId = context.runId,
+                toolCallId = callId,
+                toolName = toolName,
+                toolDescription = toolDescription,
+                toolArgs = toolArgsJson,
+                message = message,
+                error = e.toAgentError(),
+                context = context,
+            )
             return ReceivedToolResult(
-                id = id,
+                id = callId,
                 tool = toolName,
                 toolArgs = toolArgsJson,
                 toolDescription = toolDescription,
-                content = "Tool with name '$toolName' failed to execute due to the error: ${e.message}!",
+                content = message,
                 resultKind = ToolResultKind.Failure(e.toAgentError()),
-                result = null
+                result = null,
             )
         }
 
         logger.trace { "Completed execution of the tool '$toolName' with result: $toolResult" }
 
+        // Step 5: encode result.
         val (content, result) = try {
             tool.encodeResultToStringUnsafe(toolResult, serializer) to
                 tool.encodeResult(toolResult, serializer)
@@ -138,25 +254,50 @@ public class GenericAgentEnvironment(
             throw e
         } catch (e: Exception) {
             logger.error(e) { "Tool with name '$toolName' failed to encode result: $toolResult" }
+            val message = "Tool with name '$toolName' failed to serialize result due to the error: ${e.message}!"
+            context.pipeline.onToolCallFailed(
+                eventId = eventId,
+                executionInfo = context.executionInfo,
+                runId = context.runId,
+                toolCallId = callId,
+                toolName = toolName,
+                toolDescription = toolDescription,
+                toolArgs = toolArgsJson,
+                message = message,
+                error = e.toAgentError(),
+                context = context,
+            )
             return ReceivedToolResult(
-                id = id,
+                id = callId,
                 tool = toolName,
                 toolArgs = toolArgsJson,
                 toolDescription = toolDescription,
-                content = "Tool with name '$toolName' failed to serialize result due to the error: ${e.message}!",
+                content = message,
                 resultKind = ToolResultKind.Failure(e.toAgentError()),
-                result = null
+                result = null,
             )
         }
 
+        context.pipeline.onToolCallCompleted(
+            eventId = eventId,
+            executionInfo = context.executionInfo,
+            runId = context.runId,
+            toolCallId = callId,
+            toolName = toolName,
+            toolDescription = toolDescription,
+            toolArgs = toolArgsJson,
+            toolResult = result,
+            context = context,
+        )
+
         return ReceivedToolResult(
-            id = id,
+            id = callId,
             tool = toolName,
             toolArgs = toolArgsJson,
             toolDescription = toolDescription,
             content = content,
             resultKind = ToolResultKind.Success,
-            result = result
+            result = result,
         )
     }
 

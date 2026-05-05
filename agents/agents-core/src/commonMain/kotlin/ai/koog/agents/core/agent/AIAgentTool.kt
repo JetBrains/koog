@@ -2,6 +2,7 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.AIAgentTool.AgentToolInput
 import ai.koog.agents.core.agent.AIAgentTool.AgentToolResult
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
@@ -115,7 +116,7 @@ public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) con
             )
         )
     }
-) {
+), AIAgentContextAwareTool<AgentToolInput<Input>, AgentToolResult<Output>> {
     private companion object {
         private val json = Json.Default
     }
@@ -144,7 +145,7 @@ public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) con
     private val toolCallNumber: AtomicInt = AtomicInt(0)
 
     @OptIn(ExperimentalAtomicApi::class)
-    private fun nextToolAgentID(): String = "$parentAgentId.${toolCallNumber.fetchAndIncrement()}"
+    private fun nextToolAgentID(parent: String?): String = "$parent.${toolCallNumber.fetchAndIncrement()}"
 
     /**
      * Represents the result of executing an agent tool operation.
@@ -192,11 +193,19 @@ public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) con
     }
 
     @OptIn(InternalAgentToolsApi::class)
-    override suspend fun execute(args: AgentToolInput<Input>): AgentToolResult<Output> {
+    override suspend fun execute(args: AgentToolInput<Input>): AgentToolResult<Output> =
+        runAgent(args, parent = parentAgentId)
+
+    @OptIn(InternalAgentToolsApi::class)
+    override suspend fun execute(args: AgentToolInput<Input>, context: AIAgentContext): AgentToolResult<Output> =
+        runAgent(args, parent = context.agentId)
+
+    @OptIn(InternalAgentToolsApi::class)
+    private suspend fun runAgent(args: AgentToolInput<Input>, parent: String?): AgentToolResult<Output> {
         val input = args.input
 
         return try {
-            val result = agentService.createAgentAndRun(input, id = nextToolAgentID())
+            val result = agentService.createAgentAndRun(input, id = nextToolAgentID(parent))
 
             AgentToolResult(
                 successful = true,

@@ -55,3 +55,16 @@ public interface AIAgentEnvironment {
         return results
     }
 }
+
+/**
+ * Placeholder environment used during construction of an [ai.koog.agents.core.agent.context.AIAgentContext]
+ * before its real environment is wired in. Calls fail loudly — the real environment must be installed
+ * via context replacement before the agent runs.
+ */
+internal object UninitializedAgentEnvironment : AIAgentEnvironment {
+    override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult =
+        error("Agent environment is not yet initialized")
+
+    override suspend fun reportProblem(exception: Throwable): Unit =
+        throw exception
+}

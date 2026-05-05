@@ -1,5 +1,6 @@
 package ai.koog.agents.core.environment
 
+import ai.koog.agents.core.agent.StubAIAgentContext
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolRegistry
@@ -71,10 +72,10 @@ class GenericAgentEnvironmentTest {
     @Test
     fun testInvalidJsonArgsReturnsFailure() = runTest {
         val environment = GenericAgentEnvironment(
-            agentId = "test_agent",
             logger = KotlinLogging.logger { },
             toolRegistry = ToolRegistry { tool(RequiredArgsTool()) },
             serializer = serializer,
+            context = StubAIAgentContext(agentId = "test_agent", runId = "run-1"),
         )
 
         val toolCall = Tool.Call(
@@ -92,10 +93,10 @@ class GenericAgentEnvironmentTest {
     @Test
     fun testMissingFieldReturnsFailure() = runTest {
         val environment = GenericAgentEnvironment(
-            agentId = "test_agent",
             logger = KotlinLogging.logger { },
             toolRegistry = ToolRegistry { tool(RequiredArgsTool()) },
             serializer = serializer,
+            context = StubAIAgentContext(agentId = "test_agent", runId = "run-1"),
         )
 
         val toolCall = Tool.Call(
@@ -113,10 +114,10 @@ class GenericAgentEnvironmentTest {
     @Test
     fun testUnknownToolReturnsFailure() = runTest {
         val environment = GenericAgentEnvironment(
-            agentId = "test_agent",
             logger = KotlinLogging.logger { },
             toolRegistry = ToolRegistry {},
             serializer = serializer,
+            context = StubAIAgentContext(agentId = "test_agent", runId = "run-1"),
         )
 
         val result = environment.executeTool(
@@ -136,10 +137,10 @@ class GenericAgentEnvironmentTest {
     @Test
     fun testToolExceptionReturnsValidationError() = runTest {
         val environment = GenericAgentEnvironment(
-            agentId = "test_agent",
             logger = KotlinLogging.logger { },
             toolRegistry = ToolRegistry { tool(ValidationTool()) },
             serializer = serializer,
+            context = StubAIAgentContext(agentId = "test_agent", runId = "run-1"),
         )
 
         val result = environment.executeTool(
@@ -158,10 +159,10 @@ class GenericAgentEnvironmentTest {
     @Test
     fun testRuntimeFailureReturnsFailure() = runTest {
         val environment = GenericAgentEnvironment(
-            agentId = "test_agent",
             logger = KotlinLogging.logger { },
             toolRegistry = ToolRegistry { tool(FailingTool()) },
             serializer = serializer,
+            context = StubAIAgentContext(agentId = "test_agent", runId = "run-1"),
         )
 
         val result = environment.executeTool(
@@ -180,10 +181,10 @@ class GenericAgentEnvironmentTest {
     @Test
     fun testSuccessfulExecutionReturnsSuccess() = runTest {
         val environment = GenericAgentEnvironment(
-            agentId = "test_agent",
             logger = KotlinLogging.logger { },
             toolRegistry = ToolRegistry { tool(SuccessTool()) },
             serializer = serializer,
+            context = StubAIAgentContext(agentId = "test_agent", runId = "run-1"),
         )
 
         val result = environment.executeTool(
@@ -202,10 +203,10 @@ class GenericAgentEnvironmentTest {
     @Test
     fun testCancellationIsRethrown() = runTest {
         val environment = GenericAgentEnvironment(
-            agentId = "test_agent",
             logger = KotlinLogging.logger { },
             toolRegistry = ToolRegistry { tool(CancellableTool()) },
             serializer = serializer,
+            context = StubAIAgentContext(agentId = "test_agent", runId = "run-1"),
         )
 
         assertFailsWith<CancellationException> {

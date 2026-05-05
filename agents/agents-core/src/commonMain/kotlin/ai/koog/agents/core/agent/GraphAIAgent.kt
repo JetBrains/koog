@@ -9,9 +9,8 @@ import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.environment.ContextualAgentEnvironment
 import ai.koog.agents.core.environment.GenericAgentEnvironment
+import ai.koog.agents.core.environment.UninitializedAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.ContextualPromptExecutor
@@ -137,28 +136,30 @@ public open class GraphAIAgent<Input, Output>(
         val storage = AIAgentStorage()
 
         val executionInfo = AgentExecutionInfo(parent = null, partName = id)
-        val initialEnvironment = prepareAgentEnvironment(eventId = eventId, executionInfo = executionInfo)
 
-        // Initial
-        val initialLLMContext = AIAgentLLMContext(
+        // The merged environment requires an AIAgentContext, but the context references the
+        // environment — we break the cycle by building the context first against an
+        // uninitialized placeholder, then constructing the real environment around it, then
+        // swapping the placeholder out via context.replace(...).
+        val placeholderLLMContext = AIAgentLLMContext(
             tools = toolRegistry.tools.map { it.descriptor },
             toolRegistry = toolRegistry,
             prompt = agentConfig.prompt,
             model = agentConfig.model,
             responseProcessor = agentConfig.responseProcessor,
             promptExecutor = promptExecutor,
-            environment = initialEnvironment,
+            environment = UninitializedAgentEnvironment,
             config = agentConfig,
             clock = clock
         )
 
         val agentContext = AIAgentGraphContext(
-            environment = initialEnvironment,
+            environment = UninitializedAgentEnvironment,
             agentId = id,
             agentInput = agentInput,
             agentInputType = inputType,
             config = agentConfig,
-            llm = initialLLMContext,
+            llm = placeholderLLMContext,
             stateManager = stateManager,
             storage = storage,
             runId = runId,
@@ -168,9 +169,18 @@ public open class GraphAIAgent<Input, Output>(
             parentContext = null,
         )
 
-        val contextualEnvironment = ContextualAgentEnvironment(
-            environment = initialEnvironment,
+        val baseEnvironment = GenericAgentEnvironment(
+            logger = logger,
+            toolRegistry = toolRegistry,
+            serializer = agentConfig.serializer,
             context = agentContext,
+        )
+
+        val finalEnvironment = pipeline.onAgentEnvironmentTransforming(
+            eventId = eventId,
+            executionInfo = executionInfo,
+            agent = this,
+            baseEnvironment = baseEnvironment,
         )
 
         val contextualPromptExecutor = ContextualPromptExecutor(
@@ -178,51 +188,19 @@ public open class GraphAIAgent<Input, Output>(
             context = agentContext,
         )
 
-        val updatedLLMContext = agentContext.llm.copy(
-            environment = contextualEnvironment,
+        val finalLLMContext = agentContext.llm.copy(
+            environment = finalEnvironment,
             promptExecutor = contextualPromptExecutor,
         )
 
         agentContext.replace(
             agentContext.copy(
                 executionInfo = executionInfo,
-                llm = updatedLLMContext,
-                environment = contextualEnvironment,
+                llm = finalLLMContext,
+                environment = finalEnvironment,
             )
         )
 
         return agentContext
-    }
-
-    /**
-     * Prepares the environment for the AI agent by initializing a base environment
-     * and applying any registered environment transformations defined in the pipeline.
-     *
-     * Environment (initially equal to the current agent), transformed by some features
-     * (ex: testing feature transforms it into a MockEnvironment with mocked tools
-     *
-     * @return An instance of `AIAgentEnvironment` that represents the finalized environment
-     *         for the AI agent after applying all transformations.
-     */
-    private suspend fun prepareAgentEnvironment(
-        eventId: String,
-        executionInfo: AgentExecutionInfo
-    ): AIAgentEnvironment {
-        // Create a base environment implementation
-        val environment = GenericAgentEnvironment(
-            agentId = id,
-            logger = logger,
-            toolRegistry = toolRegistry,
-            serializer = agentConfig.serializer,
-        )
-
-        val preparedEnvironment = pipeline.onAgentEnvironmentTransforming(
-            eventId = eventId,
-            executionInfo = executionInfo,
-            agent = this,
-            baseEnvironment = environment,
-        )
-
-        return preparedEnvironment
     }
 }

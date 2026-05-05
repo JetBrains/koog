@@ -8,9 +8,8 @@ import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.environment.ContextualAgentEnvironment
 import ai.koog.agents.core.environment.GenericAgentEnvironment
+import ai.koog.agents.core.environment.UninitializedAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.ContextualPromptExecutor
@@ -88,29 +87,27 @@ public class PlannerAIAgent<Input, Output>(
     }
 
     override suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentPlannerContext {
-        val environment = prepareEnvironment()
         val executionInfo = AgentExecutionInfo(parent = null, partName = id)
 
-        val initialLLMContext = AIAgentLLMContext(
+        val placeholderLLMContext = AIAgentLLMContext(
             tools = toolRegistry.tools.map { it.descriptor },
             toolRegistry = toolRegistry,
             prompt = agentConfig.prompt,
             model = agentConfig.model,
             responseProcessor = agentConfig.responseProcessor,
             promptExecutor = promptExecutor,
-            environment = environment,
+            environment = UninitializedAgentEnvironment,
             config = agentConfig,
             clock = clock
         )
 
-        // Context
         val initialAgentContext = AIAgentPlannerContext(
-            environment = environment,
+            environment = UninitializedAgentEnvironment,
             agentId = id,
             runId = runId,
             agentInput = agentInput,
             config = agentConfig,
-            llm = initialLLMContext,
+            llm = placeholderLLMContext,
             stateManager = AIAgentStateManager(),
             storage = AIAgentStorage(),
             strategyName = strategy.name,
@@ -119,9 +116,10 @@ public class PlannerAIAgent<Input, Output>(
             parentContext = null,
         )
 
-        // Updated environment
-        val contextualEnvironment = ContextualAgentEnvironment(
-            environment = environment,
+        val environment = GenericAgentEnvironment(
+            logger = logger,
+            toolRegistry = toolRegistry,
+            serializer = agentConfig.serializer,
             context = initialAgentContext,
         )
 
@@ -130,32 +128,17 @@ public class PlannerAIAgent<Input, Output>(
             context = initialAgentContext,
         )
 
-        val updatedLLMContext = initialAgentContext.llm.copy(
-            environment = contextualEnvironment,
+        val finalLLMContext = initialAgentContext.llm.copy(
+            environment = environment,
             promptExecutor = contextualPromptExecutor,
         )
 
         val updatedAgentContext = initialAgentContext.copy(
-            llm = updatedLLMContext,
-            environment = contextualEnvironment,
+            llm = finalLLMContext,
+            environment = environment,
             parentRootContext = initialAgentContext.parentContext, // Keep the original parent context
         )
 
         return updatedAgentContext
     }
-
-    //region Private Methods
-
-    private fun prepareEnvironment(): AIAgentEnvironment {
-        val baseEnvironment = GenericAgentEnvironment(
-            agentId = this.id,
-            logger = logger,
-            toolRegistry = toolRegistry,
-            serializer = agentConfig.serializer,
-        )
-
-        return baseEnvironment
-    }
-
-    //endregion Private Methods
 }
