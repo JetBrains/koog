@@ -3,7 +3,6 @@ package ai.koog.agents.longtermmemory.feature
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.longtermmemory.model.MemoryRecord
@@ -26,7 +25,6 @@ import kotlin.test.assertTrue
  * Verifies that users can install the feature, provide their own storage implementations,
  * and call `search` and `add` methods from those storages within strategy nodes.
  */
-@OptIn(ExperimentalAgentsApi::class)
 class LongTermMemoryStrategyTest {
     private val myNamespace = "ns"
     private val serializer = KotlinxSerializer()

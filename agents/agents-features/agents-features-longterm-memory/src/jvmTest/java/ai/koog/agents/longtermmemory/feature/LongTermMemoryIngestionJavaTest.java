@@ -1,7 +1,6 @@
 package ai.koog.agents.longtermmemory.feature;
 
 import ai.koog.agents.core.agent.AIAgent;
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi;
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming;
 import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
@@ -23,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Java tests for configuring {@link LongTermMemory} ingestion settings from Java code.
  * Each test case demonstrates a different ingestion configuration using builders.
  */
-@ExperimentalAgentsApi
 public class LongTermMemoryIngestionJavaTest {
     private static final JSONSerializer serializer = new JacksonSerializer();
 

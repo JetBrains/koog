@@ -1,6 +1,5 @@
 package ai.koog.agents.features.longtermmemory.aws.dsl
 
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreCompositeSearchStrategy
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreCompositeSearchStrategy.AgentcoreSearchSubrequest
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceResolver
@@ -48,7 +47,6 @@ public annotation class AgentcoreLtmDsl
  * @param memoryId the AgentCore memory store identifier.
  * @param block DSL block appending one or more retrieval subrequests.
  */
-@ExperimentalAgentsApi
 public fun LongTermMemory.RetrievalSettingsBuilder.agentcore(
     client: BedrockAgentCoreClient,
     memoryId: String,

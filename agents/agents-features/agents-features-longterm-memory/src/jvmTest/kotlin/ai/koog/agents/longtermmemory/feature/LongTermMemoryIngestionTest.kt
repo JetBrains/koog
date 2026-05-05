@@ -3,7 +3,6 @@ package ai.koog.agents.longtermmemory.feature
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
@@ -36,7 +35,6 @@ import kotlin.test.assertTrue
 /**
  * Tests for LongTermMemory ingestion (IngestionSettings): persisting messages into memory storage.
  */
-@OptIn(ExperimentalAgentsApi::class)
 class LongTermMemoryIngestionTest {
     private val defaultNamespace = "default"
 

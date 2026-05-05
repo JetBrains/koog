@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
@@ -51,7 +50,6 @@ import kotlin.coroutines.cancellation.CancellationException
  * @see RetrievalSettings
  * @see IngestionSettings
  */
-@ExperimentalAgentsApi
 public class LongTermMemory(
     private val retrievalSettings: RetrievalSettings? = null,
     private val ingestionSettings: IngestionSettings? = null,
@@ -730,7 +728,6 @@ public class LongTermMemory(
  * @throws IllegalStateException if the [LongTermMemory] feature is not installed.
  * @see withLongTermMemory
  */
-@OptIn(ExperimentalAgentsApi::class)
 public fun AIAgentContext.longTermMemory(): LongTermMemory = featureOrThrow(LongTermMemory)
 
 /**
@@ -755,6 +752,5 @@ public fun AIAgentContext.longTermMemory(): LongTermMemory = featureOrThrow(Long
  * @throws IllegalStateException if the [LongTermMemory] feature is not installed.
  * @see longTermMemory
  */
-@OptIn(ExperimentalAgentsApi::class)
 public suspend fun <T> AIAgentContext.withLongTermMemory(action: suspend LongTermMemory.() -> T): T =
     longTermMemory().action()

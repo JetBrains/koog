@@ -1,6 +1,5 @@
 package ai.koog.agents.longtermmemory.retrieval
 
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.prompt.dsl.Prompt
 
 /**
@@ -11,7 +10,6 @@ import ai.koog.prompt.dsl.Prompt
  *
  * @see LastUserMessageQueryExtractor
  */
-@ExperimentalAgentsApi
 public fun interface QueryExtractor {
     /**
      * Extracts a search query string from the given [prompt].

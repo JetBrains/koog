@@ -1,6 +1,5 @@
 package ai.koog.agents.features.longtermmemory.aws.dsl
 
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreCompositeSearchStrategy
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceResolver
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceScope
@@ -30,7 +29,6 @@ import kotlin.test.assertTrue
  * DSL directly against a [LongTermMemory.RetrievalSettingsBuilder] and inspect the
  * resulting strategy / storage / augmenter / namespace without talking to AWS.
  */
-@OptIn(ExperimentalAgentsApi::class)
 class AgentcoreRetrievalDslTest {
 
     private val client = mockk<BedrockAgentCoreClient>(relaxed = true)

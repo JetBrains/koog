@@ -1,6 +1,5 @@
 package ai.koog.agents.longtermmemory.retrieval
 
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.longtermmemory.feature.FailurePolicy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
@@ -24,7 +23,6 @@ import ai.koog.rag.base.storage.search.SearchRequest
  *   Defaults to [FailurePolicy.FAIL_FAST] so that retrieval errors stop the LLM call instead
  *   of silently producing an answer without the required memory context.
  */
-@ExperimentalAgentsApi
 public data class RetrievalSettings(
     val storage: SearchStorage<TextDocument, SearchRequest>,
     val queryExtractor: QueryExtractor = LastUserMessageQueryExtractor(),

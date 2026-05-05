@@ -1,6 +1,6 @@
 # Long-term memory
 
-Feature (Experimental)
+Feature
 
 The `LongTermMemory` feature adds persistent memory to Koog AI agents via two independent group of settings:
 - **Retrieval** — augments LLM prompts with relevant context from a memory storage (Retrieval-Augmented Generation or RAG)
@@ -8,15 +8,12 @@ The `LongTermMemory` feature adds persistent memory to Koog AI agents via two in
 
 ## Quick Start
 
-> **Note:** `LongTermMemory` is an experimental API. Annotate your code with `@OptIn(ExperimentalAgentsApi::class)` or add `@file:OptIn(ExperimentalAgentsApi::class)` at the top of your file.
 
 === "Kotlin"
 
     ```kotlin
-    @OptIn(ExperimentalAgentsApi::class)
     val myStorage = InMemoryRecordStorage() // or your vector DB adapter
 
-    @OptIn(ExperimentalAgentsApi::class)
     val agent = AIAgent(
         promptExecutor = executor,
         strategy = singleRunStrategy(),
@@ -65,7 +62,6 @@ Use retrieval without ingestion when you have a pre-populated knowledge base:
 === "Kotlin"
 
     ```kotlin
-    @OptIn(ExperimentalAgentsApi::class)
     install(LongTermMemory) {
         retrieval {
             storage = myVectorDbStorage
@@ -108,7 +104,6 @@ By default, the retrieval flow uses the last user message as the search query. Y
 === "Kotlin"
 
     ```kotlin
-    @OptIn(ExperimentalAgentsApi::class)
     install(LongTermMemory) {
         retrieval {
             storage = myStorage
@@ -153,7 +148,6 @@ Use ingestion without retrieval to build up a memory storage over time:
 === "Kotlin"
 
     ```kotlin
-    @OptIn(ExperimentalAgentsApi::class)
     install(LongTermMemory) {
         ingestion {
             storage = myVectorDbStorage
@@ -195,7 +189,6 @@ By default, retrieval and ingestion run automatically (before and after LLM call
 === "Kotlin"
 
     ```kotlin
-    @OptIn(ExperimentalAgentsApi::class)
     install(LongTermMemory) {
         retrieval {
             storage = myStorage
@@ -236,7 +229,6 @@ This gives you three clean modes:
 Use `withLongTermMemory { }` inside a strategy node to directly search or add records:
 
 ```kotlin
-@OptIn(ExperimentalAgentsApi::class)
 val myNode by node<String, Unit> {
     withLongTermMemory {
         // Manually add records
@@ -253,7 +245,6 @@ val myNode by node<String, Unit> {
 Use `longTermMemory()` to get the feature instance directly:
 
 ```kotlin
-@OptIn(ExperimentalAgentsApi::class)
 val myNode by node<String, Unit> {
     val memory = longTermMemory()
     val storage = memory.ingestionStorage
@@ -265,7 +256,6 @@ val myNode by node<String, Unit> {
 Implement `ExtractionStrategy` to control how messages are transformed before storage:
 
 ```kotlin
-@OptIn(ExperimentalAgentsApi::class)
 val summarizingExtractor = ExtractionStrategy { messages ->
     messages
         .filter { it.role == Message.Role.Assistant }

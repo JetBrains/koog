@@ -1,7 +1,6 @@
 package ai.koog.agents.longtermmemory.feature;
 
 import ai.koog.agents.core.agent.AIAgent;
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi;
 import ai.koog.agents.longtermmemory.retrieval.RetrievalSettings;
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy;
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter;
@@ -20,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Java tests for configuring {@link LongTermMemory} retrieval settings from Java code.
  * Each test case demonstrates a different retrieval configuration using builders.
  */
-@ExperimentalAgentsApi
 public class LongTermMemoryRetrievalJavaTest {
     private static final JSONSerializer serializer = new JacksonSerializer();
 

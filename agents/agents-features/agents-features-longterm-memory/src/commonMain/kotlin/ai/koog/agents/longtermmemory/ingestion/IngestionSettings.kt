@@ -1,6 +1,5 @@
 package ai.koog.agents.longtermmemory.ingestion
 
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.longtermmemory.feature.FailurePolicy
 import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
 import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
@@ -29,7 +28,6 @@ import ai.koog.rag.base.storage.WriteStorage
  *   the agent run. Set to [FailurePolicy.FAIL_FAST] for durable audit/logging use cases
  *   where losing memory records is worse than failing the run.
  */
-@ExperimentalAgentsApi
 public data class IngestionSettings(
     val storage: WriteStorage<TextDocument>,
     val extractionStrategy: ExtractionStrategy = FilteringExtractionStrategy(),

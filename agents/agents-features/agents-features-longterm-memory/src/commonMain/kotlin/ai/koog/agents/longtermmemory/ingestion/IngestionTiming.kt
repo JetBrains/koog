@@ -1,6 +1,5 @@
 package ai.koog.agents.longtermmemory.ingestion
 
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 
 /**
  * Defines when messages are extracted and ingested into the memory repository, and — equally
@@ -10,7 +9,6 @@ import ai.koog.agents.core.annotation.ExperimentalAgentsApi
  * not be relied upon for cross-call deduplication; that is the responsibility of the long-term
  * memory feature itself.
  */
-@ExperimentalAgentsApi
 public enum class IngestionTiming {
     /**
      * Call-delta ingestion.

@@ -1,6 +1,5 @@
 package ai.koog.agents.longtermmemory.feature
 
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 
 /**
  * Policy controlling how failures from the underlying memory storage are handled
@@ -9,7 +8,6 @@ import ai.koog.agents.core.annotation.ExperimentalAgentsApi
  * Failures caused by [kotlin.coroutines.cancellation.CancellationException] are always
  * propagated regardless of the selected policy.
  */
-@ExperimentalAgentsApi
 public enum class FailurePolicy {
     /**
      * Re-throw the underlying error wrapped into a dedicated [LongTermMemory] exception
@@ -36,7 +34,6 @@ public enum class FailurePolicy {
  * Thrown when retrieval from the [LongTermMemory] storage fails and the configured
  * [FailurePolicy] is [FailurePolicy.FAIL_FAST].
  */
-@ExperimentalAgentsApi
 public class LongTermMemoryRetrievalException(
     message: String,
     cause: Throwable,
@@ -46,7 +43,6 @@ public class LongTermMemoryRetrievalException(
  * Thrown when ingestion into the [LongTermMemory] storage fails and the configured
  * [FailurePolicy] is [FailurePolicy.FAIL_FAST].
  */
-@ExperimentalAgentsApi
 public class LongTermMemoryIngestionException(
     message: String,
     cause: Throwable,
