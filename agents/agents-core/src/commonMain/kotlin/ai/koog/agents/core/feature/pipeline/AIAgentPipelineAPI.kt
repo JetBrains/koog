@@ -20,6 +20,8 @@ import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallFailedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallRequestedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
@@ -137,6 +139,32 @@ public interface AIAgentPipelineAPI {
 
     //region Trigger LLM Handlers
 
+    @InternalAgentsApi
+    public suspend fun onLLMCallRequested(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext
+    )
+
+    @InternalAgentsApi
+    public suspend fun onLLMCallSubmitted(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext
+    )
+
+    @Deprecated(
+        message = "Use onLLMCallSubmitted instead",
+        replaceWith = ReplaceWith("onLLMCallSubmitted(eventId, executionInfo, runId, prompt, model, tools, context)")
+    )
     @InternalAgentsApi
     public suspend fun onLLMCallStarting(
         eventId: String,
@@ -313,6 +341,23 @@ public interface AIAgentPipelineAPI {
         handle: suspend (StrategyCompletedContext) -> Unit
     )
 
+    public fun interceptLLMCallRequested(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: LLMCallRequestedContext) -> Unit
+    )
+
+    public fun interceptLLMCallSubmitted(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: LLMCallSubmittedContext) -> Unit
+    )
+
+    @Deprecated(
+        message = "Use interceptLLMCallSubmitted instead",
+        replaceWith = ReplaceWith(
+            expression = "interceptLLMCallSubmitted(feature, handle)",
+            imports = arrayOf("ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext")
+        )
+    )
     public fun interceptLLMCallStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallStartingContext) -> Unit

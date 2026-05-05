@@ -10,7 +10,7 @@ import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
-import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
@@ -161,8 +161,8 @@ public class EventHandler {
                 config.invokeOnStrategyCompleted(eventContext)
             }
 
-            pipeline.interceptLLMCallStarting(this) intercept@{ eventContext: LLMCallStartingContext ->
-                config.invokeOnLLMCallStarting(eventContext)
+            pipeline.interceptLLMCallSubmitted(this) intercept@{ eventContext: LLMCallSubmittedContext ->
+                config.invokeOnLLMCallSubmitted(eventContext)
             }
 
             pipeline.interceptLLMCallCompleted(this) intercept@{ eventContext: LLMCallCompletedContext ->

@@ -405,7 +405,7 @@ public class LongTermMemory(
             val retrieval = ltmFeature.retrievalSettings ?: return
 
             // Augment prompt before regular LLM call
-            pipeline.interceptLLMCallStarting(this) { ctx ->
+            pipeline.interceptLLMCallRequested(this) { ctx ->
                 val augmentedPrompt = getAugmentedPromptOrNull(ctx.prompt, retrieval)
                 if (augmentedPrompt != null) {
                     ctx.context.llm.prompt = augmentedPrompt // TODO: switch to writeSession after the KG-688

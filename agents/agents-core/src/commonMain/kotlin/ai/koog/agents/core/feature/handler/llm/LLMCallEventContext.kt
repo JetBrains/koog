@@ -41,15 +41,18 @@ public interface LLMCallEventContext : AgentLifecycleEventContext {
 }
 
 /**
- * Represents the context for handling a before LLM call event.
+ * Represents the context for handling an LLM call request event.
+ *
+ * This event is emitted when an agent asks for an LLM operation, before the request is transformed or submitted to the
+ * underlying prompt executor.
  *
  * @property executionInfo The execution information containing parentId and current execution path;
  * @property runId The unique identifier for this LLM call session.
- * @property prompt The prompt that will be sent to the language model.
- * @property model The language model instance being used.
- * @property tools The list of tool descriptors available for the LLM call.
+ * @property prompt The prompt requested by the caller.
+ * @property model The language model requested by the caller.
+ * @property tools The list of tool descriptors requested by the caller.
  */
-public data class LLMCallStartingContext(
+public data class LLMCallRequestedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     override val runId: String,
@@ -58,8 +61,41 @@ public data class LLMCallStartingContext(
     override val tools: List<ToolDescriptor>,
     override val context: AIAgentContext
 ) : LLMCallEventContext {
-    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallStarting
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallRequested
 }
+
+/**
+ * Represents the context for handling an LLM call submission event.
+ *
+ * This event is emitted when an LLM operation has been submitted to the underlying prompt executor with the effective
+ * prompt, model, and tools.
+ *
+ * @property executionInfo The execution information containing parentId and current execution path;
+ * @property runId The unique identifier for this LLM call session.
+ * @property prompt The prompt that will be sent to the language model.
+ * @property model The language model instance being used.
+ * @property tools The list of tool descriptors available for the LLM call.
+ */
+public data class LLMCallSubmittedContext(
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
+    override val runId: String,
+    override val prompt: Prompt,
+    override val model: LLModel,
+    override val tools: List<ToolDescriptor>,
+    override val context: AIAgentContext
+) : LLMCallEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallSubmitted
+}
+
+/**
+ * Deprecated name for [LLMCallSubmittedContext].
+ */
+@Deprecated(
+    message = "Use LLMCallSubmittedContext instead",
+    replaceWith = ReplaceWith("LLMCallSubmittedContext")
+)
+public typealias LLMCallStartingContext = LLMCallSubmittedContext
 
 /**
  * Represents the context for handling an after LLM call failed.

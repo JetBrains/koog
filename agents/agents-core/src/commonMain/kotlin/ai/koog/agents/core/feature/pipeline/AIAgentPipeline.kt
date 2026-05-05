@@ -18,6 +18,8 @@ import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallFailedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallRequestedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
@@ -250,7 +252,30 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
     //region Trigger LLM Call Handlers
 
     /**
-     * Notifies all registered LLM handlers before a language model call is made.
+     * Notifies all registered LLM handlers that an agent intends to make a language model call.
+     *
+     * This hook runs before contextual request transformations are applied.
+     *
+     * @param eventId The unique identifier for the event group.
+     * @param executionInfo The execution information for the LLM call event
+     * @param runId The unique identifier for the current run.
+     * @param prompt The prompt requested by the caller
+     * @param model The language model instance requested by the caller
+     * @param tools The list of tool descriptors requested by the caller
+     */
+    @InternalAgentsApi
+    public override suspend fun onLLMCallRequested(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext
+    )
+
+    /**
+     * Notifies all registered LLM handlers that a language model call has been submitted for execution.
      *
      * @param eventId The unique identifier for the event group.
      * @param executionInfo The execution information for the LLM call event
@@ -259,6 +284,24 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param model The language model instance that will process the request
      * @param tools The list of tool descriptors available for the LLM call
      */
+    @InternalAgentsApi
+    public override suspend fun onLLMCallSubmitted(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext
+    )
+
+    /**
+     * Notifies all registered LLM handlers that a language model call has been submitted for execution.
+     */
+    @Deprecated(
+        message = "Use onLLMCallSubmitted instead",
+        replaceWith = ReplaceWith("onLLMCallSubmitted(eventId, executionInfo, runId, prompt, model, tools, context)")
+    )
     @InternalAgentsApi
     public override suspend fun onLLMCallStarting(
         eventId: String,
@@ -668,18 +711,44 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
     )
 
     /**
-     * Intercepts LLM calls before they are made to modify or log the prompt.
+     * Intercepts LLM call requests before contextual transformations and executor submission.
      *
      * @param feature The feature associated with this handler.
-     * @param handle The handler that processes before-LLM-call events
+     * @param handle The handler that processes LLM call request events
+     */
+    public override fun interceptLLMCallRequested(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: LLMCallRequestedContext) -> Unit
+    )
+
+    /**
+     * Intercepts LLM calls after they have been submitted to the underlying prompt executor.
+     *
+     * @param feature The feature associated with this handler.
+     * @param handle The handler that processes submitted LLM call events
      *
      * Example:
      * ```
-     * pipeline.interceptLLMCallStarting(feature) { eventContext ->
-     *     logger.info("About to make LLM call with prompt: ${eventContext.prompt.messages.last().content}")
+     * pipeline.interceptLLMCallSubmitted(feature) { eventContext ->
+     *     logger.info("Submitted LLM call with prompt: ${eventContext.prompt.messages.last().content}")
      * }
      * ```
      */
+    public override fun interceptLLMCallSubmitted(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: LLMCallSubmittedContext) -> Unit
+    )
+
+    /**
+     * Intercepts LLM calls after they have been submitted to the underlying prompt executor.
+     */
+    @Deprecated(
+        message = "Use interceptLLMCallSubmitted instead",
+        replaceWith = ReplaceWith(
+            expression = "interceptLLMCallSubmitted(feature, handle)",
+            imports = arrayOf("ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext")
+        )
+    )
     public override fun interceptLLMCallStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallStartingContext) -> Unit
@@ -975,11 +1044,11 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * Intercepts LLM calls before they are made (deprecated name).
      */
     @Deprecated(
-        message = "Please use interceptLLMCallStarting instead. This method is deprecated and will be removed in the next release.",
+        message = "Please use interceptLLMCallSubmitted instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
-            expression = "interceptLLMCallStarting(feature, handle)",
+            expression = "interceptLLMCallSubmitted(feature, handle)",
             imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext"
+                "ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext"
             )
         )
     )

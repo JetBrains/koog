@@ -26,6 +26,8 @@ import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallFailedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallRequestedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
@@ -274,7 +276,7 @@ public class AIAgentPipelineImpl(
     //region Invoke LLM Call Handlers
 
     @InternalAgentsApi
-    public override suspend fun onLLMCallStarting(
+    public override suspend fun onLLMCallRequested(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -284,9 +286,42 @@ public class AIAgentPipelineImpl(
         context: AIAgentContext
     ) {
         invokeRegisteredHandlersForEvent(
-            eventType = AgentLifecycleEventType.LLMCallStarting,
-            context = LLMCallStartingContext(eventId, executionInfo, runId, prompt, model, tools, context)
+            eventType = AgentLifecycleEventType.LLMCallRequested,
+            context = LLMCallRequestedContext(eventId, executionInfo, runId, prompt, model, tools, context)
         )
+    }
+
+    @InternalAgentsApi
+    public override suspend fun onLLMCallSubmitted(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext
+    ) {
+        invokeRegisteredHandlersForEvent(
+            eventType = AgentLifecycleEventType.LLMCallSubmitted,
+            context = LLMCallSubmittedContext(eventId, executionInfo, runId, prompt, model, tools, context)
+        )
+    }
+
+    @Deprecated(
+        message = "Use onLLMCallSubmitted instead",
+        replaceWith = ReplaceWith("onLLMCallSubmitted(eventId, executionInfo, runId, prompt, model, tools, context)")
+    )
+    @InternalAgentsApi
+    public override suspend fun onLLMCallStarting(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext
+    ) {
+        onLLMCallSubmitted(eventId, executionInfo, runId, prompt, model, tools, context)
     }
 
     @InternalAgentsApi
@@ -598,15 +633,42 @@ public class AIAgentPipelineImpl(
     }
 
     @OptIn(InternalAgentsApi::class)
+    public override fun interceptLLMCallRequested(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: LLMCallRequestedContext) -> Unit
+    ) {
+        addHandlerForFeature(
+            featureKey = feature.key,
+            eventType = AgentLifecycleEventType.LLMCallRequested,
+            handler = createConditionalHandler(feature, handle)
+        )
+    }
+
+    @OptIn(InternalAgentsApi::class)
+    public override fun interceptLLMCallSubmitted(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: LLMCallSubmittedContext) -> Unit
+    ) {
+        addHandlerForFeature(
+            featureKey = feature.key,
+            eventType = AgentLifecycleEventType.LLMCallSubmitted,
+            handler = createConditionalHandler(feature, handle)
+        )
+    }
+
+    @Deprecated(
+        message = "Use interceptLLMCallSubmitted instead",
+        replaceWith = ReplaceWith(
+            expression = "interceptLLMCallSubmitted(feature, handle)",
+            imports = arrayOf("ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext")
+        )
+    )
+    @OptIn(InternalAgentsApi::class)
     public override fun interceptLLMCallStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallStartingContext) -> Unit
     ) {
-        addHandlerForFeature(
-            featureKey = feature.key,
-            eventType = AgentLifecycleEventType.LLMCallStarting,
-            handler = createConditionalHandler(feature, handle)
-        )
+        interceptLLMCallSubmitted(feature, handle)
     }
 
     @OptIn(InternalAgentsApi::class)
@@ -828,11 +890,11 @@ public class AIAgentPipelineImpl(
     }
 
     @Deprecated(
-        message = "Please use interceptLLMCallStarting instead. This method is deprecated and will be removed in the next release.",
+        message = "Please use interceptLLMCallSubmitted instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
-            expression = "interceptLLMCallStarting(feature, handle)",
+            expression = "interceptLLMCallSubmitted(feature, handle)",
             imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext"
+                "ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext"
             )
         )
     )
@@ -840,7 +902,7 @@ public class AIAgentPipelineImpl(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallStartingContext) -> Unit
     ) {
-        interceptLLMCallStarting(feature, handle)
+        interceptLLMCallSubmitted(feature, handle)
     }
 
     @Deprecated(

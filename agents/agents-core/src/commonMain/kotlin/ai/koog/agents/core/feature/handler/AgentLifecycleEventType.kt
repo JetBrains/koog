@@ -92,8 +92,22 @@ public sealed interface AgentLifecycleEventType {
     //region LLM
 
     /**
-     * Represents an event triggered when an error occurs during a language model call.
+     * Represents an event triggered when an agent intends to make a language model call.
      */
+    public object LLMCallRequested : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered when a language model call is submitted for execution.
+     */
+    public object LLMCallSubmitted : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered when a language model call is submitted for execution.
+     */
+    @Deprecated(
+        message = "Use LLMCallSubmitted instead",
+        replaceWith = ReplaceWith("LLMCallSubmitted")
+    )
     public object LLMCallStarting : AgentLifecycleEventType
 
     /**

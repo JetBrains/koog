@@ -168,7 +168,7 @@ class TestFeature(val events: MutableList<String>) {
                 config.addEvent(event, mapOf("strategy" to event.strategy.name))
             }
 
-            pipeline.interceptLLMCallStarting(this) { event ->
+            pipeline.interceptLLMCallSubmitted(this) { event ->
                 config.addEvent(
                     event,
                     mapOf(

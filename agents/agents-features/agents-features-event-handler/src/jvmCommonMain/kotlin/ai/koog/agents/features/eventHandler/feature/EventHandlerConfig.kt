@@ -9,6 +9,7 @@ import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
 import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
@@ -205,16 +206,31 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     }
 
     /**
-     * Append handler called before a call is made to the language model.
+     * Append handler called when a call is submitted to the language model.
      */
+    @JavaAPI
+    @JvmName("onLLMCallSubmitted")
+    public fun javaApiOnLLMCallSubmitted(handler: Interceptor<LLMCallSubmittedContext>) {
+        onLLMCallSubmitted { eventContext ->
+            withContextReentrant(eventContext.context.config.strategyDispatcher){
+                eventContext.context.config.submitToMainDispatcher {
+                    handler.intercept(eventContext)
+                }
+            }
+        }
+    }
+
+    /**
+     * Append handler called when a call is submitted to the language model.
+     */
+    @Deprecated(
+        message = "Use onLLMCallSubmitted instead",
+        replaceWith = ReplaceWith("javaApiOnLLMCallSubmitted(handler)")
+    )
     @JavaAPI
     @JvmName("onLLMCallStarting")
     public fun javaApiOnLLMCallStarting(handler: Interceptor<LLMCallStartingContext>) {
-        onLLMCallStarting { eventContext ->
-            withContextReentrant(eventContext.context.config.strategyDispatcher) {
-                handler.intercept(eventContext)
-            }
-        }
+        javaApiOnLLMCallSubmitted(handler)
     }
 
     /**
@@ -225,7 +241,9 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     public fun javaApiOnLLMCallCompleted(handler: Interceptor<LLMCallCompletedContext>) {
         onLLMCallCompleted { eventContext ->
             withContextReentrant(eventContext.context.config.strategyDispatcher) {
-                handler.intercept(eventContext)
+                eventContext.context.config.submitToMainDispatcher {
+                    handler.intercept(eventContext)
+                }
             }
         }
     }
