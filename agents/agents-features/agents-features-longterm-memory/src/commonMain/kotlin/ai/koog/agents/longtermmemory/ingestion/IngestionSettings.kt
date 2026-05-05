@@ -1,6 +1,7 @@
 package ai.koog.agents.longtermmemory.ingestion
 
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
+import ai.koog.agents.longtermmemory.feature.FailurePolicy
 import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
 import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
 import ai.koog.rag.base.TextDocument
@@ -23,6 +24,10 @@ import ai.koog.rag.base.storage.WriteStorage
  *   calls or on agent completion (depending on [timing]). When `false`, the storage is still
  *   accessible for manual use inside graph strategy nodes via [ai.koog.agents.longtermmemory.feature.withLongTermMemory].
  * @param namespace Namespace (table/collection name) for a request
+ * @param failurePolicy How to react to failures from [storage] when persisting records.
+ *   Defaults to [FailurePolicy.LOG_AND_CONTINUE] so transient ingestion errors do not abort
+ *   the agent run. Set to [FailurePolicy.FAIL_FAST] for durable audit/logging use cases
+ *   where losing memory records is worse than failing the run.
  */
 @ExperimentalAgentsApi
 public data class IngestionSettings(
@@ -30,5 +35,6 @@ public data class IngestionSettings(
     val extractionStrategy: ExtractionStrategy = FilteringExtractionStrategy(),
     val timing: IngestionTiming = IngestionTiming.ON_LLM_CALL,
     val enableAutomaticIngestion: Boolean = true,
-    val namespace: String? = null
+    val namespace: String? = null,
+    val failurePolicy: FailurePolicy = FailurePolicy.LOG_AND_CONTINUE,
 )

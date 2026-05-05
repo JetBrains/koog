@@ -46,6 +46,7 @@ public class LongTermMemoryRetrievalJavaTest {
         var retrievalSettings = new LongTermMemory.RetrievalSettingsBuilder()
             .withStorage(storage)
             .withSearchStrategy(SearchStrategy.builder().similarity().withTopK(10).build())
+            .withFailurePolicy(FailurePolicy.LOG_AND_CONTINUE)
             .build();
 
         var agent = buildAgentWithRetrieval(retrievalSettings);
@@ -62,6 +63,7 @@ public class LongTermMemoryRetrievalJavaTest {
         var retrievalSettings = new LongTermMemory.RetrievalSettingsBuilder()
             .withStorage(storage)
             .withSearchStrategy(query -> new SimilaritySearchRequest(query, 20, 0, 0.0, null))
+            .withFailurePolicy(FailurePolicy.LOG_AND_CONTINUE)
             .build();
 
         var agent = buildAgentWithRetrieval(retrievalSettings);
@@ -81,6 +83,7 @@ public class LongTermMemoryRetrievalJavaTest {
                 SearchStrategy.builder().similarity().withTopK(10).withSimilarityThreshold(0.7).build()
             )
             .withPromptAugmenter(PromptAugmenter.builder().system().build())
+            .withFailurePolicy(FailurePolicy.LOG_AND_CONTINUE)
             .build();
 
         var agent = buildAgentWithRetrieval(retrievalSettings);
@@ -100,6 +103,7 @@ public class LongTermMemoryRetrievalJavaTest {
                 SearchStrategy.builder().similarity().withTopK(5).withSimilarityThreshold(0.1).build()
             )
             .withPromptAugmenter(PromptAugmenter.builder().user().build())
+            .withFailurePolicy(FailurePolicy.LOG_AND_CONTINUE)
             .build();
 
         var agent = buildAgentWithRetrieval(retrievalSettings);
@@ -118,6 +122,7 @@ public class LongTermMemoryRetrievalJavaTest {
             .withSearchStrategy(
                 SearchStrategy.builder().similarity().withTopK(10).withSimilarityThreshold(0.7).build()
             )
+            .withFailurePolicy(FailurePolicy.LOG_AND_CONTINUE)
             .build();
 
         var agent = buildAgentWithRetrieval(retrievalSettings);
@@ -136,6 +141,7 @@ public class LongTermMemoryRetrievalJavaTest {
             .withSearchStrategy(
                 SearchStrategy.builder().similarity().withTopK(5).withSimilarityThreshold(0.1).build()
             )
+            .withFailurePolicy(FailurePolicy.LOG_AND_CONTINUE)
             .build();
 
         var agent = buildAgentWithRetrieval(retrievalSettings);

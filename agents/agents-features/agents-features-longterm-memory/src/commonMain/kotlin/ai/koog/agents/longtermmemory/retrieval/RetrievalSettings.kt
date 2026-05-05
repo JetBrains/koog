@@ -1,6 +1,7 @@
 package ai.koog.agents.longtermmemory.retrieval
 
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
+import ai.koog.agents.longtermmemory.feature.FailurePolicy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
 import ai.koog.rag.base.TextDocument
@@ -19,6 +20,9 @@ import ai.koog.rag.base.storage.search.SearchRequest
  *   automatically before each LLM call. When `false`, the storage and strategy are still accessible
  *   for manual use inside graph strategy nodes via [ai.koog.agents.longtermmemory.feature.withLongTermMemory].
  * @param namespace Namespace (table/collection name) for a request.
+ * @param failurePolicy How to react to failures from [storage] or [searchStrategy].
+ *   Defaults to [FailurePolicy.FAIL_FAST] so that retrieval errors stop the LLM call instead
+ *   of silently producing an answer without the required memory context.
  */
 @ExperimentalAgentsApi
 public data class RetrievalSettings(
@@ -27,5 +31,6 @@ public data class RetrievalSettings(
     val searchStrategy: SearchStrategy = SimilaritySearchStrategy(),
     val promptAugmenter: PromptAugmenter = SystemPromptAugmenter(),
     val enableAutomaticRetrieval: Boolean = true,
-    val namespace: String? = null
+    val namespace: String? = null,
+    val failurePolicy: FailurePolicy = FailurePolicy.FAIL_FAST,
 )

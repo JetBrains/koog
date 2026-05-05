@@ -2,6 +2,7 @@ package ai.koog.agents.longtermmemory.feature;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi;
+import ai.koog.agents.longtermmemory.feature.FailurePolicy;
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming;
 import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
@@ -162,6 +163,7 @@ public class LongTermMemoryIngestionJavaTest {
                         .withSearchStrategy(query ->
                             new SimilaritySearchRequest(query, 15, 0, 0.5, null)
                         )
+                        .withFailurePolicy(FailurePolicy.LOG_AND_CONTINUE)
                         .build()
                 );
             })

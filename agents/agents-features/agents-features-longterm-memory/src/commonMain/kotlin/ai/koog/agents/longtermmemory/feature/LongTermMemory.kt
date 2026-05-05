@@ -182,6 +182,15 @@ public class LongTermMemory(
         public var namespace: String? = null
 
         /**
+         * How to react to retrieval failures (e.g. storage outage, invalid search request).
+         *
+         * Defaults to [FailurePolicy.FAIL_FAST] so a retrieval error stops the LLM call instead
+         * of silently producing an answer without the required memory context. Switch to
+         * [FailurePolicy.LOG_AND_CONTINUE] to fall back to a non-augmented LLM call.
+         */
+        public var failurePolicy: FailurePolicy = FailurePolicy.FAIL_FAST
+
+        /**
          * Fluent setter for [storage].
          */
         public fun withStorage(storage: SearchStorage<TextDocument, SearchRequest>): RetrievalSettingsBuilder = apply { this.storage = storage }
@@ -217,6 +226,12 @@ public class LongTermMemory(
             apply { this.namespace = namespace }
 
         /**
+         * Fluent setter for [failurePolicy].
+         */
+        public fun withFailurePolicy(failurePolicy: FailurePolicy): RetrievalSettingsBuilder =
+            apply { this.failurePolicy = failurePolicy }
+
+        /**
          * RetrievalSettings builder.
          */
         public fun build(): RetrievalSettings {
@@ -227,7 +242,8 @@ public class LongTermMemory(
                 searchStrategy,
                 promptAugmenter,
                 enableAutomaticRetrieval,
-                namespace
+                namespace,
+                failurePolicy,
             )
         }
     }
@@ -281,6 +297,15 @@ public class LongTermMemory(
         public var namespace: String? = null
 
         /**
+         * How to react to ingestion failures (e.g. storage outage).
+         *
+         * Defaults to [FailurePolicy.LOG_AND_CONTINUE] so transient ingestion errors do not
+         * abort the agent run. Switch to [FailurePolicy.FAIL_FAST] for durable audit/logging
+         * use cases where losing memory records is worse than failing the run.
+         */
+        public var failurePolicy: FailurePolicy = FailurePolicy.LOG_AND_CONTINUE
+
+        /**
          * Fluent setter for [storage].
          */
         public fun withStorage(storage: WriteStorage<TextDocument>): IngestionSettingsBuilder = apply { this.storage = storage }
@@ -309,11 +334,24 @@ public class LongTermMemory(
             apply { this.namespace = namespace }
 
         /**
+         * Fluent setter for [failurePolicy].
+         */
+        public fun withFailurePolicy(failurePolicy: FailurePolicy): IngestionSettingsBuilder =
+            apply { this.failurePolicy = failurePolicy }
+
+        /**
          * IngestionSettings builder.
          */
         public fun build(): IngestionSettings {
             val ingestionStorage = storage ?: error("storage must be set in ingestion { } block")
-            return IngestionSettings(ingestionStorage, extractionStrategy, timing, enableAutomaticIngestion, namespace)
+            return IngestionSettings(
+                ingestionStorage,
+                extractionStrategy,
+                timing,
+                enableAutomaticIngestion,
+                namespace,
+                failurePolicy,
+            )
         }
     }
 
@@ -514,7 +552,14 @@ public class LongTermMemory(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logger.error(e) { "Failed to ingest ${records.size} memory records." }
+                when (ingestion.failurePolicy) {
+                    FailurePolicy.FAIL_FAST -> throw LongTermMemoryIngestionException(
+                        "Failed to ingest ${records.size} memory records.",
+                        e,
+                    )
+                    FailurePolicy.LOG_AND_CONTINUE ->
+                        logger.error(e) { "Failed to ingest ${records.size} memory records." }
+                }
             }
         }
 
@@ -533,8 +578,16 @@ public class LongTermMemory(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logger.error(e) { "Failed to search memory records for ${retrieval.searchStrategy}." }
-                emptyList()
+                when (retrieval.failurePolicy) {
+                    FailurePolicy.FAIL_FAST -> throw LongTermMemoryRetrievalException(
+                        "Failed to search memory records for ${retrieval.searchStrategy}.",
+                        e,
+                    )
+                    FailurePolicy.LOG_AND_CONTINUE -> {
+                        logger.error(e) { "Failed to search memory records for ${retrieval.searchStrategy}." }
+                        emptyList()
+                    }
+                }
             }
             if (searchResults.isEmpty()) {
                 return null
