@@ -87,14 +87,14 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
         ): AIAgent<String, String> = AIAgent(
             promptExecutor,
             llmModel,
-            responseProcessor,
             strategy,
             toolRegistry,
-            id,
             systemPrompt,
             temperature,
-            numberOfChoices,
             maxIterations,
+            responseProcessor,
+            id,
+            Clock.System,
             installFeatures
         )
 
@@ -117,14 +117,13 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             promptExecutor,
             llmModel,
             strategy,
-            responseProcessor,
             toolRegistry,
-            id,
-            clock,
             systemPrompt,
             temperature,
-            numberOfChoices,
             maxIterations,
+            responseProcessor,
+            id,
+            Clock.System,
             installFeatures
         )
 
@@ -144,14 +143,14 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
         ): AIAgent<Input, Output> = AIAgent(
             promptExecutor,
             llmModel,
-            responseProcessor,
-            toolRegistry,
             strategy,
-            id,
+            toolRegistry,
             systemPrompt,
             temperature,
-            numberOfChoices,
             maxIterations,
+            responseProcessor,
+            id,
+            Clock.System,
             installFeatures
         )
 
@@ -171,14 +170,14 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
         ): AIAgent<Input, Output> = AIAgent(
             promptExecutor,
             llmModel,
-            responseProcessor,
-            toolRegistry,
             strategy,
-            id,
+            toolRegistry,
             systemPrompt,
             temperature,
-            numberOfChoices,
             maxIterations,
+            responseProcessor,
+            id,
+            Clock.System,
             installFeatures
         )
 
