@@ -8,6 +8,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -15,7 +16,6 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlin.time.Clock
 
 /**
  * Structured representation of a single fact extracted from the chat history.
@@ -217,7 +217,7 @@ public class FactRetrievalHistoryCompressionStrategy(public val concepts: List<C
 internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
     concept: Concept,
     llmModel: LLModel? = null,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
 ): Fact {
     // Snapshot the original prompt and model BEFORE any mutations
     val initialPrompt = this.prompt
