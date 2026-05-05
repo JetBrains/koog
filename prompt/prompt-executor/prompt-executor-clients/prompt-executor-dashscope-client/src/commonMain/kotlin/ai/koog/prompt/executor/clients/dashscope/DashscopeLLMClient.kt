@@ -50,7 +50,7 @@ public class DashscopeClientSettings(
  * @param settings The base URL, chat completion path, and timeouts for the DashScope API,
  * defaults to "https://dashscope-intl.aliyuncs.com/compatible-mode/v1" and 900s
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
- *   to create a Ktor-backed client configured with an API key.
+ *   that accepts an API key and a [KoogHttpClientFactory] to create a client with standard defaults.
  * @param clock Clock instance used for tracking response metadata timestamps
  */
 public class DashscopeLLMClient @JvmOverloads constructor(
@@ -80,13 +80,6 @@ public class DashscopeLLMClient @JvmOverloads constructor(
         toolsConverter = toolsConverter
     )
 
-    @Deprecated(
-        "Use constructor with KoogHttpClientFactory",
-        ReplaceWith(
-            "DashscopeLLMClient(apiKey, settings, KtorHttpClientFactory(), clock, toolsConverter)",
-            "ai.koog.http.client.ktor.KtorHttpClientFactory"
-        ),
-    )
     @JvmOverloads
     public constructor(
         apiKey: String,

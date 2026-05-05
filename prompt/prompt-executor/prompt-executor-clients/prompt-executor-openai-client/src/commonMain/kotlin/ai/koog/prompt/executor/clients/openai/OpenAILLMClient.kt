@@ -98,7 +98,7 @@ public class OpenAIClientSettings(
  *
  * @param settings The base URL and timeouts for the OpenAI API, defaults to "https://api.openai.com" and 900 s
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
- *   to create a Ktor-backed client configured with an API key.
+ *   that accepts an API key and a [KoogHttpClientFactory] to create a client with standard defaults.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 @OptIn(ExperimentalAtomicApi::class)
@@ -134,13 +134,6 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         toolsConverter = toolsConverter
     )
 
-    @Deprecated(
-        "Use constructor with KoogHttpClientFactory",
-        ReplaceWith(
-            "OpenAILLMClient(apiKey, settings, KtorHttpClientFactory(), clock, toolsConverter)",
-            "ai.koog.http.client.ktor.KtorHttpClientFactory"
-        ),
-    )
     @JvmOverloads
     public constructor(
         apiKey: String,

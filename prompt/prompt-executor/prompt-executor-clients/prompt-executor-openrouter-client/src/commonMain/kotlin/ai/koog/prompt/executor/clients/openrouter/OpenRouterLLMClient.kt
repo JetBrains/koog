@@ -62,7 +62,7 @@ public class OpenRouterClientSettings(
  *
  * @param settings The base URL and timeouts for the OpenRouter API, defaults to "https://openrouter.ai" and 900s
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
- *   to create a Ktor-backed client configured with an API key.
+ *   that accepts an API key and a [KoogHttpClientFactory] to create a client with standard defaults.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public class OpenRouterLLMClient @JvmOverloads constructor(
@@ -97,13 +97,6 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         toolsConverter = toolsConverter
     )
 
-    @Deprecated(
-        "Use constructor with KoogHttpClientFactory",
-        ReplaceWith(
-            "OpenRouterLLMClient(apiKey, settings, KtorHttpClientFactory(), clock, toolsConverter)",
-            "ai.koog.http.client.ktor.KtorHttpClientFactory"
-        ),
-    )
     @JvmOverloads
     public constructor(
         apiKey: String,

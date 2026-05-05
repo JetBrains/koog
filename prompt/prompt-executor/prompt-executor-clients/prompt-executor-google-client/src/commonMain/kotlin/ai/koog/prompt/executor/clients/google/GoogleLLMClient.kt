@@ -89,8 +89,8 @@ public class GoogleClientSettings(
  *
  * @param settings Custom client settings, defaults to standard API endpoint and timeouts
  * @param httpClient A preconfigured Koog HTTP client used for API calls. Must have authentication and other
- *   request defaults already embedded. To use a Ktor-backed client with standard defaults, use the secondary
- *   constructor that accepts an API key and an [io.ktor.client.HttpClient].
+ *   request defaults already embedded. To create a client with standard defaults, use the secondary
+ *   constructor that accepts an API key and a [KoogHttpClientFactory].
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public open class GoogleLLMClient @JvmOverloads constructor(
@@ -136,13 +136,6 @@ public open class GoogleLLMClient @JvmOverloads constructor(
      * @param baseClient Ktor HTTP client used for making API requests.
      * @param clock Clock instance used for tracking response metadata timestamps.
      */
-    @Deprecated(
-        "Use constructor with KoogHttpClientFactory",
-        ReplaceWith(
-            "GoogleLLMClient(apiKey, settings, KtorHttpClientFactory(), clock)",
-            "ai.koog.http.client.ktor.KtorHttpClientFactory"
-        ),
-    )
     @JvmOverloads
     public constructor(
         apiKey: String,

@@ -55,7 +55,7 @@ public class DeepSeekClientSettings(
  * @param settings The base URL, chat completion path, and timeouts for the DeepSeek API,
  * defaults to "https://api.deepseek.com" and 900s
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
- *   to create a Ktor-backed client configured with an API key.
+ *   that accepts an API key and a [KoogHttpClientFactory] to create a client with standard defaults.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public class DeepSeekLLMClient @JvmOverloads constructor(
@@ -85,13 +85,6 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         toolsConverter = toolsConverter
     )
 
-    @Deprecated(
-        "Use constructor with KoogHttpClientFactory",
-        ReplaceWith(
-            "DeepSeekLLMClient(apiKey, settings, KtorHttpClientFactory(), clock, toolsConverter)",
-            "ai.koog.http.client.ktor.KtorHttpClientFactory"
-        ),
-    )
     @JvmOverloads
     public constructor(
         apiKey: String,
