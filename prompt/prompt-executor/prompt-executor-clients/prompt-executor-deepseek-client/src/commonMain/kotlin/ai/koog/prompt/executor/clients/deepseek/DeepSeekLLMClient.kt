@@ -76,7 +76,7 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: DeepSeekClientSettings = DeepSeekClientSettings(),
         httpClientFactory: KoogHttpClientFactory,
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,

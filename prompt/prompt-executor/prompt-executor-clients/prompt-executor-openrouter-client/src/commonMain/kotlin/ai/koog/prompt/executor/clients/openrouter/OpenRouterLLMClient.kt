@@ -83,7 +83,7 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: OpenRouterClientSettings = OpenRouterClientSettings(),
         httpClientFactory: KoogHttpClientFactory,
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ) : this(
         settings = settings,

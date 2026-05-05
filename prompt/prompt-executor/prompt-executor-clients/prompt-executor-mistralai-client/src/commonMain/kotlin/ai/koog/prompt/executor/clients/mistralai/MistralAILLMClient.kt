@@ -91,7 +91,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: MistralAIClientSettings = MistralAIClientSettings(),
         httpClientFactory: KoogHttpClientFactory,
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,

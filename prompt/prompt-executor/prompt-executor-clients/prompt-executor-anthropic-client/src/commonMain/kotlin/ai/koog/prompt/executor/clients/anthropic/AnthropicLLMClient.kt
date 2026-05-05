@@ -122,7 +122,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: AnthropicClientSettings = AnthropicClientSettings(),
         httpClientFactory: KoogHttpClientFactory,
-        clock: Clock = Clock.System
+        clock: KoogClock = KoogClock.System
     ) : this(
         settings = settings,
         httpClient = httpClientFactory.create(

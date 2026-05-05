@@ -112,7 +112,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: GoogleClientSettings = GoogleClientSettings(),
         httpClientFactory: KoogHttpClientFactory,
-        clock: Clock = Clock.System
+        clock: KoogClock = KoogClock.System
     ) : this(
         settings,
         httpClientFactory.create(

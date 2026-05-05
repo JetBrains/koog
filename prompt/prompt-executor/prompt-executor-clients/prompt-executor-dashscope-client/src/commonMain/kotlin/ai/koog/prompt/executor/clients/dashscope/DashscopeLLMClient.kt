@@ -71,7 +71,7 @@ public class DashscopeLLMClient @JvmOverloads constructor(
         apiKey: String,
         settings: DashscopeClientSettings = DashscopeClientSettings(),
         httpClientFactory: KoogHttpClientFactory,
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,
