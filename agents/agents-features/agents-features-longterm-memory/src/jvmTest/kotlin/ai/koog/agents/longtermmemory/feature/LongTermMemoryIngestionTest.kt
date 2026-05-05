@@ -53,6 +53,23 @@ class LongTermMemoryIngestionTest {
             edge(llmNode forwardTo nodeFinish transformed { it.content })
         }
 
+    /**
+     * Strategy that performs two LLM calls within a single agent run.
+     *
+     * The first input is used as the first user message; a fixed second user message is
+     * appended before the second LLM call. The prompt for the second call therefore
+     * contains the first user message and the first assistant response — exactly the
+     * "prompt-history replay" scenario that must not lead to duplicate ingestion.
+     */
+    private val twoCallNonStreamingStrategy =
+        strategy<String, String>("ingestion-two-call-test", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
+            val firstLlmNode by nodeLLMRequest(name = "llm-node-1", allowToolCalls = false)
+            val secondLlmNode by nodeLLMRequest(name = "llm-node-2", allowToolCalls = false)
+            edge(nodeStart forwardTo firstLlmNode)
+            edge(firstLlmNode forwardTo secondLlmNode transformed { "Follow-up question" })
+            edge(secondLlmNode forwardTo nodeFinish transformed { it.content })
+        }
+
     private val streamingStrategy =
         strategy<String, String>("ingestion-streaming-test", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
             val llmNode by nodeLLMRequestStreaming(name = "llm-node")
@@ -622,5 +639,94 @@ class LongTermMemoryIngestionTest {
         agent.run("Hello")
 
         assertEquals(0, storage.size(), "No records should be stored when extractor returns empty list")
+    }
+
+    // ==========================================
+    // Multi-call deduplication (Option 1: per-run ingestion cursor)
+    // ==========================================
+
+    @Test
+    fun `two LLM calls with default extractor do not duplicate prompt-history messages`() = runTest {
+        val storage = InMemoryRecordStorage()
+
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
+            mockLLMAnswer("Second answer about coroutines") onRequestContains "Follow-up question"
+            mockLLMAnswer("First answer about coroutines").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = twoCallNonStreamingStrategy,
+            agentConfig = defaultAgentConfig,
+            toolRegistry = ToolRegistry.EMPTY
+        ) {
+            install(LongTermMemory.Feature) {
+                ingestion {
+                    this.storage = storage
+                    extractionStrategy = FilteringExtractionStrategy()
+                    timing = IngestionTiming.ON_LLM_CALL
+                }
+            }
+        }
+
+        agent.run("First question")
+
+        // Expected ingested records: User1, Assistant1, User2, Assistant2 → exactly 4.
+        // Without the per-run cursor, the 2nd call's start interceptor would re-ingest
+        // User1 and Assistant1 from the prompt history, producing 6 records.
+        assertEquals(
+            4,
+            storage.size(),
+            "Per-run cursor must prevent re-ingestion of prompt-history messages across LLM calls"
+        )
+
+        val firstUser = storage.search(KeywordSearchRequest(queryText = "First question"), defaultNamespace)
+        assertEquals(1, firstUser.size, "First user message must be stored exactly once")
+
+        val firstAssistant = storage.search(KeywordSearchRequest(queryText = "First answer"), defaultNamespace)
+        assertEquals(1, firstAssistant.size, "First assistant message must be stored exactly once")
+
+        val secondUser = storage.search(KeywordSearchRequest(queryText = "Follow-up"), defaultNamespace)
+        assertEquals(1, secondUser.size, "Second user message must be stored exactly once")
+
+        val secondAssistant = storage.search(KeywordSearchRequest(queryText = "Second answer"), defaultNamespace)
+        assertEquals(1, secondAssistant.size, "Second assistant message must be stored exactly once")
+    }
+
+    @Test
+    fun `consecutive agent runs do not leak ingestion cursor state between runs`() = runTest {
+        val storage = InMemoryRecordStorage()
+
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
+            mockLLMAnswer("Stable assistant reply").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = nonStreamingStrategy,
+            agentConfig = defaultAgentConfig,
+            toolRegistry = ToolRegistry.EMPTY
+        ) {
+            install(LongTermMemory.Feature) {
+                ingestion {
+                    this.storage = storage
+                    extractionStrategy = FilteringExtractionStrategy()
+                    timing = IngestionTiming.ON_LLM_CALL
+                }
+            }
+        }
+
+        agent.run("Question one")
+        val sizeAfterFirstRun = storage.size()
+        agent.run("Question two")
+        val sizeAfterSecondRun = storage.size()
+
+        // Each run is an independent runId; the cursor is cleared on agent completion,
+        // so the second run still ingests its own messages.
+        assertTrue(
+            sizeAfterSecondRun > sizeAfterFirstRun,
+            "Second run must ingest its own messages after cursor cleanup; " +
+                "first=$sizeAfterFirstRun second=$sizeAfterSecondRun"
+        )
     }
 }

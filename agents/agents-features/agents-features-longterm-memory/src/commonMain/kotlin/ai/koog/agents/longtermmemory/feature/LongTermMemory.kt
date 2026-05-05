@@ -64,6 +64,83 @@ public class LongTermMemory(
     private val streamingFramesBufferMutex = Mutex()
 
     /**
+     * Per-run append cursor: the number of prompt messages already inspected by this
+     * feature during the current agent run. Combined with [pendingIngestedResponses] it
+     * implements call-delta ingestion under [IngestionTiming.ON_LLM_CALL].
+     */
+    private val ingestedPromptCursor: MutableMap<String, Int> = mutableMapOf()
+
+    /**
+     * Per-run FIFO of LLM responses that were already ingested directly from the
+     * call/streaming completion hooks and might reappear at the tail of the next prompt.
+     *
+     * On the next prompt delta, each new prompt message is matched against the head of
+     * this queue: stale heads (responses that were ingested directly but never appended
+     * to the prompt — e.g. plain streaming responses that the core does not append, or
+     * non-selected responses from `executeMultiple`) are dropped until either the head
+     * matches the current prompt message (then it is skipped as already ingested and the
+     * head is consumed) or the queue is exhausted (then the prompt message is treated as
+     * new). Any remaining entries are cleared on run completion. This causes neither
+     * double-ingestion nor under-ingestion of any other prompt message.
+     */
+    private val pendingIngestedResponses: MutableMap<String, ArrayDeque<Message>> = mutableMapOf()
+    private val ingestedPromptCursorMutex = Mutex()
+
+    /**
+     * Take the prompt messages added since the previous ingestion for [runId] that are
+     * not the same instances/values as previously-ingested-direct responses still pending
+     * for this run, advance the cursor past every inspected message, and consume matching
+     * pending entries.
+     */
+    private suspend fun takeNewPromptMessages(
+        runId: String,
+        messages: List<Message>,
+    ): List<Message> = ingestedPromptCursorMutex.withLock {
+        val cursor = (ingestedPromptCursor[runId] ?: 0).coerceAtMost(messages.size)
+        ingestedPromptCursor[runId] = messages.size
+        if (cursor >= messages.size) return@withLock emptyList()
+
+        val pending = pendingIngestedResponses[runId]
+        val slice = messages.subList(cursor, messages.size)
+        if (pending.isNullOrEmpty()) return@withLock slice.toList()
+
+        val result = ArrayList<Message>(slice.size)
+        for (msg in slice) {
+            // Drop stale pending heads (responses that were ingested directly but never
+            // appended to the prompt) until we either match the current prompt message or
+            // exhaust the queue. The prompt is append-only, so any pending response that
+            // does not appear at-or-before the current position can never appear later.
+            var matched = false
+            while (pending.isNotEmpty()) {
+                val head = pending.removeFirst()
+                if (head == msg) {
+                    matched = true
+                    break
+                }
+            }
+            if (!matched) result.add(msg)
+        }
+        if (pending.isEmpty()) pendingIngestedResponses.remove(runId)
+        result
+    }
+
+    /**
+     * Mark [responses] as already ingested for [runId] so that, if/when they reappear in
+     * the prompt of a subsequent LLM call, they are not re-ingested.
+     *
+     * Unlike a blind cursor advance, this never overshoots: responses that are never
+     * appended to the prompt (e.g. non-selected `executeMultiple` responses, plain
+     * streaming responses) simply stay pending and are cleared on run completion.
+     */
+    private suspend fun markResponsesIngested(runId: String, responses: List<Message>) {
+        if (responses.isEmpty()) return
+        ingestedPromptCursorMutex.withLock {
+            val deque = pendingIngestedResponses.getOrPut(runId) { ArrayDeque() }
+            deque.addAll(responses)
+        }
+    }
+
+    /**
      * Configuration for the LongTermMemory feature.
      *
      * This class allows configuring:
@@ -431,19 +508,28 @@ public class LongTermMemory(
             ingestion: IngestionSettings,
             pipeline: AIAgentPipeline,
         ) {
-            // Ingest original (not yet augmented) prompt messages before regular LLM call
+            // Ingest original (not yet augmented) prompt messages before regular LLM call.
+            // Only messages appended to the prompt since the previous ingestion are forwarded —
+            // see [takeNewPromptMessages].
             pipeline.interceptLLMCallStarting(this) { ctx ->
-                ingestMessages(ingestion, ctx.prompt.messages)
+                val newMessages = ltmFeature.takeNewPromptMessages(ctx.runId, ctx.prompt.messages)
+                ingestMessages(ingestion, newMessages)
             }
 
-            // Ingest assistant responses after regular LLM call
+            // Ingest assistant responses after regular LLM call.
+            // Mark them as already ingested so that, if/when they reappear at the cursor
+            // position in the prompt of the next LLM call, they are skipped — but if the
+            // core never appends them (e.g. non-selected reasoning responses from
+            // `executeMultiple`), no other prompt messages are accidentally swallowed.
             pipeline.interceptLLMCallCompleted(this) { ctx ->
                 ingestMessages(ingestion, ctx.responses)
+                ltmFeature.markResponsesIngested(ctx.runId, ctx.responses)
             }
 
-            // Ingest original (not yet augmented) prompt messages before streaming LLM call
+            // Ingest original (not yet augmented) prompt messages before streaming LLM call.
             pipeline.interceptLLMStreamingStarting(this) { ctx ->
-                ingestMessages(ingestion, ctx.prompt.messages)
+                val newMessages = ltmFeature.takeNewPromptMessages(ctx.runId, ctx.prompt.messages)
+                ingestMessages(ingestion, newMessages)
             }
 
             // Accumulate streaming frames in buffer
@@ -467,7 +553,9 @@ public class LongTermMemory(
                     ltmFeature.streamingFramesBuffer.remove(ctx.runId)
                 }
                 if (!frames.isNullOrEmpty()) {
-                    ingestMessages(ingestion, frames.toMessageResponses())
+                    val responses = frames.toMessageResponses()
+                    ingestMessages(ingestion, responses)
+                    ltmFeature.markResponsesIngested(ctx.runId, responses)
                 }
             }
         }
@@ -529,11 +617,19 @@ public class LongTermMemory(
                 ltmFeature.streamingFramesBufferMutex.withLock {
                     ltmFeature.streamingFramesBuffer.remove(ctx.runId)
                 }
+                ltmFeature.ingestedPromptCursorMutex.withLock {
+                    ltmFeature.ingestedPromptCursor.remove(ctx.runId)
+                    ltmFeature.pendingIngestedResponses.remove(ctx.runId)
+                }
             }
 
             pipeline.interceptAgentExecutionFailed(this) { ctx ->
                 ltmFeature.streamingFramesBufferMutex.withLock {
                     ltmFeature.streamingFramesBuffer.remove(ctx.runId)
+                }
+                ltmFeature.ingestedPromptCursorMutex.withLock {
+                    ltmFeature.ingestedPromptCursor.remove(ctx.runId)
+                    ltmFeature.pendingIngestedResponses.remove(ctx.runId)
                 }
             }
         }

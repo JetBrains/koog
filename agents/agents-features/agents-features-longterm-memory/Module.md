@@ -9,8 +9,8 @@ The agents-features-longterm-memory module adds long-term memory capabilities to
 - **Retrieval (RAG)**: Searches a memory store for context relevant to the user's query and augments the LLM prompt before each call
 - **Ingestion**: Extracts and persists conversation messages into a memory store for future retrieval
 - **Flexible storage**: Plug any backend via `SearchStorage` / `WriteStorage` interfaces from the `rag-base` module; an in-memory `InMemoryRecordStorage` is included for testing
-- **Configurable timing**: Ingest per-LLM-call or on agent completion
-- **Prompt augmentation modes**: System prompt or user prompt or custom implementation
+- **Configurable timing**: Ingest per-LLM-call (call-delta; the extractor only sees new messages of the current interaction, with cross-call deduplication handled by the feature) or once on agent completion (whole accumulated history)
+- **Prompt augmentation modes**: System prompt, user prompt, or custom implementation
 
 ### Key Components
 
@@ -21,8 +21,10 @@ The agents-features-longterm-memory module adds long-term memory capabilities to
 | [`WriteStorage`](../../../../../../rag/rag-base/src/commonMain/kotlin/ai/koog/rag/base/storage/WriteStorage.kt)                | Interface for adding memory records (defined in `rag-base`)            |
 | [`SearchStrategy`](src/commonMain/kotlin/ai/koog/agents/longtermmemory/retrieval/SearchStrategy.kt)                            | Converts user query into a `SearchRequest`; `SimilaritySearchStrategy` is the default implementation |
 | [`QueryExtractor`](src/commonMain/kotlin/ai/koog/agents/longtermmemory/retrieval/QueryExtractor.kt)                              | Extracts the search query string from a `Prompt` for retrieval         |
-| [`LastUserMessageQueryExtractor`](src/commonMain/kotlin/ai/koog/agents/longtermmemory/retrieval/QueryExtractor.kt)               | Default `QueryExtractor` that uses the last user message content       |
+| [`LastUserMessageQueryExtractor`](src/commonMain/kotlin/ai/koog/agents/longtermmemory/retrieval/LastUserMessageQueryExtractor.kt) | Default `QueryExtractor` that uses the last user message content       |
 | [`ExtractionStrategy`](src/commonMain/kotlin/ai/koog/agents/longtermmemory/ingestion/extraction/ExtractionStrategy.kt)         | Transforms messages into `TextDocument`s for storage                   |
+| [`FilteringExtractionStrategy`](src/commonMain/kotlin/ai/koog/agents/longtermmemory/ingestion/extraction/FilteringExtractionStrategy.kt) | Default `ExtractionStrategy`; filters messages by role (`User`/`Assistant` by default) |
+| [`IngestionTiming`](src/commonMain/kotlin/ai/koog/agents/longtermmemory/ingestion/IngestionTiming.kt)                          | Defines when ingestion runs and the message window the extractor sees (`ON_LLM_CALL` = call-delta, `ON_AGENT_COMPLETION` = whole history) |
 | [`PromptAugmenter`](src/commonMain/kotlin/ai/koog/agents/longtermmemory/retrieval/augmentation/PromptAugmenter.kt)             | Interface for augmenting prompts with relevant context                 |
 | [`SystemPromptAugmenter`](src/commonMain/kotlin/ai/koog/agents/longtermmemory/retrieval/augmentation/SystemPromptAugmenter.kt) | Inserts retrieved context as a system message                          |
 | [`UserPromptAugmenter`](src/commonMain/kotlin/ai/koog/agents/longtermmemory/retrieval/augmentation/UserPromptAugmenter.kt)     | Inserts retrieved context as a user message                            |

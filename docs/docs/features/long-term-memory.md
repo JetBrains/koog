@@ -175,7 +175,6 @@ Use ingestion without retrieval to build up a memory storage over time:
             ExtractionStrategy.builder()
                 .filtering()
                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
-                .withLastMessageOnly(false)
                 .build()
         )
         .withTiming(IngestionTiming.ON_LLM_CALL)

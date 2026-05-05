@@ -2,7 +2,6 @@ package ai.koog.agents.longtermmemory.feature;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi;
-import ai.koog.agents.longtermmemory.feature.FailurePolicy;
 import ai.koog.agents.longtermmemory.ingestion.IngestionTiming;
 import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
@@ -48,7 +47,6 @@ public class LongTermMemoryIngestionJavaTest {
                             ExtractionStrategy.builder()
                                 .filtering()
                                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
-                                .withLastMessageOnly(false)
                                 .build()
                         )
                         .withTiming(IngestionTiming.ON_LLM_CALL)
@@ -86,41 +84,6 @@ public class LongTermMemoryIngestionJavaTest {
                                 .build()
                         )
                         .withTiming(IngestionTiming.ON_AGENT_COMPLETION)
-                        .build()
-                )
-            )
-            .build();
-
-        String result = (String) agent.run("Hello");
-
-        assertNotNull(result);
-        assertFalse(result.isEmpty());
-    }
-
-    @Test
-    public void testIngestionWithLastMessageOnlyExtractor() {
-        InMemoryRecordStorage storage = new InMemoryRecordStorage();
-
-        var agent = AIAgent.builder()
-            .promptExecutor(
-                MockPromptExecutor.builder(serializer)
-                    .mockLLMAnswer("answer").asDefaultResponse()
-                    .build()
-            )
-            .llmModel(OpenAIModels.Chat.GPT4o)
-            .systemPrompt("You are a helpful assistant.")
-            .install(LongTermMemory.Feature, config ->
-                config.ingestion(
-                    new LongTermMemory.IngestionSettingsBuilder()
-                        .withStorage(storage)
-                        .withExtractionStrategy(
-                            ExtractionStrategy.builder()
-                                .filtering()
-                                .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.Assistant)))
-                                .withLastMessageOnly(true)
-                                .build()
-                        )
-                        .withTiming(IngestionTiming.ON_LLM_CALL)
                         .build()
                 )
             )

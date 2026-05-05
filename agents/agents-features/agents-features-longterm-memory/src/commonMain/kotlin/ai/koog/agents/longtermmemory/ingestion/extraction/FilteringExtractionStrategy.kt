@@ -10,18 +10,18 @@ import ai.koog.rag.base.TextDocument
  * This extractor filters messages to only include those with roles in
  * [messageRolesToExtract], then converts each message's content into [MemoryRecord]s.
  *
- * When [lastMessageOnly] is `true`, only the last message for each role in [messageRolesToExtract]
- * is extracted. This is useful with [ai.koog.agents.longtermmemory.ingestion.IngestionTiming.ON_LLM_CALL] to avoid re-ingesting
- * messages that were already stored in previous calls.
+ * Cross-call deduplication is the responsibility of the long-term memory feature, which
+ * presents the extractor only with the *current* call's new messages under
+ * [ai.koog.agents.longtermmemory.ingestion.IngestionTiming.ON_LLM_CALL] (see
+ * [ai.koog.agents.longtermmemory.ingestion.IngestionTiming] for the timing/window contract).
+ * The extractor therefore does not need — and should not implement — any deduplication logic
+ * of its own.
  *
  * @property messageRolesToExtract The set of message roles to extract and persist.
  *   Defaults to `setOf(Message.Role.User, Message.Role.Assistant)`.
- * @property lastMessageOnly When `true`, only the last message for each matching role is extracted.
- *   Defaults to `false`.
  */
 public class FilteringExtractionStrategy(
     public val messageRolesToExtract: Set<Message.Role> = setOf(Message.Role.User, Message.Role.Assistant),
-    public val lastMessageOnly: Boolean = false,
 ) : ExtractionStrategy {
 
     private companion object {
@@ -39,7 +39,6 @@ public class FilteringExtractionStrategy(
      * ```java
      * new FilteringExtractionStrategy.Builder()
      *     .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
-     *     .withLastMessageOnly(true)
      *     .build()
      * ```
      */
@@ -49,34 +48,19 @@ public class FilteringExtractionStrategy(
          */
         public var extractRoles: Set<Message.Role> = setOf(Message.Role.User, Message.Role.Assistant)
 
-        /**
-         * When true, only the last message for each matching role is extracted.
-         * Defaults to false.
-         */
-        public var lastMessageOnly: Boolean = false
-
         /** Fluent setter for [extractRoles]. */
         public fun withExtractRoles(roles: Set<Message.Role>): Builder =
             apply { this.extractRoles = roles }
 
-        /** Fluent setter for [lastMessageOnly]. */
-        public fun withLastMessageOnly(lastMessageOnly: Boolean): Builder =
-            apply { this.lastMessageOnly = lastMessageOnly }
-
         /** Builds a [FilteringExtractionStrategy] from the current settings. */
         public fun build(): FilteringExtractionStrategy =
-            FilteringExtractionStrategy(extractRoles, lastMessageOnly)
+            FilteringExtractionStrategy(extractRoles)
     }
 
     override suspend fun extract(messages: List<Message>): List<TextDocument> {
-        val filtered: List<Message> = if (lastMessageOnly) {
-            messageRolesToExtract.mapNotNull { role ->
-                messages.lastOrNull { it.role == role }
-            }
-        } else {
-            messages.filter { it.role in messageRolesToExtract }
-        }
-        return filtered.map { messageToMemoryRecord(it) }
+        return messages
+            .filter { it.role in messageRolesToExtract }
+            .map { messageToMemoryRecord(it) }
     }
 
     private fun messageToMemoryRecord(message: Message): TextDocument = MemoryRecord(
