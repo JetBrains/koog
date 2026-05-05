@@ -15,7 +15,7 @@ import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.processor.ResponseProcessor;
 import ai.koog.serialization.jackson.JacksonSerializer;
-import kotlin.time.Clock;
+import ai.koog.utils.time.KoogClock;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +30,7 @@ public class AIAgentFactoriesTest {
     private final Double temperature = 0.7;
     private final String systemPrompt = "You are a helpful assistant.";
     private final String id = "test-id";
-    private final Clock clock = Clock.System.INSTANCE;
+    private final KoogClock clock = KoogClock.System;
     private final ToolRegistry toolRegistry = ToolRegistry.builder().build();
     private final ResponseProcessor responseProcessor = null;
     private final AIAgentConfig agentConfig = AIAgentConfig.builder()

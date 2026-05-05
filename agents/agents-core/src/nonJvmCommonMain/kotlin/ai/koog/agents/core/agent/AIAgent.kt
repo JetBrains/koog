@@ -94,7 +94,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             maxIterations,
             responseProcessor,
             id,
-            Clock.System,
+            KoogClock.System,
             installFeatures
         )
 
@@ -123,7 +123,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             maxIterations,
             responseProcessor,
             id,
-            Clock.System,
+            KoogClock.System,
             installFeatures
         )
 
@@ -150,7 +150,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             maxIterations,
             responseProcessor,
             id,
-            Clock.System,
+            KoogClock.System,
             installFeatures
         )
 
@@ -177,7 +177,7 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             maxIterations,
             responseProcessor,
             id,
-            Clock.System,
+            KoogClock.System,
             installFeatures
         )
 

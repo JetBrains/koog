@@ -1,5 +1,6 @@
 package ai.koog.utils.time
 
+import kotlin.jvm.JvmField
 import kotlin.time.Instant
 
 /**
@@ -22,6 +23,7 @@ public fun interface KoogClock {
         /**
          * Default [KoogClock] implementation backed by [kotlin.time.Clock.System].
          */
+        @JvmField
         public val System: KoogClock = KoogClock { kotlin.time.Clock.System.now() }
     }
 }

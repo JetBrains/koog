@@ -13,9 +13,9 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.utils.time.KoogClock
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 
 /**
  * Factory functions for creating AIAgent instances.
@@ -33,7 +33,7 @@ import kotlin.time.Clock
  * @param strategy Graph strategy defining the agent's workflow.
  * @param toolRegistry Registry of tools available to the agent. Defaults to an empty registry.
  * @param id Unique identifier for the agent. A random UUID is used if null.
- * @param clock Clock for time-related operations. Defaults to [Clock.System].
+ * @param clock Clock for time-related operations. Defaults to [KoogClock.System].
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [GraphAIAgent] instance configured with the provided parameters.
  */
@@ -45,7 +45,7 @@ public fun <Input, Output> AIAgent(
     strategy: AIAgentGraphStrategy<Input, Output>,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     installFeatures: GraphAIAgent.FeatureContext.() -> Unit = {},
 ): GraphAIAgent<Input, Output> = GraphAIAgent(
     promptExecutor = promptExecutor,
@@ -64,7 +64,7 @@ public fun <Input, Output> AIAgent(
  * @param agentConfig Configuration for the agent, including the prompt, model, and other parameters.
  * @param toolRegistry Registry of tools available to the agent. Defaults to an empty registry.
  * @param id Unique identifier for the agent. A random UUID is used if null.
- * @param clock Clock for time-related operations. Defaults to [Clock.System].
+ * @param clock Clock for time-related operations. Defaults to [KoogClock.System].
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [GraphAIAgent] instance configured with the provided parameters.
  */
@@ -75,7 +75,7 @@ public fun AIAgent(
     agentConfig: AIAgentConfig,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     installFeatures: GraphAIAgent.FeatureContext.() -> Unit = {},
 ): GraphAIAgent<String, String> = AIAgent(
     promptExecutor = promptExecutor,
@@ -97,7 +97,7 @@ public fun AIAgent(
  * @param strategy Functional strategy defining the agent's execution logic.
  * @param toolRegistry Registry of tools available to the agent. Defaults to an empty registry.
  * @param id Unique identifier for the agent. A random UUID is used if null.
- * @param clock Clock for time-related operations. Defaults to [Clock.System].
+ * @param clock Clock for time-related operations. Defaults to [KoogClock.System].
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [FunctionalAIAgent] instance configured with the provided parameters.
  */
@@ -109,7 +109,7 @@ public fun <Input, Output> AIAgent(
     strategy: AIAgentFunctionalStrategy<Input, Output>,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
 ): FunctionalAIAgent<Input, Output> = FunctionalAIAgent(
     promptExecutor = promptExecutor,
@@ -131,7 +131,7 @@ public fun <Input, Output> AIAgent(
  * @param strategy Planner strategy defining the agent's workflow.
  * @param toolRegistry Registry of tools available to the agent. Defaults to an empty registry.
  * @param id Unique identifier for the agent. A random UUID is used if null.
- * @param clock Clock for time-related operations. Defaults to [Clock.System].
+ * @param clock Clock for time-related operations. Defaults to [KoogClock.System].
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [PlannerAIAgent] instance configured with the provided parameters.
  */
@@ -143,7 +143,7 @@ public fun <Input, Output> AIAgent(
     strategy: AIAgentPlannerStrategy<Input, Output, *>,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     installFeatures: PlannerAIAgent.FeatureContext.() -> Unit = {},
 ): PlannerAIAgent<Input, Output> = PlannerAIAgent(
     promptExecutor = promptExecutor,
@@ -173,7 +173,7 @@ public fun <Input, Output> AIAgent(
  * @param maxIterations Maximum number of agent iterations. Defaults to 50.
  * @param responseProcessor Optional processor for the model's responses.
  * @param id Unique identifier for the agent. A random UUID is used if null.
- * @param clock Clock for time-related operations. Defaults to [Clock.System].
+ * @param clock Clock for time-related operations. Defaults to [KoogClock.System].
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [GraphAIAgent] instance configured with the provided parameters.
  */
@@ -189,7 +189,7 @@ public fun <Input, Output> AIAgent(
     maxIterations: Int = 50,
     responseProcessor: ResponseProcessor? = null,
     id: String? = null,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     installFeatures: GraphAIAgent.FeatureContext.() -> Unit = {},
 ): GraphAIAgent<Input, Output> = GraphAIAgent(
     promptExecutor = promptExecutor,
@@ -212,7 +212,7 @@ public fun <Input, Output> AIAgent(
  * @param maxIterations Maximum number of agent iterations. Defaults to 50.
  * @param responseProcessor Optional processor for the model's responses.
  * @param id Unique identifier for the agent. A random UUID is used if null.
- * @param clock Clock for time-related operations. Defaults to [Clock.System].
+ * @param clock Clock for time-related operations. Defaults to [KoogClock.System].
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [GraphAIAgent] instance configured with the provided parameters.
  */
@@ -227,7 +227,7 @@ public fun AIAgent(
     maxIterations: Int = 50,
     responseProcessor: ResponseProcessor? = null,
     id: String? = null,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     installFeatures: GraphAIAgent.FeatureContext.() -> Unit = {}
 ): GraphAIAgent<String, String> = GraphAIAgent(
     promptExecutor = promptExecutor,
@@ -235,7 +235,7 @@ public fun AIAgent(
     strategy = singleRunStrategy(),
     toolRegistry = toolRegistry,
     id = id,
-    clock = Clock.System,
+    clock = clock,
     installFeatures = installFeatures
 )
 
@@ -253,7 +253,7 @@ public fun AIAgent(
  * @param maxIterations Maximum number of agent iterations. Defaults to 50.
  * @param responseProcessor Optional processor for the model's responses.
  * @param id Unique identifier for the agent. A random UUID is used if null.
- * @param clock Clock for time-related operations. Defaults to [Clock.System].
+ * @param clock Clock for time-related operations. Defaults to [KoogClock.System].
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [FunctionalAIAgent] instance configured with the provided parameters.
  */
@@ -269,7 +269,7 @@ public fun <Input, Output> AIAgent(
     maxIterations: Int = 50,
     responseProcessor: ResponseProcessor? = null,
     id: String? = null,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
 ): FunctionalAIAgent<Input, Output> = FunctionalAIAgent(
     promptExecutor = promptExecutor,
@@ -295,7 +295,7 @@ public fun <Input, Output> AIAgent(
  * @param maxIterations Maximum number of agent iterations. Defaults to 50.
  * @param responseProcessor Optional processor for the model's responses.
  * @param id Unique identifier for the agent. A random UUID is used if null.
- * @param clock Clock for time-related operations. Defaults to [Clock.System].
+ * @param clock Clock for time-related operations. Defaults to [KoogClock.System].
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [PlannerAIAgent] instance configured with the provided parameters.
  */
@@ -311,7 +311,7 @@ public fun <Input, Output> AIAgent(
     maxIterations: Int = 50,
     responseProcessor: ResponseProcessor? = null,
     id: String? = null,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     installFeatures: PlannerAIAgent.FeatureContext.() -> Unit = {},
 ): PlannerAIAgent<Input, Output> = PlannerAIAgent(
     promptExecutor = promptExecutor,
