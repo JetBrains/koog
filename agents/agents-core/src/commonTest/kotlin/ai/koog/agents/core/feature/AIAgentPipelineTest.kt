@@ -26,7 +26,7 @@ import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.AgentComplete
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.AgentExecutionFailed
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.AgentStarting
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.LLMCallCompleted
-import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.LLMCallSubmitted
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.LLMCallDispatched
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.NodeExecutionCompleted
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.NodeExecutionFailed
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType.NodeExecutionStarting
@@ -434,14 +434,14 @@ class AIAgentPipelineTest {
         }
 
         val actualEvents = interceptedEvents.filter { collectedEvent ->
-            collectedEvent.startsWith(LLMCallSubmitted::class.simpleName.toString()) ||
+            collectedEvent.startsWith(LLMCallDispatched::class.simpleName.toString()) ||
                 collectedEvent.startsWith(LLMCallCompleted::class.simpleName.toString())
         }
 
         val expectedEvents = listOf(
-            "${LLMCallSubmitted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCallWithoutToolsName)}, prompt: $testLLMResponse, tools: [])",
+            "${LLMCallDispatched::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCallWithoutToolsName)}, prompt: $testLLMResponse, tools: [])",
             "${LLMCallCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCallWithoutToolsName)}, responses: [${Role.Assistant.name}: $DEFAULT_ASSISTANT_RESPONSE])",
-            "${LLMCallSubmitted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCall)}, prompt: $llmCallWithToolsResponse, tools: [${DummyTool().name}])",
+            "${LLMCallDispatched::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCall)}, prompt: $llmCallWithToolsResponse, tools: [${DummyTool().name}])",
             "${LLMCallCompleted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCall)}, responses: [${Role.Assistant.name}: $DEFAULT_ASSISTANT_RESPONSE])",
         )
 
@@ -704,12 +704,12 @@ class AIAgentPipelineTest {
         }
 
         val actualEvents = interceptedEvents.filter { collectedEvent ->
-            collectedEvent.startsWith(LLMCallSubmitted::class.simpleName.toString())
+            collectedEvent.startsWith(LLMCallDispatched::class.simpleName.toString())
         }
 
         val expectedEvents = listOf(
-            "${LLMCallSubmitted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCallWithoutToolsName)}, prompt: $testLLMResponse, tools: [])",
-            "${LLMCallSubmitted::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCallName)}, prompt: $llmCallWithToolsResponse, tools: [${DummyTool().name}])",
+            "${LLMCallDispatched::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCallWithoutToolsName)}, prompt: $testLLMResponse, tools: [])",
+            "${LLMCallDispatched::class.simpleName} (path: ${agentExecutionPath(agentId, strategyName, nodeLLMCallName)}, prompt: $llmCallWithToolsResponse, tools: [${DummyTool().name}])",
         )
 
         assertEquals(

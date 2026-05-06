@@ -20,14 +20,14 @@ import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallFailedContext
-import ai.koog.agents.core.feature.handler.llm.LLMCallRequestedContext
-import ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallDispatchedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFailedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingDispatchedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
@@ -140,33 +140,18 @@ public interface AIAgentPipelineAPI {
     //region Trigger LLM Handlers
 
     @InternalAgentsApi
-    public suspend fun onLLMCallRequested(
-        eventId: String,
-        executionInfo: AgentExecutionInfo,
-        runId: String,
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>,
-        context: AIAgentContext
-    )
-
-    @InternalAgentsApi
-    public suspend fun onLLMCallSubmitted(
-        eventId: String,
-        executionInfo: AgentExecutionInfo,
-        runId: String,
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>,
-        context: AIAgentContext
-    )
-
-    @Deprecated(
-        message = "Use onLLMCallSubmitted instead",
-        replaceWith = ReplaceWith("onLLMCallSubmitted(eventId, executionInfo, runId, prompt, model, tools, context)")
-    )
-    @InternalAgentsApi
     public suspend fun onLLMCallStarting(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext
+    )
+
+    @InternalAgentsApi
+    public suspend fun onLLMCallDispatched(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         runId: String,
@@ -273,6 +258,17 @@ public interface AIAgentPipelineAPI {
     )
 
     @InternalAgentsApi
+    public suspend fun onLLMStreamingDispatched(
+        eventId: String,
+        executionInfo: AgentExecutionInfo,
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: AIAgentContext
+    )
+
+    @InternalAgentsApi
     public suspend fun onLLMStreamingFrameReceived(
         eventId: String,
         executionInfo: AgentExecutionInfo,
@@ -341,26 +337,14 @@ public interface AIAgentPipelineAPI {
         handle: suspend (StrategyCompletedContext) -> Unit
     )
 
-    public fun interceptLLMCallRequested(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: LLMCallRequestedContext) -> Unit
-    )
-
-    public fun interceptLLMCallSubmitted(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: LLMCallSubmittedContext) -> Unit
-    )
-
-    @Deprecated(
-        message = "Use interceptLLMCallSubmitted instead",
-        replaceWith = ReplaceWith(
-            expression = "interceptLLMCallSubmitted(feature, handle)",
-            imports = arrayOf("ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext")
-        )
-    )
     public fun interceptLLMCallStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallStartingContext) -> Unit
+    )
+
+    public fun interceptLLMCallDispatched(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: LLMCallDispatchedContext) -> Unit
     )
 
     public fun interceptLLMCallCompleted(
@@ -376,6 +360,11 @@ public interface AIAgentPipelineAPI {
     public fun interceptLLMStreamingStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMStreamingStartingContext) -> Unit
+    )
+
+    public fun interceptLLMStreamingDispatched(
+        feature: AIAgentFeature<*, *>,
+        handle: suspend (eventContext: LLMStreamingDispatchedContext) -> Unit
     )
 
     public fun interceptLLMStreamingFrameReceived(

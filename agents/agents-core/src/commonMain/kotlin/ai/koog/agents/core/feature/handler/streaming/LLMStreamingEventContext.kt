@@ -37,6 +37,28 @@ public data class LLMStreamingStartingContext(
 }
 
 /**
+ * Represents the context for handling a streaming dispatch event.
+ * This context is provided when the effective streaming request is dispatched to the underlying executor.
+ *
+ * @property executionInfo The execution information containing parentId and current execution path;
+ * @property runId The unique identifier for this streaming session;
+ * @property prompt The effective prompt that will be sent to the language model for streaming;
+ * @property model The effective language model instance being used for streaming;
+ * @property tools The effective list of tool descriptors available for the streaming call.
+ */
+public data class LLMStreamingDispatchedContext(
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
+    val runId: String,
+    val prompt: Prompt,
+    val model: LLModel,
+    val tools: List<ToolDescriptor>,
+    val context: AIAgentContext
+) : LLMStreamingEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingDispatched
+}
+
+/**
  * Represents the context for handling individual stream frame events.
  * This context is provided when stream frames are sent out during the streaming process.
  *

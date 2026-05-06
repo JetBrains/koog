@@ -4,7 +4,26 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.ExecutionCompleted
+import ai.koog.prompt.executor.model.ExecutionFailed
+import ai.koog.prompt.executor.model.ExecutionRequested
+import ai.koog.prompt.executor.model.ExecutionDispatched
+import ai.koog.prompt.executor.model.ModerationCompleted
+import ai.koog.prompt.executor.model.ModerationFailed
+import ai.koog.prompt.executor.model.ModerationRequested
+import ai.koog.prompt.executor.model.ModerationDispatched
+import ai.koog.prompt.executor.model.MultipleChoicesCompleted
+import ai.koog.prompt.executor.model.MultipleChoicesFailed
+import ai.koog.prompt.executor.model.MultipleChoicesRequested
+import ai.koog.prompt.executor.model.MultipleChoicesDispatched
+import ai.koog.prompt.executor.model.ObservablePromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutionContext
+import ai.koog.prompt.executor.model.PromptExecutorEvent
+import ai.koog.prompt.executor.model.StreamingCompleted
+import ai.koog.prompt.executor.model.StreamingFailed
+import ai.koog.prompt.executor.model.StreamingFrameReceived
+import ai.koog.prompt.executor.model.StreamingRequested
+import ai.koog.prompt.executor.model.StreamingDispatched
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -14,7 +33,7 @@ import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlin.jvm.JvmOverloads
 
@@ -31,7 +50,11 @@ import kotlin.jvm.JvmOverloads
 public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     private val llmClients: Map<LLMProvider, LLMClient>,
     private val fallback: FallbackPromptExecutorSettings? = null
-) : PromptExecutor() {
+) : ObservablePromptExecutor() {
+    private val eventSink = PromptExecutorEventSink()
+
+    override val events: SharedFlow<PromptExecutorEvent> = eventSink.events
+
     /**
      * Represents configuration for a fallback large language model (LLM) execution strategy.
      *
@@ -148,25 +171,37 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
      * @return A list of `Message.Response` objects containing the responses generated based on the prompt.
      * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
      */
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: PromptExecutionContext
+    ): List<Message.Response> {
+        eventSink.emit(ExecutionRequested(context, prompt, model, tools))
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
         val provider = model.provider
-
-        val response = when {
-            provider in llmClients -> llmClients[provider]!!.execute(prompt, model, tools)
-
-            fallback != null -> fallbackClient!!.execute(
-                prompt,
-                fallback.fallbackModel,
-                tools
-            )
-
-            else -> throw IllegalArgumentException("No client found for provider: $provider")
+        val (client, effectiveModel) = try {
+            when {
+                provider in llmClients -> llmClients[provider]!! to model
+                fallback != null -> fallbackClient!! to fallback.fallbackModel
+                else -> throw IllegalArgumentException("No client found for provider: $provider")
+            }
+        } catch (error: Throwable) {
+            eventSink.emit(ExecutionFailed(context, prompt, model, tools, error))
+            throw error
         }
 
-        logger.debug { "Response: $response" }
+        eventSink.emit(ExecutionDispatched(context, prompt, effectiveModel, tools))
+        val response = try {
+            client.execute(prompt, effectiveModel, tools)
+        } catch (error: Throwable) {
+            eventSink.emit(ExecutionFailed(context, prompt, effectiveModel, tools, error))
+            throw error
+        }
 
+        eventSink.emit(ExecutionCompleted(context, prompt, effectiveModel, tools, response))
+        logger.debug { "Response: $response" }
         return response
     }
 
@@ -180,14 +215,33 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        context: PromptExecutionContext
     ): Flow<StreamFrame> {
-        logger.debug { "Executing streaming prompt: $prompt with model: $model" }
-
         return flow {
+            eventSink.emit(StreamingRequested(context, prompt, model, tools))
+            logger.debug { "Executing streaming prompt: $prompt with model: $model" }
+
             val provider = model.provider
-            val client = requireNotNull(llmClients[model.provider]) { "No client found for provider: $provider" }
-            emitAll(client.executeStreaming(prompt, model, tools))
+            val client = try {
+                requireNotNull(llmClients[model.provider]) { "No client found for provider: $provider" }
+            } catch (error: Throwable) {
+                eventSink.emit(StreamingFailed(context, prompt, model, tools, error))
+                throw error
+            }
+
+            eventSink.emit(StreamingDispatched(context, prompt, model, tools))
+            try {
+                client.executeStreaming(prompt, model, tools).collect { frame ->
+                    eventSink.emit(StreamingFrameReceived(context, prompt, model, tools, frame))
+                    emit(frame)
+                }
+            } catch (error: Throwable) {
+                eventSink.emit(StreamingFailed(context, prompt, model, tools, error))
+                throw error
+            }
+
+            eventSink.emit(StreamingCompleted(context, prompt, model, tools))
         }
     }
 
@@ -203,26 +257,34 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        context: PromptExecutionContext
     ): List<LLMChoice> {
+        eventSink.emit(MultipleChoicesRequested(context, prompt, model, tools))
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
         val provider = model.provider
-
-        val choices = when {
-            provider in llmClients -> llmClients[provider]!!.executeMultipleChoices(prompt, model, tools)
-
-            fallback != null -> fallbackClient!!.executeMultipleChoices(
-                prompt,
-                fallback.fallbackModel,
-                tools
-            )
-
-            else -> throw IllegalArgumentException("No client found for provider: $provider")
+        val (client, effectiveModel) = try {
+            when {
+                provider in llmClients -> llmClients[provider]!! to model
+                fallback != null -> fallbackClient!! to fallback.fallbackModel
+                else -> throw IllegalArgumentException("No client found for provider: $provider")
+            }
+        } catch (error: Throwable) {
+            eventSink.emit(MultipleChoicesFailed(context, prompt, model, tools, error))
+            throw error
         }
 
-        logger.debug { "Choices: $choices" }
+        eventSink.emit(MultipleChoicesDispatched(context, prompt, effectiveModel, tools))
+        val choices = try {
+            client.executeMultipleChoices(prompt, effectiveModel, tools)
+        } catch (error: Throwable) {
+            eventSink.emit(MultipleChoicesFailed(context, prompt, effectiveModel, tools, error))
+            throw error
+        }
 
+        eventSink.emit(MultipleChoicesCompleted(context, prompt, effectiveModel, tools, choices))
+        logger.debug { "Choices: $choices" }
         return choices
     }
 
@@ -234,13 +296,28 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
      * @return A `ModerationResult` representing the result of the moderation process.
      * @throws IllegalArgumentException If no client is found for the model's provider.
      */
-    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+    override suspend fun moderate(prompt: Prompt, model: LLModel, context: PromptExecutionContext): ModerationResult {
+        eventSink.emit(ModerationRequested(context, prompt, model))
         logger.debug { "Moderating multi-modal content with model: ${model.id}" }
 
         val provider = model.provider
-        val client = llmClients[provider] ?: throw IllegalArgumentException("No client found for provider: $provider")
+        val client = try {
+            llmClients[provider] ?: throw IllegalArgumentException("No client found for provider: $provider")
+        } catch (error: Throwable) {
+            eventSink.emit(ModerationFailed(context, prompt, model, error))
+            throw error
+        }
 
-        return client.moderate(prompt, model)
+        eventSink.emit(ModerationDispatched(context, prompt, model))
+        val result = try {
+            client.moderate(prompt, model)
+        } catch (error: Throwable) {
+            eventSink.emit(ModerationFailed(context, prompt, model, error))
+            throw error
+        }
+
+        eventSink.emit(ModerationCompleted(context, prompt, model, result))
+        return result
     }
 
     override suspend fun models(): List<LLModel> {

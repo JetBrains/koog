@@ -15,14 +15,14 @@ import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallFailedContext
-import ai.koog.agents.core.feature.handler.llm.LLMCallRequestedContext
-import ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallDispatchedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFailedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingDispatchedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
@@ -221,59 +221,11 @@ public actual abstract class AIAgentPipeline actual constructor(
      * JVM-friendly overload that accepts an async interceptor.
      *
      * Example (Java):
-     * pipeline.interceptLLMCallRequested(feature, eventContext -> {
+     * pipeline.interceptLLMCallStarting(feature, eventContext -> {
      *     // LLM call requested
      *     return java.util.concurrent.CompletableFuture.completedFuture(null);
      * });
      */
-    @JavaAPI
-    @InternalAgentsApi
-    @JvmName("interceptLLMCallRequested")
-    public fun javaApiInterceptLLMCallRequested(
-        feature: AIAgentFeature<*, *>,
-        handle: Interceptor<LLMCallRequestedContext>
-    ) {
-        interceptLLMCallRequested(feature) { ctx ->
-            config.submitToMainDispatcher {
-                handle.intercept(ctx)
-            }
-        }
-    }
-
-    /**
-     * Intercepts LLM calls after they have been submitted to the underlying prompt executor.
-     *
-     * JVM-friendly overload that accepts an async interceptor.
-     *
-     * Example (Java):
-     * pipeline.interceptLLMCallSubmitted(feature, eventContext -> {
-     *     // LLM call submitted
-     *     return java.util.concurrent.CompletableFuture.completedFuture(null);
-     * });
-     */
-    @JavaAPI
-    @InternalAgentsApi
-    @JvmName("interceptLLMCallSubmitted")
-    public fun javaApiInterceptLLMCallSubmitted(
-        feature: AIAgentFeature<*, *>,
-        handle: Interceptor<LLMCallSubmittedContext>
-    ) {
-        interceptLLMCallSubmitted(feature) { ctx ->
-            config.submitToMainDispatcher {
-                handle.intercept(ctx)
-            }
-        }
-    }
-
-    /**
-     * Intercepts LLM calls after they have been submitted to the underlying prompt executor.
-     *
-     * JVM-friendly overload that accepts an async interceptor.
-     */
-    @Deprecated(
-        message = "Use interceptLLMCallSubmitted instead",
-        replaceWith = ReplaceWith("javaApiInterceptLLMCallSubmitted(feature, handle)")
-    )
     @JavaAPI
     @InternalAgentsApi
     @JvmName("interceptLLMCallStarting")
@@ -281,7 +233,32 @@ public actual abstract class AIAgentPipeline actual constructor(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMCallStartingContext>
     ) {
-        interceptLLMCallSubmitted(feature) { ctx ->
+        interceptLLMCallStarting(feature) { ctx ->
+            config.submitToMainDispatcher {
+                handle.intercept(ctx)
+            }
+        }
+    }
+
+    /**
+     * Intercepts LLM calls after they have been dispatched to the underlying prompt executor.
+     *
+     * JVM-friendly overload that accepts an async interceptor.
+     *
+     * Example (Java):
+     * pipeline.interceptLLMCallDispatched(feature, eventContext -> {
+     *     // LLM call dispatched
+     *     return java.util.concurrent.CompletableFuture.completedFuture(null);
+     * });
+     */
+    @JavaAPI
+    @InternalAgentsApi
+    @JvmName("interceptLLMCallDispatched")
+    public fun javaApiInterceptLLMCallDispatched(
+        feature: AIAgentFeature<*, *>,
+        handle: Interceptor<LLMCallDispatchedContext>
+    ) {
+        interceptLLMCallDispatched(feature) { ctx ->
             config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
@@ -359,6 +336,31 @@ public actual abstract class AIAgentPipeline actual constructor(
     ) {
         interceptLLMStreamingStarting(feature) { ctx ->
             withContextReentrant(config.strategyDispatcher) {
+                handle.intercept(ctx)
+            }
+        }
+    }
+
+    /**
+     * Intercepts streaming operations after they have been dispatched to the underlying prompt executor.
+     *
+     * JVM-friendly overload that accepts an async interceptor.
+     *
+     * Example (Java):
+     * pipeline.interceptLLMStreamingDispatched(feature, eventContext -> {
+     *     // Streaming dispatched
+     *     return java.util.concurrent.CompletableFuture.completedFuture(null);
+     * });
+     */
+    @JavaAPI
+    @InternalAgentsApi
+    @JvmName("interceptLLMStreamingDispatched")
+    public fun javaApiInterceptLLMStreamingDispatched(
+        feature: AIAgentFeature<*, *>,
+        handle: Interceptor<LLMStreamingDispatchedContext>
+    ) {
+        interceptLLMStreamingDispatched(feature) { ctx ->
+            config.submitToMainDispatcher {
                 handle.intercept(ctx)
             }
         }

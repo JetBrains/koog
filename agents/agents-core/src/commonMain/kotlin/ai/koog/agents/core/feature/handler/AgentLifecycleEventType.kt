@@ -94,21 +94,12 @@ public sealed interface AgentLifecycleEventType {
     /**
      * Represents an event triggered when an agent intends to make a language model call.
      */
-    public object LLMCallRequested : AgentLifecycleEventType
-
-    /**
-     * Represents an event triggered when a language model call is submitted for execution.
-     */
-    public object LLMCallSubmitted : AgentLifecycleEventType
-
-    /**
-     * Represents an event triggered when a language model call is submitted for execution.
-     */
-    @Deprecated(
-        message = "Use LLMCallSubmitted instead",
-        replaceWith = ReplaceWith("LLMCallSubmitted")
-    )
     public object LLMCallStarting : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered when a language model call is dispatched for execution.
+     */
+    public object LLMCallDispatched : AgentLifecycleEventType
 
     /**
      * Represents an event triggered after a language model call has completed.
@@ -149,9 +140,17 @@ public sealed interface AgentLifecycleEventType {
     //region LLM Streaming
 
     /**
-     * Represents an event triggered before streaming from a language model begins.
+     * Represents an event triggered when streaming from a language model is requested.
+     * Note: this happens before [LLMStreamingDispatched].
+     * Between these two events some execution parameters (such as [ai.koog.prompt.dsl.Prompt] or [ai.koog.prompt.llm.LLModel]) are allowed to change
      */
     public object LLMStreamingStarting : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered when streaming from a language model is dispatched to final calling mechanism.
+     * Note: this happens after [LLMStreamingStarting]. Once this event is trigerred, no execution parameters are allowed to change.
+     */
+    public object LLMStreamingDispatched : AgentLifecycleEventType
 
     /**
      * Represents an event triggered when a streaming frame is received from a language model.

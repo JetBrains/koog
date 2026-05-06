@@ -21,7 +21,7 @@ import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
 import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
-import ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallDispatchedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
@@ -89,7 +89,9 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
 
     //region Private LLM Call Handlers
 
-    private var _onLLMCallSubmitted: suspend (eventHandler: LLMCallSubmittedContext) -> Unit = { _ -> }
+    private var _onLLMCallStarting: suspend (eventHandler: LLMCallStartingContext) -> Unit = { _ -> }
+
+    private var _onLLMCallDispatched: suspend (eventHandler: LLMCallDispatchedContext) -> Unit = { _ -> }
 
     private var _onLLMCallCompleted: suspend (eventHandler: LLMCallCompletedContext) -> Unit = { _ -> }
 
@@ -272,25 +274,25 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     //region LLM Call Handlers
 
     /**
-     * Append handler called when a call is submitted to the language model.
+     * Append handler called when an LLM call is requested.
      */
-    public fun onLLMCallSubmitted(handler: suspend (eventContext: LLMCallSubmittedContext) -> Unit) {
-        val originalHandler = this._onLLMCallSubmitted
-        this._onLLMCallSubmitted = { eventContext ->
+    public fun onLLMCallStarting(handler: suspend (eventContext: LLMCallStartingContext) -> Unit) {
+        val originalHandler = this._onLLMCallStarting
+        this._onLLMCallStarting = { eventContext ->
             originalHandler(eventContext)
             handler.invoke(eventContext)
         }
     }
 
     /**
-     * Append handler called when a call is submitted to the language model.
+     * Append handler called when an LLM call is dispatched to the language model.
      */
-    @Deprecated(
-        message = "Use onLLMCallSubmitted instead",
-        replaceWith = ReplaceWith("onLLMCallSubmitted(handler)")
-    )
-    public fun onLLMCallStarting(handler: suspend (eventContext: LLMCallStartingContext) -> Unit) {
-        onLLMCallSubmitted(handler)
+    public fun onLLMCallDispatched(handler: suspend (eventContext: LLMCallDispatchedContext) -> Unit) {
+        val originalHandler = this._onLLMCallDispatched
+        this._onLLMCallDispatched = { eventContext ->
+            originalHandler(eventContext)
+            handler.invoke(eventContext)
+        }
     }
 
     /**
@@ -571,14 +573,14 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     }
 
     /**
-     * Append handler called when a call is submitted to the language model.
+     * Append handler called when an LLM call is requested.
      */
     @Deprecated(
-        message = "Use onLLMCallSubmitted instead",
-        ReplaceWith("onLLMCallSubmitted(handler)", "ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext")
+        message = "Use onLLMCallStarting instead",
+        ReplaceWith("onLLMCallStarting(handler)", "ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext")
     )
     public fun onBeforeLLMCall(handler: suspend (eventContext: BeforeLLMCallContext) -> Unit) {
-        onLLMCallSubmitted(handler)
+        onLLMCallStarting(handler)
     }
 
     /**
@@ -750,21 +752,17 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     //region Invoke LLM Call Handlers
 
     /**
-     * Invoke handlers for when a call is submitted to the language model event.
+     * Invoke handlers for when an LLM call is requested.
      */
-    internal suspend fun invokeOnLLMCallSubmitted(eventContext: LLMCallSubmittedContext) {
-        _onLLMCallSubmitted.invoke(eventContext)
+    internal suspend fun invokeOnLLMCallStarting(eventContext: LLMCallStartingContext) {
+        _onLLMCallStarting.invoke(eventContext)
     }
 
     /**
-     * Invoke handlers for when a call is submitted to the language model event.
+     * Invoke handlers for when an LLM call is dispatched to the language model.
      */
-    @Deprecated(
-        message = "Use invokeOnLLMCallSubmitted instead",
-        replaceWith = ReplaceWith("invokeOnLLMCallSubmitted(eventContext)")
-    )
-    internal suspend fun invokeOnLLMCallStarting(eventContext: LLMCallStartingContext) {
-        invokeOnLLMCallSubmitted(eventContext)
+    internal suspend fun invokeOnLLMCallDispatched(eventContext: LLMCallDispatchedContext) {
+        _onLLMCallDispatched.invoke(eventContext)
     }
 
     /**

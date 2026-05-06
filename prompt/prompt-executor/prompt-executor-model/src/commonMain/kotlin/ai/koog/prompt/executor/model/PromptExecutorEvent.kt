@@ -11,36 +11,19 @@ import ai.koog.prompt.streaming.StreamFrame
 /**
  * Event emitted by a [PromptExecutor] during prompt, streaming, multiple-choice, and moderation operations.
  *
- * Events with the same [promptExecutionId] belong to the same executor operation. Each event carries the prompt,
- * model, and tools snapshot that is true for its own phase, so these values may differ between requested and
- * submitted events for the same operation.
+ * Events with the same [PromptExecutionContext.promptExecutionId] belong to the same executor operation. Each event
+ * carries the prompt, model, and tools snapshot that is true for its own phase, so these values may differ between
+ * requested and dispatched events for the same operation.
  */
 public sealed interface PromptExecutorEvent {
     public val context: PromptExecutionContext
+    public val prompt: Prompt
+    public val model: LLModel
 }
 
-public sealed class ExecutionEventBase(
-    override val context: PromptExecutionContext,
-    public open val prompt: Prompt,
-    public open val model: LLModel,
-    public open val tools: List<ToolDescriptor>,
-) : PromptExecutorEvent
-
-public sealed class ExecutionCompletedBase<T>(
-    override val context: PromptExecutionContext,
-    override val prompt: Prompt,
-    override val model: LLModel,
-    override val tools: List<ToolDescriptor>,
-    public open val result: T,
-) : ExecutionEventBase(context, prompt, model, tools)
-
-public sealed class ExecutionFailedBase(
-    override val context: PromptExecutionContext,
-    override val prompt: Prompt,
-    override val model: LLModel,
-    override val tools: List<ToolDescriptor>,
-    public open val error: Throwable,
-) : ExecutionEventBase(context, prompt, model, tools)
+public sealed interface ExecutionEvent : PromptExecutorEvent {
+    public val tools: List<ToolDescriptor>
+}
 
 //region execute
 
@@ -54,19 +37,19 @@ public data class ExecutionRequested(
     override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-) : ExecutionEventBase(context, prompt, model, tools)
+) : ExecutionEvent
 
 /**
- * Emitted from [PromptExecutor.execute] when execution is submitted to the underlying execution mechanism.
+ * Emitted from [PromptExecutor.execute] when execution is dispatched to the underlying execution mechanism.
  *
- * The prompt, model, and tools describe the effective execution submitted by [PromptExecutor.execute].
+ * The prompt, model, and tools describe the effective execution dispatched by [PromptExecutor.execute].
  */
-public data class ExecutionSubmitted(
+public data class ExecutionDispatched(
     override val context: PromptExecutionContext,
     override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-) : ExecutionEventBase(context, prompt, model, tools)
+) : ExecutionEvent
 
 /**
  * Emitted when [PromptExecutor.execute] completes successfully.
@@ -78,8 +61,8 @@ public data class ExecutionCompleted(
     override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-    override val result: List<Message.Response>
-) : ExecutionCompletedBase<List<Message.Response>>(context, prompt, model, tools, result)
+    public val responses: List<Message.Response>,
+) : ExecutionEvent
 
 /**
  * Emitted when [PromptExecutor.execute] fails.
@@ -91,8 +74,8 @@ public data class ExecutionFailed(
     override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-    override val error: Throwable,
-) : ExecutionFailedBase(context, prompt, model, tools, error)
+    public val error: Throwable,
+) : ExecutionEvent
 
 //endregion execute
 
@@ -108,33 +91,33 @@ public data class MultipleChoicesRequested(
     override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-) : ExecutionEventBase(context, prompt, model, tools)
+) : ExecutionEvent
 
 /**
- * Emitted from [PromptExecutor.executeMultipleChoices] when execution is submitted to the underlying execution
+ * Emitted from [PromptExecutor.executeMultipleChoices] when execution is dispatched to the underlying execution
  * mechanism.
  *
- * The prompt, model, and tools describe the effective execution submitted by [PromptExecutor.executeMultipleChoices].
+ * The prompt, model, and tools describe the effective execution dispatched by [PromptExecutor.executeMultipleChoices].
  */
-public data class MultipleChoicesSubmitted(
+public data class MultipleChoicesDispatched(
     override val context: PromptExecutionContext,
     override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-) : ExecutionEventBase(context, prompt, model, tools)
+) : ExecutionEvent
 
 /**
  * Emitted when [PromptExecutor.executeMultipleChoices] completes successfully.
  *
- * The prompt, model, and tools describe the execution that produced [result].
+ * The prompt, model, and tools describe the execution that produced [choices].
  */
 public data class MultipleChoicesCompleted(
-    override val prompt: Prompt,
     override val context: PromptExecutionContext,
+    override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-    override val result: List<LLMChoice>,
-) : ExecutionCompletedBase<List<LLMChoice>>(context, prompt, model, tools, result)
+    public val choices: List<LLMChoice>,
+) : ExecutionEvent
 
 /**
  * Emitted when [PromptExecutor.executeMultipleChoices] fails.
@@ -142,12 +125,12 @@ public data class MultipleChoicesCompleted(
  * The prompt, model, and tools describe the execution phase where [error] was raised.
  */
 public data class MultipleChoicesFailed(
-    override val prompt: Prompt,
     override val context: PromptExecutionContext,
+    override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-    override val error: Throwable,
-) : ExecutionFailedBase(context, prompt, model, tools, error)
+    public val error: Throwable,
+) : ExecutionEvent
 
 //endregion executeMultipleChoices
 
@@ -160,24 +143,24 @@ public data class MultipleChoicesFailed(
  */
 public data class StreamingRequested(
     override val context: PromptExecutionContext,
-    public val prompt: Prompt,
-    public val model: LLModel,
-    public val tools: List<ToolDescriptor>,
-) : PromptExecutorEvent
+    override val prompt: Prompt,
+    override val model: LLModel,
+    override val tools: List<ToolDescriptor>,
+) : ExecutionEvent
 
 /**
- * Emitted from [PromptExecutor.executeStreaming] when streaming execution is submitted to the underlying execution
+ * Emitted from [PromptExecutor.executeStreaming] when streaming execution is dispatched to the underlying execution
  * mechanism.
  *
- * The prompt, model, and tools describe the effective streaming execution submitted by
+ * The prompt, model, and tools describe the effective streaming execution dispatched by
  * [PromptExecutor.executeStreaming].
  */
-public data class StreamingSubmitted(
+public data class StreamingDispatched(
     override val context: PromptExecutionContext,
-    public val prompt: Prompt,
-    public val model: LLModel,
-    public val tools: List<ToolDescriptor>,
-) : PromptExecutorEvent
+    override val prompt: Prompt,
+    override val model: LLModel,
+    override val tools: List<ToolDescriptor>,
+) : ExecutionEvent
 
 /**
  * Emitted when [PromptExecutor.executeStreaming] receives a streaming [frame].
@@ -186,11 +169,11 @@ public data class StreamingSubmitted(
  */
 public data class StreamingFrameReceived(
     override val context: PromptExecutionContext,
-    public val prompt: Prompt,
-    public val model: LLModel,
-    public val tools: List<ToolDescriptor>,
+    override val prompt: Prompt,
+    override val model: LLModel,
+    override val tools: List<ToolDescriptor>,
     public val frame: StreamFrame,
-) : PromptExecutorEvent
+) : ExecutionEvent
 
 /**
  * Emitted when the flow returned by [PromptExecutor.executeStreaming] completes successfully.
@@ -199,10 +182,10 @@ public data class StreamingFrameReceived(
  */
 public data class StreamingCompleted(
     override val context: PromptExecutionContext,
-    public val prompt: Prompt,
-    public val model: LLModel,
-    public val tools: List<ToolDescriptor>,
-) : PromptExecutorEvent
+    override val prompt: Prompt,
+    override val model: LLModel,
+    override val tools: List<ToolDescriptor>,
+) : ExecutionEvent
 
 /**
  * Emitted when the flow returned by [PromptExecutor.executeStreaming] fails.
@@ -211,11 +194,11 @@ public data class StreamingCompleted(
  */
 public data class StreamingFailed(
     override val context: PromptExecutionContext,
-    public val prompt: Prompt,
-    public val model: LLModel,
-    public val tools: List<ToolDescriptor>,
+    override val prompt: Prompt,
+    override val model: LLModel,
+    override val tools: List<ToolDescriptor>,
     public val error: Throwable,
-) : PromptExecutorEvent
+) : ExecutionEvent
 
 //endregion executeStreaming
 
@@ -228,19 +211,19 @@ public data class StreamingFailed(
  */
 public data class ModerationRequested(
     override val context: PromptExecutionContext,
-    public val prompt: Prompt,
-    public val model: LLModel,
+    override val prompt: Prompt,
+    override val model: LLModel,
 ) : PromptExecutorEvent
 
 /**
- * Emitted from [PromptExecutor.moderate] when moderation is submitted to the underlying execution mechanism.
+ * Emitted from [PromptExecutor.moderate] when moderation is dispatched to the underlying execution mechanism.
  *
- * The prompt and model describe the effective moderation request submitted by [PromptExecutor.moderate].
+ * The prompt and model describe the effective moderation request dispatched by [PromptExecutor.moderate].
  */
-public data class ModerationSubmitted(
+public data class ModerationDispatched(
     override val context: PromptExecutionContext,
-    public val prompt: Prompt,
-    public val model: LLModel,
+    override val prompt: Prompt,
+    override val model: LLModel,
 ) : PromptExecutorEvent
 
 /**
@@ -250,8 +233,8 @@ public data class ModerationSubmitted(
  */
 public data class ModerationCompleted(
     override val context: PromptExecutionContext,
-    public val prompt: Prompt,
-    public val model: LLModel,
+    override val prompt: Prompt,
+    override val model: LLModel,
     public val result: ModerationResult,
 ) : PromptExecutorEvent
 
@@ -262,8 +245,8 @@ public data class ModerationCompleted(
  */
 public data class ModerationFailed(
     override val context: PromptExecutionContext,
-    public val prompt: Prompt,
-    public val model: LLModel,
+    override val prompt: Prompt,
+    override val model: LLModel,
     public val error: Throwable,
 ) : PromptExecutorEvent
 

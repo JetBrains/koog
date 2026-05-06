@@ -16,25 +16,26 @@ import kotlin.test.assertSame
 class PromptExecutorEventTest {
 
     @Test
-    fun testRequestedAndSubmittedEventsCanCarryDifferentSnapshots() {
+    fun testRequestedAndDispatchedEventsCanCarryDifferentSnapshots() {
         val promptExecutionId = "prompt-execution-id"
+        val context = PromptExecutionContext(promptExecutionId)
         val requestedPrompt = Prompt.Empty
-        val submittedPrompt = Prompt(emptyList(), "submitted")
+        val dispatchedPrompt = Prompt(emptyList(), "dispatched")
         val requestedModel = LLModel(LLMProvider.OpenAI, "requested-model")
-        val submittedModel = LLModel(LLMProvider.OpenAI, "submitted-model")
+        val dispatchedModel = LLModel(LLMProvider.OpenAI, "dispatched-model")
         val requestedTools = listOf(ToolDescriptor("requested-tool", "Requested tool"))
-        val submittedTools = listOf(ToolDescriptor("submitted-tool", "Submitted tool"))
+        val dispatchedTools = listOf(ToolDescriptor("dispatched-tool", "Dispatched tool"))
 
-        val requested = ExecutionRequested(promptExecutionId, requestedPrompt, requestedModel, requestedTools)
-        val submitted = ExecutionSubmitted(promptExecutionId, submittedPrompt, submittedModel, submittedTools)
+        val requested = ExecutionRequested(context, requestedPrompt, requestedModel, requestedTools)
+        val dispatched = ExecutionDispatched(context, dispatchedPrompt, dispatchedModel, dispatchedTools)
 
-        assertEquals(requested.promptExecutionId, submitted.promptExecutionId)
+        assertEquals(requested.context.promptExecutionId, dispatched.context.promptExecutionId)
         assertEquals(requestedPrompt, requested.prompt)
-        assertEquals(submittedPrompt, submitted.prompt)
+        assertEquals(dispatchedPrompt, dispatched.prompt)
         assertEquals(requestedModel, requested.model)
-        assertEquals(submittedModel, submitted.model)
+        assertEquals(dispatchedModel, dispatched.model)
         assertEquals(requestedTools, requested.tools)
-        assertEquals(submittedTools, submitted.tools)
+        assertEquals(dispatchedTools, dispatched.tools)
     }
 
     @Test
@@ -46,9 +47,15 @@ class PromptExecutorEventTest {
         val choices = listOf(listOf(response))
         val moderationResult = ModerationResult(isHarmful = false, categories = emptyMap())
 
-        val executionCompleted = ExecutionCompleted("execution", prompt, model, tools, listOf(response))
-        val choicesCompleted = MultipleChoicesCompleted("choices", prompt, model, tools, choices)
-        val moderationCompleted = ModerationCompleted("moderation", prompt, model, moderationResult)
+        val executionCompleted = ExecutionCompleted(
+            PromptExecutionContext("execution"),
+            prompt,
+            model,
+            tools,
+            listOf(response)
+        )
+        val choicesCompleted = MultipleChoicesCompleted(PromptExecutionContext("choices"), prompt, model, tools, choices)
+        val moderationCompleted = ModerationCompleted(PromptExecutionContext("moderation"), prompt, model, moderationResult)
 
         assertEquals(listOf(response), executionCompleted.responses)
         assertEquals(choices, choicesCompleted.choices)
@@ -59,7 +66,7 @@ class PromptExecutorEventTest {
     fun testStreamingFrameReceivedIsPromptExecutorEvent() {
         val frame = StreamFrame.TextDelta("delta")
         val event = StreamingFrameReceived(
-            promptExecutionId = "streaming",
+            context = PromptExecutionContext("streaming"),
             prompt = Prompt.Empty,
             model = LLModel(LLMProvider.OpenAI, "model"),
             tools = emptyList(),

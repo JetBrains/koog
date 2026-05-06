@@ -9,7 +9,7 @@ import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
 import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
-import ai.koog.agents.core.feature.handler.llm.LLMCallSubmittedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallDispatchedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
@@ -206,31 +206,29 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     }
 
     /**
-     * Append handler called when a call is submitted to the language model.
+     * Append handler called when an LLM call is dispatched to the language model.
      */
     @JavaAPI
-    @JvmName("onLLMCallSubmitted")
-    public fun javaApiOnLLMCallSubmitted(handler: Interceptor<LLMCallSubmittedContext>) {
-        onLLMCallSubmitted { eventContext ->
-            withContextReentrant(eventContext.context.config.strategyDispatcher){
-                eventContext.context.config.submitToMainDispatcher {
-                    handler.intercept(eventContext)
-                }
+    @JvmName("onLLMCallDispatched")
+    public fun javaApiOnLLMCallDispatched(handler: Interceptor<LLMCallDispatchedContext>) {
+        onLLMCallDispatched { eventContext ->
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
+                handler.intercept(eventContext)
             }
         }
     }
 
     /**
-     * Append handler called when a call is submitted to the language model.
+     * Append handler called when an LLM call is requested.
      */
-    @Deprecated(
-        message = "Use onLLMCallSubmitted instead",
-        replaceWith = ReplaceWith("javaApiOnLLMCallSubmitted(handler)")
-    )
     @JavaAPI
     @JvmName("onLLMCallStarting")
     public fun javaApiOnLLMCallStarting(handler: Interceptor<LLMCallStartingContext>) {
-        javaApiOnLLMCallSubmitted(handler)
+        onLLMCallStarting { eventContext ->
+            eventContext.context.config.submitToMainDispatcher {
+                handler.intercept(eventContext)
+            }
+        }
     }
 
     /**

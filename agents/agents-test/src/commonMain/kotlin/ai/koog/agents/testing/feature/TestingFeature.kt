@@ -34,6 +34,7 @@ import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilderBase
 import ai.koog.agents.testing.tools.DummyAIAgentContext
 import ai.koog.agents.testing.tools.MockEnvironment
+import ai.koog.prompt.executor.model.ObservablePromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
@@ -1033,7 +1034,7 @@ public class Testing {
                         model = agent.agentConfig.model,
                         responseProcessor = agent.agentConfig.responseProcessor,
                         promptExecutor = ContextualPromptExecutor(
-                            executor = agent.promptExecutor,
+                            executor = agent.promptExecutor as ObservablePromptExecutor, // tmp TODO hack for compilatiom
                             context = assertion.context,
                         ),
                         environment = environment,

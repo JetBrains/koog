@@ -17,6 +17,7 @@ import ai.koog.agents.core.feature.ContextualPromptExecutor
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.prompt.executor.model.ObservablePromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -126,7 +127,7 @@ public class PlannerAIAgent<Input, Output>(
         )
 
         val contextualPromptExecutor = ContextualPromptExecutor(
-            executor = promptExecutor,
+            executor = promptExecutor as ObservablePromptExecutor, // TODO: temp hack for compilation
             context = initialAgentContext,
         )
 

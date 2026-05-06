@@ -175,4 +175,47 @@ class MultiLLMPromptExecutorTest {
             executor.executeStreaming(prompt, model).collect()
         }
     }
+
+    class ObservabilityTest : PromptExecutorObservabilityTest<MultiLLMPromptExecutor>() {
+        override fun failingExecutor(failure: Throwable): MultiLLMPromptExecutor {
+            val failingClient = MockLLMClient(
+                responseSpec = MockLLMClient.ResponseSpec(
+                    execute = Result.failure(failure),
+                    executeStreaming = Result.failure(failure),
+                    moderate = Result.failure(failure),
+                    executeMultipleChoices = Result.failure(failure),
+                    embed = Result.failure(failure),
+                    batchEmbed = Result.failure(failure),
+                )
+            )
+            return MultiLLMPromptExecutor(failingClient)
+        }
+
+        override fun passingExecutor(): MultiLLMPromptExecutor =
+            MultiLLMPromptExecutor(MockLLMClient(provider = LLMProvider.OpenAI))
+
+        @Test
+        override fun testExecuteEvents() = super.testExecuteEvents()
+
+        @Test
+        override fun testExecuteEventsOnFailure() = super.testExecuteEventsOnFailure()
+
+        @Test
+        override fun testExecuteStreamingEvents() = super.testExecuteStreamingEvents()
+
+        @Test
+        override fun testExecuteStreamingEventsOnFailure() = super.testExecuteStreamingEventsOnFailure()
+
+        @Test
+        override fun testExecuteMultipleChoicesEvents() = super.testExecuteMultipleChoicesEvents()
+
+        @Test
+        override fun testExecuteMultipleChoicesEventsOnFailure() = super.testExecuteMultipleChoicesEventsOnFailure()
+
+        @Test
+        override fun testModerationEvents() = super.testModerationEvents()
+
+        @Test
+        override fun testModerationEventsOnFailure() = super.testModerationEventsOnFailure()
+    }
 }

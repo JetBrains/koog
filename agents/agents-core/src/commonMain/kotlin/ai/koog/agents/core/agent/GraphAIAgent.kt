@@ -18,6 +18,7 @@ import ai.koog.agents.core.feature.ContextualPromptExecutor
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.prompt.executor.model.ObservablePromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.typeToken
@@ -174,7 +175,7 @@ public open class GraphAIAgent<Input, Output>(
         )
 
         val contextualPromptExecutor = ContextualPromptExecutor(
-            executor = promptExecutor,
+            executor = promptExecutor as ObservablePromptExecutor, // TODO: temp hack for compilation
             context = agentContext,
         )
 

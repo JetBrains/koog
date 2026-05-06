@@ -4,7 +4,26 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.ExecutionCompleted
+import ai.koog.prompt.executor.model.ExecutionFailed
+import ai.koog.prompt.executor.model.ExecutionRequested
+import ai.koog.prompt.executor.model.ExecutionDispatched
+import ai.koog.prompt.executor.model.ModerationCompleted
+import ai.koog.prompt.executor.model.ModerationFailed
+import ai.koog.prompt.executor.model.ModerationRequested
+import ai.koog.prompt.executor.model.ModerationDispatched
+import ai.koog.prompt.executor.model.MultipleChoicesCompleted
+import ai.koog.prompt.executor.model.MultipleChoicesFailed
+import ai.koog.prompt.executor.model.MultipleChoicesRequested
+import ai.koog.prompt.executor.model.MultipleChoicesDispatched
+import ai.koog.prompt.executor.model.ObservablePromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutionContext
+import ai.koog.prompt.executor.model.PromptExecutorEvent
+import ai.koog.prompt.executor.model.StreamingCompleted
+import ai.koog.prompt.executor.model.StreamingFailed
+import ai.koog.prompt.executor.model.StreamingFrameReceived
+import ai.koog.prompt.executor.model.StreamingRequested
+import ai.koog.prompt.executor.model.StreamingDispatched
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -13,6 +32,8 @@ import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.flow
 
 /**
  * Executes prompts using a direct client for communication with large language model (LLM) providers.
@@ -30,41 +51,98 @@ import kotlinx.coroutines.flow.Flow
 )
 public open class SingleLLMPromptExecutor(
     private val llmClient: LLMClient,
-) : PromptExecutor() {
+) : ObservablePromptExecutor() {
     private companion object {
         private val logger = KotlinLogging.logger("ai.koog.prompt.executor.llms.LLMPromptExecutor")
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        val response = llmClient.execute(prompt, model, tools)
-        logger.debug { "Response: $response" }
+    private val eventSink = PromptExecutorEventSink()
 
+    override val events: SharedFlow<PromptExecutorEvent> = eventSink.events
+
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: PromptExecutionContext
+    ): List<Message.Response> {
+        eventSink.emit(ExecutionRequested(context, prompt, model, tools))
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+        eventSink.emit(ExecutionDispatched(context, prompt, model, tools))
+
+        val response = try {
+            llmClient.execute(prompt, model, tools)
+        } catch (error: Throwable) {
+            eventSink.emit(ExecutionFailed(context, prompt, model, tools, error))
+            throw error
+        }
+
+        eventSink.emit(ExecutionCompleted(context, prompt, model, tools, response))
+        logger.debug { "Response: $response" }
         return response
     }
 
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        context: PromptExecutionContext
     ): Flow<StreamFrame> {
-        logger.debug { "Executing streaming prompt: $prompt with tools: $tools and model: $model" }
-        return llmClient.executeStreaming(prompt, model, tools)
+        return flow {
+            eventSink.emit(StreamingRequested(context, prompt, model, tools))
+            logger.debug { "Executing streaming prompt: $prompt with tools: $tools and model: $model" }
+            eventSink.emit(StreamingDispatched(context, prompt, model, tools))
+
+            try {
+                llmClient.executeStreaming(prompt, model, tools).collect { frame ->
+                    eventSink.emit(StreamingFrameReceived(context, prompt, model, tools, frame))
+                    emit(frame)
+                }
+            } catch (error: Throwable) {
+                eventSink.emit(StreamingFailed(context, prompt, model, tools, error))
+                throw error
+            }
+
+            eventSink.emit(StreamingCompleted(context, prompt, model, tools))
+        }
     }
 
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        context: PromptExecutionContext
     ): List<LLMChoice> {
+        eventSink.emit(MultipleChoicesRequested(context, prompt, model, tools))
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        val choices = llmClient.executeMultipleChoices(prompt, model, tools)
-        logger.debug { "Choices: $choices" }
+        eventSink.emit(MultipleChoicesDispatched(context, prompt, model, tools))
 
+        val choices = try {
+            llmClient.executeMultipleChoices(prompt, model, tools)
+        } catch (error: Throwable) {
+            eventSink.emit(MultipleChoicesFailed(context, prompt, model, tools, error))
+            throw error
+        }
+
+        eventSink.emit(MultipleChoicesCompleted(context, prompt, model, tools, choices))
+        logger.debug { "Choices: $choices" }
         return choices
     }
 
-    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = llmClient.moderate(prompt, model)
+    override suspend fun moderate(prompt: Prompt, model: LLModel, context: PromptExecutionContext): ModerationResult {
+        eventSink.emit(ModerationRequested(context, prompt, model))
+        eventSink.emit(ModerationDispatched(context, prompt, model))
+
+        val result = try {
+            llmClient.moderate(prompt, model)
+        } catch (error: Throwable) {
+            eventSink.emit(ModerationFailed(context, prompt, model, error))
+            throw error
+        }
+
+        eventSink.emit(ModerationCompleted(context, prompt, model, result))
+        return result
+    }
 
     override suspend fun models(): List<LLModel> = llmClient.models()
 

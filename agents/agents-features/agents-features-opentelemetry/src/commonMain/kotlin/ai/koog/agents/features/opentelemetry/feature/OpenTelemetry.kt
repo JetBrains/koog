@@ -499,7 +499,7 @@ public class OpenTelemetry {
 
             //region LLM Call
 
-            pipeline.interceptLLMCallSubmitted(this) intercept@{ eventContext ->
+            pipeline.interceptLLMCallDispatched(this) intercept@{ eventContext ->
                 logger.debug { "Execute OpenTelemetry before LLM call handler" }
 
                 val patchedExecutionInfo = eventContext.executionInfo

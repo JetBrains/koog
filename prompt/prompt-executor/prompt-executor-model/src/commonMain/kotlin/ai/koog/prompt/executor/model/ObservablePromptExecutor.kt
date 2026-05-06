@@ -19,7 +19,7 @@ public data class PromptExecutionContext(
 /**
  * A [PromptExecutor] that emits [PromptExecutorEvent] instances and accepts caller-provided execution context.
  *
- * The legacy [PromptExecutor] methods are final and delegate to context-aware counterparts, so observable executor
+ * Regular [PromptExecutor] methods are final and delegate to context-aware counterparts, so observable executor
  * implementations only need to implement methods that receive [PromptExecutionContext].
  */
 public abstract class ObservablePromptExecutor : PromptExecutor() {
@@ -33,27 +33,27 @@ public abstract class ObservablePromptExecutor : PromptExecutor() {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        promptExecutionContext: PromptExecutionContext,
+        context: PromptExecutionContext,
     ): List<Message.Response>
 
     public abstract fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        promptExecutionContext: PromptExecutionContext,
+        context: PromptExecutionContext,
     ): Flow<StreamFrame>
 
     public abstract suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        promptExecutionContext: PromptExecutionContext,
+        context: PromptExecutionContext,
     ): List<LLMChoice>
 
     public abstract suspend fun moderate(
         prompt: Prompt,
         model: LLModel,
-        promptExecutionContext: PromptExecutionContext,
+        context: PromptExecutionContext,
     ): ModerationResult
 
     final override suspend fun execute(
