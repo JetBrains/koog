@@ -21,7 +21,11 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.rag.base.TextDocument
+import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.search.KeywordSearchRequest
+import ai.koog.rag.base.storage.search.SearchRequest
+import ai.koog.rag.base.storage.search.SearchResult
 import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -30,7 +34,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
@@ -442,5 +448,49 @@ class LongTermMemoryRetrievalTest {
 
         assertTrue(augmented, "Previously ingested data should be retrievable")
         assertEquals("FOUND_CONTEXT", result)
+    }
+
+    // ==========================================
+    // FailurePolicy.FAIL_FAST (default) on retrieval
+    // ==========================================
+
+    @Test
+    @Timeout(5)
+    fun `default FAIL_FAST policy throws LongTermMemoryRetrievalException when storage search fails`() = runTest {
+        val storageError = RuntimeException("storage exploded")
+        val failingStorage = object : SearchStorage<TextDocument, SearchRequest> {
+            override suspend fun search(request: SearchRequest, namespace: String?): List<SearchResult<TextDocument>> {
+                throw storageError
+            }
+        }
+
+        var llmCalled = false
+        val executor = promptCapturingExecutor {
+            llmCalled = true
+            "SHOULD_NOT_BE_REACHED"
+        }
+
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = nonStreamingStrategy,
+            agentConfig = defaultAgentConfig,
+            toolRegistry = ToolRegistry.EMPTY
+        ) {
+            install(LongTermMemory.Feature) {
+                retrieval {
+                    this.storage = failingStorage
+                    searchStrategy = SearchStrategy { KeywordSearchRequest(queryText = "anything") }
+                    // failurePolicy left at default (FAIL_FAST)
+                }
+            }
+        }
+
+        val thrown = assertFailsWith<LongTermMemoryRetrievalException> {
+            agent.run("Tell me about Kotlin")
+        }
+
+        assertEquals(storageError, thrown.cause, "Original storage error should be preserved as cause")
+        assertNotNull(thrown.message, "Exception should carry a message")
+        assertFalse(llmCalled, "LLM must not be called when retrieval fails under FAIL_FAST policy")
     }
 }
