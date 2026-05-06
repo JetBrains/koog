@@ -29,6 +29,7 @@ import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingDispatchedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFailedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
@@ -112,6 +113,8 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     //region Private Stream Handlers
 
     private var _onLLMStreamingStarting: suspend (eventHandler: LLMStreamingStartingContext) -> Unit = { _ -> }
+
+    private var _onLLMStreamingDispatched: suspend (eventHandler: LLMStreamingDispatchedContext) -> Unit = { _ -> }
 
     private var _onLLMStreamingFrameReceived: suspend (eventHandler: LLMStreamingFrameReceivedContext) -> Unit =
         { _ -> }
@@ -274,7 +277,13 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     //region LLM Call Handlers
 
     /**
-     * Append handler called when an LLM call is requested.
+     * Append handler called when an agent requests an LLM call.
+     *
+     * This is the initial intent event. It is emitted while execution parameters, such as the prompt, model, or tools,
+     * may still be changed by the agent runtime before the LLM call happens.
+     *
+     * Use [onLLMCallDispatched] to observe the effective prompt, model, and tools after those parameters have been
+     * finalized for execution.
      */
     public fun onLLMCallStarting(handler: suspend (eventContext: LLMCallStartingContext) -> Unit) {
         val originalHandler = this._onLLMCallStarting
@@ -285,7 +294,10 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     }
 
     /**
-     * Append handler called when an LLM call is dispatched to the language model.
+     * Append handler called when an LLM call is dispatched for execution.
+     *
+     * This is emitted after request-time changes have been applied. The event context contains the effective prompt,
+     * model, and tools that will be used for the LLM call; handlers should treat these values as finalized.
      */
     public fun onLLMCallDispatched(handler: suspend (eventContext: LLMCallDispatchedContext) -> Unit) {
         val originalHandler = this._onLLMCallDispatched
@@ -378,6 +390,17 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     public fun onLLMStreamingStarting(handler: suspend (eventContext: LLMStreamingStartingContext) -> Unit) {
         val originalHandler = this._onLLMStreamingStarting
         this._onLLMStreamingStarting = { eventContext ->
+            originalHandler(eventContext)
+            handler.invoke(eventContext)
+        }
+    }
+
+    /**
+     * Registers a handler to be invoked when streaming is dispatched to the language model.
+     */
+    public fun onLLMStreamingDispatched(handler: suspend (eventContext: LLMStreamingDispatchedContext) -> Unit) {
+        val originalHandler = this._onLLMStreamingDispatched
+        this._onLLMStreamingDispatched = { eventContext ->
             originalHandler(eventContext)
             handler.invoke(eventContext)
         }
@@ -813,6 +836,13 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
      */
     internal suspend fun invokeOnLLMStreamingStarting(eventContext: LLMStreamingStartingContext) {
         _onLLMStreamingStarting.invoke(eventContext)
+    }
+
+    /**
+     * Invokes the handlers associated with a language model streaming dispatch event.
+     */
+    internal suspend fun invokeOnLLMStreamingDispatched(eventContext: LLMStreamingDispatchedContext) {
+        _onLLMStreamingDispatched.invoke(eventContext)
     }
 
     /**

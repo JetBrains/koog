@@ -134,6 +134,12 @@ class EventHandlerTest {
                 "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
                 "role: ${Message.Role.User}, message: $testLLMResponse" +
                 "}], temperature: $temperature, tools: [])",
+            "OnLLMCallDispatched (run id: $runId, prompt: id: $promptId, messages: [{" +
+                "role: ${Message.Role.System}, message: $systemPrompt, " +
+                "role: ${Message.Role.User}, message: $userPrompt, " +
+                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
+                "role: ${Message.Role.User}, message: $testLLMResponse" +
+                "}], temperature: $temperature, model: ${model.eventString}, tools: [])",
             "OnLLMCallCompleted (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
@@ -238,6 +244,12 @@ class EventHandlerTest {
                 "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt" +
                 "}], temperature: $temperature, tools: [${toolRegistry.tools.joinToString { it.name }}])",
+            "OnLLMCallDispatched (run id: $runId, prompt: id: $promptId, messages: [{" +
+                "role: ${Message.Role.System}, message: $systemPrompt, " +
+                "role: ${Message.Role.User}, message: $userPrompt, " +
+                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
+                "role: ${Message.Role.User}, message: $userPrompt" +
+                "}], temperature: $temperature, model: ${model.eventString}, tools: [$dummyToolName])",
             "OnLLMCallCompleted (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
@@ -262,6 +274,14 @@ class EventHandlerTest {
                 "role: ${Message.Role.Tool}, message: $dummyToolArgsEncoded, " +
                 "role: ${Message.Role.Tool}, message: ${dummyTool.result}" +
                 "}], temperature: $temperature, tools: [$dummyToolName])",
+            "OnLLMCallDispatched (run id: $runId, prompt: id: $promptId, messages: [{" +
+                "role: ${Message.Role.System}, message: $systemPrompt, " +
+                "role: ${Message.Role.User}, message: $userPrompt, " +
+                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
+                "role: ${Message.Role.User}, message: $userPrompt, " +
+                "role: ${Message.Role.Tool}, message: $dummyToolArgsEncoded, " +
+                "role: ${Message.Role.Tool}, message: ${dummyTool.result}" +
+                "}], temperature: $temperature, model: ${model.eventString}, tools: [$dummyToolName])",
             "OnLLMCallCompleted (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
@@ -343,6 +363,12 @@ class EventHandlerTest {
                 "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
                 "role: ${Message.Role.User}, message: $testLLMResponse" +
                 "}], temperature: $temperature, tools: [${toolRegistry.tools.joinToString { it.name }}])",
+            "OnLLMCallDispatched (run id: $runId, prompt: id: $promptId, messages: [{" +
+                "role: ${Message.Role.System}, message: $systemPrompt, " +
+                "role: ${Message.Role.User}, message: $userPrompt, " +
+                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
+                "role: ${Message.Role.User}, message: $testLLMResponse" +
+                "}], temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
             "OnLLMCallCompleted (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
@@ -360,6 +386,14 @@ class EventHandlerTest {
                 "role: ${Message.Role.Assistant}, message: Default test response, " +
                 "role: ${Message.Role.User}, message: $llmCallWithToolsResponse" +
                 "}], temperature: $temperature, tools: [${toolRegistry.tools.joinToString { it.name }}])",
+            "OnLLMCallDispatched (run id: $runId, prompt: id: $promptId, messages: [{" +
+                "role: ${Message.Role.System}, message: $systemPrompt, " +
+                "role: ${Message.Role.User}, message: $userPrompt, " +
+                "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
+                "role: ${Message.Role.User}, message: Test LLM call prompt, " +
+                "role: ${Message.Role.Assistant}, message: Default test response, " +
+                "role: ${Message.Role.User}, message: $llmCallWithToolsResponse" +
+                "}], temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
             "OnLLMCallCompleted (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
@@ -564,6 +598,7 @@ class EventHandlerTest {
 
         val expectedEvents = listOf(
             "OnLLMStreamingStarting (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
+            "OnLLMStreamingDispatched (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
             "OnLLMStreamingFrameReceived (run id: $runId, frame: TextDelta(text=$testLLMResponse, index=0))",
             "OnLLMStreamingFrameReceived (run id: $runId, frame: TextComplete(text=$testLLMResponse, index=0))",
             "OnLLMStreamingFrameReceived (run id: $runId, frame: End(finishReason=null, metaInfo=ResponseMetaInfo(timestamp=${Instant.DISTANT_PAST}, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
@@ -652,6 +687,7 @@ class EventHandlerTest {
 
         val expectedEvents = listOf(
             "OnLLMStreamingStarting (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name}}])",
+            "OnLLMStreamingDispatched (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name}}])",
             "OnLLMStreamingFailed (run id: $runId, error: $testStreamingErrorMessage)",
             "OnLLMStreamingCompleted (run id: $runId, prompt: $expectedPromptString, temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name}}])",
         )

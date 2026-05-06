@@ -16,6 +16,7 @@ import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingDispatchedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedContext
@@ -194,6 +195,10 @@ public class EventHandler {
 
             pipeline.interceptLLMStreamingStarting(this) intercept@{ eventContext: LLMStreamingStartingContext ->
                 config.invokeOnLLMStreamingStarting(eventContext)
+            }
+
+            pipeline.interceptLLMStreamingDispatched(this) intercept@{ eventContext: LLMStreamingDispatchedContext ->
+                config.invokeOnLLMStreamingDispatched(eventContext)
             }
 
             pipeline.interceptLLMStreamingFrameReceived(this) intercept@{ eventContext: LLMStreamingFrameReceivedContext ->

@@ -17,6 +17,7 @@ import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingDispatchedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFailedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
@@ -306,6 +307,19 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     public fun javaApiOnLLMStreamingStarting(handler: Interceptor<LLMStreamingStartingContext>) {
         onLLMStreamingStarting { eventContext ->
             withContextReentrant(eventContext.context.config.strategyDispatcher) {
+                handler.intercept(eventContext)
+            }
+        }
+    }
+
+    /**
+     * Registers a handler to be invoked when streaming is dispatched to a language model.
+     */
+    @JavaAPI
+    @JvmName("onLLMStreamingDispatched")
+    public fun javaApiOnLLMStreamingDispatched(handler: Interceptor<LLMStreamingDispatchedContext>) {
+        onLLMStreamingDispatched { eventContext ->
+            eventContext.context.config.submitToMainDispatcher {
                 handler.intercept(eventContext)
             }
         }

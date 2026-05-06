@@ -127,6 +127,16 @@ class TestEventsCollector {
             )
         }
 
+        onLLMCallDispatched { eventContext ->
+            someSuspendFunction()
+            updateRunId(eventContext.runId)
+            _collectedEvents.add(
+                "OnLLMCallDispatched (run id: ${eventContext.runId}, prompt: ${eventContext.prompt.traceString}, model: ${eventContext.model.eventString}, tools: [${
+                    eventContext.tools.joinToString { it.name }
+                }])"
+            )
+        }
+
         onLLMCallCompleted { eventContext ->
             someSuspendFunction()
             updateRunId(eventContext.runId)
@@ -176,6 +186,16 @@ class TestEventsCollector {
             updateRunId(eventContext.runId)
             _collectedEvents.add(
                 "OnLLMStreamingStarting (run id: ${eventContext.runId}, prompt: ${eventContext.prompt.traceString}, model: ${eventContext.model.eventString}, tools: [${
+                    eventContext.tools.joinToString { it.name }
+                }])"
+            )
+        }
+
+        onLLMStreamingDispatched { eventContext ->
+            someSuspendFunction()
+            updateRunId(eventContext.runId)
+            _collectedEvents.add(
+                "OnLLMStreamingDispatched (run id: ${eventContext.runId}, prompt: ${eventContext.prompt.traceString}, model: ${eventContext.model.eventString}, tools: [${
                     eventContext.tools.joinToString { it.name }
                 }])"
             )

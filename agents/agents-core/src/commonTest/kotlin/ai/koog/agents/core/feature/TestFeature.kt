@@ -187,6 +187,16 @@ class TestFeature(val events: MutableList<String>) {
                 )
             }
 
+            pipeline.interceptLLMStreamingDispatched(this) { event ->
+                config.addEvent(
+                    event,
+                    mapOf(
+                        "prompt" to event.prompt.messages.lastOrNull { it.role == Message.Role.User }?.content,
+                        "tools" to "[${event.tools.joinToString { it.name }}]"
+                    )
+                )
+            }
+
             pipeline.interceptToolCallStarting(this) { event ->
                 config.addEvent(
                     event,
