@@ -69,7 +69,7 @@ class GenericAgentEnvironmentTest {
     }
 
     @Test
-    fun testInvalidJsonArgsReturnsFailure() = runTest {
+    fun testInvalidJsonArgsReturnsValidationError() = runTest {
         val environment = GenericAgentEnvironment(
             agentId = "test_agent",
             logger = KotlinLogging.logger { },
@@ -86,7 +86,7 @@ class GenericAgentEnvironmentTest {
 
         val result = environment.executeTool(toolCall)
         assertEquals("required_args", result.tool)
-        assertTrue(result.resultKind is ToolResultKind.Failure)
+        assertTrue(result.resultKind is ToolResultKind.ValidationError)
     }
 
     @Test

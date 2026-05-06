@@ -8,7 +8,6 @@ import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.environment.ContextualAgentEnvironment
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
@@ -94,7 +93,6 @@ public class FunctionalAIAgent<Input, Output>(
             clock = clock
         )
 
-        // Context
         val initialAgentContext = AIAgentFunctionalContext(
             environment = environment,
             agentId = id,
@@ -110,11 +108,7 @@ public class FunctionalAIAgent<Input, Output>(
             parentContext = null
         )
 
-        // Updated environment
-        val contextualEnvironment = ContextualAgentEnvironment(
-            environment = environment,
-            context = initialAgentContext,
-        )
+        environment.attachContext(initialAgentContext)
 
         val contextualPromptExecutor = ContextualPromptExecutor(
             executor = promptExecutor,
@@ -122,20 +116,16 @@ public class FunctionalAIAgent<Input, Output>(
         )
 
         val updatedLLMContext = initialAgentContext.llm.copy(
-            environment = contextualEnvironment,
             promptExecutor = contextualPromptExecutor,
         )
 
         val updatedAgentContext = initialAgentContext.copy(
             llm = updatedLLMContext,
-            environment = contextualEnvironment,
             parentRootContext = initialAgentContext.parentContext, // Keep the original parent context
         )
 
         return updatedAgentContext
     }
-
-    //region Private Methods
 
     private fun prepareEnvironment(): AIAgentEnvironment {
         val baseEnvironment = GenericAgentEnvironment(
@@ -147,6 +137,4 @@ public class FunctionalAIAgent<Input, Output>(
 
         return baseEnvironment
     }
-
-    //endregion Private Methods
 }

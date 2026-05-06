@@ -10,7 +10,6 @@ import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.environment.ContextualAgentEnvironment
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -139,7 +138,6 @@ public open class GraphAIAgent<Input, Output>(
         val executionInfo = AgentExecutionInfo(parent = null, partName = id)
         val initialEnvironment = prepareAgentEnvironment(eventId = eventId, executionInfo = executionInfo)
 
-        // Initial
         val initialLLMContext = AIAgentLLMContext(
             tools = toolRegistry.tools.map { it.descriptor },
             toolRegistry = toolRegistry,
@@ -168,10 +166,9 @@ public open class GraphAIAgent<Input, Output>(
             parentContext = null,
         )
 
-        val contextualEnvironment = ContextualAgentEnvironment(
-            environment = initialEnvironment,
-            context = agentContext,
-        )
+        // Attach the freshly built agent context to the environment so that tool execution can
+        // dispatch pipeline events and route context-aware tools.
+        initialEnvironment.attachContext(agentContext)
 
         val contextualPromptExecutor = ContextualPromptExecutor(
             executor = promptExecutor,
@@ -179,7 +176,6 @@ public open class GraphAIAgent<Input, Output>(
         )
 
         val updatedLLMContext = agentContext.llm.copy(
-            environment = contextualEnvironment,
             promptExecutor = contextualPromptExecutor,
         )
 
@@ -187,7 +183,6 @@ public open class GraphAIAgent<Input, Output>(
             agentContext.copy(
                 executionInfo = executionInfo,
                 llm = updatedLLMContext,
-                environment = contextualEnvironment,
             )
         )
 

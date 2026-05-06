@@ -1,5 +1,7 @@
 package ai.koog.agents.core.environment
 
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -43,6 +45,19 @@ public interface AIAgentEnvironment {
      * @return A list of results corresponding to the executed tool calls. Each result includes details
      *         such as the tool name, identifier, response content, and metadata.
      */
+    /**
+     * Attaches the freshly built [AIAgentContext] to this environment so that [executeTool]
+     * implementations can dispatch pipeline events and route context-aware tools.
+     *
+     * Implementations that don't carry context (mocks, anonymous test envs) may keep the
+     * default no-op. The framework calls this exactly once per agent run, before the first
+     * tool call.
+     */
+    @InternalAgentsApi
+    public fun attachContext(context: AIAgentContext) {
+        // default: ignore
+    }
+
     public suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
         val results = supervisorScope {
             toolCalls

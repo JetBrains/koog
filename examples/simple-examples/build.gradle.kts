@@ -82,6 +82,10 @@ fun registerRunExampleTask(
 
 registerRunExampleTask("runExampleCalculator", "ai.koog.agents.example.calculator.CalculatorKt")
 registerRunExampleTask(
+    "runExampleContextAwareTool",
+    "ai.koog.agents.example.contextawaretool.ContextAwareToolExampleKt"
+)
+registerRunExampleTask(
     "runExampleCalculatorLocal",
     "ai.koog.agents.example.calculator.CalculatorKt",
     listOf("local")

@@ -1,5 +1,7 @@
 package ai.koog.agents.testing.tools
 
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
@@ -10,6 +12,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * A mock implementation of [AIAgentEnvironment] used for testing agent behavior.
@@ -78,7 +82,80 @@ public class MockEnvironment(
      * @param toolCall The tool call to execute
      * @return A [ReceivedToolResult] containing the result of the tool call
      */
+    private var context: AIAgentContext? = null
+
+    @InternalAgentsApi
+    override fun attachContext(context: AIAgentContext) {
+        check(this.context == null) { "AIAgentContext is already attached to this environment" }
+        this.context = context
+        baseEnvironment?.attachContext(context)
+    }
+
+    @OptIn(ExperimentalUuidApi::class, InternalAgentsApi::class)
     override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+        val context = this.context
+        val eventId = if (context != null) Uuid.random().toString() else ""
+        val toolDescription = toolRegistry.getToolOrNull(toolCall.tool)?.descriptor?.description
+        val toolArgs = toolCall.contentJson.toKoogJSONObject()
+
+        if (context != null) {
+            context.pipeline.onToolCallStarting(
+                eventId = eventId,
+                executionInfo = context.executionInfo,
+                runId = context.runId,
+                toolCallId = toolCall.id,
+                toolName = toolCall.tool,
+                toolDescription = toolDescription,
+                toolArgs = toolArgs,
+                context = context,
+            )
+        }
+
+        val result = runToolCall(toolCall)
+
+        if (context != null) {
+            when (val kind = result.resultKind) {
+                is ToolResultKind.Success -> context.pipeline.onToolCallCompleted(
+                    eventId = eventId,
+                    executionInfo = context.executionInfo,
+                    runId = context.runId,
+                    toolCallId = result.id,
+                    toolName = result.tool,
+                    toolDescription = result.toolDescription,
+                    toolArgs = result.toolArgs,
+                    toolResult = result.result,
+                    context = context,
+                )
+                is ToolResultKind.Failure -> context.pipeline.onToolCallFailed(
+                    eventId = eventId,
+                    executionInfo = context.executionInfo,
+                    runId = context.runId,
+                    toolCallId = result.id,
+                    toolName = result.tool,
+                    toolDescription = result.toolDescription,
+                    toolArgs = result.toolArgs,
+                    message = result.content,
+                    error = kind.error,
+                    context = context,
+                )
+                is ToolResultKind.ValidationError -> context.pipeline.onToolValidationFailed(
+                    eventId = eventId,
+                    executionInfo = context.executionInfo,
+                    runId = context.runId,
+                    toolCallId = result.id,
+                    toolName = result.tool,
+                    toolDescription = result.toolDescription,
+                    toolArgs = result.toolArgs,
+                    message = result.content,
+                    error = kind.error,
+                    context = context,
+                )
+            }
+        }
+        return result
+    }
+
+    private suspend fun runToolCall(toolCall: Message.Tool.Call): ReceivedToolResult {
         if (promptExecutor is MockPromptExecutor) {
             promptExecutor.toolActions
                 .find { it.satisfies(toolCall) }

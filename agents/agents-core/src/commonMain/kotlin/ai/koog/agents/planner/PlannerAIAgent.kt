@@ -9,7 +9,6 @@ import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.environment.ContextualAgentEnvironment
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
@@ -103,7 +102,6 @@ public class PlannerAIAgent<Input, Output>(
             clock = clock
         )
 
-        // Context
         val initialAgentContext = AIAgentPlannerContext(
             environment = environment,
             agentId = id,
@@ -119,11 +117,9 @@ public class PlannerAIAgent<Input, Output>(
             parentContext = null,
         )
 
-        // Updated environment
-        val contextualEnvironment = ContextualAgentEnvironment(
-            environment = environment,
-            context = initialAgentContext,
-        )
+        // Attach the freshly built agent context to the environment so that tool execution can
+        // dispatch pipeline events and route context-aware tools.
+        environment.attachContext(initialAgentContext)
 
         val contextualPromptExecutor = ContextualPromptExecutor(
             executor = promptExecutor,
@@ -131,13 +127,11 @@ public class PlannerAIAgent<Input, Output>(
         )
 
         val updatedLLMContext = initialAgentContext.llm.copy(
-            environment = contextualEnvironment,
             promptExecutor = contextualPromptExecutor,
         )
 
         val updatedAgentContext = initialAgentContext.copy(
             llm = updatedLLMContext,
-            environment = contextualEnvironment,
             parentRootContext = initialAgentContext.parentContext, // Keep the original parent context
         )
 
