@@ -10,13 +10,6 @@ import ai.koog.rag.base.TextDocument
  * This extractor filters messages to only include those with roles in
  * [messageRolesToExtract], then converts each message's content into [MemoryRecord]s.
  *
- * Cross-call deduplication is the responsibility of the long-term memory feature, which
- * presents the extractor only with the *current* call's new messages under
- * [ai.koog.agents.longtermmemory.ingestion.IngestionTiming.ON_LLM_CALL] (see
- * [ai.koog.agents.longtermmemory.ingestion.IngestionTiming] for the timing/window contract).
- * The extractor therefore does not need — and should not implement — any deduplication logic
- * of its own.
- *
  * @property messageRolesToExtract The set of message roles to extract and persist.
  *   Defaults to `setOf(Message.Role.User, Message.Role.Assistant)`.
  */

@@ -8,12 +8,10 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
 import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
-import ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.agents.longtermmemory.storage.InMemorySimilaritySearchStorage
 import ai.koog.prompt.dsl.Prompt
@@ -445,64 +443,5 @@ class LongTermMemoryRetrievalTest {
 
         assertTrue(augmented, "Previously ingested data should be retrievable")
         assertEquals("FOUND_CONTEXT", result)
-    }
-
-    // ==========================================
-    // Ingestion + Retrieval: ingestion stores original (non-augmented) prompt
-    // ==========================================
-
-    @Test
-    @Timeout(5)
-    fun `ingestion stores original prompt when both ingestion and retrieval are configured`() = runTest {
-        val retrievalStorage = InMemoryRecordStorage()
-        retrievalStorage.add(
-            listOf(MemoryRecord(content = "Context about Kotlin coroutines")),
-            defaultNamespace
-        )
-
-        val ingestionStorage = InMemoryRecordStorage()
-
-        var promptSeenByLLM: String? = null
-        val executor = promptCapturingExecutor { content ->
-            promptSeenByLLM = content
-            "LLM response"
-        }
-
-        val agent = AIAgent(
-            promptExecutor = executor,
-            strategy = nonStreamingStrategy,
-            agentConfig = defaultAgentConfig,
-            toolRegistry = ToolRegistry.EMPTY
-        ) {
-            install(LongTermMemory.Feature) {
-                retrieval {
-                    storage = retrievalStorage
-                    searchStrategy = SearchStrategy { _ ->
-                        KeywordSearchRequest(queryText = "Kotlin")
-                    }
-                    promptAugmenter = UserPromptAugmenter()
-                }
-                ingestion {
-                    storage = ingestionStorage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
-                    timing = IngestionTiming.ON_LLM_CALL
-                }
-            }
-        }
-
-        val originalUserMessage = "Tell me about Kotlin"
-
-        agent.run(originalUserMessage)
-
-        // Verify the LLM saw the augmented prompt (retrieval worked)
-        assertTrue(
-            promptSeenByLLM!!.contains("Context about Kotlin coroutines"),
-            "LLM should see augmented prompt with retrieved context"
-        )
-
-        // Verify ingestion stored the ORIGINAL user message, not the augmented one
-        val ingestedRecords = ingestionStorage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
-        assertEquals(1, ingestedRecords.size)
-        assertEquals(originalUserMessage, ingestedRecords.first().document.content)
     }
 }

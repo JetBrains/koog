@@ -155,7 +155,6 @@ Use ingestion without retrieval to build up a memory storage over time:
             extractionStrategy = FilteringExtractionStrategy(
                 messageRolesToExtract = setOf(Message.Role.User, Message.Role.Assistant)
             )
-            timing = IngestionTiming.ON_LLM_CALL
         }
     }
     ```
@@ -171,16 +170,10 @@ Use ingestion without retrieval to build up a memory storage over time:
                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
                 .build()
         )
-        .withTiming(IngestionTiming.ON_LLM_CALL)
         .build();
     ```
 
-### Ingestion Timing
-
-| Timing | Behavior |
-|---|---|
-| `ON_LLM_CALL` | Prompt messages are ingested before each LLM call starts; assistant output is ingested after completion or stream completion. Enables intra-session RAG. |
-| `ON_AGENT_COMPLETION` | The final accumulated session prompt/history is ingested once at agent completion. |
+Ingestion runs once when the agent run completes: the final accumulated session prompt/history is passed to the configured `extractionStrategy` as a single batch.
 
 ## Disabling Automatic Behavior
 

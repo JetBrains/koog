@@ -14,7 +14,6 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.longtermmemory.ingestion.IngestionSettings
-import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
 import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
 import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
 import ai.koog.agents.longtermmemory.retrieval.LastUserMessageQueryExtractor
@@ -26,15 +25,11 @@ import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.toMessageResponses
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.WriteStorage
 import ai.koog.rag.base.storage.search.SearchRequest
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -54,90 +49,6 @@ public class LongTermMemory(
     private val retrievalSettings: RetrievalSettings? = null,
     private val ingestionSettings: IngestionSettings? = null,
 ) {
-    /**
-     * Buffer to accumulate streaming frames by runId.
-     * Frames are accumulated during streaming and saved when streaming completes.
-     */
-    private val streamingFramesBuffer: MutableMap<String, MutableList<StreamFrame>> = mutableMapOf()
-    private val streamingFramesBufferMutex = Mutex()
-
-    /**
-     * Per-run append cursor: the number of prompt messages already inspected by this
-     * feature during the current agent run. Combined with [pendingIngestedResponses] it
-     * implements call-delta ingestion under [IngestionTiming.ON_LLM_CALL].
-     */
-    private val ingestedPromptCursor: MutableMap<String, Int> = mutableMapOf()
-
-    /**
-     * Per-run FIFO of LLM responses that were already ingested directly from the
-     * call/streaming completion hooks and might reappear at the tail of the next prompt.
-     *
-     * On the next prompt delta, each new prompt message is matched against the head of
-     * this queue: stale heads (responses that were ingested directly but never appended
-     * to the prompt — e.g. plain streaming responses that the core does not append, or
-     * non-selected responses from `executeMultiple`) are dropped until either the head
-     * matches the current prompt message (then it is skipped as already ingested and the
-     * head is consumed) or the queue is exhausted (then the prompt message is treated as
-     * new). Any remaining entries are cleared on run completion. This causes neither
-     * double-ingestion nor under-ingestion of any other prompt message.
-     */
-    private val pendingIngestedResponses: MutableMap<String, ArrayDeque<Message>> = mutableMapOf()
-    private val ingestedPromptCursorMutex = Mutex()
-
-    /**
-     * Take the prompt messages added since the previous ingestion for [runId] that are
-     * not the same instances/values as previously-ingested-direct responses still pending
-     * for this run, advance the cursor past every inspected message, and consume matching
-     * pending entries.
-     */
-    private suspend fun takeNewPromptMessages(
-        runId: String,
-        messages: List<Message>,
-    ): List<Message> = ingestedPromptCursorMutex.withLock {
-        val cursor = (ingestedPromptCursor[runId] ?: 0).coerceAtMost(messages.size)
-        ingestedPromptCursor[runId] = messages.size
-        if (cursor >= messages.size) return@withLock emptyList()
-
-        val pending = pendingIngestedResponses[runId]
-        val slice = messages.subList(cursor, messages.size)
-        if (pending.isNullOrEmpty()) return@withLock slice.toList()
-
-        val result = ArrayList<Message>(slice.size)
-        for (msg in slice) {
-            // Drop stale pending heads (responses that were ingested directly but never
-            // appended to the prompt) until we either match the current prompt message or
-            // exhaust the queue. The prompt is append-only, so any pending response that
-            // does not appear at-or-before the current position can never appear later.
-            var matched = false
-            while (pending.isNotEmpty()) {
-                val head = pending.removeFirst()
-                if (head == msg) {
-                    matched = true
-                    break
-                }
-            }
-            if (!matched) result.add(msg)
-        }
-        if (pending.isEmpty()) pendingIngestedResponses.remove(runId)
-        result
-    }
-
-    /**
-     * Mark [responses] as already ingested for [runId] so that, if/when they reappear in
-     * the prompt of a subsequent LLM call, they are not re-ingested.
-     *
-     * Unlike a blind cursor advance, this never overshoots: responses that are never
-     * appended to the prompt (e.g. non-selected `executeMultiple` responses, plain
-     * streaming responses) simply stay pending and are cleared on run completion.
-     */
-    private suspend fun markResponsesIngested(runId: String, responses: List<Message>) {
-        if (responses.isEmpty()) return
-        ingestedPromptCursorMutex.withLock {
-            val deque = pendingIngestedResponses.getOrPut(runId) { ArrayDeque() }
-            deque.addAll(responses)
-        }
-    }
-
     /**
      * Configuration for the LongTermMemory feature.
      *
@@ -310,7 +221,7 @@ public class LongTermMemory(
          * RetrievalSettings builder.
          */
         public fun build(): RetrievalSettings {
-            val retrievalStorage = storage ?: error("storage must be set in retrieval { } block")
+            val retrievalStorage = requireNotNull(storage) { "storage must be set in retrieval { } block" }
             return RetrievalSettings(
                 retrievalStorage,
                 queryExtractor,
@@ -355,16 +266,10 @@ public class LongTermMemory(
         public var extractionStrategy: ExtractionStrategy = FilteringExtractionStrategy()
 
         /**
-         * When `true` (default), ingestion happens automatically after LLM calls or on agent
-         * completion (depending on [timing]). When `false`, the storage is still accessible
-         * for manual use inside graph strategy nodes.
+         * When `true` (default), ingestion happens automatically on agent completion.
+         * When `false`, the storage is still accessible for manual use inside graph strategy nodes.
          */
         public var enableAutomaticIngestion: Boolean = true
-
-        /**
-         * When to mapMessages messages. Defaults to [IngestionTiming.ON_LLM_CALL].
-         */
-        public var timing: IngestionTiming = IngestionTiming.ON_LLM_CALL
 
         /**
          * Namespace (table/collection name) for a request.
@@ -398,11 +303,6 @@ public class LongTermMemory(
             apply { this.enableAutomaticIngestion = enable }
 
         /**
-         * Fluent setter for [timing].
-         */
-        public fun withTiming(timing: IngestionTiming): IngestionSettingsBuilder = apply { this.timing = timing }
-
-        /**
          * Fluent setter for [namespace].
          */
         public fun withNamespace(namespace: String): IngestionSettingsBuilder =
@@ -418,11 +318,10 @@ public class LongTermMemory(
          * IngestionSettings builder.
          */
         public fun build(): IngestionSettings {
-            val ingestionStorage = storage ?: error("storage must be set in ingestion { } block")
+            val ingestionStorage = requireNotNull(storage) { "storage must be set in ingestion { } block" }
             return IngestionSettings(
                 ingestionStorage,
                 extractionStrategy,
-                timing,
                 enableAutomaticIngestion,
                 namespace,
                 failurePolicy,
@@ -465,15 +364,12 @@ public class LongTermMemory(
                 return ltmFeature
             }
 
-            // Note: ingestion interceptors on "Starting" events must be registered before
-            // retrieval interceptors so that messages are ingested before prompt augmentation.
             if (enableIngestion) {
                 installIngestionInterceptors(ltmFeature, pipeline)
             }
             if (enableRetrieval) {
                 installRetrievalInterceptors(ltmFeature, pipeline)
             }
-            installCleanupInterceptors(ltmFeature, pipeline)
 
             return ltmFeature
         }
@@ -481,9 +377,8 @@ public class LongTermMemory(
         /**
          * Install interceptors for ingesting messages into the memory record repository.
          *
-         * Depending on [IngestionTiming], interceptors are installed either on individual LLM
-         * calls/streams ([IngestionTiming.ON_LLM_CALL]) or on agent completion
-         * ([IngestionTiming.ON_AGENT_COMPLETION]).
+         * Ingestion happens once at agent completion: the final accumulated session
+         * prompt/history is passed to the configured extraction strategy as a single batch.
          */
         private fun installIngestionInterceptors(
             ltmFeature: LongTermMemory,
@@ -491,81 +386,6 @@ public class LongTermMemory(
         ) {
             val ingestion = ltmFeature.ingestionSettings ?: return
 
-            when (ingestion.timing) {
-                IngestionTiming.ON_LLM_CALL -> installOnLLMCallIngestion(ltmFeature, ingestion, pipeline)
-                IngestionTiming.ON_AGENT_COMPLETION -> installOnAgentCompletionIngestion(ingestion, pipeline)
-            }
-        }
-
-        /**
-         * Install ingestion interceptors for [IngestionTiming.ON_LLM_CALL] mode.
-         * Covers both regular and streaming LLM calls.
-         */
-        private fun installOnLLMCallIngestion(
-            ltmFeature: LongTermMemory,
-            ingestion: IngestionSettings,
-            pipeline: AIAgentPipeline,
-        ) {
-            // Ingest original (not yet augmented) prompt messages before regular LLM call.
-            // Only messages appended to the prompt since the previous ingestion are forwarded —
-            // see [takeNewPromptMessages].
-            pipeline.interceptLLMCallStarting(this) { ctx ->
-                val newMessages = ltmFeature.takeNewPromptMessages(ctx.runId, ctx.prompt.messages)
-                ingestMessages(ingestion, newMessages)
-            }
-
-            // Ingest assistant responses after regular LLM call.
-            // Mark them as already ingested so that, if/when they reappear at the cursor
-            // position in the prompt of the next LLM call, they are skipped — but if the
-            // core never appends them (e.g. non-selected reasoning responses from
-            // `executeMultiple`), no other prompt messages are accidentally swallowed.
-            pipeline.interceptLLMCallCompleted(this) { ctx ->
-                ingestMessages(ingestion, ctx.responses)
-                ltmFeature.markResponsesIngested(ctx.runId, ctx.responses)
-            }
-
-            // Ingest original (not yet augmented) prompt messages before streaming LLM call.
-            pipeline.interceptLLMStreamingStarting(this) { ctx ->
-                val newMessages = ltmFeature.takeNewPromptMessages(ctx.runId, ctx.prompt.messages)
-                ingestMessages(ingestion, newMessages)
-            }
-
-            // Accumulate streaming frames in buffer
-            pipeline.interceptLLMStreamingFrameReceived(this) { ctx ->
-                ltmFeature.streamingFramesBufferMutex.withLock {
-                    ltmFeature.streamingFramesBuffer.getOrPut(ctx.runId) { mutableListOf() }
-                        .add(ctx.streamFrame)
-                }
-            }
-
-            // Clean up the buffer on streaming failure
-            pipeline.interceptLLMStreamingFailed(this) { ctx ->
-                ltmFeature.streamingFramesBufferMutex.withLock {
-                    ltmFeature.streamingFramesBuffer.remove(ctx.runId)
-                }
-            }
-
-            // Ingest accumulated streaming response on streaming completion
-            pipeline.interceptLLMStreamingCompleted(this) { ctx ->
-                val frames = ltmFeature.streamingFramesBufferMutex.withLock {
-                    ltmFeature.streamingFramesBuffer.remove(ctx.runId)
-                }
-                if (!frames.isNullOrEmpty()) {
-                    val responses = frames.toMessageResponses()
-                    ingestMessages(ingestion, responses)
-                    ltmFeature.markResponsesIngested(ctx.runId, responses)
-                }
-            }
-        }
-
-        /**
-         * Install ingestion interceptors for [IngestionTiming.ON_AGENT_COMPLETION] mode.
-         * All messages are saved at once when the agent completes.
-         */
-        private fun installOnAgentCompletionIngestion(
-            ingestion: IngestionSettings,
-            pipeline: AIAgentPipeline,
-        ) {
             pipeline.interceptAgentCompleted(this) { ctx ->
                 ctx.context.llm.readSession {
                     ingestMessages(ingestion, prompt.messages)
@@ -599,35 +419,6 @@ public class LongTermMemory(
                     ctx.context.llm.writeSession {
                         prompt = augmentedPrompt
                     }
-                }
-            }
-        }
-
-        /**
-         * Install safety-net interceptors to clean up any leaked streaming buffer entries
-         * when the agent completes or fails.
-         */
-        private fun installCleanupInterceptors(
-            ltmFeature: LongTermMemory,
-            pipeline: AIAgentPipeline,
-        ) {
-            pipeline.interceptAgentCompleted(this) { ctx ->
-                ltmFeature.streamingFramesBufferMutex.withLock {
-                    ltmFeature.streamingFramesBuffer.remove(ctx.runId)
-                }
-                ltmFeature.ingestedPromptCursorMutex.withLock {
-                    ltmFeature.ingestedPromptCursor.remove(ctx.runId)
-                    ltmFeature.pendingIngestedResponses.remove(ctx.runId)
-                }
-            }
-
-            pipeline.interceptAgentExecutionFailed(this) { ctx ->
-                ltmFeature.streamingFramesBufferMutex.withLock {
-                    ltmFeature.streamingFramesBuffer.remove(ctx.runId)
-                }
-                ltmFeature.ingestedPromptCursorMutex.withLock {
-                    ltmFeature.ingestedPromptCursor.remove(ctx.runId)
-                    ltmFeature.pendingIngestedResponses.remove(ctx.runId)
                 }
             }
         }

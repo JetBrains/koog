@@ -1,6 +1,5 @@
 package ai.koog.agents.longtermmemory.feature
 
-
 /**
  * Policy controlling how failures from the underlying memory storage are handled
  * by the [LongTermMemory] feature.
@@ -37,7 +36,7 @@ public enum class FailurePolicy {
 public class LongTermMemoryRetrievalException(
     message: String,
     cause: Throwable,
-) : RuntimeException(message, cause)
+) : Exception(message, cause)
 
 /**
  * Thrown when ingestion into the [LongTermMemory] storage fails and the configured
@@ -46,4 +45,4 @@ public class LongTermMemoryRetrievalException(
 public class LongTermMemoryIngestionException(
     message: String,
     cause: Throwable,
-) : RuntimeException(message, cause)
+) : Exception(message, cause)

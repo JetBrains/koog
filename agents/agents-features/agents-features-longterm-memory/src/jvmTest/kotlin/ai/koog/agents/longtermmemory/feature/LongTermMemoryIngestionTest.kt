@@ -8,7 +8,6 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
 import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
 import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
 import ai.koog.agents.longtermmemory.model.MemoryRecord
@@ -196,7 +195,6 @@ class LongTermMemoryIngestionTest {
                 ingestion {
                     this.storage = storage
                     extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
-                    timing = IngestionTiming.ON_LLM_CALL
                 }
             }
         }
@@ -308,38 +306,7 @@ class LongTermMemoryIngestionTest {
     // ==========================================
 
     @Test
-    fun `streaming frames are ingested when configured`() = runTest {
-        val storage = InMemoryRecordStorage()
-
-        val executor = streamingExecutor("Hello ", "world", "!")
-
-        val agent = AIAgent(
-            promptExecutor = executor,
-            strategy = streamingStrategy,
-            agentConfig = defaultAgentConfig,
-            toolRegistry = ToolRegistry.EMPTY
-        ) {
-            install(LongTermMemory.Feature) {
-                ingestion {
-                    this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
-                }
-            }
-        }
-
-        agent.run("Hello")
-
-        assertEquals(1, storage.size(), "Streaming frames should be stored as a memory record")
-        val results = storage.search(KeywordSearchRequest(queryText = "Hello world"), defaultNamespace)
-        assertEquals(1, results.size)
-        assertTrue(
-            results.first().document.content.contains("Hello world!"),
-            "Concatenated streaming content should be stored"
-        )
-    }
-
-    @Test
-    fun `user messages are ingested during streaming with ON_LLM_CALL timing`() = runTest {
+    fun `user messages are ingested during streaming`() = runTest {
         val storage = InMemoryRecordStorage()
 
         val executor = streamingExecutor("Streaming reply")
@@ -354,7 +321,6 @@ class LongTermMemoryIngestionTest {
                 ingestion {
                     this.storage = storage
                     extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
-                    timing = IngestionTiming.ON_LLM_CALL
                 }
             }
         }
@@ -372,11 +338,11 @@ class LongTermMemoryIngestionTest {
     }
 
     // ==========================================
-    // IngestionTiming.ON_AGENT_COMPLETION
+    // On-completion ingestion
     // ==========================================
 
     @Test
-    fun `ON_AGENT_COMPLETION stores messages after agent run completes`() = runTest {
+    fun `stores messages after agent run completes`() = runTest {
         val storage = InMemoryRecordStorage()
 
         val executor = getMockExecutor(defaultAgentConfig.serializer) {
@@ -393,7 +359,6 @@ class LongTermMemoryIngestionTest {
                 ingestion {
                     this.storage = storage
                     extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
-                    timing = IngestionTiming.ON_AGENT_COMPLETION
                 }
             }
         }
@@ -408,7 +373,7 @@ class LongTermMemoryIngestionTest {
 
     @Test
     @Timeout(5)
-    fun `ON_AGENT_COMPLETION does not store messages during LLM call`() = runTest {
+    fun `does not store messages during LLM call`() = runTest {
         val storage = InMemoryRecordStorage()
         var storageSizeDuringLLMCall = -1
 
@@ -445,7 +410,6 @@ class LongTermMemoryIngestionTest {
                 ingestion {
                     this.storage = storage
                     extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
-                    timing = IngestionTiming.ON_AGENT_COMPLETION
                 }
             }
         }
@@ -455,13 +419,13 @@ class LongTermMemoryIngestionTest {
         assertEquals(
             0,
             storageSizeDuringLLMCall,
-            "No records should be stored during LLM call with ON_COMPLETION timing"
+            "No records should be stored during LLM call; ingestion happens only on agent completion"
         )
         assertTrue(storage.size() > 0, "Records should be stored after agent completion")
     }
 
     @Test
-    fun `ON_AGENT_COMPLETION stores user messages`() = runTest {
+    fun `stores user messages on agent completion`() = runTest {
         val storage = InMemoryRecordStorage()
 
         val executor = getMockExecutor(defaultAgentConfig.serializer) {
@@ -478,7 +442,6 @@ class LongTermMemoryIngestionTest {
                 ingestion {
                     this.storage = storage
                     extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
-                    timing = IngestionTiming.ON_AGENT_COMPLETION
                 }
             }
         }
@@ -495,7 +458,7 @@ class LongTermMemoryIngestionTest {
     }
 
     @Test
-    fun `ON_AGENT_COMPLETION stores both user and assistant messages`() = runTest {
+    fun `stores both user and assistant messages on agent completion`() = runTest {
         val storage = InMemoryRecordStorage()
 
         val executor = getMockExecutor(defaultAgentConfig.serializer) {
@@ -512,7 +475,6 @@ class LongTermMemoryIngestionTest {
                 ingestion {
                     this.storage = storage
                     extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User, Message.Role.Assistant))
-                    timing = IngestionTiming.ON_AGENT_COMPLETION
                 }
             }
         }
@@ -640,7 +602,7 @@ class LongTermMemoryIngestionTest {
     }
 
     // ==========================================
-    // Multi-call deduplication (Option 1: per-run ingestion cursor)
+    // Multi-call ingestion: prompt history is ingested once on completion
     // ==========================================
 
     @Test
@@ -662,7 +624,6 @@ class LongTermMemoryIngestionTest {
                 ingestion {
                     this.storage = storage
                     extractionStrategy = FilteringExtractionStrategy()
-                    timing = IngestionTiming.ON_LLM_CALL
                 }
             }
         }
@@ -670,12 +631,12 @@ class LongTermMemoryIngestionTest {
         agent.run("First question")
 
         // Expected ingested records: User1, Assistant1, User2, Assistant2 → exactly 4.
-        // Without the per-run cursor, the 2nd call's start interceptor would re-ingest
-        // User1 and Assistant1 from the prompt history, producing 6 records.
+        // Ingestion runs once on agent completion over the final prompt history,
+        // so each message appears exactly once regardless of how many LLM calls happened.
         assertEquals(
             4,
             storage.size(),
-            "Per-run cursor must prevent re-ingestion of prompt-history messages across LLM calls"
+            "Each prompt-history message must be ingested exactly once on agent completion"
         )
 
         val firstUser = storage.search(KeywordSearchRequest(queryText = "First question"), defaultNamespace)
@@ -692,7 +653,7 @@ class LongTermMemoryIngestionTest {
     }
 
     @Test
-    fun `consecutive agent runs do not leak ingestion cursor state between runs`() = runTest {
+    fun `consecutive agent runs each ingest their own messages on completion`() = runTest {
         val storage = InMemoryRecordStorage()
 
         val executor = getMockExecutor(defaultAgentConfig.serializer) {
@@ -709,7 +670,6 @@ class LongTermMemoryIngestionTest {
                 ingestion {
                     this.storage = storage
                     extractionStrategy = FilteringExtractionStrategy()
-                    timing = IngestionTiming.ON_LLM_CALL
                 }
             }
         }
@@ -719,11 +679,10 @@ class LongTermMemoryIngestionTest {
         agent.run("Question two")
         val sizeAfterSecondRun = storage.size()
 
-        // Each run is an independent runId; the cursor is cleared on agent completion,
-        // so the second run still ingests its own messages.
+        // Each run is independent and ingests its own prompt history on completion.
         assertTrue(
             sizeAfterSecondRun > sizeAfterFirstRun,
-            "Second run must ingest its own messages after cursor cleanup; " +
+            "Second run must ingest its own messages on completion; " +
                 "first=$sizeAfterFirstRun second=$sizeAfterSecondRun"
         )
     }
