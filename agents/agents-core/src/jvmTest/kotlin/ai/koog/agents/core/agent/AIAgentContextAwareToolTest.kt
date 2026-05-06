@@ -2,7 +2,9 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.session.AdditionalInputs
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -93,6 +95,38 @@ class AIAgentContextAwareToolTest {
         assertEquals("parent-agent", captured.agentId, "Tool must see the parent agent's id via context")
         assertNotNull(captured.runId)
         assertEquals("hello", captured.storage.get(echoKey), "Tool wrote into context.storage; we must read it back")
+    }
+
+    @Test
+    fun testContextAwareToolStorageWritesPersistAcrossRun() = runTest {
+        val contextEcho = ContextEchoTool()
+        val toolRegistry = ToolRegistry { tool(contextEcho) }
+
+        val executor = getMockExecutor(serializer) {
+            mockLLMToolCall(contextEcho, EchoArgs("persist-me")) onRequestEquals "go"
+            mockLLMAnswer("done").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            promptExecutor = executor,
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+            id = "agent-with-storage",
+        )
+
+        // Pass an external storage instance into the run so we can inspect it after the
+        // agent finishes. The context-aware tool writes into `context.storage` during execution;
+        // since the env's context refers to this same storage, the write must still be visible
+        // here once the run completes.
+        val storage = AIAgentStorage()
+        val session = agent.createSession("storage-session")
+        session.run(input = "go", sessionInputs = AdditionalInputs.Storage(storage))
+
+        assertEquals(
+            "persist-me",
+            storage.get(echoKey),
+            "Storage modifications made via context.storage inside the tool must persist after the run.",
+        )
     }
 
     @Test
