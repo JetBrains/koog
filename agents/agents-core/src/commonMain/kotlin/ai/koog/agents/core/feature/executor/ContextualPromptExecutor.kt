@@ -1,4 +1,4 @@
-package ai.koog.agents.core.feature
+package ai.koog.agents.core.feature.executor
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -45,6 +45,18 @@ import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+
+/**
+ * Wraps this executor in the appropriate contextual executor for the given [context].
+ *
+ * If this executor is an [ObservablePromptExecutor], returns a [ContextualPromptExecutor] that subscribes to its
+ * event flow to drive pipeline hooks. Otherwise returns a [LegacyContextualPromptExecutor] that intercepts calls
+ * directly; consider migrating the executor to [ObservablePromptExecutor] to get full pipeline integration.
+ */
+@InternalAgentsApi
+public fun PromptExecutor.contextual(context: AIAgentContext): PromptExecutor =
+    if (this is ObservablePromptExecutor) ContextualPromptExecutor(this, context)
+    else LegacyContextualPromptExecutor(this, context)
 
 /**
  * A wrapper around [ai.koog.prompt.executor.model.PromptExecutor] that allows for adding internal functionality to the executor

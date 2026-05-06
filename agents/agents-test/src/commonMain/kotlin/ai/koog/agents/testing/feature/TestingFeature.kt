@@ -24,7 +24,7 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.ContextualPromptExecutor
+import ai.koog.agents.core.feature.executor.contextual
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
@@ -34,7 +34,6 @@ import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilderBase
 import ai.koog.agents.testing.tools.DummyAIAgentContext
 import ai.koog.agents.testing.tools.MockEnvironment
-import ai.koog.prompt.executor.model.ObservablePromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
@@ -1033,10 +1032,7 @@ public class Testing {
                         prompt = agent.agentConfig.prompt,
                         model = agent.agentConfig.model,
                         responseProcessor = agent.agentConfig.responseProcessor,
-                        promptExecutor = ContextualPromptExecutor(
-                            executor = agent.promptExecutor as ObservablePromptExecutor, // tmp TODO hack for compilatiom
-                            context = assertion.context,
-                        ),
+                        promptExecutor = agent.promptExecutor.contextual(assertion.context),
                         environment = environment,
                         config = agent.agentConfig,
                         clock = agent.clock
