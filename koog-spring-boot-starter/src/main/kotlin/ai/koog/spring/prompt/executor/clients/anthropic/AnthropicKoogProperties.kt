@@ -2,6 +2,7 @@ package ai.koog.spring.prompt.executor.clients.anthropic
 
 import ai.koog.spring.RetryConfigKoogProperties
 import ai.koog.spring.prompt.executor.clients.KoogLlmClientProperties
+import ai.koog.utils.lang.masked
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
@@ -44,6 +45,6 @@ public class AnthropicKoogProperties(
      * @return A string containing the property values of the `AnthropicKoogProperties` object.
      */
     override fun toString(): String {
-        return "AnthropicKoogProperties(enabled=$enabled, apiKey='$apiKey', baseUrl='$baseUrl', retry=$retry)"
+        return "AnthropicKoogProperties(enabled=$enabled, apiKey='${apiKey.masked()}', baseUrl='$baseUrl', retry=$retry)"
     }
 }
