@@ -283,4 +283,4 @@ class MyVectorDbStorage : SearchStorage<TextDocument, SearchRequest>, WriteStora
 }
 ```
 
-For testing, use the built-in `InMemoryRecordStorage` which keeps records in memory. It only supports `KeywordSearchRequest` and implements it as simple case-insensitive substring matching (no vector embeddings).
+For testing, use the built-in `InMemoryRecordStorage` which keeps records in memory. It supports both `KeywordSearchRequest` (implemented as case-insensitive substring matching) and `SimilaritySearchRequest` (implemented as a Jaccard coefficient over case-insensitive word sets); no vector embeddings are used.

@@ -13,7 +13,6 @@ import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
-import ai.koog.agents.longtermmemory.storage.InMemorySimilaritySearchStorage
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -239,7 +238,7 @@ class LongTermMemoryRetrievalTest {
     fun `search request strategy receives the user query`() = runTest {
         var capturedQuery: String? = null
 
-        val storage = InMemorySimilaritySearchStorage()
+        val storage = InMemoryRecordStorage()
         storage.add(
             listOf(
                 MemoryRecord(content = "The weather in Paris is sunny today"),
@@ -279,7 +278,7 @@ class LongTermMemoryRetrievalTest {
     @Test
     @Timeout(5)
     fun `similaritySearch builder retrieves matching records`() = runTest {
-        val storage = InMemorySimilaritySearchStorage()
+        val storage = InMemoryRecordStorage()
         storage.add(
             listOf(
                 MemoryRecord(content = "Kotlin was developed by JetBrains"),
@@ -318,7 +317,7 @@ class LongTermMemoryRetrievalTest {
     @Test
     @Timeout(5)
     fun `similaritySearch builder returns no augmentation when query does not match`() = runTest {
-        val storage = InMemorySimilaritySearchStorage()
+        val storage = InMemoryRecordStorage()
         storage.add(
             listOf(
                 MemoryRecord(content = "Kotlin was developed by JetBrains"),
@@ -360,7 +359,7 @@ class LongTermMemoryRetrievalTest {
     @Test
     @Timeout(5)
     fun `empty storage produces no augmentation`() = runTest {
-        val storage = InMemorySimilaritySearchStorage()
+        val storage = InMemoryRecordStorage()
 
         var augmented = false
         val executor = promptCapturingExecutor { content ->
@@ -395,7 +394,7 @@ class LongTermMemoryRetrievalTest {
     @Test
     @Timeout(5)
     fun `ingested data is retrievable in subsequent agent run`() = runTest {
-        val storage = InMemorySimilaritySearchStorage()
+        val storage = InMemoryRecordStorage()
 
         // First agent run: ingest data
         val ingestExecutor = promptCapturingExecutor { "Kotlin supports coroutines for async programming" }
