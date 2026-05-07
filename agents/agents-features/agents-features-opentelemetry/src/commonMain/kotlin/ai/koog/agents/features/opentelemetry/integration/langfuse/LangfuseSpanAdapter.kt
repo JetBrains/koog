@@ -3,37 +3,33 @@ package ai.koog.agents.features.opentelemetry.integration.langfuse
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
-import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
-import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
-import ai.koog.agents.features.opentelemetry.event.EventBodyFields
-import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
-import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
-import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
-import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
-import ai.koog.agents.features.opentelemetry.integration.bodyFieldsToCustomAttribute
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.SpanType
+import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.message.Message
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.fetchAndIncrement
 
 /**
  * Internal adapter class for enhancing and modifying spans related to GenAI agent processing.
- * This class processes specific types of GenAIAgentSpan instances, particularly those
- * of type `InferenceSpan`, to transform and manage associated events and attributes
- * both before the span starts and before it finishes.
+ * It reshapes inference-span content from the OTel-standard `gen_ai.input.messages` /
+ * `gen_ai.output.messages` attributes (which Langfuse does not currently recognize) into the
+ * indexed `gen_ai.prompt.{i}.*` / `gen_ai.completion.{i}.*` attributes that Langfuse displays.
  *
- * The class operates on specific event types contained within the span and converts
- * their data into custom attributes. Additionally, it ensures that the converted events
- * are removed from the span's event list after conversion.
+ * The adapter consumes the typed `messages: List<Message>` exposed by those standard attributes
+ * and re-emits them in the indexed shape; the original attributes remain on the span untouched.
  */
 @OptIn(ExperimentalAtomicApi::class)
 internal class LangfuseSpanAdapter(
     private val traceAttributes: List<CustomAttribute>,
-    private val openTelemetryConfig: OpenTelemetryConfig
+    @Suppress("unused")
+    private val openTelemetryConfig: OpenTelemetryConfig,
 ) : SpanAdapter() {
 
     private val stepKey = AtomicInt(0)
@@ -50,17 +46,12 @@ internal class LangfuseSpanAdapter(
             }
 
             SpanType.INFERENCE -> {
-                val eventsToProcess = span.events.toList()
-
-                // Each event - convert into the span attribute
-                eventsToProcess.forEachIndexed { index, event ->
-                    when (event) {
-                        is SystemMessageEvent,
-                        is UserMessageEvent,
-                        is AssistantMessageEvent,
-                        is ToolMessageEvent -> event.convertToPrompt(span, index)
-                        is ChoiceEvent -> event.convertToPrompt(span, index)
-                    }
+                // Decompose `gen_ai.input.messages` into Langfuse-shaped indexed prompt attributes.
+                // The OTel standard `gen_ai.input.messages` attribute itself is left in place, so
+                // backends that recognize the modern semconv still see it.
+                val inputMessagesAttr = span.attributes.filterIsInstance<GenAIAttributes.Input.Messages>().firstOrNull()
+                inputMessagesAttr?.messages?.forEachIndexed { index, message ->
+                    applyPromptAttributes(span, index, message)
                 }
             }
 
@@ -89,7 +80,8 @@ internal class LangfuseSpanAdapter(
 
             else -> {}
         }
-        // adding attributes to all spans as per Langfuse recommendation for OTEL instrumentation:
+
+        // Adding attributes to all spans as per Langfuse recommendation for OTel instrumentation:
         // https://langfuse.com/integrations/native/opentelemetry#propagating-attributes
         traceAttributes.forEach { attribute ->
             span.addAttribute(attribute)
@@ -99,13 +91,11 @@ internal class LangfuseSpanAdapter(
     override fun onBeforeSpanFinished(span: GenAIAgentSpan) {
         when (span.type) {
             SpanType.INFERENCE -> {
-                val eventsToProcess = span.events.toList()
-
-                eventsToProcess.forEachIndexed { index, event ->
-                    when (event) {
-                        is AssistantMessageEvent -> event.convertToCompletion(span, index)
-                        is ChoiceEvent -> event.convertToCompletion(span, index)
-                    }
+                // Decompose `gen_ai.output.messages` into Langfuse-shaped indexed completion attributes.
+                // The OTel standard attribute itself is left in place.
+                val outputMessagesAttr = span.attributes.filterIsInstance<GenAIAttributes.Output.Messages>().firstOrNull()
+                outputMessagesAttr?.messages?.forEachIndexed { index, message ->
+                    applyCompletionAttributes(span, index, message)
                 }
             }
             else -> {}
@@ -114,77 +104,102 @@ internal class LangfuseSpanAdapter(
 
     //region Private Methods
 
-    private fun GenAIAgentEvent.convertToPrompt(span: GenAIAgentSpan, index: Int) {
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
-            CustomAttribute("gen_ai.prompt.$index.${role.key}", role.value)
-        }
+    private fun applyPromptAttributes(span: GenAIAgentSpan, index: Int, message: Message) {
+        when (message) {
+            is Message.System,
+            is Message.User,
+            is Message.Assistant,
+            is Message.Reasoning -> {
+                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
+                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(message.content)))
+            }
 
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(this) { content ->
-            CustomAttribute("gen_ai.prompt.$index.${content.key}", content.value)
-        }
+            is Message.Tool.Call -> {
+                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
+                span.addAttribute(
+                    CustomAttribute(
+                        "gen_ai.prompt.$index.content",
+                        HiddenString(encodeToolCallsContent(listOf(message))),
+                    )
+                )
+            }
 
-        // Delete event from the span
-        span.removeEvent(this)
+            is Message.Tool.Result -> {
+                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
+                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(message.content)))
+            }
+        }
     }
 
-    private fun ChoiceEvent.convertToPrompt(span: GenAIAgentSpan, index: Int) {
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
-            CustomAttribute("gen_ai.prompt.$index.${role.key}", role.value)
+    private fun applyCompletionAttributes(span: GenAIAgentSpan, index: Int, message: Message) {
+        // Langfuse expects `assistant` for completion entries (even when the underlying message is a Tool.Call).
+        span.addAttribute(
+            CustomAttribute("gen_ai.completion.$index.role", Message.Role.Assistant.name.lowercase())
+        )
+
+        when (message) {
+            is Message.Assistant -> {
+                span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(message.content)))
+                message.finishReason?.let { reason ->
+                    span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", reason))
+                }
+            }
+
+            is Message.Reasoning -> {
+                span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(message.content)))
+            }
+
+            is Message.Tool.Call -> {
+                span.addAttribute(
+                    CustomAttribute(
+                        "gen_ai.completion.$index.content",
+                        HiddenString(encodeToolCallsContent(listOf(message))),
+                    )
+                )
+                span.addAttribute(
+                    CustomAttribute(
+                        "gen_ai.completion.$index.finish_reason",
+                        GenAIAttributes.Response.FinishReasonType.ToolCalls.id
+                    )
+                )
+            }
+
+            else -> {
+                // Output messages should only be assistant/reasoning/tool-call responses.
+            }
         }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(this) { toolCalls ->
-            CustomAttribute("gen_ai.prompt.$index.content", toolCalls.valueString(openTelemetryConfig.isVerbose))
-        }
-
-        // Delete event from the span
-        span.removeEvent(this)
-    }
-
-    private fun AssistantMessageEvent.convertToCompletion(span: GenAIAgentSpan, index: Int) {
-        // Convert event data fields into the span attributes
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
-            CustomAttribute("gen_ai.completion.$index.${role.key}", role.value)
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(this) { content ->
-            CustomAttribute("gen_ai.completion.$index.${content.key}", content.value)
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(this) { toolCalls ->
-            CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(openTelemetryConfig.isVerbose))
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(this) { finishReason ->
-            CustomAttribute("gen_ai.completion.$index.finish_reason", finishReason.value)
-        }
-
-        // Delete event from the span
-        span.removeEvent(this)
-    }
-
-    private fun ChoiceEvent.convertToCompletion(span: GenAIAgentSpan, index: Int) {
-        // Convert event data fields into the span attributes
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
-            // Langfuse expects to have an assistant message for correctly displaying the responses from LLM.
-            // Set a role explicitly to Assistant (even for LLM Tool Calls response).
-            CustomAttribute("gen_ai.completion.$index.${role.key}", Message.Role.Assistant.name.lowercase())
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(this) { content ->
-            CustomAttribute("gen_ai.completion.$index.${content.key}", content.value)
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(this) { toolCalls ->
-            CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(openTelemetryConfig.isVerbose))
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(this) { finishReason ->
-            CustomAttribute("gen_ai.completion.$index.finish_reason", finishReason.value)
-        }
-
-        // Delete event from the span
-        span.removeEvent(this)
     }
 
     //endregion Private Methods
+}
+
+/**
+ * Encodes a list of tool-call messages into the raw JSON-array string used by [LangfuseSpanAdapter]
+ * for the `gen_ai.prompt.{i}.content` / `gen_ai.completion.{i}.content` attribute when the underlying message
+ * is a tool call.
+ *
+ * Each entry is shaped as `{"function": {"name": <name>, "arguments": <args>}, "id": <id>, "type": "function"}`.
+ * Masking is the caller's responsibility — the caller wraps the result in [HiddenString] and the
+ * standard `applyAttributes` pipeline handles the verbose flag uniformly with all other attributes.
+ *
+ * Marked `internal` so the [LangfuseSpanAdapter] tests can compute the identical expected value.
+ */
+internal fun encodeToolCallsContent(toolCalls: List<Message.Tool.Call>): String {
+    val array = JsonArray(
+        toolCalls.map { tool ->
+            JsonObject(
+                mapOf(
+                    "function" to JsonObject(
+                        mapOf(
+                            "name" to JsonPrimitive(tool.tool),
+                            "arguments" to JsonPrimitive(tool.content),
+                        )
+                    ),
+                    "id" to JsonPrimitive(tool.id ?: ""),
+                    "type" to JsonPrimitive("function"),
+                )
+            )
+        }
+    )
+    return array.toString()
 }

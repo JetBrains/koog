@@ -1,8 +1,6 @@
 package ai.koog.agents.features.opentelemetry.extension
 
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
-import ai.koog.agents.features.opentelemetry.mock.MockEventBodyField
-import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.mock.MockSpan
 import io.opentelemetry.kotlin.tracing.StatusData
 import kotlin.test.Test
@@ -47,28 +45,5 @@ class SpanExtTest {
 
         assertEquals(expectedAttributes.size, actualAttributes.size)
         assertEquals(expectedAttributes, actualAttributes)
-    }
-
-    @Test
-    fun `setEvents converts body fields to attributes and adds events`() {
-        val span = MockSpan()
-        val event = MockGenAIAgentEvent().apply {
-            addAttribute(CustomAttribute("keyString", "valueString"))
-            addBodyField(MockEventBodyField("keyInt", 1))
-        }
-
-        span.setEvents(listOf(event), verbose = true)
-
-        val actualEvents = span.collectedEvents
-        assertEquals(1, actualEvents.size)
-
-        val actualEventAttributes = actualEvents[0].attributes
-        val expectedEvents = mapOf(
-            "keyString" to "valueString",
-            "keyInt" to 1L,
-        )
-
-        assertEquals(expectedEvents.size, actualEventAttributes.size)
-        assertEquals(expectedEvents, actualEventAttributes)
     }
 }

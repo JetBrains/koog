@@ -1,9 +1,7 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.features.opentelemetry.event.EventBodyFields
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockContextFactory
-import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.mock.MockTracer
 import io.opentelemetry.kotlin.tracing.SpanKind
 import kotlin.test.Test
@@ -151,116 +149,6 @@ class GenAIAgentSpanTest {
     }
 
     //endregion Properties
-
-    //region Add Events
-
-    @Test
-    fun `add valid events to span`() {
-        val tracer = MockTracer()
-        val contextFactory = MockContextFactory()
-
-        val span = GenAIAgentSpanBuilder(
-            spanType = SpanType.CREATE_AGENT,
-            parentSpan = null,
-            id = "test.span",
-            kind = SpanKind.CLIENT,
-            name = "test.span.name"
-        ).buildAndStart(tracer, contextFactory)
-
-        val events = listOf(
-            MockGenAIAgentEvent(name = "event1").apply {
-                addAttribute(MockAttribute("key1", "value1"))
-                addAttribute(MockAttribute("key2", 42))
-            },
-            MockGenAIAgentEvent(name = "event2").apply {
-                addAttribute(MockAttribute("key3", true))
-            },
-        )
-
-        events.forEach { event -> span.addEvent(event) }
-
-        // Verify events were added to the internal events set
-        assertEquals(2, span.events.size)
-        assertTrue(span.events.contains(events[0]))
-        assertTrue(span.events.contains(events[1]))
-    }
-
-    @Test
-    fun `add duplicate event should append`() {
-        val tracer = MockTracer()
-        val contextFactory = MockContextFactory()
-
-        val span = GenAIAgentSpanBuilder(
-            spanType = SpanType.CREATE_AGENT,
-            parentSpan = null,
-            id = "test.span",
-            kind = SpanKind.CLIENT,
-            name = "test.span.name"
-        ).buildAndStart(tracer, contextFactory)
-
-        val event = MockGenAIAgentEvent(name = "duplicate-event").apply {
-            addAttribute(MockAttribute("key", "value"))
-        }
-
-        // Add the same event twice
-        span.addEvent(event)
-        span.addEvent(event)
-
-        // Verify that both events were added
-        assertEquals(2, span.events.size)
-        assertTrue(span.events.contains(event))
-    }
-
-    @Test
-    fun `add events with body fields`() {
-        val tracer = MockTracer()
-        val contextFactory = MockContextFactory()
-
-        val span = GenAIAgentSpanBuilder(
-            spanType = SpanType.CREATE_AGENT,
-            parentSpan = null,
-            id = "test.span",
-            kind = SpanKind.CLIENT,
-            name = "test.span.name"
-        ).buildAndStart(tracer, contextFactory)
-
-        val event = MockGenAIAgentEvent(name = "event-with-body-fields").apply {
-            addAttribute(MockAttribute("key", "value"))
-            addBodyField(EventBodyFields.Content("test content"))
-        }
-
-        span.addEvent(event)
-
-        // Verify the event was added
-        assertEquals(1, span.events.size)
-        assertTrue(span.events.contains(event))
-    }
-
-    @Test
-    fun `add multiple events to span`() {
-        val tracer = MockTracer()
-        val contextFactory = MockContextFactory()
-
-        val span = GenAIAgentSpanBuilder(
-            spanType = SpanType.CREATE_AGENT,
-            parentSpan = null,
-            id = "test.span",
-            kind = SpanKind.CLIENT,
-            name = "test.span.name"
-        ).buildAndStart(tracer, contextFactory)
-
-        val events = listOf(
-            MockGenAIAgentEvent(name = "event1").apply { addAttribute(MockAttribute("stringKey", "stringValue")) },
-            MockGenAIAgentEvent(name = "event2").apply { addAttribute(MockAttribute("numberKey", 2)) },
-        )
-
-        span.addEvents(events)
-
-        assertEquals(2, span.events.size)
-        assertTrue(span.events.containsAll(events))
-    }
-
-    //endregion Add Events
 
     //region Add Attributes
 

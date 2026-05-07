@@ -23,7 +23,7 @@ private val defaultRequestTimeout = 10.seconds
  * attribute layout but are emitted only through whatever exporters the caller registers separately.
  *
  * Useful for tests that want to assert on Langfuse-shaped spans without performing a real HTTP
- * round-trip, and for integrators who want the Langfuse transformations applied to spans they ship
+ * round-trip and for integrators who want the Langfuse transformations applied to spans they ship
  * to a different backend.
  *
  * @param traceAttributes list of trace-level Langfuse attributes

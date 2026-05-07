@@ -1,11 +1,20 @@
 package ai.koog.agents.features.opentelemetry.attribute
 
 import ai.koog.agents.utils.HiddenString
+import ai.koog.prompt.dsl.ModerationResult
+import kotlinx.serialization.json.Json
 
 /**
  * Koog-specific attribute hierarchy for spans and events emitted by the OpenTelemetry feature.
  */
 public object KoogAttributes {
+
+    /**
+     * `ModerationResult.categories` uses a class-typed (sealed) [ai.koog.prompt.dsl.ModerationCategory]
+     * key, which the default JSON encoder rejects. Allow structured map keys so the encoder serializes
+     * the map as `[key, value, key, value, ...]`.
+     */
+    private val moderationJson = Json { allowStructuredMapKeys = true }
 
     /**
      * Value set on `gen_ai.provider.name` for `execute_tool` metrics and spans. LLM operations
@@ -30,7 +39,7 @@ public object KoogAttributes {
             /**
              * `koog.event.id` attribute.
              */
-            public data class Id(private val id: String) : Event {
+            public data class Id(public val id: String) : Event {
                 override val key: String = super.key.concatKey("id")
                 override val value: String = id
             }
@@ -46,7 +55,7 @@ public object KoogAttributes {
             /**
              * `koog.strategy.name` attribute.
              */
-            public data class Name(private val name: String) : Strategy {
+            public data class Name(public val name: String) : Strategy {
                 override val key: String = super.key.concatKey("name")
                 override val value: String = name
             }
@@ -62,7 +71,7 @@ public object KoogAttributes {
             /**
              * `koog.node.id` attribute.
              */
-            public data class Id(private val id: String) : Node {
+            public data class Id(public val id: String) : Node {
                 override val key: String = super.key.concatKey("id")
                 override val value: String = id
             }
@@ -70,7 +79,7 @@ public object KoogAttributes {
             /**
              * `koog.node.input` attribute.
              */
-            public data class Input(private val input: String) : Node {
+            public data class Input(public val input: String) : Node {
                 override val key: String = super.key.concatKey("input")
                 override val value: HiddenString = HiddenString(input)
             }
@@ -78,7 +87,7 @@ public object KoogAttributes {
             /**
              * `koog.node.output` attribute.
              */
-            public data class Output(private val output: String) : Node {
+            public data class Output(public val output: String) : Node {
                 override val key: String = super.key.concatKey("output")
                 override val value: HiddenString = HiddenString(output)
             }
@@ -94,7 +103,7 @@ public object KoogAttributes {
             /**
              * `koog.subgraph.id` attribute.
              */
-            public data class Id(private val id: String) : Subgraph {
+            public data class Id(public val id: String) : Subgraph {
                 override val key: String = super.key.concatKey("id")
                 override val value: String = id
             }
@@ -102,7 +111,7 @@ public object KoogAttributes {
             /**
              * `koog.subgraph.input` attribute.
              */
-            public data class Input(private val input: String) : Subgraph {
+            public data class Input(public val input: String) : Subgraph {
                 override val key: String = super.key.concatKey("input")
                 override val value: HiddenString = HiddenString(input)
             }
@@ -110,9 +119,31 @@ public object KoogAttributes {
             /**
              * `koog.subgraph.output` attribute.
              */
-            public data class Output(private val output: String) : Subgraph {
+            public data class Output(public val output: String) : Subgraph {
                 override val key: String = super.key.concatKey("output")
                 override val value: HiddenString = HiddenString(output)
+            }
+        }
+
+        /**
+         * `koog.moderation` attribute namespace.
+         */
+        public sealed interface Moderation : Koog {
+            override val key: String
+                get() = super.key.concatKey("moderation")
+
+            /**
+             * `koog.moderation.result` attribute.
+             *
+             * The OpenTelemetry GenAI semantic conventions do not define a moderation outcome
+             * attribute, so Koog publishes this as a Koog-namespaced attribute on the inference
+             * span when moderationResponse is present.
+             */
+            public data class Result(public val moderationResult: ModerationResult) : Moderation {
+                override val key: String = super.key.concatKey("result")
+                override val value: HiddenString = HiddenString(
+                    moderationJson.encodeToString(ModerationResult.serializer(), moderationResult)
+                )
             }
         }
 
@@ -133,15 +164,15 @@ public object KoogAttributes {
                 /**
                  * `koog.tool.call.status` attribute.
                  */
-                public data class Status(private val status: StatusType) : Call {
+                public data class Status(public val status: StatusType) : Call {
                     override val key: String = super.key.concatKey("status")
-                    override val value: String = status.str
+                    override val value: String = status.value
                 }
 
                 /**
                  * `koog.tool.call.status` allowed values.
                  */
-                public enum class StatusType(public val str: String) {
+                public enum class StatusType(public val value: String) {
                     SUCCESS("success"),
                     ERROR("error"),
                     VALIDATION_FAILED("validation_failed")

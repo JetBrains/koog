@@ -1,9 +1,7 @@
 package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
-import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.extension.setAttributes
-import ai.koog.agents.features.opentelemetry.extension.setEvents
 import ai.koog.agents.features.opentelemetry.extension.setSpanStatus
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.kotlin.context.Context
@@ -28,7 +26,6 @@ public class GenAIAgentSpan internal constructor(
     internal val context: Context,
     public val kind: SpanKind,
     attributes: List<Attribute>,
-    events: List<GenAIAgentEvent>,
 ) {
 
     private companion object {
@@ -37,19 +34,11 @@ public class GenAIAgentSpan internal constructor(
 
     private val _attributes: MutableList<Attribute> = attributes.toMutableList()
 
-    private val _events: MutableList<GenAIAgentEvent> = events.toMutableList()
-
     /**
      * Attributes attached to this span.
      */
     public val attributes: List<Attribute>
         get() = _attributes
-
-    /**
-     * Events recorded on this span.
-     */
-    public val events: List<GenAIAgentEvent>
-        get() = _events
 
     internal val logString: String
         get() = "${this::class.simpleName ?: "GenAIAgentSpan"} (name: $name, id: $id)"
@@ -90,39 +79,6 @@ public class GenAIAgentSpan internal constructor(
         return _attributes.remove(attribute)
     }
 
-    /**
-     * Adds [event] to the span.
-     *
-     * @param event Event to add.
-     */
-    // TODO: Update to add event directly into the OTel sdk span
-    public fun addEvent(event: GenAIAgentEvent) {
-        logger.debug { "$logString Adding event to the span: ${event.name}" }
-        _events.add(event)
-    }
-
-    /**
-     * Adds all [events] to the span.
-     *
-     * @param events Events to add.
-     */
-    // TODO: Update to add event directly into the OTel sdk span
-    public fun addEvents(events: List<GenAIAgentEvent>) {
-        logger.debug { "$logString Adding <${events.size}> event(s) to the span. Events:\n${events.joinToString("\n") { "- ${it.name}" }}" }
-        _events.addAll(events)
-    }
-
-    /**
-     * Removes [event] from the span. Returns `true` if it was present.
-     *
-     * @param event Event to remove.
-     */
-    // TODO: Deprecate
-    public fun removeEvent(event: GenAIAgentEvent): Boolean {
-        logger.debug { "$logString Removing event from span: ${event.name}" }
-        return _events.remove(event)
-    }
-
     internal fun end(
         spanEndStatus: StatusData? = null,
         verbose: Boolean = false,
@@ -130,7 +86,6 @@ public class GenAIAgentSpan internal constructor(
         logger.debug { "$logString Finishing the span." }
 
         span.setAttributes(attributes, verbose)
-        span.setEvents(events, verbose)
         span.setSpanStatus(spanEndStatus)
         span.end()
 

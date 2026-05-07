@@ -70,8 +70,10 @@ internal fun assertSpans(expectedSpans: List<Map<String, Map<String, Any>>>, act
         // Attributes
         assertAttributes(spanName, expectedAttributes, actualSpan.attributes)
 
-        // Events
-        val expectedEvents = expectedSpanData["events"] as Map<String, Map<String, Any>>
+        // Events. After the OTel events deprecation, Koog no longer emits per-message events on
+        // inference spans. Test fixtures may omit the "events" key entirely; treat that as
+        // "expect zero events on this span".
+        val expectedEvents = (expectedSpanData["events"] as? Map<String, Map<String, Any>>) ?: emptyMap()
         val actualEvents = actualSpan.events.associate { event ->
             event.name to event.attributes
         }

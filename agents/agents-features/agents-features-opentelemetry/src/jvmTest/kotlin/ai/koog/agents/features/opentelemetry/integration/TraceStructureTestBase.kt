@@ -53,7 +53,6 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 abstract class TraceStructureTestBase(private val openTelemetryConfigurator: OpenTelemetryConfig.() -> Unit) {
@@ -833,21 +832,13 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val llmSpan =
                 spans.firstOrNull { it.name == "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
-                    ?: spans.firstOrNull { span -> span.events.any { it.name == "moderation.result" } }
-                    ?: error("No LLM span for moderation found (expected '${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}' or a span with 'moderation.result' event)")
+                    ?: error("No LLM span for moderation found (expected '${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}')")
 
-            val moderationEvent = llmSpan.events.firstOrNull { it.name == "moderation.result" }
-            assertNotNull(moderationEvent, "LLM span should contain a moderation.result event")
-
-            val eventAttrs = moderationEvent.attributes
-
+            // Moderation outcome is now carried as a Koog-namespaced attribute on the inference
+            // span (the old `moderation.result` event has been removed in line with the OTel GenAI
+            // semconv update).
             val expectedContent = json.encodeToString(ModerationResult.serializer(), moderationResult)
-
-            assertEquals(expectedContent, eventAttrs["content"])
-            assertEquals(OpenAIModels.Moderation.Omni.provider.id, eventAttrs["gen_ai.system"])
-
-            val llmAttrs = llmSpan.attributes
-            assertEquals(expectedContent, llmAttrs["gen_ai.completion.0.content"])
+            assertEquals(expectedContent, llmSpan.attributes["koog.moderation.result"])
         }
     }
 
@@ -893,7 +884,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val attrs = embeddingsSpan.attributes
 
-            assertEquals(model.provider.id, attrs["gen_ai.system"], "gen_ai.system should match provider id")
+            assertEquals(model.provider.id, attrs["gen_ai.provider.name"], "gen_ai.provider.name should match provider id")
             assertEquals("embeddings", attrs["gen_ai.operation.name"], "operation should be embeddings")
             assertEquals(model.id, attrs["gen_ai.request.model"], "model id should match embeddings model")
         }

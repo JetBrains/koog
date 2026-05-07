@@ -1,10 +1,8 @@
 package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
-import ai.koog.agents.features.opentelemetry.event.EventBodyFields
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockContextFactory
-import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.mock.MockSpan
 import ai.koog.agents.features.opentelemetry.mock.MockTracer
 import ai.koog.agents.utils.HiddenString
@@ -173,48 +171,6 @@ class SpanCollectorTest {
 
         assertEquals(expectedAttributes.size, mockSpan.collectedAttributes.size)
         assertEquals(expectedAttributes, mockSpan.collectedAttributes)
-    }
-
-    @Test
-    fun `test mask HiddenString values in event attributes and body fields with verbose set to false`() = runTest {
-        val tracer = MockTracer()
-        val contextFactory = MockContextFactory()
-
-        val spanId = "test-span-id"
-        val spanName = "test-span-name"
-
-        val span = GenAIAgentSpanBuilder(
-            spanType = SpanType.CREATE_AGENT,
-            parentSpan = null,
-            id = spanId,
-            name = spanName,
-            kind = SpanKind.CLIENT,
-        ).buildAndStart(tracer, contextFactory)
-
-        val spanEvent = MockGenAIAgentEvent(name = "event").apply {
-            addAttribute(MockAttribute("secretKey", HiddenString("secretValue")))
-            addBodyField(EventBodyFields.Content("some sensitive content"))
-        }
-
-        span.addEvent(spanEvent)
-
-        // End span to append all created events
-        span.end()
-
-        // Event with attribute HiddenString and a body field that contains HiddenString
-        // Assert collected event
-        val actualSpanEvents = (span.span as MockSpan).collectedEvents
-        assertEquals(1, actualSpanEvents.size)
-        val actualEventAttributes = actualSpanEvents[0].attributes
-
-        // Assert attributes for the collected event when the verbose flag is set to 'false'
-        val expectedEventAttributes = mapOf(
-            "secretKey" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
-            "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
-        )
-
-        assertEquals(expectedEventAttributes.size, actualEventAttributes.size)
-        assertEquals(expectedEventAttributes, actualEventAttributes)
     }
 
     @Test

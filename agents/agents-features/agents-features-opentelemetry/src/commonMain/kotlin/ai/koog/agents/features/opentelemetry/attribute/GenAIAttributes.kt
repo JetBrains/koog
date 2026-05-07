@@ -71,7 +71,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.operation.name` attribute.
          */
-        public data class Name(private val operation: OperationNameType) : Operation {
+        public data class Name(public val operation: OperationNameType) : Operation {
             override val key: String = super.key.concatKey("name")
             override val value: String = operation.id
         }
@@ -100,7 +100,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.agent.description` attribute.
          */
-        public data class Description(private val description: String) : Agent {
+        public data class Description(public val description: String) : Agent {
             override val key: String = super.key.concatKey("description")
             override val value: String = description
         }
@@ -108,7 +108,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.agent.id` attribute.
          */
-        public data class Id(private val id: String) : Agent {
+        public data class Id(public val id: String) : Agent {
             override val key: String = super.key.concatKey("id")
             override val value: String = id
         }
@@ -116,7 +116,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.agent.name` attribute.
          */
-        public data class Name(private val name: String) : Agent {
+        public data class Name(public val name: String) : Agent {
             override val key: String = super.key.concatKey("name")
             override val value: String = name
         }
@@ -149,7 +149,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.conversation.id` attribute.
          */
-        public data class Id(private val id: String) : Conversation {
+        public data class Id(public val id: String) : Conversation {
             override val key: String = super.key.concatKey("id")
             override val value: String = id
         }
@@ -165,7 +165,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.data_source.id` attribute.
          */
-        public data class Id(private val id: String) : DataSource {
+        public data class Id(public val id: String) : DataSource {
             override val key: String = super.key.concatKey("id")
             override val value: String = id
         }
@@ -181,22 +181,9 @@ public object GenAIAttributes {
         /**
          * `gen_ai.input.messages` attribute.
          */
-        public data class Messages(private val messages: List<Message>) : Input {
+        public data class Messages(public val messages: List<Message>) : Input {
             override val key: String = super.key.concatKey("messages")
-            override val value: HiddenString = HiddenString(
-                JsonArray(
-                    messages.map { message ->
-                        buildJsonObject {
-                            put("role", JsonPrimitive(message.role.name))
-                            putJsonArray("parts") {
-                                message.parts.forEach { part ->
-                                    addContentPart(part, message)
-                                }
-                            }
-                        }
-                    }
-                ).toString()
-            )
+            override val value: HiddenString = HiddenString(messages.toMessagesJsonString())
         }
     }
 
@@ -210,7 +197,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.output.type` attribute.
          */
-        public data class Type(private val type: OutputType) : Output {
+        public data class Type(public val type: OutputType) : Output {
             override val key: String = super.key.concatKey("type")
             override val value: String = type.id
         }
@@ -218,22 +205,9 @@ public object GenAIAttributes {
         /**
          * `gen_ai.output.messages` attribute.
          */
-        public data class Messages(private val messages: List<Message>) : Output {
+        public data class Messages(public val messages: List<Message>) : Output {
             override val key: String = super.key.concatKey("messages")
-            override val value: HiddenString = HiddenString(
-                JsonArray(
-                    messages.map { message ->
-                        buildJsonObject {
-                            put("role", JsonPrimitive(message.role.name))
-                            putJsonArray("parts") {
-                                message.parts.forEach { part ->
-                                    addContentPart(part, message)
-                                }
-                            }
-                        }
-                    }
-                ).toString()
-            )
+            override val value: HiddenString = HiddenString(messages.toMessagesJsonString())
         }
 
         /**
@@ -263,7 +237,7 @@ public object GenAIAttributes {
             /**
              * `gen_ai.request.choice.count` attribute.
              */
-            public data class Count(private val count: Int) : Choice {
+            public data class Count(public val count: Int) : Choice {
                 override val key: String = super.key.concatKey("count")
                 override val value: Int = count
             }
@@ -272,7 +246,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.request.model` attribute.
          */
-        public data class Model(private val model: LLModel) : Request {
+        public data class Model(public val model: LLModel) : Request {
             override val key: String = super.key.concatKey("model")
             override val value: String = model.id
         }
@@ -280,7 +254,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.request.seed` attribute.
          */
-        public data class Seed(private val seed: Int) : Request {
+        public data class Seed(public val seed: Int) : Request {
             override val key: String = super.key.concatKey("seed")
             override val value: Int = seed
         }
@@ -288,7 +262,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.request.frequency_penalty` attribute.
          */
-        public data class FrequencyPenalty(private val frequencyPenalty: Double) : Request {
+        public data class FrequencyPenalty(public val frequencyPenalty: Double) : Request {
             override val key: String = super.key.concatKey("frequency_penalty")
             override val value: Double = frequencyPenalty
         }
@@ -296,7 +270,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.request.max_tokens` attribute.
          */
-        public data class MaxTokens(private val maxTokens: Int) : Request {
+        public data class MaxTokens(public val maxTokens: Int) : Request {
             override val key: String = super.key.concatKey("max_tokens")
             override val value: Int = maxTokens
         }
@@ -304,7 +278,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.request.presence_penalty` attribute.
          */
-        public data class PresencePenalty(private val presencePenalty: Double) : Request {
+        public data class PresencePenalty(public val presencePenalty: Double) : Request {
             override val key: String = super.key.concatKey("presence_penalty")
             override val value: Double = presencePenalty
         }
@@ -312,7 +286,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.request.stop_sequences` attribute.
          */
-        public data class StopSequences(private val stopSequences: List<String>) : Request {
+        public data class StopSequences(public val stopSequences: List<String>) : Request {
             override val key: String = super.key.concatKey("stop_sequences")
             override val value: List<String> = stopSequences
         }
@@ -320,7 +294,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.request.temperature` attribute.
          */
-        public data class Temperature(private val temperature: Double) : Request {
+        public data class Temperature(public val temperature: Double) : Request {
             override val key: String = super.key.concatKey("temperature")
             override val value: Double = temperature
         }
@@ -328,7 +302,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.request.top_p` attribute.
          */
-        public data class TopP(private val topP: Double) : Request {
+        public data class TopP(public val topP: Double) : Request {
             override val key: String = super.key.concatKey("top_p")
             override val value: Double = topP
         }
@@ -344,7 +318,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.response.finish_reasons` attribute.
          */
-        public data class FinishReasons(private val reasons: List<FinishReasonType>) : Response {
+        public data class FinishReasons(public val reasons: List<FinishReasonType>) : Response {
             override val key: String = super.key.concatKey("finish_reasons")
             override val value: List<String> = reasons.map { it.id }
         }
@@ -397,7 +371,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.response.id` attribute.
          */
-        public data class Id(private val id: String) : Response {
+        public data class Id(public val id: String) : Response {
             override val key: String = super.key.concatKey("id")
             override val value: String = id
         }
@@ -405,7 +379,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.response.model` attribute.
          */
-        public data class Model(private val model: LLModel) : Response {
+        public data class Model(public val model: LLModel) : Response {
             override val key: String = super.key.concatKey("model")
             override val value: String = model.id
         }
@@ -413,7 +387,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.response.metadata` attribute.
          */
-        public data class Metadata(private val metadata: String) : Response {
+        public data class Metadata(public val metadata: String) : Response {
             override val key: String = super.key.concatKey("metadata")
             override val value: String = metadata
         }
@@ -429,7 +403,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.token.type` attribute.
          */
-        public data class Type(private val type: TokenType) : Token {
+        public data class Type(public val type: TokenType) : Token {
             override val key: String = super.key.concatKey("type")
             override val value: String = type.str
         }
@@ -453,7 +427,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.usage.input_tokens` attribute.
          */
-        public data class InputTokens(private val tokens: Int) : Usage {
+        public data class InputTokens(public val tokens: Int) : Usage {
             override val key: String = super.key.concatKey("input_tokens")
             override val value: Int = tokens
         }
@@ -461,7 +435,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.usage.output_tokens` attribute.
          */
-        public data class OutputTokens(private val tokens: Int) : Usage {
+        public data class OutputTokens(public val tokens: Int) : Usage {
             override val key: String = super.key.concatKey("output_tokens")
             override val value: Int = tokens
         }
@@ -470,7 +444,7 @@ public object GenAIAttributes {
          * `gen_ai.usage.total_tokens` attribute.
          */
         // Note: Non-semantic attribute
-        public data class TotalTokens(private val tokens: Int) : Usage {
+        public data class TotalTokens(public val tokens: Int) : Usage {
             override val key: String = super.key.concatKey("total_tokens")
             override val value: Int = tokens
         }
@@ -493,7 +467,7 @@ public object GenAIAttributes {
             /**
              * `gen_ai.tool.call.id` attribute.
              */
-            public data class Id(private val id: String) : Call {
+            public data class Id(public val id: String) : Call {
                 override val key: String = super.key.concatKey("id")
                 override val value: String = id
             }
@@ -501,7 +475,7 @@ public object GenAIAttributes {
             /**
              * `gen_ai.tool.call.arguments` attribute.
              */
-            public data class Arguments(private val arguments: JsonObject) : Call {
+            public data class Arguments(public val arguments: JsonObject) : Call {
                 override val key: String = super.key.concatKey("arguments")
                 override val value: HiddenString = HiddenString(arguments.toString())
             }
@@ -509,7 +483,7 @@ public object GenAIAttributes {
             /**
              * `gen_ai.tool.call.result` attribute.
              */
-            public data class Result(private val result: JsonElement) : Call {
+            public data class Result(public val result: JsonElement) : Call {
                 override val key: String = super.key.concatKey("result")
                 override val value: HiddenString = HiddenString(result.toString())
             }
@@ -518,7 +492,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.tool.description` attribute.
          */
-        public data class Description(private val description: String) : Tool {
+        public data class Description(public val description: String) : Tool {
             override val key: String = super.key.concatKey("description")
             override val value: String = description
         }
@@ -526,7 +500,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.tool.name` attribute.
          */
-        public data class Name(private val name: String) : Tool {
+        public data class Name(public val name: String) : Tool {
             override val key: String = super.key.concatKey("name")
             override val value: String = name
         }
@@ -534,7 +508,7 @@ public object GenAIAttributes {
         /**
          * `gen_ai.tool.definitions` attribute.
          */
-        public data class Definitions(private val tools: List<ToolDescriptor>) : Tool {
+        public data class Definitions(public val tools: List<ToolDescriptor>) : Tool {
             override val key: String = super.key.concatKey("definitions")
             override val value: HiddenString = HiddenString(
                 JsonArray(
@@ -553,7 +527,7 @@ public object GenAIAttributes {
     /**
      * `gen_ai.system_instructions` attribute.
      */
-    public data class SystemInstructions(private val messages: List<Message.System>) : GenAIAttribute {
+    public data class SystemInstructions(public val messages: List<Message.System>) : GenAIAttribute {
         override val key: String = "system_instructions"
         override val value: HiddenString = run {
             val jsonObjects = messages.flatMap { (parts, metaInfo) ->
@@ -572,6 +546,24 @@ public object GenAIAttributes {
     }
 
     //region Private Methods
+
+    /**
+     * Encodes a list of [Message]s into the JSON-array string used by `gen_ai.input.messages` /
+     * `gen_ai.output.messages`. Each entry has `role` and a `parts` array.
+     */
+    private fun List<Message>.toMessagesJsonString(): String =
+        JsonArray(
+            map { message ->
+                buildJsonObject {
+                    put("role", JsonPrimitive(message.role.name))
+                    putJsonArray("parts") {
+                        message.parts.forEach { part ->
+                            addContentPart(part, message)
+                        }
+                    }
+                }
+            }
+        ).toString()
 
     private fun JsonArrayBuilder.addContentPart(part: ContentPart, message: Message) {
         when (part) {

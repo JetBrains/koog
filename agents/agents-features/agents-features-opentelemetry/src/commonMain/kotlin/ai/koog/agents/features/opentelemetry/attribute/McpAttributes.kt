@@ -12,9 +12,9 @@ package ai.koog.agents.features.opentelemetry.attribute
  * - Protocol version information
  * - TODO: Resources and prompts operations
  */
-internal object McpAttributes {
+public object McpAttributes {
 
-    sealed interface Mcp : Attribute {
+    public sealed interface Mcp : Attribute {
         override val key: String
             get() = "mcp"
 
@@ -22,11 +22,11 @@ internal object McpAttributes {
          * The name of the request or notification method.
          * This is a REQUIRED attribute for all MCP operations.
          */
-        sealed interface Method : Mcp {
+        public sealed interface Method : Mcp {
             override val key: String
                 get() = super.key.concatKey("method")
 
-            data class Name(private val name: String) : Method {
+            public data class Name(public val name: String) : Method {
                 override val key: String = super.key.concatKey("name")
                 override val value: String = name
             }
@@ -38,11 +38,11 @@ internal object McpAttributes {
          *
          * Example: "191c4850af6c49e08843a3f6c80e5046"
          */
-        sealed interface Session : Mcp {
+        public sealed interface Session : Mcp {
             override val key: String
                 get() = super.key.concatKey("session")
 
-            data class Id(private val id: String) : Session {
+            public data class Id(public val id: String) : Session {
                 override val key: String = super.key.concatKey("id")
                 override val value: String = id
             }
@@ -54,11 +54,11 @@ internal object McpAttributes {
          *
          * Example: "2025-06-18"
          */
-        sealed interface Protocol : Mcp {
+        public sealed interface Protocol : Mcp {
             override val key: String
                 get() = super.key.concatKey("protocol")
 
-            data class Version(private val version: String) : Protocol {
+            public data class Version(public val version: String) : Protocol {
                 override val key: String = super.key.concatKey("version")
                 override val value: String = version
             }
@@ -68,7 +68,7 @@ internal object McpAttributes {
     /**
      * Network transport and protocol attributes for MCP operations.
      */
-    sealed interface Network : Attribute {
+    public sealed interface Network : Attribute {
         override val key: String
             get() = "network"
 
@@ -83,7 +83,7 @@ internal object McpAttributes {
          * - "tcp" for HTTP transport
          * - "quic" for HTTP/3 transport
          */
-        data class Transport(private val transport: String) : Network {
+        public data class Transport(public val transport: String) : Network {
             override val key: String = "network.transport"
             override val value: String = transport
         }

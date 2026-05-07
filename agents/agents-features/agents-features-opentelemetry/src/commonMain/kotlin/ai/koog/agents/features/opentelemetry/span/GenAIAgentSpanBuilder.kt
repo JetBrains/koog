@@ -2,7 +2,6 @@ package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.applyAttributes
-import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.kotlin.context.Context
 import io.opentelemetry.kotlin.factory.ContextFactory
@@ -25,8 +24,6 @@ internal class GenAIAgentSpanBuilder(
     }
 
     private val attributes: MutableList<Attribute> = mutableListOf()
-
-    private val events: MutableList<GenAIAgentEvent> = mutableListOf()
 
     fun addAttribute(attribute: Attribute): GenAIAgentSpanBuilder {
         attributes.add(attribute)
@@ -56,7 +53,6 @@ internal class GenAIAgentSpanBuilder(
             kind = kind,
             context = context,
             attributes = attributes.toList(),
-            events = events.toList(),
         )
 
         logger.debug { "${genAiSpan.logString} Span has been started." }

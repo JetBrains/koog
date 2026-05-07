@@ -4,7 +4,6 @@ import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.applyAttributes
-import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.platform.errorTypeName
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.http.client.KoogHttpClientException
@@ -19,19 +18,6 @@ internal fun Span.setSpanStatus(endStatus: StatusData? = null) {
 
 internal fun Span.setAttributes(attributes: List<Attribute>, verbose: Boolean) {
     applyAttributes(attributes, verbose)
-}
-
-internal fun Span.setEvents(events: List<GenAIAgentEvent>, verbose: Boolean) {
-    events.forEach { event ->
-        val eventAttributes = buildList {
-            event.bodyFieldsToAttributes(verbose)
-            addAll(event.attributes)
-        }
-
-        addEvent(event.name) {
-            applyAttributes(eventAttributes, verbose)
-        }
-    }
 }
 
 internal fun Throwable?.toStatusData(): StatusData =

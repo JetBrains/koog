@@ -2,57 +2,41 @@ package ai.koog.agents.features.opentelemetry.integration.weave
 
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
-import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
-import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
-import ai.koog.agents.features.opentelemetry.event.EventBodyFields
-import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
-import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
-import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
-import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
-import ai.koog.agents.features.opentelemetry.integration.bodyFieldsToCustomAttribute
-import ai.koog.agents.features.opentelemetry.integration.isSdkArrayPrimitive
 import ai.koog.agents.features.opentelemetry.integration.replaceAttributes
-import ai.koog.agents.features.opentelemetry.integration.replaceBodyFields
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.SpanType
+import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.message.Message
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * WeaveSpanAdapter is a specialized implementation of [SpanAdapter] designed to process and transform
- * spans related to Generative AI agent events. It provides customized handling for specific types of
- * events, converting their data fields into span attributes and removing processed events.
+ * WeaveSpanAdapter is a specialized implementation of [SpanAdapter] that reshapes inference-span
+ * content from the OTel-standard `gen_ai.input.messages` / `gen_ai.output.messages` attributes
+ * (which Weave does not currently recognize) into the indexed `gen_ai.prompt.{i}.*` /
+ * `gen_ai.completion.{i}.*` attributes that Weave displays. It also renames token-usage
+ * attributes to the legacy `prompt_tokens` / `completion_tokens` form Weave's UI surfaces.
  *
- * This adapter specifically handles spans of type [SpanType.INFERENCE] and processes events such as
- * [SystemMessageEvent], [UserMessageEvent], [AssistantMessageEvent], and [ToolMessageEvent].
- * Events are converted into custom span attributes for better traceability and observability.
- *
- * @param openTelemetryConfig A flag to control the verbosity of the processing.
- *        When set to true, additional details may be added to span attributes during processing.
+ * The adapter consumes the typed `messages: List<Message>` exposed by those standard attributes
+ * and re-emits them in the indexed shape; the original attributes remain on the span untouched.
+ * Sensitive payload values are wrapped in [HiddenString]; the standard `applyAttributes` pipeline
+ * handles the verbose flag uniformly.
  */
-internal class WeaveSpanAdapter(private val openTelemetryConfig: OpenTelemetryConfig) : SpanAdapter() {
-
-    companion object {
-        private val json = Json { allowStructuredMapKeys = true }
-    }
+internal class WeaveSpanAdapter(
+    @Suppress("unused")
+    private val openTelemetryConfig: OpenTelemetryConfig,
+) : SpanAdapter() {
 
     override fun onBeforeSpanStarted(span: GenAIAgentSpan) {
         when (span.type) {
             SpanType.INFERENCE -> {
-                val eventsToProcess = span.events.toList()
-
-                // Each event - convert into the span attribute
-                eventsToProcess.forEachIndexed { index, event ->
-                    when (event) {
-                        is ToolMessageEvent -> event.convertToPrompt(span, index)
-
-                        is SystemMessageEvent,
-                        is UserMessageEvent,
-                        is AssistantMessageEvent,
-                        is ChoiceEvent -> event.convertToPrompt(span, index)
-                    }
+                // Decompose `gen_ai.input.messages` into Weave-shaped indexed prompt attributes.
+                // The OTel standard attribute itself is left in place.
+                val inputMessagesAttr = span.attributes.filterIsInstance<GenAIAttributes.Input.Messages>().firstOrNull()
+                inputMessagesAttr?.messages?.forEachIndexed { index, message ->
+                    applyPromptAttributes(span, index, message)
                 }
             }
             else -> {}
@@ -62,13 +46,20 @@ internal class WeaveSpanAdapter(private val openTelemetryConfig: OpenTelemetryCo
     override fun onBeforeSpanFinished(span: GenAIAgentSpan) {
         when (span.type) {
             SpanType.INFERENCE -> {
-                val eventsToProcess = span.events.toList()
+                // Convert token attributes to Weave format
+                span.replaceAttributes<GenAIAttributes.Usage.InputTokens> { attribute ->
+                    CustomAttribute("gen_ai.usage.prompt_tokens", attribute.value)
+                }
 
-                eventsToProcess.forEachIndexed { index, event ->
-                    when (event) {
-                        is AssistantMessageEvent -> event.convertToCompletion(span, index)
-                        is ChoiceEvent -> event.convertToCompletion(span, index)
-                    }
+                span.replaceAttributes<GenAIAttributes.Usage.OutputTokens> { attribute ->
+                    CustomAttribute("gen_ai.usage.completion_tokens", attribute.value)
+                }
+
+                // Decompose `gen_ai.output.messages` into Weave-shaped indexed completion attributes.
+                // The OTel standard attribute itself is left in place.
+                val outputMessagesAttr = span.attributes.filterIsInstance<GenAIAttributes.Output.Messages>().firstOrNull()
+                outputMessagesAttr?.messages?.forEachIndexed { index, message ->
+                    applyCompletionAttributes(span, index, message)
                 }
             }
             else -> {}
@@ -77,165 +68,113 @@ internal class WeaveSpanAdapter(private val openTelemetryConfig: OpenTelemetryCo
 
     //region Private Methods
 
-    private fun GenAIAgentEvent.convertToPrompt(span: GenAIAgentSpan, index: Int) {
-        // Convert event data fields into the span attributes
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
-            val roleValue =
-                if (this is ChoiceEvent) {
-                    Message.Role.Assistant.name.lowercase()
-                } else {
-                    role.value
+    private fun applyPromptAttributes(span: GenAIAgentSpan, index: Int, message: Message) {
+        when (message) {
+            is Message.System,
+            is Message.User,
+            is Message.Assistant,
+            is Message.Reasoning -> {
+                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
+                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(message.content)))
+            }
+
+            is Message.Tool.Call -> {
+                // Weave forces the role to `assistant` for tool-call entries in the prompt history,
+                // and fans out the tool call into per-field indexed attributes.
+                span.addAttribute(
+                    CustomAttribute(
+                        "gen_ai.prompt.$index.role",
+                        Message.Role.Assistant.name.lowercase()
+                    )
+                )
+                addToolCallAttributes(span, "gen_ai.prompt.$index.tool_calls", listOf(message))
+                span.addAttribute(
+                    CustomAttribute(
+                        "gen_ai.prompt.$index.finish_reason",
+                        GenAIAttributes.Response.FinishReasonType.ToolCalls.id
+                    )
+                )
+            }
+
+            is Message.Tool.Result -> {
+                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
+                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(message.content)))
+                message.id?.let { id ->
+                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.tool_call_id", id))
                 }
-
-            CustomAttribute("gen_ai.prompt.$index.${role.key}", roleValue)
+            }
         }
+    }
 
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(this) { content ->
-            CustomAttribute("gen_ai.prompt.$index.${content.key}", content.value)
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Id>(this) { id ->
-            CustomAttribute("gen_ai.prompt.$index.${id.key}", id.value)
-        }
-
-        span.replaceBodyFields<EventBodyFields.ToolCalls>(this) { toolCallsEvent ->
-            val attributes = toolCallsEvent.value.flatMapIndexed { toolIndex, toolCallMap ->
-                toolCallMap.map { (toolCallKey, toolCallValue) ->
-                    val toolCallMapValue =
-                        if (toolCallValue.isSdkArrayPrimitive) {
-                            toolCallValue
-                        } else {
-                            json.encodeToString(toolCallsEvent.convertValueToJsonElement(toolCallValue, openTelemetryConfig.isVerbose))
-                        }
-
-                    CustomAttribute("gen_ai.prompt.$index.tool_calls.$toolIndex.$toolCallKey", toolCallMapValue)
+    private fun applyCompletionAttributes(span: GenAIAgentSpan, index: Int, message: Message) {
+        when (message) {
+            is Message.Assistant -> {
+                span.addAttribute(CustomAttribute("gen_ai.completion.$index.role", message.role.name.lowercase()))
+                span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(message.content)))
+                message.finishReason?.let { reason ->
+                    span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", reason))
                 }
             }
 
-            addAttributes(attributes)
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(this) { finishReason ->
-            CustomAttribute("gen_ai.prompt.$index.finish_reason", finishReason.value)
-        }
-
-        // Delete event from the span
-        span.removeEvent(this)
-    }
-
-    private fun ToolMessageEvent.convertToPrompt(span: GenAIAgentSpan, index: Int) {
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
-            CustomAttribute("gen_ai.prompt.$index.${role.key}", role.value)
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(this) { content ->
-            CustomAttribute("gen_ai.prompt.$index.${content.key}", content.value)
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Id>(this) { id ->
-            CustomAttribute("gen_ai.prompt.$index.tool_call_id", id.value)
-        }
-
-        // Delete event from the span
-        span.removeEvent(this)
-    }
-
-    private fun AssistantMessageEvent.convertToCompletion(span: GenAIAgentSpan, index: Int) {
-        // Convert token attributes to Weave format
-        span.replaceAttributes<GenAIAttributes.Usage.InputTokens> { attribute ->
-            CustomAttribute("gen_ai.usage.prompt_tokens", attribute.value)
-        }
-
-        span.replaceAttributes<GenAIAttributes.Usage.OutputTokens> { attribute ->
-            CustomAttribute("gen_ai.usage.completion_tokens", attribute.value)
-        }
-
-        // Convert event data fields into the span attributes
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
-            CustomAttribute("gen_ai.completion.$index.${role.key}", role.value)
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(this) { content ->
-            CustomAttribute("gen_ai.completion.$index.${content.key}", content.value)
-        }
-
-        span.replaceBodyFields<EventBodyFields.ToolCalls>(this) { toolCallsEvent ->
-            val attributes = toolCallsEvent.value.flatMapIndexed { toolIndex, toolCallMap ->
-                toolCallMap.map { (toolCallKey, toolCallValue) ->
-                    val toolCallMapValue =
-                        if (toolCallValue.isSdkArrayPrimitive) {
-                            toolCallValue
-                        } else {
-                            json.encodeToString(toolCallsEvent.convertValueToJsonElement(toolCallValue, openTelemetryConfig.isVerbose))
-                        }
-
-                    CustomAttribute("gen_ai.completion.$index.tool_calls.$toolIndex.$toolCallKey", toolCallMapValue)
-                }
+            is Message.Reasoning -> {
+                span.addAttribute(CustomAttribute("gen_ai.completion.$index.role", message.role.name.lowercase()))
+                span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(message.content)))
             }
 
-            addAttributes(attributes)
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Id>(this) { id ->
-            CustomAttribute("gen_ai.completion.$index.${id.key}", id.value)
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(this) { finishReason ->
-            CustomAttribute("gen_ai.completion.$index.finish_reason", finishReason.value)
-        }
-
-        // Delete event from the span
-        span.removeEvent(this)
-    }
-
-    private fun ChoiceEvent.convertToCompletion(span: GenAIAgentSpan, index: Int) {
-        // Convert tokens attributes to Weave format
-        span.replaceAttributes<GenAIAttributes.Usage.InputTokens> { attribute ->
-            CustomAttribute("gen_ai.usage.prompt_tokens", attribute.value)
-        }
-
-        span.replaceAttributes<GenAIAttributes.Usage.OutputTokens> { attribute ->
-            CustomAttribute("gen_ai.usage.completion_tokens", attribute.value)
-        }
-
-        // Convert event data fields into the span attributes
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
-            // Weave expects to have an assistant message for correct displaying the responses from LLM.
-            // Set a role explicitly to Assistant (even for LLM Tool Calls response).
-            CustomAttribute("gen_ai.completion.$index.${role.key}", Message.Role.Assistant.name.lowercase())
-        }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(this) { content ->
-            CustomAttribute("gen_ai.completion.$index.${content.key}", content.value)
-        }
-
-        span.replaceBodyFields<EventBodyFields.ToolCalls>(this) { toolCallsEvent ->
-            val attributes = toolCallsEvent.value.flatMapIndexed { toolIndex, toolCallMap ->
-                toolCallMap.map { (toolCallKey, toolCallValue) ->
-                    val toolCallMapValue =
-                        if (toolCallValue.isSdkArrayPrimitive) {
-                            toolCallValue
-                        } else {
-                            json.encodeToString(toolCallsEvent.convertValueToJsonElement(toolCallValue, openTelemetryConfig.isVerbose))
-                        }
-
-                    CustomAttribute("gen_ai.completion.$index.tool_calls.$toolIndex.$toolCallKey", toolCallMapValue)
-                }
+            is Message.Tool.Call -> {
+                // Weave expects `assistant` role for tool-call completions.
+                span.addAttribute(
+                    CustomAttribute(
+                        "gen_ai.completion.$index.role",
+                        Message.Role.Assistant.name.lowercase()
+                    )
+                )
+                addToolCallAttributes(
+                    span = span,
+                    keyPrefix = "gen_ai.completion.$index.tool_calls",
+                    toolCalls = listOf(message)
+                )
+                span.addAttribute(
+                    CustomAttribute(
+                        "gen_ai.completion.$index.finish_reason",
+                        GenAIAttributes.Response.FinishReasonType.ToolCalls.id
+                    )
+                )
             }
 
-            addAttributes(attributes)
+            else -> {
+                // Output messages should only be assistant/reasoning/tool-call responses.
+            }
         }
+    }
 
-        span.bodyFieldsToCustomAttribute<EventBodyFields.Id>(this) { id ->
-            CustomAttribute("gen_ai.completion.$index.${id.key}", id.value)
+    /**
+     * Fan tool-call entries out to indexed `<keyPrefix>.<toolIndex>.<field>` attributes:
+     * - `<keyPrefix>.<j>.function` — `HiddenString` JSON of `{"name":..., "arguments":...}`
+     * - `<keyPrefix>.<j>.id` — call id (plain string, used by Weave for tool-call/tool-result correlation)
+     * - `<keyPrefix>.<j>.type` — `"function"` (constant, not sensitive)
+     *
+     * Content fields are wrapped in [HiddenString]; the standard `applyAttributes` pipeline handles
+     * the verbose flag uniformly. The id is left plain so the UI can thread tool calls together
+     * even when content is masked.
+     */
+    private fun addToolCallAttributes(
+        span: GenAIAgentSpan,
+        keyPrefix: String,
+        toolCalls: List<Message.Tool.Call>,
+    ) {
+        toolCalls.forEachIndexed { toolIndex, tool ->
+            // Match the legacy event-based output shape: `function` is a JSON string of {name,arguments}.
+            val functionJson = JsonObject(
+                mapOf(
+                    "name" to JsonPrimitive(tool.tool),
+                    "arguments" to JsonPrimitive(tool.content),
+                )
+            ).toString()
+            span.addAttribute(CustomAttribute("$keyPrefix.$toolIndex.function", HiddenString(functionJson)))
+            span.addAttribute(CustomAttribute("$keyPrefix.$toolIndex.id", tool.id ?: ""))
+            span.addAttribute(CustomAttribute("$keyPrefix.$toolIndex.type", "function"))
         }
-
-        span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(this) { finishReason ->
-            CustomAttribute("gen_ai.completion.$index.finish_reason", finishReason.value)
-        }
-
-        // Delete event from the span
-        span.removeEvent(this)
     }
 
     //endregion Private Methods

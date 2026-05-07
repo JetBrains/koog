@@ -22,7 +22,7 @@ private val defaultRequestTimeout = 10.seconds
  * attribute layout but are emitted only through whatever exporters the caller registers separately.
  *
  * Useful for tests that want to assert on Weave-shaped spans without performing a real HTTP
- * round-trip, and for integrators who want the Weave transformations applied to spans they ship to
+ * round-trip and for integrators who want the Weave transformations applied to spans they ship to
  * a different backend.
  */
 public fun OpenTelemetryConfig.addWeaveSpanAdapter() {

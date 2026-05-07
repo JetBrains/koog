@@ -15,12 +15,6 @@ import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
-import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
-import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
-import ai.koog.agents.features.opentelemetry.event.ModerationResponseEvent
-import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
-import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
-import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
 import ai.koog.agents.features.opentelemetry.extension.lastResponse
 import ai.koog.agents.features.opentelemetry.extension.toFinishReason
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
@@ -53,7 +47,6 @@ import ai.koog.agents.features.opentelemetry.span.startNodeExecuteSpan
 import ai.koog.agents.features.opentelemetry.span.startStrategySpan
 import ai.koog.agents.features.opentelemetry.span.startSubgraphExecuteSpan
 import ai.koog.agents.mcp.metadata.McpMetadataKeys
-import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONSerializer
@@ -509,7 +502,6 @@ public class OpenTelemetry {
             pipeline.interceptLLMCallStarting(this) intercept@{ eventContext ->
                 logger.debug { "Execute OpenTelemetry before LLM call handler" }
 
-                val provider = eventContext.model.provider
                 val patchedExecutionInfo = eventContext.executionInfo
                     .appendRunId(eventContext.runId)
                     .appendId(eventContext.eventId)
@@ -532,37 +524,6 @@ public class OpenTelemetry {
                     llmParams = eventContext.prompt.params,
                     tools = eventContext.tools
                 )
-
-                // Add events to the InferenceSpan after the span is created
-                val eventsFromMessages = messages.map { message ->
-                    when (message) {
-                        is Message.System -> {
-                            SystemMessageEvent(provider, message)
-                        }
-
-                        is Message.User -> {
-                            UserMessageEvent(provider, message)
-                        }
-
-                        is Message.Assistant, is Message.Reasoning -> {
-                            AssistantMessageEvent(provider, message)
-                        }
-
-                        is Message.Tool.Call -> {
-                            ChoiceEvent(provider, message, arguments = message.contentJsonResult.getOrNull())
-                        }
-
-                        is Message.Tool.Result -> {
-                            ToolMessageEvent(
-                                provider = provider,
-                                toolCallId = message.id,
-                                content = message.content
-                            )
-                        }
-                    }
-                }
-
-                inferenceSpan.addEvents(eventsFromMessages)
 
                 // Start span
                 spanAdapter?.onBeforeSpanStarted(inferenceSpan)
@@ -589,41 +550,24 @@ public class OpenTelemetry {
                     spanType = SpanType.INFERENCE
                 ) ?: return@intercept
 
-                val provider = eventContext.model.provider
-
-                // Add events to the InferenceSpan before finishing the span
-                val eventsToAdd = buildList {
-                    eventContext.responses.mapIndexed { index, message ->
-                        when (message) {
-                            is Message.Assistant, is Message.Reasoning -> {
-                                add(AssistantMessageEvent(provider, message))
-                            }
-
-                            is Message.Tool.Call -> {
-                                add(
-                                    ChoiceEvent(
-                                        provider,
-                                        message,
-                                        arguments = message.contentJsonResult.getOrNull(),
-                                        index = index
-                                    )
-                                )
-                            }
-                        }
-                    }
-
-                    eventContext.moderationResponse?.let { response ->
-                        add(ModerationResponseEvent(provider, response))
-                    }
+                // Moderation outcome — not part of OTel GenAI semconv, captured as a Koog
+                // namespaced attribute on the inference span when present.
+                eventContext.moderationResponse?.let { response ->
+                    inferenceSpan.addAttribute(KoogAttributes.Koog.Moderation.Result(response))
                 }
-
-                inferenceSpan.addEvents(eventsToAdd)
 
                 // Finish Reasons Attribute
                 eventContext.responses.lastOrNull()?.let { response ->
                     inferenceSpan.addAttribute(
                         GenAIAttributes.Response.FinishReasons(reasons = listOf(response.toFinishReason()))
                     )
+                }
+
+                // Pre-populate gen_ai.output.messages so SpanAdapter implementations (Langfuse, Weave)
+                // can reshape the response messages before the span ends.
+                // endInferenceSpan re-adds the same attribute idempotently.
+                if (eventContext.responses.isNotEmpty()) {
+                    inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(eventContext.responses))
                 }
 
                 // Stop InferenceSpan

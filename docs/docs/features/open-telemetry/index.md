@@ -453,7 +453,7 @@ CreateAgentSpan
 Span attributes provide metadata related to a span. Each span has its set of attributes, while some spans can also
 repeat attributes.
 
-Koog supports a list of predefined attributes that follow OpenTelemetry's [Semantic conventions for generative AI events](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/). For example, the conventions define an attribute named
+Koog supports a list of predefined attributes that follow OpenTelemetry's [Semantic conventions for generative AI spans](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/). For example, the conventions define an attribute named
 `gen_ai.conversation.id`, which is usually a required attribute for a span. In Koog, the value of this attribute is the
 unique identifier for an agent run, that is automatically set when you call the `agent.run()` method.
 
@@ -468,27 +468,20 @@ In addition, Koog also includes custom, Koog-specific attributes. You can recogn
 - `koog.subgraph.id`: the identifier (name) of the subgraph being executed. Used in the `SubgraphExecuteSpan` span.
 - `koog.subgraph.input`: the input passed to the subgraph at the beginning of execution. Present on `SubgraphExecuteSpan` when subgraph starts.
 - `koog.subgraph.output`: the output produced by the subgraph upon completion. Present on `SubgraphExecuteSpan` when subgraph completes successfully.
+- `koog.moderation.result`: the JSON-encoded moderation outcome for the LLM call when one is available. Present on the `InferenceSpan` only when moderation was performed for the call. The OpenTelemetry GenAI semantic conventions do not define a moderation attribute, so Koog publishes this under the `koog.` namespace.
 
-### Events
+### Message content
 
-A span can also have an _event_ attached to the span. Events describe a specific point in time when something relevant
-happened. For example, when an LLM call started or finished. Events also have attributes and additionally include event
-_body fields_.
+Per the OpenTelemetry GenAI semantic conventions, message content is carried on the `InferenceSpan` via two span
+attributes rather than per-message events:
 
-The following event types are supported in line with OpenTelemetry's [Semantic conventions for generative AI events](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-events/):
+- `gen_ai.input.messages`: a JSON array of the messages sent to the model (system / user / assistant / tool roles).
+- `gen_ai.output.messages`: a JSON array of the messages returned by the model.
 
-- **SystemMessageEvent**: the system instructions passed to the model.
-- **UserMessageEvent**: the user message passed to the model.
-- **AssistantMessageEvent**: the assistant message passed to the model.
-- **ToolMessageEvent**: the response from a tool or function call passed to the model.
-- **ChoiceEvent**: the response message from a model.
-- **ModerationResponseEvent**: the model moderation result or signal.
-
-!!! note   
-The OpenTelemetry SDK does not yet fully support event body fields as a first-class parameter when adding an event. Therefore, in
-the OpenTelemetry support in Koog, event body fields are a separate attribute whose key is `body` and value type is
-string. The string includes the content or payload for the event body field, which is usually a JSON-like object. For
-examples of event body fields, see the [OpenTelemetry documentation](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-events/#examples).
+Earlier versions of Koog emitted per-message OpenTelemetry events
+(`gen_ai.system.message`, `gen_ai.user.message`, `gen_ai.assistant.message`, `gen_ai.tool.message`, `gen_ai.choice`)
+to capture message content. Those events have been removed from the OpenTelemetry GenAI specification and are no longer
+emitted by Koog. Backends that still expect the indexed `gen_ai.prompt.{i}.*` / `gen_ai.completion.{i}.*` shape (Langfuse, Weave) continue to receive it through the corresponding span adapters.
 
 ## Metrics
 
