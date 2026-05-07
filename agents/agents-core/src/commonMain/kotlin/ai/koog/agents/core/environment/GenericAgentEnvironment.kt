@@ -90,7 +90,9 @@ public class GenericAgentEnvironment(
             return finish(
                 ctx,
                 failureResult(
-                    ctx, toolArgsJson, toolDescription = null,
+                    ctx = ctx,
+                    toolArgs = toolArgsJson,
+                    toolDescription = null,
                     content = "Tool with name '${ctx.toolName}' not found in the tool registry. Use one of the available tools.",
                     error = null,
                 ),
@@ -164,7 +166,9 @@ public class GenericAgentEnvironment(
         logger.error(e) { formatLog("Tool with name '${ctx.toolName}' failed to parse arguments: $toolArgsJson") }
         Step.Stop(
             failureResult(
-                ctx, toolArgsJson, toolDescription,
+                ctx = ctx,
+                toolArgs = toolArgsJson,
+                toolDescription = toolDescription,
                 content = "Tool with name '${ctx.toolName}' failed to parse arguments due to the error: ${e.message}",
                 error = e,
             )
@@ -197,7 +201,9 @@ public class GenericAgentEnvironment(
         logger.error(e) { "Tool with name '${ctx.toolName}' failed to execute with arguments: $toolArgs" }
         Step.Stop(
             failureResult(
-                ctx, toolArgsJson, toolDescription,
+                ctx = ctx,
+                toolArgs = toolArgsJson,
+                toolDescription = toolDescription,
                 content = "Tool with name '${ctx.toolName}' failed to execute due to the error: ${e.message}!",
                 error = e,
             )
@@ -224,7 +230,9 @@ public class GenericAgentEnvironment(
         logger.error(e) { "Tool with name '${ctx.toolName}' failed to encode result: $toolResult" }
         Step.Stop(
             failureResult(
-                ctx, toolArgsJson, toolDescription,
+                ctx = ctx,
+                toolArgs = toolArgsJson,
+                toolDescription = toolDescription,
                 content = "Tool with name '${ctx.toolName}' failed to serialize result due to the error: ${e.message}!",
                 error = e,
             )
