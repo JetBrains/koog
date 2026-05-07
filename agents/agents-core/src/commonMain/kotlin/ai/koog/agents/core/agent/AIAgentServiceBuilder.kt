@@ -12,7 +12,6 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.serialization.TypeToken
 import ai.koog.utils.time.KoogClock
 
 /**
@@ -35,8 +34,6 @@ public expect class AIAgentServiceBuilder internal constructor() :
  * @param Output The output type for the AI agent graph service.
  *
  * @property strategy The AI agent graph strategy governing the behavior and structure of the service.
- * @property inputType The TypeToken representation of the input type.
- * @property outputType The TypeToken representation of the output type.
  * @property promptExecutor The executor responsible for handling and orchestrating prompts.
  * @property toolRegistry The registry managing the tools available for the service.
  * @property config [AIAgentConfig] containing initial agent configuration for the builder
@@ -44,8 +41,6 @@ public expect class AIAgentServiceBuilder internal constructor() :
  */
 public class GraphAgentServiceBuilder<Input, Output> internal constructor(
     private val strategy: AIAgentGraphStrategy<Input, Output>,
-    private val inputType: TypeToken,
-    private val outputType: TypeToken,
     promptExecutor: PromptExecutor?,
     toolRegistry: ToolRegistry,
     config: AIAgentConfig,
@@ -97,8 +92,6 @@ public class GraphAgentServiceBuilder<Input, Output> internal constructor(
             promptExecutor = executor,
             agentConfig = validatedConfig,
             strategy = strategy,
-            inputType = inputType,
-            outputType = outputType,
             toolRegistry = toolRegistry,
             installFeatures = installCombined
         )

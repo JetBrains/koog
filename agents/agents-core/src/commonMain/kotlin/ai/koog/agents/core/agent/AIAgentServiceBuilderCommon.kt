@@ -17,8 +17,6 @@ public abstract class AIAgentServiceBuilderCommon<Self : AIAgentServiceBuilderCo
         strategy: AIAgentGraphStrategy<Input, Output>
     ): GraphAgentServiceBuilder<Input, Output> = GraphAgentServiceBuilder(
         strategy = strategy,
-        inputType = strategy.inputType,
-        outputType = strategy.outputType,
         promptExecutor = this.promptExecutor,
         toolRegistry = this.toolRegistry,
         config = this.config,

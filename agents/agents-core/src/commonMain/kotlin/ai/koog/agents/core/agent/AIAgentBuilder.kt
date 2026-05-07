@@ -14,7 +14,6 @@ import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.serialization.TypeToken
 import ai.koog.utils.time.KoogClock
 
 /**
@@ -34,17 +33,13 @@ public expect class AIAgentBuilder internal constructor() : AIAgentBuilderCommon
  * @param Input The input type that the agent processes.
  * @param Output The output type that the agent produces.
  * @param strategy The execution strategy used by the agent for processing input and generating results.
- * @param inputType The [TypeToken] representation of the input parameter type.
- * @param outputType The [TypeToken] representation of the output parameter type.
  * @param promptExecutor [PromptExecutor] for the agent
  * @param id id of the agent
  * @param config [AIAgentConfig] containing initial agent configuration for the builder
- * @param clock optional [Clock] to be used in the agent for calculating timestamps
+ * @param clock optional [KoogClock] to be used in the agent for calculating timestamps
  */
 public class GraphAgentBuilder<Input, Output>(
     private val strategy: AIAgentGraphStrategy<Input, Output>,
-    private val inputType: TypeToken,
-    private val outputType: TypeToken,
     promptExecutor: PromptExecutor? = null,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
@@ -100,8 +95,6 @@ public class GraphAgentBuilder<Input, Output>(
      */
     public fun build(): AIAgent<Input, Output> {
         return GraphAIAgent(
-            inputType = inputType,
-            outputType = outputType,
             strategy = strategy,
             promptExecutor = validatedPromptExecutor,
             toolRegistry = toolRegistry,

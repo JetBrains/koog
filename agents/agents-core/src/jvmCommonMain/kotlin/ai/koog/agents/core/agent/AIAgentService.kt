@@ -189,13 +189,11 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         ): GraphAIAgentService<String, String> = AIAgentService(
             promptExecutor,
             llmModel,
-            responseProcessor,
-            strategy,
             toolRegistry,
             systemPrompt,
             temperature,
-            numberOfChoices,
             maxIterations,
+            responseProcessor,
             installFeatures
         )
 
