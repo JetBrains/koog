@@ -143,7 +143,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
             socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
             json = json,
-            queryParameters = mapOf("key" to apiKey),
+            headers = mapOf("x-goog-api-key" to apiKey),
         )
     }
 
