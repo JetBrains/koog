@@ -16,13 +16,13 @@ import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.longtermmemory.ingestion.IngestionSettings
 import ai.koog.agents.longtermmemory.ingestion.extraction.DocumentExtractor
 import ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocumentExtractor
-import ai.koog.agents.longtermmemory.retrieval.LastUserMessageQueryProvider
 import ai.koog.agents.longtermmemory.retrieval.RetrievalSettings
-import ai.koog.agents.longtermmemory.retrieval.SearchQueryProvider
-import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
-import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
+import ai.koog.agents.longtermmemory.retrieval.search.LastUserMessageQueryProvider
+import ai.koog.agents.longtermmemory.retrieval.search.SearchQueryProvider
+import ai.koog.agents.longtermmemory.retrieval.search.SearchStrategy
+import ai.koog.agents.longtermmemory.retrieval.search.SimilaritySearchStrategy
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.rag.base.TextDocument

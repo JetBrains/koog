@@ -3,6 +3,7 @@ package ai.koog.agents.longtermmemory.retrieval.augmentation
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.search.SearchResult
+import kotlin.jvm.JvmStatic
 
 /**
  * Interface for augmenting prompts with relevant context retrieved from memory.
@@ -50,7 +51,7 @@ public fun interface PromptAugmenter {
          *     .build()
          * ```
          */
-        @kotlin.jvm.JvmStatic
+        @JvmStatic
         public fun builder(): PromptAugmenterBuilder = PromptAugmenterBuilder()
 
         /**

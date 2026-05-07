@@ -5,7 +5,7 @@ import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreCompositeSear
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreListingSearchRequest
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreSearchRequest
 import ai.koog.agents.features.longtermmemory.aws.request.AgentcoreSimilaritySearchRequest
-import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
+import ai.koog.agents.longtermmemory.retrieval.search.SearchStrategy
 import ai.koog.rag.base.storage.search.SearchRequest
 
 /**
@@ -18,7 +18,7 @@ import ai.koog.rag.base.storage.search.SearchRequest
  * REFLECTIONS (actor-scoped).
  *
  * The outer query string produced by
- * [ai.koog.agents.longtermmemory.retrieval.SearchQueryProvider] is injected into each
+ * [ai.koog.agents.longtermmemory.retrieval.search.SearchQueryProvider] is injected into each
  * similarity subrequest at [create] time. Listing subrequests do not use the query.
  *
  * Example:

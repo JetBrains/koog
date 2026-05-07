@@ -10,8 +10,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocumentExtractor
 import ai.koog.agents.longtermmemory.model.MemoryRecord
-import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
-import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
+import ai.koog.agents.longtermmemory.retrieval.search.SearchStrategy
+import ai.koog.agents.longtermmemory.retrieval.search.SimilaritySearchStrategy
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt

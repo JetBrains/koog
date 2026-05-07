@@ -2,7 +2,7 @@ package ai.koog.agents.longtermmemory.feature;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.longtermmemory.retrieval.RetrievalSettings;
-import ai.koog.agents.longtermmemory.retrieval.SearchStrategy;
+import ai.koog.agents.longtermmemory.retrieval.search.SearchStrategy;
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
 import ai.koog.agents.testing.tools.MockExecutorBuilder;

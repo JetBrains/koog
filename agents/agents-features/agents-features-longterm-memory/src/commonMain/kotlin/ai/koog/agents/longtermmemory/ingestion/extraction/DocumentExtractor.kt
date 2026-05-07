@@ -2,6 +2,7 @@ package ai.koog.agents.longtermmemory.ingestion.extraction
 
 import ai.koog.prompt.message.Message
 import ai.koog.rag.base.TextDocument
+import kotlin.jvm.JvmStatic
 
 /**
  * Extractor of memory records during message ingestion.
@@ -69,7 +70,7 @@ public fun interface DocumentExtractor {
          *     .build()
          * ```
          */
-        @kotlin.jvm.JvmStatic
+        @JvmStatic
         public fun builder(): DocumentExtractorBuilder = DocumentExtractorBuilder()
     }
 }

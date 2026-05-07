@@ -10,6 +10,7 @@ import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcorePromptAu
 import ai.koog.agents.longtermmemory.feature.LongTermMemory
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
+import ai.koog.agents.longtermmemory.retrieval.search.SearchStrategy
 import aws.sdk.kotlin.services.bedrockagentcore.BedrockAgentCoreClient
 
 /**
@@ -281,7 +282,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
 
     internal data class Configured(
         val storage: AgentcoreSearchStorage,
-        val searchStrategy: ai.koog.agents.longtermmemory.retrieval.SearchStrategy,
+        val searchStrategy: SearchStrategy,
         val namespace: String?,
         val promptAugmenter: PromptAugmenter,
     )

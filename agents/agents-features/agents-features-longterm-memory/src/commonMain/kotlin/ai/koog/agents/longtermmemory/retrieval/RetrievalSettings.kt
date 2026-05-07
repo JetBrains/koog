@@ -3,6 +3,10 @@ package ai.koog.agents.longtermmemory.retrieval
 import ai.koog.agents.longtermmemory.feature.FailurePolicy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
+import ai.koog.agents.longtermmemory.retrieval.search.LastUserMessageQueryProvider
+import ai.koog.agents.longtermmemory.retrieval.search.SearchQueryProvider
+import ai.koog.agents.longtermmemory.retrieval.search.SearchStrategy
+import ai.koog.agents.longtermmemory.retrieval.search.SimilaritySearchStrategy
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.search.SearchRequest
@@ -12,7 +16,7 @@ import ai.koog.rag.base.storage.search.SearchRequest
  *
  * @param storage The retrieval storage to search for relevant memory records.
  * @param searchQueryProvider The extractor that defines how to derive the search query from the prompt.
- *   Defaults to [LastUserMessageQueryProvider], which uses the last user message content.
+ *   Defaults to [ai.koog.agents.longtermmemory.retrieval.search.LastUserMessageQueryProvider], which uses the last user message content.
  * @param searchStrategy The strategy that defines how to search the retrieval store.
  * @param promptAugmenter The augmenter that defines how retrieved context is inserted into the prompt.
  * @param enableAutomaticRetrieval When `true` (default), retrieval and prompt augmentation happen

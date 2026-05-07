@@ -1,7 +1,8 @@
-package ai.koog.agents.longtermmemory.retrieval
+package ai.koog.agents.longtermmemory.retrieval.search
 
 import ai.koog.rag.base.storage.search.SearchRequest
 import ai.koog.rag.base.storage.search.SimilaritySearchRequest
+import kotlin.jvm.JvmStatic
 
 /**
  * Search strategy for creating search requests during prompt augmentation.
@@ -55,7 +56,7 @@ public fun interface SearchStrategy {
          *     .build()
          * ```
          */
-        @kotlin.jvm.JvmStatic
+        @JvmStatic
         public fun builder(): SearchStrategyBuilder = SearchStrategyBuilder()
     }
 }
