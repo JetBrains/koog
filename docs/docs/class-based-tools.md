@@ -157,6 +157,119 @@ Here is an example of a custom tool implementation using `SimpleTool` in Kotlin:
     ```
     <!--- KNIT example-class-based-tools-02.kt -->
 
+### Context-aware tools (Kotlin)
+
+Sometimes a tool needs more than its typed arguments to do its job — it needs the surrounding agent run. The
+[`AIAgentContextAwareTool<Args, Result>`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent/-a-i-agent-context-aware-tool/index.html)
+abstract class extends `Tool<Args, Result>` and gives the tool access to the current
+[`AIAgentContext`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent.context/-a-i-agent-context/index.html)
+during execution.
+
+Use a context-aware tool when it legitimately needs:
+
+* the agent / run identifiers (e.g. for parent-child linkage of nested agents);
+* shared in-run state via [`AIAgentContext.storage`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent.entity/-a-i-agent-storage/index.html);
+* the agent's [`AIAgentContext.llm`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent.context/-a-i-agent-l-l-m-context/index.html) for nested LLM calls;
+* the [`AIAgentContext.pipeline`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.feature.pipeline/-a-i-agent-pipeline/index.html) for emitting custom feature events.
+
+For tools that only need their typed arguments, keep extending `Tool` (or `SimpleTool`) directly.
+
+Each context-aware tool consists of the following components:
+
+| <div style="width:140px">Component</div>     | Description                                                                                                                                                                                                                                                                                                |
+|----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Args`                                       | The serializable data class that defines arguments required for the tool.                                                                                                                                                                                                                                  |
+| `Result`                                     | The serializable type of result that the tool returns.                                                                                                                                                                                                                                                     |
+| `argsType` / `resultType` / `descriptor`     | Same as in the base `Tool` class — see above.                                                                                                                                                                                                                                                              |
+| `execute(args, context)`                     | The function that implements the tool logic. The framework dispatches every call through this overload whenever the environment has a context attached, which is the case for any normal agent run.                                                                                                       |
+| `execute(args)` (inherited)                  | A no-context fallback. The base class provides a default that throws a clear error if the tool is invoked outside an agent run; subclasses don't need to override it.                                                                                                                                      |
+
+!!! note
+    Context-aware tools are an **opt-in extension**. Existing `Tool` and `SimpleTool` subclasses continue to work unchanged — the dispatch only routes through `execute(args, context)` when the tool actually inherits from `AIAgentContextAwareTool`.
+
+#### Usage example
+
+Here is a tool that uses `context.storage` to remember notes across multiple invocations within the same run, and reads `context.agentId` for tagging:
+
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.AIAgentContextAwareTool
+    import ai.koog.agents.core.agent.context.AIAgentContext
+    import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.serialization.typeToken
+    import kotlinx.serialization.Serializable
+    -->
+    ```kotlin
+    private val notesKey = AIAgentStorageKey<MutableList<String>>("notes")
+
+    class NoteTool : AIAgentContextAwareTool<NoteTool.Args, String>(
+        argsType = typeToken<Args>(),
+        resultType = typeToken<String>(),
+        name = "note",
+        description = "Stores or lists short notes scoped to the current agent run.",
+    ) {
+        @Serializable
+        data class Args(
+            @property:LLMDescription("'add' to record a note, 'list' to read them back")
+            val action: String,
+            @property:LLMDescription("Note text — required when action is 'add'")
+            val text: String? = null,
+        )
+
+        // Subclasses only need to implement the context-aware overload.
+        override suspend fun execute(args: Args, context: AIAgentContext): String {
+            val notes = context.storage.get(notesKey) ?: mutableListOf<String>().also {
+                context.storage.set(notesKey, it)
+            }
+            return when (args.action) {
+                "add"  -> {
+                    val text = args.text ?: return "Missing 'text' argument."
+                    notes += "[${context.agentId}] $text"
+                    "Recorded note (#${notes.size})."
+                }
+                "list" -> if (notes.isEmpty()) "No notes yet." else notes.joinToString("\n")
+                else   -> "Unknown action '${args.action}'. Expected 'add' or 'list'."
+            }
+        }
+    }
+    ```
+    <!--- KNIT example-class-based-tools-03.kt -->
+
+### SimpleContextAwareTool class (Kotlin)
+
+[`SimpleContextAwareTool<Args>`](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent/-simple-context-aware-tool/index.html)
+is to `AIAgentContextAwareTool` what `SimpleTool` is to `Tool`: a convenience base class for context-aware tools whose
+result is a plain `String`. It overrides `encodeResultToString` so the raw string is passed back to the LLM without JSON
+wrapping.
+
+Use this in the common case where your context-aware tool just needs to return a textual result:
+
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.agent.SimpleContextAwareTool
+    import ai.koog.agents.core.agent.context.AIAgentContext
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.serialization.typeToken
+    import kotlinx.serialization.Serializable
+    -->
+    ```kotlin
+    class WhoAmITool : SimpleContextAwareTool<WhoAmITool.Args>(
+        argsType = typeToken<Args>(),
+        name = "who_am_i",
+        description = "Returns the id of the agent currently running this tool.",
+    ) {
+        @Serializable
+        class Args
+
+        override suspend fun execute(args: Args, context: AIAgentContext): String =
+            "agentId=${context.agentId}, runId=${context.runId}"
+    }
+    ```
+    <!--- KNIT example-class-based-tools-04.kt -->
+
 ### Annotation-based methods (Java)
 
 To implement tools in Java, instead of subclassing `Tool` or `SimpleTool`, use annotation-based methods with `@Tool` and
@@ -327,7 +440,7 @@ Here is an example showing custom formatted output in both Kotlin and Java:
         }
     }
     ```
-    <!--- KNIT example-class-based-tools-03.kt -->
+    <!--- KNIT example-class-based-tools-05.kt -->
 
 === "Java"
 
