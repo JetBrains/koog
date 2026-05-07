@@ -1,8 +1,8 @@
 package ai.koog.agents.longtermmemory.ingestion
 
 import ai.koog.agents.longtermmemory.feature.FailurePolicy
-import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
-import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
+import ai.koog.agents.longtermmemory.ingestion.extraction.DocumentExtractor
+import ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocumentExtractor
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.WriteStorage
 
@@ -10,13 +10,13 @@ import ai.koog.rag.base.storage.WriteStorage
  * Settings controlling how messages are persisted (ingested) into the memory repository.
  *
  * Ingestion happens once at agent completion: the final accumulated session prompt/history
- * is passed to the configured [extractionStrategy] as a single batch.
+ * is passed to the configured [documentExtractor] as a single batch.
  *
  * @param storage The ingestion storage where memory records will be persisted.
- * @param extractionStrategy The extractor that defines how to transform messages into memory records.
+ * @param documentExtractor The extractor that defines how to transform messages into memory records.
  *   Pre-built ingesters are available:
- *   - [ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy] - Filters messages by role
- *   Custom ingesters can be provided as lambdas via the [ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy] SAM interface.
+ *   - [ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocumentExtractor] - Filters messages by role
+ *   Custom ingesters can be provided as lambdas via the [ai.koog.agents.longtermmemory.ingestion.extraction.DocumentExtractor] SAM interface.
  * @param enableAutomaticIngestion When `true` (default), ingestion happens automatically on agent
  *   completion. When `false`, the storage is still accessible for manual use inside graph strategy
  *   nodes via [ai.koog.agents.longtermmemory.feature.withLongTermMemory].
@@ -28,7 +28,7 @@ import ai.koog.rag.base.storage.WriteStorage
  */
 public data class IngestionSettings(
     val storage: WriteStorage<TextDocument>,
-    val extractionStrategy: ExtractionStrategy = FilteringExtractionStrategy(),
+    val documentExtractor: DocumentExtractor = MessagePassingDocumentExtractor(),
     val enableAutomaticIngestion: Boolean = true,
     val namespace: String? = null,
     val failurePolicy: FailurePolicy = FailurePolicy.LOG_AND_CONTINUE,

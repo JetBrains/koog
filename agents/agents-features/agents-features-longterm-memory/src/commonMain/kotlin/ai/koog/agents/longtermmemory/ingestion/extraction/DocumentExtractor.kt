@@ -12,40 +12,40 @@ import ai.koog.rag.base.TextDocument
  * converted into memory records while maintaining type safety.
  *
  * Pre-built implementations are available for common ingestion patterns:
- * - [FilteringExtractionStrategy] - Filters messages by role
+ * - [MessagePassingDocumentExtractor] - Filters messages by role
  *
  * ### Usage Examples
  *
  * **Using pre-built extractors (Kotlin):**
  * ```kotlin
  * // Extract User and Assistant messages (default)
- * val extractor = FilteringExtractionStrategy()
+ * val extractor = MessagePassingDocumentExtractor()
  *
  * // Extract only User messages
- * val extractor = FilteringExtractionStrategy(
+ * val extractor = MessagePassingDocumentExtractor(
  *     messageRolesToExtract = setOf(Message.Role.User)
  * )
  * ```
  *
  * **Custom implementation as lambda (Kotlin):**
  * ```kotlin
- * val customExtractor = ExtractionStrategy { messages ->
+ * val customExtractor = DocumentExtractor { messages ->
  *     messages
  *         .filter { it.role == Message.Role.Assistant }
- *         .extract { MemoryRecord(content = summarize(it.content)) }
+ *         .map { MemoryRecord(content = summarize(it.content)) }
  * }
  * ```
  *
  * **Custom implementation as lambda (Java):**
  * ```java
- * ExtractionStrategy customExtractor = (messages) ->
+ * DocumentExtractor customExtractor = (messages) ->
  *     messages.stream()
  *         .filter(m -> m.getRole() == Message.Role.Assistant)
- *         .extract(m -> new MemoryRecord(m.getContent()))
+ *         .map(m -> new MemoryRecord(m.getContent()))
  *         .collect(Collectors.toList());
  * ```
  */
-public fun interface ExtractionStrategy {
+public fun interface DocumentExtractor {
     /**
      * Transforms a list of messages into a list of memory records for storage.
      *
@@ -59,28 +59,28 @@ public fun interface ExtractionStrategy {
      */
     public companion object {
         /**
-         * Returns a builder that lets you choose a default [ExtractionStrategy] implementation.
+         * Returns a builder that lets you choose a default [DocumentExtractor] implementation.
          *
          * Example usage (Java):
          * ```java
-         * ExtractionStrategy.builder()
+         * DocumentExtractor.builder()
          *     .filtering()
          *     .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
          *     .build()
          * ```
          */
         @kotlin.jvm.JvmStatic
-        public fun builder(): ExtractionStrategyBuilder = ExtractionStrategyBuilder()
+        public fun builder(): DocumentExtractorBuilder = DocumentExtractorBuilder()
     }
 }
 
 /**
- * Intermediate builder that lets callers select a [ExtractionStrategy] implementation.
+ * Intermediate builder that lets callers select a [DocumentExtractor] implementation.
  */
-public class ExtractionStrategyBuilder {
+public class DocumentExtractorBuilder {
     /**
-     * Select the [FilteringExtractionStrategy] implementation.
-     * Returns its [FilteringExtractionStrategy.Builder] for further configuration.
+     * Select the [MessagePassingDocumentExtractor] implementation.
+     * Returns its [MessagePassingDocumentExtractor.Builder] for further configuration.
      */
-    public fun filtering(): FilteringExtractionStrategy.Builder = FilteringExtractionStrategy.Builder()
+    public fun filtering(): MessagePassingDocumentExtractor.Builder = MessagePassingDocumentExtractor.Builder()
 }

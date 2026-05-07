@@ -18,7 +18,7 @@ import ai.koog.rag.base.storage.search.SearchRequest
  * REFLECTIONS (actor-scoped).
  *
  * The outer query string produced by
- * [ai.koog.agents.longtermmemory.retrieval.QueryExtractor] is injected into each
+ * [ai.koog.agents.longtermmemory.retrieval.SearchQueryProvider] is injected into each
  * similarity subrequest at [create] time. Listing subrequests do not use the query.
  *
  * Example:

@@ -8,8 +8,8 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
-import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
+import ai.koog.agents.longtermmemory.ingestion.extraction.DocumentExtractor
+import ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocumentExtractor
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -101,7 +101,7 @@ class LongTermMemoryIngestionTest {
     }
 
     // ==========================================
-    // Default FilteringExtractionStrategy (User + Assistant)
+    // Default MessagePassingDocumentExtractor (User + Assistant)
     // ==========================================
 
     @Test
@@ -121,7 +121,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy()
+                    documentExtractor = MessagePassingDocumentExtractor()
                 }
             }
         }
@@ -162,7 +162,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
+                    documentExtractor = MessagePassingDocumentExtractor(setOf(Message.Role.Assistant))
                 }
             }
         }
@@ -194,7 +194,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
+                    documentExtractor = MessagePassingDocumentExtractor(setOf(Message.Role.User))
                 }
             }
         }
@@ -287,7 +287,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
+                    documentExtractor = MessagePassingDocumentExtractor(setOf(Message.Role.Assistant))
                 }
             }
         }
@@ -338,7 +338,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
+                    documentExtractor = MessagePassingDocumentExtractor(setOf(Message.Role.Assistant))
                 }
             }
         }
@@ -354,7 +354,7 @@ class LongTermMemoryIngestionTest {
     }
 
     // ==========================================
-    // Custom ExtractionStrategy
+    // Custom DocumentExtractor
     // ==========================================
 
     @Test
@@ -374,7 +374,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = ExtractionStrategy { messages ->
+                    documentExtractor = DocumentExtractor { messages ->
                         messages.filter { it.role == Message.Role.Assistant }
                             .flatMap { it.content.split(". ") }
                             .map { it.trim().removeSuffix(".") }
@@ -415,7 +415,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = ExtractionStrategy { emptyList() }
+                    documentExtractor = DocumentExtractor { emptyList() }
                 }
             }
         }
@@ -447,7 +447,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy()
+                    documentExtractor = MessagePassingDocumentExtractor()
                 }
             }
         }
@@ -493,7 +493,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy()
+                    documentExtractor = MessagePassingDocumentExtractor()
                 }
             }
         }

@@ -8,7 +8,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
+import ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocumentExtractor
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
@@ -414,7 +414,7 @@ class LongTermMemoryRetrievalTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy()
+                    documentExtractor = MessagePassingDocumentExtractor()
                 }
             }
         }

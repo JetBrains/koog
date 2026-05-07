@@ -90,14 +90,14 @@ Use retrieval without ingestion when you have a pre-populated knowledge base:
 | `UserPromptAugmenter()` | Inserts context as a separate user message before the last user message |
 | `PromptAugmenter { prompt, context -> ... }` | Custom augmentation via lambda |
 
-### Query Extractors
+### Search Query Providers
 
-By default, the retrieval flow uses the last user message as the search query. You can customize this by providing a `QueryExtractor`:
+By default, the retrieval flow uses the last user message as the search query. You can customize this by providing a `SearchQueryProvider`:
 
-| Extractor | Behavior |
+| Provider | Behavior |
 |---|---|
-| `LastUserMessageQueryExtractor()` | Uses the content of the last user message (default) |
-| `QueryExtractor { prompt -> ... }` | Custom extraction via lambda |
+| `LastUserMessageQueryProvider()` | Uses the content of the last user message (default) |
+| `SearchQueryProvider { prompt -> ... }` | Custom query derivation via lambda |
 
 === "Kotlin"
 
@@ -105,7 +105,7 @@ By default, the retrieval flow uses the last user message as the search query. Y
     install(LongTermMemory) {
         retrieval {
             storage = myStorage
-            queryExtractor = QueryExtractor { prompt ->
+            searchQueryProvider = SearchQueryProvider { prompt ->
                 // Combine the last two user messages as the search query
                 prompt.messages
                     .filter { it.role == Message.Role.User }
@@ -122,7 +122,7 @@ By default, the retrieval flow uses the last user message as the search query. Y
     ```java
     var retrievalSettings = new LongTermMemory.RetrievalSettingsBuilder()
         .withStorage(myStorage)
-        .withQueryExtractor(prompt -> {
+        .withSearchQueryProvider(prompt -> {
             var userMessages = prompt.getMessages().stream()
                 .filter(m -> m.getRole() == Message.Role.User)
                 .toList();
@@ -150,7 +150,7 @@ Use ingestion without retrieval to build up a memory storage over time:
         ingestion {
             storage = myVectorDbStorage
             namespace = "my-collection"  // optional: scope to a specific namespace/collection
-            extractionStrategy = FilteringExtractionStrategy(
+            documentExtractor = MessagePassingDocumentExtractor(
                 messageRolesToExtract = setOf(Message.Role.User, Message.Role.Assistant)
             )
         }
@@ -162,8 +162,8 @@ Use ingestion without retrieval to build up a memory storage over time:
     ```java
     var ingestionSettings = new LongTermMemory.IngestionSettingsBuilder()
         .withStorage(myVectorDbStorage)
-        .withExtractionStrategy(
-            ExtractionStrategy.builder()
+        .withDocumentExtractor(
+            DocumentExtractor.builder()
                 .filtering()
                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
                 .build()
@@ -171,7 +171,7 @@ Use ingestion without retrieval to build up a memory storage over time:
         .build();
     ```
 
-Ingestion runs once when the agent run completes: the final accumulated session prompt/history is passed to the configured `extractionStrategy` as a single batch.
+Ingestion runs once when the agent run completes: the final accumulated session prompt/history is passed to the configured `documentExtractor` as a single batch.
 
 ## Disabling Automatic Behavior
 
@@ -242,12 +242,12 @@ val myNode by node<String, Unit> {
 }
 ```
 
-## Custom Extraction Strategy
+## Custom Document Extractor
 
-Implement `ExtractionStrategy` to control how messages are transformed before storage:
+Implement `DocumentExtractor` to control how messages are transformed before storage:
 
 ```kotlin
-val summarizingExtractor = ExtractionStrategy { messages ->
+val summarizingExtractor = DocumentExtractor { messages ->
     messages
         .filter { it.role == Message.Role.Assistant }
         .map { MemoryRecord(content = summarize(it.content)) }
@@ -256,7 +256,7 @@ val summarizingExtractor = ExtractionStrategy { messages ->
 install(LongTermMemory) {
     ingestion {
         storage = myStorage
-        extractionStrategy = summarizingExtractor
+        documentExtractor = summarizingExtractor
     }
 }
 ```

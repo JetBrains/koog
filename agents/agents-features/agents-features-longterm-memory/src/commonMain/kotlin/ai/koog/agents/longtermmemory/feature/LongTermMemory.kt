@@ -14,11 +14,11 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.longtermmemory.ingestion.IngestionSettings
-import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
-import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
-import ai.koog.agents.longtermmemory.retrieval.LastUserMessageQueryExtractor
-import ai.koog.agents.longtermmemory.retrieval.QueryExtractor
+import ai.koog.agents.longtermmemory.ingestion.extraction.DocumentExtractor
+import ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocumentExtractor
+import ai.koog.agents.longtermmemory.retrieval.LastUserMessageQueryProvider
 import ai.koog.agents.longtermmemory.retrieval.RetrievalSettings
+import ai.koog.agents.longtermmemory.retrieval.SearchQueryProvider
 import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
@@ -104,7 +104,7 @@ public class LongTermMemory(
          * Example usage:
          * ```kotlin
          * ingestion {
-         *     extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
+         *     documentExtractor = MessagePassingDocumentExtractor(setOf(Message.Role.User))
          * }
          * ```
          */
@@ -132,12 +132,12 @@ public class LongTermMemory(
 
         /**
          * The extractor that defines how to derive the search query from the prompt.
-         * Defaults to [LastUserMessageQueryExtractor].
+         * Defaults to [LastUserMessageQueryProvider].
          *
-         * @see QueryExtractor
-         * @see LastUserMessageQueryExtractor
+         * @see SearchQueryProvider
+         * @see LastUserMessageQueryProvider
          */
-        public var queryExtractor: QueryExtractor = LastUserMessageQueryExtractor()
+        public var searchQueryProvider: SearchQueryProvider = LastUserMessageQueryProvider()
 
         /**
          * The search strategy that defines how to search the retrieval storage.
@@ -182,10 +182,10 @@ public class LongTermMemory(
         public fun withStorage(storage: SearchStorage<TextDocument, SearchRequest>): RetrievalSettingsBuilder = apply { this.storage = storage }
 
         /**
-         * Fluent setter for [queryExtractor].
+         * Fluent setter for [searchQueryProvider].
          */
-        public fun withQueryExtractor(queryExtractor: QueryExtractor): RetrievalSettingsBuilder =
-            apply { this.queryExtractor = queryExtractor }
+        public fun withSearchQueryProvider(searchQueryProvider: SearchQueryProvider): RetrievalSettingsBuilder =
+            apply { this.searchQueryProvider = searchQueryProvider }
 
         /**
          * Fluent setter for [searchStrategy].
@@ -224,7 +224,7 @@ public class LongTermMemory(
             val retrievalStorage = requireNotNull(storage) { "storage must be set in retrieval { } block" }
             return RetrievalSettings(
                 retrievalStorage,
-                queryExtractor,
+                searchQueryProvider,
                 searchStrategy,
                 promptAugmenter,
                 enableAutomaticRetrieval,
@@ -248,22 +248,22 @@ public class LongTermMemory(
          * The extractor that defines how to transform messages into memory records.
          *
          * Pre-built ingesters are available:
-         * - [ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy] - Filters messages by role
+         * - [ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocumentExtractor] - Filters messages by role
          *
          * Example usage:
          * ```kotlin
          * // Use pre-built extractor with parameters
-         * extractionStrategy = FilteringExtractionStrategy(
+         * documentExtractor = MessagePassingDocumentExtractor(
          *     messageRolesToExtract = setOf(Message.Role.User)
          * )
          *
          * // Or use lambda for custom logic
-         * extractionStrategy = ExtractionStrategy { messages ->
+         * documentExtractor = DocumentExtractor { messages ->
          *     messages.map { TextDocument(content = it.content) }
          * }
          * ```
          */
-        public var extractionStrategy: ExtractionStrategy = FilteringExtractionStrategy()
+        public var documentExtractor: DocumentExtractor = MessagePassingDocumentExtractor()
 
         /**
          * When `true` (default), ingestion happens automatically on agent completion.
@@ -291,10 +291,10 @@ public class LongTermMemory(
         public fun withStorage(storage: WriteStorage<TextDocument>): IngestionSettingsBuilder = apply { this.storage = storage }
 
         /**
-         * Fluent setter for [extractionStrategy].
+         * Fluent setter for [documentExtractor].
          */
-        public fun withExtractionStrategy(extractionStrategy: ExtractionStrategy): IngestionSettingsBuilder =
-            apply { this.extractionStrategy = extractionStrategy }
+        public fun withDocumentExtractor(documentExtractor: DocumentExtractor): IngestionSettingsBuilder =
+            apply { this.documentExtractor = documentExtractor }
 
         /**
          * Fluent setter for [enableAutomaticIngestion].
@@ -321,7 +321,7 @@ public class LongTermMemory(
             val ingestionStorage = requireNotNull(storage) { "storage must be set in ingestion { } block" }
             return IngestionSettings(
                 ingestionStorage,
-                extractionStrategy,
+                documentExtractor,
                 enableAutomaticIngestion,
                 namespace,
                 failurePolicy,
@@ -427,7 +427,7 @@ public class LongTermMemory(
             ingestion: IngestionSettings,
             messages: List<Message>,
         ) {
-            val records = ingestion.extractionStrategy.extract(messages)
+            val records = ingestion.documentExtractor.extract(messages)
             if (records.isEmpty()) {
                 return
             }
@@ -449,13 +449,13 @@ public class LongTermMemory(
         }
 
         /**
-         * Returns an augmented prompt only if there are relevant memory records for the query extracted by queryExtractor.
+         * Returns an augmented prompt only if there are relevant memory records for the query provided by searchQueryProvider.
          */
         private suspend fun getAugmentedPromptOrNull(
             prompt: Prompt,
             retrieval: RetrievalSettings,
         ): Prompt? {
-            val query = retrieval.queryExtractor.extract(prompt) ?: return null
+            val query = retrieval.searchQueryProvider.provide(prompt) ?: return null
 
             val searchResults = try {
                 val request = retrieval.searchStrategy.create(query)

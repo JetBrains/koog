@@ -13,9 +13,9 @@ import ai.koog.rag.base.TextDocument
  * @property messageRolesToExtract The set of message roles to extract and persist.
  *   Defaults to `setOf(Message.Role.User, Message.Role.Assistant)`.
  */
-public class FilteringExtractionStrategy(
+public class MessagePassingDocumentExtractor(
     public val messageRolesToExtract: Set<Message.Role> = setOf(Message.Role.User, Message.Role.Assistant),
-) : ExtractionStrategy {
+) : DocumentExtractor {
 
     private companion object {
         private const val MESSAGE_ROLE_FIELD_NAME = "messageRole"
@@ -23,21 +23,21 @@ public class FilteringExtractionStrategy(
     }
 
     /**
-     * Builder for [FilteringExtractionStrategy].
+     * Builder for [MessagePassingDocumentExtractor].
      *
-     * Provides a fluent API for constructing a [FilteringExtractionStrategy],
+     * Provides a fluent API for constructing a [MessagePassingDocumentExtractor],
      * which is convenient for Java users.
      *
      * Example usage (Java):
      * ```java
-     * new FilteringExtractionStrategy.Builder()
+     * new MessagePassingDocumentExtractor.Builder()
      *     .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
      *     .build()
      * ```
      */
     public class Builder {
         /**
-         * The set of message roles to extract. Defaults to User and Assistant.
+         * The set of message roles to provide. Defaults to User and Assistant.
          */
         public var extractRoles: Set<Message.Role> = setOf(Message.Role.User, Message.Role.Assistant)
 
@@ -45,9 +45,9 @@ public class FilteringExtractionStrategy(
         public fun withExtractRoles(roles: Set<Message.Role>): Builder =
             apply { this.extractRoles = roles }
 
-        /** Builds a [FilteringExtractionStrategy] from the current settings. */
-        public fun build(): FilteringExtractionStrategy =
-            FilteringExtractionStrategy(extractRoles)
+        /** Builds a [MessagePassingDocumentExtractor] from the current settings. */
+        public fun build(): MessagePassingDocumentExtractor =
+            MessagePassingDocumentExtractor(extractRoles)
     }
 
     override suspend fun extract(messages: List<Message>): List<TextDocument> {

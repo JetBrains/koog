@@ -1,7 +1,7 @@
 package ai.koog.agents.longtermmemory.feature;
 
 import ai.koog.agents.core.agent.AIAgent;
-import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy;
+import ai.koog.agents.longtermmemory.ingestion.extraction.DocumentExtractor;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
 import ai.koog.agents.testing.tools.MockPromptExecutor;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
@@ -40,8 +40,8 @@ public class LongTermMemoryIngestionJavaTest {
                 config.ingestion(
                     new LongTermMemory.IngestionSettingsBuilder()
                         .withStorage(storage)
-                        .withExtractionStrategy(
-                            ExtractionStrategy.builder()
+                        .withDocumentExtractor(
+                            DocumentExtractor.builder()
                                 .filtering()
                                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
                                 .build()
@@ -73,8 +73,8 @@ public class LongTermMemoryIngestionJavaTest {
                 config.ingestion(
                     new LongTermMemory.IngestionSettingsBuilder()
                         .withStorage(storage)
-                        .withExtractionStrategy(
-                            ExtractionStrategy.builder()
+                        .withDocumentExtractor(
+                            DocumentExtractor.builder()
                                 .filtering()
                                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
                                 .build()
