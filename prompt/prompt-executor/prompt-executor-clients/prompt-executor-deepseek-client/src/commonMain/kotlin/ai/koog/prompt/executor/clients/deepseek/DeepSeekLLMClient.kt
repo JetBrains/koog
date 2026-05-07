@@ -1,8 +1,7 @@
 package ai.koog.prompt.executor.clients.deepseek
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.KoogHttpClientFactory
-import ai.koog.http.client.ktor.KtorHttpClientFactory
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -55,7 +54,7 @@ public class DeepSeekClientSettings(
  * @param settings The base URL, chat completion path, and timeouts for the DeepSeek API,
  * defaults to "https://api.deepseek.com" and 900s
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
- *   that accepts an API key and a [KoogHttpClientFactory] to create a client with standard defaults.
+ *   that accepts an API key and a [KoogHttpClient.Factory] to create a client with standard defaults.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public class DeepSeekLLMClient @JvmOverloads constructor(
@@ -75,7 +74,7 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
     public constructor(
         apiKey: String,
         settings: DeepSeekClientSettings = DeepSeekClientSettings(),
-        httpClientFactory: KoogHttpClientFactory,
+        httpClientFactory: KoogHttpClient.Factory,
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
@@ -94,7 +93,7 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,
-        httpClient = createConfiguredHttpClient(apiKey, settings, KtorHttpClientFactory(baseClient), clientName = DEEPSEEK_CLIENT_NAME),
+        httpClient = createConfiguredHttpClient(apiKey, settings, KtorKoogHttpClient.Factory(baseClient), clientName = DEEPSEEK_CLIENT_NAME),
         clock = clock,
         toolsConverter = toolsConverter
     )

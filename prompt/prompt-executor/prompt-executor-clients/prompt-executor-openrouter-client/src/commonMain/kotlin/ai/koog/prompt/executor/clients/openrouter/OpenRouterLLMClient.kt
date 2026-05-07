@@ -1,8 +1,7 @@
 package ai.koog.prompt.executor.clients.openrouter
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.KoogHttpClientFactory
-import ai.koog.http.client.ktor.KtorHttpClientFactory
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -62,7 +61,7 @@ public class OpenRouterClientSettings(
  *
  * @param settings The base URL and timeouts for the OpenRouter API, defaults to "https://openrouter.ai" and 900s
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
- *   that accepts an API key and a [KoogHttpClientFactory] to create a client with standard defaults.
+ *   that accepts an API key and a [KoogHttpClient.Factory] to create a client with standard defaults.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public class OpenRouterLLMClient @JvmOverloads constructor(
@@ -82,12 +81,12 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
     public constructor(
         apiKey: String,
         settings: OpenRouterClientSettings = OpenRouterClientSettings(),
-        httpClientFactory: KoogHttpClientFactory,
+        httpClientFactory: KoogHttpClient.Factory,
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ) : this(
         settings = settings,
-        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(
+        httpClient = createConfiguredHttpClient(
             apiKey = apiKey,
             settings = settings,
             httpClientFactory = httpClientFactory,
@@ -106,10 +105,10 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ) : this(
         settings = settings,
-        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(
+        httpClient = createConfiguredHttpClient(
             apiKey = apiKey,
             settings = settings,
-            httpClientFactory = KtorHttpClientFactory(baseClient),
+            httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
             clientName = OPENROUTER_CLIENT_NAME
         ),
         clock = clock,

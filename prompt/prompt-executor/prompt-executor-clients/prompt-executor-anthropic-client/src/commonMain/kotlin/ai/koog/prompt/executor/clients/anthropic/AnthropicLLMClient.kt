@@ -4,8 +4,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.KoogHttpClientFactory
-import ai.koog.http.client.ktor.KtorHttpClientFactory
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -92,7 +91,7 @@ public class AnthropicClientSettings(
  * @param settings Configurable settings for the Anthropic client, which include the base URL and other options.
  * @param httpClient A preconfigured Koog HTTP client used for API calls. Must have authentication and other
  *   request defaults already embedded. To create a client with standard defaults, use the secondary
- *   constructor that accepts an API key and a [KoogHttpClientFactory].
+ *   constructor that accepts an API key and a [KoogHttpClient.Factory].
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public open class AnthropicLLMClient @JvmOverloads constructor(
@@ -121,7 +120,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
     public constructor(
         apiKey: String,
         settings: AnthropicClientSettings = AnthropicClientSettings(),
-        httpClientFactory: KoogHttpClientFactory,
+        httpClientFactory: KoogHttpClient.Factory,
         clock: KoogClock = KoogClock.System
     ) : this(
         settings = settings,
@@ -153,7 +152,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
     ) : this(
         apiKey = apiKey,
         settings = settings,
-        httpClientFactory = KtorHttpClientFactory(baseClient),
+        httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
         clock = clock
     )
 

@@ -2,17 +2,22 @@ package ai.koog.http.client.ktor
 
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
-import ai.koog.http.client.KoogHttpClientFactory
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngineConfig
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -21,8 +26,12 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.URLBuilder
+import io.ktor.http.contentType
+import io.ktor.http.encodedPath
 import io.ktor.http.headers
 import io.ktor.http.isSuccess
+import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.reflect.TypeInfo
 import io.ktor.utils.io.CancellationException
@@ -193,6 +202,63 @@ public class KtorKoogHttpClient internal constructor(
         logger.debug { "Closing $clientName" }
         ktorClient.close()
     }
+
+    /**
+     * [KoogHttpClient.Factory] implementation backed by Ktor [HttpClient].
+     *
+     * @property baseClient Base Ktor client used to create configured clients.
+     * @property withSse Whether created clients should install Ktor SSE support.
+     * @property logger Logger used by created clients.
+     */
+    public class Factory(
+        private val baseClient: HttpClient = HttpClient(),
+        private val withSse: Boolean = true,
+        private val logger: KLogger = KotlinLogging.logger {}
+    ) : KoogHttpClient.Factory {
+
+        @JvmOverloads
+        override fun create(
+            clientName: String,
+            baseUrl: String,
+            headers: Map<String, String>,
+            queryParameters: Map<String, String>,
+            requestTimeoutMillis: Long,
+            connectTimeoutMillis: Long,
+            socketTimeoutMillis: Long,
+            json: Json
+        ): KtorKoogHttpClient = KtorKoogHttpClient(
+            clientName = clientName,
+            logger = logger,
+            baseClient = baseClient
+        ) {
+            val normalizedBaseUrl = URLBuilder(urlString = baseUrl).apply {
+                if (!encodedPath.endsWith("/")) {
+                    encodedPath += "/"
+                }
+            }.buildString()
+
+            defaultRequest {
+                url.takeFrom(normalizedBaseUrl)
+                contentType(ContentType.Application.Json)
+                headers.forEach { (name, value) -> header(name, value) }
+                queryParameters.forEach { (name, value) -> url.parameters.append(name, value) }
+            }
+
+            if (withSse) {
+                this.install(SSE)
+            }
+
+            this.install(ContentNegotiation) {
+                json(json = json)
+            }
+
+            this.install(HttpTimeout) {
+                this.requestTimeoutMillis = requestTimeoutMillis
+                this.connectTimeoutMillis = connectTimeoutMillis
+                this.socketTimeoutMillis = socketTimeoutMillis
+            }
+        }
+    }
 }
 
 /**
@@ -237,8 +303,8 @@ public fun KoogHttpClient.Companion.fromKtorClient(
  * @return A `KoogHttpClient` instance configured with the specified parameters and options.
  */
 @Deprecated(
-    "Use KtorHttpClientFactory instead",
-    ReplaceWith("KtorHttpClientFactory(baseClient, withSse).create(clientName, baseUrl, headers, queryParameters, requestTimeoutMillis, connectTimeoutMillis, socketTimeoutMillis, json)")
+    "Use KtorKoogHttpClient.Factory instead",
+    ReplaceWith("KtorKoogHttpClient.Factory(baseClient, withSse).create(clientName, baseUrl, headers, queryParameters, requestTimeoutMillis, connectTimeoutMillis, socketTimeoutMillis, json)")
 )
 @Experimental
 @JvmOverloads
@@ -247,15 +313,15 @@ public fun KoogHttpClient.Companion.fromKtorClient(
     logger: KLogger,
     baseClient: HttpClient = HttpClient(),
     baseUrl: String,
-    requestTimeoutMillis: Long = KoogHttpClientFactory.DEFAULT_REQUEST_TIMEOUT_MS,
-    connectTimeoutMillis: Long = KoogHttpClientFactory.DEFAULT_CONNECT_TIMEOUT_MS,
-    socketTimeoutMillis: Long = KoogHttpClientFactory.DEFAULT_SOCKET_TIMEOUT_MS,
+    requestTimeoutMillis: Long = KoogHttpClient.Factory.DEFAULT_REQUEST_TIMEOUT_MS,
+    connectTimeoutMillis: Long = KoogHttpClient.Factory.DEFAULT_CONNECT_TIMEOUT_MS,
+    socketTimeoutMillis: Long = KoogHttpClient.Factory.DEFAULT_SOCKET_TIMEOUT_MS,
     json: Json,
     headers: Map<String, String> = emptyMap(),
     queryParameters: Map<String, String> = emptyMap(),
     withSse: Boolean = true,
 ): KtorKoogHttpClient =
-    KtorHttpClientFactory(baseClient, withSse, logger).create(
+    KtorKoogHttpClient.Factory(baseClient, withSse, logger).create(
         clientName,
         baseUrl,
         headers,

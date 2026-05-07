@@ -2,8 +2,7 @@ package ai.koog.prompt.executor.clients.openai.base
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.KoogHttpClientFactory
-import ai.koog.http.client.ktor.KtorHttpClientFactory
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.http.client.post
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -67,7 +66,7 @@ public abstract class OpenAIBaseSettings(
  * @param settings Configuration settings including base URL, API paths, and timeout configuration.
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Must have authentication
  *   and other request defaults (base URL, timeouts, headers) already embedded. To use a factory-backed client
- *   with standard OpenAI-compatible defaults, use the secondary constructor that accepts a [KoogHttpClientFactory]
+ *   with standard OpenAI-compatible defaults, use the secondary constructor that accepts a [KoogHttpClient.Factory]
  *   and an API key.
  * @param clock [KoogClock] used for tracking response metadata timestamps. Defaults to [KoogClock.System].
  */
@@ -92,14 +91,14 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     protected val json: Json = defaultJson
 
     /**
-     * Secondary constructor for creating a client backed by a [KoogHttpClientFactory].
+     * Secondary constructor for creating a client backed by a [KoogHttpClient.Factory].
      * Configures authentication, base URL, timeouts, and JSON serialization automatically from [apiKey] and [settings].
      */
     @JvmOverloads
     public constructor(
         apiKey: String,
         settings: OpenAIBaseSettings,
-        httpClientFactory: KoogHttpClientFactory,
+        httpClientFactory: KoogHttpClient.Factory,
         clientName: String,
         clock: KoogClock = KoogClock.System,
         logger: KLogger,
@@ -116,7 +115,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
      * Secondary constructor for creating a client backed by a Ktor [HttpClient].
      * Configures authentication, base URL, timeouts, and JSON serialization automatically from [apiKey] and [settings].
      */
-    @Deprecated("Use constructor with KoogHttpClientFactory and provide KtorHttpClientFactory")
+    @Deprecated("Use constructor with KoogHttpClient.Factory and provide KtorKoogHttpClient.Factory")
     @JvmOverloads
     public constructor(
         apiKey: String,
@@ -150,7 +149,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         public fun createConfiguredHttpClient(
             apiKey: String,
             settings: OpenAIBaseSettings,
-            httpClientFactory: KoogHttpClientFactory,
+            httpClientFactory: KoogHttpClient.Factory,
             clientName: String
         ): KoogHttpClient = httpClientFactory.create(
             clientName = clientName,
@@ -164,10 +163,10 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         )
 
         @Deprecated(
-            "Use createConfiguredHttpClient with KoogHttpClientFactory",
+            "Use createConfiguredHttpClient with KoogHttpClient.Factory",
             ReplaceWith(
-                "createConfiguredHttpClient(apiKey, settings, KtorHttpClientFactory(), clientName)",
-                "ai.koog.http.client.ktor.KtorHttpClientFactory"
+                "createConfiguredHttpClient(apiKey, settings, KtorKoogHttpClient.Factory(), clientName)",
+                "ai.koog.http.client.ktor.KtorKoogHttpClient.Factory"
             ),
         )
         public fun createConfiguredHttpClient(
@@ -178,7 +177,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         ): KoogHttpClient = createConfiguredHttpClient(
             apiKey = apiKey,
             settings = settings,
-            httpClientFactory = KtorHttpClientFactory(baseClient),
+            httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
             clientName = clientName
         )
     }

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 @Execution(ExecutionMode.SAME_THREAD)
 class KtorKoogHttpClientFactoryTest : KtorKoogHttpClientTestBase() {
     override fun createClient(): KoogHttpClient {
-        return KtorHttpClientFactory().create(clientName = "TestClient")
+        return KtorKoogHttpClient.Factory().create(clientName = "TestClient")
     }
 
     override fun ktorClient(
@@ -20,7 +20,7 @@ class KtorKoogHttpClientFactoryTest : KtorKoogHttpClientTestBase() {
         queryParameters: Map<String, String>,
         withSse: Boolean
     ): KtorKoogHttpClient {
-        return KtorHttpClientFactory(baseClient, withSse).create(
+        return KtorKoogHttpClient.Factory(baseClient, withSse).create(
             clientName = "TestClient",
             baseUrl = baseUrl,
             json = json,

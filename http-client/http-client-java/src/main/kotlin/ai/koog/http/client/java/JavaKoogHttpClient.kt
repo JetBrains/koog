@@ -4,6 +4,7 @@ import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -255,6 +256,36 @@ public class JavaKoogHttpClient internal constructor(
     }
 
     override fun close() {}
+
+    public class Factory(
+        private val logger: KLogger = KotlinLogging.logger {}
+    ) : KoogHttpClient.Factory {
+        override fun create(
+            clientName: String,
+            baseUrl: String,
+            headers: Map<String, String>,
+            queryParameters: Map<String, String>,
+            requestTimeoutMillis: Long,
+            connectTimeoutMillis: Long,
+            socketTimeoutMillis: Long,
+            json: Json
+        ): JavaKoogHttpClient {
+            val configuredClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofMillis(connectTimeoutMillis))
+                .build()
+
+            return JavaKoogHttpClient(
+                clientName = clientName,
+                logger = logger,
+                httpClient = configuredClient,
+                json = json,
+                baseUrl = baseUrl,
+                headers = headers,
+                queryParameters = queryParameters,
+                requestTimeoutMillis = requestTimeoutMillis
+            )
+        }
+    }
 }
 
 /**
@@ -262,7 +293,7 @@ public class JavaKoogHttpClient internal constructor(
  *
  * Use this function when you have a pre-configured [HttpClient] instance and want to wrap it
  * in a [KoogHttpClient]. For standard use cases where the client should be built from
- * configuration, prefer [JavaHttpClientFactory] instead.
+ * configuration, prefer [JavaHttpClient.Factory] instead.
  *
  * @param clientName The name of the client instance, used for identifying or logging client operations.
  * @param logger A `KLogger` instance used for logging client events and errors.

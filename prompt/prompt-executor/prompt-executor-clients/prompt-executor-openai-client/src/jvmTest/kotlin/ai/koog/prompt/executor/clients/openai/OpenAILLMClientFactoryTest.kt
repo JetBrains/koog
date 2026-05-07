@@ -1,7 +1,6 @@
 package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.KoogHttpClientFactory
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.test.utils.CapturingKoogHttpClient
 import kotlinx.serialization.json.Json
@@ -36,7 +35,7 @@ class OpenAILLMClientFactoryTest {
         assertEquals(3_000L, factory.socketTimeoutMillis)
     }
 
-    private class CapturingFactory : KoogHttpClientFactory {
+    private class CapturingFactory : KoogHttpClient.Factory {
         lateinit var clientName: String
         lateinit var baseUrl: String
         lateinit var headers: Map<String, String>

@@ -62,7 +62,7 @@ abstract class OkHttpKoogHttpClientTestBase : BaseKoogHttpClientTest() {
                 )
             )
 
-            val client = OkHttpKoogClientFactory().create(
+            val client = OkHttpKoogHttpClient.Factory().create(
                 clientName = "TestClient",
                 baseUrl = mockServer.url("/api"),
                 headers = mapOf("Authorization" to "Bearer token"),

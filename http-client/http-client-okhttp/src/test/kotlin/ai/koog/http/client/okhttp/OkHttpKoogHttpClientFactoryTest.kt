@@ -7,6 +7,6 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 @Execution(ExecutionMode.SAME_THREAD)
 class OkHttpKoogHttpClientFactoryTest : OkHttpKoogHttpClientTestBase() {
     override fun createClient(): KoogHttpClient {
-        return OkHttpKoogClientFactory().create(clientName = "TestClient")
+        return OkHttpKoogHttpClient.Factory().create(clientName = "TestClient")
     }
 }

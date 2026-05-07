@@ -4,6 +4,7 @@ import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +26,7 @@ import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
 import org.jetbrains.annotations.ApiStatus.Experimental
+import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 
 /**
@@ -222,6 +224,43 @@ public class OkHttpKoogHttpClient internal constructor(
         logger.debug { "Closing $clientName" }
         okHttpClient.dispatcher.executorService.shutdown()
     }
+
+    /**
+     * [ai.koog.http.client.KoogHttpClient.Factory] implementation backed by OkHttp [okhttp3.OkHttpClient].
+     *
+     * @property logger Logger used by created clients.
+     */
+    public class Factory(
+        private val logger: KLogger = KotlinLogging.logger {}
+    ) : KoogHttpClient.Factory {
+        override fun create(
+            clientName: String,
+            baseUrl: String,
+            headers: Map<String, String>,
+            queryParameters: Map<String, String>,
+            requestTimeoutMillis: Long,
+            connectTimeoutMillis: Long,
+            socketTimeoutMillis: Long,
+            json: Json
+        ): OkHttpKoogHttpClient {
+            val configuredClient = OkHttpClient.Builder()
+                .callTimeout(requestTimeoutMillis, TimeUnit.MILLISECONDS)
+                .connectTimeout(connectTimeoutMillis, TimeUnit.MILLISECONDS)
+                .readTimeout(socketTimeoutMillis, TimeUnit.MILLISECONDS)
+                .writeTimeout(socketTimeoutMillis, TimeUnit.MILLISECONDS)
+                .build()
+
+            return OkHttpKoogHttpClient(
+                clientName = clientName,
+                logger = logger,
+                okHttpClient = configuredClient,
+                json = json,
+                baseUrl = baseUrl,
+                headers = headers,
+                queryParameters = queryParameters
+            )
+        }
+    }
 }
 
 /**
@@ -229,7 +268,7 @@ public class OkHttpKoogHttpClient internal constructor(
  *
  * Use this function when you have a pre-configured [OkHttpClient] instance and want to wrap it
  * in a [KoogHttpClient]. For standard use cases where the client should be built from
- * configuration, prefer [OkHttpKoogClientFactory] instead.
+ * configuration, prefer [OkHttpKoogHttpClient.Factory] instead.
  *
  * @param clientName The name of the client instance, used for identifying or logging client operations.
  * @param logger A `KLogger` instance used for logging client events and errors.
