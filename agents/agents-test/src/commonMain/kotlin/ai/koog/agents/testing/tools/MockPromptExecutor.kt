@@ -4,8 +4,28 @@ import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.ExecutionCompleted
+import ai.koog.prompt.executor.model.ExecutionDispatched
+import ai.koog.prompt.executor.model.ExecutionFailed
+import ai.koog.prompt.executor.model.ExecutionRequested
+import ai.koog.prompt.executor.model.ModerationCompleted
+import ai.koog.prompt.executor.model.ModerationDispatched
+import ai.koog.prompt.executor.model.ModerationFailed
+import ai.koog.prompt.executor.model.ModerationRequested
+import ai.koog.prompt.executor.model.MultipleChoicesCompleted
+import ai.koog.prompt.executor.model.MultipleChoicesDispatched
+import ai.koog.prompt.executor.model.MultipleChoicesFailed
+import ai.koog.prompt.executor.model.MultipleChoicesRequested
+import ai.koog.prompt.executor.model.ObservablePromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutionContext
+import ai.koog.prompt.executor.model.PromptExecutorEvent
+import ai.koog.prompt.executor.model.StreamingCompleted
+import ai.koog.prompt.executor.model.StreamingDispatched
+import ai.koog.prompt.executor.model.StreamingFailed
+import ai.koog.prompt.executor.model.StreamingFrameReceived
+import ai.koog.prompt.executor.model.StreamingRequested
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -16,6 +36,8 @@ import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlin.jvm.JvmStatic
 
@@ -37,7 +59,7 @@ internal class ResponseMatcher<TResponse>(
 )
 
 /**
- * A mock implementation of [PromptExecutor] used for testing.
+ * A mock implementation of [ObservablePromptExecutor] used for testing.
  *
  * This class simulates an LLM by returning predefined responses based on the input prompt.
  * It supports different types of matching:
@@ -68,12 +90,15 @@ public class MockPromptExecutor internal constructor(
     internal val toolActions: List<ToolCondition<*, *>> = emptyList(),
     private val clock: KoogClock = KoogClock.System,
     private val tokenizer: Tokenizer? = null
-) : PromptExecutor() {
+) : ObservablePromptExecutor() {
     public companion object {
         @JvmStatic
         @JavaAPI
         public fun builder(serializer: JSONSerializer): MockExecutorBuilder = MockExecutorBuilder(serializer)
     }
+
+    private val eventSink = MutableSharedFlow<PromptExecutorEvent>(extraBufferCapacity = 64)
+    override val events: Flow<PromptExecutorEvent> = eventSink.asSharedFlow()
 
     /**
      * Executes a prompt with tools and returns a list of responses.
@@ -81,59 +106,125 @@ public class MockPromptExecutor internal constructor(
      * @param prompt The prompt to execute
      * @param model The LLM model to use (ignored in mock implementation)
      * @param tools The list of tools available for the execution
+     * @param context The execution context carrying the prompt execution ID
      * @return A list containing a single response
      */
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: PromptExecutionContext,
+    ): List<Message.Response> {
         logger.debug { "Executing prompt with tools: ${tools.map { it.name }}" }
-
-        return handlePrompt(prompt)
+        eventSink.emit(ExecutionRequested(context, prompt, model, tools))
+        eventSink.emit(ExecutionDispatched(context, prompt, model, tools))
+        return try {
+            val responses = handlePrompt(prompt)
+            eventSink.emit(ExecutionCompleted(context, prompt, model, tools, responses))
+            responses
+        } catch (e: Throwable) {
+            eventSink.emit(ExecutionFailed(context, prompt, model, tools, e))
+            throw e
+        }
     }
 
     /**
-     * Executes a prompt and returns a flow of string responses.
-     *
-     * This implementation simply wraps the result of [execute] in a flow.
+     * Executes a prompt and returns a flow of stream frames.
      *
      * @param prompt The prompt to execute
      * @param model The LLM model to use (ignored in mock implementation)
-     * @param tools The list of tools available for the execution
-     * @return A flow containing a single string response
+     * @param tools The list of tools available for the streaming call
+     * @param context The execution context carrying the prompt execution ID
+     * @return A flow of [StreamFrame] objects
      */
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        context: PromptExecutionContext,
     ): Flow<StreamFrame> {
-        val lastMessage = getLastMessage(prompt)
-        val matchedStream = lastMessage?.let {
-            findExactResponse(it, streamResponseMatcher.exactMatches)
-                ?: findPartialResponse(it, streamResponseMatcher.partialMatches)
+        return flow {
+            eventSink.emit(StreamingRequested(context, prompt, model, tools))
+            eventSink.emit(StreamingDispatched(context, prompt, model, tools))
+            try {
+                val lastMessage = getLastMessage(prompt)
+                val matchedStream = lastMessage?.let {
+                    findExactResponse(it, streamResponseMatcher.exactMatches)
+                        ?: findPartialResponse(it, streamResponseMatcher.partialMatches)
+                }
+                val frames = matchedStream ?: flow {
+                    handlePrompt(prompt).toStreamFrames().forEach { emit(it) }
+                }
+                frames.collect { frame ->
+                    eventSink.emit(StreamingFrameReceived(context, prompt, model, tools, frame))
+                    emit(frame)
+                }
+            } catch (e: Throwable) {
+                eventSink.emit(StreamingFailed(context, prompt, model, tools, e))
+                throw e
+            } finally {
+                eventSink.emit(StreamingCompleted(context, prompt, model, tools))
+            }
         }
+    }
 
-        return matchedStream ?: flow {
-            execute(prompt = prompt, model = model).toStreamFrames().forEach { emit(it) }
+    /**
+     * Executes a multiple-choices prompt and returns a list of choices.
+     *
+     * @param prompt The prompt to execute
+     * @param model The LLM model to use (ignored in mock implementation)
+     * @param tools The list of tools available for the execution
+     * @param context The execution context carrying the prompt execution ID
+     * @return A list containing a single choice wrapping the mock response
+     */
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        context: PromptExecutionContext,
+    ): List<LLMChoice> {
+        eventSink.emit(MultipleChoicesRequested(context, prompt, model, tools))
+        eventSink.emit(MultipleChoicesDispatched(context, prompt, model, tools))
+        return try {
+            val choices = listOf(handlePrompt(prompt))
+            eventSink.emit(MultipleChoicesCompleted(context, prompt, model, tools, choices))
+            choices
+        } catch (e: Throwable) {
+            eventSink.emit(MultipleChoicesFailed(context, prompt, model, tools, e))
+            throw e
         }
     }
 
     /**
      * Processes a given prompt to determine if it adheres to moderation rules and returns a moderation result.
      *
-     * The method evaluates the last message in the prompt for exact and partial matches against predefined moderation rules.
-     * If no matches are found, it returns a default moderation response.
-     *
      * @param prompt The prompt containing the message to be moderated.
      * @param model The LLM model used for processing (ignored in this implementation).
+     * @param context The execution context carrying the prompt execution ID
      * @return The result of the moderation, based on matches or default rules.
      */
     override suspend fun moderate(
         prompt: Prompt,
-        model: LLModel
+        model: LLModel,
+        context: PromptExecutionContext,
     ): ModerationResult {
-        val lastMessage = getLastMessage(prompt) ?: return moderationResponseMatcher.defaultResponse
-
-        return findExactResponse(lastMessage, moderationResponseMatcher.exactMatches)
-            ?: findPartialResponse(lastMessage, moderationResponseMatcher.exactMatches)
-            ?: moderationResponseMatcher.defaultResponse
+        eventSink.emit(ModerationRequested(context, prompt, model))
+        eventSink.emit(ModerationDispatched(context, prompt, model))
+        return try {
+            val lastMessage = getLastMessage(prompt)
+            val result = if (lastMessage == null) {
+                moderationResponseMatcher.defaultResponse
+            } else {
+                findExactResponse(lastMessage, moderationResponseMatcher.exactMatches)
+                    ?: findPartialResponse(lastMessage, moderationResponseMatcher.exactMatches)
+                    ?: moderationResponseMatcher.defaultResponse
+            }
+            eventSink.emit(ModerationCompleted(context, prompt, model, result))
+            result
+        } catch (e: Throwable) {
+            eventSink.emit(ModerationFailed(context, prompt, model, e))
+            throw e
+        }
     }
 
     private fun getLastMessage(prompt: Prompt): Message? {
