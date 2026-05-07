@@ -7,13 +7,10 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
-import ai.koog.serialization.typeToken
-import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Factory functions for creating AIAgentService instances.
@@ -33,69 +30,49 @@ import kotlin.jvm.JvmName
  * @return A [GraphAIAgentService] instance configured with the provided parameters.
  */
 @OptIn(InternalAgentsApi::class)
-public inline fun <reified Input, reified Output> AIAgentService(
+@JvmSynthetic
+public fun <Input, Output> AIAgentService(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfig,
     strategy: AIAgentGraphStrategy<Input, Output>,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    noinline installFeatures: FeatureContext.() -> Unit = {},
+    installFeatures: FeatureContext.() -> Unit = {},
 ): GraphAIAgentService<Input, Output> = GraphAIAgentService(
     promptExecutor = promptExecutor,
     agentConfig = agentConfig,
     strategy = strategy,
-    inputType = typeToken<Input>(),
-    outputType = typeToken<Output>(),
     toolRegistry = toolRegistry,
     installFeatures = installFeatures
 )
 
 /**
- * Creates a [GraphAIAgentService] with the provided dependencies, configuration,
- * and optional parameters for customization.
+ * Creates a [GraphAIAgentService] with the default [singleRunStrategy] and the given model parameters.
  *
- * @param promptExecutor The executor responsible for handling prompt-based interactions.
- * @param llmModel The large language model to be used by the agent.
- * @param responseProcessor An optional processor for handling responses from the language model.
- * @param strategy The graph strategy defining the agent's execution behavior. Defaults to a single-run strategy.
- * @param toolRegistry The registry of tools available to the agent. Defaults to an empty registry.
- * @param systemPrompt An optional system-level prompt for the agent.
- * @param temperature An optional parameter to control the randomness of the language model's output.
- * @param numberOfChoices The number of response choices to generate. Defaults to 1.
- * @param maxIterations The maximum number of iterations allowed for the agent. Defaults to 50.
- * @param installFeatures A lambda expression to configure and install additional features.
+ * @param promptExecutor Executor responsible for processing prompts and interacting with the language model.
+ * @param llmModel Language model to use.
+ * @param toolRegistry Registry of tools available to the agent. Defaults to an empty registry.
+ * @param systemPrompt Optional system prompt for the agent.
+ * @param temperature Optional sampling temperature for the model, typically between 0.0 and 1.0.
+ * @param maxIterations Maximum number of agent iterations. Defaults to 50.
+ * @param responseProcessor Optional processor for the model's responses.
+ * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [GraphAIAgentService] instance configured with the provided parameters.
  */
 @OptIn(InternalAgentsApi::class)
+@JvmSynthetic
 public fun AIAgentService(
     promptExecutor: PromptExecutor,
     llmModel: LLModel,
-    responseProcessor: ResponseProcessor? = null,
-    strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     systemPrompt: String? = null,
     temperature: Double? = null,
-    numberOfChoices: Int = 1,
     maxIterations: Int = 50,
+    responseProcessor: ResponseProcessor? = null,
     installFeatures: FeatureContext.() -> Unit = {}
-): GraphAIAgentService<String, String> = GraphAIAgentService(
+): GraphAIAgentService<String, String> = AIAgentService(
     promptExecutor = promptExecutor,
-    agentConfig = AIAgentConfig(
-        prompt = prompt(
-            id = "chat",
-            params = LLMParams(
-                temperature = temperature,
-                numberOfChoices = numberOfChoices
-            )
-        ) {
-            systemPrompt?.let { system(it) }
-        },
-        model = llmModel,
-        maxAgentIterations = maxIterations,
-        responseProcessor = responseProcessor
-    ),
-    strategy = strategy,
-    inputType = typeToken<String>(),
-    outputType = typeToken<String>(),
+    agentConfig = createAgentConfig(llmModel, systemPrompt, temperature, maxIterations, responseProcessor),
+    strategy = singleRunStrategy(),
     toolRegistry = toolRegistry,
     installFeatures = installFeatures
 )
@@ -113,6 +90,7 @@ public fun AIAgentService(
  * @return A [FunctionalAIAgentService] instance initialized with the given parameters.
  */
 @OptIn(InternalAgentsApi::class)
+@JvmSynthetic
 public fun <Input, Output> AIAgentService(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfig,
@@ -132,27 +110,20 @@ public fun <Input, Output> AIAgentService(
  *
  * @param promptExecutor The executor responsible for handling prompts during the agent's operation.
  * @param agentConfig The configuration object for the AI agent.
- * @param strategy The strategy defining how the agent processes tasks and connections within the graph. Defaults to `singleRunStrategy`.
  * @param toolRegistry The registry containing tools available for the agent to use. Defaults to an empty tool registry.
  * @param installFeatures A lambda function to install additional features into the agent's feature context.
  */
 @OptIn(InternalAgentsApi::class)
-// this is a workaround for clashing jvm signatures.
-// these factories are not supposed to be used from java,
-// so this fix should not bring any issues
-@JvmName("AIAgentServiceWithDefaultStrategy")
+@JvmSynthetic
 public fun AIAgentService(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfig,
-    strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     installFeatures: FeatureContext.() -> Unit = {},
-): GraphAIAgentService<String, String> = GraphAIAgentService(
+): GraphAIAgentService<String, String> = AIAgentService(
     promptExecutor = promptExecutor,
     agentConfig = agentConfig,
-    strategy = strategy,
-    inputType = typeToken<String>(),
-    outputType = typeToken<String>(),
+    strategy = singleRunStrategy(),
     toolRegistry = toolRegistry,
     installFeatures = installFeatures
 )

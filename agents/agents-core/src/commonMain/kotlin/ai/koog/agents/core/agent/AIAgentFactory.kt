@@ -1,4 +1,3 @@
-@file:JvmName("AIAgentFactory")
 @file:Suppress("FunctionName")
 
 package ai.koog.agents.core.agent
@@ -14,8 +13,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.time.KoogClock
-import kotlin.jvm.JvmName
-import kotlin.jvm.JvmOverloads
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Factory functions for creating AIAgent instances.
@@ -37,8 +35,7 @@ import kotlin.jvm.JvmOverloads
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [GraphAIAgent] instance configured with the provided parameters.
  */
-@JvmOverloads
-@JvmName("create")
+@JvmSynthetic
 public fun <Input, Output> AIAgent(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfig,
@@ -68,8 +65,7 @@ public fun <Input, Output> AIAgent(
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [GraphAIAgent] instance configured with the provided parameters.
  */
-@JvmOverloads
-@JvmName("create")
+@JvmSynthetic
 public fun AIAgent(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfig,
@@ -101,8 +97,7 @@ public fun AIAgent(
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [FunctionalAIAgent] instance configured with the provided parameters.
  */
-@JvmOverloads
-@JvmName("create")
+@JvmSynthetic
 public fun <Input, Output> AIAgent(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfig,
@@ -135,8 +130,7 @@ public fun <Input, Output> AIAgent(
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [PlannerAIAgent] instance configured with the provided parameters.
  */
-@JvmOverloads
-@JvmName("create")
+@JvmSynthetic
 public fun <Input, Output> AIAgent(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfig,
@@ -177,8 +171,7 @@ public fun <Input, Output> AIAgent(
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [GraphAIAgent] instance configured with the provided parameters.
  */
-@JvmOverloads
-@JvmName("create")
+@JvmSynthetic
 public fun <Input, Output> AIAgent(
     promptExecutor: PromptExecutor,
     llmModel: LLModel,
@@ -216,8 +209,7 @@ public fun <Input, Output> AIAgent(
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [GraphAIAgent] instance configured with the provided parameters.
  */
-@JvmOverloads
-@JvmName("create")
+@JvmSynthetic
 public fun AIAgent(
     promptExecutor: PromptExecutor,
     llmModel: LLModel,
@@ -257,8 +249,7 @@ public fun AIAgent(
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [FunctionalAIAgent] instance configured with the provided parameters.
  */
-@JvmOverloads
-@JvmName("create")
+@JvmSynthetic
 public fun <Input, Output> AIAgent(
     promptExecutor: PromptExecutor,
     llmModel: LLModel,
@@ -299,8 +290,7 @@ public fun <Input, Output> AIAgent(
  * @param installFeatures Lambda to install additional features into the agent's feature context.
  * @return A [PlannerAIAgent] instance configured with the provided parameters.
  */
-@JvmOverloads
-@JvmName("create")
+@JvmSynthetic
 public fun <Input, Output> AIAgent(
     promptExecutor: PromptExecutor,
     llmModel: LLModel,
@@ -323,7 +313,7 @@ public fun <Input, Output> AIAgent(
     installFeatures = installFeatures
 )
 
-private fun createAgentConfig(
+internal fun createAgentConfig(
     llModel: LLModel,
     systemPrompt: String?,
     temperature: Double?,
