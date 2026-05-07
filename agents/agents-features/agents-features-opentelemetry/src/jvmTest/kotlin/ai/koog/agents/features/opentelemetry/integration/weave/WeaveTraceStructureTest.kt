@@ -17,6 +17,9 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 class WeaveTraceStructureTest :
     TraceStructureTestBase(openTelemetryConfigurator = { addWeaveExporter() }) {
 
+    override val inputTokensAttributeName: String = "gen_ai.usage.prompt_tokens"
+    override val outputTokensAttributeName: String = "gen_ai.usage.completion_tokens"
+
     override fun testLLMCallToolCallLLMCallGetExpectedInitialLLMCallSpanAttributes(
         model: LLModel,
         temperature: Double,
@@ -51,8 +54,8 @@ class WeaveTraceStructureTest :
             "gen_ai.request.temperature" to temperature,
             "gen_ai.request.model" to model.id,
             "gen_ai.response.model" to model.id,
-            "gen_ai.usage.input_tokens" to 0L,
-            "gen_ai.usage.output_tokens" to 0L,
+            "gen_ai.usage.prompt_tokens" to 0L,
+            "gen_ai.usage.completion_tokens" to 0L,
             "gen_ai.input.messages" to inputMessages,
             "system_instructions" to systemInstructions,
             "gen_ai.output.messages" to outputMessages,
@@ -119,8 +122,8 @@ class WeaveTraceStructureTest :
             "gen_ai.request.temperature" to temperature,
             "gen_ai.request.model" to model.id,
             "gen_ai.response.model" to model.id,
-            "gen_ai.usage.input_tokens" to 0L,
-            "gen_ai.usage.output_tokens" to 0L,
+            "gen_ai.usage.prompt_tokens" to 0L,
+            "gen_ai.usage.completion_tokens" to 0L,
             "gen_ai.input.messages" to inputMessages,
             "system_instructions" to systemInstructions,
             "gen_ai.output.messages" to outputMessages,
@@ -183,8 +186,8 @@ class WeaveTraceStructureTest :
             "gen_ai.request.max_tokens" to maxTokens,
             "gen_ai.request.model" to model.id,
             "gen_ai.response.model" to model.id,
-            "gen_ai.usage.input_tokens" to 0L,
-            "gen_ai.usage.output_tokens" to outputTokens,
+            "gen_ai.usage.prompt_tokens" to 0L,
+            "gen_ai.usage.completion_tokens" to outputTokens,
             "gen_ai.input.messages" to inputMessages,
             "system_instructions" to systemInstructions,
             "gen_ai.output.messages" to outputMessages,
@@ -266,8 +269,8 @@ class WeaveTraceStructureTest :
             "gen_ai.request.model" to model.id,
             "gen_ai.request.max_tokens" to maxTokens,
             "gen_ai.response.model" to model.id,
-            "gen_ai.usage.input_tokens" to 0L,
-            "gen_ai.usage.output_tokens" to outputTokens,
+            "gen_ai.usage.prompt_tokens" to 0L,
+            "gen_ai.usage.completion_tokens" to outputTokens,
             "gen_ai.input.messages" to inputMessages,
             "system_instructions" to systemInstructions,
             "gen_ai.output.messages" to outputMessages,

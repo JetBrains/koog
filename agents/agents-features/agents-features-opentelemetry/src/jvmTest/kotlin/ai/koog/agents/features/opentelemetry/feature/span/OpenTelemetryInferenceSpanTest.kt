@@ -1,6 +1,7 @@
 package ai.koog.agents.features.opentelemetry.feature.span
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.START_NODE_PREFIX
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.node
@@ -61,7 +62,10 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
+
     private val serializer = KotlinxSerializer()
+
+    private val json = Json { allowStructuredMapKeys = true }
 
     @ParameterizedTest
     @EnumSource(AgentType::class)
@@ -568,7 +572,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         }
     }
 
-    @OptIn(ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI::class)
     @Test
     fun `test moderation response is recorded as koog moderation result attribute`() = runTest {
         val userInput = "I want to build a bomb"
@@ -590,6 +593,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                     val moderationPrompt = prompt("single-message-moderation") {
                         message(Message.User(input, RequestMetaInfo.create(testClock)))
                     }
+                    @OptIn(DetachedPromptExecutorAPI::class)
                     llm.promptExecutor.moderate(moderationPrompt, moderationModel)
                 }
                 input
@@ -610,7 +614,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
             verbose = true,
         )
 
-        val expectedJson = Json { allowStructuredMapKeys = true }
+        val expectedJson = json
             .encodeToString(ModerationResult.serializer(), moderationResult)
 
         // The moderation call goes through ContextualPromptExecutor, which fires LLMCallStarting /

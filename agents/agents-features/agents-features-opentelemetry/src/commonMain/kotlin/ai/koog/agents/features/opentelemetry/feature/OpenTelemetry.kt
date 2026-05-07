@@ -3,7 +3,6 @@ package ai.koog.agents.features.opentelemetry.feature
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
@@ -38,7 +37,6 @@ import ai.koog.agents.features.opentelemetry.span.endInvokeAgentSpan
 import ai.koog.agents.features.opentelemetry.span.endNodeExecuteSpan
 import ai.koog.agents.features.opentelemetry.span.endStrategySpan
 import ai.koog.agents.features.opentelemetry.span.endSubgraphExecuteSpan
-import ai.koog.agents.features.opentelemetry.span.enrichExecuteToolSpanWithMcpAttrs
 import ai.koog.agents.features.opentelemetry.span.startCreateAgentSpan
 import ai.koog.agents.features.opentelemetry.span.startExecuteToolSpan
 import ai.koog.agents.features.opentelemetry.span.startInferenceSpan
@@ -114,10 +112,10 @@ public class OpenTelemetry {
                     id = eventContext.eventId,
                     runId = eventContext.context.runId,
                     nodeId = eventContext.node.id,
-                    nodeInput = nodeInput
+                    nodeInput = nodeInput,
+                    spanAdapter = spanAdapter,
                 )
 
-                spanAdapter?.onBeforeSpanStarted(nodeExecuteSpan)
                 spanCollector.collectSpan(
                     span = nodeExecuteSpan,
                     path = patchedExecutionInfo
@@ -137,11 +135,11 @@ public class OpenTelemetry {
 
                 val nodeOutput = nodeDataToString(eventContext.output, eventContext.outputType, pipeline.config.serializer)
 
-                spanAdapter?.onBeforeSpanFinished(nodeExecuteSpan)
                 endNodeExecuteSpan(
                     span = nodeExecuteSpan,
                     nodeOutput = nodeOutput,
-                    verbose = config.isVerbose
+                    verbose = config.isVerbose,
+                    spanAdapter = spanAdapter,
                 )
                 spanCollector.removeSpan(
                     span = nodeExecuteSpan,
@@ -160,12 +158,12 @@ public class OpenTelemetry {
                     spanType = SpanType.NODE
                 ) ?: return@intercept
 
-                spanAdapter?.onBeforeSpanFinished(nodeExecuteSpan)
                 endNodeExecuteSpan(
                     span = nodeExecuteSpan,
                     nodeOutput = null,
                     error = eventContext.error,
-                    verbose = config.isVerbose
+                    verbose = config.isVerbose,
+                    spanAdapter = spanAdapter,
                 )
                 spanCollector.removeSpan(
                     span = nodeExecuteSpan,
@@ -194,10 +192,10 @@ public class OpenTelemetry {
                     id = eventContext.eventId,
                     runId = eventContext.context.runId,
                     subgraphId = eventContext.subgraph.id,
-                    subgraphInput = subgraphInput
+                    subgraphInput = subgraphInput,
+                    spanAdapter = spanAdapter,
                 )
 
-                spanAdapter?.onBeforeSpanStarted(subgraphExecuteSpan)
                 spanCollector.collectSpan(
                     span = subgraphExecuteSpan,
                     path = patchedExecutionInfo
@@ -217,11 +215,11 @@ public class OpenTelemetry {
 
                 val subgraphOutput = nodeDataToString(eventContext.output, eventContext.outputType, pipeline.config.serializer)
 
-                spanAdapter?.onBeforeSpanFinished(subgraphExecuteSpan)
                 endSubgraphExecuteSpan(
                     span = subgraphExecuteSpan,
                     subgraphOutput = subgraphOutput,
-                    verbose = config.isVerbose
+                    verbose = config.isVerbose,
+                    spanAdapter = spanAdapter,
                 )
                 spanCollector.removeSpan(
                     span = subgraphExecuteSpan,
@@ -240,12 +238,12 @@ public class OpenTelemetry {
                     spanType = SpanType.SUBGRAPH
                 ) ?: return@intercept
 
-                spanAdapter?.onBeforeSpanFinished(subgraphExecuteSpan)
                 endSubgraphExecuteSpan(
                     span = subgraphExecuteSpan,
                     subgraphOutput = null,
                     error = eventContext.error,
-                    verbose = config.isVerbose
+                    verbose = config.isVerbose,
+                    spanAdapter = spanAdapter,
                 )
                 spanCollector.removeSpan(
                     span = subgraphExecuteSpan,
@@ -311,10 +309,10 @@ public class OpenTelemetry {
                     id = eventContext.eventId,
                     model = eventContext.agent.agentConfig.model,
                     agentId = eventContext.context.agentId,
-                    messages = messages
+                    messages = messages,
+                    spanAdapter = spanAdapter,
                 )
 
-                spanAdapter?.onBeforeSpanStarted(createAgentSpan)
                 spanCollector.collectSpan(
                     span = createAgentSpan,
                     path = eventContext.executionInfo
@@ -331,10 +329,10 @@ public class OpenTelemetry {
                     runId = eventContext.runId,
                     llmParams = eventContext.agent.agentConfig.prompt.params,
                     messages = messages,
-                    tools = tools
+                    tools = tools,
+                    spanAdapter = spanAdapter,
                 )
 
-                spanAdapter?.onBeforeSpanStarted(invokeAgentSpan)
                 // Patch the agent execution info to include runId in the path.
                 // This is required to create a path structure that matches the span structure in the OTel feature.
                 spanCollector.collectSpan(
@@ -360,12 +358,12 @@ public class OpenTelemetry {
                     )
                 }
 
-                spanAdapter?.onBeforeSpanFinished(invokeAgentSpan)
                 endInvokeAgentSpan(
                     span = invokeAgentSpan,
                     messages = eventContext.context.config.prompt.messages.toList(),
                     model = eventContext.context.config.model,
-                    verbose = config.isVerbose
+                    verbose = config.isVerbose,
+                    spanAdapter = spanAdapter,
                 )
                 spanCollector.removeSpan(
                     span = invokeAgentSpan,
@@ -381,7 +379,11 @@ public class OpenTelemetry {
                 metricCollector.flushPendingAsErrors(eventContext.error)
 
                 // Stop all unfinished spans, except InvokeAgentSpan and AgentCreateSpan
-                endUnfinishedSpans(spanCollector, config.isVerbose) { span ->
+                endUnfinishedSpans(
+                    spanCollector = spanCollector,
+                    spanAdapter = spanAdapter,
+                    verbose = config.isVerbose,
+                ) { span ->
                     span.type != SpanType.CREATE_AGENT &&
                         span.type != SpanType.INVOKE_AGENT &&
                         span.id != eventContext.eventId
@@ -395,13 +397,13 @@ public class OpenTelemetry {
                     spanType = SpanType.INVOKE_AGENT
                 ) ?: return@intercept
 
-                spanAdapter?.onBeforeSpanFinished(invokeAgentSpan)
                 endInvokeAgentSpan(
                     span = invokeAgentSpan,
                     messages = eventContext.context.config.prompt.messages.toList(),
                     model = eventContext.context.config.model,
                     error = eventContext.error,
-                    verbose = config.isVerbose
+                    verbose = config.isVerbose,
+                    spanAdapter = spanAdapter,
                 )
                 spanCollector.removeSpan(
                     span = invokeAgentSpan,
@@ -417,7 +419,11 @@ public class OpenTelemetry {
                 metricCollector.flushPendingAsErrors(error = null)
 
                 // Stop all unfinished spans, except the AgentCreateSpan
-                endUnfinishedSpans(spanCollector, config.isVerbose) { span ->
+                endUnfinishedSpans(
+                    spanCollector = spanCollector,
+                    verbose = config.isVerbose,
+                    spanAdapter = spanAdapter,
+                ) { span ->
                     span.type != SpanType.CREATE_AGENT
                 }
 
@@ -428,10 +434,10 @@ public class OpenTelemetry {
                     spanType = SpanType.CREATE_AGENT
                 ) ?: return@intercept
 
-                spanAdapter?.onBeforeSpanFinished(agentSpan)
                 endCreateAgentSpan(
                     span = agentSpan,
-                    verbose = config.isVerbose
+                    verbose = config.isVerbose,
+                    spanAdapter = spanAdapter,
                 )
 
                 spanCollector.removeSpan(
@@ -442,7 +448,11 @@ public class OpenTelemetry {
                 // Just in case we miss some spans, stop them as well
                 if (spanCollector.activeSpansCount > 0) {
                     logger.warn { "Found <${spanCollector.activeSpansCount}> active span(s) after agent closing. Stopping them." }
-                    endUnfinishedSpans(spanCollector, config.isVerbose)
+                    endUnfinishedSpans(
+                        spanCollector = spanCollector,
+                        verbose = config.isVerbose,
+                        spanAdapter = spanAdapter,
+                    )
                 }
 
                 if (config.isShutdownOnAgentClose) {
@@ -468,10 +478,10 @@ public class OpenTelemetry {
                     parentSpan = parentSpan,
                     id = eventContext.eventId,
                     runId = eventContext.context.runId,
-                    strategyName = eventContext.strategy.name
+                    strategyName = eventContext.strategy.name,
+                    spanAdapter = spanAdapter,
                 )
 
-                spanAdapter?.onBeforeSpanStarted(strategySpan)
                 spanCollector.collectSpan(
                     span = strategySpan,
                     path = patchedExecutionInfo
@@ -487,8 +497,11 @@ public class OpenTelemetry {
                     spanType = SpanType.STRATEGY
                 ) ?: return@intercept
 
-                spanAdapter?.onBeforeSpanFinished(strategySpan)
-                endStrategySpan(span = strategySpan, verbose = config.isVerbose)
+                endStrategySpan(
+                    span = strategySpan,
+                    verbose = config.isVerbose,
+                    spanAdapter = spanAdapter,
+                )
                 spanCollector.removeSpan(
                     span = strategySpan,
                     path = patchedExecutionInfo
@@ -522,11 +535,10 @@ public class OpenTelemetry {
                     model = eventContext.model,
                     messages = messages,
                     llmParams = eventContext.prompt.params,
-                    tools = eventContext.tools
+                    tools = eventContext.tools,
+                    spanAdapter = spanAdapter,
                 )
 
-                // Start span
-                spanAdapter?.onBeforeSpanStarted(inferenceSpan)
                 spanCollector.collectSpan(
                     span = inferenceSpan,
                     path = patchedExecutionInfo
@@ -563,20 +575,13 @@ public class OpenTelemetry {
                     )
                 }
 
-                // Pre-populate gen_ai.output.messages so SpanAdapter implementations (Langfuse, Weave)
-                // can reshape the response messages before the span ends.
-                // endInferenceSpan re-adds the same attribute idempotently.
-                if (eventContext.responses.isNotEmpty()) {
-                    inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(eventContext.responses))
-                }
-
                 // Stop InferenceSpan
-                spanAdapter?.onBeforeSpanFinished(inferenceSpan)
                 endInferenceSpan(
                     span = inferenceSpan,
                     messages = eventContext.responses,
                     model = eventContext.model,
-                    verbose = config.isVerbose
+                    verbose = config.isVerbose,
+                    spanAdapter = spanAdapter,
                 )
                 spanCollector.removeSpan(
                     span = inferenceSpan,
@@ -629,13 +634,13 @@ public class OpenTelemetry {
                     spanType = SpanType.INFERENCE
                 ) ?: return@intercept
 
-                spanAdapter?.onBeforeSpanFinished(inferenceSpan)
                 endInferenceSpan(
                     span = inferenceSpan,
                     messages = emptyList(),
                     model = eventContext.model,
+                    error = eventContext.error,
                     verbose = config.isVerbose,
-                    error = eventContext.error
+                    spanAdapter = spanAdapter,
                 )
                 spanCollector.removeSpan(
                     span = inferenceSpan,
@@ -647,7 +652,6 @@ public class OpenTelemetry {
 
             //region Tool Call
 
-            @OptIn(InternalAgentsApi::class)
             pipeline.interceptToolCallStarting(this) intercept@{ eventContext ->
                 logger.debug { "Execute OpenTelemetry tool call handler" }
 
@@ -664,32 +668,11 @@ public class OpenTelemetry {
                     toolName = eventContext.toolName,
                     toolArgs = eventContext.toolArgs.toKotlinxJsonObject(),
                     toolDescription = eventContext.toolDescription,
-                    toolCallId = eventContext.toolCallId
+                    toolCallId = eventContext.toolCallId,
+                    mcpToolMetadata = eventContext.context.llm.toolRegistry.getMcpToolMeta(eventContext.toolName),
+                    spanAdapter = spanAdapter,
                 )
-                val mcpToolMetadata = eventContext.context.llm.toolRegistry.getMcpToolMeta(eventContext.toolName)
-                if (mcpToolMetadata != null) {
-                    val mcpVersion = mcpToolMetadata[McpMetadataKeys.McpProtocolVersion]
-                    val mcpTransportType = mcpToolMetadata[McpMetadataKeys.McpTransportType]
-                    if (mcpVersion != null && mcpTransportType != null) {
-                        executeToolSpan.enrichExecuteToolSpanWithMcpAttrs(
-                            toolName = eventContext.toolName,
-                            sessionId = mcpToolMetadata[McpMetadataKeys.McpSessionId],
-                            methodName = "tools/call",
-                            serverPort = mcpToolMetadata[McpMetadataKeys.ServerPort]?.toIntOrNull(),
-                            serverAddress = mcpToolMetadata[McpMetadataKeys.ServerUrl],
-                            mcpProtocolVersion = mcpVersion,
-                            mcpTransportType = mcpTransportType,
-                        )
-                    } else {
-                        logger.error {
-                            "MCP protocol version ($mcpVersion) and transport type ($mcpTransportType) are required " +
-                                "for mcp tool call spans: tool=${eventContext.toolName}, " +
-                                "serverUrl=${mcpToolMetadata[McpMetadataKeys.ServerUrl]}"
-                        }
-                    }
-                }
 
-                spanAdapter?.onBeforeSpanStarted(executeToolSpan)
                 spanCollector.collectSpan(executeToolSpan, path)
 
                 // Metrics
@@ -878,14 +861,20 @@ public class OpenTelemetry {
             appendId(this, id)
 
         /**
-         * Ends all unfinished spans that match the given predicate.
-         * If no predicate is provided, ends all spans.
+         * Ends all unfinished spans that match the given predicate. If no predicate is provided, ends all spans.
          * Spans are closed from leaf nodes up to parent nodes to maintain a proper hierarchy.
          *
+         * The optional [spanAdapter]'s [SpanAdapter.onBeforeSpanFinished] is invoked before
+         * each span is closed so adapter post-processing remains consistent.
+         *
+         * @param spanCollector Span collector for retrieving active spans.
+         * @param spanAdapter Optional span adapter for post-processing before span closure;
+         * @param verbose Whether to log span closure details.
          * @param filter Optional filter for spans to end.
          */
         internal suspend fun endUnfinishedSpans(
             spanCollector: SpanCollector,
+            spanAdapter: SpanAdapter?,
             verbose: Boolean = false,
             filter: ((GenAIAgentSpan) -> Boolean)? = null
         ) {
@@ -893,6 +882,7 @@ public class OpenTelemetry {
 
             spansToEnd.forEach { spanNode ->
                 try {
+                    spanAdapter?.onBeforeSpanFinished(spanNode.span)
                     spanNode.span.end(verbose = verbose)
                     spanCollector.removeSpan(spanNode.span, spanNode.path)
                 } catch (e: Exception) {
@@ -918,12 +908,12 @@ public class OpenTelemetry {
                 spanType = SpanType.EXECUTE_TOOL
             ) ?: return
 
-            spanAdapter?.onBeforeSpanFinished(span = span)
             endExecuteToolSpan(
                 span = span,
                 toolResult = toolResult?.toKotlinxJsonElement(),
                 error = error,
-                verbose = config.isVerbose
+                verbose = config.isVerbose,
+                spanAdapter = spanAdapter,
             )
             spanCollector.removeSpan(
                 span = span,
@@ -931,7 +921,6 @@ public class OpenTelemetry {
             )
         }
 
-        @OptIn(InternalAgentsApi::class)
         private fun ToolRegistry.getMcpToolMeta(
             toolName: String,
         ): Map<String, String>? = tools.firstNotNullOfOrNull { tool ->

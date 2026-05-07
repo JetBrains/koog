@@ -9,6 +9,7 @@ import ai.koog.agents.features.opentelemetry.extension.sumInputTokens
 import ai.koog.agents.features.opentelemetry.extension.sumOutputTokens
 import ai.koog.agents.features.opentelemetry.extension.systemMessages
 import ai.koog.agents.features.opentelemetry.extension.toStatusData
+import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -47,6 +48,18 @@ import kotlinx.serialization.json.JsonObject
  *
  * Custom attributes:
  * - koog.event.id
+ *
+ * @param tracer The tracer instance to use for creating the span.
+ * @param contextFactory The context factory to use for creating the span context.
+ * @param parentSpan The parent span for the new span.
+ * @param id The unique identifier for the span.
+ * @param provider The LLM provider for the inference.
+ * @param runId The unique identifier for the run.
+ * @param model The model used for inference.
+ * @param messages The list of messages used in the inference.
+ * @param llmParams The parameters for the LLM request.
+ * @param tools The list of tools available for the inference.
+ * @param spanAdapter Optional span adapter for customizing the span behavior.
  */
 internal fun startInferenceSpan(
     tracer: Tracer,
@@ -58,7 +71,8 @@ internal fun startInferenceSpan(
     model: LLModel,
     messages: List<Message>,
     llmParams: LLMParams,
-    tools: List<ToolDescriptor>
+    tools: List<ToolDescriptor>,
+    spanAdapter: SpanAdapter? = null,
 ): GenAIAgentSpan {
     val builder = GenAIAgentSpanBuilder(
         spanType = SpanType.INFERENCE,
@@ -128,11 +142,15 @@ internal fun startInferenceSpan(
 
     builder.addAttribute(KoogAttributes.Koog.Event.Id(id))
 
-    return builder.buildAndStart(tracer, contextFactory)
+    val span = builder.buildAndStart(tracer, contextFactory)
+    spanAdapter?.onBeforeSpanStarted(span)
+    return span
 }
 
 /**
- * End Inference Span and set final attributes.
+ * End Inference Span and set final attributes. The provided [spanAdapter] is invoked via
+ * [SpanAdapter.onBeforeSpanFinished] after all attributes are set and immediately before the
+ * underlying span is ended.
  *
  * Add the necessary attributes for the Inference Span according to the OpenTelemetry Semantic Convention:
  * https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/#inference
@@ -146,13 +164,21 @@ internal fun startInferenceSpan(
  * - gen_ai.usage.input_tokens (recommended)
  * - gen_ai.usage.output_tokens (recommended)
  * - gen_ai.output.messages (recommended)
+ *
+ * @param span The span to end.
+ * @param messages The list of messages used in the inference.
+ * @param model The model used for inference.
+ * @param error The error that occurred during inference if any.
+ * @param verbose Whether to log verbose information.
+ * @param spanAdapter Optional span adapter for customizing the span behavior.
  */
 internal fun endInferenceSpan(
     span: GenAIAgentSpan,
     messages: List<Message>,
     model: LLModel,
     error: Throwable? = null,
-    verbose: Boolean = false
+    verbose: Boolean = false,
+    spanAdapter: SpanAdapter? = null,
 ) {
     check(span.type == SpanType.INFERENCE) {
         "${span.logString} Expected to end span type of type: <${SpanType.INFERENCE}>, but received span of type: <${span.type}>"
@@ -184,5 +210,6 @@ internal fun endInferenceSpan(
         span.addAttribute(GenAIAttributes.Output.Messages(messages))
     }
 
+    spanAdapter?.onBeforeSpanFinished(span)
     span.end(error.toStatusData(), verbose)
 }

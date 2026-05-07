@@ -59,6 +59,20 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     private val json = Json { allowStructuredMapKeys = true }
     private val serializer = KotlinxSerializer()
 
+    /**
+     * Name of the inference-span input-token-usage attribute as it appears AFTER any [SpanAdapter]
+     * has run. Defaults to the OTel GenAI semconv name; adapters that rename the attribute (e.g.
+     * Weave → `gen_ai.usage.prompt_tokens`) override this.
+     */
+    protected open val inputTokensAttributeName: String = "gen_ai.usage.input_tokens"
+
+    /**
+     * Name of the inference-span output-token-usage attribute as it appears AFTER any [SpanAdapter]
+     * has run. Defaults to the OTel GenAI semconv name; adapters that rename the attribute (e.g.
+     * Weave → `gen_ai.usage.completion_tokens`) override this.
+     */
+    protected open val outputTokensAttributeName: String = "gen_ai.usage.output_tokens"
+
     @Test
     fun testSingleLLMCall() = runBlocking {
         TestSpanProcessor().let { testProcessor ->
@@ -112,8 +126,8 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                             "gen_ai.request.temperature" to temperature,
                             "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
                             "gen_ai.response.model" to model.id,
-                            "gen_ai.usage.input_tokens" to 0L,
-                            "gen_ai.usage.output_tokens" to 0L,
+                            inputTokensAttributeName to 0L,
+                            outputTokensAttributeName to 0L,
                             "koog.event.id" to llmCallEventId,
                             "gen_ai.input.messages" to getMessagesString(
                                 listOf(
@@ -598,8 +612,8 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                             "gen_ai.request.temperature" to temperature,
                             "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
                             "gen_ai.response.model" to model.id,
-                            "gen_ai.usage.input_tokens" to 0L,
-                            "gen_ai.usage.output_tokens" to 0L,
+                            inputTokensAttributeName to 0L,
+                            outputTokensAttributeName to 0L,
                             "koog.event.id" to llmCallEventId,
                             "gen_ai.input.messages" to getMessagesString(
                                 listOf(
@@ -716,8 +730,8 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val finalLLMEventId = testData.singleAttributeValue(actualLLMSpans[1], "koog.event.id")
 
             // Get actual token counts from spans
-            val inputTokens0 = getAttributeValue<Long>(actualLLMSpans[0], "gen_ai.usage.input_tokens") ?: 0L
-            val inputTokens1 = getAttributeValue<Long>(actualLLMSpans[1], "gen_ai.usage.input_tokens") ?: 0L
+            val inputTokens0 = getAttributeValue<Long>(actualLLMSpans[0], inputTokensAttributeName) ?: 0L
+            val inputTokens1 = getAttributeValue<Long>(actualLLMSpans[1], inputTokensAttributeName) ?: 0L
 
             // Build expected spans using abstract methods
             val expectedInitialLLMSpanAttributes =
@@ -734,7 +748,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                     ).toLong()
                 ).plus(
                     mapOf(
-                        "gen_ai.usage.input_tokens" to inputTokens0,
+                        inputTokensAttributeName to inputTokens0,
                         "koog.event.id" to initialLLMEventId,
                     )
                 )
@@ -753,7 +767,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                     outputTokens = tokenizer.countTokens(text = finalResponse).toLong(),
                 ).plus(
                     mapOf(
-                        "gen_ai.usage.input_tokens" to inputTokens1,
+                        inputTokensAttributeName to inputTokens1,
                         "koog.event.id" to finalLLMEventId,
                     )
                 )
