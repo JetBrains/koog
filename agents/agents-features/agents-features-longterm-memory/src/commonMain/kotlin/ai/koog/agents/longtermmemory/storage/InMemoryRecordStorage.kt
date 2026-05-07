@@ -18,8 +18,8 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * In-memory implementation of [SearchStorage]
- * and [WriteStorage] that stores records in a map.
+ * In-memory implementation of [SearchStorage], [WriteStorage], [LookupStorage],
+ * and [DeletionStorage] that stores records in a map.
  *
  * This implementation is useful for testing, development, and scenarios where persistence
  * is not required. All data is stored in memory and will be lost when the application stops.

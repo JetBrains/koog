@@ -9,8 +9,7 @@ import ai.koog.rag.base.storage.search.SearchResult
 /**
  * A [PromptAugmenter] that inserts retrieved context as a system message at the beginning of the prompt.
  *
- * If an existing system message is present, the new context system message is inserted
- * before it, keeping each system message focused on a single concern.
+ * The new context system message is prepended before all existing messages.
  * If there is no system message in the prompt, the prompt is returned unchanged.
  *
  * @param template The template for the system message. Use [PromptAugmenter.RELEVANT_CONTEXT_PLACEHOLDER] placeholder.

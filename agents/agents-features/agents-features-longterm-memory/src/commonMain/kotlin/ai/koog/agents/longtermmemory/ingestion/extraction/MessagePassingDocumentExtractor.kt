@@ -8,7 +8,7 @@ import ai.koog.rag.base.TextDocument
  * Default extractor that filters messages by role.
  *
  * This extractor filters messages to only include those with roles in
- * [messageRolesToExtract], then converts each message's content into [MemoryRecord]s.
+ * [messageRolesToExtract], then converts each message's content into [TextDocument]s.
  *
  * @property messageRolesToExtract The set of message roles to extract and persist.
  *   Defaults to `setOf(Message.Role.User, Message.Role.Assistant)`.
@@ -37,7 +37,7 @@ public class MessagePassingDocumentExtractor(
      */
     public class Builder {
         /**
-         * The set of message roles to provide. Defaults to User and Assistant.
+         * The set of message roles to extract. Defaults to User and Assistant.
          */
         public var extractRoles: Set<Message.Role> = setOf(Message.Role.User, Message.Role.Assistant)
 

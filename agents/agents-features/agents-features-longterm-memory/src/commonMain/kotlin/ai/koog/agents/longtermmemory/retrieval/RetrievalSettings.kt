@@ -15,7 +15,7 @@ import ai.koog.rag.base.storage.search.SearchRequest
  * Settings controlling how memory records are retrieved and injected into prompts (RAG).
  *
  * @param storage The retrieval storage to search for relevant memory records.
- * @param searchQueryProvider The extractor that defines how to derive the search query from the prompt.
+ * @param searchQueryProvider The provider that defines how to derive the search query from the prompt.
  *   Defaults to [ai.koog.agents.longtermmemory.retrieval.search.LastUserMessageQueryProvider], which uses the last user message content.
  * @param searchStrategy The strategy that defines how to search the retrieval store.
  * @param promptAugmenter The augmenter that defines how retrieved context is inserted into the prompt.

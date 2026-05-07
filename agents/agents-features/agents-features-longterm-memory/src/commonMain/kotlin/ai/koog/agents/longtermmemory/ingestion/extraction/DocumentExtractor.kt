@@ -10,7 +10,7 @@ import kotlin.jvm.JvmStatic
  * This is a functional interface (SAM) that defines how a list of messages
  * should be transformed into a list of [TextDocument]s for storage.
  * It provides flexibility in how messages are filtered, transformed, and
- * converted into memory records while maintaining type safety.
+ * converted into [TextDocument]s while maintaining type safety.
  *
  * Pre-built implementations are available for common ingestion patterns:
  * - [MessagePassingDocumentExtractor] - Filters messages by role
@@ -33,7 +33,7 @@ import kotlin.jvm.JvmStatic
  * val customExtractor = DocumentExtractor { messages ->
  *     messages
  *         .filter { it.role == Message.Role.Assistant }
- *         .map { MemoryRecord(content = summarize(it.content)) }
+ *         .map { MemoryRecord(content = it.content) }
  * }
  * ```
  *
@@ -42,16 +42,16 @@ import kotlin.jvm.JvmStatic
  * DocumentExtractor customExtractor = (messages) ->
  *     messages.stream()
  *         .filter(m -> m.getRole() == Message.Role.Assistant)
- *         .map(m -> new MemoryRecord(m.getContent()))
+ *         .map(m -> new MemoryRecord(m.getContent(), null, Collections.emptyMap()))
  *         .collect(Collectors.toList());
  * ```
  */
 public fun interface DocumentExtractor {
     /**
-     * Transforms a list of messages into a list of memory records for storage.
+     * Transforms a list of messages into a list of [TextDocument]s for storage.
      *
-     * @param messages The messages to transform into memory records
-     * @return List of memory records to be stored
+     * @param messages The messages to transform into [TextDocument]s
+     * @return List of [TextDocument]s to be stored
      */
     public suspend fun extract(messages: List<Message>): List<TextDocument>
 

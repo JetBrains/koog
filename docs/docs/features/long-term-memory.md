@@ -175,7 +175,7 @@ Ingestion runs once when the agent run completes: the final accumulated session 
 
 ## Disabling Automatic Behavior
 
-By default, retrieval and ingestion run automatically (before and after LLM calls, respectively). You can disable automatic behavior while still having access to the configured storage and strategies from within strategy nodes:
+By default, retrieval and ingestion run automatically (retrieval runs before each LLM call; ingestion runs once when the agent completes). You can disable automatic behavior while still having access to the configured storage and strategies from within strategy nodes:
 
 === "Kotlin"
 
