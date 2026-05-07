@@ -1,4 +1,4 @@
-package ai.koog.agents.utils
+package ai.koog.agents.core.utils
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -8,7 +8,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.Executor
 
 /**
- * Executes the given [block] on the [executor] if it is specified, or falls back to the [AIAgentConfig.llmRequestDispatcher].
+ * Executes the given [block] on the [executor] if it is specified, or falls back to the [llmRequestDispatcher].
  */
 @OptIn(InternalKoogUtils::class)
 @InternalAgentsApi
@@ -18,7 +18,7 @@ public fun <T> AIAgentConfig.runBlockingOnLLMDispatcher(
 ): T = runBlockingReentrant(executor?.asCoroutineDispatcher() ?: llmRequestDispatcher, block)
 
 /**
- * Executes the given [block] on the [executor] if it is specified, or falls back to the [AIAgentConfig.strategyDispatcher].
+ * Executes the given [block] on the [executor] if it is specified, or falls back to the [strategyDispatcher].
  */
 @OptIn(InternalKoogUtils::class)
 @InternalAgentsApi

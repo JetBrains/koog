@@ -5,8 +5,8 @@ import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
+import ai.koog.agents.core.utils.runBlockingOnStrategyDispatcher
 import ai.koog.agents.ext.agent.CriticResult
-import ai.koog.agents.utils.runBlockingOnStrategyDispatcher
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor

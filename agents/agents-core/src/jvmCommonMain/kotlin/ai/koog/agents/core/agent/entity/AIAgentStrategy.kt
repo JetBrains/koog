@@ -5,7 +5,7 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.utils.runBlockingOnStrategyDispatcher
+import ai.koog.agents.core.utils.runBlockingOnStrategyDispatcher
 import ai.koog.utils.annotations.InternalKoogUtils
 import java.util.concurrent.ExecutorService
 

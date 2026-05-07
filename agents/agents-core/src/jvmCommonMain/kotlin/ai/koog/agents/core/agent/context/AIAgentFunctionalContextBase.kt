@@ -17,8 +17,8 @@ import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.utils.runBlockingOnLLMDispatcher
-import ai.koog.agents.utils.runBlockingOnStrategyDispatcher
+import ai.koog.agents.core.utils.runBlockingOnLLMDispatcher
+import ai.koog.agents.core.utils.runBlockingOnStrategyDispatcher
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
