@@ -46,38 +46,6 @@ public fun <Input, Output> AIAgentService(
 )
 
 /**
- * Creates a [GraphAIAgentService] with the default [singleRunStrategy] and the given model parameters.
- *
- * @param promptExecutor Executor responsible for processing prompts and interacting with the language model.
- * @param llmModel Language model to use.
- * @param toolRegistry Registry of tools available to the agent. Defaults to an empty registry.
- * @param systemPrompt Optional system prompt for the agent.
- * @param temperature Optional sampling temperature for the model, typically between 0.0 and 1.0.
- * @param maxIterations Maximum number of agent iterations. Defaults to 50.
- * @param responseProcessor Optional processor for the model's responses.
- * @param installFeatures Lambda to install additional features into the agent's feature context.
- * @return A [GraphAIAgentService] instance configured with the provided parameters.
- */
-@OptIn(InternalAgentsApi::class)
-@JvmSynthetic
-public fun AIAgentService(
-    promptExecutor: PromptExecutor,
-    llmModel: LLModel,
-    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    systemPrompt: String? = null,
-    temperature: Double? = null,
-    maxIterations: Int = 50,
-    responseProcessor: ResponseProcessor? = null,
-    installFeatures: FeatureContext.() -> Unit = {}
-): GraphAIAgentService<String, String> = AIAgentService(
-    promptExecutor = promptExecutor,
-    agentConfig = createAgentConfig(llmModel, systemPrompt, temperature, maxIterations, responseProcessor),
-    strategy = singleRunStrategy(),
-    toolRegistry = toolRegistry,
-    installFeatures = installFeatures
-)
-
-/**
  * Creates a [FunctionalAIAgentService] instance with the provided parameters.
  *
  * @param Input The type of input data expected by the service.
@@ -125,5 +93,75 @@ public fun AIAgentService(
     agentConfig = agentConfig,
     strategy = singleRunStrategy(),
     toolRegistry = toolRegistry,
+    installFeatures = installFeatures
+)
+
+/**
+ * Creates a [GraphAIAgentService] with the default [singleRunStrategy] and the given model parameters.
+ *
+ * @param promptExecutor Executor responsible for processing prompts and interacting with the language model.
+ * @param llmModel Language model to use.
+ * @param strategy Graph strategy defining the agent's workflow.
+ * @param toolRegistry Registry of tools available to the agent. Defaults to an empty registry.
+ * @param systemPrompt Optional system prompt for the agent.
+ * @param temperature Optional sampling temperature for the model, typically between 0.0 and 1.0.
+ * @param maxIterations Maximum number of agent iterations. Defaults to 50.
+ * @param responseProcessor Optional processor for the model's responses.
+ * @param installFeatures Lambda to install additional features into the agent's feature context.
+ * @return A [GraphAIAgentService] instance configured with the provided parameters.
+ */
+@OptIn(InternalAgentsApi::class)
+@JvmSynthetic
+public fun <Input, Output> AIAgentService(
+    promptExecutor: PromptExecutor,
+    llmModel: LLModel,
+    strategy: AIAgentGraphStrategy<Input, Output>,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    systemPrompt: String? = null,
+    temperature: Double? = null,
+    maxIterations: Int = 50,
+    responseProcessor: ResponseProcessor? = null,
+    installFeatures: FeatureContext.() -> Unit = {}
+): GraphAIAgentService<Input, Output> = AIAgentService(
+    promptExecutor = promptExecutor,
+    agentConfig = createAgentConfig(llmModel, systemPrompt, temperature, maxIterations, responseProcessor),
+    strategy = strategy,
+    toolRegistry = toolRegistry,
+    installFeatures = installFeatures
+)
+
+/**
+ * Creates a [GraphAIAgentService] with the default [singleRunStrategy] and the given model parameters.
+ *
+ * @param promptExecutor Executor responsible for processing prompts and interacting with the language model.
+ * @param llmModel Language model to use.
+ * @param toolRegistry Registry of tools available to the agent. Defaults to an empty registry.
+ * @param systemPrompt Optional system prompt for the agent.
+ * @param temperature Optional sampling temperature for the model, typically between 0.0 and 1.0.
+ * @param maxIterations Maximum number of agent iterations. Defaults to 50.
+ * @param responseProcessor Optional processor for the model's responses.
+ * @param installFeatures Lambda to install additional features into the agent's feature context.
+ * @return A [GraphAIAgentService] instance configured with the provided parameters.
+ */
+@OptIn(InternalAgentsApi::class)
+@JvmSynthetic
+public fun AIAgentService(
+    promptExecutor: PromptExecutor,
+    llmModel: LLModel,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    systemPrompt: String? = null,
+    temperature: Double? = null,
+    maxIterations: Int = 50,
+    responseProcessor: ResponseProcessor? = null,
+    installFeatures: FeatureContext.() -> Unit = {}
+): GraphAIAgentService<String, String> = AIAgentService(
+    promptExecutor = promptExecutor,
+    llmModel = llmModel,
+    strategy = singleRunStrategy(),
+    toolRegistry = toolRegistry,
+    systemPrompt = systemPrompt,
+    temperature = temperature,
+    maxIterations = maxIterations,
+    responseProcessor = responseProcessor,
     installFeatures = installFeatures
 )

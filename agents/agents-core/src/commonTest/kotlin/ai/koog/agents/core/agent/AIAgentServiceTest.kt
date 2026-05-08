@@ -80,7 +80,6 @@ class AIAgentServiceTest {
             toolRegistry = ToolRegistry {},
             systemPrompt = "You are helpful",
             temperature = 0.5,
-            numberOfChoices = 2,
             maxIterations = 7
         )
         assertEquals(executor, service.promptExecutor)
