@@ -6,26 +6,27 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.ExecutionCompleted
+import ai.koog.prompt.executor.model.ExecutionDispatched
 import ai.koog.prompt.executor.model.ExecutionFailed
 import ai.koog.prompt.executor.model.ExecutionRequested
-import ai.koog.prompt.executor.model.ExecutionDispatched
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.executor.model.ModerationCompleted
+import ai.koog.prompt.executor.model.ModerationDispatched
 import ai.koog.prompt.executor.model.ModerationFailed
 import ai.koog.prompt.executor.model.ModerationRequested
-import ai.koog.prompt.executor.model.ModerationDispatched
 import ai.koog.prompt.executor.model.MultipleChoicesCompleted
+import ai.koog.prompt.executor.model.MultipleChoicesDispatched
 import ai.koog.prompt.executor.model.MultipleChoicesFailed
 import ai.koog.prompt.executor.model.MultipleChoicesRequested
-import ai.koog.prompt.executor.model.MultipleChoicesDispatched
-import ai.koog.prompt.executor.model.ObservablePromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutionContext
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutorEvent
+import ai.koog.prompt.executor.model.PromptExecutorHook
 import ai.koog.prompt.executor.model.StreamingCompleted
+import ai.koog.prompt.executor.model.StreamingDispatched
 import ai.koog.prompt.executor.model.StreamingFailed
 import ai.koog.prompt.executor.model.StreamingFrameReceived
 import ai.koog.prompt.executor.model.StreamingRequested
-import ai.koog.prompt.executor.model.StreamingDispatched
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -34,29 +35,25 @@ import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
-import kotlin.concurrent.atomics.AtomicBoolean
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
  * Wraps this executor in the appropriate contextual executor for the given [context].
  *
- * If this executor is an [ObservablePromptExecutor], returns a [ContextualPromptExecutor] that subscribes to its
- * event flow to drive pipeline hooks. Otherwise returns a [LegacyContextualPromptExecutor] that intercepts calls
- * directly; consider migrating the executor to [ObservablePromptExecutor] to get full pipeline integration.
+ * If this executor is a [HookablePromptExecutor], returns a [ContextualPromptExecutor] that provides a contextual
+ * hook to drive pipeline callbacks. Otherwise returns a [LegacyContextualPromptExecutor] that intercepts calls
+ * directly; consider migrating the executor to [HookablePromptExecutor] to get full pipeline integration.
  */
 @InternalAgentsApi
 public fun PromptExecutor.contextual(context: AIAgentContext): PromptExecutor =
-    if (this is ObservablePromptExecutor) ContextualPromptExecutor(this, context)
-    else LegacyContextualPromptExecutor(this, context)
+    if (this is HookablePromptExecutor) {
+        ContextualPromptExecutor(this, context)
+    } else {
+        LegacyContextualPromptExecutor(this, context)
+    }
 
 /**
  * A wrapper around [ai.koog.prompt.executor.model.PromptExecutor] that allows for adding internal functionality to the executor
@@ -67,7 +64,7 @@ public fun PromptExecutor.contextual(context: AIAgentContext): PromptExecutor =
  */
 @InternalAgentsApi
 public class ContextualPromptExecutor(
-    private val executor: ObservablePromptExecutor,
+    private val executor: HookablePromptExecutor,
     private val context: AIAgentContext,
 ) : PromptExecutor() {
 
@@ -75,16 +72,12 @@ public class ContextualPromptExecutor(
         private val logger = KotlinLogging.logger { }
     }
 
-    private val observer = ContextualPromptExecutorObserver(executor.events, context, logger)
-
-    init {
-        observer.startObserving()
-    }
+    private val executorHook = ContextualPromptExecutorHook(context, logger)
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         @OptIn(ExperimentalUuidApi::class)
         val eventId = Uuid.random().toString()
-        val promptExecutionContext = PromptExecutionContext(promptExecutionId = eventId)
+        val promptExecutionContext = promptExecutionContext(eventId)
 
         val promptBeforeInterceptors = context.llm.prompt // because onLLMCallStarting might change context.llm.prompt
 
@@ -107,7 +100,7 @@ public class ContextualPromptExecutor(
     ): ModerationResult {
         @OptIn(ExperimentalUuidApi::class)
         val eventId = Uuid.random().toString()
-        val promptExecutionContext = PromptExecutionContext(promptExecutionId = eventId)
+        val promptExecutionContext = promptExecutionContext(eventId)
         val promptBeforeInterceptors = context.llm.prompt
 
         logger.debug { "Requested moderation LLM request (event id: $eventId, prompt: $prompt)" }
@@ -144,7 +137,7 @@ public class ContextualPromptExecutor(
     ): Flow<StreamFrame> {
         @OptIn(ExperimentalUuidApi::class)
         val eventId: String = Uuid.random().toString()
-        val promptExecutionContext = PromptExecutionContext(promptExecutionId = eventId)
+        val promptExecutionContext = promptExecutionContext(eventId)
 
         var effectivePrompt: Prompt = prompt
 
@@ -206,72 +199,56 @@ public class ContextualPromptExecutor(
     }
 
     override fun close() {
-        observer.close()
         executor.close()
     }
 
-    @OptIn(ExperimentalAtomicApi::class)
-    private class ContextualPromptExecutorObserver(
-        private val events: Flow<PromptExecutorEvent>,
+    private fun promptExecutionContext(eventId: String): PromptExecutionContext =
+        PromptExecutionContext(
+            promptExecutionId = eventId,
+            executorHook = executorHook
+        )
+
+    private class ContextualPromptExecutorHook(
         private val context: AIAgentContext,
         private val logger: KLogger,
-    ) : AutoCloseable {
+    ) : PromptExecutorHook {
 
-        private val bridgeJob = SupervisorJob()
-        private val bridgeScope = CoroutineScope(bridgeJob + Dispatchers.Default)
-
-        private val isObserving = AtomicBoolean(false)
-
-        fun startObserving() {
-            if (isObserving.compareAndSet(expectedValue = false, newValue = true)) {
-                bridgeScope.launch(start = CoroutineStart.UNDISPATCHED) {
-                    events.collect { event ->
-                        try {
-                            handleEvent(event, context)
-                        } catch (error: Throwable) {
-                            logger.warn(error) {
-                                "Failed to handle prompt executor event (event id: ${event.context.promptExecutionId})"
-                            }
-                        }
-                    }
+        override suspend fun handle(event: PromptExecutorEvent) {
+            try {
+                handleEvent(event)
+            } catch (error: Throwable) {
+                logger.warn(error) {
+                    "Failed to handle prompt executor event (event id: ${event.promptExecutionId})"
                 }
             }
         }
 
-        override fun close() {
-            bridgeJob.cancel()
-            isObserving.store(false)
-        }
-
-        private suspend fun handleEvent(
-            event: PromptExecutorEvent,
-            context: AIAgentContext
-        ) {
+        private suspend fun handleEvent(event: PromptExecutorEvent) {
             when (event) {
                 is ExecutionRequested -> {
                     logger.debug {
-                        "Inner executor received LLM call request (event id: ${event.context.promptExecutionId}, prompt: ${event.prompt}, tools: [${event.tools.joinToString { it.name }}])"
+                        "Inner executor received LLM call request (event id: ${event.promptExecutionId}, prompt: ${event.prompt}, tools: [${event.tools.joinToString { it.name }}])"
                     }
                 }
 
                 is ModerationRequested -> {
                     logger.debug {
-                        "Inner executor received moderation LLM request (event id: ${event.context.promptExecutionId}, prompt: ${event.prompt})"
+                        "Inner executor received moderation LLM request (event id: ${event.promptExecutionId}, prompt: ${event.prompt})"
                     }
                 }
 
                 is StreamingRequested -> {
                     logger.debug {
-                        "Inner executor received LLM streaming request (event id: ${event.context.promptExecutionId}, prompt: ${event.prompt}, tools: [${event.tools.joinToString { it.name }}])"
+                        "Inner executor received LLM streaming request (event id: ${event.promptExecutionId}, prompt: ${event.prompt}, tools: [${event.tools.joinToString { it.name }}])"
                     }
                 }
 
                 is ExecutionDispatched -> {
                     logger.debug {
-                        "Executing LLM call (event id: ${event.context.promptExecutionId}, prompt: ${event.prompt}, tools: [${event.tools.joinToString { it.name }}])"
+                        "Executing LLM call (event id: ${event.promptExecutionId}, prompt: ${event.prompt}, tools: [${event.tools.joinToString { it.name }}])"
                     }
                     context.pipeline.onLLMCallDispatched(
-                        eventId = event.context.promptExecutionId,
+                        eventId = event.promptExecutionId,
                         executionInfo = context.executionInfo,
                         runId = context.runId,
                         prompt = event.prompt,
@@ -283,10 +260,10 @@ public class ContextualPromptExecutor(
 
                 is ModerationDispatched -> {
                     logger.debug {
-                        "Executing moderation LLM request (event id: ${event.context.promptExecutionId}, prompt: ${event.prompt})"
+                        "Executing moderation LLM request (event id: ${event.promptExecutionId}, prompt: ${event.prompt})"
                     }
                     context.pipeline.onLLMCallDispatched(
-                        eventId = event.context.promptExecutionId,
+                        eventId = event.promptExecutionId,
                         executionInfo = context.executionInfo,
                         runId = context.runId,
                         prompt = event.prompt,
@@ -298,10 +275,10 @@ public class ContextualPromptExecutor(
 
                 is StreamingDispatched -> {
                     logger.debug {
-                        "Executing LLM streaming call (event id: ${event.context.promptExecutionId}, prompt: ${event.prompt}, tools: [${event.tools.joinToString { it.name }}])"
+                        "Executing LLM streaming call (event id: ${event.promptExecutionId}, prompt: ${event.prompt}, tools: [${event.tools.joinToString { it.name }}])"
                     }
                     context.pipeline.onLLMStreamingDispatched(
-                        eventId = event.context.promptExecutionId,
+                        eventId = event.promptExecutionId,
                         executionInfo = context.executionInfo,
                         runId = context.runId,
                         prompt = event.prompt,
@@ -313,10 +290,10 @@ public class ContextualPromptExecutor(
 
                 is ExecutionCompleted -> {
                     logger.trace {
-                        "Finished LLM call (event id: ${event.context.promptExecutionId}) with responses: [${event.responses.joinToString { "${it.role}: ${it.content}" }}]"
+                        "Finished LLM call (event id: ${event.promptExecutionId}) with responses: [${event.responses.joinToString { "${it.role}: ${it.content}" }}]"
                     }
                     context.pipeline.onLLMCallCompleted(
-                        eventId = event.context.promptExecutionId,
+                        eventId = event.promptExecutionId,
                         executionInfo = context.executionInfo,
                         runId = context.runId,
                         prompt = event.prompt,
@@ -330,10 +307,10 @@ public class ContextualPromptExecutor(
 
                 is ModerationCompleted -> {
                     logger.trace {
-                        "Finished moderation LLM request (event id: ${event.context.promptExecutionId}) with response: ${event.result}"
+                        "Finished moderation LLM request (event id: ${event.promptExecutionId}) with response: ${event.result}"
                     }
                     context.pipeline.onLLMCallCompleted(
-                        eventId = event.context.promptExecutionId,
+                        eventId = event.promptExecutionId,
                         executionInfo = context.executionInfo,
                         runId = context.runId,
                         prompt = event.prompt,
@@ -347,10 +324,10 @@ public class ContextualPromptExecutor(
 
                 is StreamingFrameReceived -> {
                     logger.trace {
-                        "Received frame from LLM streaming call (event id: ${event.context.promptExecutionId}): ${event.frame}"
+                        "Received frame from LLM streaming call (event id: ${event.promptExecutionId}): ${event.frame}"
                     }
                     context.pipeline.onLLMStreamingFrameReceived(
-                        eventId = event.context.promptExecutionId,
+                        eventId = event.promptExecutionId,
                         executionInfo = context.executionInfo,
                         runId = context.runId,
                         prompt = event.prompt,
@@ -361,9 +338,9 @@ public class ContextualPromptExecutor(
                 }
 
                 is StreamingCompleted -> {
-                    logger.debug { "Finished LLM streaming call (event id: ${event.context.promptExecutionId}): null" }
+                    logger.debug { "Finished LLM streaming call (event id: ${event.promptExecutionId}): null" }
                     context.pipeline.onLLMStreamingCompleted(
-                        eventId = event.context.promptExecutionId,
+                        eventId = event.promptExecutionId,
                         executionInfo = context.executionInfo,
                         runId = context.runId,
                         prompt = event.prompt,
@@ -375,10 +352,10 @@ public class ContextualPromptExecutor(
 
                 is ExecutionFailed -> {
                     logger.debug(event.error) {
-                        "Error in executing LLM call (event id: ${event.context.promptExecutionId}): ${event.error}"
+                        "Error in executing LLM call (event id: ${event.promptExecutionId}): ${event.error}"
                     }
                     context.pipeline.onLLMCallFailed(
-                        eventId = event.context.promptExecutionId,
+                        eventId = event.promptExecutionId,
                         executionInfo = context.executionInfo,
                         runId = context.runId,
                         prompt = event.prompt,
@@ -391,10 +368,10 @@ public class ContextualPromptExecutor(
 
                 is ModerationFailed -> {
                     logger.debug(event.error) {
-                        "Error in moderation LLM request (event id: ${event.context.promptExecutionId}): ${event.error}"
+                        "Error in moderation LLM request (event id: ${event.promptExecutionId}): ${event.error}"
                     }
                     context.pipeline.onLLMCallFailed(
-                        eventId = event.context.promptExecutionId,
+                        eventId = event.promptExecutionId,
                         executionInfo = context.executionInfo,
                         runId = context.runId,
                         prompt = event.prompt,
@@ -407,10 +384,10 @@ public class ContextualPromptExecutor(
 
                 is StreamingFailed -> {
                     logger.debug(event.error) {
-                        "Error in LLM streaming call (event id: ${event.context.promptExecutionId}): ${event.error}"
+                        "Error in LLM streaming call (event id: ${event.promptExecutionId}): ${event.error}"
                     }
                     context.pipeline.onLLMStreamingFailed(
-                        eventId = event.context.promptExecutionId,
+                        eventId = event.promptExecutionId,
                         executionInfo = context.executionInfo,
                         runId = context.runId,
                         prompt = event.prompt,

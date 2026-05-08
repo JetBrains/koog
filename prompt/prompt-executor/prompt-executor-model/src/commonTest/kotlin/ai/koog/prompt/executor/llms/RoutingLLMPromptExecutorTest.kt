@@ -319,7 +319,7 @@ class RoutingLLMPromptExecutorTest {
         assertTrue(openAIClient.wasClosed())
     }
 
-    class ObservabilityTest : PromptExecutorObservabilityTest<RoutingLLMPromptExecutor>() {
+    class TestHookable : HookablePromptExecutorTest<RoutingLLMPromptExecutor>() {
         override fun failingExecutor(failure: Throwable): RoutingLLMPromptExecutor {
             val failingClient = MockLLMClient(
                 responseSpec = MockLLMClient.ResponseSpec(

@@ -7,13 +7,12 @@ import ai.koog.prompt.executor.model.ExecutionCompleted
 import ai.koog.prompt.executor.model.ExecutionDispatched
 import ai.koog.prompt.executor.model.ExecutionFailed
 import ai.koog.prompt.executor.model.ExecutionRequested
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.executor.model.MultipleChoicesCompleted
 import ai.koog.prompt.executor.model.MultipleChoicesDispatched
 import ai.koog.prompt.executor.model.MultipleChoicesFailed
 import ai.koog.prompt.executor.model.MultipleChoicesRequested
-import ai.koog.prompt.executor.model.ObservablePromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutionContext
-import ai.koog.prompt.executor.model.PromptExecutorEvent
 import ai.koog.prompt.executor.model.StreamingCompleted
 import ai.koog.prompt.executor.model.StreamingDispatched
 import ai.koog.prompt.executor.model.StreamingFailed
@@ -27,14 +26,9 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrames
 import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flow
 
-class TestLLMExecutor(val clock: KoogClock) : ObservablePromptExecutor() {
-
-    private val eventSink = MutableSharedFlow<PromptExecutorEvent>(extraBufferCapacity = 64)
-    override val events: Flow<PromptExecutorEvent> = eventSink.asSharedFlow()
+class TestLLMExecutor(val clock: KoogClock) : HookablePromptExecutor() {
 
     override suspend fun execute(
         prompt: Prompt,
@@ -42,14 +36,14 @@ class TestLLMExecutor(val clock: KoogClock) : ObservablePromptExecutor() {
         tools: List<ToolDescriptor>,
         context: PromptExecutionContext,
     ): List<Message.Response> {
-        eventSink.emit(ExecutionRequested(context, prompt, model, tools))
-        eventSink.emit(ExecutionDispatched(context, prompt, model, tools))
+        context.handle(ExecutionRequested(context.promptExecutionId, prompt, model, tools))
+        context.handle(ExecutionDispatched(context.promptExecutionId, prompt, model, tools))
         return try {
             val responses = listOf(handlePrompt(prompt))
-            eventSink.emit(ExecutionCompleted(context, prompt, model, tools, responses))
+            context.handle(ExecutionCompleted(context.promptExecutionId, prompt, model, tools, responses))
             responses
         } catch (e: Throwable) {
-            eventSink.emit(ExecutionFailed(context, prompt, model, tools, e))
+            context.handle(ExecutionFailed(context.promptExecutionId, prompt, model, tools, e))
             throw e
         }
     }
@@ -60,18 +54,18 @@ class TestLLMExecutor(val clock: KoogClock) : ObservablePromptExecutor() {
         tools: List<ToolDescriptor>,
         context: PromptExecutionContext,
     ): Flow<StreamFrame> = flow {
-        eventSink.emit(StreamingRequested(context, prompt, model, tools))
-        eventSink.emit(StreamingDispatched(context, prompt, model, tools))
+        context.handle(StreamingRequested(context.promptExecutionId, prompt, model, tools))
+        context.handle(StreamingDispatched(context.promptExecutionId, prompt, model, tools))
         try {
             handlePrompt(prompt).toStreamFrames().forEach { frame ->
-                eventSink.emit(StreamingFrameReceived(context, prompt, model, tools, frame))
+                context.handle(StreamingFrameReceived(context.promptExecutionId, prompt, model, tools, frame))
                 emit(frame)
             }
         } catch (e: Throwable) {
-            eventSink.emit(StreamingFailed(context, prompt, model, tools, e))
+            context.handle(StreamingFailed(context.promptExecutionId, prompt, model, tools, e))
             throw e
         } finally {
-            eventSink.emit(StreamingCompleted(context, prompt, model, tools))
+            context.handle(StreamingCompleted(context.promptExecutionId, prompt, model, tools))
         }
     }
 
@@ -81,14 +75,14 @@ class TestLLMExecutor(val clock: KoogClock) : ObservablePromptExecutor() {
         tools: List<ToolDescriptor>,
         context: PromptExecutionContext,
     ): List<LLMChoice> {
-        eventSink.emit(MultipleChoicesRequested(context, prompt, model, tools))
-        eventSink.emit(MultipleChoicesDispatched(context, prompt, model, tools))
+        context.handle(MultipleChoicesRequested(context.promptExecutionId, prompt, model, tools))
+        context.handle(MultipleChoicesDispatched(context.promptExecutionId, prompt, model, tools))
         return try {
             val choices = listOf(listOf(handlePrompt(prompt)))
-            eventSink.emit(MultipleChoicesCompleted(context, prompt, model, tools, choices))
+            context.handle(MultipleChoicesCompleted(context.promptExecutionId, prompt, model, tools, choices))
             choices
         } catch (e: Throwable) {
-            eventSink.emit(MultipleChoicesFailed(context, prompt, model, tools, e))
+            context.handle(MultipleChoicesFailed(context.promptExecutionId, prompt, model, tools, e))
             throw e
         }
     }

@@ -22,15 +22,15 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * Fallback [PromptExecutor] wrapper for agents that use a plain (non-observable) [PromptExecutor].
+ * Fallback [PromptExecutor] wrapper for agents that use a plain, non-hooked [PromptExecutor].
  *
  * Bridges executor calls to the agent pipeline by intercepting each call directly. Compared to
  * [ContextualPromptExecutor], this variant does not receive [ai.koog.prompt.executor.model.PromptExecutorEvent]s
  * from the executor, so [ai.koog.agents.core.feature.pipeline.AIAgentPipelineAPI.onLLMCallDispatched] and
  * the streaming equivalent are never fired.
  *
- * Prefer migrating the underlying executor to [ai.koog.prompt.executor.model.ObservablePromptExecutor] so
- * that [ContextualPromptExecutor] can be used instead.
+ * Prefer migrating the underlying executor to the hooked executor API so that [ContextualPromptExecutor] can be
+ * used instead.
  */
 @InternalAgentsApi
 internal class LegacyContextualPromptExecutor(

@@ -18,7 +18,6 @@ class PromptExecutorEventTest {
     @Test
     fun testRequestedAndDispatchedEventsCanCarryDifferentSnapshots() {
         val promptExecutionId = "prompt-execution-id"
-        val context = PromptExecutionContext(promptExecutionId)
         val requestedPrompt = Prompt.Empty
         val dispatchedPrompt = Prompt(emptyList(), "dispatched")
         val requestedModel = LLModel(LLMProvider.OpenAI, "requested-model")
@@ -26,10 +25,10 @@ class PromptExecutorEventTest {
         val requestedTools = listOf(ToolDescriptor("requested-tool", "Requested tool"))
         val dispatchedTools = listOf(ToolDescriptor("dispatched-tool", "Dispatched tool"))
 
-        val requested = ExecutionRequested(context, requestedPrompt, requestedModel, requestedTools)
-        val dispatched = ExecutionDispatched(context, dispatchedPrompt, dispatchedModel, dispatchedTools)
+        val requested = ExecutionRequested(promptExecutionId, requestedPrompt, requestedModel, requestedTools)
+        val dispatched = ExecutionDispatched(promptExecutionId, dispatchedPrompt, dispatchedModel, dispatchedTools)
 
-        assertEquals(requested.context.promptExecutionId, dispatched.context.promptExecutionId)
+        assertEquals(requested.promptExecutionId, dispatched.promptExecutionId)
         assertEquals(requestedPrompt, requested.prompt)
         assertEquals(dispatchedPrompt, dispatched.prompt)
         assertEquals(requestedModel, requested.model)
@@ -48,14 +47,14 @@ class PromptExecutorEventTest {
         val moderationResult = ModerationResult(isHarmful = false, categories = emptyMap())
 
         val executionCompleted = ExecutionCompleted(
-            PromptExecutionContext("execution"),
+            "execution",
             prompt,
             model,
             tools,
             listOf(response)
         )
-        val choicesCompleted = MultipleChoicesCompleted(PromptExecutionContext("choices"), prompt, model, tools, choices)
-        val moderationCompleted = ModerationCompleted(PromptExecutionContext("moderation"), prompt, model, moderationResult)
+        val choicesCompleted = MultipleChoicesCompleted("choices", prompt, model, tools, choices)
+        val moderationCompleted = ModerationCompleted("moderation", prompt, model, moderationResult)
 
         assertEquals(listOf(response), executionCompleted.responses)
         assertEquals(choices, choicesCompleted.choices)
@@ -66,7 +65,7 @@ class PromptExecutorEventTest {
     fun testStreamingFrameReceivedIsPromptExecutorEvent() {
         val frame = StreamFrame.TextDelta("delta")
         val event = StreamingFrameReceived(
-            context = PromptExecutionContext("streaming"),
+            promptExecutionId = "streaming",
             prompt = Prompt.Empty,
             model = LLModel(LLMProvider.OpenAI, "model"),
             tools = emptyList(),

@@ -176,7 +176,7 @@ class MultiLLMPromptExecutorTest {
         }
     }
 
-    class ObservabilityTest : PromptExecutorObservabilityTest<MultiLLMPromptExecutor>() {
+    class TestHookable : HookablePromptExecutorTest<MultiLLMPromptExecutor>() {
         override fun failingExecutor(failure: Throwable): MultiLLMPromptExecutor {
             val failingClient = MockLLMClient(
                 responseSpec = MockLLMClient.ResponseSpec(

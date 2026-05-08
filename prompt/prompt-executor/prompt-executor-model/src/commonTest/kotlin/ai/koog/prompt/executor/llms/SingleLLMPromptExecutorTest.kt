@@ -108,7 +108,7 @@ class SingleLLMPromptExecutorTest {
         assertSame(mockModel, client.lastModerationModel)
     }
 
-    class ObservabilityTest : PromptExecutorObservabilityTest<SingleLLMPromptExecutor>() {
+    class TestHookable : HookablePromptExecutorTest<SingleLLMPromptExecutor>() {
         override fun failingExecutor(failure: Throwable): SingleLLMPromptExecutor {
             val failingClient = MockLLMClient(
                 responseSpec = MockLLMClient.ResponseSpec(

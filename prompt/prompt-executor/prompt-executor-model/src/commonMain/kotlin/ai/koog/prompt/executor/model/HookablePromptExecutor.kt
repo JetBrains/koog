@@ -11,23 +11,57 @@ import kotlinx.coroutines.flow.Flow
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+/**
+ * Hook invoked for prompt execution lifecycle events.
+ *
+ * Hook invocation is part of the executor call path: [handle] may suspend, and the executor must not continue past
+ * the lifecycle point being reported until [handle] returns.
+ */
+public fun interface PromptExecutorHook {
+    public suspend fun handle(event: PromptExecutorEvent)
+
+    public companion object {
+        public val NoOp: PromptExecutorHook = PromptExecutorHook { }
+    }
+}
+
+/**
+ * Per-call context passed to [HookablePromptExecutor] implementations.
+ *
+ * The context provides a stable [promptExecutionId] for correlating lifecycle events from the same executor operation
+ * and an [executorHook] hook for ordered lifecycle handling.
+ */
 public data class PromptExecutionContext(
     @OptIn(ExperimentalUuidApi::class)
     public val promptExecutionId: String = Uuid.random().toString(),
-)
-
-/**
- * A [PromptExecutor] that emits [PromptExecutorEvent] instances and accepts caller-provided execution context.
- *
- * Regular [PromptExecutor] methods are final and delegate to context-aware counterparts, so observable executor
- * implementations only need to implement methods that receive [PromptExecutionContext].
- */
-public abstract class ObservablePromptExecutor : PromptExecutor() {
 
     /**
-     * Events emitted by this executor.
+     * Hook for lifecycle events emitted during this prompt execution.
      */
-    public abstract val events: Flow<PromptExecutorEvent>
+    public val executorHook: PromptExecutorHook = PromptExecutorHook.NoOp,
+) {
+
+    /**
+     * Handles [event] through [executorHook] after verifying that it belongs to this prompt execution.
+     */
+    public suspend fun handle(event: PromptExecutorEvent) {
+        require(event.promptExecutionId == promptExecutionId) {
+            "Event context mismatch: expected $promptExecutionId, got ${event.promptExecutionId}"
+        }
+        executorHook.handle(event)
+    }
+}
+
+/**
+ * A [PromptExecutor] whose implementations can report lifecycle events through a per-call hook.
+ *
+ * Public [PromptExecutor] methods are final and create a default [PromptExecutionContext]. Callers that need ordered
+ * lifecycle handling can use the overloads that accept [PromptExecutionContext] and provide a [PromptExecutorHook].
+ *
+ * Implementations should emit lifecycle events at the appropriate execution points by calling
+ * [PromptExecutionContext.handle]. Hook calls are synchronous with the executor operation and may suspend.
+ */
+public abstract class HookablePromptExecutor : PromptExecutor() {
 
     public abstract suspend fun execute(
         prompt: Prompt,

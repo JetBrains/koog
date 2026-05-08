@@ -8,6 +8,7 @@ import ai.koog.prompt.executor.model.ExecutionCompleted
 import ai.koog.prompt.executor.model.ExecutionDispatched
 import ai.koog.prompt.executor.model.ExecutionFailed
 import ai.koog.prompt.executor.model.ExecutionRequested
+import ai.koog.prompt.executor.model.HookablePromptExecutor
 import ai.koog.prompt.executor.model.ModerationCompleted
 import ai.koog.prompt.executor.model.ModerationDispatched
 import ai.koog.prompt.executor.model.ModerationFailed
@@ -16,9 +17,7 @@ import ai.koog.prompt.executor.model.MultipleChoicesCompleted
 import ai.koog.prompt.executor.model.MultipleChoicesDispatched
 import ai.koog.prompt.executor.model.MultipleChoicesFailed
 import ai.koog.prompt.executor.model.MultipleChoicesRequested
-import ai.koog.prompt.executor.model.ObservablePromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutionContext
-import ai.koog.prompt.executor.model.PromptExecutorEvent
 import ai.koog.prompt.executor.model.StreamingCompleted
 import ai.koog.prompt.executor.model.StreamingDispatched
 import ai.koog.prompt.executor.model.StreamingFailed
@@ -36,8 +35,6 @@ import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlin.jvm.JvmStatic
 
@@ -59,7 +56,7 @@ internal class ResponseMatcher<TResponse>(
 )
 
 /**
- * A mock implementation of [ObservablePromptExecutor] used for testing.
+ * A mock implementation of the hooked prompt executor API used for testing.
  *
  * This class simulates an LLM by returning predefined responses based on the input prompt.
  * It supports different types of matching:
@@ -90,15 +87,12 @@ public class MockPromptExecutor internal constructor(
     internal val toolActions: List<ToolCondition<*, *>> = emptyList(),
     private val clock: KoogClock = KoogClock.System,
     private val tokenizer: Tokenizer? = null
-) : ObservablePromptExecutor() {
+) : HookablePromptExecutor() {
     public companion object {
         @JvmStatic
         @JavaAPI
         public fun builder(serializer: JSONSerializer): MockExecutorBuilder = MockExecutorBuilder(serializer)
     }
-
-    private val eventSink = MutableSharedFlow<PromptExecutorEvent>(extraBufferCapacity = 64)
-    override val events: Flow<PromptExecutorEvent> = eventSink.asSharedFlow()
 
     /**
      * Executes a prompt with tools and returns a list of responses.
@@ -116,14 +110,14 @@ public class MockPromptExecutor internal constructor(
         context: PromptExecutionContext,
     ): List<Message.Response> {
         logger.debug { "Executing prompt with tools: ${tools.map { it.name }}" }
-        eventSink.emit(ExecutionRequested(context, prompt, model, tools))
-        eventSink.emit(ExecutionDispatched(context, prompt, model, tools))
+        context.handle(ExecutionRequested(context.promptExecutionId, prompt, model, tools))
+        context.handle(ExecutionDispatched(context.promptExecutionId, prompt, model, tools))
         return try {
             val responses = handlePrompt(prompt)
-            eventSink.emit(ExecutionCompleted(context, prompt, model, tools, responses))
+            context.handle(ExecutionCompleted(context.promptExecutionId, prompt, model, tools, responses))
             responses
         } catch (e: Throwable) {
-            eventSink.emit(ExecutionFailed(context, prompt, model, tools, e))
+            context.handle(ExecutionFailed(context.promptExecutionId, prompt, model, tools, e))
             throw e
         }
     }
@@ -144,8 +138,8 @@ public class MockPromptExecutor internal constructor(
         context: PromptExecutionContext,
     ): Flow<StreamFrame> {
         return flow {
-            eventSink.emit(StreamingRequested(context, prompt, model, tools))
-            eventSink.emit(StreamingDispatched(context, prompt, model, tools))
+            context.handle(StreamingRequested(context.promptExecutionId, prompt, model, tools))
+            context.handle(StreamingDispatched(context.promptExecutionId, prompt, model, tools))
             try {
                 val lastMessage = getLastMessage(prompt)
                 val matchedStream = lastMessage?.let {
@@ -156,14 +150,14 @@ public class MockPromptExecutor internal constructor(
                     handlePrompt(prompt).toStreamFrames().forEach { emit(it) }
                 }
                 frames.collect { frame ->
-                    eventSink.emit(StreamingFrameReceived(context, prompt, model, tools, frame))
+                    context.handle(StreamingFrameReceived(context.promptExecutionId, prompt, model, tools, frame))
                     emit(frame)
                 }
             } catch (e: Throwable) {
-                eventSink.emit(StreamingFailed(context, prompt, model, tools, e))
+                context.handle(StreamingFailed(context.promptExecutionId, prompt, model, tools, e))
                 throw e
             } finally {
-                eventSink.emit(StreamingCompleted(context, prompt, model, tools))
+                context.handle(StreamingCompleted(context.promptExecutionId, prompt, model, tools))
             }
         }
     }
@@ -183,14 +177,14 @@ public class MockPromptExecutor internal constructor(
         tools: List<ToolDescriptor>,
         context: PromptExecutionContext,
     ): List<LLMChoice> {
-        eventSink.emit(MultipleChoicesRequested(context, prompt, model, tools))
-        eventSink.emit(MultipleChoicesDispatched(context, prompt, model, tools))
+        context.handle(MultipleChoicesRequested(context.promptExecutionId, prompt, model, tools))
+        context.handle(MultipleChoicesDispatched(context.promptExecutionId, prompt, model, tools))
         return try {
             val choices = listOf(handlePrompt(prompt))
-            eventSink.emit(MultipleChoicesCompleted(context, prompt, model, tools, choices))
+            context.handle(MultipleChoicesCompleted(context.promptExecutionId, prompt, model, tools, choices))
             choices
         } catch (e: Throwable) {
-            eventSink.emit(MultipleChoicesFailed(context, prompt, model, tools, e))
+            context.handle(MultipleChoicesFailed(context.promptExecutionId, prompt, model, tools, e))
             throw e
         }
     }
@@ -208,8 +202,8 @@ public class MockPromptExecutor internal constructor(
         model: LLModel,
         context: PromptExecutionContext,
     ): ModerationResult {
-        eventSink.emit(ModerationRequested(context, prompt, model))
-        eventSink.emit(ModerationDispatched(context, prompt, model))
+        context.handle(ModerationRequested(context.promptExecutionId, prompt, model))
+        context.handle(ModerationDispatched(context.promptExecutionId, prompt, model))
         return try {
             val lastMessage = getLastMessage(prompt)
             val result = if (lastMessage == null) {
@@ -219,10 +213,10 @@ public class MockPromptExecutor internal constructor(
                     ?: findPartialResponse(lastMessage, moderationResponseMatcher.exactMatches)
                     ?: moderationResponseMatcher.defaultResponse
             }
-            eventSink.emit(ModerationCompleted(context, prompt, model, result))
+            context.handle(ModerationCompleted(context.promptExecutionId, prompt, model, result))
             result
         } catch (e: Throwable) {
-            eventSink.emit(ModerationFailed(context, prompt, model, e))
+            context.handle(ModerationFailed(context.promptExecutionId, prompt, model, e))
             throw e
         }
     }
