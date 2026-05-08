@@ -11,6 +11,7 @@ import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
+import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.environment.result
 import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
@@ -648,7 +649,16 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
                 response is Message.Tool.Call -> {
                     val toolResult = executeToolHacked(response, finishTool)
 
-                    if (toolResult.tool == finishTool.descriptor.name) {
+                    if (toolResult.tool == finishTool.descriptor.name && toolResult.resultKind is ToolResultKind.Success) {
+                        // Prompt must contain tool result
+                        llm.writeSession {
+                            appendPrompt {
+                                tool {
+                                    result(toolResult)
+                                }
+                            }
+                        }
+
                         return toolResult.toSafeResult(finishTool, config.serializer).asSuccessful().result
                     }
 
@@ -722,9 +732,20 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
                     val toolResults =
                         executeMultipleToolsHacked(toolCalls, finishTool, parallelTools = runMode == ToolCalls.PARALLEL)
 
-                    toolResults.firstOrNull { it.tool == finishTool.descriptor.name }
+                    toolResults.firstOrNull { it.tool == finishTool.descriptor.name && it.resultKind is ToolResultKind.Success }
                         ?.let { finishResult ->
-                            return finishResult.toSafeResult(finishTool, config.serializer).asSuccessful().result
+                            // Prompt must contain all tool results
+                            llm.writeSession {
+                                appendPrompt {
+                                    tool {
+                                        toolResults.forEach { result(it) }
+                                    }
+                                }
+                            }
+
+                            return finishResult
+                                .toSafeResult(finishTool, config.serializer)
+                                .asSuccessful().result
                         }
 
                     responses = sendMultipleToolResults(toolResults)
