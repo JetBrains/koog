@@ -156,9 +156,8 @@ public class MockPromptExecutor internal constructor(
             } catch (e: Throwable) {
                 context.handle(StreamingFailed(context.promptExecutionId, prompt, model, tools, e))
                 throw e
-            } finally {
-                context.handle(StreamingCompleted(context.promptExecutionId, prompt, model, tools))
             }
+            context.handle(StreamingCompleted(context.promptExecutionId, prompt, model, tools))
         }
     }
 

@@ -8,6 +8,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -217,5 +218,8 @@ class MultiLLMPromptExecutorTest {
 
         @Test
         override fun testModerationEventsOnFailure() = super.testModerationEventsOnFailure()
+
+        @Test
+        override fun testUncaughtHookFailuresPropagation(): TestResult = super.testUncaughtHookFailuresPropagation()
     }
 }

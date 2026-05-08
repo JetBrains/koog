@@ -55,11 +55,14 @@ public data class PromptExecutionContext(
 /**
  * A [PromptExecutor] whose implementations can report lifecycle events through a per-call hook.
  *
- * Public [PromptExecutor] methods are final and create a default [PromptExecutionContext]. Callers that need ordered
- * lifecycle handling can use the overloads that accept [PromptExecutionContext] and provide a [PromptExecutorHook].
+ * Base [PromptExecutor] methods create a default [PromptExecutionContext] and delegate to corresponding methods supporting [PromptExecutionContext] based hookable execution.
+ * Callers that need ordered lifecycle handling can use the overloads that accept [PromptExecutionContext] and provide a [PromptExecutorHook].
  *
  * Implementations should emit lifecycle events at the appropriate execution points by calling
  * [PromptExecutionContext.handle]. Hook calls are synchronous with the executor operation and may suspend.
+ *
+ * Subclasses are expected to implement the context-taking methods declared on this class and emit the corresponding
+ * [PromptExecutorEvent]s through [PromptExecutionContext.handle].
  */
 public abstract class HookablePromptExecutor : PromptExecutor() {
 
@@ -90,25 +93,25 @@ public abstract class HookablePromptExecutor : PromptExecutor() {
         context: PromptExecutionContext,
     ): ModerationResult
 
-    final override suspend fun execute(
+    override suspend fun execute(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<Message.Response> = execute(prompt, model, tools, PromptExecutionContext())
 
-    final override fun executeStreaming(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = executeStreaming(prompt, model, tools, PromptExecutionContext())
 
-    final override suspend fun executeMultipleChoices(
+    override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<LLMChoice> = executeMultipleChoices(prompt, model, tools, PromptExecutionContext())
 
-    final override suspend fun moderate(
+    override suspend fun moderate(
         prompt: Prompt,
         model: LLModel
     ): ModerationResult = moderate(prompt, model, PromptExecutionContext())

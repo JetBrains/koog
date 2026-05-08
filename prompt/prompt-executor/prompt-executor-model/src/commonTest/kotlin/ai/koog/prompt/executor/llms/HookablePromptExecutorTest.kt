@@ -24,8 +24,10 @@ import ai.koog.prompt.executor.model.StreamingDispatched
 import ai.koog.prompt.executor.model.StreamingFailed
 import ai.koog.prompt.executor.model.StreamingFrameReceived
 import ai.koog.prompt.executor.model.StreamingRequested
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlin.reflect.KClass
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
@@ -224,6 +226,106 @@ abstract class HookablePromptExecutorTest<T : HookablePromptExecutor> {
         )
     }
 
+    open fun testUncaughtHookFailuresPropagation() = runTest {
+        eventTypesByExecutionPath.forEach { (path, eventTypes) ->
+            testUncaughtHookFailurePropagation(path, eventTypes)
+        }
+    }
+
+    private suspend fun testUncaughtHookFailurePropagation(
+        executionPath: ExecutionPath,
+        eventTypes: List<KClass<out PromptExecutorEvent>>
+    ) {
+        val hookFailure = Exception("Hook failure")
+        val passingExecutor = passingExecutor()
+        val failingExecutor = failingExecutor(hookFailure)
+        when (executionPath) {
+            ExecutionPath.Execute -> eventTypes.forEach { eventType ->
+                val executor = if (eventType == ExecutionFailed::class) failingExecutor else passingExecutor
+                assertFailsWith(hookFailure) {
+                    executor.execute(
+                        prompt = prompt,
+                        model = model,
+                        tools = tools,
+                        context = PromptExecutionContext(
+                            executorHook = failingHook(
+                                failFor = eventType,
+                                failWith = hookFailure
+                            )
+                        )
+                    )
+                }
+            }
+
+            ExecutionPath.ExecuteMultipleChoices -> eventTypes.forEach { eventType ->
+                val executor =
+                    if (eventType == MultipleChoicesFailed::class) failingExecutor else passingExecutor
+                assertFailsWith(hookFailure) {
+                    executor.executeMultipleChoices(
+                        prompt = prompt,
+                        model = model,
+                        tools = tools,
+                        context = PromptExecutionContext(
+                            executorHook = failingHook(
+                                failFor = eventType,
+                                failWith = hookFailure
+                            )
+                        )
+                    )
+                }
+            }
+
+            ExecutionPath.ExecuteStreaming -> eventTypes.forEach { eventType ->
+                val executor =
+                    if (eventType == StreamingFailed::class) failingExecutor else passingExecutor
+                assertFailsWith(hookFailure) {
+                    executor.executeStreaming(
+                        prompt = prompt,
+                        model = model,
+                        tools = tools,
+                        context = PromptExecutionContext(
+                            executorHook = failingHook(
+                                failFor = eventType,
+                                failWith = hookFailure
+                            )
+                        )
+                    ).collect()
+                }
+            }
+
+            ExecutionPath.Moderate -> eventTypes.forEach { eventType ->
+                val executor =
+                    if (eventType == ModerationFailed::class) failingExecutor else passingExecutor
+                assertFailsWith(hookFailure) {
+                    executor.moderate(
+                        prompt = prompt,
+                        model = model,
+                        context = PromptExecutionContext(
+                            executorHook = failingHook(
+                                failFor = eventType,
+                                failWith = hookFailure
+                            )
+                        )
+                    )
+                }
+            }
+        }
+
+    }
+
+    private suspend fun assertFailsWith(expectedFailure: Throwable, block: suspend () -> Unit) {
+        val failure = assertFails { block() }
+        assertEquals(expectedFailure, failure, "Expected failure: $expectedFailure but got: $failure")
+    }
+
+    private fun failingHook(failFor: KClass<out PromptExecutorEvent>, failWith: Throwable): PromptExecutorHook {
+        return PromptExecutorHook { event ->
+            if (failFor.isInstance(event)) {
+                throw failWith
+            }
+        }
+    }
+
     private class EventsCaptor : PromptExecutorHook {
 
         private val events = mutableListOf<PromptExecutorEvent>()
@@ -235,5 +337,42 @@ abstract class HookablePromptExecutorTest<T : HookablePromptExecutor> {
         fun capturedEvents(): List<PromptExecutorEvent> {
             return events.toList()
         }
+    }
+
+    companion object {
+        private enum class ExecutionPath {
+            Execute,
+            ExecuteStreaming,
+            ExecuteMultipleChoices,
+            Moderate,
+        }
+
+        private val eventTypesByExecutionPath = mapOf(
+            ExecutionPath.Execute to listOf(
+                ExecutionRequested::class,
+                ExecutionDispatched::class,
+                ExecutionCompleted::class,
+                ExecutionFailed::class
+            ),
+            ExecutionPath.ExecuteMultipleChoices to listOf(
+                MultipleChoicesRequested::class,
+                MultipleChoicesDispatched::class,
+                MultipleChoicesCompleted::class,
+                MultipleChoicesFailed::class
+            ),
+            ExecutionPath.ExecuteStreaming to listOf(
+                StreamingRequested::class,
+                StreamingDispatched::class,
+                StreamingFrameReceived::class,
+                StreamingCompleted::class,
+                StreamingFailed::class,
+            ),
+            ExecutionPath.Moderate to listOf(
+                ModerationRequested::class,
+                ModerationDispatched::class,
+                ModerationCompleted::class,
+                ModerationFailed::class
+            )
+        )
     }
 }

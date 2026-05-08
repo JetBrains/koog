@@ -168,7 +168,7 @@ public class ContextualPromptExecutor(
     ): List<LLMChoice> {
         logger.debug { "Executing LLM call prompt: $prompt with tools: [${tools.joinToString { it.name }}]" }
 
-        val responses = executor.executeMultipleChoices(prompt, model, tools)
+        val responses = executor.executeMultipleChoices(prompt, model, tools, PromptExecutionContext())
 
         logger.debug {
             val messageBuilder = StringBuilder().appendLine("Finished LLM call with LLM Choice response:")
@@ -214,16 +214,6 @@ public class ContextualPromptExecutor(
     ) : PromptExecutorHook {
 
         override suspend fun handle(event: PromptExecutorEvent) {
-            try {
-                handleEvent(event)
-            } catch (error: Throwable) {
-                logger.warn(error) {
-                    "Failed to handle prompt executor event (event id: ${event.promptExecutionId})"
-                }
-            }
-        }
-
-        private suspend fun handleEvent(event: PromptExecutorEvent) {
             when (event) {
                 is ExecutionRequested -> {
                     logger.debug {
@@ -338,7 +328,7 @@ public class ContextualPromptExecutor(
                 }
 
                 is StreamingCompleted -> {
-                    logger.debug { "Finished LLM streaming call (event id: ${event.promptExecutionId}): null" }
+                    logger.debug { "Finished LLM streaming call (event id: ${event.promptExecutionId})" }
                     context.pipeline.onLLMStreamingCompleted(
                         eventId = event.promptExecutionId,
                         executionInfo = context.executionInfo,
@@ -393,6 +383,17 @@ public class ContextualPromptExecutor(
                         prompt = event.prompt,
                         model = event.model,
                         throwable = event.error,
+                        context = context
+                    )
+                    // note: this is intended due to backward compatibility:
+                    // we want to signal stream completion event if it failed
+                    context.pipeline.onLLMStreamingCompleted(
+                        eventId = event.promptExecutionId,
+                        executionInfo = context.executionInfo,
+                        runId = context.runId,
+                        prompt = event.prompt,
+                        model = event.model,
+                        tools = event.tools,
                         context = context
                     )
                 }

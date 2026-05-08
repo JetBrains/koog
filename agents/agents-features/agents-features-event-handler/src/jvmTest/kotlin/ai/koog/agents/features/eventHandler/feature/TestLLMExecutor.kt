@@ -64,9 +64,8 @@ class TestLLMExecutor(val clock: KoogClock) : HookablePromptExecutor() {
         } catch (e: Throwable) {
             context.handle(StreamingFailed(context.promptExecutionId, prompt, model, tools, e))
             throw e
-        } finally {
-            context.handle(StreamingCompleted(context.promptExecutionId, prompt, model, tools))
         }
+        context.handle(StreamingCompleted(context.promptExecutionId, prompt, model, tools))
     }
 
     override suspend fun executeMultipleChoices(

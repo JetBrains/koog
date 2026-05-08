@@ -360,5 +360,8 @@ class RoutingLLMPromptExecutorTest {
 
         @Test
         override fun testModerationEventsOnFailure() = super.testModerationEventsOnFailure()
+
+        @Test
+        override fun testUncaughtHookFailuresPropagation() = super.testUncaughtHookFailuresPropagation()
     }
 }

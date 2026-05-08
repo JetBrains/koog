@@ -150,7 +150,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     ): List<Message.Response> {
         context.handle(ExecutionRequested(context.promptExecutionId, prompt, model, tools))
         logger.debug {
-            "Executing prompt: $prompt with tools: $tools and model: $model. Execution id: $context"
+            "Executing prompt: $prompt with tools: $tools and model: $model. Prompt execution id: ${context.promptExecutionId}"
         }
 
         val (effectiveClient, effectiveModel) = try {
@@ -189,7 +189,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         return flow {
             context.handle(StreamingRequested(context.promptExecutionId, prompt, model, tools))
             logger.debug {
-                "Executing streaming prompt: $prompt with model: $model. Execution id: $context"
+                "Executing streaming prompt: $prompt with model: $model. Prompt execution id: ${context.promptExecutionId}"
             }
 
             val (client, effectiveModel) = try {
@@ -209,7 +209,6 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
                 context.handle(StreamingFailed(context.promptExecutionId, prompt, effectiveModel, tools, error))
                 throw error
             }
-
             context.handle(StreamingCompleted(context.promptExecutionId, prompt, effectiveModel, tools))
         }
     }
@@ -231,7 +230,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     ): List<LLMChoice> {
         context.handle(MultipleChoicesRequested(context.promptExecutionId, prompt, model, tools))
         logger.debug {
-            "Executing prompt: $prompt with tools: $tools and model: $model. Execution id: $context"
+            "Executing prompt: $prompt with tools: $tools and model: $model. Prompt execution id: ${context.promptExecutionId}"
         }
 
         val (client, effectiveModel) = try {
@@ -264,7 +263,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      */
     override suspend fun moderate(prompt: Prompt, model: LLModel, context: PromptExecutionContext): ModerationResult {
         context.handle(ModerationRequested(context.promptExecutionId, prompt, model))
-        logger.debug { "Moderating multi-modal content with model: ${model.id}. Execution id: $context" }
+        logger.debug { "Moderating multi-modal content with model: ${model.id}. Prompt execution id: ${context.promptExecutionId}" }
 
         val (client, effectiveModel) = try {
             chooseClientAndModel(model)
