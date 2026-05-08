@@ -28,3 +28,15 @@ public val Gemma3: LLModel = LLModel(
     maxOutputTokens = 4_096,
 )
 
+// https://huggingface.co/litert-community/functiongemma-270m-ft-tiny-garden/tree/main
+public val FunctionGemma: LLModel = LLModel(
+    provider = AndroidLocalLLMProvider,
+    id = "tiny_garden_q8_ekv1024.litertlm",
+    capabilities = listOf(
+        LLMCapability.Tools,
+        LLMCapability.Completion
+    ),
+    contextLength = 200_000,
+    maxOutputTokens = 4_096,
+)
+

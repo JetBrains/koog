@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.jetbrains.example.koog.compose.local.AndroidLocalLLMClient
 import com.jetbrains.example.koog.compose.local.AndroidLocalLLMClientConfig
+import com.jetbrains.example.koog.compose.local.FunctionGemma
 import com.jetbrains.example.koog.compose.local.Gemma
 import com.jetbrains.example.koog.compose.local.Gemma3
 
@@ -18,7 +19,7 @@ class MainActivity : ComponentActivity() {
                 client = AndroidLocalLLMClient(
                     AndroidLocalLLMClientConfig()
                 ),
-                model = Gemma3
+                model = FunctionGemma
             )
         }
     }
