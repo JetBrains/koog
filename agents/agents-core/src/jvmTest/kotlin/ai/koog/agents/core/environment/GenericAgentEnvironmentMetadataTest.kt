@@ -28,8 +28,6 @@ class GenericAgentEnvironmentMetadataTest {
     ) {
         val observedMetadata: MutableList<ToolCallMetadata> = mutableListOf()
 
-        override suspend fun execute(args: EchoArgs): String = error("Metadata overload must be used")
-
         override suspend fun execute(args: EchoArgs, metadata: ToolCallMetadata): String {
             observedMetadata += metadata
             return "${args.value}::${metadata["trace.span.id"]}"

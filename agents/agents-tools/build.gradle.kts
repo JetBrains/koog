@@ -17,6 +17,7 @@ kotlin {
                 implementation(project(":prompt:prompt-markdown"))
                 implementation(project(":prompt:prompt-xml"))
 
+                api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.schema.generator.json)
             }

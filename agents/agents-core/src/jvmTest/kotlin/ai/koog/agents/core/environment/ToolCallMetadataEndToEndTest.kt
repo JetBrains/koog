@@ -45,9 +45,6 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
     ) {
         val observed: MutableList<ToolCallMetadata> = mutableListOf()
 
-        override suspend fun execute(args: EchoArgs): String =
-            error("End-to-end test must reach the metadata overload")
-
         override suspend fun execute(args: EchoArgs, metadata: ToolCallMetadata): String {
             observed += metadata
             return "echo:${args.value}"

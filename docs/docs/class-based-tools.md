@@ -101,6 +101,8 @@ For more details, see [API reference](https://api.koog.ai/agents/agents-tools/ai
 
 Tools can read caller- and feature-contributed metadata by overriding the second `execute` overload. This is a side channel designed for cross-cutting context such as a distributed-tracing span id or a correlation id, and it does not affect the tool's argument schema or the data sent to the LLM.
 
+A tool that depends on metadata only needs to override `execute(args, metadata)`. The single-argument `execute(args)` overload is provided by the base class and routes through the metadata-aware overload with `ToolCallMetadata.EMPTY`, so callers that do not pass metadata still observe the same behavior with empty metadata.
+
 === "Kotlin"
 
     <!--- INCLUDE
@@ -127,15 +129,13 @@ Tools can read caller- and feature-contributed metadata by overriding the second
             val digit2: Int
         )
 
-        override suspend fun execute(args: Args): Int = args.digit1 + args.digit2
-
         override suspend fun execute(args: Args, metadata: ToolCallMetadata): Int {
             // Caller- or feature-contributed entry under an arbitrary key.
             val traceSpanId = metadata["trace.span.id"] as? String
             // Framework-injected live AIAgentContext (only set when called from an agent run).
             val runId = metadata.agentContext?.runId
             // ... use traceSpanId and runId for cross-cutting context (logging, tracing, correlation)
-            return execute(args)
+            return args.digit1 + args.digit2
         }
     }
     ```
@@ -143,7 +143,7 @@ Tools can read caller- and feature-contributed metadata by overriding the second
 
 Callers can pass metadata through `SafeTool.execute(args, serializer, metadata)` or directly through `AIAgentEnvironment.executeTool(toolCall, metadata)`. Features can contribute metadata for every tool call during installation by calling `pipeline.provideToolCallMetadata(this) { eventContext -> mapOf(...) }`. Caller-supplied metadata always wins over feature contributions on key collision.
 
-Existing tools that only override `execute(args)` continue to work unchanged: the default implementation of the metadata-aware overload delegates to the legacy path.
+Existing tools that only override `execute(args)` continue to work unchanged: the default implementation of the metadata-aware overload delegates to that overload, dropping metadata.
 
 When the call originates from an agent run, the framework also injects the live `AIAgentContext` under a reserved key. Tools that need the agent's full state (LLM context, run id, configuration, storage, ...) read it through the typed `agentContext` extension on `ToolCallMetadata`, as the example above shows, rather than expecting it through the argument schema. The framework's value always wins over caller and feature entries on the reserved key, so the property reflects the real context driving the current call. Outside an agent run (for example when invoking `Tool.execute(args, metadata)` directly from a unit test), `metadata.agentContext` returns `null`.
 

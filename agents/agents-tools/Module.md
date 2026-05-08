@@ -20,12 +20,12 @@ Tools can receive caller- and feature-contributed per-call metadata (e.g. a trac
 correlation id) alongside their typed arguments. Metadata is a side channel: it is not part of the
 tool's argument schema and is not serialized to the LLM.
 
-Override the metadata-aware `execute` overload when the tool needs the context:
+Override the metadata-aware `execute` overload when the tool needs the context. The single-argument
+`execute(args)` overload is provided by the base class and routes through the metadata-aware overload
+with `ToolCallMetadata.EMPTY`, so a tool that only cares about metadata does not need to override it:
 
 ```kotlin
 class TracingTool : Tool<MyArgs, String>(...) {
-    override suspend fun execute(args: MyArgs): String = execute(args, ToolCallMetadata.EMPTY)
-
     override suspend fun execute(args: MyArgs, metadata: ToolCallMetadata): String {
         val spanId = metadata["trace.span.id"] as? String
         // ... use spanId
@@ -34,7 +34,7 @@ class TracingTool : Tool<MyArgs, String>(...) {
 ```
 
 Existing tools that only override `execute(args)` continue to work: the default implementation of
-`execute(args, metadata)` delegates to the legacy path.
+`execute(args, metadata)` delegates to that overload, dropping metadata.
 
 ### Using in your project
 

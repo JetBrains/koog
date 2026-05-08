@@ -28,9 +28,11 @@ public interface AIAgentEnvironment {
      * [metadata] is an additive side channel that travels alongside the call (e.g. a trace span id,
      * a correlation id); it is not embedded in [Message.Tool.Call] and is not serialized to the LLM.
      *
-     * The default implementation delegates to [executeTool] and discards [metadata], so existing
-     * environment implementations remain source-compatible. Environments that want to propagate
-     * metadata to [ai.koog.agents.core.tools.Tool.execute] should override this overload.
+     * The default implementation delegates to the single-argument [executeTool] overload and discards
+     * [metadata], so existing environment implementations remain source-compatible. A custom environment
+     * that overrides only that single-argument overload inherits this default and silently drops any
+     * [metadata] supplied here; override this overload to propagate [metadata] to
+     * [ai.koog.agents.core.tools.Tool.execute].
      *
      * @param toolCall The tool call to execute.
      * @param metadata Caller- and feature-contributed per-call context.

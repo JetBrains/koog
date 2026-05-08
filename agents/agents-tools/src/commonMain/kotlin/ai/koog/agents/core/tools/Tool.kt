@@ -9,9 +9,13 @@ import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.KSerializerTypeToken
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.annotations.InternalKoogSerializationApi
+import kotlinx.coroutines.withContext
 import kotlinx.schema.generator.json.JsonSchemaConfig
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
 
 /**
  * Base class representing a tool that can be invoked by the LLM.
@@ -99,10 +103,24 @@ public abstract class Tool<TArgs, TResult>(
      * Consider using methods like `findTool(tool: Class)` or similar, to retrieve a `SafeTool`, and then call `execute`
      * on it. This ensures that the tool call is delegated properly to the underlying `environment` object.
      *
+     * Subclasses must override at least one of the two `execute` overloads:
+     * - Override this overload for tools that do not depend on per-call metadata.
+     * - Override [execute] with [ToolCallMetadata] for tools that need a trace span id, correlation id,
+     *   feature-contributed flag, or the live agent context. The default implementation here routes to
+     *   that overload with [ToolCallMetadata.EMPTY], so a subclass that overrides only the metadata-aware
+     *   overload still works when called via `execute(args)`.
+     *
+     * If a subclass overrides neither overload, the first invocation throws [NotImplementedError] with a
+     * clear message; the mutual delegation between the two overloads is detected via a coroutine-context
+     * marker so the failure is loud and immediate rather than a stack overflow.
+     *
      * @param args The input arguments required to execute the tool.
      * @return The result of the tool's execution.
      */
-    public abstract suspend fun execute(args: TArgs): TResult
+    public open suspend fun execute(args: TArgs): TResult =
+        withContext(NoOverrideMarker) {
+            execute(args, ToolCallMetadata.EMPTY)
+        }
 
     /**
      * Executes the tool's logic with the provided arguments and caller-contributed [metadata].
@@ -112,12 +130,27 @@ public abstract class Tool<TArgs, TResult>(
      * a trace span id, a correlation id, or a feature-contributed flag. Metadata is a side channel: it is
      * not part of the argument schema and is not exposed to the LLM.
      *
+     * A subclass that overrides only this overload reads metadata when invoked via `execute(args, metadata)`,
+     * and observes [ToolCallMetadata.EMPTY] when invoked via `execute(args)` (the default of the
+     * single-argument overload routes here).
+     *
+     * If a subclass overrides neither overload, this default detects the mutual delegation via a
+     * coroutine-context marker placed by the default body of [execute] and throws
+     * [NotImplementedError] with a clear message.
+     *
      * @param args The input arguments required to execute the tool.
      * @param metadata Caller- and feature-contributed per-call context. [ToolCallMetadata.EMPTY] when absent.
      * @return The result of the tool's execution.
      */
-    public open suspend fun execute(args: TArgs, metadata: ToolCallMetadata): TResult =
-        execute(args)
+    public open suspend fun execute(args: TArgs, metadata: ToolCallMetadata): TResult {
+        if (coroutineContext[NoOverrideMarker.Key] != null) {
+            throw NotImplementedError(
+                "Tool '$name' overrides neither execute(args) nor execute(args, metadata). " +
+                    "Override at least one of these overloads.",
+            )
+        }
+        return execute(args)
+    }
 
     /**
      * Executes the tool with the provided arguments without type safety checks.
@@ -322,4 +355,18 @@ public abstract class Tool<TArgs, TResult>(
     @Suppress("DEPRECATION")
     @Serializable
     public data object EmptyArgs : Args
+
+    /**
+     * Coroutine-context element placed by the default body of [execute] before it delegates to
+     * [execute] with [ToolCallMetadata]. The default body of the metadata-aware overload checks
+     * for this element; its presence indicates that the subclass overrode neither `execute`
+     * overload, in which case continuing the delegation would mutually recurse, so it throws
+     * [NotImplementedError] instead.
+     *
+     * Internal to [Tool]; not part of the public surface and never observable to user-supplied
+     * [ToolCallMetadata].
+     */
+    private object NoOverrideMarker : AbstractCoroutineContextElement(Key) {
+        object Key : CoroutineContext.Key<NoOverrideMarker>
+    }
 }
