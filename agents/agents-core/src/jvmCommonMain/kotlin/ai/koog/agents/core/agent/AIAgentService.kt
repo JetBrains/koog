@@ -174,7 +174,20 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         ): GraphAIAgentService<Input, Output> =
             AIAgentService(promptExecutor, agentConfig, strategy, toolRegistry, installFeatures)
 
-        @Deprecated("Use AIAgentService(...)")
+        @Deprecated("""
+            Use AIAgentService(...) instead of AIAgentService.Companion.invoke(...).
+            Note that in the new version, parameters `numberOfChoices` and `strategy` are removed, and the order of parameters is changed:
+            `AIAgentService(
+                promptExecutor,
+                llmModel,
+                toolRegistry,
+                systemPrompt,
+                temperature,
+                maxIterations,
+                responseProcessor,
+                installFeatures
+            )`
+        """)
         public actual operator fun invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,

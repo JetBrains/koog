@@ -101,7 +101,22 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             AIAgent(promptExecutor, agentConfig, strategy, toolRegistry, id, clock, installFeatures)
 
         @OptIn(markerClass = [ExperimentalUuidApi::class])
-        @Deprecated("Use AIAgent(...)")
+        @Deprecated("""
+            Use AIAgent(...) instead of AIAgent.Companion.invoke(...).
+            Note that in the new version, parameters `numberOfChoices` and `strategy` are removed, parameter `clock` is added, and the order of parameters is changed:
+            `AIAgent(
+                promptExecutor,
+                llmModel,
+                toolRegistry,
+                systemPrompt,
+                temperature,
+                maxIterations,
+                responseProcessor,
+                id,
+                KoogClock.System,
+                installFeatures
+            )`
+        """)
         public actual operator fun invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
@@ -129,7 +144,23 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
         )
 
         @OptIn(markerClass = [ExperimentalUuidApi::class])
-        @Deprecated("Use AIAgent(...)")
+        @Deprecated("""
+            Use AIAgent(...) instead of AIAgent.Companion.invoke(...).
+            Note that in the new version, parameter `numberOfChoices` is removed, parameter `clock` is added, and the order of parameters is changed:
+            `AIAgent(
+                promptExecutor,
+                llmModel,
+                strategy,
+                toolRegistry,
+                systemPrompt,
+                temperature,
+                maxIterations,
+                responseProcessor,
+                id,
+                KoogClock.System,
+                installFeatures
+            )`
+        """)
         public actual inline operator fun <reified Input, reified Output> invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
@@ -157,7 +188,23 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             installFeatures
         )
 
-        @Deprecated("Use AIAgent(...)")
+        @Deprecated("""
+            Use AIAgent(...) instead of AIAgent.Companion.invoke(...).
+            Note that in the new version, parameter `numberOfChoices` is removed, parameter `clock` is added, and the order of parameters is changed:
+            `AIAgent(
+                promptExecutor,
+                llmModel,
+                strategy,
+                toolRegistry,
+                systemPrompt,
+                temperature,
+                maxIterations,
+                responseProcessor,
+                id,
+                KoogClock.System,
+                installFeatures
+            )`
+        """)
         public actual operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
@@ -184,7 +231,23 @@ public actual abstract class AIAgent<Input, Output> : Closeable {
             installFeatures
         )
 
-        @Deprecated("Use AIAgent(...)")
+        @Deprecated("""
+            Use AIAgent(...) instead of AIAgent.Companion.invoke(...).
+            Note that in the new version, parameter `numberOfChoices` is removed, parameter `clock` is added, and the order of parameters is changed:
+            `AIAgent(
+                promptExecutor,
+                llmModel,
+                strategy,
+                toolRegistry,
+                systemPrompt,
+                temperature,
+                maxIterations,
+                responseProcessor,
+                id,
+                KoogClock.System,
+                installFeatures
+            )`
+        """)
         public actual operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,

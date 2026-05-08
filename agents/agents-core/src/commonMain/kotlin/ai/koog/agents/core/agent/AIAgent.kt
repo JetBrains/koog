@@ -156,7 +156,23 @@ public expect abstract class AIAgent<Input, Output>() : Closeable {
          * @return An instance of [AIAgent] configured with the provided parameters.
          */
         @OptIn(ExperimentalUuidApi::class)
-        @Deprecated("Use AIAgent(...)")
+        @Deprecated("""
+            Use AIAgent(...) instead of AIAgent.Companion.invoke(...).
+            Note that in the new version, `numberOfChoices` and `strategy` are removed, `clock` is added, and the order of parameters is changed:
+            `AIAgent(
+                promptExecutor,
+                llmModel,
+                strategy,
+                toolRegistry,
+                systemPrompt,
+                temperature,
+                maxIterations,
+                responseProcessor,
+                id,
+                KoogClock.System,
+                installFeatures
+            )`
+        """)
         public operator fun invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,

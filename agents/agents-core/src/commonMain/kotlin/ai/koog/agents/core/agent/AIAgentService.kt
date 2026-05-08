@@ -155,7 +155,20 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
          * @param promptExecutor The executor responsible for handling prompt-based interactions.
          * @param llmModel The large language model to be used by the agent.
          * @param strategy The graph strategy defining the agent's execution behavior. Defaults to a single-run*/
-        @Deprecated("Use AIAgentService(...)")
+        @Deprecated("""
+            Use AIAgentService(...) instead of AIAgentService.Companion.invoke(...).
+            Note that in the new version, parameters `numberOfChoices` and `strategy` are removed, and the order of parameters is changed:
+            `AIAgentService(
+                promptExecutor,
+                llmModel,
+                toolRegistry,
+                systemPrompt,
+                temperature,
+                maxIterations,
+                responseProcessor,
+                installFeatures
+            )`
+        """)
         public operator fun invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
