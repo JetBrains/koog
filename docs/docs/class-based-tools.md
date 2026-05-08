@@ -104,6 +104,7 @@ Tools can read caller- and feature-contributed metadata by overriding the second
 === "Kotlin"
 
     <!--- INCLUDE
+    import ai.koog.agents.core.environment.agentContext
     import ai.koog.agents.core.tools.Tool
     import ai.koog.agents.core.tools.ToolCallMetadata
     import ai.koog.agents.core.tools.annotations.LLMDescription
@@ -111,12 +112,12 @@ Tools can read caller- and feature-contributed metadata by overriding the second
     import kotlinx.serialization.Serializable
     -->
     ```kotlin
-    // A tool that reads an optional trace span id from caller- or feature-contributed metadata.
+    // A tool that reads cross-cutting context from caller-, feature-, and framework-supplied metadata.
     object TracingCalculatorTool : Tool<TracingCalculatorTool.Args, Int>(
         argsType = typeToken<Args>(),
         resultType = typeToken<Int>(),
         name = "tracing_calculator",
-        description = "Adds two digits and optionally reads a trace span id from metadata."
+        description = "Adds two digits and reads optional cross-cutting context from metadata."
     ) {
         @Serializable
         data class Args(
@@ -129,8 +130,11 @@ Tools can read caller- and feature-contributed metadata by overriding the second
         override suspend fun execute(args: Args): Int = args.digit1 + args.digit2
 
         override suspend fun execute(args: Args, metadata: ToolCallMetadata): Int {
+            // Caller- or feature-contributed entry under an arbitrary key.
             val traceSpanId = metadata["trace.span.id"] as? String
-            // ... use traceSpanId for cross-cutting context (logging, tracing, correlation)
+            // Framework-injected live AIAgentContext (only set when called from an agent run).
+            val runId = metadata.agentContext?.runId
+            // ... use traceSpanId and runId for cross-cutting context (logging, tracing, correlation)
             return execute(args)
         }
     }
@@ -141,16 +145,7 @@ Callers can pass metadata through `SafeTool.execute(args, serializer, metadata)`
 
 Existing tools that only override `execute(args)` continue to work unchanged: the default implementation of the metadata-aware overload delegates to the legacy path.
 
-When the call originates from an agent run, the framework also injects the live `AIAgentContext` under a reserved key. Tools that need the agent's full state (LLM context, run id, configuration, storage, ...) read it through the typed `agentContext` extension rather than expecting it through the argument schema:
-
-```kotlin
-override suspend fun execute(args: Args, metadata: ToolCallMetadata): Result {
-    val runId = metadata.agentContext?.runId
-    // ...
-}
-```
-
-The framework's value always wins over caller and feature entries on the reserved key, so the property reflects the real context driving the current call. Outside an agent run (for example when invoking `Tool.execute(args, metadata)` directly from a unit test), `metadata.agentContext` returns `null`.
+When the call originates from an agent run, the framework also injects the live `AIAgentContext` under a reserved key. Tools that need the agent's full state (LLM context, run id, configuration, storage, ...) read it through the typed `agentContext` extension on `ToolCallMetadata`, as the example above shows, rather than expecting it through the argument schema. The framework's value always wins over caller and feature entries on the reserved key, so the property reflects the real context driving the current call. Outside an agent run (for example when invoking `Tool.execute(args, metadata)` directly from a unit test), `metadata.agentContext` returns `null`.
 
 ### SimpleTool class (Kotlin)
 
