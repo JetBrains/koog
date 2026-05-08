@@ -136,7 +136,11 @@ class OtlpJsonSpanExporterTest {
 
     @Test
     fun testForceFlushReturnsSuccess() = runTest {
-        val exporter = OtlpJsonSpanExporter(endpoint = "https://example.test/v1/traces")
+        val mock = mockClient()
+        val exporter = OtlpJsonSpanExporter(
+            endpoint = "https://example.test/v1/traces",
+            baseClient = mock.client,
+        )
         assertEquals(OperationResultCode.Success, exporter.forceFlush())
     }
 
