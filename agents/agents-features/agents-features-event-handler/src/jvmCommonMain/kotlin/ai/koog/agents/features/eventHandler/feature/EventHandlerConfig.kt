@@ -133,7 +133,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onAgentClosing")
     public fun javaApiOnAgentClosing(handler: Interceptor<AgentClosingContext>) {
         onAgentClosing { eventContext ->
-            withContextReentrant(eventContext.config.strategyDispatcher) {
+            withContextReentrant(eventContext.agent.agentConfig.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }

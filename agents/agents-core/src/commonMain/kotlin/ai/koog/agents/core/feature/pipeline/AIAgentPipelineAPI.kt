@@ -1,9 +1,6 @@
-@file:Suppress("MissingKDocForPublicAPI")
-
 package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -71,43 +68,43 @@ public interface AIAgentPipelineAPI {
     public suspend fun <TInput, TOutput> onAgentStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        runId: String,
         agent: AIAgent<*, *>,
-        context: AIAgentContext
+        context: AIAgentContext,
+        runId: String,
     )
 
     @InternalAgentsApi
     public suspend fun onAgentCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        agentId: String,
+        agent: AIAgent<*, *>,
+        context: AIAgentContext,
         runId: String,
         result: Any?,
-        context: AIAgentContext
     )
 
     @InternalAgentsApi
     public suspend fun onAgentExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        agentId: String,
+        agent: AIAgent<*, *>,
+        context: AIAgentContext,
         runId: String,
         error: Throwable,
-        context: AIAgentContext
     )
 
     @InternalAgentsApi
     public suspend fun onAgentClosing(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        agentId: String
+        agent: AIAgent<*, *>,
     )
 
     @InternalAgentsApi
     public suspend fun onAgentEnvironmentTransforming(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        agent: GraphAIAgent<*, *>,
+        agent: AIAgent<*, *>,
         baseEnvironment: AIAgentEnvironment
     ): AIAgentEnvironment
 
@@ -119,16 +116,16 @@ public interface AIAgentPipelineAPI {
     public suspend fun onStrategyStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
+        context: AIAgentContext,
         strategy: AIAgentStrategy<*, *, *>,
-        context: AIAgentContext
     )
 
     @InternalAgentsApi
     public suspend fun onStrategyCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        strategy: AIAgentStrategy<*, *, *>,
         context: AIAgentContext,
+        strategy: AIAgentStrategy<*, *, *>,
         result: Any?,
         resultType: TypeToken
     )
@@ -141,34 +138,34 @@ public interface AIAgentPipelineAPI {
     public suspend fun onLLMCallStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
+        context: AIAgentContext,
         runId: String,
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        context: AIAgentContext
     )
 
     @InternalAgentsApi
     public suspend fun onLLMCallCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
+        context: AIAgentContext,
         runId: String,
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
         responses: List<Message.Response>,
         moderationResponse: ModerationResult? = null,
-        context: AIAgentContext
     )
 
     public suspend fun onLLMCallFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
+        context: AIAgentContext,
         runId: String,
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        context: AIAgentContext,
         error: Throwable,
     )
 
@@ -180,18 +177,19 @@ public interface AIAgentPipelineAPI {
     public suspend fun onToolCallStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
+        context: AIAgentContext,
         runId: String,
         toolCallId: String?,
         toolName: String,
         toolDescription: String?,
         toolArgs: JSONObject,
-        context: AIAgentContext
     )
 
     @InternalAgentsApi
     public suspend fun onToolValidationFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
+        context: AIAgentContext,
         runId: String,
         toolCallId: String?,
         toolName: String,
@@ -199,13 +197,13 @@ public interface AIAgentPipelineAPI {
         toolArgs: JSONObject,
         message: String,
         error: Throwable,
-        context: AIAgentContext
     )
 
     @InternalAgentsApi
     public suspend fun onToolCallFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
+        context: AIAgentContext,
         runId: String,
         toolCallId: String?,
         toolName: String,
@@ -213,20 +211,19 @@ public interface AIAgentPipelineAPI {
         toolArgs: JSONObject,
         message: String,
         error: Throwable?,
-        context: AIAgentContext
     )
 
     @InternalAgentsApi
     public suspend fun onToolCallCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
+        context: AIAgentContext,
         runId: String,
         toolCallId: String?,
         toolName: String,
         toolDescription: String?,
         toolArgs: JSONObject,
         toolResult: JSONElement?,
-        context: AIAgentContext
     )
 
     //endregion Trigger Tool Handlers
@@ -237,44 +234,44 @@ public interface AIAgentPipelineAPI {
     public suspend fun onLLMStreamingStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
+        context: AIAgentContext,
         runId: String,
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        context: AIAgentContext
     )
 
     @InternalAgentsApi
     public suspend fun onLLMStreamingFrameReceived(
         eventId: String,
         executionInfo: AgentExecutionInfo,
+        context: AIAgentContext,
         runId: String,
         prompt: Prompt,
         model: LLModel,
         streamFrame: StreamFrame,
-        context: AIAgentContext
     )
 
     @InternalAgentsApi
     public suspend fun onLLMStreamingFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
+        context: AIAgentContext,
         runId: String,
         prompt: Prompt,
         model: LLModel,
         error: Throwable,
-        context: AIAgentContext
     )
 
     @InternalAgentsApi
     public suspend fun onLLMStreamingCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
+        context: AIAgentContext,
         runId: String,
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        context: AIAgentContext
     )
 
     //endregion Trigger Streaming Handlers

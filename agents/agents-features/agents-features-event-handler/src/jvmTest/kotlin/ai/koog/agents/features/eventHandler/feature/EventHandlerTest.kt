@@ -462,7 +462,7 @@ class EventHandlerTest {
 
                     onAgentCompleted { eventContext ->
                         collectedEvents.add(
-                            "OnAgentCompleted (agent id: ${eventContext.agentId}, run id: ${eventContext.runId}, result: $agentResult)"
+                            "OnAgentCompleted (agent id: ${eventContext.agent.id}, run id: ${eventContext.runId}, result: $agentResult)"
                         )
                     }
                 }

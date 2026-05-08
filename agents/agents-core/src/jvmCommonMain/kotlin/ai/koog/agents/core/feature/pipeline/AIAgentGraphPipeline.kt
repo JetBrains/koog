@@ -1,6 +1,3 @@
-@file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-@file:OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
-
 package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.annotations.JavaAPI
@@ -18,6 +15,7 @@ import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.concurrency.withContextReentrant
 import ai.koog.utils.time.KoogClock
 
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "DELEGATED_MEMBER_HIDES_SUPERTYPE_OVERRIDE")
 public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
     agentConfig: AIAgentConfig,
     clock: KoogClock,
@@ -41,7 +39,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
     /**
      * Intercepts node execution before it starts.
      *
-     * @param feature The feature associated with this handler.
+     * @param feature The feature associated with this handler;
      * @param handle The handler that processes before-node events.
      *
      * Example:
@@ -59,6 +57,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<NodeExecutionStartingContext>
     ) {
         interceptNodeExecutionStarting(feature) {
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(it)
             }
@@ -68,7 +67,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
     /**
      * Intercepts node execution after it is successfully completed.
      *
-     * @param feature The feature associated with this handler.
+     * @param feature The feature associated with this handler;
      * @param handle The handler that processes after-node completion events.
      *
      * Example:
@@ -86,6 +85,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<NodeExecutionCompletedContext>
     ) {
         interceptNodeExecutionCompleted(feature) {
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(it)
             }
@@ -95,7 +95,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
     /**
      * Intercepts node execution when it fails.
      *
-     * @param feature The feature associated with this handler.
+     * @param feature The feature associated with this handler;
      * @param handle The handler that processes node-failure events.
      *
      * Example:
@@ -113,6 +113,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<NodeExecutionFailedContext>
     ) {
         interceptNodeExecutionFailed(feature) {
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(it)
             }
@@ -122,7 +123,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
     /**
      * Intercepts subgraph execution before it starts.
      *
-     * @param feature The feature associated with this handler.
+     * @param feature The feature associated with this handler;
      * @param handle The handler that processes before-subgraph events.
      *
      * Example:
@@ -140,6 +141,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<SubgraphExecutionStartingContext>
     ) {
         interceptSubgraphExecutionStarting(feature) {
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(it)
             }
@@ -149,7 +151,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
     /**
      * Intercepts subgraph execution after it is successfully completed.
      *
-     * @param feature The feature associated with this handler.
+     * @param feature The feature associated with this handler;
      * @param handle The handler that processes subgraph-completion events.
      *
      * Example:
@@ -167,6 +169,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<SubgraphExecutionCompletedContext>
     ) {
         interceptSubgraphExecutionCompleted(feature) {
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(it)
             }
@@ -176,7 +179,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
     /**
      * Intercepts subgraph execution when it fails.
      *
-     * @param feature The feature associated with this handler.
+     * @param feature The feature associated with this handler;
      * @param handle The handler that processes subgraph-failure events.
      *
      * Example:
@@ -194,6 +197,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
         handle: Interceptor<SubgraphExecutionFailedContext>
     ) {
         interceptSubgraphExecutionFailed(feature) {
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(it)
             }

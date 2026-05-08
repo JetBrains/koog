@@ -1,5 +1,3 @@
-@file:Suppress("MissingKDocForPublicAPI")
-
 package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
@@ -30,18 +28,18 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
     public suspend fun onNodeExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
+        node: AIAgentNodeBase<*, *>,
         input: Any?,
-        inputType: TypeToken
+        inputType: TypeToken,
     )
 
     @InternalAgentsApi
     public suspend fun onNodeExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
+        node: AIAgentNodeBase<*, *>,
         input: Any?,
         inputType: TypeToken,
         output: Any?,
@@ -52,11 +50,11 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
     public suspend fun onNodeExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
+        node: AIAgentNodeBase<*, *>,
         input: Any?,
         inputType: TypeToken,
-        error: Throwable
+        error: Throwable,
     )
 
     //endregion Trigger Node Handlers
@@ -67,18 +65,18 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
     public suspend fun onSubgraphExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
+        subgraph: AIAgentSubgraphBase<*, *>,
         input: Any?,
-        inputType: TypeToken
+        inputType: TypeToken,
     )
 
     @InternalAgentsApi
     public suspend fun onSubgraphExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
+        subgraph: AIAgentSubgraphBase<*, *>,
         input: Any?,
         inputType: TypeToken,
         output: Any?,
@@ -89,11 +87,11 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
     public suspend fun onSubgraphExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
+        subgraph: AIAgentSubgraphBase<*, *>,
         input: Any?,
         inputType: TypeToken,
-        error: Throwable
+        error: Throwable,
     )
 
     //endregion Trigger Subgraph Handlers
@@ -129,5 +127,6 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionFailedContext) -> Unit
     )
+
     //endregion Interceptors
 }

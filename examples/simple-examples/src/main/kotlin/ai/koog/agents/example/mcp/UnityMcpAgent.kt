@@ -116,7 +116,7 @@ fun main() {
 
                     onAgentCompleted { eventContext ->
                         println(
-                            "OnAgentCompleted (agent id: ${eventContext.agentId}, result: ${eventContext.result})"
+                            "OnAgentCompleted (agent id: ${eventContext.agent.id}, result: ${eventContext.result})"
                         )
                     }
                 }

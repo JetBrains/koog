@@ -139,7 +139,7 @@ public class Tracing {
                 val event = AgentCompletedEvent(
                     eventId = eventContext.eventId,
                     executionInfo = eventContext.executionInfo,
-                    agentId = eventContext.agentId,
+                    agentId = eventContext.agent.id,
                     runId = eventContext.runId,
                     result = eventContext.result?.toString(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
@@ -151,7 +151,7 @@ public class Tracing {
                 val event = AgentExecutionFailedEvent(
                     eventId = eventContext.eventId,
                     executionInfo = eventContext.executionInfo,
-                    agentId = eventContext.agentId,
+                    agentId = eventContext.agent.id,
                     runId = eventContext.runId,
                     error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
@@ -163,7 +163,7 @@ public class Tracing {
                 val event = AgentClosingEvent(
                     eventId = eventContext.eventId,
                     executionInfo = eventContext.executionInfo,
-                    agentId = eventContext.agentId,
+                    agentId = eventContext.agent.id,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)

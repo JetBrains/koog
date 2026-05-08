@@ -1,5 +1,3 @@
-@file:OptIn(InternalAgentsApi::class)
-
 package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
@@ -505,7 +503,7 @@ public class Testing {
         /**
          * Sets a custom handler for processing assertion results.
          *
-         * @param block A lambda which takes an `AssertionResult` as input and processes it.
+         * @param block A lambda that takes an `AssertionResult` as input and processes it.
          *              This allows customization of how assertion results are handled,
          *              such as logging or throwing custom exceptions.
          */
@@ -949,7 +947,8 @@ public class Testing {
         ): Testing {
             val testing = Testing()
             pipeline.interceptEnvironmentCreated(this) { eventContext, environment ->
-                MockEnvironment(eventContext.agent.toolRegistry, eventContext.agent.promptExecutor, pipeline.config.serializer, environment)
+                val graphAgent = eventContext.agent as GraphAIAgent<*, *>
+                MockEnvironment(graphAgent.toolRegistry, graphAgent.promptExecutor, pipeline.config.serializer, environment)
             }
 
             if (config.enableGraphTesting) {
@@ -1032,7 +1031,8 @@ public class Testing {
                         prompt = agent.agentConfig.prompt,
                         model = agent.agentConfig.model,
                         responseProcessor = agent.agentConfig.responseProcessor,
-                        promptExecutor = ContextualPromptExecutor(
+                        promptExecutor = @OptIn(InternalAgentsApi::class)
+                        ContextualPromptExecutor(
                             executor = agent.promptExecutor,
                             context = assertion.context,
                         ),

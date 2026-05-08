@@ -148,7 +148,7 @@ class TestFeature(val events: MutableList<String>) {
                 config.addEvent(
                     event,
                     mapOf(
-                        "id" to event.agentId,
+                        "id" to event.agent.id,
                         "run id" to event.runId,
                         "result" to event.result
                     )
@@ -159,7 +159,7 @@ class TestFeature(val events: MutableList<String>) {
                 config.addEvent(
                     event,
                     mapOf(
-                        "id" to event.agentId
+                        "id" to event.agent.id
                     )
                 )
             }

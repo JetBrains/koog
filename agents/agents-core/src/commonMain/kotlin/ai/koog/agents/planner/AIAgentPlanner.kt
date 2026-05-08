@@ -90,7 +90,7 @@ public abstract class AIAgentPlanner<State : Any, Plan : Any>(
             val plan = context.with(partName = "buildPlan-${stepIndex + 1}") { executionInfo, eventId ->
                 context.pipeline.onPlanCreationStarting(eventId, executionInfo, context, state, previousPlan, stepIndex + 1)
                 val newPlan = buildPlan(context, state, previousPlan)
-                context.pipeline.onPlanCreationCompleted(eventId, executionInfo, context, state, newPlan, stepIndex + 1)
+                context.pipeline.onPlanCreationCompleted(eventId, executionInfo, context, state, previousPlan, stepIndex + 1, newPlan)
                 newPlan
             }
 
@@ -109,7 +109,7 @@ public abstract class AIAgentPlanner<State : Any, Plan : Any>(
             val isCompleted = context.with(partName = "isPlanCompleted-${stepIndex + 1}") { executionInfo, eventId ->
                 context.pipeline.onPlanCompletionEvaluationStarting(eventId, executionInfo, context, state, plan, stepIndex + 1)
                 val completed = isPlanCompleted(context, state, plan)
-                context.pipeline.onPlanCompletionEvaluationCompleted(eventId, executionInfo, context, state, plan, completed, stepIndex + 1)
+                context.pipeline.onPlanCompletionEvaluationCompleted(eventId, executionInfo, context, state, plan, stepIndex + 1, completed)
                 completed
             }
 

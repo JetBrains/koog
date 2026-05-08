@@ -12,7 +12,7 @@ import ai.koog.utils.time.KoogClock
  * workflows or data processing tasks that do not require graph-based
  * data structures.
  *
- * @property clock The clock used for time-based operations within the pipeline
+ * @property clock The clock used for time-based operations within the pipeline.
  */
 public class AIAgentFunctionalPipeline(
     agentConfig: AIAgentConfig,
@@ -21,10 +21,10 @@ public class AIAgentFunctionalPipeline(
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.
      *
-     * @param TConfig The type of the feature configuration
-     * @param TFeature The type of the feature being installed
-     * @param feature The feature implementation to be installed
-     * @param configure A lambda to customize the feature configuration
+     * @param TConfig The type of the feature configuration;
+     * @param TFeature The type of the feature being installed;
+     * @param feature The feature implementation to be installed;
+     * @param configure A lambda to customize the feature configuration.
      */
     public fun <TConfig : FeatureConfig, TFeature : Any> install(
         feature: AIAgentFunctionalFeature<TConfig, TFeature>,

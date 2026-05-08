@@ -1,6 +1,3 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
-@file:OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
-
 package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.annotations.JavaAPI
@@ -30,6 +27,7 @@ import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.concurrency.withContextReentrant
 import ai.koog.utils.time.KoogClock
 
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public actual abstract class AIAgentPipeline actual constructor(
     agentConfig: AIAgentConfig,
     clock: KoogClock
@@ -41,8 +39,8 @@ public actual abstract class AIAgentPipeline actual constructor(
      *
      * This overload is JVM-friendly and accepts an async transformer.
      *
-     * @param feature The feature associated with this transformer.
-     * @param transform An async transformer that takes the transforming context and the current environment,
+     * @param feature The feature associated with this transformer;
+     * @param transform An async transformer that takes the transforming context and the current environment
      *                  and returns a possibly modified environment.
      *
      * Example (Java):
@@ -52,7 +50,6 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptEnvironmentCreated")
     public fun javaApiInterceptEnvironmentCreated(
         feature: AIAgentFeature<*, *>,
@@ -75,13 +72,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptAgentStarting")
     public fun javaApiInterceptAgentStarting(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<AgentStartingContext>
     ) {
         interceptAgentStarting(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -100,13 +97,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptAgentCompleted")
     public fun javaApiInterceptAgentCompleted(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<AgentCompletedContext>
     ) {
         interceptAgentCompleted(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -125,13 +122,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptAgentExecutionFailed")
     public fun javaApiInterceptAgentExecutionFailed(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<AgentExecutionFailedContext>
     ) {
         interceptAgentExecutionFailed(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -150,13 +147,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptAgentClosing")
     public fun javaApiInterceptAgentClosing(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<AgentClosingContext>
     ) {
         interceptAgentClosing(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -164,24 +161,24 @@ public actual abstract class AIAgentPipeline actual constructor(
     }
 
     /**
-     * Intercepts strategy started event to perform actions when an agent strategy begins execution.
+     * Intercepts starting strategy event to perform actions when an agent strategy begins execution.
      *
      * JVM-friendly overload that accepts an async interceptor.
      *
      * Example (Java):
      * pipeline.interceptStrategyStarting(feature, event -> {
-     *     // Strategy started
+     *     // Strategy has been started
      *     return java.util.concurrent.CompletableFuture.completedFuture(null);
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptStrategyStarting")
     public fun javaApiInterceptStrategyStarting(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<StrategyStartingContext>
     ) {
         interceptStrategyStarting(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -200,13 +197,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptStrategyCompleted")
     public fun javaApiInterceptStrategyCompleted(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<StrategyCompletedContext>
     ) {
         interceptStrategyCompleted(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -225,13 +222,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMCallStarting")
     public fun javaApiInterceptLLMCallStarting(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMCallStartingContext>
     ) {
         interceptLLMCallStarting(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -250,13 +247,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMCallCompleted")
     public fun javaApiInterceptLLMCallCompleted(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMCallCompletedContext>
     ) {
         interceptLLMCallCompleted(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -276,13 +273,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMCallFailed")
     public fun javaApiInterceptLLMCallFailed(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMCallFailedContext>
     ) {
         interceptLLMCallFailed(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -301,13 +298,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMStreamingStarting")
     public fun javaApiInterceptLLMStreamingStarting(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMStreamingStartingContext>
     ) {
         interceptLLMStreamingStarting(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -326,13 +323,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMStreamingFrameReceived")
     public fun javaApiInterceptLLMStreamingFrameReceived(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMStreamingFrameReceivedContext>
     ) {
         interceptLLMStreamingFrameReceived(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -351,13 +348,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMStreamingFailed")
     public fun javaApiInterceptLLMStreamingFailed(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMStreamingFailedContext>
     ) {
         interceptLLMStreamingFailed(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -376,13 +373,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptLLMStreamingCompleted")
     public fun javaApiInterceptLLMStreamingCompleted(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMStreamingCompletedContext>
     ) {
         interceptLLMStreamingCompleted(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -401,13 +398,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptToolCallStarting")
     public fun javaApiInterceptToolCallStarting(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<ToolCallStartingContext>
     ) {
         interceptToolCallStarting(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -426,13 +423,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptToolValidationFailed")
     public fun javaApiInterceptToolValidationFailed(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<ToolValidationFailedContext>
     ) {
         interceptToolValidationFailed(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -451,13 +448,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptToolCallFailed")
     public fun javaApiInterceptToolCallFailed(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<ToolCallFailedContext>
     ) {
         interceptToolCallFailed(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -476,13 +473,13 @@ public actual abstract class AIAgentPipeline actual constructor(
      * });
      */
     @JavaAPI
-    @InternalAgentsApi
     @JvmName("interceptToolCallCompleted")
     public fun javaApiInterceptToolCallCompleted(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<ToolCallCompletedContext>
     ) {
         interceptToolCallCompleted(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }

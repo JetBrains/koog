@@ -1,5 +1,3 @@
-@file:OptIn(InternalAgentsApi::class)
-
 package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -27,108 +25,109 @@ internal class AIAgentGraphPipelineImpl(
 
     //region Trigger Node Handlers
 
+    @InternalAgentsApi
     public override suspend fun onNodeExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
+        node: AIAgentNodeBase<*, *>,
         input: Any?,
-        inputType: TypeToken
+        inputType: TypeToken,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.NodeExecutionStarting,
-            context = NodeExecutionStartingContext(eventId, executionInfo, node, context, input, inputType)
+            context = NodeExecutionStartingContext(eventId, executionInfo, context, node, input, inputType)
         )
     }
 
+    @InternalAgentsApi
     public override suspend fun onNodeExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
+        node: AIAgentNodeBase<*, *>,
         input: Any?,
         inputType: TypeToken,
         output: Any?,
-        outputType: TypeToken
+        outputType: TypeToken,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.NodeExecutionCompleted,
-            context = NodeExecutionCompletedContext(eventId, executionInfo, node, context, input, inputType, output, outputType)
+            context = NodeExecutionCompletedContext(eventId, executionInfo, context, node, input, inputType, output, outputType)
         )
     }
 
+    @InternalAgentsApi
     public override suspend fun onNodeExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
+        node: AIAgentNodeBase<*, *>,
         input: Any?,
         inputType: TypeToken,
-        error: Throwable
+        error: Throwable,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.NodeExecutionFailed,
-            context = NodeExecutionFailedContext(eventId, executionInfo, node, context, input, inputType, error)
+            context = NodeExecutionFailedContext(eventId, executionInfo, context, node, input, inputType, error)
         )
     }
 
     //endregion Trigger Node Handlers
 
-    //region Interceptors
+    //region Trigger Subgraph Handlers
 
+    @InternalAgentsApi
     public override suspend fun onSubgraphExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
+        subgraph: AIAgentSubgraphBase<*, *>,
         input: Any?,
-        inputType: TypeToken
+        inputType: TypeToken,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.SubgraphExecutionStarting,
-            context = SubgraphExecutionStartingContext(eventId, executionInfo, subgraph, context, input, inputType)
+            context = SubgraphExecutionStartingContext(eventId, executionInfo, context, subgraph, input, inputType)
         )
     }
 
+    @InternalAgentsApi
     public override suspend fun onSubgraphExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
+        subgraph: AIAgentSubgraphBase<*, *>,
         input: Any?,
         inputType: TypeToken,
         output: Any?,
-        outputType: TypeToken
+        outputType: TypeToken,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.SubgraphExecutionCompleted,
-            context = SubgraphExecutionCompletedContext(
-                eventId,
-                executionInfo,
-                subgraph,
-                context,
-                input,
-                output,
-                inputType,
-                outputType
-            )
+            context = SubgraphExecutionCompletedContext(eventId, executionInfo, context, subgraph, input, inputType, output, outputType)
         )
     }
 
+    @InternalAgentsApi
     public override suspend fun onSubgraphExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
+        subgraph: AIAgentSubgraphBase<*, *>,
         input: Any?,
         inputType: TypeToken,
-        error: Throwable
+        error: Throwable,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.SubgraphExecutionFailed,
-            context = SubgraphExecutionFailedContext(eventId, executionInfo, subgraph, context, input, inputType, error)
+            context = SubgraphExecutionFailedContext(eventId, executionInfo, context, subgraph, input, inputType, error)
         )
     }
+
+    //endregion Trigger Subgraph Handlers
+
+    //region Interceptors
 
     public override fun interceptNodeExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,
