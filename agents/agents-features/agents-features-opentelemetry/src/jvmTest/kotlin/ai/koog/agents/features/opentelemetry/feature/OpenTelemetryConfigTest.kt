@@ -299,6 +299,100 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
     }
 
     @Test
+    fun testAddSpanExporterWrapsExporterInBatchProcessorAndDeliversSpans() = runTest {
+        MockSpanExporter().use { mockExporter ->
+            val agent = createAgent(
+                strategy = getSingleLLMCallStrategy(AgentType.Graph),
+                executor = defaultMockExecutor,
+            ) {
+                addSpanExporter(mockExporter)
+            }
+
+            agent.run(USER_PROMPT_PARIS, null)
+            withContext(Dispatchers.Default) {
+                withTimeoutOrNull(10.seconds) { mockExporter.isCollected.first { it } }
+            }
+            agent.close()
+
+            assertTrue(
+                mockExporter.collectedSpans.isNotEmpty(),
+                "addSpanExporter must deliver spans through the batchSpanProcessor it registers internally"
+            )
+        }
+    }
+
+    @Test
+    fun testAddResourceAttributesAppearsInBuildResourceMap() {
+        val config = OpenTelemetryConfig()
+
+        config.addResourceAttributes(
+            mapOf(
+                "custom.string" to "hello",
+                "custom.long" to 42L,
+                "custom.bool" to true,
+                "custom.double" to 3.14,
+            )
+        )
+
+        val resourceMap = config.buildResourceMap()
+
+        assertEquals("hello", resourceMap["custom.string"])
+        assertEquals(42L, resourceMap["custom.long"])
+        assertEquals(true, resourceMap["custom.bool"])
+        assertEquals(3.14, resourceMap["custom.double"])
+    }
+
+    @Test
+    fun testSetServiceInfoWithNamespaceStoresNamespaceInBuildResourceMap() {
+        val config = OpenTelemetryConfig()
+
+        config.setServiceInfo("my-service", "1.0.0", "my-namespace")
+
+        val resourceMap = config.buildResourceMap()
+
+        assertEquals("my-service", resourceMap["service.name"])
+        assertEquals("1.0.0", resourceMap["service.version"])
+        assertEquals("my-namespace", resourceMap["service.namespace"])
+    }
+
+    @Test
+    fun testSetServiceInfoWithoutNamespaceOmitsNamespaceFromBuildResourceMap() {
+        val config = OpenTelemetryConfig()
+
+        config.setServiceInfo("my-service", "1.0.0")
+
+        assertTrue(
+            !config.buildResourceMap().containsKey("service.namespace"),
+            "service.namespace key must be absent from buildResourceMap when namespace is not set"
+        )
+    }
+
+    @Test
+    fun testMultipleAddSpanProcessorCallsSendSpansToBothProcessors() = runTest {
+        MockSpanExporter().use { exporter1 ->
+            MockSpanExporter().use { exporter2 ->
+                val agent = createAgent(
+                    strategy = getSingleLLMCallStrategy(AgentType.Graph),
+                    executor = defaultMockExecutor,
+                ) {
+                    addSpanProcessor { simpleSpanProcessor(exporter1) }
+                    addSpanProcessor { simpleSpanProcessor(exporter2) }
+                }
+
+                agent.run(USER_PROMPT_PARIS, null)
+                withContext(Dispatchers.Default) {
+                    withTimeoutOrNull(5.seconds) { exporter1.isCollected.first { it } }
+                    withTimeoutOrNull(5.seconds) { exporter2.isCollected.first { it } }
+                }
+                agent.close()
+
+                assertTrue(exporter1.collectedSpans.isNotEmpty(), "First processor's exporter must receive spans when composite processor is used")
+                assertTrue(exporter2.collectedSpans.isNotEmpty(), "Second processor's exporter must receive spans when composite processor is used")
+            }
+        }
+    }
+
+    @Test
     fun `test setSdk overrides feature configuration and uses the user-supplied SDK`() = runTest {
         MockSpanExporter().use { sdkExporter ->
             MockSpanExporter().use { ignoredExporter ->

@@ -134,6 +134,22 @@ class OtlpJsonSpanExporterTest {
         assertEquals(0, mock.capturedRequests.size)
     }
 
+    @Test
+    fun testForceFlushReturnsSuccess() = runTest {
+        val exporter = OtlpJsonSpanExporter(endpoint = "https://example.test/v1/traces")
+        assertEquals(OperationResultCode.Success, exporter.forceFlush())
+    }
+
+    @Test
+    fun testShutdownReturnsSuccess() = runTest {
+        val mock = mockClient()
+        val exporter = OtlpJsonSpanExporter(
+            endpoint = "https://example.test/v1/traces",
+            baseClient = mock.client,
+        )
+        assertEquals(OperationResultCode.Success, exporter.shutdown())
+    }
+
     //region Private Methods
 
     private fun mockClient(): CapturingClient {
