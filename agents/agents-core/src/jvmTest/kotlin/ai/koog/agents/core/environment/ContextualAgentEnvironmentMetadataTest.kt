@@ -15,6 +15,7 @@ import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 
@@ -76,7 +77,8 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
 
         wrapper.executeTool(newToolCall(), callerMetadata)
 
-        assertEquals(callerMetadata, capturing.lastMetadata)
+        val captured = capturing.lastMetadata!!
+        assertEquals("caller-value", captured["caller.key"])
     }
 
     @Test
@@ -142,14 +144,16 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
     }
 
     @Test
-    fun testNoFeaturesYieldsEmptyMetadataOnNoCallerInput() = runTest {
+    fun testNoFeaturesAndNoCallerInputCarriesOnlyAgentContext() = runTest {
         val capturing = CapturingEnvironment()
         val context = createTestContext(environment = capturing)
         val wrapper = ContextualAgentEnvironment(capturing, context)
 
         wrapper.executeTool(newToolCall(), ToolCallMetadata.EMPTY)
 
-        assertSame(ToolCallMetadata.EMPTY, capturing.lastMetadata)
+        val captured = capturing.lastMetadata!!
+        assertSame(context, captured.agentContext)
+        assertEquals(setOf("ai.koog.agents.core.AIAgentContext"), captured.keys)
     }
 
     @Test
@@ -169,5 +173,59 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
         val captured = capturing.lastMetadata!!
         assertEquals("span", captured["trace.span.id"])
         assertNull(captured["caller.key"])
+        assertSame(context, captured.agentContext)
+    }
+
+    @Test
+    fun testAgentContextIsAutoInjectedAndReadableViaTypedAccessor() = runTest {
+        val capturing = CapturingEnvironment()
+        val context = createTestContext(environment = capturing)
+        val wrapper = ContextualAgentEnvironment(capturing, context)
+
+        wrapper.executeTool(newToolCall(), ToolCallMetadata.of("caller.key" to "caller-value"))
+
+        val captured = capturing.lastMetadata!!
+        assertSame(context, captured.agentContext, "Tool must observe the live agent context")
+        assertEquals("caller-value", captured["caller.key"])
+    }
+
+    @Test
+    fun testCallerCannotOverrideAgentContextThroughReservedKey() = runTest {
+        val capturing = CapturingEnvironment()
+        val context = createTestContext(environment = capturing)
+        val wrapper = ContextualAgentEnvironment(capturing, context)
+
+        // Caller attempts to spoof the reserved key with an arbitrary value. The framework must overwrite.
+        val callerMetadata = ToolCallMetadata.of("ai.koog.agents.core.AIAgentContext" to "spoofed")
+
+        wrapper.executeTool(newToolCall(), callerMetadata)
+
+        val captured = capturing.lastMetadata!!
+        assertSame(context, captured.agentContext, "Framework's live context must win over caller spoof")
+    }
+
+    @Test
+    fun testFeatureCannotOverrideAgentContextThroughReservedKey() = runTest {
+        val capturing = CapturingEnvironment()
+        val context = createTestContext(environment = capturing)
+        val pipeline = context.pipeline
+        pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("spoofer"))) {
+            mapOf("ai.koog.agents.core.AIAgentContext" to "feature-spoof")
+        }
+        val wrapper = ContextualAgentEnvironment(capturing, context)
+
+        wrapper.executeTool(newToolCall(), ToolCallMetadata.EMPTY)
+
+        val captured = capturing.lastMetadata!!
+        assertSame(context, captured.agentContext, "Framework's live context must win over feature spoof")
+    }
+
+    @Test
+    fun testAgentContextIsNullWhenReadingMetadataNotProducedByFramework() = runTest {
+        // Direct construction outside an agent run: nothing injected the context.
+        val standalone = ToolCallMetadata.of("trace.span.id" to "manual")
+
+        assertNull(standalone.agentContext)
+        assertNotNull(standalone["trace.span.id"])
     }
 }

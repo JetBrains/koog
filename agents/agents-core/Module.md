@@ -113,6 +113,21 @@ Contributions from multiple features are merged in installation order; later fea
 earlier ones on key collision. Caller-supplied metadata then takes precedence over every feature
 contribution, so an explicit call-site override is never silently replaced.
 
+After the merge, the framework injects the live `AIAgentContext` under a reserved key. Tools that
+need access to the agent's full state (LLM context, run id, configuration, storage, ...) read it
+through the typed `agentContext` extension on `ToolCallMetadata`:
+
+```kotlin
+override suspend fun execute(args: Args, metadata: ToolCallMetadata): Result {
+    val runId = metadata.agentContext?.runId
+    // ...
+}
+```
+
+The framework's value always wins over caller and feature entries, so the property reflects the
+real context driving the current call. When `Tool.execute(args, metadata)` is invoked outside an
+agent run (for example from a unit test), `metadata.agentContext` returns `null`.
+
 ### Standard Feature Events
 
 Features in the Koog ecosystem consume standardized Feature Events emitted by agents-core during agent execution. These events are defined in this module under the package `ai.koog.agents.core.feature.model.events`.

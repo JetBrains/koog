@@ -141,6 +141,17 @@ Callers can pass metadata through `SafeTool.execute(args, serializer, metadata)`
 
 Existing tools that only override `execute(args)` continue to work unchanged: the default implementation of the metadata-aware overload delegates to the legacy path.
 
+When the call originates from an agent run, the framework also injects the live `AIAgentContext` under a reserved key. Tools that need the agent's full state (LLM context, run id, configuration, storage, ...) read it through the typed `agentContext` extension rather than expecting it through the argument schema:
+
+```kotlin
+override suspend fun execute(args: Args, metadata: ToolCallMetadata): Result {
+    val runId = metadata.agentContext?.runId
+    // ...
+}
+```
+
+The framework's value always wins over caller and feature entries on the reserved key, so the property reflects the real context driving the current call. Outside an agent run (for example when invoking `Tool.execute(args, metadata)` directly from a unit test), `metadata.agentContext` returns `null`.
+
 ### SimpleTool class (Kotlin)
 
 The [`SimpleTool<Args>`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-simple-tool/index.html) abstract class extends `Tool<Args, ToolResult.Text>` and simplifies the creation of tools that return text results.

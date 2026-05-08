@@ -22,6 +22,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 
 /**
  * End-to-end validation that wires the full chain a downstream feature author would hit:
@@ -140,7 +141,7 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
     }
 
     @Test
-    fun testNoFeaturesAndNoCallerMetadataYieldsEmptyAtTool() = runTest {
+    fun testNoFeaturesAndNoCallerMetadataYieldsOnlyAgentContextAtTool() = runTest {
         val tool = MetadataAwareTool()
         val generic = genericEnvironmentWith(tool)
         val context = createTestContext(environment = generic)
@@ -151,6 +152,21 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
         val seen = tool.observed.single()
         assertNotNull(seen)
         assertNull(seen["trace.span.id"])
-        assertEquals(0, seen.keys.size)
+        assertSame(context, seen.agentContext)
+    }
+
+    @Test
+    fun testToolReadsAgentContextTypedThroughTheFullPipeline() = runTest {
+        val tool = MetadataAwareTool()
+        val generic = genericEnvironmentWith(tool)
+        val context = createTestContext(environment = generic)
+        val contextual = ContextualAgentEnvironment(generic, context)
+
+        contextual.executeTool(newToolCall(), ToolCallMetadata.of("caller.key" to "caller-value"))
+
+        val seen = tool.observed.single()
+        assertSame(context, seen.agentContext, "Tool must read the live agent context typed")
+        assertEquals(context.runId, seen.agentContext?.runId)
+        assertEquals("caller-value", seen["caller.key"])
     }
 }
