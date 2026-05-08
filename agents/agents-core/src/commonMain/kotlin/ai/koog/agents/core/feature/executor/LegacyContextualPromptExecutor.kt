@@ -104,11 +104,11 @@ internal class LegacyContextualPromptExecutor(
         }
             .onEach { frame ->
                 logger.trace { "Received frame from LLM streaming call (event id: $eventId): $frame" }
-                context.pipeline.onLLMStreamingFrameReceived(eventId, context.executionInfo, context.runId, prompt = effectivePrompt, model, streamFrame = frame, context)
+                context.pipeline.onLLMStreamingFrameReceived(eventId, context.executionInfo, context.runId, effectivePrompt, model, frame, context)
             }
             .catch { error ->
                 logger.debug(error) { "Error in LLM streaming call (event id: $eventId): $error" }
-                context.pipeline.onLLMStreamingFailed(eventId, context.executionInfo, context.runId, prompt = effectivePrompt, model, throwable = error, context)
+                context.pipeline.onLLMStreamingFailed(eventId, context.executionInfo, context.runId, effectivePrompt, model, error, context)
 
                 throw error
             }
@@ -116,7 +116,7 @@ internal class LegacyContextualPromptExecutor(
                 logger.debug(error) { "Finished LLM streaming call (event id: $eventId): $error" }
 
                 // Note: it will be executed in any case (even if error is null)
-                context.pipeline.onLLMStreamingCompleted(eventId, context.executionInfo, context.runId, prompt = effectivePrompt, model, tools, context)
+                context.pipeline.onLLMStreamingCompleted(eventId, context.executionInfo, context.runId, effectivePrompt, model, tools, context)
             }
     }
 

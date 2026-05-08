@@ -222,7 +222,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      *
      * Example (Java):
      * pipeline.interceptLLMCallStarting(feature, eventContext -> {
-     *     // LLM call requested
+     *     // About to call LLM
      *     return java.util.concurrent.CompletableFuture.completedFuture(null);
      * });
      */
@@ -234,7 +234,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMCallStartingContext>
     ) {
         interceptLLMCallStarting(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -259,7 +259,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMCallDispatchedContext>
     ) {
         interceptLLMCallDispatched(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -360,7 +360,7 @@ public actual abstract class AIAgentPipeline actual constructor(
         handle: Interceptor<LLMStreamingDispatchedContext>
     ) {
         interceptLLMStreamingDispatched(feature) { ctx ->
-            config.submitToMainDispatcher {
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }

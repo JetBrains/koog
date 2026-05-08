@@ -268,7 +268,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
 
             //region Intercept LLM Call Events
 
-            pipeline.interceptLLMCallDispatched(this) intercept@{ eventContext ->
+            pipeline.interceptLLMCallStarting(this) intercept@{ eventContext ->
                 val event = LLMCallStartingEvent(
                     eventId = eventContext.eventId,
                     executionInfo = eventContext.executionInfo,

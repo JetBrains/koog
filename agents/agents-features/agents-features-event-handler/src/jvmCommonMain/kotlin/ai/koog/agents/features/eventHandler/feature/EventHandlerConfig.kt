@@ -226,7 +226,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onLLMCallStarting")
     public fun javaApiOnLLMCallStarting(handler: Interceptor<LLMCallStartingContext>) {
         onLLMCallStarting { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }
@@ -240,9 +240,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     public fun javaApiOnLLMCallCompleted(handler: Interceptor<LLMCallCompletedContext>) {
         onLLMCallCompleted { eventContext ->
             withContextReentrant(eventContext.context.config.strategyDispatcher) {
-                eventContext.context.config.submitToMainDispatcher {
-                    handler.intercept(eventContext)
-                }
+                handler.intercept(eventContext)
             }
         }
     }
@@ -319,7 +317,7 @@ public actual open class EventHandlerConfig actual constructor() : EventHandlerC
     @JvmName("onLLMStreamingDispatched")
     public fun javaApiOnLLMStreamingDispatched(handler: Interceptor<LLMStreamingDispatchedContext>) {
         onLLMStreamingDispatched { eventContext ->
-            eventContext.context.config.submitToMainDispatcher {
+            withContextReentrant(eventContext.context.config.strategyDispatcher) {
                 handler.intercept(eventContext)
             }
         }

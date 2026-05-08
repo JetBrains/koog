@@ -310,7 +310,6 @@ abstract class HookablePromptExecutorTest<T : HookablePromptExecutor> {
                 }
             }
         }
-
     }
 
     private suspend fun assertFailsWith(expectedFailure: Throwable, block: suspend () -> Unit) {

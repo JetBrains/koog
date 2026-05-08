@@ -382,7 +382,7 @@ public class ContextualPromptExecutor(
                         runId = context.runId,
                         prompt = event.prompt,
                         model = event.model,
-                        throwable = event.error,
+                        error = event.error,
                         context = context
                     )
                     // note: this is intended due to backward compatibility:

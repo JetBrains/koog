@@ -150,7 +150,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     ): List<Message.Response> {
         context.handle(ExecutionRequested(context.promptExecutionId, prompt, model, tools))
         logger.debug {
-            "Executing prompt: $prompt with tools: $tools and model: $model. Prompt execution id: ${context.promptExecutionId}"
+            "Executing prompt: $prompt with tools: $tools and model: $model.  rgPrompt execution id: ${context.promptExecutionId}"
         }
 
         val (effectiveClient, effectiveModel) = try {
