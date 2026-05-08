@@ -1,6 +1,7 @@
 package ai.koog.agents.example.chess.choice
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -15,9 +16,11 @@ import ai.koog.agents.example.chess.Move
 import ai.koog.agents.example.chess.nodeTrimHistory
 import ai.koog.agents.ext.llm.choice.nodeLLMSendResultsMultipleChoices
 import ai.koog.agents.ext.llm.choice.nodeSelectLLMChoice
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.runBlocking
 
 fun main(): Unit = runBlocking {
@@ -53,23 +56,28 @@ fun main(): Unit = runBlocking {
         edge(nodeSelectLLMChoice forwardTo nodeExecuteTool transformed { it.first() } onToolCall { true })
     }
 
-    // Create a chat agent with a system prompt and the tool registry
+    val agentConfig = AIAgentConfig(
+        prompt = prompt("chess", LLMParams(temperature = 1.0, numberOfChoices = 3)) {
+            system(
+                """
+                You are an agent who plays chess.
+                You should always propose a move in response to the "Your move!" message.
+                
+                DO NOT HALLUCINATE!!!
+                DO NOT PLAY ILLEGAL MOVES!!!
+                YOU CAN SEND A MESSAGE ONLY IF IT IS A RESIGNATION OR A CHECKMATE!!!
+                """.trimIndent()
+            )
+        },
+        model = OpenAIModels.Chat.O3Mini,
+        maxAgentIterations = 200,
+    )
+
     val agent = AIAgent(
         promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
+        agentConfig = agentConfig,
         strategy = strategy,
-        llmModel = OpenAIModels.Chat.O3Mini,
-        systemPrompt = """
-            You are an agent who plays chess.
-            You should always propose a move in response to the "Your move!" message.
-            
-            DO NOT HALLUCINATE!!!
-            DO NOT PLAY ILLEGAL MOVES!!!
-            YOU CAN SEND A MESSAGE ONLY IF IT IS A RESIGNATION OR A CHECKMATE!!!
-        """.trimMargin(),
-        temperature = 1.0,
         toolRegistry = toolRegistry,
-        maxIterations = 200,
-        numberOfChoices = 3,
     )
 
     println("Chess Game started!")
