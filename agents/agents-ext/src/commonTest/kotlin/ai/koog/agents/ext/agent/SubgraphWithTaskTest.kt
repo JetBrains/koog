@@ -27,6 +27,8 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.kotest.assertions.withClue
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
@@ -793,6 +795,64 @@ class SubgraphWithTaskTest {
     }
 
     //endregion
+
+    /**
+     * If the model called finish tool along with some other tools, all results must be present, not only finish tool result.
+     */
+    @Test
+    fun testAllToolCallsHaveRespectiveToolResults() = runTest {
+        val blankTool = TestBlankTool()
+        val finishTool = TestFinishTool
+
+        val toolRegistry = ToolRegistry {
+            tool(blankTool)
+        }
+
+        val model = OpenAIModels.Chat.GPT4o
+
+        val inputRequest = "Test input"
+        val blankToolResult = "I'm done"
+        val finishToolResult = "Finished"
+
+        val mockExecutor = getMockExecutor(serializer) {
+            @Suppress("UNCHECKED_CAST")
+            mockLLMToolCall(
+                listOf(
+                    blankTool to TestBlankTool.Args(blankToolResult),
+                    finishTool to TestFinishTool.Args(finishToolResult),
+                ) as List<Pair<Tool<Any?, Any?>, Any?>>
+            ) onRequestEquals inputRequest
+        }
+
+        lateinit var finalPrompt: Prompt
+
+        createAgent(
+            model = model,
+            runMode = ToolCalls.SEQUENTIAL,
+            toolRegistry = toolRegistry,
+            executor = mockExecutor,
+            finishTool = finishTool,
+            installFeatures = {
+                install(EventHandler) {
+                    onAgentCompleted { ctx ->
+                        finalPrompt = ctx.context.llm.prompt
+                    }
+                }
+            }
+        ).use { agent ->
+            val agentResult = agent.run(inputRequest, null)
+            logger.info { "Agent is finished with result: $agentResult" }
+        }
+
+        val toolCalls = finalPrompt.messages.filterIsInstance<Message.Tool.Call>()
+        val toolResults = finalPrompt.messages.filterIsInstance<Message.Tool.Result>()
+
+        withClue("Equal number of tool calls and tool results") {
+            val expectedSize = 2
+            toolCalls.size shouldBe expectedSize
+            toolResults.size shouldBe expectedSize
+        }
+    }
 
     //region Private Methods
 

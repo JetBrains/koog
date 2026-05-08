@@ -18,6 +18,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
+import ai.koog.agents.core.environment.result
 import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -681,16 +682,28 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
         defineTask(input)
     }
 
-    val finalizeTask by node<ReceivedToolResult, OutputTransformed>(
+    val finalizeTask by node<List<ReceivedToolResult>, OutputTransformed>(
         inputType = typeToken<ReceivedToolResult>(),
         outputType = outputTransformedType
-    ) { toolResult ->
+    ) { toolResults ->
         llm.writeSession {
+            // Append all tool results to the prompt, otherwise there will be calls without results, which is invalid
+            appendPrompt {
+                tool {
+                    toolResults.forEach { result(it) }
+                }
+            }
+
             // Restore original tools
             tools = storage.get(originalToolsKey)!!
         }
 
-        toolResult.toSafeResult(finishTool, config.serializer).asSuccessful().result
+        // Take the first finish tool and return as a result
+        toolResults
+            .first { it.tool == finishTool.name }
+            .toSafeResult(finishTool, config.serializer)
+            .asSuccessful()
+            .result
     }
 
     // Helper node to overcome problems of the current api and repeat less code when writing routing conditions
@@ -795,10 +808,10 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
     edge(
         callToolsHacked forwardTo finalizeTask
             onCondition { toolResults ->
-                toolResults.firstOrNull()
-                    ?.let { it.tool == finishTool.name && it.resultKind is ToolResultKind.Success } == true
+                toolResults
+                    .any { it.tool == finishTool.name && it.resultKind is ToolResultKind.Success }
             }
-            transformed { toolsResults -> toolsResults.first() }
+            transformed { toolsResults -> toolsResults }
     )
 
     if (runMode == ToolCalls.SINGLE_RUN_SEQUENTIAL) {
@@ -870,16 +883,6 @@ internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishToo
             resultKind = ToolResultKind.Failure(e),
             result = null,
         )
-    }
-
-    // Append a final tool call result to the prompt for further LLM calls
-    // to see it (otherwise they would fail)
-    llm.writeSession {
-        appendPrompt {
-            tool {
-                result(toolCall.id, toolCall.tool, toolCall.content)
-            }
-        }
     }
 
     return ReceivedToolResult(
