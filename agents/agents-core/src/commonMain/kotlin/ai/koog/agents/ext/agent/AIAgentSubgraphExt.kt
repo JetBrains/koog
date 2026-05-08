@@ -352,7 +352,7 @@ public fun <Input : Any, OutputTransformed : Any> subgraphWithTask(
     defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph<Input, OutputTransformed>(
     inputType = inputType,
-    outputType = inputType,
+    outputType = finishTool.resultType,
     name = name,
     toolSelectionStrategy = toolSelectionStrategy,
     llmModel = llmModel,
