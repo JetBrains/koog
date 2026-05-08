@@ -683,7 +683,7 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
     }
 
     val finalizeTask by node<List<ReceivedToolResult>, OutputTransformed>(
-        inputType = typeToken<ReceivedToolResult>(),
+        inputType = typeToken<List<ReceivedToolResult>>(),
         outputType = outputTransformedType
     ) { toolResults ->
         llm.writeSession {
@@ -700,7 +700,7 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
 
         // Take the first finish tool and return as a result
         toolResults
-            .first { it.tool == finishTool.name }
+            .first { it.tool == finishTool.name && it.resultKind is ToolResultKind.Success }
             .toSafeResult(finishTool, config.serializer)
             .asSuccessful()
             .result
