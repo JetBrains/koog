@@ -4,13 +4,10 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.runBlockingOnStrategyDispatcher
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.time.KoogClock
 import java.util.concurrent.ExecutorService
 
@@ -162,65 +159,5 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
             toolRegistry = agent.toolRegistry,
             installFeatures = agent.installFeatures
         )
-
-        @OptIn(markerClass = [InternalAgentsApi::class])
-        @Deprecated("Use AIAgentService(...)")
-        public actual inline operator fun <reified Input, reified Output> invoke(
-            promptExecutor: PromptExecutor,
-            agentConfig: AIAgentConfig,
-            strategy: AIAgentGraphStrategy<Input, Output>,
-            toolRegistry: ToolRegistry,
-            noinline installFeatures: GraphAIAgent.FeatureContext.() -> Unit
-        ): GraphAIAgentService<Input, Output> =
-            AIAgentService(promptExecutor, agentConfig, strategy, toolRegistry, installFeatures)
-
-        @Deprecated(
-            """
-            Use AIAgentService(...) instead of AIAgentService.Companion.invoke(...).
-            Note that in the new version, parameters `numberOfChoices` and `strategy` are removed, and the order of parameters is changed:
-            `AIAgentService(
-                promptExecutor,
-                llmModel,
-                toolRegistry,
-                systemPrompt,
-                temperature,
-                maxIterations,
-                responseProcessor,
-                installFeatures
-            )`
-        """
-        )
-        public actual operator fun invoke(
-            promptExecutor: PromptExecutor,
-            llmModel: LLModel,
-            responseProcessor: ResponseProcessor?,
-            strategy: AIAgentGraphStrategy<String, String>,
-            toolRegistry: ToolRegistry,
-            systemPrompt: String?,
-            temperature: Double?,
-            numberOfChoices: Int,
-            maxIterations: Int,
-            installFeatures: GraphAIAgent.FeatureContext.() -> Unit
-        ): GraphAIAgentService<String, String> = AIAgentService(
-            promptExecutor,
-            llmModel,
-            toolRegistry,
-            systemPrompt,
-            temperature,
-            maxIterations,
-            responseProcessor,
-            installFeatures
-        )
-
-        @OptIn(markerClass = [InternalAgentsApi::class])
-        @Deprecated("Use AIAgentService(...)")
-        public actual operator fun <Input, Output> invoke(
-            promptExecutor: PromptExecutor,
-            agentConfig: AIAgentConfig,
-            strategy: AIAgentFunctionalStrategy<Input, Output>,
-            toolRegistry: ToolRegistry,
-            installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit
-        ): FunctionalAIAgentService<Input, Output> =
-            AIAgentService(promptExecutor, agentConfig, strategy, toolRegistry, installFeatures)
     }
 }

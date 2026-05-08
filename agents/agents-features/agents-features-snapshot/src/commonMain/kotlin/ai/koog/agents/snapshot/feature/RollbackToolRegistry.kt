@@ -82,19 +82,9 @@ public class RollbackToolRegistry internal constructor(rollbackToolsMap: Map<Too
     public companion object {
         /**
          * Returns a [RollbackToolRegistryBuilder] for [ai.koog.agents.snapshot.feature.RollbackToolRegistry]
-         * */
+         */
         @JvmStatic
         public fun builder(): RollbackToolRegistryBuilder = RollbackToolRegistryBuilder()
-
-        /**
-         * Invokes the builder pattern to create and configure an instance of [RollbackToolRegistry].
-         *
-         * @param init A lambda function used to configure the [RollbackToolRegistryBuilder] object.
-         * @return A fully built instance of [RollbackToolRegistry] configured using the [init] lambda.
-         */
-        @Deprecated("Use RollbackToolRegistry(...)")
-        public operator fun invoke(init: RollbackToolRegistryBuilder.() -> Unit): RollbackToolRegistry =
-            RollbackToolRegistryBuilder().apply(init).build()
 
         /**
          * Represents an empty instance of the [RollbackToolRegistry].

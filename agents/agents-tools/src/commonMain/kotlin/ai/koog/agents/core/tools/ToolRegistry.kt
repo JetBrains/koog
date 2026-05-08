@@ -143,15 +143,6 @@ public class ToolRegistry internal constructor(tools: List<Tool<*, *>> = emptyLi
         public fun builder(): ToolRegistryBuilder = ToolRegistryBuilder()
 
         /**
-         * Creates a new ToolRegistry using the provided builder initialization block.
-         *
-         * @param init A lambda that configures the registry by adding tools
-         * @return A new ToolRegistry instance configured according to the initialization block
-         */
-        @Deprecated("Use ToolRegistry(...)")
-        public operator fun invoke(init: ToolRegistryBuilder.() -> Unit): ToolRegistry = ToolRegistryBuilder().apply(init).build()
-
-        /**
          * A constant representing an empty registry with no tools.
          * TODO(KG-676): ToolRegistry is mutable but stored as an immutable object.
          */

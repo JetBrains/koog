@@ -12,8 +12,6 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.KSerializerTypeToken
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.annotations.InternalKoogSerializationApi
@@ -129,80 +127,6 @@ public expect abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         public fun <Input, Output> fromAgent(
             agent: FunctionalAIAgent<Input, Output>
         ): AIAgentService<Input, Output, FunctionalAIAgent<Input, Output>>
-
-        /**
-         * Invokes the creation of a [GraphAIAgentService] instance with the provided configuration, strategy,
-         * tool registry, and optional feature installation logic.
-         *
-         * @param promptExecutor The executor responsible for processing AI prompts and responses.
-         * @param agentConfig Configuration parameters for the AI agent.
-         * @param strategy A strategy defining the graph structure for AI agent interactions and processing.
-         * @param toolRegistry*/
-        @OptIn(InternalAgentsApi::class)
-        @Deprecated("Use AIAgentService(...)")
-        public inline operator fun <reified Input, reified Output> invoke(
-            promptExecutor: PromptExecutor,
-            agentConfig: AIAgentConfig,
-            strategy: AIAgentGraphStrategy<Input, Output>,
-            toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-            noinline installFeatures: FeatureContext.() -> Unit = {},
-        ): GraphAIAgentService<Input, Output>
-
-        /**
-         * Invokes the creation of a [GraphAIAgentService] with the provided dependencies, configuration,
-         * and optional parameters for customization.
-         *
-         * @param promptExecutor The executor responsible for handling prompt-based interactions.
-         * @param llmModel The large language model to be used by the agent.
-         * @param strategy The graph strategy defining the agent's execution behavior. Defaults to a single-run*/
-        @Deprecated(
-            """
-            Use AIAgentService(...) instead of AIAgentService.Companion.invoke(...).
-            Note that in the new version, parameters `numberOfChoices` and `strategy` are removed, and the order of parameters is changed:
-            `AIAgentService(
-                promptExecutor,
-                llmModel,
-                toolRegistry,
-                systemPrompt,
-                temperature,
-                maxIterations,
-                responseProcessor,
-                installFeatures
-            )`
-        """
-        )
-        public operator fun invoke(
-            promptExecutor: PromptExecutor,
-            llmModel: LLModel,
-            responseProcessor: ResponseProcessor? = null,
-            strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
-            toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-            systemPrompt: String? = null,
-            temperature: Double? = null,
-            numberOfChoices: Int = 1,
-            maxIterations: Int = 50,
-            installFeatures: FeatureContext.() -> Unit = {}
-        ): GraphAIAgentService<String, String>
-
-        /**
-         * Invokes the creation of a FunctionalAIAgentService instance with the provided parameters.
-         *
-         * @param promptExecutor The executor responsible for handling prompts and managing their execution.
-         * @param agentConfig The configuration parameters for the AI agent.
-         * @param strategy The functional strategy that defines the behavior and capabilities of the AI agent.
-         * @param toolRegistry The registry containing tools that can be used by the agent. Defaults to an empty registry if not specified.
-         * @param installFeatures A lambda expression to configure and install additional features to the AI agent context.
-         * @return An instance of FunctionalAIAgentService initialized with the given parameters.
-         */
-        @OptIn(InternalAgentsApi::class)
-        @Deprecated("Use AIAgentService(...)")
-        public operator fun <Input, Output> invoke(
-            promptExecutor: PromptExecutor,
-            agentConfig: AIAgentConfig,
-            strategy: AIAgentFunctionalStrategy<Input, Output>,
-            toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-            installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
-        ): FunctionalAIAgentService<Input, Output>
     }
 
     /**
@@ -431,29 +355,6 @@ public constructor(
         installFeatures = installFeatures
     )
 }
-
-/**
- * Invokes the process to create and return an instance of `GraphAIAgentService`.
- *
- * @param promptExecutor The executor responsible for handling prompts during the agent's operation.
- * @param agentConfig The configuration object for the AI agent.
- * @param strategy The strategy defining how the agent processes tasks and connections within the graph. Defaults to `singleRunStrategy`.
- * @param toolRegistry The registry containing tools available for the agent to use. Defaults to an empty*/
-@OptIn(InternalAgentsApi::class)
-@Deprecated("Use AIAgentService(...)")
-public operator fun AIAgentService.Companion.invoke(
-    promptExecutor: PromptExecutor,
-    agentConfig: AIAgentConfig,
-    strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
-    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    installFeatures: FeatureContext.() -> Unit = {},
-): GraphAIAgentService<String, String> = GraphAIAgentService(
-    promptExecutor = promptExecutor,
-    agentConfig = agentConfig,
-    strategy = strategy,
-    toolRegistry = toolRegistry,
-    installFeatures = installFeatures
-)
 
 /**
  * Creates an [AIAgent] and converts it to a [Tool] that can be used by other AI Agents.
