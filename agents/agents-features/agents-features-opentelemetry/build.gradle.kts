@@ -123,7 +123,9 @@ extensions.configure<LibraryAndroidComponentsExtension> {
 configurations.matching { it.name.startsWith("wasmJs") }.configureEach {
     exclude(group = "io.opentelemetry.kotlin")
 }
-tasks.matching { it.name.startsWith("wasmJs") || it.name == "compileKotlinWasmJs" || it.name == "compileTestKotlinWasmJs" }.configureEach {
+// Match both camelCase prefixed tasks (wasmJsJar, wasmJsSourcesJar, ...) and PascalCase
+// suffixed ones (compileKotlinWasmJs, generateMetadataFileForWasmJsPublication, ...).
+tasks.matching { it.name.startsWith("wasmJs") || it.name.contains("WasmJs") }.configureEach {
     onlyIf("OTel Kotlin SDK 0.3.0 does not publish wasmJs artifacts") { false }
 }
 
