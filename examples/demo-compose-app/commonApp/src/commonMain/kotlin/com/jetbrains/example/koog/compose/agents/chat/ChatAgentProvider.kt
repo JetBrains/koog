@@ -33,7 +33,7 @@ internal class ChatAgentProvider(private val provideLLMClient: suspend () -> Pai
 
         // Create tool registry with just the exit tool
         val toolRegistry = ToolRegistry {
-//            tool(ExitTool)
+            tool(ExitTool)
         }
 
         val strategy = strategy(title) {
@@ -62,9 +62,7 @@ internal class ChatAgentProvider(private val provideLLMClient: suspend () -> Pai
                 system(
                     """
                     You are a helpful and friendly chat assistant.
-                    Engage in conversation with the user, answering questions and providing information.
-                    Be concise, accurate, and friendly in your responses.
-                    If you don't know something, admit it rather than making up information.
+                    CALL TOOLS when asked.
                     """.trimIndent()
                 )
             },

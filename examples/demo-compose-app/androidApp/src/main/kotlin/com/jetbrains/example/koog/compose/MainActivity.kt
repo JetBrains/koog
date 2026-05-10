@@ -6,9 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.jetbrains.example.koog.compose.local.AndroidLocalLLMClient
 import com.jetbrains.example.koog.compose.local.AndroidLocalLLMClientConfig
-import com.jetbrains.example.koog.compose.local.FunctionGemma
-import com.jetbrains.example.koog.compose.local.Gemma
-import com.jetbrains.example.koog.compose.local.Gemma3
+import com.jetbrains.example.koog.compose.local.AndroidLocalModels
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,7 +17,7 @@ class MainActivity : ComponentActivity() {
                 client = AndroidLocalLLMClient(
                     AndroidLocalLLMClientConfig()
                 ),
-                model = FunctionGemma
+                model = AndroidLocalModels.FunctionGemma
             )
         }
     }
