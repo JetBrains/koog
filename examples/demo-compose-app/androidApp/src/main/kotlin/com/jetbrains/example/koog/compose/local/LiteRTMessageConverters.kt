@@ -8,7 +8,7 @@ import com.google.ai.edge.litertlm.Content
 import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.OpenApiTool
 import io.modelcontextprotocol.kotlin.sdk.types.toJson
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import com.google.ai.edge.litertlm.Message as LitertMessage
 
 internal fun LitertMessage.toKoogMessages(clock: Clock): List<Message.Response> {

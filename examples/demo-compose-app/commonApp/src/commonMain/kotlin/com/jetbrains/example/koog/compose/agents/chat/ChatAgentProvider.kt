@@ -2,7 +2,7 @@ package com.jetbrains.example.koog.compose.agents.chat
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
@@ -62,7 +62,6 @@ internal class ChatAgentProvider(private val provideLLMClient: suspend () -> Pai
                 system(
                     """
                     You are a helpful and friendly chat assistant.
-                    CALL TOOLS when asked.
                     """.trimIndent()
                 )
             },

@@ -21,7 +21,7 @@ public data class LiteRTClientConfig(
     val clock: Clock = Clock.System,
 )
 
-public class LiteRTLLMClient(config: LiteRTClientConfig) : LLMClient {
+public class LiteRTLLMClient(config: LiteRTClientConfig) : LLMClient() {
     private val session = LiteRTLLMSession(config)
 
     override suspend fun execute(

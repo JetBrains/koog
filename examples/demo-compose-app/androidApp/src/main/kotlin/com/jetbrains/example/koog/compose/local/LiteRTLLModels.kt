@@ -20,7 +20,12 @@ public object LiteRTLLModels : LLModelDefinitions {
         maxOutputTokens = 4_096,
     )
 
-    public fun getIdFromPath(path: String): String {
-        return path.split("/").last()
+    private val customModels = mutableListOf<LLModel>()
+
+    override val models: List<LLModel>
+        get() = listOf(FunctionGemma) + customModels
+
+    override fun addCustomModel(model: LLModel) {
+        customModels.add(model)
     }
 }

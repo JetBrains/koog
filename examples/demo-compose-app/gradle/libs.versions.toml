@@ -52,7 +52,7 @@ ktor-client-js = { module = "io.ktor:ktor-client-js" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp" }
 markdown-renderer = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "markdown-renderer" }
 
-# Local Android Models
+# LiteRT
 android-litertlm = { module = "com.google.ai.edge.litertlm:litertlm-android", version.ref = "litertlm" }
 
 [plugins]
