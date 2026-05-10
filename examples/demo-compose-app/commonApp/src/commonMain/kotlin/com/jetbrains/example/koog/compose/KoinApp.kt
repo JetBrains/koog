@@ -78,10 +78,9 @@ fun KoinApp(client: LLMClient? = null, model: LLModel? = null) = KoinMultiplatfo
                                 require(geminiToken.isNotEmpty()) { "Gemini token is not configured." }
                                 Pair(GoogleLLMClient(geminiToken), GoogleModels.Gemini2_5FlashLite)
                             }
-
-                            SelectedOption.Local -> {
-                                requireNotNull(client) { "Local client is not configured." }
-                                requireNotNull(model) { "Local model is not configured." }
+                            SelectedOption.LiteRT -> {
+                                requireNotNull(client) { "LiteRT client is not configured." }
+                                requireNotNull(model) { "LiteRT model is not configured." }
                                 Pair(client, model)
                             }
                         }

@@ -5,12 +5,12 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 
-public data object AndroidLocalLLMProvider : LLMProvider("android-litert", "LiteRT")
+public data object LiteRTLLMProvider : LLMProvider("android-litert", "LiteRT")
 
-object AndroidLocalModels : LLModelDefinitions {
+public object LiteRTLLModels : LLModelDefinitions {
     // https://huggingface.co/litert-community/functiongemma-270m-ft-tiny-garden/tree/main
     public val FunctionGemma: LLModel = LLModel(
-        provider = AndroidLocalLLMProvider,
+        provider = LiteRTLLMProvider,
         id = "tiny_garden.litertlm",
         capabilities = listOf(
             LLMCapability.Tools,

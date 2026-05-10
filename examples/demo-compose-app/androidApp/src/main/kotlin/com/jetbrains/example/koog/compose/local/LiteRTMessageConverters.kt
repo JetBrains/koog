@@ -11,7 +11,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.toJson
 import kotlinx.datetime.Clock
 import com.google.ai.edge.litertlm.Message as LitertMessage
 
-fun LitertMessage.toKoogMessages(clock: Clock): List<Message.Response> {
+internal fun LitertMessage.toKoogMessages(clock: Clock): List<Message.Response> {
     return buildList {
         if (contents.contents.isNotEmpty()) {
             val parts = contents.contents.map {
@@ -43,7 +43,7 @@ fun LitertMessage.toKoogMessages(clock: Clock): List<Message.Response> {
     }
 }
 
-fun Message.toLitertMessage(): LitertMessage {
+internal fun Message.toLitertMessage(): LitertMessage {
     return when (role) {
         Message.Role.System -> LitertMessage.system(content)
         Message.Role.User -> LitertMessage.user(content)
@@ -59,6 +59,6 @@ internal class AndroidLocalTool(val tool: ToolDescriptor): OpenApiTool {
     }
 
     override fun execute(paramsJsonString: String): String {
-        throw UnsupportedOperationException("Should not be called for Koog")
+        throw UnsupportedOperationException("Should not be called")
     }
 }

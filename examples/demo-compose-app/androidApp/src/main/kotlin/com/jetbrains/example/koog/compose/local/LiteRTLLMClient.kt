@@ -8,12 +8,12 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import com.google.ai.edge.litertlm.Backend
-import kotlinx.datetime.Clock
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
-data class AndroidLocalLLMClientConfig(
-    val defaultModel: LLModel = AndroidLocalModels.FunctionGemma,
+public data class LiteRTClientConfig(
+    val defaultModel: LLModel = LiteRTLLModels.FunctionGemma,
     val modelsPath: String = "/data/local/tmp/llm",
     val cacheDir: String = "/data/local/tmp/llm/cache",
     val backend: Backend = Backend.CPU(),
@@ -21,8 +21,8 @@ data class AndroidLocalLLMClientConfig(
     val clock: Clock = Clock.System,
 )
 
-class AndroidLocalLLMClient(config: AndroidLocalLLMClientConfig) : LLMClient {
-    private val session = AndroidLocalLLMSession(config)
+public class LiteRTLLMClient(config: LiteRTClientConfig) : LLMClient {
+    private val session = LiteRTLLMSession(config)
 
     override suspend fun execute(
         prompt: Prompt,
@@ -39,7 +39,7 @@ class AndroidLocalLLMClient(config: AndroidLocalLLMClientConfig) : LLMClient {
         throw UnsupportedOperationException("Moderation is not supported for Android local models")
     }
 
-    override fun llmProvider(): LLMProvider = AndroidLocalLLMProvider
+    override fun llmProvider(): LLMProvider = LiteRTLLMProvider
 
     @OptIn(ExperimentalAtomicApi::class)
     override fun close() {

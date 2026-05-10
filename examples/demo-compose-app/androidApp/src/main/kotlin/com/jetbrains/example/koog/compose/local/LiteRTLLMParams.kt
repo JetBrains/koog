@@ -7,7 +7,7 @@ import kotlinx.serialization.json.double
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 
-class AndroidLocalLLMParams private constructor(
+public class AndroidLocalLLMParams private constructor(
     val exactTemperature: Double,
     val topK: Int,
     val topP: Double,

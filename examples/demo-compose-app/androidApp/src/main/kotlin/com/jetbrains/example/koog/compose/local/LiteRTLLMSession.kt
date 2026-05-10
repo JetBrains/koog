@@ -10,7 +10,7 @@ import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.ai.edge.litertlm.SamplerConfig
 
-class AndroidLocalLLMSession(private val config: AndroidLocalLLMClientConfig) {
+internal class LiteRTLLMSession(private val config: LiteRTClientConfig) {
     private var engine: Engine? = null
     private var engineConfig: EngineConfig? = null
     private var conversation: Conversation? = null
