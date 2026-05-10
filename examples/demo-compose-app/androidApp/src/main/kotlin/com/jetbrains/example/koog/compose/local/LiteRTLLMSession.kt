@@ -9,6 +9,7 @@ import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.ai.edge.litertlm.SamplerConfig
+import com.google.ai.edge.litertlm.tool
 
 internal class LiteRTLLMSession(private val config: LiteRTClientConfig) {
     private var engine: Engine? = null
@@ -60,7 +61,7 @@ internal class LiteRTLLMSession(private val config: LiteRTClientConfig) {
                 temperature = params.exactTemperature,
             ),
             initialMessages = messagePrefix.map { it.toLitertMessage() },
-            tools = tools.map { AndroidLocalTool(it) },
+            tools = tools.map { tool(AndroidLocalTool(it)) },
             automaticToolCalling = false
         )
 
