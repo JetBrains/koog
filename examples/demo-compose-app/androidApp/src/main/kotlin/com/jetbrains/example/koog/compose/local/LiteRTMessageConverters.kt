@@ -1,6 +1,7 @@
 package com.jetbrains.example.koog.compose.local
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -9,6 +10,11 @@ import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.OpenApiTool
 import io.modelcontextprotocol.kotlin.sdk.types.toJson
 import kotlin.time.Clock
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import com.google.ai.edge.litertlm.Message as LitertMessage
 
 /**
@@ -75,6 +81,58 @@ internal fun Message.toLitertMessage(): LitertMessage {
 }
 
 /**
+ * Converts a [ToolParameterType] to its OpenAPI-compatible JSON schema [JsonObject].
+ *
+ * Handles all parameter types recursively:
+ * - Primitives (`String`, `Integer`, `Float`, `Boolean`, `Null`) emit a `"type"` field.
+ * - [ToolParameterType.Enum] emits `"type": "string"` plus an `"enum"` array.
+ * - [ToolParameterType.List] emits `"type": "array"` with a recursive `"items"` schema.
+ * - [ToolParameterType.Object] emits `"type": "object"` with `"properties"` and `"required"`.
+ * - [ToolParameterType.AnyOf] emits an `"anyOf"` array of type schemas.
+ *
+ * Descriptions are NOT included here; callers should add `"description"` to the
+ * enclosing property object.
+ */
+private fun ToolParameterType.toJsonSchema(): JsonObject = buildJsonObject {
+    when (val type = this@toJsonSchema) {
+        ToolParameterType.String -> put("type", "string")
+        ToolParameterType.Integer -> put("type", "integer")
+        ToolParameterType.Float -> put("type", "number")
+        ToolParameterType.Boolean -> put("type", "boolean")
+        ToolParameterType.Null -> put("type", "null")
+        is ToolParameterType.Enum -> {
+            put("type", "string")
+            put("enum", JsonArray(type.entries.map { JsonPrimitive(it) }))
+        }
+        is ToolParameterType.List -> {
+            put("type", "array")
+            put("items", type.itemsType.toJsonSchema())
+        }
+        is ToolParameterType.Object -> {
+            put("type", "object")
+            put("properties", buildJsonObject {
+                for (prop in type.properties) {
+                    put(prop.name, buildJsonObject {
+                        prop.type.toJsonSchema().forEach { (k, v) -> put(k, v) }
+                        put("description", prop.description)
+                    })
+                }
+            })
+            if (type.requiredProperties.isNotEmpty()) {
+                put("required", JsonArray(type.requiredProperties.map { JsonPrimitive(it) }))
+            }
+        }
+        is ToolParameterType.AnyOf -> {
+            put("anyOf", JsonArray(type.types.map { descriptor ->
+                buildJsonObject {
+                    descriptor.type.toJsonSchema().forEach { (k, v) -> put(k, v) }
+                }
+            }))
+        }
+    }
+}
+
+/**
  * Adapts a koog [ToolDescriptor] to the LiteRT [OpenApiTool] interface.
  *
  * This adapter is used to register koog tools with a LiteRT [Conversation] so the
@@ -84,9 +142,33 @@ internal fun Message.toLitertMessage(): LitertMessage {
  * @property tool The koog tool descriptor to expose to LiteRT.
  */
 internal class AndroidLocalTool(val tool: ToolDescriptor): OpenApiTool {
-    /** Returns the tool's description JSON string as defined in [ToolDescriptor.description]. */
+    /**
+     * Returns the tool schema as an OpenAPI-compatible JSON string.
+     *
+     * The schema includes [ToolDescriptor.name], [ToolDescriptor.description], and a
+     * `parameters` object with all required and optional parameters as JSON Schema
+     * property entries. Only [ToolDescriptor.requiredParameters] are listed in `required`.
+     */
     override fun getToolDescriptionJsonString(): String {
-        return tool.description
+        val allParams = tool.requiredParameters + tool.optionalParameters
+        return buildJsonObject {
+            put("name", tool.name)
+            put("description", tool.description)
+            put("parameters", buildJsonObject {
+                put("type", "object")
+                put("properties", buildJsonObject {
+                    for (param in allParams) {
+                        put(param.name, buildJsonObject {
+                            param.type.toJsonSchema().forEach { (k, v) -> put(k, v) }
+                            put("description", param.description)
+                        })
+                    }
+                })
+                if (tool.requiredParameters.isNotEmpty()) {
+                    put("required", JsonArray(tool.requiredParameters.map { JsonPrimitive(it.name) }))
+                }
+            })
+        }.toString()
     }
 
     /**

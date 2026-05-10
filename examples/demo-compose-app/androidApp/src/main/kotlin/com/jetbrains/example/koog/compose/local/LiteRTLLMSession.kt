@@ -119,7 +119,6 @@ internal class LiteRTLLMSession(private val config: LiteRTClientConfig) {
      */
     fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         require(prompt.messages.isNotEmpty(), { "There should be at least one message" })
-        require(tools.isEmpty(), { "Currently tools are not supported" })
 
         val conversation = getCurrentConversation(prompt, model, tools)
 

@@ -53,7 +53,7 @@ public class LiteRTLLMClient(config: LiteRTClientConfig) : LLMClient() {
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<Message.Response> {
-        return session.execute(prompt, model, emptyList())
+        return session.execute(prompt, model, tools)
     }
 
     /**
