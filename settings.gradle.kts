@@ -58,6 +58,7 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client")
+include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-client")
 
 include(":prompt:prompt-executor:prompt-executor-llms-all")
 include(":prompt:prompt-executor:prompt-executor-model")

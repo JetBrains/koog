@@ -24,6 +24,7 @@ kover = "0.9.8"
 ktlint = "14.2.0"
 ktor3 = "3.2.2"
 lettuce = "7.2.1.RELEASE"
+litertlm = "0.11.0"
 logback = "1.5.13"
 mcp = "0.11.1"
 mockito = "5.21.0"
@@ -83,6 +84,7 @@ ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor3" 
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor3" }
 ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor3" }
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
+android-litertlm = { module = "com.google.ai.edge.litertlm:litertlm-android", version.ref = "litertlm" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }

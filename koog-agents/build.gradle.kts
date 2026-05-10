@@ -87,6 +87,7 @@ val included = setOf(
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-client",
     ":prompt:prompt-executor:prompt-executor-llms-all",
     ":prompt:prompt-executor:prompt-executor-model",
     ":prompt:prompt-llm",
