@@ -101,8 +101,7 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
                     stderrBuilder.toString().trimEnd(),
                     "Command timed out after $timeoutSeconds seconds"
                 )
-
-                ExecutionResult(output = combinedPartialOutput, exitCode = null)
+                ExecutionResult(output = combinedPartialOutput, exitCode = null, timedOut = true)
             } else {
                 val combinedOutput = buildCombinedOutput(
                     stdoutBuilder.toString().trimEnd(),

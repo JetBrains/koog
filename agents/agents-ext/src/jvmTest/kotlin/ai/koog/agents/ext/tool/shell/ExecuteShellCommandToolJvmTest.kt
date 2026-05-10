@@ -392,6 +392,15 @@ class ExecuteShellCommandToolJvmTest {
         assertTrue(executionTimeMs < 4000, "Should timeout at 1s, but took ${executionTimeMs}ms")
     }
 
+    @Test
+    @EnabledOnOs(OS.LINUX, OS.MAC)
+    fun testExecutorResultMarksTimeout() = runBlocking {
+        val result = executor.execute("sleep 2", workingDirectory = null, timeoutSeconds = 1)
+
+        assertNull(result.exitCode)
+        assertTrue(result.timedOut)
+    }
+
     // CANCELLATION TESTS
 
     @RepeatedTest(10)

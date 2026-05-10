@@ -19,9 +19,11 @@ public interface ShellCommandExecutor {
      *
      * @property output All text printed by the command (both success and error messages)
      * @property exitCode Process exit code (0 = success), or null if the process was interrupted or timed out
+     * @property timedOut True when the process was terminated because the timeout was reached
      */
     public data class ExecutionResult(
         val output: String,
-        val exitCode: Int?
+        val exitCode: Int?,
+        val timedOut: Boolean = false,
     )
 }
