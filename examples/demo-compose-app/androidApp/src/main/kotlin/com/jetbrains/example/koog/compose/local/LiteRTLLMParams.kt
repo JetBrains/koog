@@ -7,6 +7,18 @@ import kotlinx.serialization.json.double
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 
+/**
+ * LLM sampling parameters for on-device Android inference via LiteRT.
+ *
+ * Extends [LLMParams] with LiteRT-specific sampling controls and serializes
+ * [topK] and [topP] into [LLMParams.additionalProperties] so they are forwarded
+ * to the underlying engine.
+ *
+ * @property exactTemperature Sampling temperature controlling output randomness.
+ * @property topK Number of top tokens to consider during sampling.
+ * @property topP Nucleus-sampling probability threshold.
+ * @property seed Optional random seed for reproducible generation.
+ */
 public class AndroidLocalLLMParams private constructor(
     val exactTemperature: Double,
     val topK: Int,
@@ -21,6 +33,14 @@ public class AndroidLocalLLMParams private constructor(
     }
 ) {
 
+    /**
+     * Creates [AndroidLocalLLMParams] applying defaults for any `null` argument.
+     *
+     * @param temperature Sampling temperature; defaults to [DEFAULT_TEMPERATURE] when `null`.
+     * @param topK Top-K value; defaults to [DEFAULT_TOP_K] when `null`.
+     * @param topP Nucleus-sampling threshold; defaults to [DEFAULT_TOP_P] when `null`.
+     * @param seed Optional random seed for reproducible generation.
+     */
     constructor(
         temperature: Double?,
         topK: Int?,
@@ -40,6 +60,12 @@ public class AndroidLocalLLMParams private constructor(
     }
 }
 
+/**
+ * Converts a generic [LLMParams] to [AndroidLocalLLMParams].
+ *
+ * Returns the receiver unchanged if it is already an [AndroidLocalLLMParams].
+ * Otherwise extracts `topK`, `topP`, and `seed` from [LLMParams.additionalProperties].
+ */
 internal fun LLMParams.toAndroidLocalParams(): AndroidLocalLLMParams {
     if (this is AndroidLocalLLMParams) return this
     return AndroidLocalLLMParams(
