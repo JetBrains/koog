@@ -3,15 +3,18 @@ package ai.koog.http.client.test
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
 import ai.koog.http.client.get
+import ai.koog.http.client.lines
 import ai.koog.http.client.post
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.test.fail
 
 /**
@@ -234,6 +237,124 @@ abstract class BaseKoogHttpClientTest {
         )
 
         assertEquals(responseBody, result)
+    }
+
+    @Suppress("FunctionName")
+    open fun `test lines emits non-blank lines`(): Unit = runTest {
+        val lines = listOf("""{"i":1}""", """{"i":2}""", """{"i":3}""")
+
+        mockServer.start(
+            streamEndpoints = listOf(
+                MockWebServer.StreamEndpointConfig(
+                    path = "/stream",
+                    lines = lines
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val collected = client.lines(
+            path = mockServer.url("/stream"),
+            request = "{}"
+        ).toList()
+
+        assertEquals(lines, collected)
+    }
+
+    @Suppress("FunctionName")
+    open fun `test lines skips blank lines`(): Unit = runTest {
+        val lines = listOf("""{"i":1}""", "", "   ", """{"i":2}""")
+
+        mockServer.start(
+            streamEndpoints = listOf(
+                MockWebServer.StreamEndpointConfig(
+                    path = "/stream",
+                    lines = lines
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val collected = client.lines(
+            path = mockServer.url("/stream"),
+            request = "{}"
+        ).toList()
+
+        assertEquals(listOf("""{"i":1}""", """{"i":2}"""), collected)
+    }
+
+    @Suppress("FunctionName")
+    open fun `test lines emits nothing for empty body`(): Unit = runTest {
+        mockServer.start(
+            streamEndpoints = listOf(
+                MockWebServer.StreamEndpointConfig(
+                    path = "/stream",
+                    lines = emptyList()
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val collected = client.lines(
+            path = mockServer.url("/stream"),
+            request = "{}"
+        ).toList()
+
+        assertTrue(collected.isEmpty())
+    }
+
+    @Suppress("FunctionName")
+    open fun `test lines surfaces non-2xx as KoogHttpClientException`(): Unit = runTest {
+        mockServer.start(
+            streamEndpoints = listOf(
+                MockWebServer.StreamEndpointConfig(
+                    path = "/stream",
+                    lines = listOf("ignored"),
+                    statusCode = HttpStatusCode.BadRequest,
+                    contentType = ContentType.Text.Plain
+                )
+            )
+        )
+
+        val client = createClient()
+
+        try {
+            client.lines(
+                path = mockServer.url("/stream"),
+                request = "{}"
+            ).toList()
+            fail("Expected KoogHttpClientException for non-2xx response")
+        } catch (e: KoogHttpClientException) {
+            assertEquals("TestClient", e.clientName)
+            assertEquals(400, e.statusCode)
+        }
+    }
+
+    @Suppress("FunctionName")
+    open fun `test lines propagates cancellation`(): Unit = runTest {
+        val lines = List(100) { """{"i":$it}""" }
+
+        mockServer.start(
+            streamEndpoints = listOf(
+                MockWebServer.StreamEndpointConfig(
+                    path = "/stream",
+                    lines = lines
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val collected = client.lines(
+            path = mockServer.url("/stream"),
+            request = "{}"
+        ).take(3).toList()
+
+        assertEquals(3, collected.size)
+        assertEquals(lines.take(3), collected)
     }
 
     @Suppress("FunctionName")

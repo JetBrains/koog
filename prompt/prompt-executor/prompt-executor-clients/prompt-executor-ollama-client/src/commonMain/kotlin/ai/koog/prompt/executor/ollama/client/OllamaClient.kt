@@ -2,7 +2,12 @@ package ai.koog.prompt.executor.ollama.client
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.serialization.ToolDescriptorSchemaGenerator
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
+import ai.koog.http.client.get
+import ai.koog.http.client.ktor.KtorKoogHttpClient
+import ai.koog.http.client.lines
+import ai.koog.http.client.post
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -41,23 +46,6 @@ import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.preparePost
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
-import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
@@ -70,23 +58,26 @@ import kotlin.jvm.JvmOverloads
  * - [LLMClient] for executing prompts and streaming responses.
  * - [LLMEmbeddingProvider] for generating embeddings from input text.
  *
- * @param baseUrl The base URL of the Ollama server. Defaults to "http://localhost:11434".
- * @param baseClient The underlying HTTP client used for making requests.
- * @param timeoutConfig Configuration for connection, request, and socket timeouts.
+ * @param httpClient A preconfigured Koog HTTP client used for API calls. Must have the Ollama base URL
+ *   and timeouts already embedded. To create a client with standard defaults, use the secondary
+ *   constructor that accepts a base URL and a [KoogHttpClient.Factory].
  * @param clock Clock instance used for tracking response metadata timestamps.
  * @param contextWindowStrategy The [ContextWindowStrategy] to use for computing context window lengths.
  *   Defaults to [ContextWindowStrategy.None].
+ * @param toolDescriptorConverter Generates JSON schemas for tool descriptors sent to the model.
  */
 public class OllamaClient @JvmOverloads constructor(
-    public val baseUrl: String = "http://localhost:11434",
-    baseClient: HttpClient = HttpClient(),
-    timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    private val httpClient: KoogHttpClient,
     private val clock: KoogClock = KoogClock.System,
     private val contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
     private val toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
 ) : LLMClient() {
 
-    private companion object {
+    public companion object {
+        public const val DEFAULT_BASE_URL: String = "http://localhost:11434"
+
+        private const val CLIENT_NAME = "OllamaClient"
+
         private val logger = KotlinLogging.logger { }
 
         private const val DEFAULT_MESSAGE_PATH = "api/chat"
@@ -94,6 +85,11 @@ public class OllamaClient @JvmOverloads constructor(
         private const val DEFAULT_LIST_MODELS_PATH = "api/tags"
         private const val DEFAULT_SHOW_MODEL_PATH = "api/show"
         private const val DEFAULT_PULL_MODEL_PATH = "api/pull"
+
+        private val ollamaJson = Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
 
         private val moderationCategoriesMapping: Map<String, List<ModerationCategory>> = mapOf(
             // Violent crimes: unlawful violence towards people and animals
@@ -139,29 +135,52 @@ public class OllamaClient @JvmOverloads constructor(
         private val possibleModerationCategories = moderationCategoriesMapping.values.flatten().distinct()
     }
 
-    private val ollamaJson = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-    }
+    /**
+     * Secondary constructor that builds the underlying [KoogHttpClient] from a [KoogHttpClient.Factory].
+     */
+    @JvmOverloads
+    public constructor(
+        baseUrl: String = DEFAULT_BASE_URL,
+        httpClientFactory: KoogHttpClient.Factory,
+        timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+        clock: KoogClock = KoogClock.System,
+        contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
+        toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
+    ) : this(
+        httpClient = httpClientFactory.create(
+            clientName = CLIENT_NAME,
+            baseUrl = baseUrl,
+            headers = emptyMap(),
+            queryParameters = emptyMap(),
+            requestTimeoutMillis = timeoutConfig.requestTimeoutMillis,
+            connectTimeoutMillis = timeoutConfig.connectTimeoutMillis,
+            socketTimeoutMillis = timeoutConfig.socketTimeoutMillis,
+            json = ollamaJson,
+        ),
+        clock = clock,
+        contextWindowStrategy = contextWindowStrategy,
+        toolDescriptorConverter = toolDescriptorConverter,
+    )
 
-    private val client = baseClient.config {
-        defaultRequest {
-            url(baseUrl)
-            contentType(ContentType.Application.Json)
-        }
-        install(ContentNegotiation) {
-            json(ollamaJson)
-            // Ollama sometimes returns non-streaming responses with `Content-Type: text/plain`
-            // (see https://github.com/JetBrains/koog/issues/1237). Register the same JSON
-            // deserializer for that content type so the body is still parsed correctly.
-            json(ollamaJson, ContentType.Text.Plain)
-        }
-        install(HttpTimeout) {
-            requestTimeoutMillis = timeoutConfig.requestTimeoutMillis
-            connectTimeoutMillis = timeoutConfig.connectTimeoutMillis
-            socketTimeoutMillis = timeoutConfig.socketTimeoutMillis
-        }
-    }
+    /**
+     * Secondary constructor for creating an [OllamaClient] backed by a Ktor [HttpClient].
+     */
+    @JvmOverloads
+    public constructor(
+        baseUrl: String = DEFAULT_BASE_URL,
+        baseClient: HttpClient = HttpClient(),
+        timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+        clock: KoogClock = KoogClock.System,
+        contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
+        toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
+    ) : this(
+        baseUrl = baseUrl,
+        httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
+        timeoutConfig = timeoutConfig,
+        clock = clock,
+        contextWindowStrategy = contextWindowStrategy,
+        toolDescriptorConverter = toolDescriptorConverter,
+    )
 
     internal fun LLMParams.toOllamaChatParams(): OllamaParams {
         if (this is OllamaParams) return this
@@ -222,27 +241,21 @@ public class OllamaClient @JvmOverloads constructor(
             )
         )
 
-        val response = client.post(DEFAULT_MESSAGE_PATH) {
-            setBody(request)
-        }
-
-        if (response.status.isSuccess()) {
-            return parseResponse(response.body<OllamaChatResponseDTO>())
-        } else {
-            // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
-
-            val httpClientException = KoogHttpClientException(
-                statusCode = response.status.value,
-                errorBody = response.bodyAsText(),
-            )
+        val responseBody = try {
+            httpClient.post<String, String>(path = DEFAULT_MESSAGE_PATH, request = request)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
             val exception = LLMClientException(
                 clientName = clientName,
-                message = httpClientException.message,
-                cause = httpClientException,
+                message = e.message,
+                cause = e
             )
             logger.error(exception) { exception.message }
             throw exception
         }
+
+        return parseResponse(ollamaJson.decodeFromString<OllamaChatResponseDTO>(responseBody))
     }
 
     private fun parseResponse(response: OllamaChatResponseDTO): List<Message.Response> {
@@ -315,40 +328,30 @@ public class OllamaClient @JvmOverloads constructor(
             )
         )
 
-        client.preparePost(DEFAULT_MESSAGE_PATH) {
-            contentType(ContentType.Application.Json)
-            setBody(request)
-        }.execute { response: HttpResponse ->
-            val channel: ByteReadChannel = response.bodyAsChannel()
-
-            while (!channel.isClosedForRead) {
-                val line = channel.readUTF8Line() ?: break
-                if (line.isBlank()) continue
-                try {
-                    val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
-                    chunk.message?.let { message ->
-                        if (message.content.isNotEmpty()) {
-                            emitTextDelta(text = message.content)
-                        }
-                        if (message.thinking.isNullOrEmpty().not()) {
-                            emitReasoningDelta(text = message.thinking)
-                        }
-                        message.toolCalls?.forEachIndexed { index, toolCall ->
-                            val name = toolCall.function.name
-                            val args = toolCall.function.arguments.toString()
-                            emitToolCallDelta(
-                                id = generateToolCallId(name, args, index),
-                                name = toolCall.function.name,
-                                args = args,
-                                index = index
-                            )
-                            tryEmitPendingToolCall()
-                        }
+        httpClient.lines(path = DEFAULT_MESSAGE_PATH, request = request).collect { line ->
+            try {
+                val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
+                chunk.message?.let { message ->
+                    if (message.content.isNotEmpty()) {
+                        emitTextDelta(text = message.content)
                     }
-                } catch (_: Exception) {
-                    // Skip malformed JSON lines
-                    continue
+                    if (message.thinking.isNullOrEmpty().not()) {
+                        emitReasoningDelta(text = message.thinking)
+                    }
+                    message.toolCalls?.forEachIndexed { index, toolCall ->
+                        val name = toolCall.function.name
+                        val args = toolCall.function.arguments.toString()
+                        emitToolCallDelta(
+                            id = generateToolCallId(name, args, index),
+                            name = toolCall.function.name,
+                            args = args,
+                            index = index
+                        )
+                        tryEmitPendingToolCall()
+                    }
                 }
+            } catch (_: Exception) {
+                // Skip malformed JSON lines
             }
         }
     }
@@ -378,19 +381,20 @@ public class OllamaClient @JvmOverloads constructor(
             throw LLMClientException(clientName, "Model ${model.id} does not have the Embed capability")
         }
 
-        val response = client.post(DEFAULT_EMBEDDINGS_PATH) {
-            setBody(EmbeddingRequestDTO(model = model.id, input = text))
-        }
-
-        if (!response.status.isSuccess()) {
-            val errorBody = response.bodyAsText()
+        val responseBody = try {
+            httpClient.post<EmbeddingRequestDTO, String>(
+                path = DEFAULT_EMBEDDINGS_PATH,
+                request = EmbeddingRequestDTO(model = model.id, input = text)
+            )
+        } catch (e: KoogHttpClientException) {
             throw LLMClientException(
                 clientName,
-                "Embedding request failed (HTTP ${response.status.value}): $errorBody"
+                "Embedding request failed (HTTP ${e.statusCode}): ${e.errorBody}",
+                cause = e
             )
         }
 
-        val embeddingResponse = response.body<EmbeddingBatchResponseDTO>()
+        val embeddingResponse = ollamaJson.decodeFromString<EmbeddingBatchResponseDTO>(responseBody)
         return embeddingResponse.normalizedEmbeddings().firstOrNull() ?: emptyList()
     }
 
@@ -413,11 +417,12 @@ public class OllamaClient @JvmOverloads constructor(
             throw LLMClientException(clientName, "Model ${model.id} does not have the Embed capability")
         }
 
-        val response = client.post(DEFAULT_EMBEDDINGS_PATH) {
-            setBody(EmbeddingBatchRequestDTO(model = model.id, input = inputs))
-        }
+        val responseBody = httpClient.post<EmbeddingBatchRequestDTO, String>(
+            path = DEFAULT_EMBEDDINGS_PATH,
+            request = EmbeddingBatchRequestDTO(model = model.id, input = inputs)
+        )
 
-        val embeddingResponse = response.body<EmbeddingBatchResponseDTO>()
+        val embeddingResponse = ollamaJson.decodeFromString<EmbeddingBatchResponseDTO>(responseBody)
         return embeddingResponse.normalizedEmbeddings()
     }
 
@@ -538,20 +543,25 @@ public class OllamaClient @JvmOverloads constructor(
     }
 
     private suspend fun listModels(): OllamaModelsListResponseDTO {
-        return client.get(DEFAULT_LIST_MODELS_PATH).body<OllamaModelsListResponseDTO>()
+        val responseBody = httpClient.get<String>(path = DEFAULT_LIST_MODELS_PATH)
+        return ollamaJson.decodeFromString(responseBody)
     }
 
     private suspend fun showModel(name: String): OllamaShowModelResponseDTO {
-        return client.post(DEFAULT_SHOW_MODEL_PATH) {
-            setBody(OllamaShowModelRequestDTO(name = name))
-        }.body<OllamaShowModelResponseDTO>()
+        val responseBody = httpClient.post<OllamaShowModelRequestDTO, String>(
+            path = DEFAULT_SHOW_MODEL_PATH,
+            request = OllamaShowModelRequestDTO(name = name)
+        )
+        return ollamaJson.decodeFromString(responseBody)
     }
 
     private suspend fun pullModel(name: String) {
         try {
-            val response = client.post(DEFAULT_PULL_MODEL_PATH) {
-                setBody(OllamaPullModelRequestDTO(name = name, stream = false))
-            }.body<OllamaPullModelResponseDTO>()
+            val responseBody = httpClient.post<OllamaPullModelRequestDTO, String>(
+                path = DEFAULT_PULL_MODEL_PATH,
+                request = OllamaPullModelRequestDTO(name = name, stream = false)
+            )
+            val response = ollamaJson.decodeFromString<OllamaPullModelResponseDTO>(responseBody)
 
             response.error?.let { error ->
                 throw LLMClientException(clientName, "Failed to pull model '$name': $error")
@@ -580,6 +590,6 @@ public class OllamaClient @JvmOverloads constructor(
     }
 
     override fun close() {
-        client.close()
+        httpClient.close()
     }
 }

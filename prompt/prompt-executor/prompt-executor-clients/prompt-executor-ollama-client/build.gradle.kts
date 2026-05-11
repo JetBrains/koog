@@ -11,6 +11,7 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-tools"))
                 api(project(":http-client:http-client-core"))
+                api(project(":http-client:http-client-ktor"))
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-model"))
                 api(project(":prompt:prompt-tokenizer"))
@@ -18,10 +19,8 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 api(project(":embeddings:embeddings-base"))
 
-                api(libs.ktor.client.logging)
                 api(libs.kotlinx.coroutines.core)
-                api(libs.ktor.client.content.negotiation)
-                api(libs.ktor.serialization.kotlinx.json)
+                api(libs.ktor.client.core)
                 implementation(libs.oshai.kotlin.logging)
             }
         }

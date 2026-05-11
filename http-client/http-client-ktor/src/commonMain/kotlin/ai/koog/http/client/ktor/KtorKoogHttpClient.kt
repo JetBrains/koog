@@ -20,8 +20,10 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import io.ktor.client.request.preparePost
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -35,6 +37,7 @@ import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.reflect.TypeInfo
 import io.ktor.utils.io.CancellationException
+import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -187,6 +190,54 @@ public class KtorKoogHttpClient internal constructor(
                 message = e.message,
                 cause = e
             )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw KoogHttpClientException(
+                clientName = clientName,
+                message = "Exception during streaming: ${e.message}",
+                cause = e,
+            )
+        }
+    }
+
+    override fun <T : Any> lines(
+        path: String,
+        request: T,
+        requestBodyType: KClass<T>,
+        parameters: Map<String, String>,
+    ): Flow<String> = flow {
+        logger.debug { "Opening lines flow for $clientName" }
+
+        try {
+            ktorClient.preparePost(path) {
+                parameters.forEach { (key, value) ->
+                    parameter(key, value)
+                }
+                if (requestBodyType == String::class) {
+                    @Suppress("UNCHECKED_CAST")
+                    setBody(request as String)
+                } else {
+                    setBody(request, TypeInfo(requestBodyType))
+                }
+            }.execute { response: HttpResponse ->
+                if (!response.status.isSuccess()) {
+                    throw KoogHttpClientException(
+                        clientName = clientName,
+                        statusCode = response.status.value,
+                        errorBody = response.bodyAsText(),
+                    )
+                }
+
+                val channel = response.bodyAsChannel()
+                while (!channel.isClosedForRead) {
+                    val line = channel.readUTF8Line() ?: break
+                    if (line.isBlank()) continue
+                    emit(line)
+                }
+            }
+        } catch (e: KoogHttpClientException) {
+            throw e
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

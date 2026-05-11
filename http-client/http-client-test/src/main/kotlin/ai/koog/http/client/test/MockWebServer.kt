@@ -12,6 +12,7 @@ import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
+import io.ktor.server.response.respondTextWriter
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
@@ -63,12 +64,24 @@ class MockWebServer {
     )
 
     /**
+     * Configuration for a mock chunked-stream endpoint that emits newline-delimited lines over plain POST.
+     */
+    data class StreamEndpointConfig(
+        val path: String,
+        val lines: List<String>,
+        val statusCode: HttpStatusCode = HttpStatusCode.OK,
+        val contentType: ContentType = ContentType.Application.Json,
+        val expectedParameters: Map<String, String> = emptyMap()
+    )
+
+    /**
      * Starts the server with the specified endpoint configurations
      */
     fun start(
         getEndpoints: List<GetEndpointConfig> = emptyList(),
         postEndpoints: List<PostEndpointConfig> = emptyList(),
         sseEndpoints: List<SSEEndpointConfig> = emptyList(),
+        streamEndpoints: List<StreamEndpointConfig> = emptyList(),
         port: Int = 0
     ) {
         require(
@@ -129,6 +142,34 @@ class MockWebServer {
                             contentType = config.contentType,
                             status = config.statusCode
                         )
+                    }
+                }
+
+                // Configure chunked-stream endpoints for POST requests (newline-delimited body)
+                streamEndpoints.forEach { config ->
+                    post(config.path) {
+                        call.receiveText()
+                        val actualParameters = call.request.queryParameters
+
+                        config.expectedParameters.forEach { (key, expectedValue) ->
+                            val actualValue = actualParameters[key]
+                            if (actualValue != expectedValue) {
+                                call.respondText(
+                                    text = "Parameter mismatch: expected $key=$expectedValue, got $key=$actualValue",
+                                    status = HttpStatusCode.BadRequest
+                                )
+                                return@post
+                            }
+                        }
+
+                        call.respondTextWriter(contentType = config.contentType, status = config.statusCode) {
+                            config.lines.forEach { line ->
+                                write(line)
+                                write("\n")
+                                flush()
+                                delay(10)
+                            }
+                        }
                     }
                 }
 

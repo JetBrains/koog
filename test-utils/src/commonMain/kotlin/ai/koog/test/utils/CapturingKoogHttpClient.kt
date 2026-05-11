@@ -56,5 +56,12 @@ public class CapturingKoogHttpClient(
         parameters: Map<String, String>,
     ): Flow<O> = emptyFlow()
 
+    override fun <T : Any> lines(
+        path: String,
+        request: T,
+        requestBodyType: KClass<T>,
+        parameters: Map<String, String>,
+    ): Flow<String> = emptyFlow()
+
     override fun close(): Unit = Unit
 }

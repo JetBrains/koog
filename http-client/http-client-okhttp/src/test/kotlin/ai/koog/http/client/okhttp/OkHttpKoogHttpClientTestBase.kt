@@ -47,6 +47,26 @@ abstract class OkHttpKoogHttpClientTestBase : BaseKoogHttpClientTest() {
     }
 
     @Test
+    override fun `test lines emits non-blank lines`() =
+        super.`test lines emits non-blank lines`()
+
+    @Test
+    override fun `test lines skips blank lines`() =
+        super.`test lines skips blank lines`()
+
+    @Test
+    override fun `test lines emits nothing for empty body`() =
+        super.`test lines emits nothing for empty body`()
+
+    @Test
+    override fun `test lines surfaces non-2xx as KoogHttpClientException`() =
+        super.`test lines surfaces non-2xx as KoogHttpClientException`()
+
+    @Test
+    override fun `test lines propagates cancellation`() =
+        super.`test lines propagates cancellation`()
+
+    @Test
     fun testOkHttpFactoryAppliesBaseUrlAndDefaultQueryParameters() = runTest {
         val mockServer = MockWebServer()
         try {

@@ -239,6 +239,64 @@ public class JavaKoogHttpClient internal constructor(
         }
     }
 
+    override fun <T : Any> lines(
+        path: String,
+        request: T,
+        requestBodyType: KClass<T>,
+        parameters: Map<String, String>
+    ): Flow<String> = callbackFlow {
+        val requestBody = prepareRequestBody(request, requestBodyType)
+
+        val httpRequest = HttpRequest.newBuilder()
+            .uri(buildUri(path, parameters))
+            .defaultHeaders()
+            .defaultTimeout()
+            .POST(HttpRequest.BodyPublishers.ofString(requestBody.body))
+            .header("Content-Type", requestBody.contentType)
+            .build()
+
+        try {
+            val response = withContext(Dispatchers.SuitableForIO) {
+                httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofLines())
+            }
+
+            if (response.statusCode() !in 200..299) {
+                close(
+                    KoogHttpClientException(
+                        clientName = clientName,
+                        statusCode = response.statusCode(),
+                    )
+                )
+                return@callbackFlow
+            }
+
+            logger.debug { "Lines flow opened for $clientName" }
+
+            response.body().forEach { line ->
+                if (line.isNotBlank()) {
+                    trySend(line)
+                }
+            }
+
+            logger.debug { "Lines flow closed for $clientName" }
+            close()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            close(
+                KoogHttpClientException(
+                    clientName = clientName,
+                    message = "Exception during streaming: ${e.message}",
+                    cause = e
+                )
+            )
+        }
+
+        awaitClose {
+            // Cleanup if needed
+        }
+    }
+
     /**
      * Common logic of preparing the request body.
      */

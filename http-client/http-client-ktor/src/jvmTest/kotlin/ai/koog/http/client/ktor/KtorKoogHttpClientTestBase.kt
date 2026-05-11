@@ -60,6 +60,26 @@ abstract class KtorKoogHttpClientTestBase : BaseKoogHttpClientTest() {
         super.`test return success string response on post with parameters`()
     }
 
+    @Test
+    override fun `test lines emits non-blank lines`() =
+        super.`test lines emits non-blank lines`()
+
+    @Test
+    override fun `test lines skips blank lines`() =
+        super.`test lines skips blank lines`()
+
+    @Test
+    override fun `test lines emits nothing for empty body`() =
+        super.`test lines emits nothing for empty body`()
+
+    @Test
+    override fun `test lines surfaces non-2xx as KoogHttpClientException`() =
+        super.`test lines surfaces non-2xx as KoogHttpClientException`()
+
+    @Test
+    override fun `test lines propagates cancellation`() =
+        super.`test lines propagates cancellation`()
+
     abstract fun ktorClient(
         baseClient: HttpClient,
         baseUrl: String = "",

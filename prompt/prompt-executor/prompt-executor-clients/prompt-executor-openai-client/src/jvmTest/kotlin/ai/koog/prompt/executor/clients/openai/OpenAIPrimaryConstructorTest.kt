@@ -171,6 +171,13 @@ class OpenAIPrimaryConstructorTest {
                 }
             }
 
+            override fun <T : Any> lines(
+                path: String,
+                request: T,
+                requestBodyType: KClass<T>,
+                parameters: Map<String, String>,
+            ): Flow<String> = error("lines is not expected in this test")
+
             override fun close(): Unit = Unit
         }
         val client = OpenAILLMClient(

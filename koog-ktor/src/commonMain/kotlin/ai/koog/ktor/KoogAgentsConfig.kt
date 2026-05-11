@@ -870,7 +870,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
     public class OllamaConfig {
         /**
          * The base URL for the Ollama API, used as the endpoint for all HTTP requests made
-         * by the Ollama client. By default, it is set to `[OllamaClient.baseUrl]`.
+         * by the Ollama client. By default, it is set to `[OllamaClient.DEFAULT_BASE_URL]`.
          *
          * This property can be configured to point to a custom server or different instance
          * of the Ollama service, depending on the deployment or development needs.
@@ -1071,10 +1071,9 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
     internal fun ollama(configure: OllamaConfig.() -> Unit) {
         val client = with(OllamaConfig()) {
             configure()
-            val defaults = OllamaClient()
 
             OllamaClient(
-                baseUrl = baseUrl ?: defaults.baseUrl,
+                baseUrl = baseUrl ?: OllamaClient.DEFAULT_BASE_URL,
                 baseClient = httpClient,
                 timeoutConfig = timeoutConfig ?: ConnectionTimeoutConfig()
             )

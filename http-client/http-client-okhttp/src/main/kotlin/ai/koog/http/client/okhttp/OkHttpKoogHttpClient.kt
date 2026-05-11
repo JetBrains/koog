@@ -5,6 +5,7 @@ import ai.koog.http.client.KoogHttpClientException
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -200,6 +201,68 @@ public class OkHttpKoogHttpClient internal constructor(
 
         awaitClose {
             eventSource.cancel()
+        }
+    }
+
+    override fun <T : Any> lines(
+        path: String,
+        request: T,
+        requestBodyType: KClass<T>,
+        parameters: Map<String, String>
+    ): Flow<String> = callbackFlow {
+        val requestBody = prepareRequestBody(request, requestBodyType)
+
+        val httpRequest = Request.Builder()
+            .url(buildUrl(path, parameters))
+            .headers(defaultHeaders)
+            .post(requestBody)
+            .build()
+
+        val call = okHttpClient.newCall(httpRequest)
+
+        try {
+            withContext(Dispatchers.SuitableForIO) {
+                val response: Response = call.execute()
+
+                if (!response.isSuccessful) {
+                    val errorBody = response.body.string()
+                    response.close()
+                    close(
+                        KoogHttpClientException(
+                            clientName = clientName,
+                            statusCode = response.code,
+                            errorBody = errorBody,
+                        )
+                    )
+                    return@withContext
+                }
+
+                logger.debug { "Lines flow opened for $clientName" }
+                response.use {
+                    val source = response.body.source()
+                    while (!source.exhausted()) {
+                        val line = source.readUtf8Line() ?: break
+                        if (line.isBlank()) continue
+                        trySend(line)
+                    }
+                }
+                logger.debug { "Lines flow closed for $clientName" }
+                close()
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            close(
+                KoogHttpClientException(
+                    clientName = clientName,
+                    message = "Exception during streaming: ${e.message}",
+                    cause = e
+                )
+            )
+        }
+
+        awaitClose {
+            call.cancel()
         }
     }
 

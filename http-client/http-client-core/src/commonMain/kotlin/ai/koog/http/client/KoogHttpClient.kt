@@ -90,6 +90,23 @@ public interface KoogHttpClient : AutoCloseable {
         parameters: Map<String, String> = emptyMap(),
     ): Flow<O>
 
+    /**
+     * Sends an HTTP POST request and emits each non-blank UTF-8 line of the response body as it arrives.
+     *
+     * @param path The endpoint path to which the HTTP POST request is sent.
+     * @param request The request payload to be sent in the POST request.
+     * @param requestBodyType The Kotlin class reference representing the type of the request body.
+     * @param parameters Optional query parameters to include in the request.
+     * @return A [Flow] emitting each non-blank line of the response body as it arrives.
+     * @throws KoogHttpClientException if the server returns a non-success status.
+     */
+    public fun <T : Any> lines(
+        path: String,
+        request: T,
+        requestBodyType: KClass<T>,
+        parameters: Map<String, String> = emptyMap(),
+    ): Flow<String>
+
     public interface Factory {
         /**
          * Creates a configured [KoogHttpClient].
@@ -183,3 +200,18 @@ public inline fun <reified T : Any, reified R : Any, O : Any> KoogHttpClient.sse
     noinline processStreamingChunk: (R) -> O?,
     parameters: Map<String, String> = emptyMap(),
 ): Flow<O> = sse(path, request, T::class, dataFilter, decodeStreamingResponse, processStreamingChunk, parameters)
+
+/**
+ * Sends an HTTP POST request and emits each non-blank UTF-8 line of the response body as it arrives.
+ *
+ * @param path The endpoint path to which the HTTP POST request is sent.
+ * @param request The request payload to be sent in the POST request.
+ * @param parameters Optional query parameters to include in the request.
+ * @return A [Flow] emitting each non-blank line of the response body as it arrives.
+ * @throws KoogHttpClientException if the server returns a non-success status.
+ */
+public inline fun <reified T : Any> KoogHttpClient.lines(
+    path: String,
+    request: T,
+    parameters: Map<String, String> = emptyMap(),
+): Flow<String> = lines(path, request, T::class, parameters)
