@@ -5,16 +5,13 @@ import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.USER
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Strategy.getSingleLLMCallStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.defaultMockExecutor
-import io.opentelemetry.sdk.common.CompletableResultCode
-import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.sdk.trace.export.SpanExporter
+import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
+import ai.koog.utils.io.use
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
@@ -28,38 +25,27 @@ class OpenTelemetryConfigJvmExtTest {
      */
     @Test
     fun testAddSpanExporterWithJavaSdkExporterDeliversSpansViaBridge() = runTest {
-        val receivedSpans = CopyOnWriteArrayList<SpanData>()
-        val spanReceived = MutableStateFlow(false)
-
-        val javaSdkExporter = object : SpanExporter {
-            override fun export(spans: Collection<SpanData>): CompletableResultCode {
-                receivedSpans.addAll(spans)
-                if (spans.isNotEmpty()) spanReceived.value = true
-                return CompletableResultCode.ofSuccess()
+        MockSpanExporter().use { mockExporter ->
+            val agent = createAgent(
+                strategy = getSingleLLMCallStrategy(AgentType.Graph),
+                executor = defaultMockExecutor,
+            ) {
+                val config = this
+                with(OpenTelemetryConfigJvm) {
+                    config.addSpanExporter(mockExporter.javaSdkExporter)
+                }
             }
-            override fun flush(): CompletableResultCode = CompletableResultCode.ofSuccess()
-            override fun shutdown(): CompletableResultCode = CompletableResultCode.ofSuccess()
-        }
 
-        val agent = createAgent(
-            strategy = getSingleLLMCallStrategy(AgentType.Graph),
-            executor = defaultMockExecutor,
-        ) {
-            val config = this
-            with(OpenTelemetryConfigJvm) {
-                config.addSpanExporter(javaSdkExporter)
+            agent.run(USER_PROMPT_PARIS, null)
+            withContext(Dispatchers.Default) {
+                withTimeoutOrNull(10.seconds) { mockExporter.isCollected.first { it } }
             }
-        }
+            agent.close()
 
-        agent.run(USER_PROMPT_PARIS, null)
-        withContext(Dispatchers.Default) {
-            withTimeoutOrNull(10.seconds) { spanReceived.first { it } }
+            assertTrue(
+                mockExporter.collectedJavaSpans.isNotEmpty(),
+                "Java-SDK SpanExporter must receive spans routed through the toOtelKotlinSpanExporter bridge"
+            )
         }
-        agent.close()
-
-        assertTrue(
-            receivedSpans.isNotEmpty(),
-            "Java-SDK SpanExporter must receive spans routed through the toOtelKotlinSpanExporter bridge"
-        )
     }
 }

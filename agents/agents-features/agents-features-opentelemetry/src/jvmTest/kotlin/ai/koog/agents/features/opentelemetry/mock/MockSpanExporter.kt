@@ -5,10 +5,13 @@ import ai.koog.utils.io.Closeable
 import io.opentelemetry.kotlin.export.OperationResultCode
 import io.opentelemetry.kotlin.tracing.data.SpanData
 import io.opentelemetry.kotlin.tracing.export.SpanExporter
+import io.opentelemetry.sdk.common.CompletableResultCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.concurrent.CopyOnWriteArrayList
+import io.opentelemetry.sdk.trace.data.SpanData as JavaSpanData
+import io.opentelemetry.sdk.trace.export.SpanExporter as JavaSpanExporter
 
 /**
  * A mock span exporter that captures spans created by the OpenTelemetry feature.
@@ -31,6 +34,11 @@ internal class MockSpanExporter : SpanExporter, Closeable {
     val collectedSpans: List<SpanData>
         get() = _collectedSpans
 
+    private val _collectedJavaSpans = CopyOnWriteArrayList<JavaSpanData>()
+
+    val collectedJavaSpans: List<JavaSpanData>
+        get() = _collectedJavaSpans
+
     val runIds: List<String>
         get() {
             return collectedSpans.mapNotNull { span ->
@@ -45,6 +53,18 @@ internal class MockSpanExporter : SpanExporter, Closeable {
 
     val isCollected: StateFlow<Boolean>
         get() = _isCollected.asStateFlow()
+
+    val javaSdkExporter: JavaSpanExporter = object : JavaSpanExporter {
+        override fun export(spans: Collection<JavaSpanData>): CompletableResultCode {
+            _collectedJavaSpans.addAll(spans)
+            if (spans.isNotEmpty()) _isCollected.value = true
+            return CompletableResultCode.ofSuccess()
+        }
+
+        override fun flush(): CompletableResultCode = CompletableResultCode.ofSuccess()
+
+        override fun shutdown(): CompletableResultCode = CompletableResultCode.ofSuccess()
+    }
 
     override suspend fun export(telemetry: List<SpanData>): OperationResultCode {
         telemetry.forEach { span ->
