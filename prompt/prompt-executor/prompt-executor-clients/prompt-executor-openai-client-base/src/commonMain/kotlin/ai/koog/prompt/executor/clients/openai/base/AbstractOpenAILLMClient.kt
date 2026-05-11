@@ -127,7 +127,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
     ) : this(
         settings = settings,
-        httpClient = createConfiguredHttpClient(apiKey, settings, baseClient, clientName),
+        httpClient = createConfiguredHttpClient(apiKey, settings, KtorKoogHttpClient.Factory(baseClient), clientName),
         clock = clock,
         logger = logger,
         toolsConverter = toolsConverter
@@ -172,12 +172,13 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         public fun createConfiguredHttpClient(
             apiKey: String,
             settings: OpenAIBaseSettings,
+            logger: KLogger,
             baseClient: HttpClient = HttpClient(),
             clientName: String
         ): KoogHttpClient = createConfiguredHttpClient(
             apiKey = apiKey,
             settings = settings,
-            httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
+            httpClientFactory = KtorKoogHttpClient.Factory(baseClient = baseClient, logger = logger),
             clientName = clientName
         )
     }
@@ -389,9 +390,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             model.requireCapability(LLMCapability.Vision.Image)
             val imageUrl = when (val attachmentContent = content) {
                 is AttachmentContent.URL -> attachmentContent.url
-
                 is AttachmentContent.Binary -> "data:$mimeType;base64,${attachmentContent.asBase64()}"
-
                 else -> throw LLMClientException(
                     clientName,
                     "Unsupported image attachment content: ${attachmentContent::class}"
@@ -404,7 +403,6 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             model.requireCapability(LLMCapability.Audio)
             val inputAudio = when (val attachmentContent = content) {
                 is AttachmentContent.Binary -> OpenAIContentPart.InputAudio(attachmentContent.asBase64(), format)
-
                 else -> throw LLMClientException(
                     clientName,
                     "Unsupported audio attachment content: ${attachmentContent::class}"
@@ -448,11 +446,8 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
 
     protected fun LLMParams.ToolChoice.toOpenAIToolChoice(): OpenAIToolChoice = when (this) {
         LLMParams.ToolChoice.Auto -> OpenAIToolChoice.Auto
-
         LLMParams.ToolChoice.None -> OpenAIToolChoice.None
-
         LLMParams.ToolChoice.Required -> OpenAIToolChoice.Required
-
         is LLMParams.ToolChoice.Named -> OpenAIToolChoice.Function(
             function = OpenAIToolChoice.FunctionName(name)
         )

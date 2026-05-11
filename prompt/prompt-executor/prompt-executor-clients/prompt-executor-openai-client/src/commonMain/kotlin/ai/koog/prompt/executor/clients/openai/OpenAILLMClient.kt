@@ -969,9 +969,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
     }
 
     internal fun determineParams(params: LLMParams, model: LLModel): OpenAIParams = when {
-        "openai.azure.com" in settings.baseUrl -> params.toOpenAIChatParams()
-
-        // TODO: create a separate Azure Client
+        "openai.azure.com" in settings.baseUrl -> params.toOpenAIChatParams() // TODO: create a separate Azure Client
         params is OpenAIResponsesParams -> {
             model.requireCapability(
                 LLMCapability.OpenAIEndpoint.Responses,
@@ -989,9 +987,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         }
 
         model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params.toOpenAIChatParams()
-
         model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
-
         else -> throw LLMClientException(clientName, "Cannot determine proper LLM params for OpenAI model: ${model.id}")
     }
 

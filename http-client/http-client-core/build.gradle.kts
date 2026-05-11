@@ -15,7 +15,6 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.jetbrains.annotations)
-                api(libs.oshai.kotlin.logging)
             }
         }
     }

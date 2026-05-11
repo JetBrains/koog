@@ -293,7 +293,7 @@ public class JavaKoogHttpClient internal constructor(
  *
  * Use this function when you have a pre-configured [HttpClient] instance and want to wrap it
  * in a [KoogHttpClient]. For standard use cases where the client should be built from
- * configuration, prefer [JavaHttpClient.Factory] instead.
+ * configuration, prefer [JavaKoogHttpClient.Factory] instead.
  *
  * @param clientName The name of the client instance, used for identifying or logging client operations.
  * @param logger A `KLogger` instance used for logging client events and errors.
