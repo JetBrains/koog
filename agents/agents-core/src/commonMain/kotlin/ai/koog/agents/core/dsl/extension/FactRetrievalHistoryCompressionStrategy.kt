@@ -9,7 +9,11 @@ import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.utils.time.KoogClock
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
+
+private val logger = KotlinLogging.logger { }
 
 /**
  * Structured representation of a single fact extracted from the chat history.
@@ -35,8 +39,6 @@ internal data class FactListStructure(
     val facts: List<FactStructure>,
 )
 
-private const val NO_FACTS_EXTRACTED = "No facts extracted"
-
 /**
  * Tag to wrap history.
  */
@@ -57,8 +59,9 @@ private fun singleFactPrompt(concept: Concept): String =
         4. Choose the fact with the broadest impact on understanding this concept
         
         Output constraints:
-        - Exactly one fact
+        - Exactly one fact, or an empty string if no relevant information exists in the history
         - Must be a complete, self-contained statement
+        - Do NOT invent or guess: if the conversation contains nothing about this concept, return an empty string in the "fact" field
         
         Respond with a JSON object containing a single "fact" field.
     """.trimIndent()
@@ -80,6 +83,8 @@ private fun multipleFactsPrompt(concept: Concept): String =
         Output constraints:
         - Facts must be complete statements that stand alone
         - Skip any fact that just describes what was attempted or checked
+        - Return an empty "facts" array if no relevant information exists in the history
+        - Do NOT invent or guess facts that are not supported by the conversation
         
         Respond with a JSON object containing a "facts" array, where each element has a "fact" field.
     """.trimIndent()
@@ -101,11 +106,17 @@ private fun multipleFactsPrompt(concept: Concept): String =
  * - A single assistant message with a `[CONTEXT RESTORATION]` block listing the extracted facts
  *   and the approximate number of tool interactions that occurred before compression
  *
- * If no facts are extracted for any concept, the prompt is left unchanged.
+ * If no facts are extracted for any concept, the strategy delegates to [fallback] (by default
+ * [NoCompression], which leaves the prompt unchanged). Provide a different strategy (e.g. a
+ * TLDR-based one) to guarantee the history still shrinks when no configured concept matched.
  *
  * @param concepts A list of [Concept] objects that define the topics for which facts should be extracted.
+ * @param fallback Strategy used when no facts are extracted for any concept. Defaults to [NoCompression].
  */
-public class FactRetrievalHistoryCompressionStrategy(public val concepts: List<Concept>) : HistoryCompressionStrategy() {
+public class FactRetrievalHistoryCompressionStrategy(
+    public val concepts: List<Concept>,
+    public val fallback: HistoryCompressionStrategy = NoCompression,
+) : HistoryCompressionStrategy() {
     /**
      * Secondary constructor for `FactRetrievalHistoryCompressionStrategy` that initializes the instance
      * with a variable number of `Concept` objects, converting them into a list.
@@ -127,26 +138,39 @@ public class FactRetrievalHistoryCompressionStrategy(public val concepts: List<C
     ) {
         // Snapshot original messages BEFORE any extraction (preserves trailing tool calls)
         val originalMessages = llmSession.prompt.messages
-        val iterationsCount = originalMessages.count { it is Message.Tool.Result }
+        val toolResultCount = originalMessages.count { it is Message.Tool.Result }
 
-        val factsString = concepts
-            .associateWith { concept -> llmSession.retrieveFactsFromHistory(concept) }
-            .entries
-            .filter { (_, fact) ->
+        val extractedFacts = concepts
+            .mapNotNull { concept ->
+                // Isolate per-concept failures so one bad extraction does not abort the whole
+                // compression. CancellationException MUST be rethrown to preserve coroutine
+                // cancellation semantics — runCatching would otherwise swallow it.
+                val fact = try {
+                    llmSession.retrieveFactsFromHistory(concept)
+                } catch (c: CancellationException) {
+                    throw c
+                } catch (_: Throwable) {
+                    null
+                } ?: return@mapNotNull null
+                concept to fact
+            }
+
+        if (extractedFacts.isEmpty()) {
+            // No configured concept produced facts: delegate to the configured fallback
+            // strategy so that compression is not silently a no-op when the history is oversized.
+            fallback.compress(llmSession, memoryMessages)
+            return
+        }
+
+        val factsString = extractedFacts.joinToString("\n") { (concept, fact) ->
+            buildString {
+                appendLine("## KNOWN FACTS ABOUT `${concept.keyword}` (${concept.description})")
                 when (fact) {
-                    is SingleFact -> fact.value != NO_FACTS_EXTRACTED
-                    is MultipleFacts -> fact.values.isNotEmpty()
+                    is MultipleFacts -> fact.values.forEach { appendLine("- $it") }
+                    is SingleFact -> appendLine("- ${fact.value}")
                 }
             }
-            .joinToString("\n") { (concept, fact) ->
-                buildString {
-                    appendLine("## KNOWN FACTS ABOUT `${concept.keyword}` (${concept.description})")
-                    when (fact) {
-                        is MultipleFacts -> fact.values.forEach { appendLine("- $it") }
-                        is SingleFact -> appendLine("- ${fact.value}")
-                    }
-                }
-            }
+        }
 
         val assistantMessage = buildString {
             appendLine("[CONTEXT RESTORATION]")
@@ -156,16 +180,14 @@ public class FactRetrievalHistoryCompressionStrategy(public val concepts: List<C
                     "Below are the extracted facts about configured concepts."
             )
             appendLine()
-            if (factsString.isNotEmpty()) {
-                appendLine("**Extracted Facts:**")
-                appendLine("<compressed_facts>")
-                append(factsString)
-                appendLine("</compressed_facts>")
-                appendLine()
-            }
+            appendLine("**Extracted Facts:**")
+            appendLine("<compressed_facts>")
+            append(factsString)
+            appendLine("</compressed_facts>")
+            appendLine()
             appendLine("**Current Status:**")
             append(
-                "Approximately $iterationsCount tool interactions occurred before compression. " +
+                "Approximately $toolResultCount tool results were observed before compression. " +
                     "Note: only facts about configured concepts were preserved; active task state, pending steps, and recent conversation flow may not be fully captured."
             )
         }
@@ -173,10 +195,6 @@ public class FactRetrievalHistoryCompressionStrategy(public val concepts: List<C
         val newMessages = Prompt.build(llmSession.prompt.id) {
             assistant(assistantMessage)
         }.messages
-
-        if (factsString.isEmpty()) {
-            return
-        }
 
         val compressedMessages = composeMessageHistory(originalMessages, newMessages, memoryMessages)
         llmSession.prompt = llmSession.prompt.withMessages { compressedMessages }
@@ -198,21 +216,23 @@ public class FactRetrievalHistoryCompressionStrategy(public val concepts: List<C
  *    and a [StructureFixingParser] for robustness.
  * 6. Restores the original prompt and model before returning.
  *
- * Structured-output failures are handled gracefully: if parsing fails, a sentinel value is returned
- * ([NO_FACTS_EXTRACTED] for single facts, empty list for multiple facts). The caller ([compress])
- * filters out these sentinel values before rendering.
+ * Structured-output failures are handled gracefully: if parsing fails, or no facts are found,
+ * `null` is returned. The caller ([compress]) filters out these `null` values before rendering.
  *
  * @param concept The concept to extract facts about.
  * @param llmModel Optional model to use for extraction (defaults to the session's current model).
  * @param clock Clock used to timestamp the produced [Fact].
- * @return A [Fact] (either [SingleFact] or [MultipleFacts]) containing the extracted information.
+ * @return A [Fact] (either [SingleFact] or [MultipleFacts]) containing the extracted information,
+ *         or `null` if no facts could be extracted.
  */
 @OptIn(InternalAgentsApi::class)
 internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
     concept: Concept,
     llmModel: LLModel? = null,
     clock: KoogClock = KoogClock.System,
-): Fact {
+): Fact? {
+    logger.debug { "Retrieving facts from history for concept '${concept.keyword}' (factType=${concept.factType})" }
+
     // Snapshot the original prompt and model BEFORE any mutations
     val initialPrompt = this.prompt
     val initialModel = this.model
@@ -237,7 +257,7 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
 
     val timestamp = clock.now().toEpochMilliseconds()
 
-    val facts: Fact = try {
+    val facts: Fact? = try {
         when (concept.factType) {
             FactType.SINGLE -> {
                 val response = requestLLMStructured<FactStructure>(
@@ -247,11 +267,16 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
                     fixingParser = fixingParser,
                 )
 
-                SingleFact(
-                    concept = concept,
-                    value = response.getOrNull()?.data?.fact ?: NO_FACTS_EXTRACTED,
-                    timestamp = timestamp,
-                )
+                val value = response.getOrNull()?.data?.fact?.trim()
+                if (value.isNullOrBlank()) {
+                    null
+                } else {
+                    SingleFact(
+                        concept = concept,
+                        value = value,
+                        timestamp = timestamp,
+                    )
+                }
             }
 
             FactType.MULTIPLE -> {
@@ -266,19 +291,33 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
                     ),
                     fixingParser = fixingParser,
                 )
-                val factsList = response.getOrNull()?.data?.facts ?: emptyList()
+                val factsList = response.getOrNull()?.data?.facts
+                    .orEmpty()
+                    .map { it.fact.trim() }
+                    .filter { it.isNotBlank() }
+                    .distinct()
 
-                MultipleFacts(
-                    concept = concept,
-                    values = factsList.map { it.fact },
-                    timestamp = timestamp,
-                )
+                if (factsList.isEmpty()) {
+                    null
+                } else {
+                    MultipleFacts(
+                        concept = concept,
+                        values = factsList,
+                        timestamp = timestamp,
+                    )
+                }
             }
         }
     } finally {
         // Restore the original prompt and model (including any trailing tool calls)
         this.prompt = initialPrompt
         this.model = initialModel
+    }
+
+    when (facts) {
+        null -> logger.debug { "No facts extracted for concept '${concept.keyword}'" }
+        is SingleFact -> logger.debug { "Extracted single fact for concept '${concept.keyword}'" }
+        is MultipleFacts -> logger.debug { "Extracted ${facts.values.size} facts for concept '${concept.keyword}'" }
     }
 
     return facts

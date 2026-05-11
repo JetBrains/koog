@@ -153,9 +153,8 @@ class FactRetrievalHistoryCompressionStrategyTest {
             result = retrieveFactsFromHistory(concept, clock = testClock)
         }
 
-        // Assert: should return a fallback SingleFact
-        assertTrue(result is SingleFact)
-        assertEquals("No facts extracted", (result as SingleFact).value)
+        // Assert: parser failure should yield null
+        assertEquals(null, result)
     }
 
     /**
@@ -192,9 +191,8 @@ class FactRetrievalHistoryCompressionStrategyTest {
             result = retrieveFactsFromHistory(concept, clock = testClock)
         }
 
-        // Assert: should return a fallback MultipleFacts with empty list
-        assertTrue(result is MultipleFacts)
-        assertTrue((result as MultipleFacts).values.isEmpty())
+        // Assert: parser failure should yield null
+        assertEquals(null, result)
     }
 
     /**
