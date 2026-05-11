@@ -15,7 +15,6 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
@@ -178,11 +177,10 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
             val initialLLMContext = context.llm
 
             val effectiveParams = llmParams ?: context.llm.prompt.params
-            val innerPrompt = if (freshHistory) {
-                Prompt(messages = emptyList(), id = context.llm.prompt.id, params = effectiveParams)
-            } else {
-                context.llm.prompt.copy(params = effectiveParams)
-            }
+            val innerPrompt = context.llm.prompt.copy(
+                messages = if (freshHistory) emptyList() else context.llm.prompt.messages,
+                params = effectiveParams,
+            )
 
             context.replace(
                 context.copy(
