@@ -121,7 +121,6 @@ items. Here is an example of installing the OpenTelemetry feature with a basic s
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import io.opentelemetry.exporter.logging.LoggingSpanExporter
@@ -151,7 +150,6 @@ items. Here is an example of installing the OpenTelemetry feature with a basic s
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.logging.LoggingSpanExporter;
@@ -178,7 +176,7 @@ items. Here is an example of installing the OpenTelemetry feature with a basic s
         config.setServiceInfo("my-agent-service", "1.0.0");
 
         // Add the Logging exporter
-        OpenTelemetryConfigJvm.addSpanExporter(config, LoggingSpanExporter.create());
+        config.addSpanExporter(LoggingSpanExporter.create());
     })
     ```
     <!--- KNIT exampleOpentelemetrySupportJava02.java -->
@@ -203,6 +201,24 @@ Adds a span exporter to send telemetry data to external systems. Takes the follo
 | `exporter` | `SpanExporter` | Yes      |               | The `SpanExporter` instance to be added to the list of custom span exporters. |
 
 Both Kotlin SDK (`io.opentelemetry.kotlin.tracing.export.SpanExporter`) and Java SDK (`io.opentelemetry.sdk.trace.export.SpanExporter`) exporters are accepted. Java SDK exporters are automatically converted via the compat bridge.
+
+The exporter is registered behind a `batchSpanProcessor` — the OpenTelemetry-recommended default for production: spans are buffered and flushed on a worker so the agent never blocks on network I/O when a span ends. If you need full control over the processor (custom batching parameters, a simple processor for tests, or a composite processor), use [`addSpanProcessor`](#addspanprocessor) instead.
+
+#### addSpanProcessor
+
+Registers a `SpanProcessor` directly, bypassing the `batchSpanProcessor` wrapping done by [`addSpanExporter`](#addspanexporter). The factory runs inside the SDK's `TraceExportConfigDsl` scope, which exposes `batchSpanProcessor`, `simpleSpanProcessor`, and `compositeSpanProcessor`. Takes the following argument:
+
+| Name      | Data type                                | Required | Default value | Description                                                              |
+|-----------|------------------------------------------|----------|---------------|--------------------------------------------------------------------------|
+| `factory` | `TraceExportConfigDsl.() -> SpanProcessor` | Yes    |               | Lambda that returns the `SpanProcessor` to register.                     |
+
+Reach for this when:
+
+- You want custom batching parameters: `addSpanProcessor { batchSpanProcessor(exporter, scheduleDelayMs = 500) }`.
+- You want spans flushed synchronously (useful in tests): `addSpanProcessor { simpleSpanProcessor(exporter) }`.
+- You want to fan out to several processors at once: `addSpanProcessor { compositeSpanProcessor(p1, p2) }`.
+
+For Java SDK exporters, wrap with `toOtelKotlinSpanExporter()` from the compat package first.
 
 #### addResourceAttributes
 
@@ -255,7 +271,6 @@ For more advanced configuration, you can also customize resource attributes to a
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import io.opentelemetry.exporter.logging.LoggingSpanExporter
@@ -290,7 +305,6 @@ For more advanced configuration, you can also customize resource attributes to a
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.logging.LoggingSpanExporter;
@@ -317,7 +331,7 @@ For more advanced configuration, you can also customize resource attributes to a
         config.setServiceInfo("my-agent-service", "1.0.0");
 
         // Add the Logging exporter
-        OpenTelemetryConfigJvm.addSpanExporter(config, LoggingSpanExporter.create());
+        config.addSpanExporter(LoggingSpanExporter.create());
 
         // Add resource attributes
         config.addResourceAttributes(Map.of(
@@ -550,7 +564,6 @@ This type of export is useful for development and debugging purposes.
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import io.opentelemetry.exporter.logging.LoggingSpanExporter
@@ -578,7 +591,6 @@ This type of export is useful for development and debugging purposes.
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.logging.LoggingSpanExporter;
@@ -601,7 +613,7 @@ This type of export is useful for development and debugging purposes.
     ```java
     install(OpenTelemetry.Feature, config -> {
         // Add the logging exporter
-        OpenTelemetryConfigJvm.addSpanExporter(config, LoggingSpanExporter.create());
+        config.addSpanExporter(LoggingSpanExporter.create());
         // Add more exporters as needed
     })
     ```
@@ -617,7 +629,6 @@ OpenTelemetry HTTP exporter (`OtlpHttpSpanExporter`) is a part of the `opentelem
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
@@ -655,7 +666,6 @@ OpenTelemetry HTTP exporter (`OtlpHttpSpanExporter`) is a part of the `opentelem
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
@@ -680,8 +690,7 @@ OpenTelemetry HTTP exporter (`OtlpHttpSpanExporter`) is a part of the `opentelem
     ```java
     install(OpenTelemetry.Feature, config -> {
         // Add OpenTelemetry HTTP exporter
-        OpenTelemetryConfigJvm.addSpanExporter(
-            config,
+        config.addSpanExporter(
             OtlpHttpSpanExporter.builder()
                 // Set the maximum time to wait for the collector to process an exported batch of spans
                 .setTimeout(30, TimeUnit.SECONDS)
@@ -707,7 +716,6 @@ lets you define the host and port of the backend, collector, or endpoint that re
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
@@ -739,7 +747,6 @@ lets you define the host and port of the backend, collector, or endpoint that re
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
@@ -762,8 +769,7 @@ lets you define the host and port of the backend, collector, or endpoint that re
     ```java
     install(OpenTelemetry.Feature, config -> {
         // Add OpenTelemetry gRPC exporter
-        OpenTelemetryConfigJvm.addSpanExporter(
-            config,
+        config.addSpanExporter(
             OtlpGrpcSpanExporter.builder()
                 // Set the host and the port
                 .setEndpoint("http://localhost:4317")
@@ -1034,7 +1040,6 @@ Here is the full code sample:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
     import ai.koog.utils.io.use
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -1082,7 +1087,6 @@ Here is the full code sample:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import io.opentelemetry.exporter.logging.LoggingSpanExporter;
@@ -1103,11 +1107,10 @@ Here is the full code sample:
             .systemPrompt("You are a code assistant. Provide concise code examples.")
             .install(OpenTelemetry.Feature, config -> {
                 // Add a console logger for local debugging
-                OpenTelemetryConfigJvm.addSpanExporter(config, LoggingSpanExporter.create());
+                config.addSpanExporter(LoggingSpanExporter.create());
 
                 // Send traces to OpenTelemetry collector
-                OpenTelemetryConfigJvm.addSpanExporter(
-                    config,
+                config.addSpanExporter(
                     OtlpGrpcSpanExporter.builder()
                         .setEndpoint("http://localhost:4317")
                         .build()
@@ -1205,7 +1208,6 @@ Where `{target}` is the tool name or prompt name when applicable. Examples:
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
     import ai.koog.agents.mcp.McpToolRegistryProvider
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor

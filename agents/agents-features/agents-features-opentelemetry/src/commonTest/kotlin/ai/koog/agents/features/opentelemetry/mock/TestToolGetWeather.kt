@@ -2,10 +2,11 @@ package ai.koog.agents.features.opentelemetry.mock
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 internal object TestGetWeatherTool : SimpleTool<TestGetWeatherTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "Get weather",
     description = "The test tool to get a weather based on provided location."
 ) {

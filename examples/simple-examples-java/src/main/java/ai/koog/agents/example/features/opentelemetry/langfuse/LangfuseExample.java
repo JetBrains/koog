@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.example.ApiKeyService;
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute;
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.model.PromptExecutor;
 
@@ -25,8 +24,7 @@ public class LangfuseExample {
             .systemPrompt("You are a helpful assistant.")
             .llmModel(OpenAIModels.Chat.GPT4o)
             .install(OpenTelemetry.Feature, config ->
-                OpenTelemetryConfigJvm.addLangfuseExporter(
-                    config,
+                config.addLangfuseExporter(
                     null, null, null, null,
                     List.of(
                         new CustomAttribute("langfuse.session.id", sessionId),

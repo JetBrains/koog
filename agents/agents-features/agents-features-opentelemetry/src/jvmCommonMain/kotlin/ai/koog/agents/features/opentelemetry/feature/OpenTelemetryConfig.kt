@@ -1,7 +1,10 @@
 package ai.koog.agents.features.opentelemetry.feature
 
 import ai.koog.agents.annotations.JavaAPI
+import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter
 import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
 import ai.koog.agents.features.opentelemetry.integration.weave.addWeaveExporter
@@ -10,6 +13,7 @@ import ai.koog.agents.features.opentelemetry.metric.adapter.MetricAdapter
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.metrics.Meter
+import io.opentelemetry.kotlin.factory.ContextFactory
 import io.opentelemetry.kotlin.tracing.export.toOtelKotlinSpanExporter
 import io.opentelemetry.sdk.metrics.InstrumentSelector
 import io.opentelemetry.sdk.metrics.SdkMeterProvider
@@ -26,33 +30,64 @@ import kotlin.time.toKotlinDuration
 import java.time.Duration as JavaDuration
 
 /**
- * JVM-only OpenTelemetry configuration extensions.
+ * Configuration class for the OpenTelemetry feature, providing integration and export mechanisms
+ * for traces, metrics, and other telemetry data. This class abstracts the underlying implementation
+ * and offers convenient methods for setup and configuration within the Kotlin Multiplatform SDK.
  *
- * The Kotlin OTel SDK 0.3.0 ships no metrics API, so metrics use the Java SDK [SdkMeterProvider]
- * directly. There is no Kotlin-SDK bridge here: the meter, counters, histograms, exporters, and
- * readers are all Java SDK types and never touch the Kotlin SDK. Metrics are registered via
- * [addMetricExporter] / [addMetricFilter] and consumed via the [meter] property.
+ * The class includes constructors, methods, and properties used to manage telemetry exporters, filters,
+ * and adapters, as well as Java-friendly API overrides for compatibility with Java callers.
  *
- * Non-JVM targets have no metrics - [createMetricCollector][ai.koog.agents.features.opentelemetry.metric.createMetricCollector]
- * returns a no-op there.
+ * This configuration is designed to work across different platforms and integrates seamlessly with Java SDK.
  *
- * Java-SDK [io.opentelemetry.sdk.trace.export.SpanExporter]s can be registered through the
- * [addSpanExporter] convenience defined in this file - it bridges the exporter to the Kotlin SDK
- * via `toOtelKotlinSpanExporter()` and wraps it in a batch processor (matching the commonMain
- * `addSpanExporter` semantics). For full control over the processor, drop down to
- * `addSpanProcessor { batchSpanProcessor(myJavaExporter.toOtelKotlinSpanExporter()) }`.
+ * Note: Some configurations rely on the Java SDK due to limitations in the current Kotlin Multiplatform SDK.
  */
-public object OpenTelemetryConfigJvm {
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+public actual class OpenTelemetryConfig internal actual constructor(
+    internal actual val delegate: OpenTelemetryConfigImpl,
+) : FeatureConfig(), OpenTelemetryConfigAPI by delegate {
+
+    public actual constructor() : this(delegate = OpenTelemetryConfigImpl())
+
+    internal actual val platform: OpenTelemetryPlatform
+        get() = delegate.platform
+
+    internal actual val contextFactory: ContextFactory
+        get() = delegate.contextFactory
+
+    internal actual val spanAdapter: SpanAdapter?
+        get() = delegate.spanAdapter
+
+    internal actual val instrumentationScopeName: String
+        get() = delegate.instrumentationScopeName
+
+    internal actual fun buildResourceMap(): Map<String, Any> = delegate.buildResourceMap()
+
+    internal actual suspend fun closeSdks() {
+        delegate.closeSdks()
+    }
+
+    /**
+     * Java-friendly 2-arg overload of [setServiceInfo] that omits the optional `serviceNamespace`.
+     */
+    public fun setServiceInfo(serviceName: String, serviceVersion: String) {
+        delegate.setServiceInfo(serviceName, serviceVersion, null)
+    }
+
+    override fun setEventFilter(filter: (AgentLifecycleEventContext) -> Boolean) {
+        // Do not allow events filtering for the OpenTelemetry feature:
+        // OpenTelemetry relies on the lifecycle hierarchy and dropped events would corrupt spans.
+        throw UnsupportedOperationException("Events filtering is not allowed for the OpenTelemetry feature.")
+    }
 
     /**
      * Default interval for metric readings when [addMetricExporter] is called without one.
      */
-    private val DEFAULT_METER_INTERVAL: Duration = 1.seconds
+    private val defaultMeterInterval: Duration = 1.seconds
 
     /**
      * Java-SDK [Meter] used to create counters, histograms, and gauges.
      */
-    public val OpenTelemetryConfig.meter: Meter
+    public val meter: Meter
         get() {
             val provider = platform.meterProvider ?: initializeMeterProvider().also { platform.meterProvider = it }
             return provider.get(instrumentationScopeName)
@@ -67,9 +102,7 @@ public object OpenTelemetryConfigJvm {
      * For full control over the processor (custom batching parameters, simple/composite processors)
      * use `addSpanProcessor { batchSpanProcessor(exporter.toOtelKotlinSpanExporter()) }` directly.
      */
-    @JavaAPI
-    @JvmStatic
-    public fun OpenTelemetryConfig.addSpanExporter(exporter: SpanExporter) {
+    public fun addSpanExporter(exporter: SpanExporter) {
         addSpanExporter(exporter.toOtelKotlinSpanExporter())
     }
 
@@ -87,9 +120,8 @@ public object OpenTelemetryConfigJvm {
      * @see ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
      */
     @JavaAPI
-    @JvmStatic
     @JvmOverloads
-    public fun OpenTelemetryConfig.addLangfuseExporter(
+    public fun addLangfuseExporter(
         langfuseUrl: String? = null,
         langfusePublicKey: String? = null,
         langfuseSecretKey: String? = null,
@@ -115,9 +147,8 @@ public object OpenTelemetryConfigJvm {
      * @see ai.koog.agents.features.opentelemetry.integration.weave.addWeaveExporter
      */
     @JavaAPI
-    @JvmStatic
     @JvmOverloads
-    public fun OpenTelemetryConfig.addWeaveExporter(
+    public fun addWeaveExporter(
         weaveOtelBaseUrl: String? = null,
         weaveEntity: String? = null,
         weaveProjectName: String? = null,
@@ -143,9 +174,8 @@ public object OpenTelemetryConfigJvm {
      * @see ai.koog.agents.features.opentelemetry.integration.datadog.addDatadogExporter
      */
     @JavaAPI
-    @JvmStatic
     @JvmOverloads
-    public fun OpenTelemetryConfig.addDatadogExporter(
+    public fun addDatadogExporter(
         datadogApiKey: String? = null,
         url: String? = null,
         timeout: JavaDuration? = null,
@@ -169,34 +199,29 @@ public object OpenTelemetryConfigJvm {
      * Note: the Kotlin Multiplatform OpenTelemetry SDK 0.3.0 does not include metrics.
      *       Use metrics from the Java SDK.
      */
-    @JvmStatic
-    public fun OpenTelemetryConfig.addMetricExporter(
-        exporter: MetricExporter,
-        meterInterval: Duration = DEFAULT_METER_INTERVAL,
-    ) {
+    public fun addMetricExporter(exporter: MetricExporter, meterInterval: Duration = defaultMeterInterval) {
         platform.metricExporters.add(exporter to meterInterval)
     }
 
     /**
      * Registers a OTel Java SDK [MetricExporter] driven by a [PeriodicMetricReader] at [meterInterval].
      */
-    @JvmStatic
-    public fun OpenTelemetryConfig.addMetricExporter(exporter: MetricExporter, meterInterval: JavaDuration) {
+    @JavaAPI
+    public fun addMetricExporter(exporter: MetricExporter, meterInterval: JavaDuration) {
         platform.metricExporters.add(exporter to meterInterval.toKotlinDuration())
     }
 
     /**
      * Registers a filter that restricts the attribute keys retained on a given metric during aggregation.
      */
-    @JvmStatic
-    public fun OpenTelemetryConfig.addMetricFilter(metricName: String, keysToRetain: Set<String>) {
+    public fun addMetricFilter(metricName: String, keysToRetain: Set<String>) {
         platform.metricFilters.add(MetricFilter(metricName, keysToRetain))
     }
 
     /**
      * Installs a [MetricAdapter] used to post-process metric events before they are recorded.
      */
-    internal fun OpenTelemetryConfig.addMetricAdapter(adapter: MetricAdapter) {
+    internal fun addMetricAdapter(adapter: MetricAdapter) {
         platform.metricAdapter = adapter
     }
 
@@ -204,7 +229,7 @@ public object OpenTelemetryConfigJvm {
 
     //region Private Methods
 
-    private fun OpenTelemetryConfig.initializeMeterProvider(): SdkMeterProvider {
+    private fun initializeMeterProvider(): SdkMeterProvider {
         val builder: SdkMeterProviderBuilder = SdkMeterProvider.builder()
             .setResource(createJavaResource())
 
@@ -225,7 +250,7 @@ public object OpenTelemetryConfigJvm {
         return builder.build()
     }
 
-    private fun OpenTelemetryConfig.createJavaResource(): Resource {
+    private fun createJavaResource(): Resource {
         val builder = Attributes.builder()
         buildResourceMap().forEach { (key, value) ->
             when (value) {
