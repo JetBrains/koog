@@ -2,6 +2,7 @@ package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -44,7 +45,7 @@ class HistoryCompressionStrategiesTest {
         tool(DummyTool())
     }
 
-    private fun createHistoryCompressionStrategy(strategy: HistoryCompressionStrategy, messages: List<Message>) =
+    private fun createHistoryCompressionStrategy(strategy: HistoryCompressionStrategy, messages: List<Message>): AIAgentGraphStrategy<String, List<Message>> =
         strategy<String, List<Message>>("strategy") {
             return strategy<String, List<Message>>("strategy") {
                 val setMessageHistory by node<String, String> { input ->
@@ -457,7 +458,7 @@ class HistoryCompressionStrategiesTest {
         originalMessages: List<Message>,
         factResponse: String,
     ): List<Message> {
-        val agent = AIAgent.Companion(
+        val agent = AIAgent(
             promptExecutor = createFactRetrievalMockExecutor(factResponse),
             strategy = createHistoryCompressionStrategy(strategy, originalMessages),
             agentConfig = createBaseAgentConfig(),

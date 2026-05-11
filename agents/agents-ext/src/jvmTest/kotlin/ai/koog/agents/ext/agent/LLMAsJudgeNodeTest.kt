@@ -4,11 +4,8 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentGraphContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
-import ai.koog.agents.core.agent.entity.FinishNode
-import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
@@ -95,11 +92,6 @@ class LLMAsJudgeNodeTest {
             parentContext = null
         )
 
-        val subgraphContext = object : AIAgentSubgraphBuilderBase<String, String>() {
-            override val nodeStart: StartNode<String> = mockk()
-            override val nodeFinish: FinishNode<String> = mockk()
-        }
-
         val anotherModel = OllamaModels.Meta.LLAMA_4_SCOUT
 
         val llmJudgeNode by llmAsAJudge<Int>(
@@ -136,16 +128,16 @@ class LLMAsJudgeNodeTest {
             <user>
             User answer
             </user>
-            <tool_call tool=tool1>
+            <tool_call tool="tool1">
             {x=1}
             </tool_call>
-            <tool_result tool=tool1>
+            <tool_result tool="tool1">
             {result=2}
             </tool_result>
-            <tool_call tool=tool2>
+            <tool_call tool="tool2">
             {x=100}
             </tool_call>
-            <tool_result tool=tool2>
+            <tool_result tool="tool2">
             {result=-200}
             </tool_result>
             </previous_conversation>
