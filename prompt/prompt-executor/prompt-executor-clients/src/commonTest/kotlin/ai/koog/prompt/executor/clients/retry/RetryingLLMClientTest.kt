@@ -407,6 +407,29 @@ class RetryingLLMClientTest {
     }
 
     @Test
+    fun testJitterFactorZeroRetriesWithoutThrowing() = runTest {
+        // jitterFactor = 0.0 is documented as a valid "no jitter" setting and accepted by
+        // RetryConfig's require(). Before the fix, calculateDelay called Random.nextDouble(0.0, 0.0)
+        // and threw IllegalArgumentException instead of retrying, so a transient 503 would surface
+        // as an unrelated IAE.
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse,
+            failuresBeforeSuccess = 1,
+            failureMessage = "Error: 503"
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 2, initialDelay = 10.milliseconds, jitterFactor = 0.0)
+        )
+
+        val result = retryingClient.execute(testPrompt, testModel, emptyList())
+
+        assertEquals(testResponse, result)
+        assertEquals(2, mockClient.executeCalls)
+    }
+
+    @Test
     fun testDisabledRetryConfig() = runTest {
         val mockClient = MockLLMClient(
             executeResponse = testResponse,
