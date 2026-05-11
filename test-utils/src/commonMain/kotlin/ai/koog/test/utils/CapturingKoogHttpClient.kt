@@ -29,7 +29,12 @@ public class CapturingKoogHttpClient(
     /** Captured request body from the most recent POST request. */
     public var lastRequest: Any? = null
 
-    override suspend fun <R : Any> get(path: String, responseType: KClass<R>, parameters: Map<String, String>): R {
+    override suspend fun <R : Any> get(
+        path: String,
+        responseType: KClass<R>,
+        parameters: Map<String, String>,
+        headers: Map<String, String>,
+    ): R {
         error("GET is not expected in this test")
     }
 
@@ -39,6 +44,7 @@ public class CapturingKoogHttpClient(
         requestBodyType: KClass<T>,
         responseType: KClass<R>,
         parameters: Map<String, String>,
+        headers: Map<String, String>,
     ): R {
         lastPath = path
         lastRequest = request
@@ -54,6 +60,7 @@ public class CapturingKoogHttpClient(
         decodeStreamingResponse: (String) -> R,
         processStreamingChunk: (R) -> O?,
         parameters: Map<String, String>,
+        headers: Map<String, String>,
     ): Flow<O> = emptyFlow()
 
     override fun <T : Any> lines(
@@ -61,6 +68,7 @@ public class CapturingKoogHttpClient(
         request: T,
         requestBodyType: KClass<T>,
         parameters: Map<String, String>,
+        headers: Map<String, String>,
     ): Flow<String> = emptyFlow()
 
     override fun close(): Unit = Unit

@@ -52,7 +52,8 @@ class MockWebServer {
         val responseBody: String,
         val statusCode: HttpStatusCode = HttpStatusCode.OK,
         val contentType: ContentType = ContentType.Text.Plain,
-        val expectedParameters: Map<String, String> = emptyMap()
+        val expectedParameters: Map<String, String> = emptyMap(),
+        val expectedHeaders: Map<String, String> = emptyMap()
     )
 
     /**
@@ -66,12 +67,16 @@ class MockWebServer {
     /**
      * Configuration for a mock chunked-stream endpoint that emits newline-delimited lines over plain POST.
      */
-    data class StreamEndpointConfig(
+    data class LinesEndpointConfig(
         val path: String,
         val lines: List<String>,
         val statusCode: HttpStatusCode = HttpStatusCode.OK,
         val contentType: ContentType = ContentType.Application.Json,
-        val expectedParameters: Map<String, String> = emptyMap()
+        val expectedParameters: Map<String, String> = emptyMap(),
+        val expectedHeaders: Map<String, String> = emptyMap(),
+        val lineDelayMillis: Long = 10,
+        val onLineWritten: (Int) -> Unit = {},
+        val onStreamClosed: () -> Unit = {},
     )
 
     /**
@@ -81,7 +86,7 @@ class MockWebServer {
         getEndpoints: List<GetEndpointConfig> = emptyList(),
         postEndpoints: List<PostEndpointConfig> = emptyList(),
         sseEndpoints: List<SSEEndpointConfig> = emptyList(),
-        streamEndpoints: List<StreamEndpointConfig> = emptyList(),
+        linesEndpoints: List<LinesEndpointConfig> = emptyList(),
         port: Int = 0
     ) {
         require(
@@ -137,6 +142,17 @@ class MockWebServer {
                             }
                         }
 
+                        config.expectedHeaders.forEach { (key, expectedValue) ->
+                            val actualValue = call.request.headers[key]
+                            if (actualValue?.startsWith(expectedValue, ignoreCase = true) != true) {
+                                call.respondText(
+                                    text = "Header mismatch: expected $key=$expectedValue, got $key=$actualValue",
+                                    status = HttpStatusCode.BadRequest
+                                )
+                                return@post
+                            }
+                        }
+
                         call.respondText(
                             text = config.responseBody,
                             contentType = config.contentType,
@@ -145,8 +161,8 @@ class MockWebServer {
                     }
                 }
 
-                // Configure chunked-stream endpoints for POST requests (newline-delimited body)
-                streamEndpoints.forEach { config ->
+                // Configure line stream endpoints for POST requests (newline-delimited body)
+                linesEndpoints.forEach { config ->
                     post(config.path) {
                         call.receiveText()
                         val actualParameters = call.request.queryParameters
@@ -162,12 +178,28 @@ class MockWebServer {
                             }
                         }
 
+                        config.expectedHeaders.forEach { (key, expectedValue) ->
+                            val actualValue = call.request.headers[key]
+                            if (actualValue?.startsWith(expectedValue, ignoreCase = true) != true) {
+                                call.respondText(
+                                    text = "Header mismatch: expected $key=$expectedValue, got $key=$actualValue",
+                                    status = HttpStatusCode.BadRequest
+                                )
+                                return@post
+                            }
+                        }
+
                         call.respondTextWriter(contentType = config.contentType, status = config.statusCode) {
-                            config.lines.forEach { line ->
-                                write(line)
-                                write("\n")
-                                flush()
-                                delay(10)
+                            try {
+                                config.lines.forEachIndexed { index, line ->
+                                    write(line)
+                                    write("\n")
+                                    flush()
+                                    config.onLineWritten(index)
+                                    delay(config.lineDelayMillis)
+                                }
+                            } finally {
+                                config.onStreamClosed()
                             }
                         }
                     }

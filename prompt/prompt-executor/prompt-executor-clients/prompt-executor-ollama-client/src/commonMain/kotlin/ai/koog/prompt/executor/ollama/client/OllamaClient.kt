@@ -86,6 +86,8 @@ public class OllamaClient @JvmOverloads constructor(
         private const val DEFAULT_SHOW_MODEL_PATH = "api/show"
         private const val DEFAULT_PULL_MODEL_PATH = "api/pull"
 
+        private val jsonContentHeaders = mapOf("Content-Type" to "application/json")
+
         private val ollamaJson = Json {
             ignoreUnknownKeys = true
             isLenient = true
@@ -242,7 +244,11 @@ public class OllamaClient @JvmOverloads constructor(
         )
 
         val responseBody = try {
-            httpClient.post<String, String>(path = DEFAULT_MESSAGE_PATH, request = request)
+            httpClient.post<String, String>(
+                path = DEFAULT_MESSAGE_PATH,
+                request = request,
+                headers = jsonContentHeaders
+            )
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -328,7 +334,11 @@ public class OllamaClient @JvmOverloads constructor(
             )
         )
 
-        httpClient.lines(path = DEFAULT_MESSAGE_PATH, request = request).collect { line ->
+        httpClient.lines(
+            path = DEFAULT_MESSAGE_PATH,
+            request = request,
+            headers = jsonContentHeaders
+        ).collect { line ->
             try {
                 val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
                 chunk.message?.let { message ->

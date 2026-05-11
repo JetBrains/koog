@@ -17,6 +17,7 @@ import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.spring.prompt.executor.MultiLLMAutoConfiguration
 import ai.koog.spring.prompt.executor.clients.anthropic.AnthropicLLMAutoConfiguration
@@ -609,21 +610,58 @@ class KoogAutoConfigurationTest {
     }
 
     @Test
-    fun `should supply Ollama executor bean with provided baseUrl`() {
-        val configBaseUrl = "https://some-url.com"
-        createApplicationContextRunner().withPropertyValues(
-            "ai.koog.ollama.enabled=true",
-            "ai.koog.ollama.base-url=$configBaseUrl"
-        )
-            .run { context ->
-                val executor = context.getBean<MultiLLMPromptExecutor>()
-                val llmClient = getLlmClient(executor, "ollama")
-                assertInstanceOf<OllamaClient>(llmClient)
+    fun `should send Ollama request with configured baseUrl`() {
+        val requestPath = AtomicReference<String>()
+        val requestBody = AtomicReference<String>()
+        val server = HttpServer.create(InetSocketAddress(0), 0).apply {
+            createContext("/api/chat") { exchange ->
+                requestPath.set(exchange.requestURI.toString())
+                requestBody.set(exchange.requestBody.reader().readText())
 
-                val baseUrl = getPrivateFieldValue(llmClient, "baseUrl")
+                val response = """
+                    {
+                      "model": "llama3.2:latest",
+                      "message": {
+                        "role": "assistant",
+                        "content": "Ollama says hi"
+                      },
+                      "done": true,
+                      "prompt_eval_count": 4,
+                      "eval_count": 5
+                    }
+                """.trimIndent().toByteArray()
 
-                assertEquals(configBaseUrl, baseUrl)
+                exchange.responseHeaders.add("Content-Type", "application/json")
+                exchange.sendResponseHeaders(200, response.size.toLong())
+                exchange.responseBody.use { it.write(response) }
             }
+            start()
+        }
+
+        try {
+            createApplicationContextRunner().withPropertyValues(
+                "ai.koog.ollama.enabled=true",
+                "ai.koog.ollama.base-url=http://localhost:${server.address.port}",
+            )
+                .run { context ->
+                    val executor = context.getBean<MultiLLMPromptExecutor>()
+                    val llmClient = getLlmClient(executor, "ollama")
+                    assertInstanceOf<OllamaClient>(llmClient)
+
+                    val responses = runBlocking {
+                        executor.execute(
+                            prompt = prompt("spring-ollama-test") { user("Hello from Spring?") },
+                            model = OllamaModels.Meta.LLAMA_3_2,
+                        )
+                    }
+
+                    assertEquals("/api/chat", requestPath.get())
+                    assertTrue(requestBody.get().contains("Hello from Spring?"))
+                    assertEquals("Ollama says hi", responses.single().content)
+                }
+        } finally {
+            server.stop(0)
+        }
     }
 
     @Test

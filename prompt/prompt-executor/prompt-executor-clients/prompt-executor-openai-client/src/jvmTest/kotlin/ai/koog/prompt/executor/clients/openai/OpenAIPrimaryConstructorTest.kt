@@ -94,6 +94,7 @@ class OpenAIPrimaryConstructorTest {
                 path: String,
                 responseType: KClass<R>,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): R = error("GET is not expected in this test")
 
             override suspend fun <T : Any, R : Any> post(
@@ -102,6 +103,7 @@ class OpenAIPrimaryConstructorTest {
                 requestBodyType: KClass<T>,
                 responseType: KClass<R>,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): R = error("POST is not expected in this test")
 
             override fun <T : Any, R : Any, O : Any> sse(
@@ -112,6 +114,7 @@ class OpenAIPrimaryConstructorTest {
                 decodeStreamingResponse: (String) -> R,
                 processStreamingChunk: (R) -> O?,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): Flow<O> {
                 assertEquals(responsesPath, path)
 
@@ -176,6 +179,7 @@ class OpenAIPrimaryConstructorTest {
                 request: T,
                 requestBodyType: KClass<T>,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): Flow<String> = error("lines is not expected in this test")
 
             override fun close(): Unit = Unit

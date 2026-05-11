@@ -21,6 +21,10 @@ abstract class JavaKoogHttpClientTestBase : BaseKoogHttpClientTest() {
         super.`test return success string response on post`()
 
     @Test
+    override fun `test post request headers override inferred string content type`() =
+        super.`test post request headers override inferred string content type`()
+
+    @Test
     override fun `test post JSON request and get JSON response`() =
         super.`test post JSON request and get JSON response`()
 
@@ -49,6 +53,10 @@ abstract class JavaKoogHttpClientTestBase : BaseKoogHttpClientTest() {
     @Test
     override fun `test lines emits non-blank lines`() =
         super.`test lines emits non-blank lines`()
+
+    @Test
+    override fun `test lines request headers override inferred string content type`() =
+        super.`test lines request headers override inferred string content type`()
 
     @Test
     override fun `test lines skips blank lines`() =

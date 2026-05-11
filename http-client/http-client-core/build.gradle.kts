@@ -14,6 +14,18 @@ kotlin {
                 api(libs.jetbrains.annotations)
             }
         }
+
+        commonTest {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation(kotlin("test-junit5"))
+            }
+        }
     }
 
     explicitApi()

@@ -544,6 +544,7 @@ class GoogleLLMClientTest {
                 path: String,
                 responseType: KClass<R>,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): R = error("GET is not expected in this test")
 
             override suspend fun <T : Any, R : Any> post(
@@ -552,6 +553,7 @@ class GoogleLLMClientTest {
                 requestBodyType: KClass<T>,
                 responseType: KClass<R>,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): R = error("POST is not expected in this test")
 
             override fun <T : Any, R : Any, O : Any> sse(
@@ -562,6 +564,7 @@ class GoogleLLMClientTest {
                 decodeStreamingResponse: (String) -> R,
                 processStreamingChunk: (R) -> O?,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): Flow<O> {
                 path shouldBe "v1beta/models/${model.id}:streamGenerateContent"
                 request.shouldBeInstanceOf<GoogleRequest>()
@@ -595,6 +598,7 @@ class GoogleLLMClientTest {
                 request: T,
                 requestBodyType: KClass<T>,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): Flow<String> = error("lines is not expected in this test")
 
             override fun close(): Unit = Unit

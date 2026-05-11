@@ -2,6 +2,7 @@ package ai.koog.http.client.okhttp
 
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
+import ai.koog.http.client.mergeHeaders
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -10,10 +11,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import okhttp3.Headers
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -52,7 +53,10 @@ public class OkHttpKoogHttpClient internal constructor(
     private val queryParameters: Map<String, String> = emptyMap(),
 ) : KoogHttpClient {
 
-    private val defaultHeaders: Headers = headers.toHeaders()
+    private val defaultHeaders: Map<String, String> = headers
+
+    private fun Map<String, String>.headerValue(name: String): String? =
+        entries.firstOrNull { (key, _) -> key.equals(name, ignoreCase = true) }?.value
 
     private fun <R : Any> processResponse(response: Response, responseType: KClass<R>): R {
         if (response.isSuccessful) {
@@ -99,11 +103,12 @@ public class OkHttpKoogHttpClient internal constructor(
     override suspend fun <R : Any> get(
         path: String,
         responseType: KClass<R>,
-        parameters: Map<String, String>
+        parameters: Map<String, String>,
+        headers: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val httpRequest = Request.Builder()
             .url(buildUrl(path, parameters))
-            .headers(defaultHeaders)
+            .headers(mergeHeaders(defaultHeaders, headers).toHeaders())
             .get()
             .build()
 
@@ -118,13 +123,20 @@ public class OkHttpKoogHttpClient internal constructor(
         request: T,
         requestBodyType: KClass<T>,
         responseType: KClass<R>,
-        parameters: Map<String, String>
+        parameters: Map<String, String>,
+        headers: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
-        val requestBody = prepareRequestBody(request, requestBodyType)
+        val requestBody = prepareRequestBody(request, requestBodyType, headers.headerValue("Content-Type"))
 
         val httpRequest = Request.Builder()
             .url(buildUrl(path, parameters))
-            .headers(defaultHeaders)
+            .headers(
+                mergeHeaders(
+                    defaultHeaders,
+                    mapOf("Content-Type" to requestBody.contentType().toString()),
+                    headers,
+                ).toHeaders()
+            )
             .post(requestBody)
             .build()
 
@@ -142,17 +154,27 @@ public class OkHttpKoogHttpClient internal constructor(
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
         processStreamingChunk: (R) -> O?,
-        parameters: Map<String, String>
+        parameters: Map<String, String>,
+        headers: Map<String, String>
     ): Flow<O> = callbackFlow {
-        val requestBody = prepareRequestBody(request, requestBodyType)
+        val requestBody = prepareRequestBody(request, requestBodyType, headers.headerValue("Content-Type"))
 
         val httpRequest = Request.Builder()
             .url(buildUrl(path, parameters))
-            .headers(defaultHeaders)
+            .headers(
+                mergeHeaders(
+                    defaultHeaders,
+                    mapOf(
+                        "Content-Type" to requestBody.contentType().toString(),
+                        "Accept" to "text/event-stream",
+                        "Cache-Control" to "no-cache",
+                        "Connection" to "keep-alive",
+                    ),
+                    headers,
+                )
+                    .toHeaders()
+            )
             .post(requestBody)
-            .header("Accept", "text/event-stream")
-            .header("Cache-Control", "no-cache")
-            .header("Connection", "keep-alive")
             .build()
 
         val eventSourceListener = object : EventSourceListener() {
@@ -208,20 +230,27 @@ public class OkHttpKoogHttpClient internal constructor(
         path: String,
         request: T,
         requestBodyType: KClass<T>,
-        parameters: Map<String, String>
+        parameters: Map<String, String>,
+        headers: Map<String, String>
     ): Flow<String> = callbackFlow {
-        val requestBody = prepareRequestBody(request, requestBodyType)
+        val requestBody = prepareRequestBody(request, requestBodyType, headers.headerValue("Content-Type"))
 
         val httpRequest = Request.Builder()
             .url(buildUrl(path, parameters))
-            .headers(defaultHeaders)
+            .headers(
+                mergeHeaders(
+                    defaultHeaders,
+                    mapOf("Content-Type" to requestBody.contentType().toString()),
+                    headers,
+                ).toHeaders()
+            )
             .post(requestBody)
             .build()
 
         val call = okHttpClient.newCall(httpRequest)
 
-        try {
-            withContext(Dispatchers.SuitableForIO) {
+        val readerJob = launch(Dispatchers.SuitableForIO) {
+            try {
                 val response: Response = call.execute()
 
                 if (!response.isSuccessful) {
@@ -234,7 +263,7 @@ public class OkHttpKoogHttpClient internal constructor(
                             errorBody = errorBody,
                         )
                     )
-                    return@withContext
+                    return@launch
                 }
 
                 logger.debug { "Lines flow opened for $clientName" }
@@ -243,26 +272,30 @@ public class OkHttpKoogHttpClient internal constructor(
                     while (!source.exhausted()) {
                         val line = source.readUtf8Line() ?: break
                         if (line.isBlank()) continue
-                        trySend(line)
+                        if (trySend(line).isClosed) {
+                            call.cancel()
+                            return@launch
+                        }
                     }
                 }
                 logger.debug { "Lines flow closed for $clientName" }
                 close()
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            close(
-                KoogHttpClientException(
-                    clientName = clientName,
-                    message = "Exception during streaming: ${e.message}",
-                    cause = e
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                close(
+                    KoogHttpClientException(
+                        clientName = clientName,
+                        message = "Exception during streaming: ${e.message}",
+                        cause = e
+                    )
                 )
-            )
+            }
         }
 
         awaitClose {
             call.cancel()
+            readerJob.cancel()
         }
     }
 
@@ -272,14 +305,15 @@ public class OkHttpKoogHttpClient internal constructor(
     private fun <T : Any> prepareRequestBody(
         request: T,
         requestBodyType: KClass<T>,
+        contentType: String? = null,
     ): RequestBody {
         return if (requestBodyType == String::class) {
             @Suppress("UNCHECKED_CAST")
-            (request as String).toRequestBody("text/plain".toMediaType())
+            (request as String).toRequestBody((contentType ?: "text/plain").toMediaType())
         } else {
             val serializer = serializer(requestBodyType.java)
             val jsonString = json.encodeToString(serializer, request)
-            jsonString.toRequestBody("application/json".toMediaType())
+            jsonString.toRequestBody((contentType ?: "application/json").toMediaType())
         }
     }
 
