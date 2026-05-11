@@ -220,7 +220,10 @@ public class RetryingLLMClient @JvmOverloads constructor(
         val boundedMs = minOf(exponentialMs, config.maxDelay.inWholeMilliseconds.toDouble())
         // Jitter is drawn from [0, bound) so it only increases the delay, never decreases it -
         // guards against clients that shorten their backoff under load and stampede retries.
-        val jitterMs = Random.nextDouble(0.0, boundedMs * config.jitterFactor)
+        // Random.nextDouble requires from < until, so skip the draw when the upper bound
+        // collapses to zero (jitterFactor == 0.0 or initialDelay == Duration.ZERO).
+        val jitterUpper = boundedMs * config.jitterFactor
+        val jitterMs = if (jitterUpper > 0.0) Random.nextDouble(0.0, jitterUpper) else 0.0
         return (boundedMs + jitterMs).toLong().milliseconds
     }
 
