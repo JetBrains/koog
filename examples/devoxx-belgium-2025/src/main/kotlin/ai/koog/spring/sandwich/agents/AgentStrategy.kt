@@ -11,9 +11,6 @@ import ai.koog.agents.ext.agent.subgraphWithVerification
 import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.FactType
-//import ai.koog.agents.core.dsl.extension.FactRetrievalHistoryCompressionStrategy
-//import ai.koog.agents.core.dsl.extension.Concept
-//import ai.koog.agents.core.dsl.extension.FactType
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.spring.sandwich.structs.OrderSupportRequest
