@@ -1,20 +1,27 @@
 package ai.koog.agents.features.opentelemetry.integration.otlp
 
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.engine.HttpClientEngineBase
+import io.ktor.client.engine.HttpClientEngineConfig
+import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondError
 import io.ktor.client.engine.mock.toByteArray
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpRequestData
+import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.InternalAPI
 import io.opentelemetry.kotlin.export.OperationResultCode
 import io.opentelemetry.kotlin.tracing.SpanKind
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -152,6 +159,25 @@ class OtlpJsonSpanExporterTest {
             baseClient = mock.client,
         )
         assertEquals(OperationResultCode.Success, exporter.shutdown())
+    }
+
+    @OptIn(InternalAPI::class)
+    @Test
+    fun testShutdownReturnsFailureWhenClientCloseThrows() = runTest {
+        val throwingEngineFactory = object : HttpClientEngineFactory<HttpClientEngineConfig> {
+            override fun create(block: HttpClientEngineConfig.() -> Unit): HttpClientEngine =
+                object : HttpClientEngineBase("throwing-close") {
+                    override val config = HttpClientEngineConfig().apply(block)
+                    override val dispatcher = Dispatchers.Unconfined
+                    override suspend fun execute(data: HttpRequestData): HttpResponseData = error("not used")
+                    override fun close(): Unit = throw IllegalStateException("simulated close failure")
+                }
+        }
+        val exporter = OtlpJsonSpanExporter(
+            endpoint = "https://example.test/v1/traces",
+            baseClient = HttpClient(throwingEngineFactory),
+        )
+        assertEquals(OperationResultCode.Failure, exporter.shutdown())
     }
 
     //region Private Methods
