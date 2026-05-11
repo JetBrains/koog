@@ -306,7 +306,7 @@ the error message continue to work unchanged.
         }
     };
 
-    RetryConfig config = RetryConfig.builder()
+    RetryConfig config = new RetryConfigBuilder()
         .retryAfterExtractor(new CompositeRetryAfterExtractor(
             myExtractor,
             DefaultRetryAfterExtractor.INSTANCE
