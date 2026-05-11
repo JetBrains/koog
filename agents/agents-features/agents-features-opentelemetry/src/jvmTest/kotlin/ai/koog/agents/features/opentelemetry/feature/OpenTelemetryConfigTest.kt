@@ -361,8 +361,12 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
 
         config.setServiceInfo("my-service", "1.0.0")
 
+        val resourceMap = config.buildResourceMap()
+
+        assertEquals("my-service", resourceMap["service.name"])
+        assertEquals("1.0.0", resourceMap["service.version"])
         assertTrue(
-            !config.buildResourceMap().containsKey("service.namespace"),
+            !resourceMap.containsKey("service.namespace"),
             "service.namespace key must be absent from buildResourceMap when namespace is not set"
         )
     }
