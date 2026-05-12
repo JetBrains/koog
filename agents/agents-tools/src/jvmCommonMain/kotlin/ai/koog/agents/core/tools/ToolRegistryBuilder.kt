@@ -12,19 +12,19 @@ import java.lang.reflect.Method
 import kotlin.reflect.KFunction
 
 public actual class ToolRegistryBuilder {
-    private val tools = mutableListOf<Tool<*, *>>()
+    private val tools = mutableListOf<ToolBase<*, *>>()
 
     /**
      * Add a tool to the registry
      */
-    public actual fun tool(tool: Tool<*, *>): ToolRegistryBuilder = apply {
+    public actual fun tool(tool: ToolBase<*, *>): ToolRegistryBuilder = apply {
         tools.addTool(tool)
     }
 
     /**
      * Add multiple tools to the registry
      */
-    public actual fun tools(toolsList: List<Tool<*, *>>): ToolRegistryBuilder = apply {
+    public actual fun tools(toolsList: List<ToolBase<*, *>>): ToolRegistryBuilder = apply {
         toolsList.forEach { tool(it) }
     }
 

@@ -7,7 +7,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.SafeTool
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.Prompt
@@ -59,7 +59,7 @@ internal constructor(
  * @return a `SafeTool.Result` containing the tool's execution result of type `TResult`.
  */
 public suspend fun <TArgs, TResult> AIAgentLLMWriteSession.callTool(
-    tool: Tool<TArgs, TResult>,
+    tool: ToolBase<TArgs, TResult>,
     args: TArgs
 ): SafeTool.Result<TResult> {
     return findTool(tool::class).execute(args, config.serializer)
@@ -103,7 +103,7 @@ public suspend fun <TArgs> AIAgentLLMWriteSession.callToolRaw(
  * @return A result wrapper containing either the successful result of the tool's execution or an error.
  */
 public suspend fun <TArgs, TResult> AIAgentLLMWriteSession.callTool(
-    toolClass: KClass<out Tool<TArgs, TResult>>,
+    toolClass: KClass<out ToolBase<TArgs, TResult>>,
     args: TArgs
 ): SafeTool.Result<TResult> {
     val tool = findTool(toolClass)
@@ -116,7 +116,7 @@ public suspend fun <TArgs, TResult> AIAgentLLMWriteSession.callTool(
  * @param args The input arguments required for the tool execution.
  * @return A `SafeTool.Result` containing the outcome of the tool's execution, which may be of any type that extends `ToolResult`.
  */
-public suspend inline fun <reified ToolT : Tool<Any?, Any?>> AIAgentLLMWriteSession.callTool(
+public suspend inline fun <reified ToolT : ToolBase<Any?, Any?>> AIAgentLLMWriteSession.callTool(
     args: Any?
 ): SafeTool.Result<out Any?> {
     val tool = findTool(ToolT::class)
@@ -136,10 +136,10 @@ public suspend inline fun <reified ToolT : Tool<Any?, Any?>> AIAgentLLMWriteSess
  */
 public fun <TArgs, TResult> AIAgentLLMWriteSession.findToolByNameAndArgs(
     toolName: String
-): Tool<TArgs, TResult> =
+): ToolBase<TArgs, TResult> =
     @Suppress("UNCHECKED_CAST")
     (
-        toolRegistry.getTool(toolName) as? Tool<TArgs, TResult>
+        toolRegistry.getTool(toolName) as? ToolBase<TArgs, TResult>
             ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined or has incompatible arguments")
         )
 
@@ -154,7 +154,7 @@ public fun <TArgs, TResult> AIAgentLLMWriteSession.findToolByNameAndArgs(
 public fun <TArgs> AIAgentLLMWriteSession.findToolByName(toolName: String): SafeTool<TArgs, *> {
     @Suppress("UNCHECKED_CAST")
     val tool = (
-        toolRegistry.getTool(toolName) as? Tool<TArgs, *>
+        toolRegistry.getTool(toolName) as? ToolBase<TArgs, *>
             ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined or has incompatible arguments")
         )
 

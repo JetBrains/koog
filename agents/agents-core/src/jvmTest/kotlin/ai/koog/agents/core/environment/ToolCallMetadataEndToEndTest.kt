@@ -3,16 +3,20 @@
 package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentTestBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.AgentContextAwareTool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.agentContext
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -29,17 +33,18 @@ import kotlin.test.assertSame
  *
  *   AIAgentFeature.install { pipeline.provideToolCallMetadata { ... } }
  *     -> AIAgentGraphPipeline.collectToolCallMetadata
- *       -> ContextualAgentEnvironment merges caller + feature metadata (caller wins)
- *         -> GenericAgentEnvironment routes to the registered Tool
- *           -> Tool.execute(args, metadata) observes the merged values
+ *       -> ContextualAgentEnvironment merges caller + feature metadata (caller wins) and injects AIAgentContext
+ *         -> GenericAgentEnvironment routes to the registered tool
+ *           -> ToolBase.execute(args, metadata) observes the merged values
  */
 class ToolCallMetadataEndToEndTest : AgentTestBase() {
 
     @Serializable
     private data class EchoArgs(val value: String)
 
-    private class MetadataAwareTool : SimpleTool<EchoArgs>(
+    private class MetadataObservingTool : ToolBase<EchoArgs, String>(
         argsType = typeToken<EchoArgs>(),
+        resultType = typeToken<String>(),
         name = "metadata_aware",
         description = "Tool that captures the metadata it was invoked with.",
     ) {
@@ -49,6 +54,24 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
             observed += metadata
             return "echo:${args.value}"
         }
+
+        override fun encodeResultToString(result: String, serializer: JSONSerializer): String = result
+    }
+
+    private class ContextObservingTool : AgentContextAwareTool<EchoArgs, String>(
+        argsType = typeToken<EchoArgs>(),
+        resultType = typeToken<String>(),
+        name = "context_aware",
+        description = "Tool that captures the AIAgentContext it was invoked with.",
+    ) {
+        val observed: MutableList<AIAgentContext> = mutableListOf()
+
+        override suspend fun execute(args: EchoArgs, context: AIAgentContext): String {
+            observed += context
+            return "echo:${args.value}"
+        }
+
+        override fun encodeResultToString(result: String, serializer: JSONSerializer): String = result
     }
 
     private class TestFeatureConfig : FeatureConfig()
@@ -58,14 +81,15 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
         override fun createInitialConfig(agentConfig: AIAgentConfig): TestFeatureConfig = TestFeatureConfig()
     }
 
-    private fun newToolCall(value: String = "hello"): Message.Tool.Call = Message.Tool.Call(
-        id = "call-1",
-        tool = "metadata_aware",
-        content = """{"value":"$value"}""",
-        metaInfo = ResponseMetaInfo.Empty,
-    )
+    private fun newToolCall(toolName: String = "metadata_aware", value: String = "hello"): Message.Tool.Call =
+        Message.Tool.Call(
+            id = "call-1",
+            tool = toolName,
+            content = """{"value":"$value"}""",
+            metaInfo = ResponseMetaInfo.Empty,
+        )
 
-    private fun genericEnvironmentWith(tool: MetadataAwareTool): GenericAgentEnvironment =
+    private fun environmentWith(tool: ToolBase<*, *>): GenericAgentEnvironment =
         GenericAgentEnvironment(
             agentId = "e2e-agent",
             logger = KotlinLogging.logger { },
@@ -75,8 +99,8 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
 
     @Test
     fun testFeatureContributedMetadataReachesToolExecute() = runTest {
-        val tool = MetadataAwareTool()
-        val generic = genericEnvironmentWith(tool)
+        val tool = MetadataObservingTool()
+        val generic = environmentWith(tool)
         val context = createTestContext(environment = generic)
         val feature = TestFeature(AIAgentStorageKey("trace-feature"))
         context.pipeline.provideToolCallMetadata(feature) {
@@ -95,8 +119,8 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
 
     @Test
     fun testCallerOverridesFeatureOnKeyCollision() = runTest {
-        val tool = MetadataAwareTool()
-        val generic = genericEnvironmentWith(tool)
+        val tool = MetadataObservingTool()
+        val generic = environmentWith(tool)
         val context = createTestContext(environment = generic)
         context.pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("tracer"))) {
             mapOf("trace.span.id" to "feature-span", "only-feature" to "F")
@@ -118,8 +142,8 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
 
     @Test
     fun testMultipleFeaturesAccumulateInInstallationOrderThroughToTool() = runTest {
-        val tool = MetadataAwareTool()
-        val generic = genericEnvironmentWith(tool)
+        val tool = MetadataObservingTool()
+        val generic = environmentWith(tool)
         val context = createTestContext(environment = generic)
         context.pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("first"))) {
             mapOf("shared" to "first", "only-first" to "1")
@@ -139,8 +163,8 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
 
     @Test
     fun testNoFeaturesAndNoCallerMetadataYieldsOnlyAgentContextAtTool() = runTest {
-        val tool = MetadataAwareTool()
-        val generic = genericEnvironmentWith(tool)
+        val tool = MetadataObservingTool()
+        val generic = environmentWith(tool)
         val context = createTestContext(environment = generic)
         val contextual = ContextualAgentEnvironment(generic, context)
 
@@ -153,17 +177,31 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
     }
 
     @Test
-    fun testToolReadsAgentContextTypedThroughTheFullPipeline() = runTest {
-        val tool = MetadataAwareTool()
-        val generic = genericEnvironmentWith(tool)
+    fun testToolBaseReadsAgentContextThroughExtensionAccessor() = runTest {
+        val tool = MetadataObservingTool()
+        val generic = environmentWith(tool)
         val context = createTestContext(environment = generic)
         val contextual = ContextualAgentEnvironment(generic, context)
 
         contextual.executeTool(newToolCall(), ToolCallMetadata.of("caller.key" to "caller-value"))
 
         val seen = tool.observed.single()
-        assertSame(context, seen.agentContext, "Tool must read the live agent context typed")
+        assertSame(context, seen.agentContext, "Tool extending ToolBase must read the live agent context typed")
         assertEquals(context.runId, seen.agentContext?.runId)
         assertEquals("caller-value", seen["caller.key"])
+    }
+
+    @Test
+    fun testAgentContextAwareToolReceivesContextTypedThroughTheFullPipeline() = runTest {
+        val tool = ContextObservingTool()
+        val generic = environmentWith(tool)
+        val context = createTestContext(environment = generic)
+        val contextual = ContextualAgentEnvironment(generic, context)
+
+        val result = contextual.executeTool(newToolCall(toolName = "context_aware"), ToolCallMetadata.EMPTY)
+
+        assertEquals(ToolResultKind.Success, result.resultKind)
+        assertEquals(1, tool.observed.size)
+        assertSame(context, tool.observed.single(), "AgentContextAwareTool must observe the live agent context")
     }
 }

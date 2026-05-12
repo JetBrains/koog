@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.OutputOption
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
 import ai.koog.agents.ext.agent.CriticResult
@@ -65,7 +66,7 @@ public class SubtaskBuilderWithOutput<Output : Any>(
     public val context: AIAgentFunctionalContextBase<*>,
     public val taskDescription: String,
     public val output: OutputOption<Output>,
-    public var tools: List<Tool<*, *>>? = null,
+    public var tools: List<ToolBase<*, *>>? = null,
     public var llmModel: LLModel? = null,
     public var llmParams: LLMParams? = null,
     public var responseProcessor: ResponseProcessor? = null,
@@ -109,7 +110,7 @@ public class SubtaskBuilderWithOutput<Output : Any>(
      * @param tools A list of tools, each represented as an instance of `Tool<*, *>`,
      *              to be utilized for the execution of the subtask.
      */
-    public fun withTools(tools: List<Tool<*, *>>): SubtaskBuilderWithOutput<Output> =
+    public fun withTools(tools: List<ToolBase<*, *>>): SubtaskBuilderWithOutput<Output> =
         apply { this.tools = tools }
 
     /**

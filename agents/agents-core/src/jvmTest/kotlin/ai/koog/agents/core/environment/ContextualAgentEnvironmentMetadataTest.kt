@@ -7,7 +7,9 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.tools.AgentContextAwareTool
 import ai.koog.agents.core.tools.ToolCallMetadata
+import ai.koog.agents.core.tools.agentContext
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
@@ -153,7 +155,7 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
 
         val captured = capturing.lastMetadata!!
         assertSame(context, captured.agentContext)
-        assertEquals(setOf("ai.koog.agents.core.AIAgentContext"), captured.keys)
+        assertEquals(setOf(AgentContextAwareTool.AgentContextKey), captured.keys)
     }
 
     @Test
@@ -196,7 +198,7 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
         val wrapper = ContextualAgentEnvironment(capturing, context)
 
         // Caller attempts to spoof the reserved key with an arbitrary value. The framework must overwrite.
-        val callerMetadata = ToolCallMetadata.of("ai.koog.agents.core.AIAgentContext" to "spoofed")
+        val callerMetadata = ToolCallMetadata.of(AgentContextAwareTool.AgentContextKey to "spoofed")
 
         wrapper.executeTool(newToolCall(), callerMetadata)
 
@@ -210,7 +212,7 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
         val context = createTestContext(environment = capturing)
         val pipeline = context.pipeline
         pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("spoofer"))) {
-            mapOf("ai.koog.agents.core.AIAgentContext" to "feature-spoof")
+            mapOf(AgentContextAwareTool.AgentContextKey to "feature-spoof")
         }
         val wrapper = ContextualAgentEnvironment(capturing, context)
 

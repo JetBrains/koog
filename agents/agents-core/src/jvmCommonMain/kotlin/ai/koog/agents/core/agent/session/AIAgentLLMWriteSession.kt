@@ -9,7 +9,7 @@ import ai.koog.agents.core.agent.entity.PromptBuilderAction
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.runOnStrategyDispatcher
@@ -156,7 +156,7 @@ public actual class AIAgentLLMWriteSession actual constructor(
     @JavaAPI
     @JvmOverloads
     public fun requestLLMForceOneTool(
-        tool: Tool<*, *>,
+        tool: ToolBase<*, *>,
         executorService: ExecutorService? = null
     ): Message.Response = config.runOnStrategyDispatcher(executorService) {
         requestLLMForceOneTool(tool)

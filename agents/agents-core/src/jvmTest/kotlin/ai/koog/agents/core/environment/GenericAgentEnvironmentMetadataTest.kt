@@ -1,10 +1,12 @@
 package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.message.Message.Tool
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -21,8 +23,9 @@ class GenericAgentEnvironmentMetadataTest {
     @Serializable
     private data class EchoArgs(val value: String)
 
-    private class MetadataAwareTool : SimpleTool<EchoArgs>(
+    private class MetadataAwareTool : ToolBase<EchoArgs, String>(
         argsType = typeToken<EchoArgs>(),
+        resultType = typeToken<String>(),
         name = "metadata_aware",
         description = "Tool that echoes a value plus a piece of metadata.",
     ) {
@@ -32,6 +35,8 @@ class GenericAgentEnvironmentMetadataTest {
             observedMetadata += metadata
             return "${args.value}::${metadata["trace.span.id"]}"
         }
+
+        override fun encodeResultToString(result: String, serializer: JSONSerializer): String = result
     }
 
     private class LegacyTool : SimpleTool<EchoArgs>(
@@ -42,7 +47,7 @@ class GenericAgentEnvironmentMetadataTest {
         override suspend fun execute(args: EchoArgs): String = "legacy:${args.value}"
     }
 
-    private fun environmentWith(vararg tools: ai.koog.agents.core.tools.Tool<*, *>): GenericAgentEnvironment =
+    private fun environmentWith(vararg tools: ToolBase<*, *>): GenericAgentEnvironment =
         GenericAgentEnvironment(
             agentId = "test_agent",
             logger = KotlinLogging.logger { },

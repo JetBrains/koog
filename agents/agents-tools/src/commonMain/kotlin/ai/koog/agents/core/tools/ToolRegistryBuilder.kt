@@ -10,12 +10,12 @@ public expect class ToolRegistryBuilder() {
     /**
      * Add a tool to the registry
      */
-    public fun tool(tool: Tool<*, *>): ToolRegistryBuilder
+    public fun tool(tool: ToolBase<*, *>): ToolRegistryBuilder
 
     /**
      * Add multiple tools to the registry
      */
-    public fun tools(toolsList: List<Tool<*, *>>): ToolRegistryBuilder
+    public fun tools(toolsList: List<ToolBase<*, *>>): ToolRegistryBuilder
 
     /**
      * Builds a [ToolRegistry] instance containing the tools added to the builder.
@@ -23,7 +23,7 @@ public expect class ToolRegistryBuilder() {
     public fun build(): ToolRegistry
 }
 
-internal fun MutableList<Tool<*, *>>.addTool(tool: Tool<*, *>) {
+internal fun MutableList<ToolBase<*, *>>.addTool(tool: ToolBase<*, *>) {
     require(tool.name !in this.map { it.name }) { "Tool \"${tool.name}\" is already defined" }
     this.add(tool)
 }

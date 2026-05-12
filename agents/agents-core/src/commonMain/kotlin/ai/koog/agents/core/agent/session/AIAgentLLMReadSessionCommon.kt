@@ -1,7 +1,7 @@
 package ai.koog.agents.core.agent.session
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.utils.ActiveProperty
 import ai.koog.prompt.dsl.ModerationResult
@@ -178,7 +178,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * @param tool The tool to force in the request.
      * @return The response from the language model.
      */
-    public suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
+    public suspend fun requestLLMForceOneTool(tool: ToolBase<*, *>): Message.Response {
         return requestLLMForceOneTool(tool.descriptor)
     }
 

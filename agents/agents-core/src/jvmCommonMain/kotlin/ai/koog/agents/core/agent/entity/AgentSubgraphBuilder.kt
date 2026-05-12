@@ -8,6 +8,7 @@ import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.utils.submitToMainDispatcher
 import ai.koog.agents.ext.agent.CriticResult
@@ -53,7 +54,7 @@ public open class AgentSubgraphBuilder<SubgraphBuilder : AgentSubgraphBuilder<Su
      * @param tools A list of tools to be used, each represented by its descriptor.
      * @return The current instance of [AgentSubgraphBuilder] for chaining further configurations.
      */
-    public fun limitedTools(tools: List<Tool<*, *>>): SubgraphBuilder = self().apply {
+    public fun limitedTools(tools: List<ToolBase<*, *>>): SubgraphBuilder = self().apply {
         toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor })
     }
 

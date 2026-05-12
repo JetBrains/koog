@@ -1,6 +1,6 @@
 package ai.koog.agents.core.environment
 
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -17,7 +17,7 @@ import kotlin.time.Clock
  * @property environment The environment in which the tool operates. Handles the execution of tool logic.
  */
 public data class SafeTool<TArgs, TResult>(
-    internal val tool: Tool<TArgs, TResult>,
+    internal val tool: ToolBase<TArgs, TResult>,
     internal val environment: AIAgentEnvironment,
     internal val clock: Clock
 ) {
@@ -181,7 +181,7 @@ public data class SafeTool<TArgs, TResult>(
  * @return A [SafeTool.Result] which will either be a [SafeTool.Result.Failure] or [SafeTool.Result.Success]
  */
 public fun <TResult> ReceivedToolResult.toSafeResult(
-    tool: Tool<*, TResult>,
+    tool: ToolBase<*, TResult>,
     serializer: JSONSerializer,
 ): SafeTool.Result<TResult> {
     val encodedResult = result ?: return SafeTool.Result.Failure(message = content)

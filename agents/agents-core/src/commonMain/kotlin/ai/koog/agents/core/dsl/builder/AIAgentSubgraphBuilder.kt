@@ -15,7 +15,7 @@ import ai.koog.agents.core.agent.entity.SubgraphMetadata
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
@@ -447,7 +447,7 @@ public fun <Input : Any, Output : Any> subgraph(
  */
 public inline fun <reified Input, reified Output> subgraph(
     name: String? = null,
-    tools: List<Tool<*, *>>,
+    tools: List<ToolBase<*, *>>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     responseProcessor: ResponseProcessor? = null,

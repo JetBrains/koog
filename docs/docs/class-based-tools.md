@@ -97,29 +97,65 @@ After implementing your tool, you need to add it to a tool registry and then use
 
 For more details, see [API reference](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool/index.html).
 
-#### Receiving per-call metadata
+#### Reading the agent context from a tool
 
-Tools can read caller- and feature-contributed metadata by overriding the second `execute` overload. This is a side channel designed for cross-cutting context such as a distributed-tracing span id or a correlation id, and it does not affect the tool's argument schema or the data sent to the LLM.
-
-A tool that depends on metadata only needs to override `execute(args, metadata)`. The single-argument `execute(args)` overload is provided by the base class and routes through the metadata-aware overload with `ToolCallMetadata.EMPTY`, so callers that do not pass metadata still observe the same behavior with empty metadata.
+Tools that need the agent's full state (LLM context, run id, configuration, storage, ...) extend `AgentContextAwareTool<Args, Result>` instead of `Tool<Args, Result>`. The framework injects the live `AIAgentContext` driving the call, and the tool receives it as a typed parameter rather than reading it out of the argument schema.
 
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.agents.core.environment.agentContext
-    import ai.koog.agents.core.tools.Tool
+    import ai.koog.agents.core.agent.context.AIAgentContext
+    import ai.koog.agents.core.tools.AgentContextAwareTool
+    import ai.koog.agents.core.tools.annotations.LLMDescription
+    import ai.koog.serialization.typeToken
+    import kotlinx.serialization.Serializable
+    -->
+    ```kotlin
+    // A tool that reads the live AIAgentContext driving the call.
+    object TracingCalculatorTool : AgentContextAwareTool<TracingCalculatorTool.Args, Int>(
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Int>(),
+        name = "tracing_calculator",
+        description = "Adds two digits and emits a log line tagged with the agent run id."
+    ) {
+        @Serializable
+        data class Args(
+            @property:LLMDescription("The first digit to add (0-9)")
+            val digit1: Int,
+            @property:LLMDescription("The second digit to add (0-9)")
+            val digit2: Int
+        )
+
+        override suspend fun execute(args: Args, context: AIAgentContext): Int {
+            val runId = context.runId
+            // ... use runId for cross-cutting context (logging, tracing, correlation)
+            return args.digit1 + args.digit2
+        }
+    }
+    ```
+    <!--- KNIT example-class-based-tools-metadata-01.kt -->
+
+`AgentContextAwareTool` is dispatched by the framework via a per-call `ToolCallMetadata` side channel that the framework manages on the tool's behalf. Invoking such a tool outside an agent run throws `IllegalStateException` because no `AIAgentContext` was injected; production code should always go through `ContextualAgentEnvironment`, and unit tests can supply the context explicitly via `ToolCallMetadata.of(AgentContextAwareTool.AgentContextKey to context)`.
+
+#### Reading raw per-call metadata
+
+A small number of tools want to read caller- or feature-contributed entries that are *not* the agent context (for example a distributed-tracing span id contributed by an observability feature). These tools extend `ToolBase<Args, Result>` directly, which exposes the full `ToolCallMetadata` bag:
+
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.agents.core.tools.ToolBase
     import ai.koog.agents.core.tools.ToolCallMetadata
     import ai.koog.agents.core.tools.annotations.LLMDescription
     import ai.koog.serialization.typeToken
     import kotlinx.serialization.Serializable
     -->
     ```kotlin
-    // A tool that reads cross-cutting context from caller-, feature-, and framework-supplied metadata.
-    object TracingCalculatorTool : Tool<TracingCalculatorTool.Args, Int>(
+    object SpanAwareCalculatorTool : ToolBase<SpanAwareCalculatorTool.Args, Int>(
         argsType = typeToken<Args>(),
         resultType = typeToken<Int>(),
-        name = "tracing_calculator",
-        description = "Adds two digits and reads optional cross-cutting context from metadata."
+        name = "span_aware_calculator",
+        description = "Adds two digits, propagating a tracing span id from caller or feature metadata."
     ) {
         @Serializable
         data class Args(
@@ -130,22 +166,17 @@ A tool that depends on metadata only needs to override `execute(args, metadata)`
         )
 
         override suspend fun execute(args: Args, metadata: ToolCallMetadata): Int {
-            // Caller- or feature-contributed entry under an arbitrary key.
             val traceSpanId = metadata["trace.span.id"] as? String
-            // Framework-injected live AIAgentContext (only set when called from an agent run).
-            val runId = metadata.agentContext?.runId
-            // ... use traceSpanId and runId for cross-cutting context (logging, tracing, correlation)
+            // ... use traceSpanId for cross-cutting context (logging, tracing, correlation)
             return args.digit1 + args.digit2
         }
     }
     ```
-    <!--- KNIT example-class-based-tools-metadata-01.kt -->
+    <!--- KNIT example-class-based-tools-metadata-02.kt -->
 
 Callers can pass metadata through `SafeTool.execute(args, serializer, metadata)` or directly through `AIAgentEnvironment.executeTool(toolCall, metadata)`. Features can contribute metadata for every tool call during installation by calling `pipeline.provideToolCallMetadata(this) { eventContext -> mapOf(...) }`. Caller-supplied metadata always wins over feature contributions on key collision.
 
-Existing tools that only override `execute(args)` continue to work unchanged: the default implementation of the metadata-aware overload delegates to that overload, dropping metadata.
-
-When the call originates from an agent run, the framework also injects the live `AIAgentContext` under a reserved key. Tools that need the agent's full state (LLM context, run id, configuration, storage, ...) read it through the typed `agentContext` extension on `ToolCallMetadata`, as the example above shows, rather than expecting it through the argument schema. The framework's value always wins over caller and feature entries on the reserved key, so the property reflects the real context driving the current call. Outside an agent run (for example when invoking `Tool.execute(args, metadata)` directly from a unit test), `metadata.agentContext` returns `null`.
+Existing tools that extend `Tool<Args, Result>` and override `execute(args)` continue to work unchanged: the framework dispatches them through the same path and discards any `ToolCallMetadata`. To opt in to metadata, switch to `AgentContextAwareTool` (typed context access) or `ToolBase` (raw bag access).
 
 ### SimpleTool class (Kotlin)
 

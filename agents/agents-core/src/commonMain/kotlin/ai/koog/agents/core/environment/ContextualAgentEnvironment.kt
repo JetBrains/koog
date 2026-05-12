@@ -3,6 +3,7 @@ package ai.koog.agents.core.environment
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.tools.AgentContextAwareTool
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONObject
@@ -23,10 +24,10 @@ import kotlin.uuid.Uuid
  * [ai.koog.agents.core.feature.pipeline.AIAgentPipelineAPI.provideToolCallMetadata] and merges them with
  * the caller-supplied metadata. On key collision, the caller's value wins, so an explicit call-site
  * override is never silently replaced by a feature contribution. After the merge, the framework injects
- * the live [AIAgentContext] under a reserved key (readable via [agentContext]); the framework's value
- * always wins over caller and feature entries so a tool always observes the real context driving the
- * current call. The merged metadata is then passed to the wrapped environment, which threads it into
- * [ai.koog.agents.core.tools.Tool.execute].
+ * the live [AIAgentContext] under [AgentContextAwareTool.AgentContextKey]; the framework's value always
+ * wins over caller and feature entries so a tool always observes the real context driving the current
+ * call. The merged metadata is then passed to the wrapped environment, which threads it into
+ * [ai.koog.agents.core.tools.ToolBase.execute].
  *
  * @constructor Constructs a new instance of [ContextualAgentEnvironment] with a decorated [environment] and a
  * contextual [context].
@@ -121,8 +122,9 @@ public class ContextualAgentEnvironment(
 
         // Caller-supplied metadata wins on key collision, so an explicit call-site override is never
         // silently replaced by a feature contribution. The framework's live AIAgentContext is then injected
-        // under a reserved key so that tools always see the real context driving the current call.
-        val mergedMetadata = (featureMetadata + metadata).withAgentContext(context)
+        // under the reserved key so that tools always see the real context driving the current call.
+        val mergedMetadata = featureMetadata + metadata +
+            ToolCallMetadata.of(AgentContextAwareTool.AgentContextKey to context)
 
         val toolResult = environment.executeTool(toolCall, mergedMetadata)
         processToolResult(eventId, context.executionInfo, toolResult)

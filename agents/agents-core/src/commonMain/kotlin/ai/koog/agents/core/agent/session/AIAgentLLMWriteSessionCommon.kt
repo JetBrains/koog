@@ -7,7 +7,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.SafeTool
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ActiveProperty
@@ -85,7 +85,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Finds a specific tool instance from the tool registry by a tool instance type.
      */
-    public fun <TArgs, TResult> findTool(tool: Tool<TArgs, TResult>): SafeTool<TArgs, TResult> {
+    public fun <TArgs, TResult> findTool(tool: ToolBase<TArgs, TResult>): SafeTool<TArgs, TResult> {
         return findTool(tool::class)
     }
 
@@ -93,8 +93,8 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
      * Finds a specific tool instance from the tool registry by tool class.
      */
     @Suppress("UNCHECKED_CAST")
-    public fun <TArgs, TResult> findTool(toolClass: KClass<out Tool<TArgs, TResult>>): SafeTool<TArgs, TResult> {
-        val tool = toolRegistry.tools.find(toolClass::isInstance) as? Tool<TArgs, TResult>
+    public fun <TArgs, TResult> findTool(toolClass: KClass<out ToolBase<TArgs, TResult>>): SafeTool<TArgs, TResult> {
+        val tool = toolRegistry.tools.find(toolClass::isInstance) as? ToolBase<TArgs, TResult>
             ?: throw IllegalArgumentException("Tool with type ${toolClass.simpleName} is not defined")
 
         return SafeTool(tool, environment, clock)
@@ -179,7 +179,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a request while forcing a specific tool and appends the response to the prompt.
      */
-    public suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
+    public suspend fun requestLLMForceOneTool(tool: ToolBase<*, *>): Message.Response {
         return readSession.requestLLMForceOneTool(tool)
             .also { response -> appendPrompt { message(response) } }
     }
@@ -313,7 +313,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
      * Converts each flow item into a parallel tool call using a tool instance.
      */
     public inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCalls(
-        tool: Tool<TArgs, TResult>,
+        tool: ToolBase<TArgs, TResult>,
         concurrency: Int = 16
     ): Flow<SafeTool.Result<TResult>> = flatMapMerge(concurrency) { args ->
         val safeTool = findTool(tool::class)
@@ -324,7 +324,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
      * Converts each flow item into a parallel tool call using a tool class.
      */
     public inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCalls(
-        toolClass: KClass<out Tool<TArgs, TResult>>,
+        toolClass: KClass<out ToolBase<TArgs, TResult>>,
         concurrency: Int = 16
     ): Flow<SafeTool.Result<TResult>> {
         val tool = findTool(toolClass)
@@ -335,7 +335,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
      * Converts each flow item into a parallel tool call using a tool class and emits raw string content.
      */
     public inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCallsRaw(
-        toolClass: KClass<out Tool<TArgs, TResult>>,
+        toolClass: KClass<out ToolBase<TArgs, TResult>>,
         concurrency: Int = 16
     ): Flow<String> {
         val tool = findTool(toolClass)

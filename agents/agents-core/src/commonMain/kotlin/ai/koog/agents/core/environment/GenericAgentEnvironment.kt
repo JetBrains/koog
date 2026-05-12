@@ -1,6 +1,6 @@
 package ai.koog.agents.core.environment
 
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolRegistry
@@ -111,7 +111,7 @@ public class GenericAgentEnvironment(
 
         val toolResult = try {
             @Suppress("UNCHECKED_CAST")
-            (tool as Tool<Any?, Any?>).execute(toolArgs, metadata)
+            (tool as ToolBase<Any?, Any?>).execute(toolArgs, metadata)
         } catch (e: CancellationException) {
             throw e
         } catch (e: ToolException) {
