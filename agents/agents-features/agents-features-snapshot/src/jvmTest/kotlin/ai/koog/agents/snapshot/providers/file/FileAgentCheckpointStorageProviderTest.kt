@@ -5,7 +5,6 @@ import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest

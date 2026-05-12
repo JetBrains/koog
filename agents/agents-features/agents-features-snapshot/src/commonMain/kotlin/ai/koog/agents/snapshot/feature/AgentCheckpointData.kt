@@ -15,10 +15,6 @@ import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONNull
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
-import ai.koog.serialization.JSONSerializer
-import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toKotlinxJsonElement
-import ai.koog.serialization.typeToken
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.Serializable
@@ -29,7 +25,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonTransformingSerializer
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -85,7 +80,7 @@ public data class AgentCheckpointData internal constructor(
     /**
      * Creates an instance of `AgentCheckpointData` with graph properties.
      */
-     public constructor(
+    public constructor(
         checkpointId: String,
         createdAt: Instant,
         messageHistory: List<Message>,

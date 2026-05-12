@@ -28,12 +28,9 @@ import ai.koog.agents.planner.PlannerAgentExecutionPoint
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement
-import ai.koog.serialization.JSONObject
-import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.kotlinx.toKoogJSONElement
 import ai.koog.serialization.kotlinx.toKoogJSONObject
-import ai.koog.serialization.typeToken
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonElement
@@ -457,13 +454,6 @@ public class Persistence(
             logger.warn { "Failed to serialize plan for planner checkpoint, skipping checkpoint creation..." }
             return null
         }
-
-//        val executionPointJson = try {
-//            agentContext.config.serializer.encodeToJSONElement(executionPoint, typeToken<PlannerAgentExecutionPoint>())
-//        } catch (_: Exception) {
-//            logger.warn { "Failed to serialize execution point for planner checkpoint, skipping checkpoint creation..." }
-//            return null
-//        }
 
         val checkpoint = AgentCheckpointData(
             checkpointId = checkpointId ?: Uuid.random().toString(),
