@@ -56,6 +56,7 @@ The following scopes are supported:
 - `a2a`
 - `agents`
 - `embeddings`
+- `http-client`
 - `integration-tests`
 - `koog-agents`
 - `koog-ktor`
