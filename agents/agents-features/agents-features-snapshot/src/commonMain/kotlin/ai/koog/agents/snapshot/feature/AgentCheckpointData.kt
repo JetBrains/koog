@@ -33,9 +33,13 @@ import kotlin.uuid.Uuid
  * Represents the checkpoint data for an agent's state during a session.
  *
  * @property checkpointId The unique identifier of the checkpoint. This allows tracking and restoring the agent's session to a specific state.
- * @property messageHistory A list of messages exchanged in the session up to the checkpoint. Messages include interactions between the user, system, assistant, and tools.
- * @property properties Additional data associated with the checkpoint. This can be used to store additional information about the agent's state.
  * @property createdAt The timestamp when the checkpoint was created.
+ * @property nodePath The identifier of the node where the checkpoint was created.
+ * @property lastInput Serialized input received for node with [nodePath]
+ * @property lastOutput Serialized output received from node with [nodePath]
+ * @property messageHistory A list of messages exchanged in the session up to the checkpoint. Messages include interactions between the user, system, assistant, and tools.
+ * @property storage Serialized [ai.koog.agents.core.agent.entity.AIAgentStorage]
+ * @property properties Additional data associated with the checkpoint. This can be used to store additional information about the agent's state.
  * @property version The version of the checkpoint data structure
  */
 @OptIn(ExperimentalSerializationApi::class)
@@ -45,6 +49,7 @@ public data class AgentCheckpointData internal constructor(
     val checkpointId: String,
     val createdAt: Instant,
     val messageHistory: List<Message>,
+    val storage: JSONObject? = null,
     val version: Long,
     val graphProperties: GraphCheckpointProperties?,
     val plannerProperties: PlannerCheckpointProperties?,
@@ -65,12 +70,13 @@ public data class AgentCheckpointData internal constructor(
         version: Long,
         properties: JSONObject? = null
     ) : this(
-        checkpointId,
-        createdAt,
-        messageHistory,
-        version,
-        GraphCheckpointProperties(nodePath, lastInput ?: JSONNull, lastOutput ?: JSONNull),
-        JSONObject(
+        checkpointId = checkpointId,
+        createdAt = createdAt,
+        messageHistory = messageHistory,
+        storage = null,
+        version = version,
+        graphProperties = GraphCheckpointProperties(nodePath, lastInput ?: JSONNull, lastOutput ?: JSONNull),
+        properties = JSONObject(
             buildMap {
                 properties?.entries?.let { putAll(it) }
             }
@@ -84,17 +90,19 @@ public data class AgentCheckpointData internal constructor(
         checkpointId: String,
         createdAt: Instant,
         messageHistory: List<Message>,
+        storage: JSONObject? = null,
         version: Long,
         graphProperties: GraphCheckpointProperties,
         properties: JSONObject? = null,
     ) : this(
-        checkpointId,
-        createdAt,
-        messageHistory,
-        version,
-        graphProperties,
-        null,
-        properties
+        checkpointId = checkpointId,
+        createdAt = createdAt,
+        messageHistory = messageHistory,
+        storage = storage,
+        version = version,
+        graphProperties = graphProperties,
+        plannerProperties = null,
+        properties = properties
     )
 
     /**
@@ -104,17 +112,19 @@ public data class AgentCheckpointData internal constructor(
         checkpointId: String,
         createdAt: Instant,
         messageHistory: List<Message>,
+        storage: JSONObject? = null,
         version: Long,
         plannerProperties: PlannerCheckpointProperties,
         properties: JSONObject? = null,
     ) : this(
-        checkpointId,
-        createdAt,
-        messageHistory,
-        version,
-        null,
-        plannerProperties,
-        properties
+        checkpointId = checkpointId,
+        createdAt = createdAt,
+        messageHistory = messageHistory,
+        storage = storage,
+        version = version,
+        graphProperties = null,
+        plannerProperties = plannerProperties,
+        properties = properties
     )
 
     /**
@@ -197,9 +207,10 @@ public fun tombstoneCheckpoint(
         checkpointId = Uuid.random().toString(),
         createdAt = createdAt,
         messageHistory = emptyList(),
+        storage = null,
         version = version,
-        null,
-        null,
+        graphProperties = null,
+        plannerProperties = null,
         properties = JSONObject(
             mapOf(
                 PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME to JSONPrimitive(true)
@@ -247,20 +258,21 @@ public fun AgentCheckpointData.toAgentContextData(
 ): AgentContextData? {
     return when {
         graphProperties != null -> GraphAgentContextData(
-            messageHistory,
-            graphProperties.nodePath,
-            graphProperties.lastInput,
-            graphProperties.lastOutput,
-            rollbackStrategy,
-            additionalRollbackActions
+            messageHistory = messageHistory,
+            storage = storage ?: JSONObject(emptyMap()),
+            nodePath = graphProperties.nodePath,
+            lastInput = graphProperties.lastInput,
+            lastOutput = graphProperties.lastOutput,
+            rollbackStrategy = rollbackStrategy,
+            additionalRollbackActions = additionalRollbackActions
         )
         plannerProperties != null -> PlannerAgentContextData(
-            messageHistory,
-            plannerProperties.state,
-            plannerProperties.plan,
-            plannerProperties.executionPoint,
-            rollbackStrategy,
-            additionalRollbackActions
+            messageHistory = messageHistory,
+            state = plannerProperties.state,
+            plan = plannerProperties.plan,
+            executionPoint = plannerProperties.executionPoint,
+            rollbackStrategy = rollbackStrategy,
+            additionalRollbackActions = additionalRollbackActions
         )
         else -> null
     }

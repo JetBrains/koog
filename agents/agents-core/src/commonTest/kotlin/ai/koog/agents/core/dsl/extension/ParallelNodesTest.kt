@@ -3,7 +3,7 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
@@ -60,9 +60,9 @@ class ParallelNodesTest {
     @Test
     fun testContextIsolation() = runTest {
         val agentStrategy = strategy<String, String>("test-isolation") {
-            val testKey1 = AIAgentStorageKey<String>("testKey1")
-            val testKey2 = AIAgentStorageKey<String>("testKey2")
-            val testKey3 = AIAgentStorageKey<String>("testKey3")
+            val testKey1 = createStorageKey<String>("testKey1")
+            val testKey2 = createStorageKey<String>("testKey2")
+            val testKey3 = createStorageKey<String>("testKey3")
             val val1 = "value1"
             val val2 = "value2"
             val val3 = "value3"

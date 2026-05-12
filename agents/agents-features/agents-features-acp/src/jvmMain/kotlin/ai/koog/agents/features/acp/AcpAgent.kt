@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -120,7 +121,7 @@ public class AcpAgent(
         AIAgentPlannerFeature<AcpConfig, AcpAgent> {
 
         private val logger = KotlinLogging.logger { }
-        override val key: AIAgentStorageKey<AcpAgent> = AIAgentStorageKey("agents-features-acp")
+        override val key: AIAgentStorageKey<AcpAgent> = createStorageKey<AcpAgent>("agents-features-acp")
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig,

@@ -4,7 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorage
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.agent.session.AdditionalInputs
@@ -59,6 +59,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.serialization.JSONPrimitive
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
 import ai.koog.utils.time.KoogClock
 import io.kotest.assertions.withClue
@@ -904,8 +905,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     fun integration_AIAgentSessionStorageDoesNotLeakBetweenRuns(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
-        val greetingKey = AIAgentStorageKey<String>("integration-session-greeting")
-        val counterKey = AIAgentStorageKey<Int>("integration-session-counter")
+        val greetingKey = createStorageKey<String>("integration-session-greeting")
+        val counterKey = createStorageKey<Int>("integration-session-counter")
 
         val storageStrategy = strategy<String, String>("integration-session-storage-strategy") {
             val readNode by node<String, String>("readStorage") {
@@ -931,7 +932,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             toolRegistry = ToolRegistry {},
         )
 
-        val initialStorage = AIAgentStorage().apply {
+        val initialStorage = AIAgentStorage(KotlinxSerializer()).apply {
             set(greetingKey, "hello-from-session-inputs")
             set(counterKey, 7)
         }
@@ -999,7 +1000,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         val result = Persistence.runFromCheckpoint(
             agent = agent,
-            agentInput = "ignored",
+            input = "ignored",
             checkpoint = checkpoint,
             sessionId = sessionId,
         )
@@ -1046,7 +1047,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val error = assertFailsWith<IllegalStateException> {
             Persistence.runFromCheckpoint(
                 agent = agent,
-                agentInput = "ignored",
+                input = "ignored",
                 checkpoint = checkpoint,
                 sessionId = sessionId,
             )

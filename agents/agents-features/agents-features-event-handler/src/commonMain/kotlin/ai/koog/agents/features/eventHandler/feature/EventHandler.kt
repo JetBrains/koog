@@ -5,6 +5,7 @@ package ai.koog.agents.features.eventHandler.feature
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -62,7 +63,7 @@ public class EventHandler {
         private val logger = KotlinLogging.logger { }
 
         override val key: AIAgentStorageKey<EventHandler> =
-            AIAgentStorageKey("agents-features-event-handler")
+            createStorageKey<EventHandler>("agents-features-event-handler")
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig

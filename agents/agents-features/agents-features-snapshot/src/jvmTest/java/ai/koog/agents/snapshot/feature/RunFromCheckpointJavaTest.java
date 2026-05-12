@@ -12,6 +12,7 @@ import ai.koog.prompt.message.Message;
 import ai.koog.prompt.message.RequestMetaInfo;
 import ai.koog.prompt.message.ResponseMetaInfo;
 import ai.koog.serialization.JSONElementKt;
+import ai.koog.serialization.JSONPrimitive;
 import ai.koog.serialization.kotlinx.KotlinxSerializer;
 import kotlin.time.Clock;
 import kotlin.time.Instant;
@@ -67,7 +68,7 @@ public class RunFromCheckpointJavaTest {
             time,
             nodePath(sessionId, "straight-forward", "Node2"),
             null,
-            JSONElementKt.JSONPrimitive("Node 2 output"),
+            JSONPrimitive.of("Node 2 output"),
             List.of(
                 new Message.User("User message", new RequestMetaInfo(time, null)),
                 new Message.Assistant("Assistant message", new ResponseMetaInfo(time, null, null, null))

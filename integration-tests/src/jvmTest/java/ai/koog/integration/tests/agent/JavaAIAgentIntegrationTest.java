@@ -30,7 +30,9 @@ import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.AttachmentContent;
 import ai.koog.prompt.message.ContentPart;
 import ai.koog.prompt.message.Message;
+import ai.koog.serialization.TypeToken;
 import ai.koog.serialization.kotlinx.KotlinxSerializer;
+import ai.koog.serialization.jackson.JacksonSerializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -537,7 +539,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     public void integration_ShouldStoreAndRetrieveValueWithStorageKeys(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgentStorageKey<String> storageKey = new AIAgentStorageKey<>("test-key");
+        AIAgentStorageKey<String> storageKey = new AIAgentStorageKey("test-key", TypeToken.of(String.class));
         String expectedValue = "test-value";
         AtomicReference<String> retrievedValue = new AtomicReference<>();
 
@@ -559,7 +561,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     public void integration_ShouldReturnNullForNotExistentKey(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgentStorageKey<String> nonExistentKey = new AIAgentStorageKey<>("non-existent");
+        AIAgentStorageKey<String> nonExistentKey = new AIAgentStorageKey("non-existent", TypeToken.of(String.class));
         AtomicReference<String> retrievedValue = new AtomicReference<>("not-null");
 
         AIAgent<String, String> agent = javaBuilder(model)
@@ -579,7 +581,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     public void integration_ShouldOverwriteValueForSameKey(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgentStorageKey<String> storageKey = new AIAgentStorageKey<>("overwrite-key");
+        AIAgentStorageKey<String> storageKey = new AIAgentStorageKey<>("overwrite-key", TypeToken.of(String.class));
         AtomicReference<String> firstRead = new AtomicReference<>();
         AtomicReference<String> secondRead = new AtomicReference<>();
 
@@ -604,8 +606,8 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     public void integration_ShouldSupportKeysWithDifferentTypes(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgentStorageKey<String> stringKey = new AIAgentStorageKey<>("string-key");
-        AIAgentStorageKey<Integer> intKey = new AIAgentStorageKey<>("int-key");
+        AIAgentStorageKey<String> stringKey = new AIAgentStorageKey<>("string-key", TypeToken.of(String.class));
+        AIAgentStorageKey<Integer> intKey = new AIAgentStorageKey<>("int-key", TypeToken.of(Integer.class));
         AtomicReference<String> retrievedString = new AtomicReference<>();
         AtomicReference<Integer> retrievedInt = new AtomicReference<>();
 
@@ -630,7 +632,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     public void integration_ShouldIsolateStorageForMultipleRuns(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgentStorageKey<Integer> runCountKey = new AIAgentStorageKey<>("run-count");
+        AIAgentStorageKey<Integer> runCountKey = new AIAgentStorageKey<>("run-count", TypeToken.of(Integer.class));
         AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
@@ -654,8 +656,8 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
     public void integration_ShouldNotLeakSessionStorageBetweenRuns(LLModel model) {
         Models.assumeAvailable(model.getProvider());
 
-        AIAgentStorageKey<String> greetingKey = new AIAgentStorageKey<>("java-session-greeting");
-        AIAgentStorageKey<Integer> counterKey = new AIAgentStorageKey<>("java-session-counter");
+        AIAgentStorageKey<String> greetingKey = new AIAgentStorageKey<>("java-session-greeting", TypeToken.of(String.class));
+        AIAgentStorageKey<Integer> counterKey = new AIAgentStorageKey<>("java-session-counter", TypeToken.of(Integer.class));
 
         AIAgent<String, String> agent = javaBuilder(model)
             .systemPrompt("You are a helpful assistant.")
@@ -666,7 +668,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
             })
             .build();
 
-        AIAgentStorage initialStorage = new AIAgentStorage();
+        AIAgentStorage initialStorage = new AIAgentStorage(new JacksonSerializer());
         JavaUtils.storageSet(initialStorage, greetingKey, "hello-from-java-session");
         JavaUtils.storageSet(initialStorage, counterKey, 11);
 

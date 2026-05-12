@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
@@ -257,7 +258,7 @@ public inline fun <T> AIAgentContext.with(partName: String, block: (executionInf
  */
 @OptIn(InternalAgentsApi::class)
 public val graphAgentContextDataAdditionalKey: AIAgentStorageKey<GraphAgentContextData> =
-    AIAgentStorageKey("graph-agent-context-data-key")
+    createStorageKey<GraphAgentContextData>("graph-agent-context-data-key")
 
 /**
  * A storage key used for associating and retrieving `AgentContextData` within the AI agent's storage system.
@@ -272,7 +273,7 @@ public val graphAgentContextDataAdditionalKey: AIAgentStorageKey<GraphAgentConte
  */
 @OptIn(InternalAgentsApi::class)
 public val plannerAgentContextDataAdditionalKey: AIAgentStorageKey<PlannerAgentContextData> =
-    AIAgentStorageKey("planner-agent-context-data-key")
+    createStorageKey<PlannerAgentContextData>("planner-agent-context-data-key")
 
 /**
  * Stores the given agent context data within the current AI agent context.

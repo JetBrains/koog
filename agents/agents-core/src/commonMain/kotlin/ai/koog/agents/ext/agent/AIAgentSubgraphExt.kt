@@ -494,7 +494,7 @@ public fun <Input : Any> subgraphWithVerification(
     inputType = inputType,
     outputType = typeToken<CriticResult<Input>>()
 ) {
-    val inputKey = createStorageKey<Input>("subgraphWithVerification-input-key")
+    val inputKey = createStorageKey<Input>("subgraphWithVerification-input-key", inputType)
 
     val saveInput by node<Input, Input>(inputType = inputType, outputType = inputType) { input ->
         storage.set(inputKey, input)

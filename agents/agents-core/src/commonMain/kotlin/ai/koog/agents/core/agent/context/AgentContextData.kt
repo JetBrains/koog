@@ -7,6 +7,7 @@ import ai.koog.agents.planner.PlannerAgentExecutionPoint
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONNull
+import ai.koog.serialization.JSONObject
 
 @InternalAgentsApi
 public sealed class AgentContextData {
@@ -18,6 +19,7 @@ public sealed class AgentContextData {
 @InternalAgentsApi
 public class GraphAgentContextData(
     override val messageHistory: List<Message>,
+    internal val storage: JSONObject,
     internal val nodePath: String,
     @Deprecated("Use lastOutput instead, lastOutput will be removed in future versions")
     internal val lastInput: JSONElement = JSONNull,

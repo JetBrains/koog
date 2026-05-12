@@ -2,11 +2,16 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.agent.context.graphAgentContextDataAdditionalKey
+import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.straightForwardGraphNoCheckpoint
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -15,6 +20,7 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
@@ -66,7 +72,7 @@ class RunFromCheckpointTest {
 
         val output = Persistence.runFromCheckpoint(
             agent = agent,
-            agentInput = "Start the test",
+            input = "Start the test",
             checkpoint = checkpoint,
             sessionId = sessionId,
         )
@@ -104,9 +110,8 @@ class RunFromCheckpointTest {
             toolRegistry = toolRegistry,
         )
 
-        val session = agent.createSession(sessionId)
         val output = Persistence.runFromCheckpoint(
-            session = session,
+            agent = agent,
             input = "Start the test",
             checkpoint = checkpoint,
         )
@@ -146,7 +151,7 @@ class RunFromCheckpointTest {
 
         val output = Persistence.runFromCheckpoint(
             agent = agent,
-            agentInput = "Start the test",
+            input = "Start the test",
             checkpoint = checkpoint,
             rollbackStrategy = RollbackStrategy.MessageHistoryOnly,
             sessionId = sessionId,
@@ -191,7 +196,7 @@ class RunFromCheckpointTest {
 
         val output = Persistence.runFromCheckpoint(
             agent = agent,
-            agentInput = "Ignored input",
+            input = "Ignored input",
             checkpoint = checkpoint,
             sessionId = sessionId,
         )
@@ -232,7 +237,7 @@ class RunFromCheckpointTest {
 
         val output = Persistence.runFromCheckpoint(
             agent = agent,
-            agentInput = "ignored",
+            input = "ignored",
             checkpoint = checkpoint,
             sessionId = sessionId,
         )
@@ -269,13 +274,62 @@ class RunFromCheckpointTest {
         val error = assertFailsWith<IllegalStateException> {
             Persistence.runFromCheckpoint(
                 agent = agent,
-                agentInput = "ignored",
+                input = "ignored",
                 checkpoint = checkpoint,
                 sessionId = sessionId,
             )
         }
 
         assertEquals("Node straight-forward/MissingNode not found", error.message)
+    }
+
+    @Test
+    fun testRunFromCheckpointRestoresStorage() = runTest {
+        val sessionId = "test-session-storage"
+        val time = Clock.System.now()
+        val greetingKey = createStorageKey<String>("greeting")
+        val greetingText = "hello from checkpoint"
+
+        // Create and serialize a storage
+        val storageJson = AIAgentStorage(serializer)
+            .apply { set(greetingKey, greetingText) }
+            .let { JSONObject(it.toSerializedMap()) }
+
+        val checkpoint = AgentCheckpointData(
+            checkpointId = "checkpoint-storage",
+            createdAt = time,
+            messageHistory = emptyList(),
+            storage = storageJson,
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "storage-reading", "Node1"),
+                lastOutput = JSONPrimitive("Node 1 output"),
+            )
+        )
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) { },
+            strategy = strategy("storage-reading") {
+                val node1 by node<String, String>("Node1") { it }
+
+                val readNode by node<String, String>("readStorage") {
+                    "greeting=${storage.get(greetingKey)}"
+                }
+
+                nodeStart then node1 then readNode then nodeFinish
+            },
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+        )
+
+        val output = Persistence.runFromCheckpoint(
+            agent = agent,
+            input = "ignored",
+            checkpoint = checkpoint,
+            sessionId = sessionId,
+        )
+
+        assertEquals("greeting=$greetingText", output)
     }
 
     @Test

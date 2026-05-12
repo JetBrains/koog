@@ -124,6 +124,9 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
         agentContext.llm.withPrompt {
             this.withMessages { (data.messageHistory) }
         }
+
+        // Restore the storage
+        agentContext.storage.putAllSerialized(data.storage.entries)
     }
 
     private fun setExecutionPointImpl(pathSegments: List<String>, node: AIAgentNodeBase<*, *>, input: Any?) {

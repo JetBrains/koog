@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
@@ -101,7 +102,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
         public const val KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION: String = "koog.debugger.wait.connection.ms"
 
         override val key: AIAgentStorageKey<Debugger> =
-            AIAgentStorageKey("agents-features-debugger")
+            createStorageKey<Debugger>("agents-features-debugger")
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig,

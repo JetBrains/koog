@@ -3,6 +3,7 @@ package ai.koog.agents.features.tracing.feature
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.message.FeatureMessage
@@ -102,7 +103,7 @@ public class Tracing {
         private val logger = KotlinLogging.logger { }
 
         override val key: AIAgentStorageKey<Tracing> =
-            AIAgentStorageKey("agents-features-tracing")
+            createStorageKey<Tracing>("agents-features-tracing")
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig,

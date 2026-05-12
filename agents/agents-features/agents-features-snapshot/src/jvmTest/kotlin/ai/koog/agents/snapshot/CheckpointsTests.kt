@@ -7,6 +7,8 @@ import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.GraphAIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.session.callTool
 import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
@@ -750,6 +752,53 @@ class CheckpointsTests {
             """.trimIndent(),
             tracer.traceAsString().trimIndent()
         )
+    }
+
+    @Test
+    fun testStorageIsSavedInCheckpoint() = runTest {
+        val storageKey = createStorageKey<String>("test-value")
+        val checkpointProvider = InMemoryPersistenceStorageProvider()
+        val sessionId = "storage-checkpoint-session"
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) { },
+            strategy = strategy("storage-checkpoint") {
+                // write a key to the storage that will be persisted in the checkpoint
+                val writeNode by node<String, String>("writeNode") {
+                    storage.set(storageKey, "persisted-value")
+                    it
+                }
+
+                val checkpointNode by node<String, String>("checkpointNode") {
+                    withPersistence { ctx ->
+                        createCheckpointAfterNode(
+                            agentContext = ctx,
+                            nodePath = ctx.executionInfo.path(),
+                            lastOutput = it,
+                            lastOutputType = typeToken<String>(),
+                            version = 0L
+                        )
+                    }
+                    it
+                }
+
+                nodeStart then writeNode then checkpointNode then nodeFinish
+            },
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry
+        ) {
+            install(Persistence) {
+                storage = checkpointProvider
+            }
+        }
+
+        agent.run("start", sessionId = sessionId)
+
+        // get second to last checkpoint because the latest checkpoint is a tombstone checkpoint that doesn't have storage and message history
+        val checkpoint = checkpointProvider.getCheckpoints(sessionId).let { it[it.lastIndex - 1] }
+        val restoredStorage = AIAgentStorage(serializer)
+        restoredStorage.putAllSerialized(checkpoint.storage?.entries ?: emptyMap())
+        assertEquals("persisted-value", restoredStorage.get(storageKey))
     }
 
     /**
