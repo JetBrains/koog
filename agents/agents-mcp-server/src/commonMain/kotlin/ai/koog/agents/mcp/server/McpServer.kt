@@ -1,6 +1,6 @@
 package ai.koog.agents.mcp.server
 
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -202,7 +202,7 @@ public fun configureMcpServer(
  */
 @OptIn(InternalAgentToolsApi::class)
 public fun Server.addTool(
-    tool: Tool<*, *>,
+    tool: ToolBase<*, *>,
     serializer: JSONSerializer = KotlinxSerializer(),
 ) {
     addTool(tool.descriptor.asSdkTool()) { request ->
