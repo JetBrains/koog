@@ -28,7 +28,15 @@ kotlin {
                 api(project(":prompt:prompt-model"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
-                api(libs.ktor.client.content.negotiation)
+            }
+        }
+
+        // Ship http-client-ktor on JVM/Android runtime classpaths so its ServiceLoader-registered
+        // KoogHttpClient.Factory is discoverable. Consumers get a working default factory without
+        // compile-time Ktor coupling.
+        jvmCommonMain {
+            dependencies {
+                runtimeOnly(project(":http-client:http-client-ktor"))
             }
         }
 
