@@ -104,8 +104,8 @@ Tools that need the agent's full state (LLM context, run id, configuration, stor
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.agents.core.agent.AgentContextAwareTool
     import ai.koog.agents.core.agent.context.AIAgentContext
+    import ai.koog.agents.core.agent.tools.AgentContextAwareTool
     import ai.koog.agents.core.tools.annotations.LLMDescription
     import ai.koog.serialization.typeToken
     import kotlinx.serialization.Serializable

@@ -9,8 +9,8 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.agents.core.agent.AgentContextAwareTool
-import ai.koog.agents.core.agent.agentContext
+import ai.koog.agents.core.agent.tools.AgentContextAwareTool
+import ai.koog.agents.core.agent.tools.agentContext
 import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolRegistry

@@ -1,4 +1,4 @@
-package ai.koog.agents.core.agent
+package ai.koog.agents.core.agent.tools
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.tools.Tool

@@ -1,6 +1,6 @@
 @file:OptIn(InternalAgentToolsApi::class, InternalAgentsApi::class)
 
-package ai.koog.agents.core.agent
+package ai.koog.agents.core.agent.tools
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentTestBase

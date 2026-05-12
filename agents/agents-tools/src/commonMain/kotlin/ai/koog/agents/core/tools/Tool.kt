@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
  *
  * Existing tool implementations subclass this type. Implementations that need typed access to the
  * live `AIAgentContext` should extend
- * [ai.koog.agents.core.agent.AgentContextAwareTool] (in `agents-core`) instead; implementations
+ * [ai.koog.agents.core.agent.tools.AgentContextAwareTool] (in `agents-core`) instead; implementations
  * that need raw [ToolCallMetadata] entries (for example a tracing span id contributed by a feature)
  * should extend [ToolBase] directly.
  *
