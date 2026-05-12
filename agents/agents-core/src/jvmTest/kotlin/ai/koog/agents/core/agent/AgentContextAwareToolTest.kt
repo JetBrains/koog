@@ -1,10 +1,11 @@
 @file:OptIn(InternalAgentToolsApi::class, InternalAgentsApi::class)
 
-package ai.koog.agents.core.tools
+package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentTestBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest

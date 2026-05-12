@@ -1,6 +1,10 @@
-package ai.koog.agents.core.tools
+package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
+import ai.koog.agents.core.tools.ToolCallMetadata
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.schema.defaultJsonSchemaConfig
 import ai.koog.agents.core.tools.schema.getToolDescriptor

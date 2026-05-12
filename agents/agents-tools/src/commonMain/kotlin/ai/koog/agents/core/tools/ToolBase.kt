@@ -18,7 +18,7 @@ import kotlinx.schema.generator.json.JsonSchemaConfig
  *
  * - [Tool] is the conventional shape with an [Tool.execute] taking only the arguments. Existing
  *   subclasses keep working unchanged.
- * - [ai.koog.agents.core.tools.AgentContextAwareTool] (in `agents-core`) gives the implementation
+ * - [ai.koog.agents.core.agent.AgentContextAwareTool] (in `agents-core`) gives the implementation
  *   typed access to the live `AIAgentContext` driving the current call.
  *
  * A subclass that needs raw [ToolCallMetadata] (for example to read a trace span id contributed by a

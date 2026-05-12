@@ -3,7 +3,7 @@ package ai.koog.agents.core.environment
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.tools.AgentContextAwareTool
+import ai.koog.agents.core.agent.AgentContextAwareTool
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONObject
