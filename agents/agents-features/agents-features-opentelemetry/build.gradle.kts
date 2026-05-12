@@ -1,8 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.multiplatform")

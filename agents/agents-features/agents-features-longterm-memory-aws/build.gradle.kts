@@ -1,8 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 import org.gradle.api.tasks.testing.Test
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.multiplatform")

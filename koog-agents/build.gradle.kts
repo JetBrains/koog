@@ -1,8 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 import ai.koog.gradle.xcframework.XCFrameworkConfig.configureFrameworkExportsIfRequested
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.multiplatform")
