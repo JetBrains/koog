@@ -219,7 +219,7 @@ class H2JdbcCheckpointBackwardCompatibilityTest {
 
         assertEquals(nodePath, checkpoint.nodePath)
         assertEquals(lastOutput, checkpoint.lastOutput)
-        assertEquals(customValue, checkpoint.properties.entries[customKey])
+        assertEquals(customValue, checkpoint.properties?.entries[customKey])
     }
 
     companion object {

@@ -33,6 +33,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.RollbackToolRegistry
 import ai.koog.agents.snapshot.feature.withPersistence
@@ -401,11 +402,9 @@ class CheckpointsTests {
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
             version = 0,
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive(path(convId, "straight-forward", "Node2")),
-                    "lastInput" to JSONPrimitive("Test input")
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(convId, "straight-forward", "Node2"),
+                lastInput = JSONPrimitive("Test input")
             )
         )
 
@@ -446,11 +445,9 @@ class CheckpointsTests {
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
             version = 0,
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive(path(sessionId, "straight-forward", "Node1")),
-                    "lastInput" to JSONPrimitive("Test input")
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node1"),
+                lastInput = JSONPrimitive("Test input")
             )
         )
 
@@ -462,11 +459,9 @@ class CheckpointsTests {
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
             version = testCheckpoint2.version + 1,
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive(path(sessionId, "straight-forward", "Node2")),
-                    "lastInput" to JSONPrimitive("Test input")
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node2"),
+                lastInput = JSONPrimitive("Test input")
             )
         )
 
@@ -724,13 +719,10 @@ class CheckpointsTests {
             lastMessageHistory
         )
 
-        val nodePath = lastCheckpoint.properties?.entries?.get("nodePath") as? JSONPrimitive
-        assertTrue(
-            nodePath?.content?.endsWith("executeTool") == true,
-            message = "Last checkpoint node should be `executeTool`"
-        )
+        val nodePath = lastCheckpoint.graphProperties?.nodePath
+        assertEquals(nodePath?.endsWith("executeTool"), true, "Last checkpoint node should be `executeTool`")
 
-        val lastOutput = lastCheckpoint.properties?.entries?.get("lastOutput")
+        val lastOutput = lastCheckpoint.graphProperties?.lastOutput
         assertTrue(
             lastOutput.toString().contains("Ferdinand Magellan"),
             message = "Last checkpointed node should be an `executeTool` with \"Ferdinand Magellan\" as an output (already calculated)"
@@ -900,35 +892,30 @@ class CheckpointsTests {
 
         checkpointStorage.removeCheckpoints()
 
-        val nodePathStr = (lastCheckpoint.properties?.entries?.get("nodePath") as? JSONPrimitive)?.content
+        val nodePathStr = lastCheckpoint.graphProperties?.nodePath!!
         checkpointStorage.saveCheckpoint(
             agent.id,
             lastCheckpoint.copy(
                 version = 0,
-                properties = JSONObject(
-                    mapOf(
-                        "nodePath" to JSONPrimitive(nodePathStr),
-                        "lastInput" to Json.encodeToJsonElement(
-                            Message.Tool.Call(
-                                id = "call-1",
-                                tool = "ask",
-                                content = "{\"message\":\"Who discovered this?\"}",
-                                metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-02T22:35:01+01:00"))
-                            )
-                        ).toKoogJSONElement()
-                    )
+                graphProperties = GraphCheckpointProperties(
+                    nodePath = nodePathStr,
+                    lastInput = Json.encodeToJsonElement(
+                        Message.Tool.Call(
+                            id = "call-1",
+                            tool = "ask",
+                            content = "{\"message\":\"Who discovered this?\"}",
+                            metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-02T22:35:01+01:00"))
+                        )
+                    ).toKoogJSONElement()
                 )
             )
         )
 
         println(checkpointStorage.getLatestCheckpoint(agent.id))
 
-        assertTrue(
-            nodePathStr?.endsWith("executeTool") == true,
-            message = "Last checkpoint node should be `executeTool`"
-        )
+        assertEquals(nodePathStr?.endsWith("executeTool"), true, "Last checkpoint node should be `executeTool`")
 
-        val lastOutput = lastCheckpoint.properties?.entries?.get("lastOutput")
+        val lastOutput = lastCheckpoint.graphProperties?.lastOutput
         assertTrue(
             lastOutput.toString().contains("Ferdinand Magellan"),
             message = "Last checkpointed node should be an `executeTool` with \"Ferdinand Magellan\" as an output (already calculated)"

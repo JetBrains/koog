@@ -1,3 +1,5 @@
+package ai.koog.agents.snapshot.providers.file
+
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.execution.path
@@ -5,9 +7,9 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.createCheckpointGraphWithRollback
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.isTombstone
-import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider
 import ai.koog.agents.snapshot.straightForwardGraphNoCheckpoint
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
@@ -134,11 +136,9 @@ class FileCheckpointsTests {
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
             version = 0L,
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive(path(agentId, "straight-forward", "Node2")),
-                    "lastInput" to JSONPrimitive("Test input")
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(agentId, "straight-forward", "Node2"),
+                lastInput = JSONPrimitive("Test input")
             )
         )
 
@@ -181,11 +181,9 @@ class FileCheckpointsTests {
                 Message.User("Node 2 output (already calculated)", metaInfo = RequestMetaInfo(time))
             ),
             version = 0L,
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive(path(agentId, "straight-forward", "Node2")),
-                    "lastOutput" to JSONPrimitive("Test output")
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(agentId, "straight-forward", "Node2"),
+                lastOutput = JSONPrimitive("Test output")
             )
         )
 
@@ -226,11 +224,9 @@ class FileCheckpointsTests {
                 Message.Assistant("Earlier response", metaInfo = ResponseMetaInfo(time))
             ),
             version = 0L,
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive(path(agentId, "straight-forward", "Node1")),
-                    "lastInput" to JSONPrimitive("Test input")
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(agentId, "straight-forward", "Node1"),
+                lastInput = JSONPrimitive("Test input")
             )
         )
 
@@ -242,11 +238,9 @@ class FileCheckpointsTests {
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
             version = testCheckpoint2.version.plus(1),
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive(path(agentId, "straight-forward", "Node2")),
-                    "lastInput" to JSONPrimitive("Test input")
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(agentId, "straight-forward", "Node2"),
+                lastInput = JSONPrimitive("Test input")
             )
         )
 

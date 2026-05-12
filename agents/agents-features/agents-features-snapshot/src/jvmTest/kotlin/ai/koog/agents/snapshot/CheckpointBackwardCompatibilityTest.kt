@@ -175,6 +175,6 @@ class CheckpointBackwardCompatibilityTest {
 
         assertEquals(nodePath, checkpoint.nodePath)
         assertEquals(lastOutput, checkpoint.lastOutput)
-        assertEquals(customValue, checkpoint.properties.entries[customKey])
+        assertEquals(customValue, checkpoint.properties?.entries[customKey])
     }
 }

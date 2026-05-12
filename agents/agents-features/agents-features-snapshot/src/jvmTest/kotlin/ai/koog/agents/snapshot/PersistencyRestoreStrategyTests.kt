@@ -3,6 +3,7 @@ package ai.koog.agents.snapshot
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -33,11 +34,9 @@ class PersistenceRestoreStrategyTests {
             createdAt = KoogClock.System.now(),
             messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(KoogClock.System.now()))),
             version = 0L,
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive("$agentId/restore-strategy/Node2"),
-                    "lastInput" to JSONPrimitive("input-for-node2")
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = "$agentId/restore-strategy/Node2",
+                lastInput = JSONPrimitive("input-for-node2")
             )
         )
 

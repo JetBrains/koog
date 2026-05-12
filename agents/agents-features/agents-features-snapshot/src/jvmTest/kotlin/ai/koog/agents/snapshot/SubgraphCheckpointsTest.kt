@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -187,11 +188,9 @@ class SubgraphCheckpointsTest {
             createdAt = KoogClock.System.now(),
             messageHistory = listOf(),
             version = 1L,
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive(path(agentId, "repeated-subgraphs-test", "sg1", "sgNode1")),
-                    "lastInput" to JSONPrimitive("Input at checkpoint")
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(agentId, "repeated-subgraphs-test", "sg1", "sgNode1"),
+                lastInput = JSONPrimitive("Input at checkpoint")
             )
         )
 

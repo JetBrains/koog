@@ -143,10 +143,7 @@ public class Persistence(
                 val checkpoint = persistence.rollbackToLatestCheckpoint(ctx.context)
 
                 if (checkpoint != null) {
-                    val nodePath = ctx.context.config.serializer.decodeFromJSONElement<GraphCheckpointProperties>(
-                        checkpoint.properties,
-                        typeToken<GraphCheckpointProperties>()
-                    )
+                    val nodePath = checkpoint.graphProperties?.nodePath
                     logger.info { "Restoring checkpoint: ${checkpoint.checkpointId} to node $nodePath" }
                 } else {
                     logger.info { "No non-tombstone checkpoint found, starting from the beginning" }
@@ -369,11 +366,9 @@ public class Persistence(
             messageHistory = agentContext.getHistory(),
             createdAt = clock.now(),
             version = version,
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive(agentContext.executionInfo.path()),
-                    "lastInput" to inputJson,
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = agentContext.executionInfo.path(),
+                lastInput = inputJson
             ),
         )
 
@@ -419,12 +414,10 @@ public class Persistence(
             messageHistory = agentContext.getHistory(),
             createdAt = clock.now(),
             version = version,
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive(agentContext.executionInfo.path()),
-                    "lastOutput" to outputJson,
-                )
-            ),
+            graphProperties = GraphCheckpointProperties(
+                nodePath = agentContext.executionInfo.path(),
+                lastOutput = outputJson
+            )
         )
 
         saveCheckpoint(agentContext.runId, checkpoint)
@@ -465,25 +458,23 @@ public class Persistence(
             return null
         }
 
-        val executionPointJson = try {
-            agentContext.config.serializer.encodeToJSONElement(executionPoint, typeToken<PlannerAgentExecutionPoint>())
-        } catch (_: Exception) {
-            logger.warn { "Failed to serialize execution point for planner checkpoint, skipping checkpoint creation..." }
-            return null
-        }
+//        val executionPointJson = try {
+//            agentContext.config.serializer.encodeToJSONElement(executionPoint, typeToken<PlannerAgentExecutionPoint>())
+//        } catch (_: Exception) {
+//            logger.warn { "Failed to serialize execution point for planner checkpoint, skipping checkpoint creation..." }
+//            return null
+//        }
 
         val checkpoint = AgentCheckpointData(
             checkpointId = checkpointId ?: Uuid.random().toString(),
             messageHistory = agentContext.getHistory(),
             createdAt = clock.now(),
             version = version,
-            properties = JSONObject(
-                mapOf(
-                    "executionPoint" to executionPointJson,
-                    "state" to stateJson,
-                    "plan" to planJson
-                )
-            ),
+            plannerProperties = PlannerCheckpointProperties(
+                executionPoint = executionPoint,
+                state = stateJson,
+                plan = planJson
+            )
         )
 
         saveCheckpoint(agentContext.runId, checkpoint)
@@ -652,7 +643,7 @@ public class Persistence(
                 }
         }
 
-        val contextData = checkpoint.toAgentContextData(rollbackStrategy, agentContext.config.serializer, rollbackAction) ?: return null
+        val contextData = checkpoint.toAgentContextData(rollbackStrategy, rollbackAction) ?: return null
         agentContext.store(contextData)
         return checkpoint
     }
@@ -691,7 +682,7 @@ public class Persistence(
         agentContext: AIAgentContext
     ): AgentCheckpointData? {
         val checkpoint = getLatestCheckpoint(agentContext.runId)
-        val contextData = checkpoint?.toAgentContextData(rollbackStrategy, agentContext.config.serializer) ?: return null
+        val contextData = checkpoint?.toAgentContextData(rollbackStrategy) ?: return null
         agentContext.store(contextData)
         return checkpoint
     }

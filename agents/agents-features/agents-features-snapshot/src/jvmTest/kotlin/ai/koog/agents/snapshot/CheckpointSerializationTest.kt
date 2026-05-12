@@ -1,6 +1,7 @@
 package ai.koog.agents.snapshot
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.tombstoneCheckpoint
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.prompt.message.Message
@@ -33,11 +34,9 @@ class CheckpointSerializationTest {
             createdAt = now,
             messageHistory = sampleMessages(now),
             version = 0L,
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive("NodeA"),
-                    "lastOutput" to JSONPrimitive("last-input")
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = "NodeA",
+                lastOutput = JSONPrimitive("last-input")
             )
         )
 
@@ -49,9 +48,9 @@ class CheckpointSerializationTest {
         // Thorough field-by-field assertions
         assertEquals("cp-1", restored.checkpointId)
         assertEquals(now, restored.createdAt)
-        val nodePath = restored.properties?.entries?.get("nodePath") as? JSONPrimitive
-        assertEquals("NodeA", nodePath?.content)
-        assertEquals(JSONPrimitive("last-input"), restored.properties?.entries?.get("lastOutput"))
+        val nodePath = restored.graphProperties?.nodePath
+        assertEquals("NodeA", nodePath)
+        assertEquals(JSONPrimitive("last-input"), restored.graphProperties?.lastOutput)
 
         // Message history assertions
         assertEquals(2, restored.messageHistory.size)
@@ -73,13 +72,6 @@ class CheckpointSerializationTest {
             put("string", "value")
             put("number", 42)
             put("boolean", true)
-            put("nodePath", "NodeB")
-            put(
-                "lastOutput",
-                buildJsonObject {
-                    put("inputKey", "inputVal")
-                }
-            )
             put(
                 "nested",
                 buildJsonObject {
@@ -99,7 +91,11 @@ class CheckpointSerializationTest {
             createdAt = now,
             messageHistory = sampleMessages(now),
             properties = properties,
-            version = 0L
+            version = 0L,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = "NodeB",
+                lastOutput = JSONObject(mapOf("inputKey" to JSONPrimitive("inputVal")))
+            )
         )
 
         val json = PersistenceUtils.defaultCheckpointJson

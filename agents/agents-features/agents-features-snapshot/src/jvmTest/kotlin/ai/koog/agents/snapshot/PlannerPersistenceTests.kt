@@ -14,6 +14,7 @@ import ai.koog.agents.planner.llm.SimpleLLMPlanner
 import ai.koog.agents.planner.llm.SimplePlan
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistence
+import ai.koog.agents.snapshot.feature.PlannerCheckpointProperties
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -169,13 +170,11 @@ class PlannerPersistenceTests {
             createdAt = Clock.System.now(),
             messageHistory = emptyList(),
             version = 0,
-            properties = JSONObject(
-                mapOf(
-                    "executionPoint" to KotlinxSerializer().encodeToJSONElement(executionPoint, typeToken<PlannerAgentExecutionPoint>()),
-                    "state" to JSONPrimitive(state),
-                    "plan" to JSONPrimitive(plan)
-                )
-            ),
+            plannerProperties = PlannerCheckpointProperties(
+                executionPoint = executionPoint,
+                state = JSONPrimitive(state),
+                plan = JSONPrimitive(plan)
+            )
         )
 
         testStorage.saveCheckpoint(runId, checkpoint)

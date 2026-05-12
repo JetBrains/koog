@@ -1,6 +1,7 @@
 package ai.koog.agents.snapshot.providers.file
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -52,11 +53,9 @@ class FileAgentCheckpointStorageProviderTest {
             createdAt = createdAt,
             messageHistory = messageHistory,
             version = 0L,
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive(nodeId),
-                    "lastOutput" to lastInput
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = nodeId,
+                lastOutput = lastInput
             )
         )
 
@@ -72,9 +71,9 @@ class FileAgentCheckpointStorageProviderTest {
         val retrievedCheckpoint = checkpoints.first()
         assertEquals(checkpointId, retrievedCheckpoint.checkpointId)
         assertEquals(createdAt, retrievedCheckpoint.createdAt)
-        val retrievedNodePath = retrievedCheckpoint.properties?.entries?.get("nodePath") as? JSONPrimitive
-        assertEquals(nodeId, retrievedNodePath?.content)
-        assertEquals(lastInput, retrievedCheckpoint.properties?.entries?.get("lastOutput"))
+        val retrievedNodePath = retrievedCheckpoint.graphProperties?.nodePath
+        assertEquals(nodeId, retrievedNodePath)
+        assertEquals(lastInput, retrievedCheckpoint.graphProperties?.lastOutput)
         assertEquals(messageHistory.size, retrievedCheckpoint.messageHistory.size)
 
         // Check first message (User)
@@ -100,11 +99,9 @@ class FileAgentCheckpointStorageProviderTest {
             createdAt = laterCreatedAt,
             messageHistory = messageHistory,
             version = checkpoint.version.plus(1),
-            properties = JSONObject(
-                mapOf(
-                    "nodePath" to JSONPrimitive(nodeId),
-                    "lastOutput" to lastInput
-                )
+            graphProperties = GraphCheckpointProperties(
+                nodePath = nodeId,
+                lastOutput = lastInput
             )
         )
 

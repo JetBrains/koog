@@ -100,7 +100,6 @@ public abstract class AIAgentPlanner<State : Any, Plan : Any>(
             }
 
             if (executionPoint == null) {
-                executionPoint = null
                 context.with(partName = "buildPlan-${stepIndex + 1}") { executionInfo, eventId ->
                     context.pipeline.onPlanCreationStarting(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex + 1)
                     val newPlan = buildPlan(context, state, plan)

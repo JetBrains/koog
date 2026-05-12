@@ -130,8 +130,8 @@ class SimpleGraphCheckpointTest {
         val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull()
         assertNotNull(checkpoint, "No checkpoint was created")
         val expectedPath = path(agentId, checkpointStrategyName, checkpointNodeId)
-        val nodePath = checkpoint?.properties?.entries?.get("nodePath") as? JSONPrimitive
-        assertEquals(expectedPath, nodePath?.content, "Checkpoint has incorrect node ID")
+        val nodePath = checkpoint?.graphProperties?.nodePath
+        assertEquals(expectedPath, nodePath, "Checkpoint has incorrect node ID")
     }
 
     @Test
@@ -181,8 +181,8 @@ class SimpleGraphCheckpointTest {
 
         val expectedPath = "$agentId${DEFAULT_AGENT_PATH_SEPARATOR}$checkpointStrategyName${DEFAULT_AGENT_PATH_SEPARATOR}$checkpointNodeId"
         assertNotNull(checkpoint, "No checkpoint was created")
-        val nodePath = checkpoint.properties?.entries?.get("nodePath") as? JSONPrimitive
-        assertEquals(expectedPath, nodePath?.content, "Checkpoint has incorrect node ID")
+        val nodePath = checkpoint.graphProperties?.nodePath
+        assertEquals(expectedPath, nodePath, "Checkpoint has incorrect node ID")
         assertEquals(3, checkpoint.messageHistory.size)
         assertEquals(input, checkpoint.messageHistory[0].content)
         assertEquals("Node 1 output", checkpoint.messageHistory[1].content)

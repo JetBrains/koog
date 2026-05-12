@@ -46,18 +46,20 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable(with = AgentCheckpointDataSerializer::class)
 @KeepGeneratedSerializer
-public data class AgentCheckpointData(
+public data class AgentCheckpointData internal constructor(
     val checkpointId: String,
     val createdAt: Instant,
     val messageHistory: List<Message>,
     val version: Long,
-    val properties: JSONObject
+    val graphProperties: GraphCheckpointProperties?,
+    val plannerProperties: PlannerCheckpointProperties?,
+    val properties: JSONObject?
 ) {
 
     /**
-     * Creates an instance of `AgentCheckpointData` using graph properties.
+     * Creates an instance of `AgentCheckpointData` with graph properties.
      */
-    @Deprecated("The nodePath, lastInput, and lastOutput should be put in the properties")
+    @Deprecated("Use the constructor with `GraphCheckpointProperties` instead")
     public constructor(
         checkpointId: String,
         createdAt: Instant,
@@ -72,14 +74,52 @@ public data class AgentCheckpointData(
         createdAt,
         messageHistory,
         version,
+        GraphCheckpointProperties(nodePath, lastInput ?: JSONNull, lastOutput ?: JSONNull),
         JSONObject(
             buildMap {
                 properties?.entries?.let { putAll(it) }
-                put("nodePath", JSONPrimitive(nodePath))
-                put("lastInput", lastInput ?: JSONNull)
-                put("lastOutput", lastOutput ?: JSONNull)
             }
         )
+    )
+
+    /**
+     * Creates an instance of `AgentCheckpointData` with graph properties.
+     */
+     public constructor(
+        checkpointId: String,
+        createdAt: Instant,
+        messageHistory: List<Message>,
+        version: Long,
+        graphProperties: GraphCheckpointProperties,
+        properties: JSONObject? = null,
+    ) : this(
+        checkpointId,
+        createdAt,
+        messageHistory,
+        version,
+        graphProperties,
+        null,
+        properties
+    )
+
+    /**
+     * Creates an instance of `AgentCheckpointData` with planner properties.
+     */
+    public constructor(
+        checkpointId: String,
+        createdAt: Instant,
+        messageHistory: List<Message>,
+        version: Long,
+        plannerProperties: PlannerCheckpointProperties,
+        properties: JSONObject? = null,
+    ) : this(
+        checkpointId,
+        createdAt,
+        messageHistory,
+        version,
+        null,
+        plannerProperties,
+        properties
     )
 
     /**
@@ -87,30 +127,21 @@ public data class AgentCheckpointData(
      */
     @Deprecated("nodePath is deprecated, use properties[\"nodePath\"] instead")
     public val nodePath: String
-        get() = properties
-            .entries["nodePath"]
-            ?.toKotlinxJsonElement()
-            ?.jsonPrimitive
-            ?.content
-            ?: error("nodePath is not set")
+        get() = graphProperties?.nodePath ?: error("nodePath is not set")
 
     /**
      * Serialized input received for node with [nodePath]
      */
     @Deprecated("lstInput is deprecated, use properties[\"lastInput\"] instead")
     public val lastInput: JSONElement
-        get() = properties
-            .entries["lastInput"]
-            ?: error("lastInput is not set")
+        get() = graphProperties?.lastInput ?: error("lastInput is not set")
 
     /**
      * Serialized output received from node with [nodePath]
      */
     @Deprecated("lstOutput is deprecated, use properties[\"lastOutput\"] instead")
     public val lastOutput: JSONElement
-        get() = properties
-            .entries["lastOutput"]
-            ?: error("lastOutput is not set")
+        get() = graphProperties?.lastOutput ?: error("lastOutput is not set")
 }
 
 /**
@@ -139,8 +170,7 @@ public object AgentCheckpointDataSerializer : JsonTransformingSerializer<AgentCh
         val lastInput = element["lastInput"] ?: JsonNull
         val lastOutput = element["lastOutput"] ?: JsonNull
 
-        val mergedProperties = buildJsonObject {
-            (element["properties"] as? JsonObject)?.forEach { (k, v) -> put(k, v) }
+        val graphProperties = buildJsonObject {
             put("nodePath", nodePath)
             put("lastInput", lastInput)
             put("lastOutput", lastOutput)
@@ -148,9 +178,9 @@ public object AgentCheckpointDataSerializer : JsonTransformingSerializer<AgentCh
 
         return buildJsonObject {
             for ((k, v) in element) {
-                if (k !in setOf("nodePath", "lastInput", "lastOutput", "properties")) put(k, v)
+                if (k !in setOf("nodePath", "lastInput", "lastOutput")) put(k, v)
             }
-            put("properties", mergedProperties)
+            put("graphProperties", graphProperties)
         }
     }
 
@@ -173,6 +203,8 @@ public fun tombstoneCheckpoint(
         createdAt = createdAt,
         messageHistory = emptyList(),
         version = version,
+        null,
+        null,
         properties = JSONObject(
             mapOf(
                 PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME to JSONPrimitive(true)
@@ -194,12 +226,7 @@ public data class GraphCheckpointProperties(
     @Deprecated("Use lastOutput instead, lastOutput will be removed in future versions")
     public val lastInput: JSONElement = JSONNull,
     public val lastOutput: JSONElement = JSONNull
-) {
-    init {
-        require(lastInput == JSONNull || lastOutput == JSONNull) { "`lastInput` and `lastOutput` cannot be both set" }
-        require(lastInput != JSONNull || lastOutput != JSONNull) { "`lastInput` (until 0.6.0) or `lastOutput` (since 0.6.1) must be set" }
-    }
-}
+)
 
 /**
  * Specialized data for planner agents, capturing state, plan, and current execution point.
@@ -221,46 +248,31 @@ public data class PlannerCheckpointProperties(
 @InternalAgentsApi
 public fun AgentCheckpointData.toAgentContextData(
     rollbackStrategy: RollbackStrategy,
-    serializer: JSONSerializer = KotlinxSerializer(),
     additionalRollbackActions: suspend (AIAgentContext) -> Unit = {}
 ): AgentContextData? {
-    runCatching {
-        serializer.decodeFromJSONElement<GraphCheckpointProperties>(
-            properties,
-            typeToken<GraphCheckpointProperties>()
+    return when {
+        graphProperties != null -> GraphAgentContextData(
+            messageHistory,
+            graphProperties.nodePath,
+            graphProperties.lastInput,
+            graphProperties.lastOutput,
+            rollbackStrategy,
+            additionalRollbackActions
         )
-    }.getOrNull()?.let { graphProperties ->
-        return GraphAgentContextData(
-            messageHistory = messageHistory,
-            nodePath = graphProperties.nodePath,
-            lastInput = graphProperties.lastInput,
-            lastOutput = graphProperties.lastOutput,
-            rollbackStrategy = rollbackStrategy,
-            additionalRollbackActions = additionalRollbackActions
+        plannerProperties != null -> PlannerAgentContextData(
+            messageHistory,
+            plannerProperties.state,
+            plannerProperties.plan,
+            plannerProperties.executionPoint,
+            rollbackStrategy,
+            additionalRollbackActions
         )
+        else -> null
     }
-
-    runCatching {
-        serializer.decodeFromJSONElement<PlannerCheckpointProperties>(
-            properties,
-            typeToken<PlannerCheckpointProperties>()
-        )
-    }.getOrNull()?.let { plannerProperties ->
-        return PlannerAgentContextData(
-            messageHistory = messageHistory,
-            state = plannerProperties.state,
-            plan = plannerProperties.plan,
-            executionPoint = plannerProperties.executionPoint,
-            rollbackStrategy = rollbackStrategy,
-            additionalRollbackActions = additionalRollbackActions
-        )
-    }
-
-    return null
 }
 
 /**
  * Checks whether the `AgentCheckpointData` instance is marked as a tombstone.
  */
 public fun AgentCheckpointData.isTombstone(): Boolean =
-    properties.entries[PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME] == JSONPrimitive(true)
+    properties?.entries[PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME] == JSONPrimitive(true)
