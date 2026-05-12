@@ -150,11 +150,9 @@ public interface KoogHttpClient : AutoCloseable {
     }
 
     /**
-     * Easter egg companion object. Guess why it's here.
-     *
-     * Hint: it was created in order to not bring Ktor and other dependencies to the interface declaration
-     * */
-    public companion object
+     * Companion anchor used by extensions such as [defaultFactoryHolder].
+     */
+    public companion object {}
 }
 
 /**

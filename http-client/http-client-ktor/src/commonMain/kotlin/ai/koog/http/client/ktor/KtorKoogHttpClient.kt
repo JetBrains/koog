@@ -1,5 +1,6 @@
 package ai.koog.http.client.ktor
 
+import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
 import ai.koog.http.client.mergeHeaders
@@ -281,13 +282,21 @@ public class KtorKoogHttpClient internal constructor(
     }
 
     /**
+     * Companion anchor for [KtorKoogHttpClient] extensions such as [installAsDefault].
+     */
+    public companion object {}
+
+    /**
      * [KoogHttpClient.Factory] implementation backed by Ktor [HttpClient].
+     *
+     * The primary constructor is `@JvmOverloads` so that JVM consumers (including reflective
+     * instantiation by `ServiceLoader`) see a no-arg constructor.
      *
      * @property baseClient Base Ktor client used to create configured clients.
      * @property withSse Whether created clients should install Ktor SSE support.
      * @property logger Logger used by created clients.
      */
-    public class Factory(
+    public class Factory @JvmOverloads public constructor(
         private val baseClient: HttpClient = HttpClient(),
         private val withSse: Boolean = true,
         private val logger: KLogger = KotlinLogging.logger {}
@@ -361,50 +370,14 @@ public fun KoogHttpClient.Companion.fromKtorClient(
 ): KoogHttpClient = KtorKoogHttpClient(clientName, logger, baseClient, configurer)
 
 /**
- * Creates an instance of `KoogHttpClient` using Ktor's `HttpClient` and additional configuration options.
+ * Installs a default [KtorKoogHttpClient.Factory] into [DefaultHttpClientFactoryHolder].
  *
- * This method combines a base `HttpClient` with predefined configurations for request handling,
- * such as timeouts, headers, query parameters, content type, and optional Server-Sent Events (SSE) support.
- *
- * @param clientName The name assigned to the client instance, used for logging and traceability purposes.
- * @param logger A `KLogger` instance for logging client operations and errors.
- * @param baseClient The base Ktor `HttpClient` instance to be used. Defaults to a new `HttpClient` instance.
- * @param baseUrl The base URL for all HTTP requests made through this client.
- * @param requestTimeoutMillis The timeout in milliseconds for HTTP requests.
- * @param connectTimeoutMillis The timeout in milliseconds for establishing a connection.
- * @param socketTimeoutMillis The timeout in milliseconds for socket operations.
- * @param json A `Json` instance used for serializing request bodies and deserializing responses.
- * @param headers A map of default HTTP headers to include in every request. Defaults to an empty map.
- * @param queryParameters A map of default query parameters to include in every request. Defaults to an empty map.
- * @param withSse A flag indicating whether the client should support Server-Sent Events (SSE). Defaults to `true`.
- * @return A `KoogHttpClient` instance configured with the specified parameters and options.
+ * Call this once at application startup on targets that lack a runtime discovery mechanism
+ * for [KoogHttpClient.Factory] providers (JS, native, Wasm). On JVM, the same factory is
+ * registered automatically through the `ServiceLoader` SPI when `http-client-ktor` is on the
+ * runtime classpath.
  */
-@Deprecated(
-    "Use KtorKoogHttpClient.Factory instead",
-    ReplaceWith("KtorKoogHttpClient.Factory(baseClient, withSse).create(clientName, baseUrl, headers, queryParameters, requestTimeoutMillis, connectTimeoutMillis, socketTimeoutMillis, json)")
-)
 @Experimental
-@JvmOverloads
-public fun KoogHttpClient.Companion.fromKtorClient(
-    clientName: String,
-    logger: KLogger,
-    baseClient: HttpClient = HttpClient(),
-    baseUrl: String,
-    requestTimeoutMillis: Long = KoogHttpClient.Factory.DEFAULT_REQUEST_TIMEOUT_MS,
-    connectTimeoutMillis: Long = KoogHttpClient.Factory.DEFAULT_CONNECT_TIMEOUT_MS,
-    socketTimeoutMillis: Long = KoogHttpClient.Factory.DEFAULT_SOCKET_TIMEOUT_MS,
-    json: Json,
-    headers: Map<String, String> = emptyMap(),
-    queryParameters: Map<String, String> = emptyMap(),
-    withSse: Boolean = true,
-): KtorKoogHttpClient =
-    KtorKoogHttpClient.Factory(baseClient, withSse, logger).create(
-        clientName,
-        baseUrl,
-        headers,
-        queryParameters,
-        requestTimeoutMillis,
-        connectTimeoutMillis,
-        socketTimeoutMillis,
-        json
-    )
+public fun KtorKoogHttpClient.Companion.installAsDefault() {
+    DefaultHttpClientFactoryHolder.setDefault(KtorKoogHttpClient.Factory())
+}
