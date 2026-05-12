@@ -14,6 +14,7 @@ import ai.koog.integration.tests.utils.TestUtils.assertExceptionMessageContains
 import ai.koog.integration.tests.utils.TestUtils.isValidJson
 import ai.koog.integration.tests.utils.TestUtils.singlePropertyObjectSchema
 import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
+import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
@@ -77,9 +78,18 @@ class ModelCapabilitiesIntegrationTest {
         val anthropicKey = readTestAnthropicKeyFromEnv()
         val googleKey = readTestGoogleAIKeyFromEnv()
 
-        openAIClient = OpenAILLMClient(openAIKey)
-        anthropicClient = AnthropicLLMClient(anthropicKey)
-        googleClient = GoogleLLMClient(googleKey)
+        openAIClient = OpenAILLMClient(
+            apiKey = openAIKey,
+            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+        )
+        anthropicClient = AnthropicLLMClient(
+            apiKey = anthropicKey,
+            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+        )
+        googleClient = GoogleLLMClient(
+            apiKey = googleKey,
+            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+        )
         executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val resourceUrl = this::class.java.getResource("/media") ?: error("Resource folder '/media' not found.")

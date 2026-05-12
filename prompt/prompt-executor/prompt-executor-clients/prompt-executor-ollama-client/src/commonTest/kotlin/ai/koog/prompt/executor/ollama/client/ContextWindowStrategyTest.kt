@@ -9,6 +9,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.PromptTokenizer
 import ai.koog.utils.time.KoogClock
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -22,7 +23,7 @@ class ContextWindowStrategyTest {
         val mockServer = MockOllamaChatServer { request -> makeDummyResponse(request) }
 
         val ollamaClient = OllamaClient(
-            baseClient = HttpClient(mockServer.mockEngine),
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockServer.mockEngine)),
             contextWindowStrategy = ContextWindowStrategy.Companion.None,
         )
 
@@ -44,7 +45,7 @@ class ContextWindowStrategyTest {
         val mockServer = MockOllamaChatServer { request -> makeDummyResponse(request) }
 
         val ollamaClient = OllamaClient(
-            baseClient = HttpClient(mockServer.mockEngine),
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockServer.mockEngine)),
             contextWindowStrategy = ContextWindowStrategy.Companion.Fixed(42),
         )
 
@@ -66,7 +67,7 @@ class ContextWindowStrategyTest {
         val mockServer = MockOllamaChatServer { request -> makeDummyResponse(request) }
 
         val ollamaClient = OllamaClient(
-            baseClient = HttpClient(mockServer.mockEngine),
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockServer.mockEngine)),
             contextWindowStrategy = ContextWindowStrategy.Companion.FitPrompt(
                 promptTokenizer = object : PromptTokenizer {
                     override fun tokenCountFor(message: Message): Int = error("Not needed")
@@ -95,7 +96,7 @@ class ContextWindowStrategyTest {
         val mockServer = MockOllamaChatServer { request -> makeDummyResponse(request) }
 
         val ollamaClient = OllamaClient(
-            baseClient = HttpClient(mockServer.mockEngine),
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockServer.mockEngine)),
             contextWindowStrategy = ContextWindowStrategy.Companion.FitPrompt(
                 promptTokenizer = null,
                 contextChunkSize = 1024,
@@ -121,7 +122,7 @@ class ContextWindowStrategyTest {
         val mockServer = MockOllamaChatServer { request -> makeDummyResponse(request) }
 
         val ollamaClient = OllamaClient(
-            baseClient = HttpClient(mockServer.mockEngine),
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockServer.mockEngine)),
             contextWindowStrategy = ContextWindowStrategy.Companion.FitPrompt(
                 promptTokenizer = null,
                 contextChunkSize = 1024,
@@ -157,7 +158,7 @@ class ContextWindowStrategyTest {
         val mockServer = MockOllamaChatServer { request -> makeDummyResponse(request) }
 
         val ollamaClient = OllamaClient(
-            baseClient = HttpClient(mockServer.mockEngine),
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockServer.mockEngine)),
             contextWindowStrategy = ContextWindowStrategy.Companion.FitPrompt(
                 promptTokenizer = object : PromptTokenizer {
                     override fun tokenCountFor(message: Message): Int = error("Not needed")

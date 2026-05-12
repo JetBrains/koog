@@ -41,6 +41,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(project(":http-client:http-client-ktor"))
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.client.mock)
                 runtimeOnly(libs.slf4j.simple)

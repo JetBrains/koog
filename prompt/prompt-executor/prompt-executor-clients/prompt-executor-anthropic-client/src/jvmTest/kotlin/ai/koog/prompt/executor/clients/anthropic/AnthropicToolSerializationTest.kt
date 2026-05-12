@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.clients.anthropic
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.message.Message
@@ -29,7 +30,7 @@ class AnthropicToolSerializationTest {
 
     @Test
     fun `createAnthropicRequest should handle Null parameter type`() {
-        val client = AnthropicLLMClient(apiKey = "test-key")
+        val client = AnthropicLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="test-key")
         val model = AnthropicModels.Sonnet_4
 
         val tool = ToolDescriptor(
@@ -76,7 +77,7 @@ class AnthropicToolSerializationTest {
 
     @Test
     fun `createAnthropicRequest should throw exception for AnyOf parameter type`() {
-        val client = AnthropicLLMClient(apiKey = "test-key")
+        val client = AnthropicLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="test-key")
         val model = AnthropicModels.Sonnet_4
 
         val tool = ToolDescriptor(
@@ -116,7 +117,7 @@ class AnthropicToolSerializationTest {
 
     @Test
     fun `createAnthropicRequest should handle multiple parameter types including Null`() {
-        val client = AnthropicLLMClient(apiKey = "test-key")
+        val client = AnthropicLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="test-key")
         val model = AnthropicModels.Sonnet_4
 
         val tool = ToolDescriptor(
@@ -190,7 +191,7 @@ class AnthropicToolSerializationTest {
 
     @Test
     fun testCreateAnthropicRequestIncludesIsErrorTrueForErrorToolResult() {
-        val client = AnthropicLLMClient(apiKey = "test-key")
+        val client = AnthropicLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="test-key")
         val model = AnthropicModels.Sonnet_4
         val metaInfo = RequestMetaInfo.create(KoogClock.System)
 
@@ -233,7 +234,7 @@ class AnthropicToolSerializationTest {
 
     @Test
     fun testCreateAnthropicRequestOmitsIsErrorForSuccessfulToolResult() {
-        val client = AnthropicLLMClient(apiKey = "test-key")
+        val client = AnthropicLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="test-key")
         val model = AnthropicModels.Sonnet_4
         val metaInfo = RequestMetaInfo.create(KoogClock.System)
 

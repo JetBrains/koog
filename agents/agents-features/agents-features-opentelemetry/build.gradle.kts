@@ -84,6 +84,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
+                implementation(project(":http-client:http-client-ktor"))
                 implementation(libs.junit.jupiter.params)
 
                 // Real Ktor engine for jvmTest paths that need an actual HTTP transport

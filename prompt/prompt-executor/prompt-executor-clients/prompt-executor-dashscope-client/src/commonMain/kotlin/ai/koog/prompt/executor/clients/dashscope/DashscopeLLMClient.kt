@@ -1,7 +1,6 @@
 package ai.koog.prompt.executor.clients.dashscope
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -24,7 +23,6 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
 
@@ -75,20 +73,6 @@ public class DashscopeLLMClient @JvmOverloads constructor(
     ) : this(
         settings = settings,
         httpClient = createConfiguredHttpClient(apiKey, settings, httpClientFactory, clientName = DASHSCOPE_CLIENT_NAME),
-        clock = clock,
-        toolsConverter = toolsConverter
-    )
-
-    @JvmOverloads
-    public constructor(
-        apiKey: String,
-        settings: DashscopeClientSettings = DashscopeClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
-    ) : this(
-        settings = settings,
-        httpClient = createConfiguredHttpClient(apiKey, settings, KtorKoogHttpClient.Factory(baseClient), clientName = DASHSCOPE_CLIENT_NAME),
         clock = clock,
         toolsConverter = toolsConverter
     )

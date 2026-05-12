@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.llms.all
 
+import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
@@ -21,7 +22,9 @@ import ai.koog.prompt.executor.ollama.client.OllamaClient
  */
 public fun simpleOpenAIExecutor(
     apiToken: String
-): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OpenAILLMClient(apiToken))
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(
+    OpenAILLMClient(apiKey = apiToken, httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
+)
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `OpenAILLMClient` configured for Azure OpenAI.
@@ -37,8 +40,13 @@ public fun simpleAzureOpenAIExecutor(
     deploymentName: String,
     version: AzureOpenAIServiceVersion,
     apiToken: String,
-): SingleLLMPromptExecutor =
-    SingleLLMPromptExecutor(OpenAILLMClient(apiToken, AzureOpenAIClientSettings(resourceName, deploymentName, version)))
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(
+    OpenAILLMClient(
+        apiKey = apiToken,
+        settings = AzureOpenAIClientSettings(resourceName, deploymentName, version),
+        httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+    )
+)
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `OpenAILLMClient` configured for Azure OpenAI.
@@ -52,8 +60,13 @@ public fun simpleAzureOpenAIExecutor(
     baseUrl: String,
     version: AzureOpenAIServiceVersion,
     apiToken: String,
-): SingleLLMPromptExecutor =
-    SingleLLMPromptExecutor(OpenAILLMClient(apiToken, AzureOpenAIClientSettings(baseUrl, version)))
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(
+    OpenAILLMClient(
+        apiKey = apiToken,
+        settings = AzureOpenAIClientSettings(baseUrl, version),
+        httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+    )
+)
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `AnthropicLLMClient`.
@@ -62,7 +75,9 @@ public fun simpleAzureOpenAIExecutor(
  */
 public fun simpleAnthropicExecutor(
     apiKey: String
-): SingleLLMPromptExecutor = SingleLLMPromptExecutor(AnthropicLLMClient(apiKey))
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(
+    AnthropicLLMClient(apiKey = apiKey, httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
+)
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `OpenRouterLLMClient`.
@@ -71,7 +86,9 @@ public fun simpleAnthropicExecutor(
  */
 public fun simpleOpenRouterExecutor(
     apiKey: String
-): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OpenRouterLLMClient(apiKey))
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(
+    OpenRouterLLMClient(apiKey = apiKey, httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
+)
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `GoogleLLMClient`.
@@ -80,7 +97,9 @@ public fun simpleOpenRouterExecutor(
  */
 public fun simpleGoogleAIExecutor(
     apiKey: String
-): SingleLLMPromptExecutor = SingleLLMPromptExecutor(GoogleLLMClient(apiKey))
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(
+    GoogleLLMClient(apiKey = apiKey, httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
+)
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `OllamaClient`.
@@ -89,12 +108,15 @@ public fun simpleGoogleAIExecutor(
  */
 public fun simpleOllamaAIExecutor(
     baseUrl: String = "http://localhost:11434"
-): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OllamaClient(baseUrl))
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(
+    OllamaClient(baseUrl = baseUrl, httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
+)
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with a `MistralAILLMClient`.
  *
  * @param apiKey The API token used for authentication with the Mistral AI provider.
  */
-public fun simpleMistralAIExecutor(apiKey: String): SingleLLMPromptExecutor =
-    SingleLLMPromptExecutor(MistralAILLMClient(apiKey))
+public fun simpleMistralAIExecutor(apiKey: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(
+    MistralAILLMClient(apiKey = apiKey, httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
+)

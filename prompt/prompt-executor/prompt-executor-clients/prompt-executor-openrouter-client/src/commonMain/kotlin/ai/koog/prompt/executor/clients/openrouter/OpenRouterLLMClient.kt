@@ -1,7 +1,6 @@
 package ai.koog.prompt.executor.clients.openrouter
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -33,7 +32,6 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
@@ -90,25 +88,6 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
             apiKey = apiKey,
             settings = settings,
             httpClientFactory = httpClientFactory,
-            clientName = OPENROUTER_CLIENT_NAME
-        ),
-        clock = clock,
-        toolsConverter = toolsConverter
-    )
-
-    @JvmOverloads
-    public constructor(
-        apiKey: String,
-        settings: OpenRouterClientSettings = OpenRouterClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ) : this(
-        settings = settings,
-        httpClient = createConfiguredHttpClient(
-            apiKey = apiKey,
-            settings = settings,
-            httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
             clientName = OPENROUTER_CLIENT_NAME
         ),
         clock = clock,

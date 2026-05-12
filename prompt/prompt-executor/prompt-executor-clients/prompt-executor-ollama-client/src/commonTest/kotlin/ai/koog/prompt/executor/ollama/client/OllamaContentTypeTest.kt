@@ -4,6 +4,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatMessageDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
 import ai.koog.prompt.message.Message
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -30,7 +31,7 @@ class OllamaContentTypeTest {
             )
         }
 
-        val ollamaClient = OllamaClient(baseClient = HttpClient(mockServer.mockEngine))
+        val ollamaClient = OllamaClient(httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockServer.mockEngine)))
 
         val responses = ollamaClient.execute(
             prompt = prompt("test") { user("Hi") },

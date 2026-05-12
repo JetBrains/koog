@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.google
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.list
 import ai.koog.prompt.llm.LLMCapability
@@ -74,7 +75,7 @@ class GoogleModelsTest {
 
         val googleClient = GoogleLLMClient(
             apiKey = "test-key",
-            baseClient = HttpClient(mockEngine) // Ktor client would always respond with the json from above
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockEngine)) // Ktor client would always respond with the json from above
         )
 
         val responses = googleClient.execute(

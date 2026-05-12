@@ -1,5 +1,6 @@
 package ai.koog.spring.prompt.executor.clients.deepseek
 
+import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
@@ -70,7 +71,8 @@ public class DeepSeekLLMAutoConfiguration(
         logger.info("Creating DeepSeekLLMClient with baseUrl=${properties.baseUrl}")
         return DeepSeekLLMClient(
             apiKey = properties.apiKey,
-            settings = DeepSeekClientSettings(baseUrl = properties.baseUrl)
+            settings = DeepSeekClientSettings(baseUrl = properties.baseUrl),
+            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         )
     }
 

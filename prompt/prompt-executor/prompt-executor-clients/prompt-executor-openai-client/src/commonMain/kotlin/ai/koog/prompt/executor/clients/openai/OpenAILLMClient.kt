@@ -2,7 +2,6 @@ package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -58,7 +57,6 @@ import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.utils.io.SuitableForIO
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -127,25 +125,6 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             apiKey = apiKey,
             settings = settings,
             httpClientFactory = httpClientFactory,
-            clientName = OPENAI_CLIENT_NAME
-        ),
-        clock = clock,
-        toolsConverter = toolsConverter
-    )
-
-    @JvmOverloads
-    public constructor(
-        apiKey: String,
-        settings: OpenAIClientSettings = OpenAIClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ) : this(
-        settings = settings,
-        httpClient = createConfiguredHttpClient(
-            apiKey = apiKey,
-            settings = settings,
-            httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
             clientName = OPENAI_CLIENT_NAME
         ),
         clock = clock,

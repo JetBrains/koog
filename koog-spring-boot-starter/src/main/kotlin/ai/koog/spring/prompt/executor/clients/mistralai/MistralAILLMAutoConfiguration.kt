@@ -1,5 +1,6 @@
 package ai.koog.spring.prompt.executor.clients.mistralai
 
+import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.executor.clients.mistralai.MistralAIClientSettings
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
@@ -66,7 +67,8 @@ public class MistralAILLMAutoConfiguration(
         logger.info("Creating mistralAILLMClient client with baseUrl=${properties.baseUrl}")
         return MistralAILLMClient(
             apiKey = properties.apiKey,
-            settings = MistralAIClientSettings(baseUrl = properties.baseUrl)
+            settings = MistralAIClientSettings(baseUrl = properties.baseUrl),
+            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         )
     }
 

@@ -5,7 +5,6 @@ import ai.koog.agents.core.tools.serialization.ToolDescriptorSchemaGenerator
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
 import ai.koog.http.client.get
-import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.http.client.lines
 import ai.koog.http.client.post
 import ai.koog.prompt.dsl.ModerationCategory
@@ -45,7 +44,6 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
@@ -161,30 +159,6 @@ public class OllamaClient @JvmOverloads constructor(
             socketTimeoutMillis = timeoutConfig.socketTimeoutMillis,
             json = ollamaJson,
         ),
-        clock = clock,
-        contextWindowStrategy = contextWindowStrategy,
-        toolDescriptorConverter = toolDescriptorConverter,
-    )
-
-    /**
-     * Secondary constructor for creating an [OllamaClient] backed by a Ktor [HttpClient].
-     */
-    @JvmOverloads
-    public constructor(
-        baseUrl: String = DEFAULT_BASE_URL,
-        baseClient: HttpClient = HttpClient(),
-        headers: Map<String, String> = emptyMap(),
-        queryParameters: Map<String, String> = emptyMap(),
-        timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-        clock: KoogClock = KoogClock.System,
-        contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
-        toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
-    ) : this(
-        httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
-        baseUrl = baseUrl,
-        headers = headers,
-        queryParameters = queryParameters,
-        timeoutConfig = timeoutConfig,
         clock = clock,
         contextWindowStrategy = contextWindowStrategy,
         toolDescriptorConverter = toolDescriptorConverter,

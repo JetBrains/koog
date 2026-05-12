@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openai
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.utils.time.KoogClock
@@ -66,7 +67,7 @@ class OpenAIChatCompletionLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = OpenAILLMClient(apiKey = key, baseClient = http, clock = FixedClock)
+        val client = OpenAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
 
         val prompt = Prompt.build(id = "p-tool-response", clock = FixedClock, params = OpenAIChatParams()) {
             user("What is the weather in Boston?")

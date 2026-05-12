@@ -32,6 +32,7 @@ import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.utils.HiddenString
 import ai.koog.http.client.KoogHttpClientException
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -522,7 +523,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         val testData = OpenTelemetryTestData()
         val result = runCatching {
             AIAgent(
-                promptExecutor = MultiLLMPromptExecutor(OpenAILLMClient("fake-key", baseClient = failingHttpClient)),
+                promptExecutor = MultiLLMPromptExecutor(OpenAILLMClient(apiKey = "fake-key", httpClientFactory = KtorKoogHttpClient.Factory(failingHttpClient))),
                 llmModel = OpenTelemetryTestAPI.Parameter.defaultModel,
                 strategy = singleRunStrategy(),
                 systemPrompt = OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT

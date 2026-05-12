@@ -4,7 +4,6 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -47,8 +46,7 @@ import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
-import io.ktor.utils.io.CancellationException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -137,22 +135,6 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
             json = json,
         ),
-        clock = clock
-    )
-
-    /**
-     * Secondary constructor for creating an Anthropic client from a base Ktor HTTP client.
-     */
-    @JvmOverloads
-    public constructor(
-        apiKey: String,
-        settings: AnthropicClientSettings = AnthropicClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: KoogClock = KoogClock.System
-    ) : this(
-        apiKey = apiKey,
-        settings = settings,
-        httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
         clock = clock
     )
 

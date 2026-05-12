@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openrouter
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.utils.time.KoogClock
@@ -66,7 +67,7 @@ class OpenRouterLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = OpenRouterLLMClient(apiKey = apiKey, baseClient = http, clock = FixedClock)
+        val client = OpenRouterLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =apiKey, clock = FixedClock)
 
         val prompt = Prompt.build(id = "p-tool-response", clock = FixedClock) {
             user("What is the weather in Boston?")

@@ -11,7 +11,6 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-tools"))
                 api(project(":http-client:http-client-core"))
-                api(project(":http-client:http-client-ktor"))
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-model"))
                 api(project(":prompt:prompt-tokenizer"))
@@ -20,7 +19,6 @@ kotlin {
                 api(project(":embeddings:embeddings-base"))
 
                 api(libs.kotlinx.coroutines.core)
-                api(libs.ktor.client.core)
                 implementation(libs.oshai.kotlin.logging)
             }
         }
@@ -51,6 +49,7 @@ kotlin {
 
         commonTest {
             dependencies {
+                implementation(project(":http-client:http-client-ktor"))
                 implementation(project(":test-utils"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(libs.kotlinx.coroutines.core)

@@ -4,7 +4,6 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -46,8 +45,7 @@ import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
-import io.ktor.utils.io.CancellationException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -125,27 +123,6 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             json = json,
         ),
         clock
-    )
-
-    /**
-     * Secondary constructor for creating a GoogleLLMClient backed with a Ktor HTTP client.
-     *
-     * @param apiKey The API key for the Google AI API
-     * @param settings Custom client settings, defaults to standard API endpoint and timeouts
-     * @param baseClient Ktor HTTP client used for making API requests.
-     * @param clock Clock instance used for tracking response metadata timestamps.
-     */
-    @JvmOverloads
-    public constructor(
-        apiKey: String,
-        settings: GoogleClientSettings = GoogleClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: KoogClock = KoogClock.System
-    ) : this(
-        apiKey = apiKey,
-        settings = settings,
-        httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
-        clock = clock
     )
 
     @OptIn(InternalStructuredOutputApi::class)

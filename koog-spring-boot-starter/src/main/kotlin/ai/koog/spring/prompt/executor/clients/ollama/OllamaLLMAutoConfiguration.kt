@@ -1,5 +1,6 @@
 package ai.koog.spring.prompt.executor.clients.ollama
 
+import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
@@ -58,6 +59,7 @@ public class OllamaLLMAutoConfiguration(
         logger.info("Creating OllamaClient with baseUrl=${properties.baseUrl}")
         return OllamaClient(
             baseUrl = properties.baseUrl,
+            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         )
     }
 

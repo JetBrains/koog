@@ -17,6 +17,7 @@ import ai.koog.integration.tests.utils.tools.CalculatorTool
 import ai.koog.integration.tests.utils.tools.files.CreateFile
 import ai.koog.integration.tests.utils.tools.files.MockFileSystem
 import ai.koog.integration.tests.utils.tools.files.OperationResult
+import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -73,9 +74,18 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
             }
         }
 
-        val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
-        val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
-        val googleClient = GoogleLLMClient(googleApiKey).reportingTo(eventsChannel)
+        val openAIClient = OpenAILLMClient(
+            apiKey = openAIApiKey,
+            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+        ).reportingTo(eventsChannel)
+        val anthropicClient = AnthropicLLMClient(
+            apiKey = anthropicApiKey,
+            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+        ).reportingTo(eventsChannel)
+        val googleClient = GoogleLLMClient(
+            apiKey = googleApiKey,
+            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+        ).reportingTo(eventsChannel)
 
         val reportingExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient,

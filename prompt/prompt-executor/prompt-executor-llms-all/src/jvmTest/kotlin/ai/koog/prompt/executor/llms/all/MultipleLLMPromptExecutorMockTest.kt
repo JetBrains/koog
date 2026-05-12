@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.llms.all
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -35,7 +36,7 @@ class MultipleLLMPromptExecutorMockTest {
     val mockClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     // Mock client for OpenAI
-    private inner class MockOpenAILLMClient : OpenAILLMClient(API_KEY) {
+    private inner class MockOpenAILLMClient : OpenAILLMClient(apiKey = API_KEY, httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory()) {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
@@ -53,7 +54,7 @@ class MultipleLLMPromptExecutorMockTest {
     }
 
     // Mock client for Anthropic
-    private inner class MockAnthropicLLMClient : AnthropicLLMClient(API_KEY) {
+    private inner class MockAnthropicLLMClient : AnthropicLLMClient(apiKey = API_KEY, httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory()) {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
@@ -71,7 +72,7 @@ class MultipleLLMPromptExecutorMockTest {
     }
 
     // Mock client for Anthropic
-    private inner class MockGoogleLLMClient : GoogleLLMClient(API_KEY) {
+    private inner class MockGoogleLLMClient : GoogleLLMClient(apiKey = API_KEY, httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory()) {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
