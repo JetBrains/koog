@@ -48,9 +48,7 @@ class AnthropicModelsTest {
 
     @Test
     fun `Pre-4_5 models should not support structured output`() {
-        @Suppress("DEPRECATION")
         val modelsWithoutSchema = listOf(
-            AnthropicModels.Haiku_3,
             AnthropicModels.Sonnet_4,
             AnthropicModels.Opus_4,
             AnthropicModels.Opus_4_1,

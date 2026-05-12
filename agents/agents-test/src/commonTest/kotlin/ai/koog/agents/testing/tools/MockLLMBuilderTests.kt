@@ -6,6 +6,7 @@ import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.streaming.streamFrameFlowOf
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
@@ -22,8 +23,8 @@ class MockLLMBuilderTests {
 
     // Sample tool for testing
     private object TestTool : Tool<TestTool.Args, String>(
-        argsSerializer = serializer<Args>(),
-        resultSerializer = serializer<String>(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<String>(),
         name = "test_tool",
         description = "A test tool for testing"
     ) {

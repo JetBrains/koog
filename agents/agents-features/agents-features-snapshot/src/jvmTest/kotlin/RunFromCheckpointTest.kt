@@ -56,13 +56,15 @@ class RunFromCheckpointTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-1",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node2"),
-            lastOutput = JSONPrimitive("Node 2 output"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node2"),
+                lastOutput = JSONPrimitive("Node 2 output"),
+            ),
         )
 
         val agent = AIAgent(
@@ -96,13 +98,15 @@ class RunFromCheckpointTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-1",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node1"),
-            lastOutput = JSONPrimitive("Node 1 output"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node1"),
+                lastOutput = JSONPrimitive("Node 1 output"),
+            ),
         )
 
         val agent = AIAgent(
@@ -136,12 +140,14 @@ class RunFromCheckpointTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-1",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node1"),
-            lastOutput = JSONPrimitive("Node 1 output"),
             messageHistory = listOf(
                 Message.User("Restored message", metaInfo = RequestMetaInfo(time)),
             ),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node1"),
+                lastOutput = JSONPrimitive("Node 1 output"),
+            ),
         )
 
         val agent = AIAgent(
@@ -178,14 +184,16 @@ class RunFromCheckpointTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-no-persistence",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node1"),
-            lastOutput = JSONPrimitive("Node 1 output"),
             messageHistory = listOf(
                 Message.System("You are a test agent.", metaInfo = RequestMetaInfo(time)),
                 Message.User("Hello", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Hi there", metaInfo = ResponseMetaInfo(time)),
             ),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node1"),
+                lastOutput = JSONPrimitive("Node 1 output"),
+            ),
         )
 
         // Agent created without any Persistence feature
@@ -213,46 +221,6 @@ class RunFromCheckpointTest {
     }
 
     @Test
-    fun testRunFromCheckpointUsesLastInputWithoutSkippingCompletedNode() = runTest {
-        val sessionId = "test-session-last-input"
-        val time = Clock.System.now()
-
-        @Suppress("DEPRECATION")
-        val checkpoint = AgentCheckpointData(
-            checkpointId = "checkpoint-last-input",
-            createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node2"),
-            lastInput = JSONPrimitive("Node 1 output"),
-            messageHistory = listOf(
-                Message.User("User message", metaInfo = RequestMetaInfo(time)),
-                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
-            ),
-            version = 0
-        )
-
-        val agent = AIAgent(
-            promptExecutor = getMockExecutor(serializer) { },
-            strategy = straightForwardGraphNoCheckpoint(),
-            agentConfig = agentConfig,
-            toolRegistry = toolRegistry,
-        )
-
-        val output = Persistence.runFromCheckpoint(
-            agent = agent,
-            input = "ignored",
-            checkpoint = checkpoint,
-            sessionId = sessionId,
-        )
-
-        assertEquals(
-            "History: User message\n" +
-                "Assistant message\n" +
-                "Node 2 output",
-            output
-        )
-    }
-
-    @Test
     fun testRunFromCheckpointFailsForUnknownNodePath() = runTest {
         val sessionId = "test-session-invalid-path"
         val time = Clock.System.now()
@@ -260,10 +228,12 @@ class RunFromCheckpointTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-invalid-path",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "MissingNode"),
-            lastOutput = JSONPrimitive("missing"),
             messageHistory = emptyList(),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "MissingNode"),
+                lastOutput = JSONPrimitive("missing")
+            )
         )
 
         val agent = AIAgent(
@@ -369,10 +339,12 @@ class RunFromCheckpointTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-cleanup",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node1"),
-            lastOutput = JSONPrimitive("Node 1 output"),
             messageHistory = emptyList(),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node1"),
+                lastOutput = JSONPrimitive("Node 1 output")
+            )
         )
 
         val agent = AIAgent(

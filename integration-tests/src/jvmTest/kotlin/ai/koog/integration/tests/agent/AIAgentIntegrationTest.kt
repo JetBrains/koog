@@ -28,6 +28,7 @@ import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.withPersistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
@@ -642,7 +643,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         with(checkpointStorageProvider.getCheckpoints(agent.id)) {
             shouldNotBeEmpty()
-            first().nodePath shouldContain save
+            first().graphProperties?.nodePath shouldContain save
         }
 
         val restoredAgent = AIAgent(
@@ -931,13 +932,15 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val checkpoint = AgentCheckpointData(
             checkpointId = "last-input-checkpoint",
             createdAt = KoogClock.System.now(),
-            nodePath = path(sessionId, strategyName, node2Name),
-            lastInput = JSONPrimitive("Node 1 output"),
             messageHistory = listOf(
                 Message.User("Restored user message", metaInfo = RequestMetaInfo(KoogClock.System.now())),
                 Message.Assistant("Restored assistant message", metaInfo = ResponseMetaInfo(KoogClock.System.now()))
             ),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, strategyName, node2Name),
+                lastOutput = JSONPrimitive("Node 1 output"),
+            ),
         )
 
         val agent = AIAgent(
@@ -980,10 +983,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val checkpoint = AgentCheckpointData(
             checkpointId = "invalid-checkpoint",
             createdAt = KoogClock.System.now(),
-            nodePath = path(sessionId, strategyName, "MissingNode"),
-            lastOutput = JSONPrimitive("missing"),
             messageHistory = emptyList(),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, strategyName, "MissingNode"),
+                lastOutput = JSONPrimitive("missing")
+            )
         )
 
         val agent = AIAgent(
@@ -1080,10 +1085,10 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         agent.run(testInput, agent.id)
 
         val expectedNodePath = path(agentId, strategyName, bye)
-        with(fileStorageProvider.getCheckpoints(agent.id).filter { it.nodePath != "tombstone" }) {
+        with(fileStorageProvider.getCheckpoints(agent.id).filter { it.graphProperties?.nodePath != "tombstone" }) {
             withClue(incorrectNodeIdError) {
                 shouldNotBeEmpty()
-                first().nodePath shouldBe expectedNodePath
+                first().graphProperties?.nodePath shouldBe expectedNodePath
             }
         }
     }
@@ -1142,7 +1147,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 }
 
                 withClue("Checkpoint message history should contain a tool call to '${SimpleCalculatorTool.name}'") {
-                    storageProvider.getCheckpoints(agent.id).filter { it.nodePath != "tombstone" }
+                    storageProvider.getCheckpoints(agent.id).filter { it.graphProperties?.nodePath != "tombstone" }
                         .shouldNotBeEmpty()
                         .shouldForAny { cp ->
                             cp.messageHistory.any { msg ->

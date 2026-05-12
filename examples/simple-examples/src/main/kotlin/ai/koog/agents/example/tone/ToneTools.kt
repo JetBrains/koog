@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.MessagePart
 import kotlinx.serialization.Serializable
+import ai.koog.serialization.typeToken
 
 object ToneTools {
     /**
@@ -20,7 +21,7 @@ object ToneTools {
         description: String,
         private val toneType: String
     ) : SimpleTool<ToneTool.Args>(
-        argsSerializer = Args.serializer(),
+        argsType = typeToken<Args>(),
         name = name,
         description = description
     ) {

@@ -23,7 +23,6 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -290,8 +289,6 @@ class AIAgentPipelineJvmTest {
         id: String? = "test-agent-id",
         installFeatures: FeatureContext.() -> Unit = {}
     ) : GraphAIAgent<String, String>(
-        inputType = typeToken<String>(),
-        outputType = typeToken<String>(),
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
         strategy = strategy,

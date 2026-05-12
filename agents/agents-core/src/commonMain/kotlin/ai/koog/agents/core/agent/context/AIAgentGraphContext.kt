@@ -3,13 +3,13 @@ package ai.koog.agents.core.agent.context
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.lock.RWLock
+import ai.koog.prompt.message.Message
 import ai.koog.serialization.TypeToken
 
 /**
@@ -214,31 +214,10 @@ public class AIAgentGraphContext(
         }
     }
 
-    /**
-     * Plain in-memory map backing [store], [get] and [remove].
-     *
-     * Concurrency caveat: this is a plain [mutableMapOf], it is **not** thread-safe. Unlike [storage] (which is
-     * an [AIAgentStorage] that provides its own synchronization), concurrent access to [store], [get] or
-     * [remove] from different coroutines/threads on the same [AIAgentGraphContext] is not synchronized and may
-     * lead to data races. Callers must externally serialize access, or use the concurrent-safe [storage]
-     * property for shared data.
-     */
-    private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
-
-    @Deprecated("Use context.storage.set() instead", level = DeprecationLevel.WARNING)
-    override fun store(key: AIAgentStorageKey<*>, value: Any) {
-        storeMap[key] = value
-    }
-
-    @Deprecated("Use context.storage.get() instead", level = DeprecationLevel.WARNING)
-    override fun <T> get(key: AIAgentStorageKey<*>): T? {
-        @Suppress("UNCHECKED_CAST")
-        return storeMap[key] as T?
-    }
-
-    @Deprecated("Use context.storage.remove() instead", level = DeprecationLevel.WARNING)
-    override fun remove(key: AIAgentStorageKey<*>): Boolean {
-        return storeMap.remove(key) != null
+    override suspend fun getHistory(): List<Message> {
+        return llm.readSession {
+            prompt.messages
+        }
     }
 
     /**

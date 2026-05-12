@@ -39,16 +39,14 @@ class ExecutorsTest {
     Iterable<PromptExecutor> promptExecutors() {
         return List.of(
             new MultiLLMPromptExecutor(Map.of(provider, llmClient)),
-            new MultiLLMPromptExecutor(Map.of(provider, llmClient)),
-            new SingleLLMPromptExecutor(llmClient)
+            new MultiLLMPromptExecutor(Map.of(provider, llmClient))
         );
     }
 
     Iterable<PromptExecutor> failingPromptExecutors() {
         return List.of(
             new MultiLLMPromptExecutor(Map.of(provider, failingClient)),
-            new MultiLLMPromptExecutor(Map.of(provider, failingClient)),
-            new SingleLLMPromptExecutor(failingClient)
+            new MultiLLMPromptExecutor(Map.of(provider, failingClient))
         );
     }
 

@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
@@ -31,7 +30,6 @@ import io.ktor.server.sse.SSE
 import io.ktor.server.sse.sse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
-import ai.koog.serialization.typeToken
 
 /**
  * Example: Streaming AI Agent with Ktor Server
@@ -114,8 +112,6 @@ private fun createAgent(
     )
 
     return GraphAIAgent(
-        typeToken<String>(),
-        typeToken<String>(),
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
         strategy = createStrategy(

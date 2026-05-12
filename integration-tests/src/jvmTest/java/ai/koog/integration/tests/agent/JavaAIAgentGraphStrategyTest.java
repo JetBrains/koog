@@ -12,6 +12,7 @@ import ai.koog.agents.core.tools.reflect.ToolSet;
 import ai.koog.agents.ext.agent.CriticResult;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
 import ai.koog.agents.snapshot.feature.AgentCheckpointData;
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties;
 import ai.koog.agents.snapshot.feature.Persistence;
 import ai.koog.agents.snapshot.feature.PersistenceKt;
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider;
@@ -405,7 +406,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
         assertAll(
             () -> assertEquals(1, checkpoints.size(), "Expected exactly one checkpoint to be created"),
-            () -> assertTrue(checkpoints.get(0).getNodePath().endsWith("/checkpoint-node"), "Checkpoint should be stored for checkpoint-node, but was: " + checkpoints.get(0).getNodePath()),
+            () -> assertTrue(checkpoints.get(0).getGraphProperties().getNodePath().endsWith("/checkpoint-node"), "Checkpoint should be stored for checkpoint-node, but was: " + checkpoints.get(0).getGraphProperties().getNodePath()),
             () -> assertEquals(1, checkpointNodeRunsAfterFirstRun, "Checkpoint node should run exactly once on the initial execution"),
             () -> assertEquals(1, finalNodeRunsAfterFirstRun, "Final node should run exactly once on the initial execution"),
             () -> assertEquals("final-node:checkpoint-node:first run", firstResult, "Initial run should produce the expected final-node output"),
@@ -442,12 +443,12 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
         assertAll(
             () -> assertEquals(1, checkpoints.size(), "Expected exactly one file checkpoint to be created"),
-            () -> assertTrue(checkpoints.get(0).getNodePath().endsWith("/checkpoint-node"), "Checkpoint should be stored for checkpoint-node, but was: " + checkpoints.get(0).getNodePath()),
+            () -> assertTrue(checkpoints.get(0).getGraphProperties().getNodePath().endsWith("/checkpoint-node"), "Checkpoint should be stored for checkpoint-node, but was: " + checkpoints.get(0).getGraphProperties().getNodePath()),
             () -> assertEquals(1, checkpointNodeRunsAfterFirstRun, "Checkpoint node should run exactly once on the initial execution"),
             () -> assertEquals(1, finalNodeRunsAfterFirstRun, "Final node should run exactly once on the initial execution"),
             () -> assertEquals("final-node:checkpoint-node:first run", firstResult, "Initial run should produce the expected final-node output"),
             () -> assertNotNull(latestCheckpoint, "Latest checkpoint should be available after file-based persistence"),
-            () -> assertTrue(latestCheckpoint.getNodePath().endsWith("/checkpoint-node"), "Latest file checkpoint should point to checkpoint-node, but was: " + latestCheckpoint.getNodePath()),
+            () -> assertTrue(latestCheckpoint.getGraphProperties().getNodePath().endsWith("/checkpoint-node"), "Latest file checkpoint should point to checkpoint-node, but was: " + latestCheckpoint.getGraphProperties().getNodePath()),
             () -> assertTrue(hasAnyFiles(tempDir), "File persistence should materialize checkpoint files in the temp directory"),
             () -> assertEquals("final-node:checkpoint-node:first run", secondResult, "Restored run should reuse the stored checkpoint output"),
             () -> assertEquals(1, checkpointNodeRuns.get(), "Checkpoint node should not rerun after file restore"),
@@ -546,7 +547,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
                 "Execution order should show rollback to the checkpoint and replay from the downstream node"
             ),
             () -> assertEquals(1, checkpoints.size(), "Rollback should not delete the existing checkpoint"),
-            () -> assertTrue(checkpoints.get(0).getNodePath().endsWith("/checkpoint-node"), "Rollback should preserve the checkpoint at checkpoint-node, but was: " + checkpoints.get(0).getNodePath())
+            () -> assertTrue(checkpoints.get(0).getGraphProperties().getNodePath().endsWith("/checkpoint-node"), "Rollback should preserve the checkpoint at checkpoint-node, but was: " + checkpoints.get(0).getGraphProperties().getNodePath())
         );
     }
 
@@ -596,14 +597,16 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         AgentCheckpointData checkpoint = new AgentCheckpointData(
             "java-last-input-checkpoint",
             now,
-            sessionId + "/" + strategyName + "/Node2",
-            JSONElementKt.JSONPrimitive("Node 1 output"),
-            null,
             List.of(
                 new Message.User("Restored user message", new RequestMetaInfo(now, null)),
                 new Message.Assistant("Restored assistant message", new ResponseMetaInfo(now, null, null, null))
             ),
+            null,
             0L,
+            new GraphCheckpointProperties(
+                sessionId + "/" + strategyName + "/Node2",
+                JSONElementKt.JSONPrimitive("Node 1 output")
+            ),
             null
         );
 
@@ -650,11 +653,13 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         AgentCheckpointData checkpoint = new AgentCheckpointData(
             "java-invalid-checkpoint",
             now,
-            sessionId + "/" + strategyName + "/MissingNode",
-            null,
-            JSONPrimitive.of("missing"),
             List.of(),
+            null,
             0L,
+            new GraphCheckpointProperties(
+                sessionId + "/" + strategyName + "/MissingNode",
+                JSONPrimitive.of("missing")
+            ),
             null
         );
 

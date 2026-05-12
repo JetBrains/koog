@@ -250,7 +250,6 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             topLogprobs = params.topLogprobs,
             topP = params.topP,
             truncation = params.truncation,
-            user = params.user,
             additionalProperties = params.additionalProperties,
         )
 

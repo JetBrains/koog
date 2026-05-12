@@ -5,15 +5,6 @@ import ai.koog.rag.base.files.JVMFileSystemProvider
 import kotlinx.serialization.json.Json
 import java.nio.file.Path
 
-@Deprecated(
-    "`JVMFilePersistencyStorageProvider` has been renamed to `JVMFilePersistenceStorageProvider`",
-    replaceWith = ReplaceWith(
-        expression = "JVMFilePersistenceStorageProvider",
-        "ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider"
-    )
-)
-public typealias JVMFilePersistencyStorageProvider = JVMFilePersistenceStorageProvider
-
 /**
  * A JVM-specific implementation of [FilePersistenceStorageProvider] for managing agent checkpoints
  * in a file system.

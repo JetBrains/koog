@@ -580,21 +580,12 @@ For advanced control, you can directly set the execution point of an agent:
     import ai.koog.agents.snapshot.feature.persistence
     import ai.koog.prompt.message.Message.User
     import ai.koog.serialization.JSONPrimitive
-    val customInput = JSONPrimitive("custom-input")
     val customOutput = JSONPrimitive("custom-output")
     val customMessageHistory = emptyList<User>()
     -->
     ```kotlin
     suspend fun example(context: AIAgentContext) {
-        // You can set the execution point before some node and provide an input for it:
-        context.persistence().setExecutionPoint(
-            agentContext = context,
-            nodePath = context.executionInfo.path(),
-            messageHistory = customMessageHistory,
-            input = customInput
-        )
-
-        // Or after some node and provide an output from the node:
+        // You can set the execution point after some node and provide an output from the node:
         context.persistence().setExecutionPointAfterNode(
             agentContext = context,
             nodePath = context.executionInfo.path(),
@@ -617,15 +608,7 @@ For advanced control, you can directly set the execution point of an agent:
     ```java
     Persistence persistence = PersistenceKt.persistence(context);
 
-    // Set the execution point before a node and provide an input for it:
-    persistence.setExecutionPoint(
-        context,
-        context.getExecutionInfo().path(),
-        customMessageHistory,
-        customInput
-    );
-
-    // Or after a node and provide an output from the node:
+    // Set the execution point after a node and provide an output from the node:
     persistence.setExecutionPointAfterNode(
         context,
         context.getExecutionInfo().path(),

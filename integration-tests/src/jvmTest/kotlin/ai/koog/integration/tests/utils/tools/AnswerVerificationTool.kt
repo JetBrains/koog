@@ -2,10 +2,11 @@ package ai.koog.integration.tests.utils.tools
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 object AnswerVerificationTool : SimpleTool<AnswerVerificationTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "answer_verification_tool",
     description = "A tool for verifying the correctness of answers with optional confidence rating"
 ) {

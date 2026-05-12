@@ -3,9 +3,10 @@ package ai.koog.agents.example.chess
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.Serializable
+import ai.koog.serialization.typeToken
 
 class Move(val game: ChessGame) : SimpleTool<Move.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "move",
     description = "Moves a piece according to the notation:\n${game.moveNotation}"
 ) {

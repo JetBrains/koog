@@ -43,32 +43,7 @@ public data class GraphStrategyStartingEvent(
     override val strategyName: String,
     val graph: StrategyEventGraph,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
-) : StrategyStartingEventBase() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("GraphStrategyStartingEvent(executionInfo, runId, strategyName, graph, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        strategyName: String,
-        graph: StrategyEventGraph,
-        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = GraphStrategyStartingEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = GraphStrategyStartingEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        strategyName = strategyName,
-        graph = graph,
-        timestamp = timestamp
-    )
-}
+) : StrategyStartingEventBase()
 
 /**
  * Represents an event triggered at the start of executing a functional, planner, and other strategy types by an AI agent.
@@ -86,30 +61,7 @@ public data class StrategyStartingEvent(
     override val runId: String,
     override val strategyName: String,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
-) : StrategyStartingEventBase() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("FunctionalStrategyStartingEvent(executionInfo, runId, strategyName, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        strategyName: String,
-        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = StrategyStartingEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = StrategyStartingEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        strategyName = strategyName,
-        timestamp = timestamp
-    )
-}
+) : StrategyStartingEventBase()
 
 /**
  * Event that represents the completion of an AI agent's strategy execution.
@@ -132,32 +84,7 @@ public data class StrategyCompletedEvent(
     val strategyName: String,
     val result: String?,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("StrategyCompletedEvent(executionInfo, runId, strategyName, result, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        strategyName: String,
-        result: String?,
-        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = StrategyCompletedEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = StrategyCompletedEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        strategyName = strategyName,
-        result = result,
-        timestamp = timestamp
-    )
-}
+) : DefinedFeatureEvent()
 
 /**
  * Represents a graph structure used by an AI agent, consisting of a collection
@@ -267,19 +194,3 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.startNodeToGr
 
     return graph
 }
-
-//region Deprecated
-
-@Deprecated(
-    message = "Use StrategyStartingEvent instead or one of particular methods like GraphStrategyStartingEvent or FunctionalStrategyStartingEvent",
-    replaceWith = ReplaceWith("StrategyStartingEvent")
-)
-public typealias AIAgentStrategyStartEvent = StrategyStartingEvent
-
-@Deprecated(
-    message = "Use StrategyCompletedEvent instead",
-    replaceWith = ReplaceWith("StrategyCompletedEvent")
-)
-public typealias AIAgentStrategyFinishedEvent = StrategyCompletedEvent
-
-//endregion Deprecated

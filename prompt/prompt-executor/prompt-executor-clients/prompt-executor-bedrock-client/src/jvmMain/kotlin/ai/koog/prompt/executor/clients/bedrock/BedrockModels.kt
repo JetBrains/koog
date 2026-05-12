@@ -243,24 +243,6 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
-     * Claude 3 Haiku - Fast and efficient model for high-volume, simple tasks
-     *
-     * This model is optimized for:
-     * - Quick responses
-     * - High-volume processing
-     * - Basic reasoning and comprehension
-     * - Multimodal understanding
-     * - Tool/function calling
-     *
-     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-lifecycle.html">
-     */
-    @Deprecated("Claude 3 Haiku is deprecated. Please use Claude Opus 4.6 instead.")
-    public val AnthropicClaude3Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_3,
-        "anthropic.claude-3-haiku-20240307-v1:0",
-    ).effectiveModel
-
-    /**
      * Claude Haiku 4.5 - Anthropic's most powerful model for powering real-world agents,
      * with industry-leading capabilities around coding, and computer use.
      *
@@ -866,9 +848,6 @@ public object BedrockModels : LLModelDefinitions {
      * List of the supported models by the Bedrock provider.
      */
     private val supportedModels: List<LLModel> = listOf(
-        // Claude 3 Series
-        AnthropicClaude3Haiku,
-
         // Claude 4 Series
         AnthropicClaude4Opus,
         AnthropicClaude41Opus,

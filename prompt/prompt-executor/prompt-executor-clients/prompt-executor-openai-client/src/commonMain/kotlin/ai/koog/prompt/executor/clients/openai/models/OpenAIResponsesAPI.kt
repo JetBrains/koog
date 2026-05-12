@@ -143,8 +143,6 @@ internal class OpenAIResponsesAPIRequest(
     override val topLogprobs: Int? = null,
     override val topP: Double? = null,
     val truncation: Truncation? = null,
-    @Deprecated("Use safetyIdentifier and promptCacheKey instead")
-    val user: String? = null,
     val additionalProperties: Map<String, JsonElement>? = null,
 ) : OpenAIBaseLLMRequest
 
@@ -1447,8 +1445,6 @@ internal class OpenAIResponsesAPIResponse(
     val topP: Double? = null,
     val truncation: String? = null,
     val usage: Usage? = null,
-    @Deprecated("Use safetyIdentifier and promptCacheKey instead")
-    val user: String? = null,
 ) : OpenAIBaseLLMResponse {
     /**
      * @property code The error code for the response.

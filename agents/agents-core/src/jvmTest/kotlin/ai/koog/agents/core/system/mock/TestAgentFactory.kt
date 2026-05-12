@@ -19,7 +19,6 @@ import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.typeToken
 
 object TestAgentFactory {
     /**
@@ -125,8 +124,6 @@ object TestAgentFactory {
         )
 
         return GraphAIAgent(
-            inputType = typeToken<String>(),
-            outputType = typeToken<String>(),
             id = agentId,
             promptExecutor = promptExecutor ?: getMockExecutor(agentConfig.serializer, clock = testClock) { },
             strategy = strategy,

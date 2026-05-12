@@ -7,6 +7,7 @@ import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.agents.snapshot.feature.tombstoneCheckpoint
@@ -290,14 +291,16 @@ class PostgresPersistenceAgentRunTest {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = time,
-            nodePath = nodePath,
-            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test agent.", RequestMetaInfo(time)),
                 Message.User("Node 1 output", RequestMetaInfo(time)),
                 Message.Assistant("Node 2 output", ResponseMetaInfo(time))
             ),
-            version = version
+            version = version,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = nodePath,
+                lastOutput = JSONPrimitive("Test input"),
+            ),
         )
     }
 }

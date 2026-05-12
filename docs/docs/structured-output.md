@@ -321,7 +321,6 @@ The fixing process iteratively passes the parsing error to the auxiliary model, 
 You can integrate structured data processing into your agent strategies:
 
 <!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -370,7 +369,6 @@ This creates an agent node that:
 #### Node layer example
 
 <!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -425,7 +423,6 @@ Here is a full example of using the Structured Output API:
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest

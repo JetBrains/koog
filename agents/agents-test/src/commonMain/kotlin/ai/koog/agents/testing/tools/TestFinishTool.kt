@@ -2,16 +2,16 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.serializer
 
 /**
  * A simple implementation of the Tool class designed to handle string arguments and return string results.
  * The tool is used for testing purposes only.
  */
 public object TestFinishTool : Tool<TestFinishTool.Args, String>(
-    argsSerializer = serializer<Args>(),
-    resultSerializer = serializer<String>(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<String>(),
     name = "test_finish_tool",
     description = "test-finish-tool"
 ) {

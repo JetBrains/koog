@@ -4,12 +4,8 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
-import ai.koog.serialization.kotlinx.toKoogJSONElement
-import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
 
 /**
  * Represents the result or response received from a tool operation.
@@ -34,25 +30,6 @@ public data class ReceivedToolResult(
     val result: JSONElement?,
     @property:InternalAgentsApi @property:Transient val resultObject: Any? = null,
 ) {
-    @Deprecated("Use the constructor with JSONElement instead of JsonElement")
-    public constructor(
-        id: String?,
-        tool: String,
-        toolArgs: JsonObject,
-        toolDescription: String?,
-        output: String,
-        resultKind: ToolResultKind,
-        result: JsonElement?
-    ) : this(
-        id = id,
-        tool = tool,
-        toolArgs = toolArgs.toKoogJSONObject(),
-        toolDescription = toolDescription,
-        output = output,
-        resultKind = resultKind,
-        result = result?.toKoogJSONElement()
-    )
-
     /**
      * Converts the current `ReceivedToolResult` instance into a `MessagePart.Tool.Result` object.
      *

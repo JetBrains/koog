@@ -142,14 +142,14 @@ class RoundRobinBasedExecutorTest {
         val executor = RoutingLLMPromptExecutor(openAIClient, anthropicClient, fallback = fallback)
 
         // When
-        val fallbackExecuteResponse = executor.execute(prompt, GoogleModels.Gemini2_0Flash)
-        val fallbackExecuteStreamingResponse = executor.executeStreaming(prompt, GoogleModels.Gemini2_0Flash)
+        val fallbackExecuteResponse = executor.execute(prompt, GoogleModels.Gemini2_5Flash)
+        val fallbackExecuteStreamingResponse = executor.executeStreaming(prompt, GoogleModels.Gemini2_5Flash)
         val fallbackExecuteMultipleChoicesResponse = executor.executeMultipleChoices(
             prompt,
-            GoogleModels.Gemini2_0Flash,
+            GoogleModels.Gemini2_5Flash,
             emptyList()
         )
-        val fallbackModerateResponse = executor.moderate(prompt, GoogleModels.Gemini2_0Flash)
+        val fallbackModerateResponse = executor.moderate(prompt, GoogleModels.Gemini2_5Flash)
 
         // Then
         assertEquals(anthropicClient.executeResponse, fallbackExecuteResponse)

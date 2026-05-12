@@ -63,7 +63,7 @@ class MultiLLMPromptExecutorTest {
             LLMProvider.Google to MockLLMClient(provider = LLMProvider.Google)
         )
 
-        val model = GoogleModels.Gemini2_0Flash
+        val model = GoogleModels.Gemini2_5Flash
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -133,7 +133,7 @@ class MultiLLMPromptExecutorTest {
             MockLLMClient(provider = LLMProvider.Google)
         )
 
-        val model = GoogleModels.Gemini2_0Flash
+        val model = GoogleModels.Gemini2_5Flash
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")

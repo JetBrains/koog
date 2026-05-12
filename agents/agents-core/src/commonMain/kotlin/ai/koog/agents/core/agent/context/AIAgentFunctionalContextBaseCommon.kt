@@ -23,7 +23,6 @@ import ai.koog.agents.ext.agent.FinishTool
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.ext.agent.executeFinishTool
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
@@ -66,26 +65,8 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
     override val parentContext: AIAgentContext? = null
 ) : AIAgentContext {
 
-    @Deprecated("Use context.storage.set() instead", level = DeprecationLevel.WARNING)
-    override fun store(key: AIAgentStorageKey<*>, value: Any) {
-        storeMap[key] = value
-    }
-
-    @Deprecated("Use context.storage.get() instead", level = DeprecationLevel.WARNING)
-    override fun <T> get(key: AIAgentStorageKey<*>): T? = storeMap[key] as T?
-
-    @Deprecated("Use context.storage.remove() instead", level = DeprecationLevel.WARNING)
-    override fun remove(key: AIAgentStorageKey<*>): Boolean = storeMap.remove(key) != null
-
-    /**
-     * Appends messages to the current LLM prompt without making an LLM request.
-     * Corresponds to [nodeAppendPrompt].
-     *
-     * @param body Lambda to modify the prompt using [PromptBuilder].
-     */
-    @JvmSynthetic
-    public suspend fun appendPrompt(body: PromptBuilder.() -> Unit) {
-        llm.writeSession { appendPrompt { body() } }
+    override suspend fun getHistory(): List<Message> {
+        return llm.readSession { prompt.messages }
     }
 
     // ================

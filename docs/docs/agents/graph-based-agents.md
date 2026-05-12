@@ -80,7 +80,6 @@ provide a unique identifier for the strategy, and define the nodes and edges.
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.extension.*
     -->
@@ -208,7 +207,6 @@ Let's create an agent instance with this strategy and run it:
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.extension.*
     import ai.koog.agents.core.dsl.extension.nodeExecuteTools
@@ -442,7 +440,6 @@ Add the tool registry to the agent configuration:
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.extension.*
     import ai.koog.agents.core.dsl.extension.nodeExecuteTools
@@ -624,7 +621,6 @@ In our example, it is important to describe how the agent should process complex
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
-    import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.extension.*
     import ai.koog.agents.core.dsl.extension.nodeExecuteTools

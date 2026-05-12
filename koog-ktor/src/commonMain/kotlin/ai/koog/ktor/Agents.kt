@@ -7,8 +7,6 @@ import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import ai.koog.serialization.TypeToken
-import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import io.ktor.server.application.pluginOrNull
 import io.ktor.server.routing.RoutingContext
@@ -29,8 +27,6 @@ public fun RoutingContext.llm(): PromptExecutor =
  * @throws IllegalArgumentException If the agent configuration (`agentConfig`) is not set in the route.
  */
 public suspend fun <Input, Output> RoutingContext.aiAgent(
-    inputType: TypeToken,
-    outputType: TypeToken,
     strategy: AIAgentGraphStrategy<Input, Output>,
     model: LLModel,
     tools: ToolRegistry = ToolRegistry.EMPTY,
@@ -38,8 +34,6 @@ public suspend fun <Input, Output> RoutingContext.aiAgent(
     val plugin = requireNotNull(call.application.pluginOrNull(Koog)) { "Plugin $Koog is not configured" }
 
     return GraphAIAgent(
-        inputType = inputType,
-        outputType = outputType,
         promptExecutor = plugin.promptExecutor,
         strategy = strategy,
         agentConfig = plugin.agentConfig(model),
@@ -60,12 +54,6 @@ public suspend fun <Input, Output> RoutingContext.aiAgent(
  * @return An instance of `AIAgent` configured with the specified strategy and the route's resources.
  * @throws IllegalArgumentException If the agent configuration (`agentConfig`) is not set in the route.
  */
-public suspend inline fun <reified Input, reified Output> RoutingContext.aiAgent(
-    strategy: AIAgentGraphStrategy<Input, Output>,
-    model: LLModel,
-    tools: ToolRegistry = ToolRegistry.EMPTY,
-): AIAgent<Input, Output> = aiAgent(typeToken<Input>(), typeToken<Output>(), strategy, model, tools)
-
 /**
  * Creates an agent using [aiAgent], and immediately runs it given the [input].
  * When the agent is completed it provides the final [Output].

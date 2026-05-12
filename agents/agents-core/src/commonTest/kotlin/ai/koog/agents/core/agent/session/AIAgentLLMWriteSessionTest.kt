@@ -28,6 +28,7 @@ import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Ignore
@@ -74,7 +75,7 @@ class AIAgentLLMWriteSessionTest {
     }
 
     class TestTool : SimpleTool<TestTool.Args>(
-        argsSerializer = Args.serializer(),
+        argsType = typeToken<Args>(),
         name = "test-tool",
         description = "A test tool"
     ) {
@@ -90,8 +91,8 @@ class AIAgentLLMWriteSessionTest {
     }
 
     class CustomTool : Tool<CustomTool.Args, CustomTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         descriptor = ToolDescriptor(
             name = "custom-tool",
             description = "A custom tool",

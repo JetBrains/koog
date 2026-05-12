@@ -12,7 +12,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.Executor
-import java.util.concurrent.ExecutorService
 
 @OptIn(InternalAgentsApi::class)
 @Suppress(
@@ -48,24 +47,6 @@ public actual class AIAgentConfig actual constructor(
     @InternalAgentsApi
     public var llmRequestDispatcher: CoroutineDispatcher = Dispatchers.IO
         internal set
-
-    @Deprecated("Use constructor that accepts Executor instead of ExecutorService")
-    @JavaAPI
-    @JvmOverloads
-    public constructor(
-        prompt: Prompt,
-        model: LLModel,
-        maxAgentIterations: Int,
-        agentStrategyExecutorService: ExecutorService?,
-        llmRequestExecutorService: ExecutorService? = null,
-        missingToolsConversionStrategy: MissingToolsConversionStrategy =
-            MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
-        responseProcessor: ResponseProcessor? = null,
-        serializer: JSONSerializer = JacksonSerializer()
-    ) : this(prompt, model, maxAgentIterations, missingToolsConversionStrategy, responseProcessor, serializer) {
-        agentStrategyExecutorService?.let { strategyDispatcher = it.asCoroutineDispatcher() }
-        llmRequestExecutorService?.let { llmRequestDispatcher = it.asCoroutineDispatcher() }
-    }
 
     @JavaAPI
     @JvmOverloads
@@ -166,28 +147,6 @@ public actual class AIAgentConfig actual constructor(
             internal var llmRequestExecutor: Executor? = null,
             internal var serializer: JSONSerializer = JacksonSerializer()
         ) {
-            @Deprecated("Use constructor that accepts Executor instead of ExecutorService")
-            @JavaAPI
-            public constructor(
-                model: LLModel,
-                prompt: Prompt? = null,
-                maxAgentIterations: Int? = null,
-                missingToolsConversionStrategy: MissingToolsConversionStrategy? = null,
-                responseProcessor: ResponseProcessor? = null,
-                strategyExecutorService: ExecutorService? = null,
-                llmRequestExecutorService: ExecutorService? = null,
-                serializer: JSONSerializer = JacksonSerializer()
-            ) : this(
-                model = model,
-                prompt = prompt,
-                maxAgentIterations = maxAgentIterations,
-                missingToolsConversionStrategy = missingToolsConversionStrategy,
-                responseProcessor = responseProcessor,
-                strategyExecutor = strategyExecutorService,
-                llmRequestExecutor = llmRequestExecutorService,
-                serializer = serializer
-            )
-
             /**
              * Sets serializer for underlying tool calls and LLM requests
              *
@@ -238,15 +197,6 @@ public actual class AIAgentConfig actual constructor(
                 apply { this.strategyExecutor = executor }
 
             /**
-             * Sets the executor service to be used for executing strategies within the agent configuration.
-             *
-             * @param executor The executor service to manage the execution of strategies. Can be null.
-             */
-            @Deprecated("Use strategyExecutor instead", replaceWith = ReplaceWith("strategyExecutor(executor)"))
-            public fun strategyExecutorService(executor: ExecutorService?): AIAgentConfigBuilder =
-                strategyExecutor(executor)
-
-            /**
              * Sets the executor for handling LLM requests.
              *
              * @param executor The executor to be used for executing LLM-related tasks.
@@ -254,16 +204,6 @@ public actual class AIAgentConfig actual constructor(
              */
             public fun llmRequestExecutor(executor: Executor?): AIAgentConfigBuilder =
                 apply { this.llmRequestExecutor = executor }
-
-            /**
-             * Sets the executor service for handling LLM requests.
-             *
-             * @param executor The executor service to be used for executing LLM-related tasks.
-             *                 If `null`, no specific executor will be set.
-             */
-            @Deprecated("Use llmRequestExecutor instead", replaceWith = ReplaceWith("llmRequestExecutor(executor)"))
-            public fun llmRequestExecutorService(executor: ExecutorService?): AIAgentConfigBuilder =
-                llmRequestExecutor(executor)
 
             /**
              * Constructs and returns an instance of [AIAgentConfig] using the values configured

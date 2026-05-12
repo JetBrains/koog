@@ -345,8 +345,8 @@ class JavaAPIAgentBuilderTest {
                 prompt = builder("copy-test").system("system").build(),
                 model = OpenAIModels.Chat.GPT4o,
                 maxAgentIterations = 3,
-                agentStrategyExecutorService = strategyExecutor,
-                llmRequestExecutorService = llmExecutor
+                strategyExecutor = strategyExecutor,
+                llmRequestExecutor = llmExecutor
             )
 
             val agent = AIAgent.builder()

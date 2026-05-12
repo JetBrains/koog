@@ -3,6 +3,7 @@ package ai.koog.agents.example.userpaystatus
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.Serializable
+import ai.koog.serialization.typeToken
 
 private data class Payment(
     val transactionId: String,
@@ -21,7 +22,7 @@ private val payments = listOf(
 )
 
 class PaymentStatusTool : SimpleTool<PaymentStatusTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "payment_status",
     description = "Get payment status of a transaction"
 ) {

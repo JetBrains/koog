@@ -1,8 +1,8 @@
 package ai.koog.integration.tests.utils.tools
 
 import ai.koog.agents.core.tools.Tool
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 
 @Serializable
 enum class Colors {
@@ -21,8 +21,8 @@ enum class Colors {
  * Use to test tool with empty arguments
  */
 object PickColorTool : Tool<Unit, Colors>(
-    argsSerializer = Unit.serializer(),
-    resultSerializer = Colors.serializer(),
+    argsType = typeToken<Unit>(),
+    resultType = typeToken<Colors>(),
     name = "pick_color",
     description = "Picks a random color"
 ) {
@@ -35,8 +35,8 @@ object PickColorTool : Tool<Unit, Colors>(
  * Use to test tool with a list of enum arguments
  */
 object PickColorFromListTool : Tool<PickColorFromListTool.Args, Colors>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Colors.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Colors>(),
     name = "pick_color",
     description = "Picks a random color from a given list of colors"
 ) {
@@ -52,8 +52,8 @@ object PickColorFromListTool : Tool<PickColorFromListTool.Args, Colors>(
  * Use to test tool with enum arguments
  */
 object PaintTool : Tool<Colors, Unit>(
-    argsSerializer = Colors.serializer(),
-    resultSerializer = Unit.serializer(),
+    argsType = typeToken<Colors>(),
+    resultType = typeToken<Unit>(),
     name = "paint",
     description = "Paints the picture with selected color"
 ) {

@@ -109,7 +109,7 @@ private fun teleportOnceNode(
         teleportState.teleported = true
         withPersistence { ctx ->
             val history = llm.readSession { this.prompt.messages }
-            setExecutionPoint(ctx, teleportToPath, history, input = JSONPrimitive("$it\nTeleported"))
+            setExecutionPointAfterNode(ctx, teleportToPath, history, output = JSONPrimitive("$it\nTeleported"))
             return@withPersistence "Teleported"
         }
     } else {
@@ -132,11 +132,11 @@ private fun nodeForSecondTry(
     }
 }
 
-@Suppress("DEPRECATION")
 private fun createCheckpointNode(name: String? = null, checkpointId: String) =
     node<String, String>(name) { input ->
         withPersistence { ctx ->
-            createCheckpoint(ctx, ctx.executionInfo.path(), input, typeToken<String>(), 0L, checkpointId)
+            // Append the marker message BEFORE creating the checkpoint so it's part of the
+            // captured messageHistory; under lastOutput semantics the node won't re-execute.
             llm.writeSession {
                 appendPrompt {
                     user {
@@ -144,6 +144,7 @@ private fun createCheckpointNode(name: String? = null, checkpointId: String) =
                     }
                 }
             }
+            createCheckpointAfterNode(ctx, ctx.executionInfo.path(), input, typeToken<String>(), 0L, checkpointId)
         }
         return@node "$input\nCheckpoint Created"
     }

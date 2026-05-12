@@ -11,15 +11,6 @@ import ai.koog.rag.base.files.writeText
 import kotlinx.serialization.json.Json
 import kotlin.jvm.JvmOverloads
 
-@Deprecated(
-    "`FilePersistencyStorageProvider` has been renamed to `FilePersistenceStorageProvider`",
-    replaceWith = ReplaceWith(
-        expression = "FilePersistenceStorageProvider",
-        "ai.koog.agents.snapshot.providers.file.FilePersistenceStorageProvider"
-    )
-)
-public typealias FilePersistencyStorageProvider<Path> = FilePersistenceStorageProvider<Path>
-
 /**
  * A file-based implementation of [PersistenceStorageProvider] that stores agent checkpoints in a file system.
  *

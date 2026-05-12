@@ -51,8 +51,6 @@ class PersistenceRunsTwiceTest {
         )
 
         val agent = GraphAIAgent(
-            inputType = typeToken<String>(),
-            outputType = typeToken<String>(),
             promptExecutor = getMockExecutor(serializer) {
                 // No LLM calls needed for this test; nodes write directly to the prompt/history
             },
@@ -264,11 +262,12 @@ class PersistenceRunsTwiceTest {
 
         val lastCheckpoint = checkpointStorage.getCheckpoints("session-01").last()
 
-        assertEquals("nodeExecuteTool", lastCheckpoint.nodePath.substringAfterLast("/"))
-        assertNotNull(lastCheckpoint.lastOutput, lastCheckpoint.nodePath.substringAfterLast("/"))
+        val lastGraphProps = lastCheckpoint.graphProperties!!
+        assertEquals("nodeExecuteTool", lastGraphProps.nodePath.substringAfterLast("/"))
+        assertNotNull(lastGraphProps.lastOutput, lastGraphProps.nodePath.substringAfterLast("/"))
 
         val lastOutputValue = KotlinxSerializer().decodeFromJSONElement<ReceivedToolResults>(
-            lastCheckpoint.lastOutput,
+            lastGraphProps.lastOutput,
             typeToken<ReceivedToolResults>()
         )
         val persistedToolResult = lastOutputValue.toolResults.single()

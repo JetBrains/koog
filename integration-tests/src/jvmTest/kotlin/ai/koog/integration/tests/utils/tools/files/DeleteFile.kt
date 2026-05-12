@@ -2,11 +2,12 @@ package ai.koog.integration.tests.utils.tools.files
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 class DeleteFile(private val fs: MockFileSystem) : Tool<DeleteFile.Args, DeleteFile.Result>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Result.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Result>(),
     name = "delete_file",
     description = "Deletes a file"
 ) {

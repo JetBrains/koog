@@ -22,9 +22,10 @@ import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
-import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OpenAILLMProvider
 import ai.koog.prompt.markdown.markdown
@@ -68,7 +69,7 @@ class ModelCapabilitiesIntegrationTest {
     private lateinit var openAIClient: OpenAILLMClient
     private lateinit var anthropicClient: AnthropicLLMClient
     private lateinit var googleClient: GoogleLLMClient
-    private lateinit var executor: DefaultMultiLLMPromptExecutor
+    private lateinit var executor: MultiLLMPromptExecutor
     private lateinit var testResourcesDir: Path
 
     @BeforeAll
@@ -80,7 +81,11 @@ class ModelCapabilitiesIntegrationTest {
         openAIClient = OpenAILLMClient(openAIKey)
         anthropicClient = AnthropicLLMClient(anthropicKey)
         googleClient = GoogleLLMClient(googleKey)
-        executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
+        executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to openAIClient,
+            LLMProvider.Anthropic to anthropicClient,
+            LLMProvider.Google to googleClient,
+        )
 
         val resourceUrl = this::class.java.getResource("/media") ?: error("Resource folder '/media' not found.")
         testResourcesDir = Path.of(resourceUrl.toURI())

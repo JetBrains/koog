@@ -35,42 +35,7 @@ public data class LLMCallStartingEvent(
     val model: ModelInfo,
     val tools: List<String>,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated Use constructor with executionInfo parameter and model parameter of type [ModelInfo]:
-     *             LLMCallStartingEvent(executionInfo, runId, prompt, model, tools, timestamp)
-     */
-    @Deprecated(
-        message = "Please use constructor with executionInfo parameter and model parameter of type [ModelInfo]: LLMCallStartingEvent(executionInfo, runId, prompt, model, tools, timestamp)",
-        replaceWith = ReplaceWith("LLMCallStartingEvent(executionInfo, runId, prompt, model, tools, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        prompt: Prompt,
-        model: String,
-        tools: List<String>,
-        eventId: String = LLMCallStartingEvent::class.simpleName.toString(),
-        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = eventId,
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = LLMCallStartingEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        prompt = prompt,
-        model = ModelInfo.fromString(model),
-        tools = tools,
-        timestamp = timestamp
-    )
-
-    /**
-     * @deprecated Use model.eventString instead
-     */
-    @Deprecated("Use model.eventString instead", ReplaceWith("model.eventString"))
-    public val modelString: String get() = model.eventString
-}
+) : DefinedFeatureEvent()
 
 /**
  * Represents an event signaling the completion of an LLM (Large Language Model) call.
@@ -103,42 +68,6 @@ public data class LLMCallCompletedEvent(
     val moderationResponse: ModerationResult? = null,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated Use constructor with executionInfo parameter and model parameter of type [ModelInfo]:
-     *             LLMCallCompletedEvent(executionInfo, runId, prompt, model, responses, moderationResponse, timestamp)
-     */
-    @Deprecated(
-        message = "Please use constructor with executionInfo parameter and model parameter of type [ModelInfo]: LLMCallCompletedEvent(executionInfo, runId, prompt, model, responses, moderationResponse, timestamp)",
-        replaceWith = ReplaceWith("LLMCallCompletedEvent(executionInfo, runId, prompt, model, responses, moderationResponse, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        prompt: Prompt,
-        model: String,
-        response: Message.Assistant? = null,
-        moderationResponse: ModerationResult? = null,
-        eventId: String = LLMCallCompletedEvent::class.simpleName.toString(),
-        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = eventId,
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = LLMCallCompletedEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        prompt = prompt,
-        model = ModelInfo.fromString(model),
-        response = response,
-        moderationResponse = moderationResponse,
-        timestamp = timestamp
-    )
-
-    /**
-     * @deprecated Use model.eventString instead
-     */
-    @Deprecated("Use model.eventString instead", ReplaceWith("model.eventString"))
-    public val modelString: String get() = model.eventString
 }
 
 /**
@@ -166,19 +95,3 @@ public data class LLMCallFailedEvent(
     val error: AIAgentError,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
-
-//region Deprecated
-
-@Deprecated(
-    message = "Use LLMCallStartingEvent instead",
-    replaceWith = ReplaceWith("LLMCallStartingEvent")
-)
-public typealias BeforeLLMCallEvent = LLMCallStartingEvent
-
-@Deprecated(
-    message = "Use LLMCallCompletedEvent instead",
-    replaceWith = ReplaceWith("LLMCallCompletedEvent")
-)
-public typealias AfterLLMCallEvent = LLMCallCompletedEvent
-
-//endregion Deprecated

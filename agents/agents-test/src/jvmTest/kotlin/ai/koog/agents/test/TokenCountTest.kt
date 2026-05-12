@@ -13,6 +13,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import ai.koog.utils.time.KoogClock
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
@@ -50,7 +51,7 @@ class TokenCountTest {
     }
 
     object TestTool : SimpleTool<TestTool.Args>(
-        argsSerializer = Args.serializer(),
+        argsType = typeToken<Args>(),
         name = "test_tool",
         description = "A test tool for token counting"
     ) {

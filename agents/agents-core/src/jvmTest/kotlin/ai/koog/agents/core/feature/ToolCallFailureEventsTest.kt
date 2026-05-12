@@ -34,7 +34,7 @@ class ToolCallFailureEventsTest {
     private data class RequiredArgs(val required: String)
 
     private class RequiredArgsTool : SimpleTool<RequiredArgs>(
-        argsSerializer = RequiredArgs.serializer(),
+        argsType = typeToken<RequiredArgs>(),
         name = "required_args",
         description = "Tool that requires a single argument.",
     ) {
@@ -42,7 +42,7 @@ class ToolCallFailureEventsTest {
     }
 
     private class BadResultTool : SimpleTool<RequiredArgs>(
-        argsSerializer = RequiredArgs.serializer(),
+        argsType = typeToken<RequiredArgs>(),
         name = "bad_result",
         description = "Tool that fails on result serialization.",
     ) {
@@ -85,8 +85,6 @@ class ToolCallFailureEventsTest {
         }
 
         val agent = GraphAIAgent(
-            inputType = typeToken<MessagePart.Tool.Call>(),
-            outputType = typeToken<ReceivedToolResult>(),
             promptExecutor = getMockExecutor(serializer) { },
             agentConfig = AIAgentConfig.withSystemPrompt("test"),
             strategy = strategy,
@@ -121,8 +119,6 @@ class ToolCallFailureEventsTest {
         }
 
         val agent = GraphAIAgent(
-            inputType = typeToken<MessagePart.Tool.Call>(),
-            outputType = typeToken<ReceivedToolResult>(),
             promptExecutor = getMockExecutor(serializer) { },
             agentConfig = AIAgentConfig.withSystemPrompt("test"),
             strategy = strategy,
@@ -156,8 +152,6 @@ class ToolCallFailureEventsTest {
         }
 
         val agent = GraphAIAgent(
-            inputType = typeToken<MessagePart.Tool.Call>(),
-            outputType = typeToken<ReceivedToolResult>(),
             promptExecutor = getMockExecutor(serializer) { },
             agentConfig = AIAgentConfig.withSystemPrompt("test"),
             strategy = strategy,

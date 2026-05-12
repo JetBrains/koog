@@ -404,62 +404,6 @@ public interface AIAgentPipelineAPI {
         handle: suspend (eventContext: ToolCallCompletedContext) -> Unit
     )
 
-    // Short aliases
-
-    public fun interceptBeforeAgentStarted(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (AgentStartingContext) -> Unit
-    )
-
-    public fun interceptAgentFinished(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: AgentCompletedContext) -> Unit
-    )
-
-    public fun interceptAgentRunError(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (AgentExecutionFailedContext) -> Unit
-    )
-
-    public fun interceptAgentBeforeClose(feature: AIAgentFeature<*, *>, handle: suspend (AgentClosingContext) -> Unit)
-
-    public fun interceptStrategyStart(feature: AIAgentFeature<*, *>, handle: suspend (StrategyStartingContext) -> Unit)
-
-    public fun interceptStrategyFinished(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (StrategyCompletedContext) -> Unit
-    )
-
-    public fun interceptBeforeLLMCall(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: LLMCallStartingContext) -> Unit
-    )
-
-    public fun interceptAfterLLMCall(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: LLMCallCompletedContext) -> Unit
-    )
-
-    public fun interceptToolCall(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: ToolCallStartingContext) -> Unit
-    )
-
-    public fun interceptToolCallResult(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: ToolCallCompletedContext) -> Unit
-    )
-
-    public fun interceptToolCallFailure(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: ToolCallFailedContext) -> Unit
-    )
-
-    public fun interceptToolValidationError(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: ToolValidationFailedContext) -> Unit
-    )
-
     //endregion Interceptors
 
     @InternalAgentsApi

@@ -1,6 +1,7 @@
 package ai.koog.agents.features.persistence.jdbc
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -72,14 +73,16 @@ class PostgresJdbcPersistenceStorageProviderTest : AbstractJdbcPersistenceStorag
             AgentCheckpointData(
                 checkpointId = Uuid.random().toString(),
                 createdAt = KoogClock.System.now(),
-                nodePath = "graph/math/solve",
-                lastOutput = JSONPrimitive("4"),
                 messageHistory = listOf(
                     Message.System("You help with math.", RequestMetaInfo.create(KoogClock.System)),
                     Message.User("What is 2+2?", RequestMetaInfo.create(KoogClock.System)),
                     Message.Assistant("4", ResponseMetaInfo.create(KoogClock.System))
                 ),
-                version = 1L
+                version = 1L,
+                graphProperties = GraphCheckpointProperties(
+                    nodePath = "graph/math/solve",
+                    lastOutput = JSONPrimitive("4"),
+                ),
             )
         )
         run1.saveCheckpoint(
@@ -87,14 +90,16 @@ class PostgresJdbcPersistenceStorageProviderTest : AbstractJdbcPersistenceStorag
             AgentCheckpointData(
                 checkpointId = Uuid.random().toString(),
                 createdAt = KoogClock.System.now(),
-                nodePath = "graph/history/answer",
-                lastOutput = JSONPrimitive("July 20, 1969."),
                 messageHistory = listOf(
                     Message.System("You help with history.", RequestMetaInfo.create(KoogClock.System)),
                     Message.User("When was the moon landing?", RequestMetaInfo.create(KoogClock.System)),
                     Message.Assistant("July 20, 1969.", ResponseMetaInfo.create(KoogClock.System))
                 ),
-                version = 1L
+                version = 1L,
+                graphProperties = GraphCheckpointProperties(
+                    nodePath = "graph/history/answer",
+                    lastOutput = JSONPrimitive("July 20, 1969."),
+                ),
             )
         )
 
@@ -106,20 +111,22 @@ class PostgresJdbcPersistenceStorageProviderTest : AbstractJdbcPersistenceStorag
 
         val aliceCheckpoints = run2.getCheckpoints("agent-alice")
         assertEquals(1, aliceCheckpoints.size)
-        assertEquals("graph/math/solve", aliceCheckpoints[0].nodePath)
+        assertEquals("graph/math/solve", aliceCheckpoints[0].graphProperties?.nodePath)
 
         run2.saveCheckpoint(
             "agent-alice",
             AgentCheckpointData(
                 checkpointId = Uuid.random().toString(),
                 createdAt = KoogClock.System.now(),
-                nodePath = "graph/math/solve",
-                lastOutput = JSONPrimitive("6"),
                 messageHistory = aliceCheckpoints[0].messageHistory + listOf(
                     Message.User("And 3+3?", RequestMetaInfo.create(KoogClock.System)),
                     Message.Assistant("6", ResponseMetaInfo.create(KoogClock.System))
                 ),
-                version = 2L
+                version = 2L,
+                graphProperties = GraphCheckpointProperties(
+                    nodePath = "graph/math/solve",
+                    lastOutput = JSONPrimitive("6"),
+                ),
             )
         )
 

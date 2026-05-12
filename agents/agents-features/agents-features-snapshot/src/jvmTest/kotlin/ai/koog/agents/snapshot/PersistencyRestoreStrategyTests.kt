@@ -10,6 +10,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
@@ -31,11 +32,14 @@ class PersistenceRestoreStrategyTests {
         val checkpoint = AgentCheckpointData(
             checkpointId = "chk-1",
             createdAt = KoogClock.System.now(),
-            messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(KoogClock.System.now()))),
+            messageHistory = listOf(
+                Message.Assistant("History Before", ResponseMetaInfo(KoogClock.System.now())),
+                Message.User("Node 2 output", RequestMetaInfo(KoogClock.System.now()))
+            ),
             version = 0L,
             graphProperties = GraphCheckpointProperties(
                 nodePath = "$agentId/restore-strategy/Node2",
-                lastInput = JSONPrimitive("input-for-node2")
+                lastOutput = JSONPrimitive("Node 2 output")
             ),
             plannerProperties = null,
             properties = null,
