@@ -44,7 +44,9 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
      * @param executionInfo The execution information for the plan creation event;
      * @param context The context of the plan creation;
      * @param state The current state;
-     * @param plan The plan that completed creation;
+     * @param plan The previous plan, or `null` if this is the first plan;
+     * @param stepIndex The index of the step in the plan;
+     * @param updatedPlan The newly built plan.
      */
     @InternalAgentsApi
     public suspend fun onPlanCreationCompleted(
@@ -52,8 +54,9 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
-        plan: Any,
+        plan: Any?,
         stepIndex: Int,
+        updatedPlan: Any,
     )
 
     /**
@@ -123,6 +126,7 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
      * @param context The context of the plan execution;
      * @param state The current state;
      * @param plan The plan being evaluated for completion;
+     * @param stepIndex The index of the step in the plan;
      * @param isCompleted The result of the completion check.
      */
     @InternalAgentsApi
@@ -132,8 +136,8 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
         context: AIAgentContext,
         state: Any,
         plan: Any,
-        isCompleted: Boolean,
         stepIndex: Int,
+        isCompleted: Boolean,
     )
 
     //endregion Trigger Planner Handlers

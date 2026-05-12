@@ -12,7 +12,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 
 /**
  * Annotation for marking APIs as detached prompt executors within the `AIAgentLLMContext`.
@@ -63,5 +63,5 @@ public expect open class AIAgentLLMContext(
     promptExecutor: PromptExecutor,
     environment: AIAgentEnvironment,
     config: AIAgentConfig,
-    clock: Clock
+    clock: KoogClock
 ) : AIAgentLLMContextCommon

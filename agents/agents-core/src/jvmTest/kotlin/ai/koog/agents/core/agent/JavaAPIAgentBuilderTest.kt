@@ -2,6 +2,7 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt.Companion.builder
@@ -9,14 +10,15 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.utils.time.KoogClock
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.asCoroutineDispatcher
 import org.junit.jupiter.api.Test
 import java.util.concurrent.Executors
 import kotlin.test.assertNotNull
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 /**
@@ -30,9 +32,7 @@ class JavaAPIAgentBuilderTest {
     companion object {
         val ts: Instant = Instant.parse("2023-01-01T00:00:00Z")
 
-        val testClock: Clock = object : Clock {
-            override fun now(): Instant = ts
-        }
+        val testClock: KoogClock = KoogClock { ts }
     }
 
     @Test
@@ -333,6 +333,7 @@ class JavaAPIAgentBuilderTest {
         agent.agentConfig.prompt.params.temperature.shouldBe(0.7)
     }
 
+    @OptIn(InternalAgentsApi::class)
     @Test
     fun testBuilderUpdatePreservesJvmExecutorsFromCustomConfig() {
         val strategyExecutor = Executors.newSingleThreadExecutor()
@@ -353,8 +354,8 @@ class JavaAPIAgentBuilderTest {
                 .temperature(0.7)
                 .build()
 
-            agent.agentConfig.strategyExecutorService.shouldBe(strategyExecutor)
-            agent.agentConfig.llmRequestExecutorService.shouldBe(llmExecutor)
+            agent.agentConfig.strategyDispatcher.shouldBe(strategyExecutor.asCoroutineDispatcher())
+            agent.agentConfig.llmRequestDispatcher.shouldBe(llmExecutor.asCoroutineDispatcher())
         } finally {
             strategyExecutor.shutdownNow()
             llmExecutor.shutdownNow()

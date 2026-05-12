@@ -3,6 +3,7 @@ package ai.koog.agents.features.chatmemory.sql
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -12,7 +13,6 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 
 @TestInstance(Lifecycle.PER_METHOD)
 @Execution(ExecutionMode.SAME_THREAD)
@@ -27,9 +27,9 @@ class H2ChatHistoryProviderTest {
     }
 
     private fun createTestMessages(): List<Message> = listOf(
-        Message.System("You are a helpful assistant", RequestMetaInfo.create(Clock.System)),
-        Message.User("Hello", RequestMetaInfo.create(Clock.System)),
-        Message.Assistant("Hi there! How can I help?", ResponseMetaInfo.create(Clock.System))
+        Message.System("You are a helpful assistant", RequestMetaInfo.create(KoogClock.System)),
+        Message.User("Hello", RequestMetaInfo.create(KoogClock.System)),
+        Message.Assistant("Hi there! How can I help?", ResponseMetaInfo.create(KoogClock.System))
     )
 
     @Test
@@ -65,8 +65,8 @@ class H2ChatHistoryProviderTest {
         p.store("conv-1", original)
 
         val updated = listOf(
-            Message.User("New message", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("New response", ResponseMetaInfo.create(Clock.System))
+            Message.User("New message", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("New response", ResponseMetaInfo.create(KoogClock.System))
         )
         p.store("conv-1", updated)
 
@@ -85,12 +85,12 @@ class H2ChatHistoryProviderTest {
         p.migrate()
 
         val messages1 = listOf(
-            Message.User("Hello from conv-1", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Response to conv-1", ResponseMetaInfo.create(Clock.System))
+            Message.User("Hello from conv-1", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Response to conv-1", ResponseMetaInfo.create(KoogClock.System))
         )
         val messages2 = listOf(
-            Message.User("Hello from conv-2", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Response to conv-2", ResponseMetaInfo.create(Clock.System))
+            Message.User("Hello from conv-2", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Response to conv-2", ResponseMetaInfo.create(KoogClock.System))
         )
 
         p.store("conv-1", messages1)
@@ -114,20 +114,20 @@ class H2ChatHistoryProviderTest {
         p.migrate()
 
         val messages = listOf(
-            Message.System("System prompt", RequestMetaInfo.create(Clock.System)),
-            Message.User("User input", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Assistant response", ResponseMetaInfo.create(Clock.System)),
+            Message.System("System prompt", RequestMetaInfo.create(KoogClock.System)),
+            Message.User("User input", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Assistant response", ResponseMetaInfo.create(KoogClock.System)),
             Message.Tool.Call(
                 id = "call-1",
                 tool = "searchTool",
                 content = """{"query": "test"}""",
-                metaInfo = ResponseMetaInfo.create(Clock.System)
+                metaInfo = ResponseMetaInfo.create(KoogClock.System)
             ),
             Message.Tool.Result(
                 id = "call-1",
                 tool = "searchTool",
                 content = """{"result": "found"}""",
-                metaInfo = RequestMetaInfo.create(Clock.System)
+                metaInfo = RequestMetaInfo.create(KoogClock.System)
             )
         )
 

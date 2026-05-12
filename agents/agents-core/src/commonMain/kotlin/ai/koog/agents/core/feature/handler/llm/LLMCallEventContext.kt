@@ -15,6 +15,11 @@ import ai.koog.prompt.message.Message
  */
 public interface LLMCallEventContext : AgentLifecycleEventContext {
     /**
+     * The AI agent context.
+     */
+    public val context: AIAgentContext
+
+    /**
      * The unique identifier for this LLM call session.
      */
     public val runId: String
@@ -33,30 +38,19 @@ public interface LLMCallEventContext : AgentLifecycleEventContext {
      * The list of tool descriptors available for the LLM call.
      */
     public val tools: List<ToolDescriptor>
-
-    /**
-     * The AI agent context.
-     */
-    public val context: AIAgentContext
 }
 
 /**
  * Represents the context for handling a before LLM call event.
- *
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property runId The unique identifier for this LLM call session.
- * @property prompt The prompt that will be sent to the language model.
- * @property model The language model instance being used.
- * @property tools The list of tool descriptors available for the LLM call.
  */
 public data class LLMCallStartingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
+    override val context: AIAgentContext,
     override val runId: String,
     override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-    override val context: AIAgentContext
 ) : LLMCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallStarting
 }
@@ -64,21 +58,17 @@ public data class LLMCallStartingContext(
 /**
  * Represents the context for handling an after LLM call failed.
  *
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property runId The unique identifier for this LLM call session.
- * @property prompt The prompt that will be sent to the language model.
- * @property model The language model instance being used.
- * @property tools The list of tool descriptors available for the LLM call.
+ * @property error The error that occurred during the LLM call.
  */
 public data class LLMCallFailedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
+    override val context: AIAgentContext,
     override val runId: String,
     override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-    override val context: AIAgentContext,
-    val error: Throwable
+    public val error: Throwable
 ) : LLMCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallStarting
 }
@@ -86,24 +76,19 @@ public data class LLMCallFailedContext(
 /**
  * Represents the context for handling an after LLM call event.
  *
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property runId The unique identifier for this LLM call session.
- * @property prompt The prompt that was sent to the language model.
- * @property model The language model instance that was used.
- * @property tools The list of tool descriptors that were available for the LLM call.
  * @property responses The response messages received from the language model.
  * @property moderationResponse The moderation response, if any, received from the language model.
  */
 public data class LLMCallCompletedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
+    override val context: AIAgentContext,
     override val runId: String,
     override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-    val responses: List<Message.Response>,
-    val moderationResponse: ModerationResult?,
-    override val context: AIAgentContext
+    public val responses: List<Message.Response>,
+    public val moderationResponse: ModerationResult?,
 ) : LLMCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallCompleted
 }

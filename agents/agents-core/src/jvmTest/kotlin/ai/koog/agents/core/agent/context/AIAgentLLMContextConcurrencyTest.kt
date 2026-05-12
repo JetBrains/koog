@@ -199,7 +199,7 @@ class AIAgentLLMContextConcurrencyTest {
         val testTool = TestTool()
         val tools = listOf(testTool.descriptor)
 
-        val toolRegistry = ToolRegistry.Companion {
+        val toolRegistry = ToolRegistry {
             tool(testTool)
         }
 

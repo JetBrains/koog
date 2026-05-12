@@ -7,6 +7,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.jsonArray
@@ -18,7 +19,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 
 class AnthropicToolSerializationTest {
 
@@ -192,7 +192,7 @@ class AnthropicToolSerializationTest {
     fun testCreateAnthropicRequestIncludesIsErrorTrueForErrorToolResult() {
         val client = AnthropicLLMClient(apiKey = "test-key")
         val model = AnthropicModels.Sonnet_4
-        val metaInfo = RequestMetaInfo.create(Clock.System)
+        val metaInfo = RequestMetaInfo.create(KoogClock.System)
 
         val requestJson = client.createAnthropicRequest(
             prompt = Prompt(
@@ -235,7 +235,7 @@ class AnthropicToolSerializationTest {
     fun testCreateAnthropicRequestOmitsIsErrorForSuccessfulToolResult() {
         val client = AnthropicLLMClient(apiKey = "test-key")
         val model = AnthropicModels.Sonnet_4
-        val metaInfo = RequestMetaInfo.create(Clock.System)
+        val metaInfo = RequestMetaInfo.create(KoogClock.System)
 
         val requestJson = client.createAnthropicRequest(
             prompt = Prompt(

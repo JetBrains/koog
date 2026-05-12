@@ -17,8 +17,6 @@ public abstract class AIAgentServiceBuilderCommon<Self : AIAgentServiceBuilderCo
         strategy: AIAgentGraphStrategy<Input, Output>
     ): GraphAgentServiceBuilder<Input, Output> = GraphAgentServiceBuilder(
         strategy = strategy,
-        inputType = strategy.inputType,
-        outputType = strategy.outputType,
         promptExecutor = this.promptExecutor,
         toolRegistry = this.toolRegistry,
         config = this.config,
@@ -40,11 +38,11 @@ public abstract class AIAgentServiceBuilderCommon<Self : AIAgentServiceBuilderCo
      * Convenience build for GraphAIAgentService<String, String> using singleRunStrategy.
      */
     public fun build(): GraphAIAgentService<String, String> {
-        return AIAgentServiceHelper(
+        return AIAgentService(
             promptExecutor = validatedPromptExecutor,
             agentConfig = config,
             strategy = singleRunStrategy(),
             toolRegistry = toolRegistry,
-        ) {}
+        )
     }
 }

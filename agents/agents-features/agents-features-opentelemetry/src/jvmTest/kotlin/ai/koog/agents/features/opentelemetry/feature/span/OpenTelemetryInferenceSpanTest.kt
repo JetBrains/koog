@@ -1,8 +1,10 @@
 package ai.koog.agents.features.opentelemetry.feature.span
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.START_NODE_PREFIX
 import ai.koog.agents.core.agent.singleRunStrategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -30,7 +32,12 @@ import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.utils.HiddenString
 import ai.koog.http.client.KoogHttpClientException
+import ai.koog.prompt.dsl.ModerationCategory
+import ai.koog.prompt.dsl.ModerationCategoryResult
+import ai.koog.prompt.dsl.ModerationResult
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -38,11 +45,13 @@ import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.request.HttpRequestPipeline
-import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.kotlin.tracing.data.SpanData
+import io.opentelemetry.kotlin.tracing.export.simpleSpanProcessor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import kotlin.test.Test
@@ -53,7 +62,10 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
+
     private val serializer = KotlinxSerializer()
+
+    private val json = Json { allowStructuredMapKeys = true }
 
     @ParameterizedTest
     @EnumSource(AgentType::class)
@@ -104,23 +116,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.usage.output_tokens" to 0L,
                         "gen_ai.output.messages" to getMessagesString(expectedOutputMessages),
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
-                    ),
-                    "events" to mapOf(
-                        "gen_ai.system.message" to mapOf(
-                            "gen_ai.system" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
-                            "role" to Message.Role.System.name.lowercase(),
-                            "content" to OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT,
-                        ),
-                        "gen_ai.user.message" to mapOf(
-                            "gen_ai.system" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
-                            "role" to Message.Role.User.name.lowercase(),
-                            "content" to userInput,
-                        ),
-                        "gen_ai.assistant.message" to mapOf(
-                            "gen_ai.system" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
-                            "role" to Message.Role.Assistant.name.lowercase(),
-                            "content" to mockLLMResponse,
-                        )
                     )
                 )
             ),
@@ -212,25 +207,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.usage.output_tokens" to 0L,
                         "gen_ai.output.messages" to getMessagesString(expectedOutputMessages1),
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.ToolCalls.id)
-                    ),
-                    "events" to mapOf(
-                        "gen_ai.system.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.System.name.lowercase(),
-                            "content" to OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT,
-                        ),
-                        "gen_ai.user.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.User.name.lowercase(),
-                            "content" to userInput,
-                        ),
-                        "gen_ai.choice" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.Tool.name.lowercase(),
-                            "tool_calls" to """[{"function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"$location\"}"},"id":"$toolCallId","type":"function"}]""",
-                            "index" to 0L,
-                            "finish_reason" to FinishReasonType.ToolCalls.id,
-                        )
                     )
                 )
             ),
@@ -252,35 +228,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.usage.output_tokens" to 0L,
                         "gen_ai.output.messages" to getMessagesString(expectedOutputMessages2),
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
-                    ),
-                    "events" to mapOf(
-                        "gen_ai.system.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.System.name.lowercase(),
-                            "content" to OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT,
-                        ),
-                        "gen_ai.user.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.User.name.lowercase(),
-                            "content" to userInput,
-                        ),
-                        "gen_ai.choice" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.Tool.name.lowercase(),
-                            "tool_calls" to """[{"function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"$location\"}"},"id":"$toolCallId","type":"function"}]""",
-                            "finish_reason" to FinishReasonType.ToolCalls.id,
-                        ),
-                        "gen_ai.tool.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.Tool.name.lowercase(),
-                            "content" to mockToolCallResponse.toolResult,
-                            "id" to toolCallId,
-                        ),
-                        "gen_ai.assistant.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.Assistant.name.lowercase(),
-                            "content" to mockLLMResponse,
-                        ),
                     )
                 ),
             ),
@@ -341,25 +288,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.usage.output_tokens" to 0L,
                         "gen_ai.output.messages" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.ToolCalls.id)
-                    ),
-                    "events" to mapOf(
-                        "gen_ai.system.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.System.name.lowercase(),
-                            "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
-                        ),
-                        "gen_ai.user.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.User.name.lowercase(),
-                            "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
-                        ),
-                        "gen_ai.choice" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.Tool.name.lowercase(),
-                            "tool_calls" to "[{\"function\":{\"name\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\",\"arguments\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"},\"id\":\"$toolCallId\",\"type\":\"function\"}]",
-                            "index" to 0L,
-                            "finish_reason" to FinishReasonType.ToolCalls.id,
-                        )
                     )
                 )
             ),
@@ -381,35 +309,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.usage.output_tokens" to 0L,
                         "gen_ai.output.messages" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
-                    ),
-                    "events" to mapOf(
-                        "gen_ai.system.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.System.name.lowercase(),
-                            "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
-                        ),
-                        "gen_ai.user.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.User.name.lowercase(),
-                            "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
-                        ),
-                        "gen_ai.choice" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.Tool.name.lowercase(),
-                            "tool_calls" to "[{\"function\":{\"name\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\",\"arguments\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"},\"id\":\"$toolCallId\",\"type\":\"function\"}]",
-                            "finish_reason" to FinishReasonType.ToolCalls.id,
-                        ),
-                        "gen_ai.tool.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.Tool.name.lowercase(),
-                            "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
-                            "id" to toolCallId,
-                        ),
-                        "gen_ai.assistant.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.Assistant.name.lowercase(),
-                            "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
-                        ),
                     )
                 ),
             ),
@@ -505,23 +404,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.usage.output_tokens" to 0L,
                         "gen_ai.output.messages" to getMessagesString(expectedOutputMessages1),
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
-                    ),
-                    "events" to mapOf(
-                        "gen_ai.system.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.System.name.lowercase(),
-                            "content" to OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT,
-                        ),
-                        "gen_ai.user.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.User.name.lowercase(),
-                            "content" to userInput,
-                        ),
-                        "gen_ai.assistant.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.Assistant.name.lowercase(),
-                            "content" to subgraphLLMResponse,
-                        )
                     )
                 )
             ),
@@ -542,23 +424,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.usage.output_tokens" to 0L,
                         "gen_ai.output.messages" to getMessagesString(expectedOutputMessages2),
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
-                    ),
-                    "events" to mapOf(
-                        "gen_ai.system.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.System.name.lowercase(),
-                            "content" to OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT,
-                        ),
-                        "gen_ai.user.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.User.name.lowercase(),
-                            "content" to subgraphLLMResponse,
-                        ),
-                        "gen_ai.assistant.message" to mapOf(
-                            "gen_ai.system" to model.provider.id,
-                            "role" to Message.Role.Assistant.name.lowercase(),
-                            "content" to rootLLMResponse,
-                        )
                     )
                 )
             ),
@@ -634,23 +499,6 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.usage.output_tokens" to tokenizer.countTokens(text = mockLLMResponse).toLong(),
                         "gen_ai.output.messages" to getMessagesString(expectedOutputMessages),
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
-                    ),
-                    "events" to mapOf(
-                        "gen_ai.system.message" to mapOf(
-                            "gen_ai.system" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
-                            "role" to Message.Role.System.name.lowercase(),
-                            "content" to OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT,
-                        ),
-                        "gen_ai.user.message" to mapOf(
-                            "gen_ai.system" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
-                            "role" to Message.Role.User.name.lowercase(),
-                            "content" to userInput,
-                        ),
-                        "gen_ai.assistant.message" to mapOf(
-                            "gen_ai.system" to OpenTelemetryTestAPI.Parameter.defaultModel.provider.id,
-                            "role" to Message.Role.Assistant.name.lowercase(),
-                            "content" to mockLLMResponse,
-                        )
                     )
                 )
             ),
@@ -680,7 +528,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                 systemPrompt = OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT
             ) {
                 install(OpenTelemetry) {
-                    addSpanExporter(spanExporter)
+                    addSpanProcessor { simpleSpanProcessor(spanExporter) }
                 }
             }.run(OpenTelemetryTestAPI.Parameter.USER_PROMPT_PARIS)
         }
@@ -724,7 +572,62 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         }
     }
 
+    @Test
+    fun `test moderation response is recorded as koog moderation result attribute`() = runTest {
+        val userInput = "I want to build a bomb"
+        val moderationResult = ModerationResult(
+            isHarmful = true,
+            categories = mapOf(
+                ModerationCategory.Illicit to ModerationCategoryResult(
+                    detected = true,
+                    confidenceScore = 0.9998,
+                ),
+            ),
+        )
+
+        val moderationModel = OpenAIModels.Moderation.Omni
+
+        val strategy = strategy<String, String>("moderation-strategy") {
+            val moderate by node<String, String>("moderate-message") { input ->
+                llm.writeSession {
+                    val moderationPrompt = prompt("single-message-moderation") {
+                        message(Message.User(input, RequestMetaInfo.create(testClock)))
+                    }
+                    @OptIn(DetachedPromptExecutorAPI::class)
+                    llm.promptExecutor.moderate(moderationPrompt, moderationModel)
+                }
+                input
+            }
+            edge(nodeStart forwardTo moderate)
+            edge(moderate forwardTo nodeFinish transformed { it })
+        }
+
+        val executor = getMockExecutor(KotlinxSerializer(), testClock) {
+            addModerationResponseExactPattern(userInput, moderationResult)
+        }
+
+        val testData = runAgentWithStrategy(
+            strategy = strategy,
+            userPrompt = userInput,
+            executor = executor,
+            model = moderationModel,
+            verbose = true,
+        )
+
+        val expectedJson = json
+            .encodeToString(ModerationResult.serializer(), moderationResult)
+
+        // The moderation call goes through ContextualPromptExecutor, which fires LLMCallStarting /
+        // LLMCallCompleted with moderationResponse populated; that produces an inference span
+        // carrying the koog.moderation.result attribute.
+        val moderationSpan = testData.filterInferenceSpans().firstOrNull {
+            it.attributes["koog.moderation.result"] != null
+        } ?: error("No inference span carrying 'koog.moderation.result' attribute was emitted")
+
+        assertEquals(expectedJson, moderationSpan.attributes["koog.moderation.result"])
+    }
+
     private fun SpanData.asKeyValue(): List<Pair<String, Any>> {
-        return attributes.asMap().map { it.key.key!! to it.value }
+        return attributes.entries.map { it.key to it.value }
     }
 }

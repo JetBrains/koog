@@ -5,7 +5,7 @@ import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Token.Tok
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes.Koog.Tool.Call.StatusType
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
-import ai.koog.agents.features.opentelemetry.metric.MetricCollector
+import ai.koog.agents.features.opentelemetry.metric.JvmMetricCollector
 import ai.koog.agents.features.opentelemetry.metric.events.createExecuteToolDurationHistogramMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.events.createLLMCallDurationHistogramMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.events.createLLMInputTokensMetricEvent
@@ -58,7 +58,7 @@ class MetricCollectorTest {
 
         // Initialize MetricCollector to register metrics on the meter
         val config = OpenTelemetryConfig()
-        MetricCollector(meter, config)
+        JvmMetricCollector(meter, config)
 
         // One counter and two histograms should be created
         assertEquals(countersAmount, meter.buildCounter.size)
@@ -73,7 +73,7 @@ class MetricCollectorTest {
     fun testMetricCollectorToCreateTokenUsageHistogram() {
         val meter = TestMeter()
         val config = OpenTelemetryConfig()
-        MetricCollector(meter, config)
+        JvmMetricCollector(meter, config)
 
         assertContains(
             meter.buildHistogram,
@@ -85,7 +85,7 @@ class MetricCollectorTest {
     fun testMetricCollectorToCreateToolCallCounter() {
         val meter = TestMeter()
         val config = OpenTelemetryConfig()
-        MetricCollector(meter, config)
+        JvmMetricCollector(meter, config)
 
         assertContains(
             meter.buildCounter,
@@ -97,7 +97,7 @@ class MetricCollectorTest {
     fun testMetricCollectorToCreateOperationDurationHistogram() {
         val meter = TestMeter()
         val config = OpenTelemetryConfig()
-        MetricCollector(meter, config)
+        JvmMetricCollector(meter, config)
 
         assertContains(
             meter.buildHistogram,
@@ -109,7 +109,7 @@ class MetricCollectorTest {
     fun testMetricCollectorToProcessLLMTokens() {
         val meter = TestMeter()
         val config = OpenTelemetryConfig()
-        val metricCollector = MetricCollector(meter, config)
+        val metricCollector = JvmMetricCollector(meter, config)
 
         val model = model
         val inputTokenSpend = 100L
@@ -154,7 +154,7 @@ class MetricCollectorTest {
     fun testMetricCollectorToProcessLLMCallDuration() {
         val meter = TestMeter()
         val config = OpenTelemetryConfig()
-        val metricCollector = MetricCollector(meter, config)
+        val metricCollector = JvmMetricCollector(meter, config)
 
         val model = model
         val duration = 1.seconds
@@ -216,7 +216,7 @@ class MetricCollectorTest {
         cases.forEach { status ->
             val meter = TestMeter()
             val config = OpenTelemetryConfig()
-            val metricCollector = MetricCollector(meter, config)
+            val metricCollector = JvmMetricCollector(meter, config)
 
             val toolCallName = "test-tool"
             val duration = 100.milliseconds

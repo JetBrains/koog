@@ -29,8 +29,8 @@ import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.executor.ollama.tools.json.OllamaToolDescriptorSchemaGenerator
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
-import kotlin.time.Clock
 
 /**
  * Builder for constructing a [PromptExecutor] that automatically selects the appropriate executor
@@ -91,7 +91,7 @@ public class PromptExecutorBuilder {
      * @param apiKey The API key for authenticating with the OpenAI API.
      * @param settings Configuration settings for the OpenAI client. Defaults to [OpenAIClientSettings].
      * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [Clock.System].
+     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
      * @param toolsConverter Tool descriptor schema generator for OpenAI. Defaults to [OpenAICompatibleToolDescriptorSchemaGenerator].
      * @return This builder instance for chaining.
      */
@@ -100,7 +100,7 @@ public class PromptExecutorBuilder {
         apiKey: String,
         settings: OpenAIClientSettings = OpenAIClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
         addClient(OpenAILLMClient(apiKey, settings, baseClient, clock, toolsConverter))
@@ -115,7 +115,7 @@ public class PromptExecutorBuilder {
      * @param apiKey The API key for authenticating with the Anthropic API.
      * @param settings Configuration settings for the Anthropic client. Defaults to [AnthropicClientSettings].
      * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [Clock.System].
+     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
      * @return This builder instance for chaining.
      */
     @JvmOverloads
@@ -123,7 +123,7 @@ public class PromptExecutorBuilder {
         apiKey: String,
         settings: AnthropicClientSettings = AnthropicClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
     ): PromptExecutorBuilder = apply {
         addClient(AnthropicLLMClient(apiKey, settings, baseClient, clock))
     }
@@ -137,7 +137,7 @@ public class PromptExecutorBuilder {
      * @param apiKey The API key for authenticating with the Google AI API.
      * @param settings Configuration settings for the Google client. Defaults to [GoogleClientSettings].
      * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [Clock.System].
+     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
      * @return This builder instance for chaining.
      */
     @JvmOverloads
@@ -145,7 +145,7 @@ public class PromptExecutorBuilder {
         apiKey: String,
         settings: GoogleClientSettings = GoogleClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
     ): PromptExecutorBuilder = apply {
         addClient(GoogleLLMClient(apiKey, settings, baseClient, clock))
     }
@@ -159,7 +159,7 @@ public class PromptExecutorBuilder {
      * @param apiKey The API key for authenticating with the DeepSeek API.
      * @param settings Configuration settings for the DeepSeek client. Defaults to [DeepSeekClientSettings].
      * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [Clock.System].
+     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
      * @param toolsConverter Tool descriptor schema generator. Defaults to [OpenAICompatibleToolDescriptorSchemaGenerator].
      * @return This builder instance for chaining.
      */
@@ -168,7 +168,7 @@ public class PromptExecutorBuilder {
         apiKey: String,
         settings: DeepSeekClientSettings = DeepSeekClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
         addClient(DeepSeekLLMClient(apiKey, settings, baseClient, clock, toolsConverter))
@@ -183,7 +183,7 @@ public class PromptExecutorBuilder {
      * @param apiKey The API key for authenticating with the Mistral AI API.
      * @param settings Configuration settings for the Mistral AI client. Defaults to [MistralAIClientSettings].
      * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [Clock.System].
+     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
      * @param toolsConverter Tool descriptor schema generator. Defaults to [OpenAICompatibleToolDescriptorSchemaGenerator].
      * @return This builder instance for chaining.
      */
@@ -192,7 +192,7 @@ public class PromptExecutorBuilder {
         apiKey: String,
         settings: MistralAIClientSettings = MistralAIClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
         addClient(MistralAILLMClient(apiKey, settings, baseClient, clock, toolsConverter))
@@ -207,7 +207,7 @@ public class PromptExecutorBuilder {
      * @param baseUrl The base URL of the Ollama server. Defaults to `http://localhost:11434`.
      * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
      * @param timeoutConfig Connection timeout configuration. Defaults to [ConnectionTimeoutConfig].
-     * @param clock The clock used for time-related operations. Defaults to [Clock.System].
+     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
      * @param contextWindowStrategy Strategy for managing the context window. Defaults to [ContextWindowStrategy.None].
      * @param toolDescriptorConverter Tool descriptor schema generator. Defaults to [OllamaToolDescriptorSchemaGenerator].
      * @return This builder instance for chaining.
@@ -217,7 +217,7 @@ public class PromptExecutorBuilder {
         baseUrl: String = "http://localhost:11434",
         baseClient: HttpClient = HttpClient(),
         timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
         contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
         toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
@@ -242,7 +242,7 @@ public class PromptExecutorBuilder {
      * @param apiKey The API key for authenticating with the OpenRouter API.
      * @param settings Configuration settings for the OpenRouter client. Defaults to [OpenRouterClientSettings].
      * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [Clock.System].
+     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
      * @param toolsConverter Tool descriptor schema generator. Defaults to [OpenAICompatibleToolDescriptorSchemaGenerator].
      * @return This builder instance for chaining.
      */
@@ -251,7 +251,7 @@ public class PromptExecutorBuilder {
         apiKey: String,
         settings: OpenRouterClientSettings = OpenRouterClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
         addClient(OpenRouterLLMClient(apiKey, settings, baseClient, clock, toolsConverter))
@@ -266,7 +266,7 @@ public class PromptExecutorBuilder {
      * @param apiKey The API key for authenticating with the Dashscope API.
      * @param settings Configuration settings for the Dashscope client. Defaults to [DashscopeClientSettings].
      * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [Clock.System].
+     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
      * @param toolsConverter Tool descriptor schema generator. Defaults to [OpenAICompatibleToolDescriptorSchemaGenerator].
      * @return This builder instance for chaining.
      */
@@ -275,7 +275,7 @@ public class PromptExecutorBuilder {
         apiKey: String,
         settings: DashscopeClientSettings = DashscopeClientSettings(),
         baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
         addClient(DashscopeLLMClient(apiKey, settings, baseClient, clock, toolsConverter))

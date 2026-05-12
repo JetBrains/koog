@@ -14,6 +14,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -28,7 +29,6 @@ import org.springframework.ai.chat.model.ChatResponse
 import org.springframework.ai.chat.model.Generation
 import org.springframework.ai.model.tool.ToolCallingChatOptions
 import reactor.core.publisher.Flux
-import kotlin.time.Clock
 import org.springframework.ai.chat.prompt.Prompt as SpringPrompt
 
 class SpringAiLLMClientTest {
@@ -43,7 +43,7 @@ class SpringAiLLMClientTest {
     private fun createPrompt(vararg messages: Message): Prompt =
         Prompt(messages.toList(), "test-prompt", LLMParams())
 
-    private fun requestMeta() = RequestMetaInfo.create(Clock.System)
+    private fun requestMeta() = RequestMetaInfo.create(KoogClock.System)
 
     // ---- llmProvider ----
 

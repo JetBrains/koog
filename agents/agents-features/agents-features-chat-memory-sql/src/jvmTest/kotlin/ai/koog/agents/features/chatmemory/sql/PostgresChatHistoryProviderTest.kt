@@ -4,6 +4,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.test.utils.DockerAvailableCondition
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
@@ -19,7 +20,6 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 
 @TestInstance(Lifecycle.PER_CLASS)
 @ExtendWith(DockerAvailableCondition::class)
@@ -62,9 +62,9 @@ class PostgresChatHistoryProviderTest {
     }
 
     private fun createTestMessages(): List<Message> = listOf(
-        Message.System("You are a helpful assistant", RequestMetaInfo.create(Clock.System)),
-        Message.User("Hello", RequestMetaInfo.create(Clock.System)),
-        Message.Assistant("Hi there! How can I help?", ResponseMetaInfo.create(Clock.System))
+        Message.System("You are a helpful assistant", RequestMetaInfo.create(KoogClock.System)),
+        Message.User("Hello", RequestMetaInfo.create(KoogClock.System)),
+        Message.Assistant("Hi there! How can I help?", ResponseMetaInfo.create(KoogClock.System))
     )
 
     @Test
@@ -100,8 +100,8 @@ class PostgresChatHistoryProviderTest {
         p.store("conv-overwrite", original)
 
         val updated = listOf(
-            Message.User("New message", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("New response", ResponseMetaInfo.create(Clock.System))
+            Message.User("New message", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("New response", ResponseMetaInfo.create(KoogClock.System))
         )
         p.store("conv-overwrite", updated)
 
@@ -119,12 +119,12 @@ class PostgresChatHistoryProviderTest {
         p.migrate()
 
         val messages1 = listOf(
-            Message.User("Hello from conv-1", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Response to conv-1", ResponseMetaInfo.create(Clock.System))
+            Message.User("Hello from conv-1", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Response to conv-1", ResponseMetaInfo.create(KoogClock.System))
         )
         val messages2 = listOf(
-            Message.User("Hello from conv-2", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Response to conv-2", ResponseMetaInfo.create(Clock.System))
+            Message.User("Hello from conv-2", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Response to conv-2", ResponseMetaInfo.create(KoogClock.System))
         )
 
         p.store("iso-conv-1", messages1)
@@ -148,20 +148,20 @@ class PostgresChatHistoryProviderTest {
         p.migrate()
 
         val messages = listOf(
-            Message.System("System prompt", RequestMetaInfo.create(Clock.System)),
-            Message.User("User input", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Assistant response", ResponseMetaInfo.create(Clock.System)),
+            Message.System("System prompt", RequestMetaInfo.create(KoogClock.System)),
+            Message.User("User input", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Assistant response", ResponseMetaInfo.create(KoogClock.System)),
             Message.Tool.Call(
                 id = "call-1",
                 tool = "searchTool",
                 content = """{"query": "test"}""",
-                metaInfo = ResponseMetaInfo.create(Clock.System)
+                metaInfo = ResponseMetaInfo.create(KoogClock.System)
             ),
             Message.Tool.Result(
                 id = "call-1",
                 tool = "searchTool",
                 content = """{"result": "found"}""",
-                metaInfo = RequestMetaInfo.create(Clock.System)
+                metaInfo = RequestMetaInfo.create(KoogClock.System)
             )
         )
 
@@ -268,37 +268,37 @@ class PostgresChatHistoryProviderTest {
         val messages = mutableListOf<Message>()
 
         // Turn 1: system prompt + first user message + assistant reply
-        messages += Message.System("You are a coding assistant.", RequestMetaInfo.create(Clock.System))
-        messages += Message.User("Write me a hello world in Kotlin", RequestMetaInfo.create(Clock.System))
-        messages += Message.Assistant("Here you go:\n```kotlin\nfun main() = println(\"Hello, World!\")\n```", ResponseMetaInfo.create(Clock.System))
+        messages += Message.System("You are a coding assistant.", RequestMetaInfo.create(KoogClock.System))
+        messages += Message.User("Write me a hello world in Kotlin", RequestMetaInfo.create(KoogClock.System))
+        messages += Message.Assistant("Here you go:\n```kotlin\nfun main() = println(\"Hello, World!\")\n```", ResponseMetaInfo.create(KoogClock.System))
         p.store(conversationId, messages)
 
         var loaded = p.load(conversationId)
         assertEquals(3, loaded.size)
 
         // Turn 2: user follow-up with tool usage
-        messages += Message.User("Now run it for me", RequestMetaInfo.create(Clock.System))
+        messages += Message.User("Now run it for me", RequestMetaInfo.create(KoogClock.System))
         messages += Message.Tool.Call(
             id = "exec-1",
             tool = "codeRunner",
             content = """{"language":"kotlin","code":"fun main() = println(\"Hello, World!\")"}""",
-            metaInfo = ResponseMetaInfo.create(Clock.System)
+            metaInfo = ResponseMetaInfo.create(KoogClock.System)
         )
         messages += Message.Tool.Result(
             id = "exec-1",
             tool = "codeRunner",
             content = """{"output":"Hello, World!","exitCode":0}""",
-            metaInfo = RequestMetaInfo.create(Clock.System)
+            metaInfo = RequestMetaInfo.create(KoogClock.System)
         )
-        messages += Message.Assistant("Done! The output is:\n```\nHello, World!\n```", ResponseMetaInfo.create(Clock.System))
+        messages += Message.Assistant("Done! The output is:\n```\nHello, World!\n```", ResponseMetaInfo.create(KoogClock.System))
         p.store(conversationId, messages)
 
         loaded = p.load(conversationId)
         assertEquals(7, loaded.size)
 
         // Turn 3: another follow-up
-        messages += Message.User("Can you add a greeting parameter?", RequestMetaInfo.create(Clock.System))
-        messages += Message.Assistant("Sure:\n```kotlin\nfun greet(name: String) = println(\"Hello, \$name!\")\n```", ResponseMetaInfo.create(Clock.System))
+        messages += Message.User("Can you add a greeting parameter?", RequestMetaInfo.create(KoogClock.System))
+        messages += Message.Assistant("Sure:\n```kotlin\nfun greet(name: String) = println(\"Hello, \$name!\")\n```", ResponseMetaInfo.create(KoogClock.System))
         p.store(conversationId, messages)
 
         loaded = p.load(conversationId)
@@ -326,9 +326,9 @@ class PostgresChatHistoryProviderTest {
         run1Provider.migrate()
 
         val run1Messages = listOf(
-            Message.System("You are a helpful assistant.", RequestMetaInfo.create(Clock.System)),
-            Message.User("What is the capital of France?", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("The capital of France is Paris.", ResponseMetaInfo.create(Clock.System))
+            Message.System("You are a helpful assistant.", RequestMetaInfo.create(KoogClock.System)),
+            Message.User("What is the capital of France?", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("The capital of France is Paris.", ResponseMetaInfo.create(KoogClock.System))
         )
         run1Provider.store(conversationId, run1Messages)
 
@@ -344,8 +344,8 @@ class PostgresChatHistoryProviderTest {
         assertEquals("The capital of France is Paris.", run2Loaded[2].content)
 
         val run2Messages = run2Loaded + listOf(
-            Message.User("And what about Germany?", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("The capital of Germany is Berlin.", ResponseMetaInfo.create(Clock.System))
+            Message.User("And what about Germany?", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("The capital of Germany is Berlin.", ResponseMetaInfo.create(KoogClock.System))
         )
         run2Provider.store(conversationId, run2Messages)
 
@@ -382,18 +382,18 @@ class PostgresChatHistoryProviderTest {
         run1.store(
             "agent-alice",
             listOf(
-                Message.System("You help with math.", RequestMetaInfo.create(Clock.System)),
-                Message.User("What is 2+2?", RequestMetaInfo.create(Clock.System)),
-                Message.Assistant("4", ResponseMetaInfo.create(Clock.System))
+                Message.System("You help with math.", RequestMetaInfo.create(KoogClock.System)),
+                Message.User("What is 2+2?", RequestMetaInfo.create(KoogClock.System)),
+                Message.Assistant("4", ResponseMetaInfo.create(KoogClock.System))
             )
         )
 
         run1.store(
             "agent-bob",
             listOf(
-                Message.System("You help with history.", RequestMetaInfo.create(Clock.System)),
-                Message.User("When was the moon landing?", RequestMetaInfo.create(Clock.System)),
-                Message.Assistant("July 20, 1969.", ResponseMetaInfo.create(Clock.System))
+                Message.System("You help with history.", RequestMetaInfo.create(KoogClock.System)),
+                Message.User("When was the moon landing?", RequestMetaInfo.create(KoogClock.System)),
+                Message.Assistant("July 20, 1969.", ResponseMetaInfo.create(KoogClock.System))
             )
         )
 
@@ -406,16 +406,16 @@ class PostgresChatHistoryProviderTest {
         val aliceHistory = run2.load("agent-alice")
         assertEquals(3, aliceHistory.size)
         val aliceUpdated = aliceHistory + listOf(
-            Message.User("And 3+3?", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("6", ResponseMetaInfo.create(Clock.System))
+            Message.User("And 3+3?", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("6", ResponseMetaInfo.create(KoogClock.System))
         )
         run2.store("agent-alice", aliceUpdated)
 
         val bobHistory = run2.load("agent-bob")
         assertEquals(3, bobHistory.size)
         val bobUpdated = bobHistory + listOf(
-            Message.User("Who was the first person on the moon?", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Neil Armstrong.", ResponseMetaInfo.create(Clock.System))
+            Message.User("Who was the first person on the moon?", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Neil Armstrong.", ResponseMetaInfo.create(KoogClock.System))
         )
         run2.store("agent-bob", bobUpdated)
 

@@ -1,10 +1,11 @@
 @file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+@file:OptIn(InternalKoogUtils::class)
 
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.annotations.JavaAPI
-import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.utils.runBlockingIfRequired
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.runBlockingReentrant
 
 /**
  * Represents a storage key used for identifying and accessing data associated with an AI agent.
@@ -25,50 +26,43 @@ public actual class AIAgentStorage internal actual constructor(
 
     @JavaAPI
     @JvmName("set")
-    @OptIn(InternalAgentsApi::class)
-    public fun <T : Any> setBlocking(key: AIAgentStorageKey<T>, value: T): Unit = runBlockingIfRequired {
+    public fun <T : Any> setBlocking(key: AIAgentStorageKey<T>, value: T): Unit = runBlockingReentrant {
         set(key, value)
     }
 
     @JavaAPI
     @JvmName("get")
-    @OptIn(InternalAgentsApi::class)
-    public fun <T : Any> getBlocking(key: AIAgentStorageKey<T>): T? = runBlockingIfRequired {
+    public fun <T : Any> getBlocking(key: AIAgentStorageKey<T>): T? = runBlockingReentrant {
         get(key)
     }
 
     @JavaAPI
     @JvmName("getValue")
-    @OptIn(InternalAgentsApi::class)
-    public fun <T : Any> getValueBlocking(key: AIAgentStorageKey<T>): T = runBlockingIfRequired {
+    public fun <T : Any> getValueBlocking(key: AIAgentStorageKey<T>): T = runBlockingReentrant {
         getValue(key)
     }
 
     @JavaAPI
     @JvmName("remove")
-    @OptIn(InternalAgentsApi::class)
-    public fun <T : Any> removeBlocking(key: AIAgentStorageKey<T>): T? = runBlockingIfRequired {
+    public fun <T : Any> removeBlocking(key: AIAgentStorageKey<T>): T? = runBlockingReentrant {
         remove(key)
     }
 
     @JavaAPI
     @JvmName("toMap")
-    @OptIn(InternalAgentsApi::class)
-    public fun toMapBlocking(): Map<AIAgentStorageKey<*>, Any> = runBlockingIfRequired {
+    public fun toMapBlocking(): Map<AIAgentStorageKey<*>, Any> = runBlockingReentrant {
         toMap()
     }
 
     @JavaAPI
     @JvmName("putAll")
-    @OptIn(InternalAgentsApi::class)
-    public fun putAllBlocking(map: Map<AIAgentStorageKey<*>, Any>): Unit = runBlockingIfRequired {
+    public fun putAllBlocking(map: Map<AIAgentStorageKey<*>, Any>): Unit = runBlockingReentrant {
         putAll(map)
     }
 
     @JavaAPI
     @JvmName("clear")
-    @OptIn(InternalAgentsApi::class)
-    public fun clearBlocking(): Unit = runBlockingIfRequired {
+    public fun clearBlocking(): Unit = runBlockingReentrant {
         clear()
     }
 

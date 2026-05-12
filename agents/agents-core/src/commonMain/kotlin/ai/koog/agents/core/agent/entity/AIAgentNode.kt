@@ -188,8 +188,8 @@ public open class SimpleAIAgentNodeImpl<TInput, TOutput> internal constructor(
             context.pipeline.onNodeExecutionStarting(
                 eventId,
                 executionInfo,
-                this@SimpleAIAgentNodeImpl,
                 context,
+                this@SimpleAIAgentNodeImpl,
                 input,
                 inputType
             )
@@ -206,8 +206,8 @@ public open class SimpleAIAgentNodeImpl<TInput, TOutput> internal constructor(
                     context.pipeline.onNodeExecutionFailed(
                         eventId,
                         executionInfo,
-                        this@SimpleAIAgentNodeImpl,
                         context,
+                        this@SimpleAIAgentNodeImpl,
                         input,
                         inputType,
                         e
@@ -218,8 +218,8 @@ public open class SimpleAIAgentNodeImpl<TInput, TOutput> internal constructor(
             context.pipeline.onNodeExecutionCompleted(
                 eventId,
                 executionInfo,
-                this@SimpleAIAgentNodeImpl,
                 context,
+                this@SimpleAIAgentNodeImpl,
                 input,
                 inputType,
                 output,

@@ -1,6 +1,3 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
-@file:OptIn(InternalAgentsApi::class)
-
 package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.annotations.JavaAPI
@@ -15,12 +12,14 @@ import ai.koog.agents.core.feature.handler.planner.PlanCreationCompletedContext
 import ai.koog.agents.core.feature.handler.planner.PlanCreationStartingContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionStartingContext
-import ai.koog.agents.core.utils.submitToMainDispatcher
-import kotlin.time.Clock
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.withContextReentrant
+import ai.koog.utils.time.KoogClock
 
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "DELEGATED_MEMBER_HIDES_SUPERTYPE_OVERRIDE")
 public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor(
     agentConfig: AIAgentConfig,
-    clock: Clock,
+    clock: KoogClock,
     private val basePipelineDelegate: AIAgentPipelineImpl
 ) : AIAgentPipeline(agentConfig, clock), AIAgentPlannerPipelineAPI by AIAgentPlannerPipelineImpl(agentConfig, clock, basePipelineDelegate) {
 
@@ -59,7 +58,8 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         handle: Interceptor<PlanCreationStartingContext>
     ) {
         interceptPlanCreationStarting(feature) { ctx ->
-            config.submitToMainDispatcher {
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -77,7 +77,8 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         handle: Interceptor<PlanCreationCompletedContext>
     ) {
         interceptPlanCreationCompleted(feature) { ctx ->
-            config.submitToMainDispatcher {
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -101,7 +102,8 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         handle: Interceptor<StepExecutionStartingContext>
     ) {
         interceptStepExecutionStarting(feature) { ctx ->
-            config.submitToMainDispatcher {
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -125,7 +127,8 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         handle: Interceptor<StepExecutionCompletedContext>
     ) {
         interceptStepExecutionCompleted(feature) { ctx ->
-            config.submitToMainDispatcher {
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -143,7 +146,8 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         handle: Interceptor<PlanCompletionEvaluationStartingContext>
     ) {
         interceptPlanCompletionEvaluationStarting(feature) { ctx ->
-            config.submitToMainDispatcher {
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }
@@ -167,7 +171,8 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
         handle: Interceptor<PlanCompletionEvaluationCompletedContext>
     ) {
         interceptPlanCompletionEvaluationCompleted(feature) { ctx ->
-            config.submitToMainDispatcher {
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
+            withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
         }

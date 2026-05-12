@@ -6,6 +6,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.test.utils.DockerAvailableCondition
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -19,7 +20,6 @@ import org.postgresql.ds.PGSimpleDataSource
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
-import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -71,13 +71,13 @@ class PostgresJdbcPersistenceStorageProviderTest : AbstractJdbcPersistenceStorag
             "agent-alice",
             AgentCheckpointData(
                 checkpointId = Uuid.random().toString(),
-                createdAt = Clock.System.now(),
+                createdAt = KoogClock.System.now(),
                 nodePath = "graph/math/solve",
                 lastOutput = JSONPrimitive("4"),
                 messageHistory = listOf(
-                    Message.System("You help with math.", RequestMetaInfo.create(Clock.System)),
-                    Message.User("What is 2+2?", RequestMetaInfo.create(Clock.System)),
-                    Message.Assistant("4", ResponseMetaInfo.create(Clock.System))
+                    Message.System("You help with math.", RequestMetaInfo.create(KoogClock.System)),
+                    Message.User("What is 2+2?", RequestMetaInfo.create(KoogClock.System)),
+                    Message.Assistant("4", ResponseMetaInfo.create(KoogClock.System))
                 ),
                 version = 1L
             )
@@ -86,13 +86,13 @@ class PostgresJdbcPersistenceStorageProviderTest : AbstractJdbcPersistenceStorag
             "agent-bob",
             AgentCheckpointData(
                 checkpointId = Uuid.random().toString(),
-                createdAt = Clock.System.now(),
+                createdAt = KoogClock.System.now(),
                 nodePath = "graph/history/answer",
                 lastOutput = JSONPrimitive("July 20, 1969."),
                 messageHistory = listOf(
-                    Message.System("You help with history.", RequestMetaInfo.create(Clock.System)),
-                    Message.User("When was the moon landing?", RequestMetaInfo.create(Clock.System)),
-                    Message.Assistant("July 20, 1969.", ResponseMetaInfo.create(Clock.System))
+                    Message.System("You help with history.", RequestMetaInfo.create(KoogClock.System)),
+                    Message.User("When was the moon landing?", RequestMetaInfo.create(KoogClock.System)),
+                    Message.Assistant("July 20, 1969.", ResponseMetaInfo.create(KoogClock.System))
                 ),
                 version = 1L
             )
@@ -112,12 +112,12 @@ class PostgresJdbcPersistenceStorageProviderTest : AbstractJdbcPersistenceStorag
             "agent-alice",
             AgentCheckpointData(
                 checkpointId = Uuid.random().toString(),
-                createdAt = Clock.System.now(),
+                createdAt = KoogClock.System.now(),
                 nodePath = "graph/math/solve",
                 lastOutput = JSONPrimitive("6"),
                 messageHistory = aliceCheckpoints[0].messageHistory + listOf(
-                    Message.User("And 3+3?", RequestMetaInfo.create(Clock.System)),
-                    Message.Assistant("6", ResponseMetaInfo.create(Clock.System))
+                    Message.User("And 3+3?", RequestMetaInfo.create(KoogClock.System)),
+                    Message.Assistant("6", ResponseMetaInfo.create(KoogClock.System))
                 ),
                 version = 2L
             )

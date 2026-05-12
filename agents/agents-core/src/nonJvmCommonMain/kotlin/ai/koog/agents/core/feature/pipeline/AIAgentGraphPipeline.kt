@@ -7,11 +7,11 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 
 public actual open class AIAgentGraphPipeline actual constructor(
     agentConfig: AIAgentConfig,
-    clock: Clock,
+    clock: KoogClock,
     private val basePipelineDelegate: AIAgentPipelineImpl
 ) : AIAgentPipeline(agentConfig, clock),
     AIAgentGraphPipelineAPI by AIAgentGraphPipelineImpl(agentConfig, clock, basePipelineDelegate) {

@@ -3,8 +3,8 @@ package ai.koog.agents.core.feature.model.events
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
-import kotlin.time.Clock
 
 /**
  * Represents an event triggered at the start of an AI agent strategy execution.
@@ -42,7 +42,7 @@ public data class GraphStrategyStartingEvent(
     override val runId: String,
     override val strategyName: String,
     val graph: StrategyEventGraph,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : StrategyStartingEventBase() {
 
     /**
@@ -56,7 +56,7 @@ public data class GraphStrategyStartingEvent(
         runId: String,
         strategyName: String,
         graph: StrategyEventGraph,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = GraphStrategyStartingEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
@@ -85,7 +85,7 @@ public data class StrategyStartingEvent(
     override val executionInfo: AgentExecutionInfo,
     override val runId: String,
     override val strategyName: String,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : StrategyStartingEventBase() {
 
     /**
@@ -98,7 +98,7 @@ public data class StrategyStartingEvent(
     public constructor(
         runId: String,
         strategyName: String,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = StrategyStartingEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
@@ -131,7 +131,7 @@ public data class StrategyCompletedEvent(
     val runId: String,
     val strategyName: String,
     val result: String?,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -145,7 +145,7 @@ public data class StrategyCompletedEvent(
         runId: String,
         strategyName: String,
         result: String?,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = StrategyCompletedEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(

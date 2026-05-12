@@ -1,5 +1,3 @@
-@file:OptIn(InternalAgentsApi::class)
-
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.AIAgentState.NotStarted
@@ -69,30 +67,32 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
             withPreparedPipeline(context, agent.id, sessionPipeline) {
                 try {
                     logger.debug { formatLog(id, id, "Starting agent execution") }
+
+                    @OptIn(InternalAgentsApi::class)
                     sessionPipeline.onAgentStarting<Input, Output>(
                         agent.id,
                         context.executionInfo,
-                        id,
                         agent,
-                        context
+                        context,
+                        id,
                     )
 
                     val result = context.with(partName = strategy.name) { executionInfo, eventId ->
                         runCatchingCancellable {
+                            @OptIn(InternalAgentsApi::class)
                             state = AIAgentState.Running(context.parentContext ?: context)
-                            context.pipeline.onStrategyStarting(eventId, executionInfo, strategy, context)
+
+                            @OptIn(InternalAgentsApi::class)
+                            context.pipeline.onStrategyStarting(eventId, executionInfo, context, strategy)
+
                             val result = strategy.execute(context = context, input = input)
 
                             logger.trace { "Finished executing strategy (name: ${strategy.name}) with result: $result" }
-                            context.pipeline.onStrategyCompleted(
-                                eventId,
-                                executionInfo,
-                                strategy,
-                                context,
-                                result,
-                                // FIXME this will break serialization, need to add outputType to the AIAgentStrategy!!
-                                typeToken<Any?>()
-                            )
+
+                            // FIXME!
+                            //  resultType will break serialization, need to add outputType to the AIAgentStrategy!
+                            @OptIn(InternalAgentsApi::class)
+                            context.pipeline.onStrategyCompleted(eventId, executionInfo, context, strategy, result, typeToken<Any?>())
 
                             result
                         }.onFailure {
@@ -101,13 +101,16 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
                     }
 
                     logger.debug { formatLog(id, id, "Finished agent execution") }
-                    sessionPipeline.onAgentCompleted(id, context.executionInfo, agent.id, id, result, context)
 
+                    @OptIn(InternalAgentsApi::class)
+                    sessionPipeline.onAgentCompleted(id, context.executionInfo, agent, context, id, result)
                     result
                 } catch (e: Exception) {
                     state = AIAgentState.Failed(e)
                     logger.error(e) { "Execution exception reported by server!" }
-                    sessionPipeline.onAgentExecutionFailed(id, context.executionInfo, agent.id, id, e, context)
+
+                    @OptIn(InternalAgentsApi::class)
+                    sessionPipeline.onAgentExecutionFailed(id, context.executionInfo, agent, context, id, e)
                     throw e
                 }
             }
@@ -134,6 +137,7 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
     private fun formatLog(agentId: String, runId: String, message: String): String =
         "[agent id: $agentId, run id: $runId] $message"
 
+    @OptIn(InternalAgentsApi::class)
     private suspend fun <T> withPreparedPipeline(
         context: AIAgentContext,
         eventId: String,
@@ -151,7 +155,7 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
             pipeline.onAgentClosing(
                 eventId = eventId,
                 executionInfo = context.executionInfo.parent ?: context.executionInfo,
-                agentId = agent.id
+                agent = agent
             )
             pipeline.closeAllFeaturesMessageProcessors()
         }

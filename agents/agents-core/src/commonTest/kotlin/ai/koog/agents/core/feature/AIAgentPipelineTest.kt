@@ -49,6 +49,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.Message.Role
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.js.JsName
@@ -57,7 +58,6 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 class AIAgentPipelineTest {
@@ -67,9 +67,7 @@ class AIAgentPipelineTest {
         private const val DEFAULT_ASSISTANT_RESPONSE = "Default test response"
     }
 
-    private val testClock: Clock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
+    private val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     @Test
     @JsName("testPipelineInterceptorsForNodeEvents")

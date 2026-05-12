@@ -7,7 +7,6 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.functionalStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -39,6 +38,8 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
+import ai.koog.utils.time.KoogClock
+import io.opentelemetry.kotlin.tracing.export.simpleSpanProcessor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -47,16 +48,13 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 internal object OpenTelemetryTestAPI {
     private val serializer = KotlinxSerializer()
 
-    internal val testClock: Clock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
+    internal val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     private val spansCollectionTimeout = 5.seconds
 
@@ -232,7 +230,7 @@ internal object OpenTelemetryTestAPI {
                 temperature = TEMPERATURE,
                 maxTokens = maxTokens,
             ) {
-                addSpanExporter(mockExporter)
+                addSpanProcessor { simpleSpanProcessor(mockExporter) }
                 setVerbose(verbose)
             }.use { agent ->
                 agent.run(userPrompt ?: USER_PROMPT_PARIS)

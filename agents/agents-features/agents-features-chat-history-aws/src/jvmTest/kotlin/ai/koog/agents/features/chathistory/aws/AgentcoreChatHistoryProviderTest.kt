@@ -3,6 +3,7 @@ package ai.koog.agents.features.chathistory.aws
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.utils.time.KoogClock
 import aws.sdk.kotlin.services.bedrockagentcore.BedrockAgentCoreClient
 import aws.sdk.kotlin.services.bedrockagentcore.model.Content
 import aws.sdk.kotlin.services.bedrockagentcore.model.Conversational
@@ -42,10 +43,10 @@ class AgentcoreChatHistoryProviderTest {
 
     @Test
     fun testBlankMemoryIdThrows() {
-        assertFailsWith<AgentcoreMemoryException.ConfigurationException> {
+        assertFailsWith<AgentcoreShortTermMemoryException.ConfigurationException> {
             AgentcoreChatHistoryProvider(client, memoryId = "")
         }
-        assertFailsWith<AgentcoreMemoryException.ConfigurationException> {
+        assertFailsWith<AgentcoreShortTermMemoryException.ConfigurationException> {
             AgentcoreChatHistoryProvider(client, memoryId = "   ")
         }
     }
@@ -510,7 +511,7 @@ class AgentcoreChatHistoryProviderTest {
         coEvery { client.createEvent(any<CreateEventRequest>()) } throws
             aws.smithy.kotlin.runtime.ServiceException("AWS error")
 
-        assertFailsWith<AgentcoreMemoryException.WriteException> {
+        assertFailsWith<AgentcoreShortTermMemoryException.WriteException> {
             provider.store("actor:session", listOf(Message.User("hi", RequestMetaInfo.Empty)))
         }
     }
@@ -522,7 +523,7 @@ class AgentcoreChatHistoryProviderTest {
         coEvery { client.listEvents(any<ListEventsRequest>()) } throws
             aws.smithy.kotlin.runtime.ServiceException("AWS error")
 
-        assertFailsWith<AgentcoreMemoryException.ReadException> {
+        assertFailsWith<AgentcoreShortTermMemoryException.ReadException> {
             provider.load("actor:session")
         }
     }
@@ -637,7 +638,7 @@ class AgentcoreChatHistoryProviderTest {
         return Message.User(
             text,
             RequestMetaInfo(
-                timestamp = kotlin.time.Clock.System.now(),
+                timestamp = KoogClock.System.now(),
                 metadata = JsonObject(mapOf(EVENT_ID_METADATA_KEY to JsonPrimitive(eventId)))
             )
         )
@@ -647,7 +648,7 @@ class AgentcoreChatHistoryProviderTest {
         return Message.Assistant(
             text,
             ResponseMetaInfo(
-                timestamp = kotlin.time.Clock.System.now(),
+                timestamp = KoogClock.System.now(),
                 metadata = JsonObject(mapOf(EVENT_ID_METADATA_KEY to JsonPrimitive(eventId)))
             )
         )

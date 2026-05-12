@@ -8,7 +8,6 @@ import ai.koog.agents.core.utils.ConfigureAction
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.AIAgentPlannerStrategyBuilder
 import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
-import ai.koog.serialization.typeToken
 
 /**
  * Common chained implementation for [AIAgentBuilder] actual classes.
@@ -30,8 +29,6 @@ public abstract class AIAgentBuilderCommon<Self : AIAgentBuilderCommon<Self>> in
         strategy: AIAgentGraphStrategy<Input, Output>
     ): GraphAgentBuilder<Input, Output> = GraphAgentBuilder(
         strategy = strategy,
-        inputType = strategy.inputType,
-        outputType = strategy.outputType,
         promptExecutor = this.promptExecutor,
         id = this.id,
         config = this.config,
@@ -107,8 +104,6 @@ public abstract class AIAgentBuilderCommon<Self : AIAgentBuilderCommon<Self>> in
         configure: ConfigureAction<TConfig>
     ): GraphAgentBuilder<String, String> = GraphAgentBuilder(
         strategy = singleRunStrategy(),
-        inputType = typeToken<String>(),
-        outputType = typeToken<String>(),
         promptExecutor = this.promptExecutor,
         id = this.id,
         config = this.config,
@@ -133,7 +128,6 @@ public abstract class AIAgentBuilderCommon<Self : AIAgentBuilderCommon<Self>> in
     public fun build(): AIAgent<String, String> {
         return AIAgent(
             promptExecutor = validatedPromptExecutor,
-            strategy = singleRunStrategy(),
             toolRegistry = toolRegistry,
             id = id,
             agentConfig = validatedConfig,

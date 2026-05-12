@@ -12,22 +12,27 @@ import ai.koog.serialization.JSONObject
  */
 public interface ToolCallEventContext : AgentLifecycleEventContext {
     /**
-     * [runId] The unique identifier for this tool call session;
+     * [context] The agent context associated with the tool call.
+     */
+    public val context: AIAgentContext
+
+    /**
+     * [runId] The unique identifier for this tool call session.
      */
     public val runId: String
 
     /**
-     * [toolCallId] The unique identifier for this tool call;
+     * [toolCallId] The unique identifier for this tool call.
      */
     public val toolCallId: String?
 
     /**
-     * [toolName] The tool name that is being executed;
+     * [toolName] The tool name that is being executed.
      */
     public val toolName: String
 
     /**
-     * [toolDescription] A description of the tool being executed;
+     * [toolDescription] A description of the tool being executed.
      */
     public val toolDescription: String?
 
@@ -35,11 +40,6 @@ public interface ToolCallEventContext : AgentLifecycleEventContext {
      * [toolArgs] The arguments provided for the tool execution, adhering to the tool's expected input structure.
      */
     public val toolArgs: JSONObject
-
-    /**
-     * [context] The agent context associated with the tool call;
-     */
-    public val context: AIAgentContext
 }
 
 /**
@@ -50,12 +50,12 @@ public interface ToolCallEventContext : AgentLifecycleEventContext {
 public data class ToolCallStartingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
+    override val context: AIAgentContext,
     override val runId: String,
     override val toolCallId: String?,
     override val toolName: String,
     override val toolDescription: String?,
     override val toolArgs: JSONObject,
-    override val context: AIAgentContext
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallStarting
 }
@@ -70,14 +70,14 @@ public data class ToolCallStartingContext(
 public data class ToolValidationFailedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
+    override val context: AIAgentContext,
     override val runId: String,
     override val toolCallId: String?,
     override val toolName: String,
     override val toolDescription: String?,
     override val toolArgs: JSONObject,
-    val message: String,
-    val error: Throwable,
-    override val context: AIAgentContext
+    public val message: String,
+    public val error: Throwable,
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolValidationFailed
 }
@@ -92,14 +92,14 @@ public data class ToolValidationFailedContext(
 public data class ToolCallFailedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
+    override val context: AIAgentContext,
     override val runId: String,
     override val toolCallId: String?,
     override val toolName: String,
     override val toolDescription: String?,
     override val toolArgs: JSONObject,
-    val message: String,
-    val error: Throwable?,
-    override val context: AIAgentContext
+    public val message: String,
+    public val error: Throwable?,
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallFailed
 }
@@ -113,13 +113,13 @@ public data class ToolCallFailedContext(
 public data class ToolCallCompletedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
+    override val context: AIAgentContext,
     override val runId: String,
     override val toolCallId: String?,
     override val toolName: String,
     override val toolDescription: String?,
     override val toolArgs: JSONObject,
-    val toolResult: JSONElement?,
-    override val context: AIAgentContext
+    public val toolResult: JSONElement?,
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallCompleted
 }

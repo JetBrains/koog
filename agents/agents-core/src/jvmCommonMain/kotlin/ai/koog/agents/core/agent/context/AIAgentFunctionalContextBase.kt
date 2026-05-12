@@ -17,17 +17,16 @@ import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.utils.asCoroutineContext
-import ai.koog.agents.core.utils.runOnLLMDispatcher
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
+import ai.koog.agents.core.utils.runBlockingOnLLMDispatcher
+import ai.koog.agents.core.utils.runBlockingOnStrategyDispatcher
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredResponse
+import ai.koog.utils.annotations.InternalKoogUtils
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.serializer
@@ -36,6 +35,7 @@ import java.util.concurrent.Flow
 import kotlin.reflect.KClass
 
 @Suppress("MissingKDocForPublicAPI")
+@OptIn(InternalKoogUtils::class)
 public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipeline> internal actual constructor(
     environment: AIAgentEnvironment,
     agentId: String,
@@ -158,8 +158,11 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
 
     @JavaAPI
     @JvmOverloads
-    public fun getHistory(executorService: ExecutorService? = null): List<Message> =
-        config.runOnStrategyDispatcher(executorService) { getHistory() }
+    public fun getHistory(
+        executorService: ExecutorService? = null
+    ): List<Message> = config.runBlockingOnLLMDispatcher(executorService) {
+        getHistory()
+    }
 
     /**
      * Sends a request to the Large Language Model (LLM) and retrieves its response.
@@ -177,7 +180,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
         message: String,
         allowToolCalls: Boolean = true,
         executorService: ExecutorService? = null
-    ): Message.Response = config.runOnLLMDispatcher(executorService) {
+    ): Message.Response = config.runBlockingOnLLMDispatcher(executorService) {
         requestLLM(message, allowToolCalls)
     }
 
@@ -194,7 +197,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     @JvmOverloads
     public fun latestTokenUsage(
         executorService: ExecutorService? = null
-    ): Int = config.runOnStrategyDispatcher(executorService) {
+    ): Int = config.runBlockingOnLLMDispatcher(executorService) {
         latestTokenUsage()
     }
 
@@ -233,15 +236,11 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
         message: String,
         structureDefinition: StructureDefinition?,
         executorService: ExecutorService? = null
-    ): Flow.Publisher<StreamFrame> = config.runOnLLMDispatcher(executorService) {
-        // TODO: Use JavaRX instead of Publisher!
-        val context = executorService.asCoroutineContext(
-            defaultExecutorService = config.llmRequestExecutorService,
-            fallbackDispatcher = Dispatchers.IO
-        )
+    ): Flow.Publisher<StreamFrame> {
+        val dispatcher = executorService?.asCoroutineDispatcher() ?: config.llmRequestDispatcher
 
-        Flow.Publisher { subscriber ->
-            val scope = CoroutineScope(context)
+        return Flow.Publisher { subscriber ->
+            val scope = CoroutineScope(dispatcher)
             val job = scope.launch {
                 try {
                     requestLLMStreaming(message, structureDefinition).collect { frame ->
@@ -277,7 +276,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     public fun requestLLMMultiple(
         message: String,
         executorService: ExecutorService? = null
-    ): List<Message.Response> = config.runOnLLMDispatcher(executorService) {
+    ): List<Message.Response> = config.runBlockingOnLLMDispatcher(executorService) {
         requestLLMMultiple(message)
     }
 
@@ -293,7 +292,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     public fun requestLLMOnlyCallingTools(
         message: String,
         executorService: ExecutorService? = null
-    ): Message.Response = config.runOnLLMDispatcher(executorService) {
+    ): Message.Response = config.runBlockingOnLLMDispatcher(executorService) {
         requestLLMOnlyCallingTools(message)
     }
 
@@ -313,7 +312,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
         message: String,
         tool: ToolDescriptor,
         executorService: ExecutorService? = null
-    ): Message.Response = config.runOnLLMDispatcher(executorService) {
+    ): Message.Response = config.runBlockingOnLLMDispatcher(executorService) {
         requestLLMForceOneTool(message, tool)
     }
 
@@ -332,7 +331,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
         message: String,
         tool: Tool<*, *>,
         executorService: ExecutorService? = null
-    ): Message.Response = config.runOnLLMDispatcher(executorService) {
+    ): Message.Response = config.runBlockingOnLLMDispatcher(executorService) {
         requestLLMForceOneTool(message, tool)
     }
 
@@ -348,7 +347,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     public fun executeTool(
         toolCall: Message.Tool.Call,
         executorService: ExecutorService? = null
-    ): ReceivedToolResult = config.runOnStrategyDispatcher(executorService) {
+    ): ReceivedToolResult = config.runBlockingOnStrategyDispatcher(executorService) {
         executeTool(toolCall)
     }
 
@@ -366,7 +365,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
         toolCalls: List<Message.Tool.Call>,
         parallelTools: Boolean,
         executorService: ExecutorService? = null
-    ): List<ReceivedToolResult> = config.runOnStrategyDispatcher(executorService) {
+    ): List<ReceivedToolResult> = config.runBlockingOnStrategyDispatcher(executorService) {
         executeMultipleTools(toolCalls, parallelTools)
     }
 
@@ -382,7 +381,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     public fun sendToolResult(
         toolResult: ReceivedToolResult,
         executorService: ExecutorService? = null
-    ): Message.Response = config.runOnLLMDispatcher(executorService) {
+    ): Message.Response = config.runBlockingOnLLMDispatcher(executorService) {
         sendToolResult(toolResult)
     }
 
@@ -398,7 +397,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     public fun sendMultipleToolResults(
         results: List<ReceivedToolResult>,
         executorService: ExecutorService? = null
-    ): List<Message.Response> = config.runOnLLMDispatcher(executorService) {
+    ): List<Message.Response> = config.runBlockingOnLLMDispatcher(executorService) {
         sendMultipleToolResults(results)
     }
 
@@ -418,7 +417,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
         toolArgs: ToolArg,
         doUpdatePrompt: Boolean,
         executorService: ExecutorService? = null
-    ): SafeTool.Result<ToolResult> = config.runOnStrategyDispatcher(executorService) {
+    ): SafeTool.Result<ToolResult> = config.runBlockingOnStrategyDispatcher(executorService) {
         executeSingleTool(tool, toolArgs, doUpdatePrompt)
     }
 
@@ -433,11 +432,11 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      */
     @JavaAPI
     @JvmOverloads
-    public fun <ToolArg, ToolResult> compressHistory(
+    public fun compressHistory(
         strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
         preserveMemory: Boolean = true,
         executorService: ExecutorService? = null
-    ): Unit = config.runOnLLMDispatcher(executorService) {
+    ): Unit = config.runBlockingOnLLMDispatcher(executorService) {
         compressHistory(strategy, preserveMemory)
     }
 

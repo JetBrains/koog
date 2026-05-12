@@ -91,7 +91,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         )
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
-        val toolRegistry = ToolRegistry.Companion {
+        val toolRegistry = ToolRegistry {
             tool(SimpleCalculatorTool)
         }
 
@@ -124,7 +124,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         Models.assumeEnumToolCallsAreStable(model, "builder graph-strategy tool integration")
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
 
-        val toolRegistry = ToolRegistry.Companion {
+        val toolRegistry = ToolRegistry {
             tool(SimpleCalculatorTool)
         }
 

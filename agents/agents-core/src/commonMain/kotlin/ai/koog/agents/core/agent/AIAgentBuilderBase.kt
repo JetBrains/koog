@@ -6,7 +6,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 
 /**
  * Shared fluent configuration for agent builders.
@@ -16,7 +16,7 @@ public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> intern
     toolRegistry: ToolRegistry,
     protected var id: String?,
     config: AIAgentConfig,
-    protected var clock: Clock,
+    protected var clock: KoogClock,
 ) : AIAgentServiceBuilderBase<Self>(
     promptExecutor = promptExecutor,
     toolRegistry = toolRegistry,
@@ -34,7 +34,7 @@ public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> intern
             maxAgentIterations = 50,
             serializer = serializer
         ),
-        Clock.System,
+        KoogClock.System,
     )
 
     /**
@@ -50,7 +50,7 @@ public abstract class AIAgentBuilderBase<Self : AIAgentBuilderBase<Self>> intern
     /**
      * Sets the clock for the agent.
      */
-    public fun clock(clock: Clock): Self = self().apply {
+    public fun clock(clock: KoogClock): Self = self().apply {
         this.clock = clock
     }
 }

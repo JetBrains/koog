@@ -1,7 +1,7 @@
 package ai.koog.prompt.dsl
 
 import ai.koog.prompt.params.LLMParams
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 
 /**
  * Marker annotation for the Prompt DSL.
@@ -26,7 +26,7 @@ public annotation class PromptDSL
  *
  * @param id The identifier for the prompt
  * @param params The parameters for the language model
- * @param clock The clock to use for generating timestamps, defaults to Clock.System
+ * @param clock The clock to use for generating timestamps, defaults to [KoogClock.System]
  * @param build The initialization block for the PromptBuilder
  * @return A new Prompt object
  */
@@ -34,7 +34,7 @@ public annotation class PromptDSL
 public fun prompt(
     id: String,
     params: LLMParams = LLMParams(),
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     build: PromptBuilder.() -> Unit
 ): Prompt {
     return Prompt.build(id, params, clock, build)
@@ -66,13 +66,13 @@ public fun emptyPrompt(): Prompt = Prompt.build("") { }
  * ```
  *
  * @param existing The existing prompt to extend
- * @param clock The clock to use for generating timestamps, defaults to Clock.System
+ * @param clock The clock to use for generating timestamps, defaults to [KoogClock.System]
  * @param build The initialization block for the PromptBuilder
  * @return A new Prompt object based on the existing one
  */
 public fun prompt(
     existing: Prompt,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     build: PromptBuilder.() -> Unit
 ): Prompt {
     return Prompt.build(existing, clock, build)

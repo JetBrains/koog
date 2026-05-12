@@ -43,7 +43,7 @@ class ParallelNodesTest {
         mockLLMAnswer("Default test response").asDefaultResponse
     }
 
-    private fun createToolRegistry() = ToolRegistry.Companion {
+    private fun createToolRegistry() = ToolRegistry {
         tool(DummyTool())
     }
 

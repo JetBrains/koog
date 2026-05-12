@@ -568,7 +568,7 @@ typically use subgraphs that delegate tool orchestration to the LLM.
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.prompt.message.Message
     import ai.koog.prompt.message.ResponseMetaInfo
-    import kotlin.time.Clock
+    import ai.koog.utils.time.KoogClock
     import kotlinx.serialization.Serializable
     import kotlinx.serialization.json.Json
     import java.util.*
@@ -585,7 +585,7 @@ typically use subgraphs that delegate tool orchestration to the LLM.
         val toolCall = Message.Tool.Call(
             id = UUID.randomUUID().toString(),
             tool = toolName,
-            metaInfo = ResponseMetaInfo.create(Clock.System),
+            metaInfo = ResponseMetaInfo.create(KoogClock.System),
             content = Json.encodeToString(ToolArgs(arg1 = input, arg2 = 42)) // Use the input as tool arguments
         )
 

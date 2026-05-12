@@ -3,12 +3,12 @@ package ai.koog.agents.features.chathistory.jdbc
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 
 abstract class AbstractJdbcChatHistoryProviderTest {
 
@@ -18,9 +18,9 @@ abstract class AbstractJdbcChatHistoryProviderTest {
     ): JdbcChatHistoryProvider
 
     protected fun createTestMessages(): List<Message> = listOf(
-        Message.System("You are a helpful assistant", RequestMetaInfo.create(Clock.System)),
-        Message.User("Hello", RequestMetaInfo.create(Clock.System)),
-        Message.Assistant("Hi there! How can I help?", ResponseMetaInfo.create(Clock.System))
+        Message.System("You are a helpful assistant", RequestMetaInfo.create(KoogClock.System)),
+        Message.User("Hello", RequestMetaInfo.create(KoogClock.System)),
+        Message.Assistant("Hi there! How can I help?", ResponseMetaInfo.create(KoogClock.System))
     )
 
     @Test
@@ -56,8 +56,8 @@ abstract class AbstractJdbcChatHistoryProviderTest {
         p.store("conv-overwrite", original)
 
         val updated = listOf(
-            Message.User("New message", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("New response", ResponseMetaInfo.create(Clock.System))
+            Message.User("New message", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("New response", ResponseMetaInfo.create(KoogClock.System))
         )
         p.store("conv-overwrite", updated)
 
@@ -75,12 +75,12 @@ abstract class AbstractJdbcChatHistoryProviderTest {
         p.migrate()
 
         val messages1 = listOf(
-            Message.User("Hello from conv-1", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Response to conv-1", ResponseMetaInfo.create(Clock.System))
+            Message.User("Hello from conv-1", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Response to conv-1", ResponseMetaInfo.create(KoogClock.System))
         )
         val messages2 = listOf(
-            Message.User("Hello from conv-2", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Response to conv-2", ResponseMetaInfo.create(Clock.System))
+            Message.User("Hello from conv-2", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Response to conv-2", ResponseMetaInfo.create(KoogClock.System))
         )
 
         p.store("iso-conv-1", messages1)
@@ -104,20 +104,20 @@ abstract class AbstractJdbcChatHistoryProviderTest {
         p.migrate()
 
         val messages = listOf(
-            Message.System("System prompt", RequestMetaInfo.create(Clock.System)),
-            Message.User("User input", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Assistant response", ResponseMetaInfo.create(Clock.System)),
+            Message.System("System prompt", RequestMetaInfo.create(KoogClock.System)),
+            Message.User("User input", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Assistant response", ResponseMetaInfo.create(KoogClock.System)),
             Message.Tool.Call(
                 id = "call-1",
                 tool = "searchTool",
                 content = """{"query": "test"}""",
-                metaInfo = ResponseMetaInfo.create(Clock.System)
+                metaInfo = ResponseMetaInfo.create(KoogClock.System)
             ),
             Message.Tool.Result(
                 id = "call-1",
                 tool = "searchTool",
                 content = """{"result": "found"}""",
-                metaInfo = RequestMetaInfo.create(Clock.System)
+                metaInfo = RequestMetaInfo.create(KoogClock.System)
             )
         )
 
@@ -223,9 +223,9 @@ abstract class AbstractJdbcChatHistoryProviderTest {
         run1Provider.migrate()
 
         val run1Messages = listOf(
-            Message.System("You are a helpful assistant.", RequestMetaInfo.create(Clock.System)),
-            Message.User("What is the capital of France?", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("The capital of France is Paris.", ResponseMetaInfo.create(Clock.System))
+            Message.System("You are a helpful assistant.", RequestMetaInfo.create(KoogClock.System)),
+            Message.User("What is the capital of France?", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("The capital of France is Paris.", ResponseMetaInfo.create(KoogClock.System))
         )
         run1Provider.store(conversationId, run1Messages)
         assertEquals(3, run1Provider.load(conversationId).size)
@@ -238,8 +238,8 @@ abstract class AbstractJdbcChatHistoryProviderTest {
         assertEquals("What is the capital of France?", run2Loaded[1].content)
 
         val run2Messages = run2Loaded + listOf(
-            Message.User("And what about Germany?", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("The capital of Germany is Berlin.", ResponseMetaInfo.create(Clock.System))
+            Message.User("And what about Germany?", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("The capital of Germany is Berlin.", ResponseMetaInfo.create(KoogClock.System))
         )
         run2Provider.store(conversationId, run2Messages)
 

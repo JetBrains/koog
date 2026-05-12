@@ -8,8 +8,8 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.text.TextContentBuilder
+import ai.koog.utils.time.KoogClock
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 
 /**
  * A builder class for creating prompts using a DSL approach.
@@ -34,12 +34,12 @@ import kotlin.time.Clock
 public class PromptBuilder internal constructor(
     private val id: String,
     private val params: LLMParams = LLMParams(),
-    private val clock: Clock = Clock.System
+    private val clock: KoogClock = KoogClock.System
 ) {
     private val messages = mutableListOf<Message>()
 
     internal companion object {
-        internal fun from(prompt: Prompt, clock: Clock = Clock.System): PromptBuilder = PromptBuilder(
+        internal fun from(prompt: Prompt, clock: KoogClock = KoogClock.System): PromptBuilder = PromptBuilder(
             prompt.id,
             prompt.params,
             clock
@@ -261,7 +261,7 @@ public class PromptBuilder internal constructor(
      */
     @JavaAPI
     @PromptDSL
-    public inner class ToolMessageBuilder(public val clock: Clock) {
+    public inner class ToolMessageBuilder(public val clock: KoogClock) {
         /**
          * Adds a tool call message to the prompt.
          *
@@ -355,7 +355,7 @@ public class PromptBuilder internal constructor(
      */
     @JavaAPI
     public class ToolResultMessageBuilder(
-        private val clock: Clock,
+        private val clock: KoogClock,
         private val call: ToolMessageBuilder.() -> Unit,
         private val promptBuilder: PromptBuilder
     ) {

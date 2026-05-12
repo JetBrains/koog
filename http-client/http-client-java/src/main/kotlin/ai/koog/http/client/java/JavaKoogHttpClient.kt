@@ -4,6 +4,7 @@ import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -18,7 +19,9 @@ import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.time.Duration
 import kotlin.reflect.KClass
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * JavaKoogHttpClient is an implementation of the KoogHttpClient interface, utilizing Java 11's standard HttpClient
@@ -36,8 +39,17 @@ public class JavaKoogHttpClient internal constructor(
     override val clientName: String,
     private val logger: KLogger,
     private val httpClient: HttpClient,
-    private val json: Json
+    private val json: Json,
+    private val baseUrl: String = "",
+    private val headers: Map<String, String> = emptyMap(),
+    private val queryParameters: Map<String, String> = emptyMap(),
+    private val requestTimeoutMillis: Long = DEFAULT_REQUEST_TIMEOUT_MS
 ) : KoogHttpClient {
+
+    public companion object {
+        public val DEFAULT_REQUEST_TIMEOUT_MS: Long = 15.minutes.inWholeMilliseconds
+    }
+
     private data class RequestBody(
         val body: String,
         val contentType: String
@@ -70,16 +82,34 @@ public class JavaKoogHttpClient internal constructor(
      * @return The URL path with the appended query parameters, or the original `path` if `parameters` is null or empty.
      */
     private fun buildUri(path: String, parameters: Map<String, String>?): URI {
-        val fullPath = if (!parameters.isNullOrEmpty()) {
-            val query = parameters.entries.joinToString("&") { (key, value) ->
+        val fullPath = resolvePath(path)
+        val mergedParameters = queryParameters + parameters.orEmpty()
+        val fullPathWithParameters = if (mergedParameters.isNotEmpty()) {
+            val query = mergedParameters.entries.joinToString("&") { (key, value) ->
                 "${URLEncoder.encode(key, "UTF-8")}=${URLEncoder.encode(value, "UTF-8")}"
             }
-            "$path?$query"
+            "$fullPath?$query"
         } else {
-            path
+            fullPath
         }
 
-        return URI.create(fullPath)
+        return URI.create(fullPathWithParameters)
+    }
+
+    private fun resolvePath(path: String): String {
+        if (URI.create(path).isAbsolute || baseUrl.isBlank()) {
+            return path
+        }
+
+        return "${baseUrl.trimEnd('/')}/${path.trimStart('/')}"
+    }
+
+    private fun HttpRequest.Builder.defaultHeaders(): HttpRequest.Builder = apply {
+        headers.forEach { (name, value) -> header(name, value) }
+    }
+
+    private fun HttpRequest.Builder.defaultTimeout(): HttpRequest.Builder = apply {
+        timeout(Duration.ofMillis(requestTimeoutMillis))
     }
 
     override suspend fun <R : Any> get(
@@ -89,6 +119,8 @@ public class JavaKoogHttpClient internal constructor(
     ): R = withContext(Dispatchers.SuitableForIO) {
         val httpRequest = HttpRequest.newBuilder()
             .uri(buildUri(path, parameters))
+            .defaultHeaders()
+            .defaultTimeout()
             .GET()
             .build()
 
@@ -108,6 +140,8 @@ public class JavaKoogHttpClient internal constructor(
 
         val httpRequest = HttpRequest.newBuilder()
             .uri(buildUri(path, parameters))
+            .defaultHeaders()
+            .defaultTimeout()
             .POST(HttpRequest.BodyPublishers.ofString(requestBody.body))
             .header("Content-Type", requestBody.contentType)
             .build()
@@ -130,6 +164,8 @@ public class JavaKoogHttpClient internal constructor(
 
         val httpRequest = HttpRequest.newBuilder()
             .uri(buildUri(path, parameters))
+            .defaultHeaders()
+            .defaultTimeout()
             .POST(HttpRequest.BodyPublishers.ofString(requestBody.body))
             .header("Content-Type", requestBody.contentType)
             .header("Accept", "text/event-stream")
@@ -220,13 +256,44 @@ public class JavaKoogHttpClient internal constructor(
     }
 
     override fun close() {}
+
+    public class Factory(
+        private val logger: KLogger = KotlinLogging.logger {}
+    ) : KoogHttpClient.Factory {
+        override fun create(
+            clientName: String,
+            baseUrl: String,
+            headers: Map<String, String>,
+            queryParameters: Map<String, String>,
+            requestTimeoutMillis: Long,
+            connectTimeoutMillis: Long,
+            socketTimeoutMillis: Long,
+            json: Json
+        ): JavaKoogHttpClient {
+            val configuredClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofMillis(connectTimeoutMillis))
+                .build()
+
+            return JavaKoogHttpClient(
+                clientName = clientName,
+                logger = logger,
+                httpClient = configuredClient,
+                json = json,
+                baseUrl = baseUrl,
+                headers = headers,
+                queryParameters = queryParameters,
+                requestTimeoutMillis = requestTimeoutMillis
+            )
+        }
+    }
 }
 
 /**
- * Creates a new instance of `KoogHttpClient` using Java 11's standard HttpClient for performing HTTP operations.
+ * Creates a new instance of `KoogHttpClient` wrapping the given Java [HttpClient].
  *
- * This function allows configuring the underlying Java `HttpClient` and provides enhanced logging,
- * flexibility, and customization in HTTP interactions.
+ * Use this function when you have a pre-configured [HttpClient] instance and want to wrap it
+ * in a [KoogHttpClient]. For standard use cases where the client should be built from
+ * configuration, prefer [JavaKoogHttpClient.Factory] instead.
  *
  * @param clientName The name of the client instance, used for identifying or logging client operations.
  * @param logger A `KLogger` instance used for logging client events and errors.

@@ -1,5 +1,3 @@
-@file:OptIn(InternalAgentsApi::class)
-
 package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
@@ -39,8 +37,8 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.TypeToken
+import ai.koog.utils.time.KoogClock
 import org.jetbrains.annotations.TestOnly
-import kotlin.time.Clock
 
 /**
  * Represents a reference to a specific type of node within an AI agent subgraph. This sealed class
@@ -426,7 +424,7 @@ public class Testing {
          * This enables test scenarios that require precise control over time
          * by allowing the use of custom clock instances, such as mock or fixed clocks.
          */
-        public var clock: Clock = Clock.System
+        public var clock: KoogClock = KoogClock.System
 
         /**
          * Defines the tokenizer to be used for estimating token counts in text strings.
@@ -505,7 +503,7 @@ public class Testing {
         /**
          * Sets a custom handler for processing assertion results.
          *
-         * @param block A lambda which takes an `AssertionResult` as input and processes it.
+         * @param block A lambda that takes an `AssertionResult` as input and processes it.
          *              This allows customization of how assertion results are handled,
          *              such as logging or throwing custom exceptions.
          */
@@ -543,7 +541,7 @@ public class Testing {
          */
         public class SubgraphAssertionsBuilder<Input, Output>(
             private val subgraphRef: NodeReference.SubgraphNode<Input, Output>,
-            internal val clock: Clock,
+            internal val clock: KoogClock,
             internal val tokenizer: Tokenizer?,
             internal val serializer: JSONSerializer,
         ) {
@@ -949,7 +947,8 @@ public class Testing {
         ): Testing {
             val testing = Testing()
             pipeline.interceptEnvironmentCreated(this) { eventContext, environment ->
-                MockEnvironment(eventContext.agent.toolRegistry, eventContext.agent.promptExecutor, pipeline.config.serializer, environment)
+                val graphAgent = eventContext.agent as GraphAIAgent<*, *>
+                MockEnvironment(graphAgent.toolRegistry, graphAgent.promptExecutor, pipeline.config.serializer, environment)
             }
 
             if (config.enableGraphTesting) {
@@ -1032,7 +1031,8 @@ public class Testing {
                         prompt = agent.agentConfig.prompt,
                         model = agent.agentConfig.model,
                         responseProcessor = agent.agentConfig.responseProcessor,
-                        promptExecutor = ContextualPromptExecutor(
+                        promptExecutor = @OptIn(InternalAgentsApi::class)
+                        ContextualPromptExecutor(
                             executor = agent.promptExecutor,
                             context = assertion.context,
                         ),

@@ -25,6 +25,7 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.io.SuitableForIO
+import ai.koog.utils.time.KoogClock
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 import aws.sdk.kotlin.services.bedrockruntime.applyGuardrail
 import aws.sdk.kotlin.services.bedrockruntime.model.ApplyGuardrailResponse
@@ -58,7 +59,6 @@ import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.jetbrains.annotations.VisibleForTesting
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -137,7 +137,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
     private val apiMethod: BedrockAPIMethod = BedrockAPIMethod.InvokeModel,
     private val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
     private val fallbackModelFamily: BedrockModelFamilies? = null,
-    private val clock: Clock = Clock.System,
+    private val clock: KoogClock = KoogClock.System,
 ) : LLMClient() {
 
     private val logger = KotlinLogging.logger {}
@@ -154,7 +154,7 @@ public class BedrockLLMClient @JvmOverloads constructor(
     public constructor(
         identityProvider: IdentityProvider,
         settings: BedrockClientSettings = BedrockClientSettings(),
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
     ) : this(
         bedrockClient = BedrockRuntimeClient {
             this.region = settings.region

@@ -6,6 +6,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.planner.goap.GoapAgentState
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.jvm.JvmStatic
+import kotlin.jvm.JvmSynthetic
 
 /**
  * A strategy implementation that utilizes a planner to manage and execute AI agent workflows.
@@ -45,20 +46,8 @@ public class AIAgentPlannerStrategy<Input, Output, State : Any>(
 
     /**
      * Companion object with factories for [AIAgentPlannerStrategy]
-     * */
+     */
     public companion object {
-        /**
-         * Creates an instance of [AIAgentPlannerStrategy] with the specified name and planner.
-         *
-         * @param name The name of the planner strategy to be created.
-         * @param planner The planner instance that defines the specific planning logic.
-         * @return A new [AIAgentPlannerStrategy] instance where the input, output, and state types are the same.
-         */
-        public operator fun <State : Any> invoke(
-            name: String,
-            planner: AIAgentPlanner<State, *>,
-        ): AIAgentPlannerStrategy<State, State, State> = AIAgentPlannerStrategy(name, planner, { it }, { it })
-
         /**
          * Creates a new instance of AIAgentPlannerStrategyBuilder with the specified name.
          *
@@ -86,3 +75,16 @@ public class AIAgentPlannerStrategy<Input, Output, State : Any>(
         }.build()
     }
 }
+
+/**
+ * Creates an instance of [AIAgentPlannerStrategy] with the specified name and planner.
+ *
+ * @param name The name of the planner strategy to be created.
+ * @param planner The planner instance that defines the specific planning logic.
+ * @return A new [AIAgentPlannerStrategy] instance where the input, output, and state types are the same.
+ */
+@JvmSynthetic
+public fun <State : Any> AIAgentPlannerStrategy(
+    name: String,
+    planner: AIAgentPlanner<State, *>,
+): AIAgentPlannerStrategy<State, State, State> = AIAgentPlannerStrategy(name, planner, { it }, { it })

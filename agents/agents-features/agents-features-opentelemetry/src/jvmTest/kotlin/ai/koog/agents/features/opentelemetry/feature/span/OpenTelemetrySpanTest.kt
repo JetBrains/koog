@@ -23,10 +23,18 @@ import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.utils.io.use
+import io.opentelemetry.kotlin.tracing.export.simpleSpanProcessor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Tests for the OpenTelemetry feature.
@@ -192,13 +200,26 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                 systemPrompt = systemPrompt,
                 temperature = OpenTelemetryTestAPI.Parameter.TEMPERATURE,
             ) {
-                addSpanExporter(mockExporter)
+                addSpanProcessor { simpleSpanProcessor(mockExporter) }
                 setVerbose(true)
             }
 
             agentService.createAgentAndRun(userPrompt0, id = agentId)
+            // Wait for first run's async span exports
+            withContext(Dispatchers.Default) {
+                withTimeoutOrNull(5.seconds) { mockExporter.isCollected.first { it } }
+            }
+
             index++
             agentService.createAgentAndRun(userPrompt1, id = agentId)
+            // Wait for second run's async span exports (poll for 2 distinct runIds)
+            withContext(Dispatchers.Default) {
+                withTimeoutOrNull(5.seconds) {
+                    while (mockExporter.runIds.size < 2) {
+                        delay(50)
+                    }
+                }
+            }
 
             val collectedSpans = mockExporter.collectedSpans
             assertTrue(collectedSpans.isNotEmpty(), "Spans should be created during agent execution")

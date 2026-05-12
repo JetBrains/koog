@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -55,6 +56,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
 import ai.koog.utils.io.SuitableForIO
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
@@ -66,7 +68,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIContent
@@ -96,14 +97,14 @@ public class OpenAIClientSettings(
  *
  * @param settings The base URL and timeouts for the OpenAI API, defaults to "https://api.openai.com" and 900 s
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
- *   to create a Ktor-backed client configured with an API key.
+ *   that accepts an API key and a [KoogHttpClient.Factory] to create a client with standard defaults.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 @OptIn(ExperimentalAtomicApi::class)
 public open class OpenAILLMClient @JvmOverloads constructor(
     private val settings: OpenAIClientSettings = OpenAIClientSettings(),
     httpClient: KoogHttpClient,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
 ) : AbstractOpenAILLMClient<OpenAIChatCompletionResponse, OpenAIChatCompletionStreamResponse>(
     settings = settings,
@@ -117,16 +118,34 @@ public open class OpenAILLMClient @JvmOverloads constructor(
     public constructor(
         apiKey: String,
         settings: OpenAIClientSettings = OpenAIClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        httpClientFactory: KoogHttpClient.Factory,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ) : this(
         settings = settings,
         httpClient = createConfiguredHttpClient(
             apiKey = apiKey,
             settings = settings,
-            logger = staticLogger,
-            baseClient = baseClient,
+            httpClientFactory = httpClientFactory,
+            clientName = OPENAI_CLIENT_NAME
+        ),
+        clock = clock,
+        toolsConverter = toolsConverter
+    )
+
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: OpenAIClientSettings = OpenAIClientSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: KoogClock = KoogClock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(
+            apiKey = apiKey,
+            settings = settings,
+            httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
             clientName = OPENAI_CLIENT_NAME
         ),
         clock = clock,

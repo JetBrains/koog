@@ -1,4 +1,4 @@
-@file:OptIn(InternalAgentsApi::class)
+@file:OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
 
 package ai.koog.agents.core.agent.entity
 
@@ -10,7 +10,6 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.utils.submitToMainDispatcher
 import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.ext.agent.subgraphWithVerification
@@ -18,6 +17,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.TypeToken
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.withContextReentrant
 import kotlin.random.Random
 
 /**
@@ -533,7 +534,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
                 responseProcessor = responseProcessor,
             ) { input ->
                 val ctx = this
-                ctx.config.submitToMainDispatcher {
+                withContextReentrant(ctx.config.strategyDispatcher) {
                     defineTask.execute(input, ctx)
                 }
             }
@@ -554,7 +555,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
                 responseProcessor = responseProcessor,
             ) { input ->
                 val ctx = this
-                ctx.config.submitToMainDispatcher {
+                withContextReentrant(ctx.config.strategyDispatcher) {
                     defineTask.execute(input, ctx)
                 }
             }
@@ -574,7 +575,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
                 responseProcessor = responseProcessor,
             ) { input ->
                 val ctx = this
-                ctx.config.submitToMainDispatcher {
+                withContextReentrant(ctx.config.strategyDispatcher) {
                     defineTask.execute(input, ctx)
                 }
             }

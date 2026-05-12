@@ -12,6 +12,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +49,7 @@ import org.springframework.ai.chat.prompt.Prompt as SpringPrompt
 public class SpringAiLLMClient(
     private val chatModel: ChatModel,
     private val provider: LLMProvider,
-    private val clock: kotlin.time.Clock,
+    private val clock: KoogClock,
     private val dispatcher: CoroutineDispatcher,
     private val chatOptionsCustomizer: ChatOptionsCustomizer,
     private val moderationModel: ModerationModel?,
@@ -61,7 +62,7 @@ public class SpringAiLLMClient(
         /**
          * Returns a new [Builder] for constructing a [SpringAiLLMClient].
          * Intended for Java callers who want to avoid dealing with Kotlin default parameters
-         * and [kotlin.time.Clock].
+         * and [KoogClock].
          *
          * Usage:
          * ```java
@@ -86,7 +87,7 @@ public class SpringAiLLMClient(
     public class Builder {
         private var chatModel: ChatModel? = null
         private var provider: LLMProvider = SpringAiLLMProvider
-        private var clock: kotlin.time.Clock = kotlin.time.Clock.System
+        private var clock: KoogClock = KoogClock.System
         private var dispatcher: CoroutineDispatcher = Dispatchers.IO
         private var chatOptionsCustomizer: ChatOptionsCustomizer = ChatOptionsCustomizer.NOOP
         private var moderationModel: ModerationModel? = null
@@ -97,8 +98,8 @@ public class SpringAiLLMClient(
         /** Sets the [LLMProvider] to report for this client. Default is [SpringAiLLMProvider]. */
         public fun provider(provider: LLMProvider): Builder = apply { this.provider = provider }
 
-        /** Sets the clock used for creating response metadata timestamps. Default is [kotlin.time.Clock.System]. */
-        public fun clock(clock: kotlin.time.Clock): Builder = apply { this.clock = clock }
+        /** Sets the clock used for creating response metadata timestamps. Default is [KoogClock.System]. */
+        public fun clock(clock: KoogClock): Builder = apply { this.clock = clock }
 
         /** Sets the [CoroutineDispatcher] used for blocking model calls. Default is [Dispatchers.IO]. */
         public fun dispatcher(dispatcher: CoroutineDispatcher): Builder = apply { this.dispatcher = dispatcher }

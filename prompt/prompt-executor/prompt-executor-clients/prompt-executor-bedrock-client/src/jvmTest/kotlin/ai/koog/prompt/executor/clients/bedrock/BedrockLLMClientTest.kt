@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.utils.time.KoogClock
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 import aws.sdk.kotlin.services.bedrockruntime.model.ApplyGuardrailRequest
@@ -65,7 +66,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import aws.sdk.kotlin.services.bedrockruntime.model.Message as BedrockMessage
 
@@ -106,7 +106,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         assertNotNull(client)
@@ -117,7 +117,7 @@ class BedrockLLMClientTest {
         val client = BedrockLLMClient(
             identityProvider = StaticBearerTokenProvider(token = "test-token"),
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
         assertNotNull(client)
     }
@@ -231,7 +231,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = customSettings,
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         // then
@@ -277,7 +277,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         // Verify that Claude Haiku supports tools
@@ -406,7 +406,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -712,7 +712,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
         val prompt = Prompt.build("test") {
             user("Get embeddings for this.")
@@ -731,7 +731,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
         val prompt = Prompt.build("test") {
             user("Get Cohere embeddings for this.")
@@ -750,7 +750,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
         val noCompletionModel = LLModel(
             provider = LLMProvider.Bedrock,
@@ -774,7 +774,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
         val prompt = Prompt.build("test") {
             user("Get embeddings for this.")
@@ -793,7 +793,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
         val prompt = Prompt.build("test") {
             user("Get Cohere embeddings for this.")
@@ -812,7 +812,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
         val noCompletionModel = LLModel(
             provider = LLMProvider.Bedrock,
@@ -836,7 +836,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         // Test known model families
@@ -942,7 +942,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val unsupportedModel = LLModel(
@@ -972,7 +972,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 fallbackModelFamily = fallbackFamily
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val unsupportedModel = LLModel(
@@ -998,7 +998,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 fallbackModelFamily = BedrockModelFamilies.AnthropicClaude
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         // Test with Meta fallback
@@ -1011,7 +1011,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 fallbackModelFamily = BedrockModelFamilies.Meta
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val unsupportedModel = LLModel(
@@ -1034,7 +1034,7 @@ class BedrockLLMClientTest {
             bedrockClient = mockClient,
             moderationGuardrailsSettings = null,
             fallbackModelFamily = fallbackFamily,
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val unsupportedModel = LLModel(
@@ -1064,7 +1064,7 @@ class BedrockLLMClientTest {
                 secretAccessKey = "test-secret"
             },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val nonBedrockModel = LLModel(
@@ -1126,7 +1126,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1152,7 +1152,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1205,7 +1205,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1230,7 +1230,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1270,7 +1270,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1295,7 +1295,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1348,7 +1348,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1373,7 +1373,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1444,7 +1444,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val prompt = Prompt.build("test") {
@@ -1469,7 +1469,7 @@ class BedrockLLMClientTest {
                 region = BedrockRegions.US_EAST_1.regionCode,
                 apiMethod = BedrockAPIMethod.InvokeModel
             ),
-            clock = Clock.System
+            clock = KoogClock.System
         )
 
         val prompt = Prompt.build("test") {

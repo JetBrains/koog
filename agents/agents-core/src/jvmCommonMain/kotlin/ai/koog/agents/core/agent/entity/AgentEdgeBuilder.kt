@@ -1,4 +1,4 @@
-@file:OptIn(InternalAgentsApi::class)
+@file:OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
 
 package ai.koog.agents.core.agent.entity
 
@@ -9,7 +9,8 @@ import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilder
 import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate
 import ai.koog.agents.core.utils.Option
 import ai.koog.agents.core.utils.Some
-import ai.koog.agents.core.utils.submitToMainDispatcher
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.withContextReentrant
 
 /**
  * A builder class for creating and managing edges between AI agent nodes in a graph.
@@ -138,7 +139,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
         toNode,
         forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
-                ctx.config.submitToMainDispatcher {
+                withContextReentrant(ctx.config.strategyDispatcher) {
                     filter { transOutput ->
                         condition.invoke(transOutput, ctx)
                     }
@@ -166,7 +167,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
         toNode,
         forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
-                ctx.config.submitToMainDispatcher {
+                withContextReentrant(ctx.config.strategyDispatcher) {
                     filter { transOutput ->
                         condition.invoke(transOutput)
                     }
@@ -190,7 +191,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
         toNode,
         forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
-                ctx.config.submitToMainDispatcher {
+                withContextReentrant(ctx.config.strategyDispatcher) {
                     map { transformation.invoke(it, ctx) }
                 }
             }
@@ -212,7 +213,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
         toNode,
         forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
-                ctx.config.submitToMainDispatcher {
+                withContextReentrant(ctx.config.strategyDispatcher) {
                     map { transformation.invoke(it) }
                 }
             }
@@ -234,7 +235,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
         toNode,
         forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
-                ctx.config.submitToMainDispatcher {
+                withContextReentrant(ctx.config.strategyDispatcher) {
                     map { transformation.invoke(it, ctx) }
                 }
             }
@@ -256,7 +257,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
         toNode,
         forwardOutputComposition = { ctx, output ->
             with(forwardOutputComposition(ctx, output)) {
-                ctx.config.submitToMainDispatcher {
+                withContextReentrant(ctx.config.strategyDispatcher) {
                     map { transformation.invoke(it) }
                 }
             }

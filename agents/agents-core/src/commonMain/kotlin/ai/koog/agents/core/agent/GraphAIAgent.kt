@@ -20,10 +20,9 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.TypeToken
-import ai.koog.serialization.typeToken
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.reflect.KType
-import kotlin.time.Clock
 
 /**
  * Represents an implementation of an AI agent that provides functionalities to execute prompts,
@@ -36,8 +35,6 @@ import kotlin.time.Clock
  * @param Input Type of agent input.
  * @param Output Type of agent output.
  *
- * @property inputType [TypeToken] representing [Input] - agent input.
- * @property outputType [TypeToken] representing [Output] - agent output.
  * @property promptExecutor Executor used to manage and execute prompt strings.
  * @property strategy The execution strategy defining how the agent processes input and produces output.
  * @property agentConfig Configuration details for the local agent that define its operational parameters.
@@ -50,14 +47,12 @@ import kotlin.time.Clock
 @Suppress("ktlint:standard:wrapping")
 @OptIn(InternalAgentsApi::class)
 public open class GraphAIAgent<Input, Output>(
-    public val inputType: TypeToken,
-    public val outputType: TypeToken,
     public val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
     override val strategy: AIAgentGraphStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
-    public val clock: Clock = Clock.System,
+    public val clock: KoogClock = KoogClock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
 ) : AIAgentBase<Input, Output, AIAgentGraphContextBase>(
@@ -77,7 +72,7 @@ public open class GraphAIAgent<Input, Output>(
      * @param clock Clock instance used by the agent, defaulting to the system clock.
      * @param installFeatures A lambda for installing custom features in the agent's feature context.
      */
-    @Deprecated("Use constructor with `TypeToken` instead of `KType`.")
+    @Deprecated("Use constructor without `inputType` and `outputType`.")
     public constructor(
         inputType: KType,
         outputType: KType,
@@ -86,11 +81,42 @@ public open class GraphAIAgent<Input, Output>(
         strategy: AIAgentGraphStrategy<Input, Output>,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         id: String? = null,
-        clock: Clock = Clock.System,
+        clock: KoogClock = KoogClock.System,
         installFeatures: FeatureContext.() -> Unit = {}
     ) : this(
-        typeToken(inputType),
-        typeToken(outputType),
+        promptExecutor,
+        agentConfig,
+        strategy,
+        toolRegistry,
+        id,
+        clock,
+        installFeatures
+    )
+
+    /**
+     * @param inputType [TypeToken] representing [Input] - agent input.
+     * @param outputType [TypeToken] representing [Output] - agent output.
+     * @param promptExecutor Executor used to manage and execute prompt strings.
+     * @param strategy The execution strategy defining how the agent processes input and produces output.
+     * @param agentConfig Configuration details for the local agent that define its operational parameters.
+     * @param toolRegistry Registry of tools the agent can interact with, defaulting to an empty registry.
+     * @param installFeatures Lambda for installing additional features within the agent environment.
+     * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
+     * @param clock The clock used to calculate message timestamps
+     * @constructor Initializes the AI agent instance and prepares the feature context and pipeline for use.
+     */
+    @Deprecated("Use constructor without `inputType` and `outputType`")
+    public constructor(
+        inputType: TypeToken,
+        outputType: TypeToken,
+        promptExecutor: PromptExecutor,
+        agentConfig: AIAgentConfig,
+        strategy: AIAgentGraphStrategy<Input, Output>,
+        toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+        id: String? = null,
+        clock: KoogClock = KoogClock.System,
+        installFeatures: FeatureContext.() -> Unit = {}
+    ) : this(
         promptExecutor,
         agentConfig,
         strategy,
@@ -103,6 +129,16 @@ public open class GraphAIAgent<Input, Output>(
     private companion object {
         private val logger = KotlinLogging.logger {}
     }
+
+    /**
+     * [TypeToken] representing [Input] - agent input.
+     */
+    public val inputType: TypeToken = strategy.nodeStart.inputType
+
+    /**
+     * [TypeToken] representing [Output] - agent output.
+     */
+    public val outputType: TypeToken = strategy.nodeFinish.outputType
 
     override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(agentConfig, clock)
 

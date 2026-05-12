@@ -2,7 +2,7 @@ package ai.koog.prompt.cache.memory
 
 import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.message.Message
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 import kotlin.time.Instant
 
 /**
@@ -39,14 +39,14 @@ public class InMemoryPromptCache(private val maxEntries: Int?) : PromptCache {
 
     private data class CacheEntry(
         val response: List<Message.Response>,
-        var accessed: Instant = Clock.System.now()
+        var accessed: Instant = KoogClock.System.now()
     )
 
     override suspend fun get(request: PromptCache.Request): List<Message.Response>? {
         val entry = cache[request.asCacheKey] ?: return null
 
         // Update last accessed time
-        entry.accessed = Clock.System.now()
+        entry.accessed = KoogClock.System.now()
 
         return entry.response
     }

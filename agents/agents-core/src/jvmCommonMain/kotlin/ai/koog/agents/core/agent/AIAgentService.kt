@@ -1,20 +1,17 @@
 @file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
-@file:OptIn(InternalAgentsApi::class)
 
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
+import ai.koog.agents.core.utils.runBlockingOnStrategyDispatcher
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.utils.time.KoogClock
 import java.util.concurrent.ExecutorService
-import kotlin.time.Clock
 
+@OptIn(InternalAgentsApi::class)
 public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> {
     public actual abstract val promptExecutor: PromptExecutor
     public actual abstract val agentConfig: AIAgentConfig
@@ -23,7 +20,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock
+        clock: KoogClock
     ): TAgent
 
     public actual abstract suspend fun createAgentAndRun(
@@ -31,7 +28,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock
+        clock: KoogClock
     ): Output
 
     public actual abstract suspend fun removeAgent(agent: TAgent): Boolean
@@ -55,8 +52,8 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         additionalToolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         agentConfig: AIAgentConfig = this.agentConfig,
         executorService: ExecutorService? = null,
-        clock: Clock = Clock.System
-    ): TAgent = agentConfig.runOnStrategyDispatcher(executorService) {
+        clock: KoogClock = KoogClock.System
+    ): TAgent = agentConfig.runBlockingOnStrategyDispatcher(executorService) {
         createAgent(id, additionalToolRegistry, agentConfig, clock)
     }
 
@@ -79,7 +76,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         additionalToolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         agentConfig: AIAgentConfig = this.agentConfig,
         executorService: ExecutorService? = null,
-        clock: Clock
+        clock: KoogClock
     ): Output = createAgent(id, additionalToolRegistry, agentConfig, executorService, clock)
         .javaNonSuspendRun(agentInput, null, executorService)
 
@@ -98,7 +95,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
     public fun removeAgent(
         agent: TAgent,
         executorService: ExecutorService? = null
-    ): Boolean = agentConfig.runOnStrategyDispatcher(executorService) {
+    ): Boolean = agentConfig.runBlockingOnStrategyDispatcher(executorService) {
         removeAgent(agent)
     }
 
@@ -114,7 +111,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
     public fun removeAgentWithId(
         id: String,
         executorService: ExecutorService? = null
-    ): Boolean = agentConfig.runOnStrategyDispatcher(executorService) {
+    ): Boolean = agentConfig.runBlockingOnStrategyDispatcher(executorService) {
         removeAgentWithId(id)
     }
 
@@ -133,57 +130,8 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
     public fun agentById(
         id: String,
         executorService: ExecutorService? = null
-    ): TAgent? = agentConfig.runOnStrategyDispatcher(executorService) {
+    ): TAgent? = agentConfig.runBlockingOnStrategyDispatcher(executorService) {
         agentById(id)
-    }
-
-    /**
-     * Lists all currently active agents using the configured strategy dispatcher.
-     *
-     * If an optional `executorService` is provided, it will be used as the execution context
-     * for running the operation. Otherwise, a default executor service or dispatcher is utilized.
-     *
-     * @param executorService The optional `ExecutorService` to use for task execution. Defaults to `null`.
-     * @return A list of currently active agents of type `TAgent`.
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun listActiveAgents(
-        executorService: ExecutorService? = null
-    ): List<TAgent> = agentConfig.runOnStrategyDispatcher(executorService) {
-        listActiveAgents()
-    }
-
-    /**
-     * Retrieves a list of all inactive agents.
-     *
-     * This method utilizes the provided `ExecutorService` for dispatching, if specified.
-     * If no `ExecutorService` is provided, a default strategy-specific executor will be used.
-     *
-     * @param executorService An optional `ExecutorService` to execute the operation.
-     *                        If `null`, the default executor service of the agent's configuration is used.
-     * @return A list of `TAgent` objects representing the inactive agents.
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun listInactiveAgents(
-        executorService: ExecutorService? = null
-    ): List<TAgent> = agentConfig.runOnStrategyDispatcher(executorService) {
-        listInactiveAgents()
-    }
-
-    /**
-     * Retrieves a list of finished agents.
-     *
-     * @param executorService The optional executor service to be used for the operation. If no executor service is provided, a default one will be used.
-     * @return A list of finished agents.
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun listFinishedAgents(
-        executorService: ExecutorService? = null
-    ): List<TAgent> = agentConfig.runOnStrategyDispatcher(executorService) {
-        listFinishedAgents()
     }
 
     public actual companion object {
@@ -193,55 +141,23 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         @OptIn(markerClass = [InternalAgentsApi::class])
         public actual inline fun <reified Input, reified Output> fromAgent(
             agent: GraphAIAgent<Input, Output>
-        ): AIAgentService<Input, Output, GraphAIAgent<Input, Output>> = AIAgentServiceHelper.fromAgent(agent)
+        ): AIAgentService<Input, Output, GraphAIAgent<Input, Output>> = AIAgentService(
+            promptExecutor = agent.promptExecutor,
+            agentConfig = agent.agentConfig,
+            strategy = agent.strategy,
+            toolRegistry = agent.toolRegistry,
+            installFeatures = agent.installFeatures
+        )
 
         @OptIn(markerClass = [InternalAgentsApi::class])
         public actual fun <Input, Output> fromAgent(
             agent: FunctionalAIAgent<Input, Output>
-        ): AIAgentService<Input, Output, FunctionalAIAgent<Input, Output>> = AIAgentServiceHelper.fromAgent(agent)
-
-        @OptIn(markerClass = [InternalAgentsApi::class])
-        public actual inline operator fun <reified Input, reified Output> invoke(
-            promptExecutor: PromptExecutor,
-            agentConfig: AIAgentConfig,
-            strategy: AIAgentGraphStrategy<Input, Output>,
-            toolRegistry: ToolRegistry,
-            noinline installFeatures: GraphAIAgent.FeatureContext.() -> Unit
-        ): GraphAIAgentService<Input, Output> =
-            AIAgentServiceHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, installFeatures)
-
-        public actual operator fun invoke(
-            promptExecutor: PromptExecutor,
-            llmModel: LLModel,
-            responseProcessor: ResponseProcessor?,
-            strategy: AIAgentGraphStrategy<String, String>,
-            toolRegistry: ToolRegistry,
-            systemPrompt: String?,
-            temperature: Double?,
-            numberOfChoices: Int,
-            maxIterations: Int,
-            installFeatures: GraphAIAgent.FeatureContext.() -> Unit
-        ): GraphAIAgentService<String, String> = AIAgentServiceHelper.invoke(
-            promptExecutor,
-            llmModel,
-            responseProcessor,
-            strategy,
-            toolRegistry,
-            systemPrompt,
-            temperature,
-            numberOfChoices,
-            maxIterations,
-            installFeatures
+        ): AIAgentService<Input, Output, FunctionalAIAgent<Input, Output>> = AIAgentService(
+            promptExecutor = agent.promptExecutor,
+            agentConfig = agent.agentConfig,
+            strategy = agent.strategy,
+            toolRegistry = agent.toolRegistry,
+            installFeatures = agent.installFeatures
         )
-
-        @OptIn(markerClass = [InternalAgentsApi::class])
-        public actual operator fun <Input, Output> invoke(
-            promptExecutor: PromptExecutor,
-            agentConfig: AIAgentConfig,
-            strategy: AIAgentFunctionalStrategy<Input, Output>,
-            toolRegistry: ToolRegistry,
-            installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit
-        ): FunctionalAIAgentService<Input, Output> =
-            AIAgentServiceHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, installFeatures)
     }
 }

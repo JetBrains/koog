@@ -26,13 +26,13 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 /**
@@ -48,7 +48,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     public val config: AIAgentConfig,
-    public val clock: Clock,
+    public val clock: KoogClock,
 ) : AutoCloseable {
     protected val readSession: AIAgentLLMReadSession
         get() = AIAgentLLMReadSession(

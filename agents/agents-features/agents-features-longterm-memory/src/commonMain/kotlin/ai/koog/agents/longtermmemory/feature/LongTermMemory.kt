@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
@@ -15,27 +14,22 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.longtermmemory.ingestion.IngestionSettings
-import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
-import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
-import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
-import ai.koog.agents.longtermmemory.retrieval.LastUserMessageQueryExtractor
-import ai.koog.agents.longtermmemory.retrieval.QueryExtractor
+import ai.koog.agents.longtermmemory.ingestion.extraction.DocumentExtractor
+import ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocumentExtractor
 import ai.koog.agents.longtermmemory.retrieval.RetrievalSettings
-import ai.koog.agents.longtermmemory.retrieval.SearchStrategy
-import ai.koog.agents.longtermmemory.retrieval.SimilaritySearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
+import ai.koog.agents.longtermmemory.retrieval.search.LastUserMessageQueryProvider
+import ai.koog.agents.longtermmemory.retrieval.search.SearchQueryProvider
+import ai.koog.agents.longtermmemory.retrieval.search.SearchStrategy
+import ai.koog.agents.longtermmemory.retrieval.search.SimilaritySearchStrategy
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.toMessageResponses
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.SearchStorage
 import ai.koog.rag.base.storage.WriteStorage
 import ai.koog.rag.base.storage.search.SearchRequest
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -51,18 +45,10 @@ import kotlin.coroutines.cancellation.CancellationException
  * @see RetrievalSettings
  * @see IngestionSettings
  */
-@ExperimentalAgentsApi
 public class LongTermMemory(
     private val retrievalSettings: RetrievalSettings? = null,
     private val ingestionSettings: IngestionSettings? = null,
 ) {
-    /**
-     * Buffer to accumulate streaming frames by runId.
-     * Frames are accumulated during streaming and saved when streaming completes.
-     */
-    private val streamingFramesBuffer: MutableMap<String, MutableList<StreamFrame>> = mutableMapOf()
-    private val streamingFramesBufferMutex = Mutex()
-
     /**
      * Configuration for the LongTermMemory feature.
      *
@@ -118,7 +104,7 @@ public class LongTermMemory(
          * Example usage:
          * ```kotlin
          * ingestion {
-         *     extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
+         *     documentExtractor = MessagePassingDocumentExtractor(setOf(Message.Role.User))
          * }
          * ```
          */
@@ -146,12 +132,12 @@ public class LongTermMemory(
 
         /**
          * The extractor that defines how to derive the search query from the prompt.
-         * Defaults to [LastUserMessageQueryExtractor].
+         * Defaults to [LastUserMessageQueryProvider].
          *
-         * @see QueryExtractor
-         * @see LastUserMessageQueryExtractor
+         * @see SearchQueryProvider
+         * @see LastUserMessageQueryProvider
          */
-        public var queryExtractor: QueryExtractor = LastUserMessageQueryExtractor()
+        public var searchQueryProvider: SearchQueryProvider = LastUserMessageQueryProvider()
 
         /**
          * The search strategy that defines how to search the retrieval storage.
@@ -182,15 +168,24 @@ public class LongTermMemory(
         public var namespace: String? = null
 
         /**
+         * How to react to retrieval failures (e.g. storage outage, invalid search request).
+         *
+         * Defaults to [FailurePolicy.FAIL_FAST] so a retrieval error stops the LLM call instead
+         * of silently producing an answer without the required memory context. Switch to
+         * [FailurePolicy.LOG_AND_CONTINUE] to fall back to a non-augmented LLM call.
+         */
+        public var failurePolicy: FailurePolicy = FailurePolicy.FAIL_FAST
+
+        /**
          * Fluent setter for [storage].
          */
         public fun withStorage(storage: SearchStorage<TextDocument, SearchRequest>): RetrievalSettingsBuilder = apply { this.storage = storage }
 
         /**
-         * Fluent setter for [queryExtractor].
+         * Fluent setter for [searchQueryProvider].
          */
-        public fun withQueryExtractor(queryExtractor: QueryExtractor): RetrievalSettingsBuilder =
-            apply { this.queryExtractor = queryExtractor }
+        public fun withSearchQueryProvider(searchQueryProvider: SearchQueryProvider): RetrievalSettingsBuilder =
+            apply { this.searchQueryProvider = searchQueryProvider }
 
         /**
          * Fluent setter for [searchStrategy].
@@ -217,17 +212,24 @@ public class LongTermMemory(
             apply { this.namespace = namespace }
 
         /**
+         * Fluent setter for [failurePolicy].
+         */
+        public fun withFailurePolicy(failurePolicy: FailurePolicy): RetrievalSettingsBuilder =
+            apply { this.failurePolicy = failurePolicy }
+
+        /**
          * RetrievalSettings builder.
          */
         public fun build(): RetrievalSettings {
-            val retrievalStorage = storage ?: error("storage must be set in retrieval { } block")
+            val retrievalStorage = requireNotNull(storage) { "storage must be set in retrieval { } block" }
             return RetrievalSettings(
                 retrievalStorage,
-                queryExtractor,
+                searchQueryProvider,
                 searchStrategy,
                 promptAugmenter,
                 enableAutomaticRetrieval,
-                namespace
+                namespace,
+                failurePolicy,
             )
         }
     }
@@ -246,34 +248,28 @@ public class LongTermMemory(
          * The extractor that defines how to transform messages into memory records.
          *
          * Pre-built ingesters are available:
-         * - [ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy] - Filters messages by role
+         * - [ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocumentExtractor] - Filters messages by role
          *
          * Example usage:
          * ```kotlin
          * // Use pre-built extractor with parameters
-         * extractionStrategy = FilteringExtractionStrategy(
+         * documentExtractor = MessagePassingDocumentExtractor(
          *     messageRolesToExtract = setOf(Message.Role.User)
          * )
          *
          * // Or use lambda for custom logic
-         * extractionStrategy = ExtractionStrategy { messages ->
+         * documentExtractor = DocumentExtractor { messages ->
          *     messages.map { TextDocument(content = it.content) }
          * }
          * ```
          */
-        public var extractionStrategy: ExtractionStrategy = FilteringExtractionStrategy()
+        public var documentExtractor: DocumentExtractor = MessagePassingDocumentExtractor()
 
         /**
-         * When `true` (default), ingestion happens automatically after LLM calls or on agent
-         * completion (depending on [timing]). When `false`, the storage is still accessible
-         * for manual use inside graph strategy nodes.
+         * When `true` (default), ingestion happens automatically on agent completion.
+         * When `false`, the storage is still accessible for manual use inside graph strategy nodes.
          */
         public var enableAutomaticIngestion: Boolean = true
-
-        /**
-         * When to mapMessages messages. Defaults to [IngestionTiming.ON_LLM_CALL].
-         */
-        public var timing: IngestionTiming = IngestionTiming.ON_LLM_CALL
 
         /**
          * Namespace (table/collection name) for a request.
@@ -281,15 +277,24 @@ public class LongTermMemory(
         public var namespace: String? = null
 
         /**
+         * How to react to ingestion failures (e.g. storage outage).
+         *
+         * Defaults to [FailurePolicy.LOG_AND_CONTINUE] so transient ingestion errors do not
+         * abort the agent run. Switch to [FailurePolicy.FAIL_FAST] for durable audit/logging
+         * use cases where losing memory records is worse than failing the run.
+         */
+        public var failurePolicy: FailurePolicy = FailurePolicy.LOG_AND_CONTINUE
+
+        /**
          * Fluent setter for [storage].
          */
         public fun withStorage(storage: WriteStorage<TextDocument>): IngestionSettingsBuilder = apply { this.storage = storage }
 
         /**
-         * Fluent setter for [extractionStrategy].
+         * Fluent setter for [documentExtractor].
          */
-        public fun withExtractionStrategy(extractionStrategy: ExtractionStrategy): IngestionSettingsBuilder =
-            apply { this.extractionStrategy = extractionStrategy }
+        public fun withDocumentExtractor(documentExtractor: DocumentExtractor): IngestionSettingsBuilder =
+            apply { this.documentExtractor = documentExtractor }
 
         /**
          * Fluent setter for [enableAutomaticIngestion].
@@ -298,22 +303,29 @@ public class LongTermMemory(
             apply { this.enableAutomaticIngestion = enable }
 
         /**
-         * Fluent setter for [timing].
-         */
-        public fun withTiming(timing: IngestionTiming): IngestionSettingsBuilder = apply { this.timing = timing }
-
-        /**
          * Fluent setter for [namespace].
          */
         public fun withNamespace(namespace: String): IngestionSettingsBuilder =
             apply { this.namespace = namespace }
 
         /**
+         * Fluent setter for [failurePolicy].
+         */
+        public fun withFailurePolicy(failurePolicy: FailurePolicy): IngestionSettingsBuilder =
+            apply { this.failurePolicy = failurePolicy }
+
+        /**
          * IngestionSettings builder.
          */
         public fun build(): IngestionSettings {
-            val ingestionStorage = storage ?: error("storage must be set in ingestion { } block")
-            return IngestionSettings(ingestionStorage, extractionStrategy, timing, enableAutomaticIngestion, namespace)
+            val ingestionStorage = requireNotNull(storage) { "storage must be set in ingestion { } block" }
+            return IngestionSettings(
+                ingestionStorage,
+                documentExtractor,
+                enableAutomaticIngestion,
+                namespace,
+                failurePolicy,
+            )
         }
     }
 
@@ -352,15 +364,12 @@ public class LongTermMemory(
                 return ltmFeature
             }
 
-            // Note: ingestion interceptors on "Starting" events must be registered before
-            // retrieval interceptors so that messages are ingested before prompt augmentation.
             if (enableIngestion) {
                 installIngestionInterceptors(ltmFeature, pipeline)
             }
             if (enableRetrieval) {
                 installRetrievalInterceptors(ltmFeature, pipeline)
             }
-            installCleanupInterceptors(ltmFeature, pipeline)
 
             return ltmFeature
         }
@@ -368,9 +377,8 @@ public class LongTermMemory(
         /**
          * Install interceptors for ingesting messages into the memory record repository.
          *
-         * Depending on [IngestionTiming], interceptors are installed either on individual LLM
-         * calls/streams ([IngestionTiming.ON_LLM_CALL]) or on agent completion
-         * ([IngestionTiming.ON_AGENT_COMPLETION]).
+         * Ingestion happens once at agent completion: the final accumulated session
+         * prompt/history is passed to the configured extraction strategy as a single batch.
          */
         private fun installIngestionInterceptors(
             ltmFeature: LongTermMemory,
@@ -378,70 +386,6 @@ public class LongTermMemory(
         ) {
             val ingestion = ltmFeature.ingestionSettings ?: return
 
-            when (ingestion.timing) {
-                IngestionTiming.ON_LLM_CALL -> installOnLLMCallIngestion(ltmFeature, ingestion, pipeline)
-                IngestionTiming.ON_AGENT_COMPLETION -> installOnAgentCompletionIngestion(ingestion, pipeline)
-            }
-        }
-
-        /**
-         * Install ingestion interceptors for [IngestionTiming.ON_LLM_CALL] mode.
-         * Covers both regular and streaming LLM calls.
-         */
-        private fun installOnLLMCallIngestion(
-            ltmFeature: LongTermMemory,
-            ingestion: IngestionSettings,
-            pipeline: AIAgentPipeline,
-        ) {
-            // Ingest original (not yet augmented) prompt messages before regular LLM call
-            pipeline.interceptLLMCallStarting(this) { ctx ->
-                ingestMessages(ingestion, ctx.prompt.messages)
-            }
-
-            // Ingest assistant responses after regular LLM call
-            pipeline.interceptLLMCallCompleted(this) { ctx ->
-                ingestMessages(ingestion, ctx.responses)
-            }
-
-            // Ingest original (not yet augmented) prompt messages before streaming LLM call
-            pipeline.interceptLLMStreamingStarting(this) { ctx ->
-                ingestMessages(ingestion, ctx.prompt.messages)
-            }
-
-            // Accumulate streaming frames in buffer
-            pipeline.interceptLLMStreamingFrameReceived(this) { ctx ->
-                ltmFeature.streamingFramesBufferMutex.withLock {
-                    ltmFeature.streamingFramesBuffer.getOrPut(ctx.runId) { mutableListOf() }
-                        .add(ctx.streamFrame)
-                }
-            }
-
-            // Clean up the buffer on streaming failure
-            pipeline.interceptLLMStreamingFailed(this) { ctx ->
-                ltmFeature.streamingFramesBufferMutex.withLock {
-                    ltmFeature.streamingFramesBuffer.remove(ctx.runId)
-                }
-            }
-
-            // Ingest accumulated streaming response on streaming completion
-            pipeline.interceptLLMStreamingCompleted(this) { ctx ->
-                val frames = ltmFeature.streamingFramesBufferMutex.withLock {
-                    ltmFeature.streamingFramesBuffer.remove(ctx.runId)
-                }
-                if (!frames.isNullOrEmpty()) {
-                    ingestMessages(ingestion, frames.toMessageResponses())
-                }
-            }
-        }
-
-        /**
-         * Install ingestion interceptors for [IngestionTiming.ON_AGENT_COMPLETION] mode.
-         * All messages are saved at once when the agent completes.
-         */
-        private fun installOnAgentCompletionIngestion(
-            ingestion: IngestionSettings,
-            pipeline: AIAgentPipeline,
-        ) {
             pipeline.interceptAgentCompleted(this) { ctx ->
                 ctx.context.llm.readSession {
                     ingestMessages(ingestion, prompt.messages)
@@ -479,32 +423,11 @@ public class LongTermMemory(
             }
         }
 
-        /**
-         * Install safety-net interceptors to clean up any leaked streaming buffer entries
-         * when the agent completes or fails.
-         */
-        private fun installCleanupInterceptors(
-            ltmFeature: LongTermMemory,
-            pipeline: AIAgentPipeline,
-        ) {
-            pipeline.interceptAgentCompleted(this) { ctx ->
-                ltmFeature.streamingFramesBufferMutex.withLock {
-                    ltmFeature.streamingFramesBuffer.remove(ctx.runId)
-                }
-            }
-
-            pipeline.interceptAgentExecutionFailed(this) { ctx ->
-                ltmFeature.streamingFramesBufferMutex.withLock {
-                    ltmFeature.streamingFramesBuffer.remove(ctx.runId)
-                }
-            }
-        }
-
         private suspend fun ingestMessages(
             ingestion: IngestionSettings,
             messages: List<Message>,
         ) {
-            val records = ingestion.extractionStrategy.extract(messages)
+            val records = ingestion.documentExtractor.extract(messages)
             if (records.isEmpty()) {
                 return
             }
@@ -514,18 +437,25 @@ public class LongTermMemory(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logger.error(e) { "Failed to ingest ${records.size} memory records." }
+                when (ingestion.failurePolicy) {
+                    FailurePolicy.FAIL_FAST -> throw LongTermMemoryIngestionException(
+                        "Failed to ingest ${records.size} memory records.",
+                        e,
+                    )
+                    FailurePolicy.LOG_AND_CONTINUE ->
+                        logger.error(e) { "Failed to ingest ${records.size} memory records." }
+                }
             }
         }
 
         /**
-         * Returns an augmented prompt only if there are relevant memory records for the query extracted by queryExtractor.
+         * Returns an augmented prompt only if there are relevant memory records for the query provided by searchQueryProvider.
          */
         private suspend fun getAugmentedPromptOrNull(
             prompt: Prompt,
             retrieval: RetrievalSettings,
         ): Prompt? {
-            val query = retrieval.queryExtractor.extract(prompt) ?: return null
+            val query = retrieval.searchQueryProvider.provide(prompt) ?: return null
 
             val searchResults = try {
                 val request = retrieval.searchStrategy.create(query)
@@ -533,8 +463,16 @@ public class LongTermMemory(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logger.error(e) { "Failed to search memory records for ${retrieval.searchStrategy}." }
-                emptyList()
+                when (retrieval.failurePolicy) {
+                    FailurePolicy.FAIL_FAST -> throw LongTermMemoryRetrievalException(
+                        "Failed to search memory records for ${retrieval.searchStrategy}.",
+                        e,
+                    )
+                    FailurePolicy.LOG_AND_CONTINUE -> {
+                        logger.error(e) { "Failed to search memory records for ${retrieval.searchStrategy}." }
+                        emptyList()
+                    }
+                }
             }
             if (searchResults.isEmpty()) {
                 return null
@@ -581,7 +519,6 @@ public class LongTermMemory(
  * @throws IllegalStateException if the [LongTermMemory] feature is not installed.
  * @see withLongTermMemory
  */
-@OptIn(ExperimentalAgentsApi::class)
 public fun AIAgentContext.longTermMemory(): LongTermMemory = featureOrThrow(LongTermMemory)
 
 /**
@@ -606,6 +543,5 @@ public fun AIAgentContext.longTermMemory(): LongTermMemory = featureOrThrow(Long
  * @throws IllegalStateException if the [LongTermMemory] feature is not installed.
  * @see longTermMemory
  */
-@OptIn(ExperimentalAgentsApi::class)
 public suspend fun <T> AIAgentContext.withLongTermMemory(action: suspend LongTermMemory.() -> T): T =
     longTermMemory().action()

@@ -188,8 +188,8 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                 pipeline.onSubgraphExecutionStarting(
                     eventId,
                     executionInfo,
-                    this@AIAgentSubgraphBase,
                     context,
+                    this@AIAgentSubgraphBase,
                     input,
                     inputType
                 )
@@ -206,8 +206,8 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                     pipeline.onSubgraphExecutionFailed(
                         eventId,
                         executionInfo,
-                        this@AIAgentSubgraphBase,
                         context,
+                        this@AIAgentSubgraphBase,
                         input,
                         inputType,
                         e
@@ -235,8 +235,8 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                 pipeline.onSubgraphExecutionCompleted(
                     eventId,
                     executionInfo,
-                    this@AIAgentSubgraphBase,
                     context,
+                    this@AIAgentSubgraphBase,
                     input,
                     inputType,
                     result,

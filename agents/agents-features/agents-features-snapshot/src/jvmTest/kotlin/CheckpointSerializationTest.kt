@@ -7,6 +7,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -15,7 +16,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 class CheckpointSerializationTest {
@@ -27,7 +27,7 @@ class CheckpointSerializationTest {
 
     @Test
     fun `serialize and deserialize without properties`() {
-        val now = Clock.System.now()
+        val now = KoogClock.System.now()
         val checkpoint = AgentCheckpointData(
             checkpointId = "cp-1",
             createdAt = now,
@@ -70,7 +70,7 @@ class CheckpointSerializationTest {
 
     @Test
     fun `serialize and deserialize with diverse properties`() {
-        val now = Clock.System.now()
+        val now = KoogClock.System.now()
         val properties = buildJsonObject {
             put("string", "value")
             put("number", 42)
@@ -109,7 +109,7 @@ class CheckpointSerializationTest {
 
     @Test
     fun `serialize and deserialize tombstone checkpoint`() {
-        val checkpoint = tombstoneCheckpoint(Clock.System.now(), 0L)
+        val checkpoint = tombstoneCheckpoint(KoogClock.System.now(), 0L)
         val json = PersistenceUtils.defaultCheckpointJson
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), checkpoint)
         val restored = json.decodeFromString(AgentCheckpointData.serializer(), serialized)

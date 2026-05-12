@@ -3,7 +3,7 @@ package ai.koog.agents.features.opentelemetry.metrics
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
-import ai.koog.agents.features.opentelemetry.metric.MetricCollector
+import ai.koog.agents.features.opentelemetry.metric.JvmMetricCollector
 import ai.koog.agents.features.opentelemetry.metric.adapter.restrictToolNameCardinality
 import ai.koog.agents.features.opentelemetry.metric.events.createExecuteToolDurationHistogramMetricEvent
 import ai.koog.agents.features.opentelemetry.metric.events.createToolCallCounterMetricEvent
@@ -25,7 +25,7 @@ class MetricAdapterTest {
         val allowedToolNames = setOf("allowed-tool", "another-allowed-tool")
         config.restrictToolNameCardinality(allowedToolNames)
 
-        val metricCollector = MetricCollector(meter, config)
+        val metricCollector = JvmMetricCollector(meter, config)
 
         val toolName = "allowed-tool"
         metricCollector.addCounterMetricEvent(
@@ -52,7 +52,7 @@ class MetricAdapterTest {
         val fallbackToolName = "filtered"
         config.restrictToolNameCardinality(allowedToolNames, fallbackToolName)
 
-        val metricCollector = MetricCollector(meter, config)
+        val metricCollector = JvmMetricCollector(meter, config)
 
         val toolName = "disallowed-tool"
         metricCollector.addCounterMetricEvent(
@@ -79,7 +79,7 @@ class MetricAdapterTest {
         val allowedToolNames = setOf("allowed-tool")
         config.restrictToolNameCardinality(allowedToolNames)
 
-        val metricCollector = MetricCollector(meter, config)
+        val metricCollector = JvmMetricCollector(meter, config)
 
         val toolName = "allowed-tool"
         val duration = 100.milliseconds
@@ -108,7 +108,7 @@ class MetricAdapterTest {
         val allowedToolNames = setOf("tool-a", "tool-b")
         config.restrictToolNameCardinality(allowedToolNames)
 
-        val metricCollector = MetricCollector(meter, config)
+        val metricCollector = JvmMetricCollector(meter, config)
 
         // Add allowed tools
         metricCollector.addCounterMetricEvent(
@@ -149,7 +149,7 @@ class MetricAdapterTest {
         // Using default fallback name "filtered"
         config.restrictToolNameCardinality(allowedToolNames)
 
-        val metricCollector = MetricCollector(meter, config)
+        val metricCollector = JvmMetricCollector(meter, config)
 
         val toolName = "disallowed-tool"
         metricCollector.addCounterMetricEvent(

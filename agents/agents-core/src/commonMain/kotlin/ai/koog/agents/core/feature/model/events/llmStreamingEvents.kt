@@ -5,8 +5,8 @@ import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.utils.ModelInfo
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
-import kotlin.time.Clock
 
 /**
  * Represents an event triggered when a language model (LLM) streaming operation is starting.
@@ -30,7 +30,7 @@ public data class LLMStreamingStartingEvent(
     val prompt: Prompt,
     val model: ModelInfo,
     val tools: List<String>,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -46,7 +46,7 @@ public data class LLMStreamingStartingEvent(
         prompt: Prompt,
         model: String,
         tools: List<String>,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = LLMStreamingStartingEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
@@ -83,7 +83,7 @@ public data class LLMStreamingFrameReceivedEvent(
     val prompt: Prompt,
     val model: ModelInfo,
     val frame: StreamFrame,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -96,7 +96,7 @@ public data class LLMStreamingFrameReceivedEvent(
     public constructor(
         runId: String,
         frame: StreamFrame,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = LLMStreamingFrameReceivedEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
@@ -133,7 +133,7 @@ public data class LLMStreamingFailedEvent(
     val prompt: Prompt,
     val model: ModelInfo,
     val error: AIAgentError,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -146,7 +146,7 @@ public data class LLMStreamingFailedEvent(
     public constructor(
         runId: String,
         error: AIAgentError,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = LLMStreamingFailedEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
@@ -180,7 +180,7 @@ public data class LLMStreamingCompletedEvent(
     val prompt: Prompt,
     val model: ModelInfo,
     val tools: List<String>,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -196,7 +196,7 @@ public data class LLMStreamingCompletedEvent(
         prompt: Prompt,
         model: String,
         tools: List<String>,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = LLMStreamingCompletedEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(

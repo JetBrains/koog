@@ -12,7 +12,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 
 public actual class AIAgentLLMWriteSession actual constructor(
     environment: AIAgentEnvironment,
@@ -23,5 +23,5 @@ public actual class AIAgentLLMWriteSession actual constructor(
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
-    clock: Clock
+    clock: KoogClock
 ) : AIAgentLLMWriteSessionCommon(environment, executor, tools, toolRegistry, prompt, model, responseProcessor, config, clock)

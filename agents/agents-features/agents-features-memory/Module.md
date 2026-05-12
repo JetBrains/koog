@@ -1,115 +1,30 @@
 # Module agents-features-memory
 
-Provides `AgentMemory` feature that allows to store and persist facts from LLM history between agent runs and even
-between multiple agents
+Provides the `ChatMemory` feature that persists and restores conversation history between agent runs.
 
 ### Overview
 
-The agents-features-memory module provides memory capabilities for AI agents, allowing them to store, retrieve, and share information between conversations and even between different agents. This enables agents to maintain context, remember user preferences, and build knowledge over time.
+The `agents-features-memory` module enables AI agents to maintain continuity across multiple sessions by
+storing and loading the full conversation history. When a new agent run starts, the previous messages are
+automatically injected into the prompt; when the run completes, the updated history is saved back to the
+configured provider.
 
-Key features include:
-- Storage and retrieval of facts with concepts and values
-- Memory organization with subjects and scopes
-- Secure storage with encryption options
-- Memory sharing between agents
-- Automatic fact detection from agent history
+### Main Components
 
-### Using in your project
+- **ChatMemory** — the installable agent feature. Intercepts strategy start and completion events to load
+  and store conversation history via a `ChatHistoryProvider`.
+- **ChatMemoryConfig** — configuration holder. Accepts a `ChatHistoryProvider` implementation and an
+  optional list of `ChatMemoryPreProcessor`s applied to the history before it is used or saved.
+- **ChatHistoryProvider** — interface for reading and writing conversation history, keyed by a conversation
+  (run) identifier. Implementations can target any storage backend (in-memory, SQL, file system, etc.).
+- **InMemoryChatHistoryProvider** — built-in, thread-safe in-memory implementation of `ChatHistoryProvider`,
+  useful for testing and short-lived sessions.
+- **ChatMemoryPreProcessor** — interface for transforming the message list before it is injected into the
+  prompt or persisted. The module ships with a sliding-window pre-processor that trims history to a
+  configurable maximum number of messages.
 
-To use the memory feature in your project, add the following dependency:
+### Goals
 
-```kotlin
-dependencies {
-    implementation("ai.koog.agents:agents-features-memory:$version")
-}
-```
-
-Then, install the AgentMemory feature when creating your agent:
-
-```kotlin
-val myAgent = AIAgents(
-    // other configuration parameters
-) {
-    install(AgentMemory) {
-        memoryProvider = LocalFileMemoryProvider(
-            config = LocalMemoryConfig("my-memory"),
-            storage = SimpleStorage(JVMFileSystemProvider),
-            root = Path("memory/data")
-        )
-        featureName = "my-feature"
-        organizationName = "my-organization"
-    }
-}
-```
-
-### Using in unit tests
-
-For testing agents with memory capabilities, you can use an in-memory storage implementation:
-
-```kotlin
-// Create an in-memory storage for testing
-val testMemoryProvider = LocalFileMemoryProvider(
-    config = LocalMemoryConfig("test-memory"),
-    storage = SimpleStorage(InMemoryFileSystemProvider),
-    root = Path("test/memory")
-)
-
-// Create a test agent with memory
-val testAgent = AIAgents(
-    // other test configuration
-) {
-    install(AgentMemory) {
-        memoryProvider = testMemoryProvider
-        featureName = "test-feature"
-    }
-
-    // Enable testing mode
-    withTesting()
-}
-```
-
-This approach allows you to test memory operations without writing to the actual file system.
-
-### Example of usage
-
-Here's an example of using memory in an agent strategy graph:
-
-```kotlin
-// Define concepts for storing information
-val projectStructureConcept = Concept(
-    "project-structure", 
-    "Structure of the project, including modules and important files", 
-    FactType.MULTIPLE
-)
-
-val userPreferencesConcept = Concept(
-    "user-preferences", 
-    "User's preferred settings and configurations", 
-    FactType.SINGLE
-)
-
-// Create a strategy with memory operations
-val strategy = strategyGraph<Unit, String> {
-    // Node to load facts from memory
-    val loadFromMemory by nodeLoadFromMemory(
-        concepts = listOf(projectStructureConcept, userPreferencesConcept)
-    )
-
-    // Node to process user request
-    val processRequest by nodeLLM<Unit, String> {
-        // LLM processing logic
-    }
-
-    // Node to save facts to memory
-    val saveProjectInfo by nodeSaveToMemory(
-        projectStructureConcept,
-        subject = MemorySubjects.Project,
-        scope = MemoryScopeType.PRODUCT
-    )
-
-    // Connect the nodes
-    start - loadFromMemory - processRequest - saveProjectInfo - end
-}
-```
-
-This example demonstrates loading facts from memory, processing a request, and saving updated information back to memory.
+- Provide conversation continuity across agent runs without requiring changes to agent strategy logic.
+- Keep the storage backend pluggable so teams can use any persistence layer.
+- Allow history shaping (e.g. truncation, filtering) through a composable pre-processor pipeline.

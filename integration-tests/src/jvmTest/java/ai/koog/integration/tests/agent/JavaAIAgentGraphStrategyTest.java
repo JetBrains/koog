@@ -48,7 +48,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static ai.koog.agents.core.utils.CoroutineUtilsKt.runBlockingIfRequired;
+import static ai.koog.utils.concurrency.ReentrantCoroutineUtilsKt.runBlockingReentrant;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
@@ -772,7 +772,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
     private void createCheckpoint(AIAgentGraphContextBase ctx, String nodePath, String lastOutput) {
         Persistence persistence = PersistenceKt.persistence(ctx);
 
-        runBlockingIfRequired(
+        runBlockingReentrant(
             continuation -> persistence.createCheckpointAfterNode(
                 ctx,
                 nodePath,
@@ -787,7 +787,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
     private void rollbackToLatestCheckpoint(AIAgentGraphContextBase ctx) {
         Persistence persistence = PersistenceKt.persistence(ctx);
-        runBlockingIfRequired(
+        runBlockingReentrant(
             continuation -> persistence.rollbackToLatestCheckpoint(ctx, continuation)
         );
     }

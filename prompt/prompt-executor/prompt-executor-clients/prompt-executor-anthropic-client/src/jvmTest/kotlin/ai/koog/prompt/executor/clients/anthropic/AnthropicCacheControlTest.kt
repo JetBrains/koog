@@ -7,6 +7,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.anthropic.models.CacheTtl
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -16,7 +17,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.time.Clock
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicCacheControl as AnthropicCacheControlBlock
 
 class AnthropicCacheControlTest {
@@ -28,7 +28,7 @@ class AnthropicCacheControlTest {
 
     private val client = AnthropicLLMClient(apiKey = "test-key")
     private val model = AnthropicModels.Sonnet_4
-    private val metaInfo = RequestMetaInfo.create(Clock.System)
+    private val metaInfo = RequestMetaInfo.create(KoogClock.System)
 
     // --- toAnthropicCacheControl conversion ---
 

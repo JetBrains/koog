@@ -12,20 +12,26 @@ import ai.koog.serialization.TypeToken
  * Extends the base event handler context to include functionality and behavior dedicated to managing
  * the lifecycle and operations of strategies associated with AI agents.
  */
-public interface StrategyEventContext : AgentLifecycleEventContext
+public interface StrategyEventContext : AgentLifecycleEventContext {
+    /**
+     * The AI agent context.
+     */
+    public val context: AIAgentContext
+
+    /**
+     * The strategy being handled or updated, encapsulating the AI agent's workflow logic.
+     */
+    public val strategy: AIAgentStrategy<*, *, *>
+}
 
 /**
  * Represents the context for updating AI agent strategies during execution.
- *
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property strategy The strategy being updated, encapsulating the AI agent's workflow logic.
- * @property context The context associated with the strategy's execution.
  */
 public class StrategyStartingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    public val strategy: AIAgentStrategy<*, *, *>,
-    public val context: AIAgentContext,
+    override val context: AIAgentContext,
+    override val strategy: AIAgentStrategy<*, *, *>,
 ) : StrategyEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.StrategyStarting
 
@@ -44,17 +50,14 @@ public class StrategyStartingContext(
 /**
  * Represents the context associated with the completion of an AI agent strategy execution.
  *
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property strategy The strategy being updated, encapsulating the AI agent's workflow logic.
- * @property context The context associated with the strategy's execution.
  * @property result Strategy result.
  * @property resultType [TypeToken] representing the type of the [result]
  */
 public class StrategyCompletedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    public val strategy: AIAgentStrategy<*, *, *>,
-    public val context: AIAgentContext,
+    override val context: AIAgentContext,
+    override val strategy: AIAgentStrategy<*, *, *>,
     public val result: Any?,
     public val resultType: TypeToken,
 ) : StrategyEventContext {

@@ -2,7 +2,7 @@ package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -14,13 +14,14 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
-import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
@@ -40,11 +41,11 @@ class HistoryCompressionStrategiesTest {
         )
     }
 
-    private fun createToolRegistry() = ToolRegistry.Companion {
+    private fun createToolRegistry() = ToolRegistry {
         tool(DummyTool())
     }
 
-    private fun createHistoryCompressionStrategy(strategy: HistoryCompressionStrategy, messages: List<Message>) =
+    private fun createHistoryCompressionStrategy(strategy: HistoryCompressionStrategy, messages: List<Message>): AIAgentGraphStrategy<String, List<Message>> =
         strategy<String, List<Message>>("strategy") {
             return strategy<String, List<Message>>("strategy") {
                 val setMessageHistory by node<String, String> { input ->
@@ -67,9 +68,7 @@ class HistoryCompressionStrategiesTest {
     companion object {
         private val dummyArgsContent = Json.encodeToString(DummyTool.Args("dummy"))
 
-        private fun testClock(delay: Duration): Clock = object : Clock {
-            override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z").plus(delay)
-        }
+        private fun testClock(delay: Duration): KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z").plus(delay) }
 
         val simpleHistory = listOf(
             Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
@@ -374,7 +373,7 @@ class HistoryCompressionStrategiesTest {
         originalMessages: List<Message>,
         compressedMessages: List<Message>
     ) {
-        val agent = AIAgent.Companion(
+        val agent = AIAgent(
             promptExecutor = createMockExecutor(),
             strategy = createHistoryCompressionStrategy(
                 strategy,
@@ -447,4 +446,117 @@ class HistoryCompressionStrategiesTest {
                 compressedMessages
             )
         }
+
+    private fun createFactRetrievalMockExecutor(factResponse: String) = getMockExecutor(serializer) {
+        mockLLMAnswer(factResponse).asDefaultResponse
+        // Fallback if FactRetrieval degrades to WholeHistory TLDR
+        mockLLMAnswer("TLDR").onRequestContains("Create a comprehensive summary")
+    }
+
+    private suspend fun checkFactRetrievalCompression(
+        strategy: HistoryCompressionStrategy,
+        originalMessages: List<Message>,
+        factResponse: String,
+    ): List<Message> {
+        val agent = AIAgent(
+            promptExecutor = createFactRetrievalMockExecutor(factResponse),
+            strategy = createHistoryCompressionStrategy(strategy, originalMessages),
+            agentConfig = createBaseAgentConfig(),
+            toolRegistry = createToolRegistry()
+        )
+        return agent.run("User input", null)
+    }
+
+    @Test
+    fun testFactRetrievalCompressionMultipleFacts() = runTest {
+        val concept = Concept(
+            keyword = "topic",
+            description = "Important topic discussed in the conversation",
+            factType = FactType.MULTIPLE
+        )
+        val strategy = HistoryCompressionStrategy.FactRetrieval(listOf(concept))
+
+        val resultMessages = checkFactRetrievalCompression(
+            strategy,
+            longMessagesHistory,
+            factResponse = """{"facts": [{"fact": "Fact A"}, {"fact": "Fact B"}]}"""
+        )
+
+        // Original system messages and the first user message must be preserved
+        val systemMessages = resultMessages.filterIsInstance<Message.System>()
+        assert(systemMessages.size == longMessagesHistory.filterIsInstance<Message.System>().size) {
+            "All original system messages must be preserved, got: $systemMessages"
+        }
+        val firstUser = resultMessages.firstOrNull { it is Message.User }
+        assert(firstUser != null && firstUser.content == "User message 0") {
+            "First user message must be preserved"
+        }
+
+        // A context-restoration assistant message with extracted facts must be appended
+        val contextRestoration = resultMessages
+            .filterIsInstance<Message.Assistant>()
+            .lastOrNull { it.content.contains("[CONTEXT RESTORATION]") }
+        assert(contextRestoration != null) { "Context-restoration assistant message should be present" }
+        assert(contextRestoration!!.content.contains(concept.keyword)) {
+            "Context-restoration must reference the concept keyword '${concept.keyword}'"
+        }
+        assert(contextRestoration.content.contains("Fact A") && contextRestoration.content.contains("Fact B")) {
+            "Context-restoration must contain extracted multiple-facts values"
+        }
+
+        // No TLDR fallback should have been produced
+        assert(resultMessages.none { it.content == "TLDR" }) {
+            "FactRetrieval should not fall back to WholeHistory TLDR when facts are extracted"
+        }
+
+        // Trailing tool-calls (none in longMessagesHistory) — verify no Tool.Call leaked
+        assert(resultMessages.none { it is Message.Tool.Call }) {
+            "Tool.Call messages should not survive FactRetrieval compression for this history"
+        }
+    }
+
+    @Test
+    fun testFactRetrievalCompressionSingleFact() = runTest {
+        val concept = Concept(
+            keyword = "summary",
+            description = "Single most important fact",
+            factType = FactType.SINGLE
+        )
+        val strategy = HistoryCompressionStrategy.FactRetrieval(listOf(concept))
+
+        val resultMessages = checkFactRetrievalCompression(
+            strategy,
+            simpleHistory,
+            factResponse = """{"fact": "Single fact"}"""
+        )
+
+        val contextRestoration = resultMessages
+            .filterIsInstance<Message.Assistant>()
+            .lastOrNull { it.content.contains("[CONTEXT RESTORATION]") }
+        assert(contextRestoration != null) { "Context-restoration assistant message should be present" }
+        assert(contextRestoration!!.content.contains("Single fact")) {
+            "Context-restoration must contain the extracted single fact"
+        }
+    }
+
+    @Test
+    fun testFactRetrievalCompressionPreservesTrailingToolCall() = runTest {
+        val concept = Concept(
+            keyword = "topic",
+            description = "Important topic",
+            factType = FactType.MULTIPLE
+        )
+        val strategy = HistoryCompressionStrategy.FactRetrieval(listOf(concept))
+
+        val resultMessages = checkFactRetrievalCompression(
+            strategy,
+            trailingToolCallHistory,
+            factResponse = """{"facts": [{"fact": "Fact A"}]}"""
+        )
+
+        // Trailing tool call must be preserved at the end
+        assert(resultMessages.last() is Message.Tool.Call) {
+            "Trailing Tool.Call must be preserved as the last message"
+        }
+    }
 }

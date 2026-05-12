@@ -16,6 +16,10 @@ dependencies {
     implementation(libs.koog.agents.features.persistence.jdbc)
     implementation(libs.jackson.databind)
     implementation(libs.logback.classic)
+
+    implementation(platform(libs.opentelemetry.bom))
+    implementation(libs.opentelemetry.exporter.logging)
+    implementation(libs.opentelemetry.exporter.otlp)
 }
 
 /**

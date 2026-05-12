@@ -1,11 +1,11 @@
 package ai.koog.prompt.message
 
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 public typealias LLMChoice = List<Message.Response>
@@ -393,7 +393,7 @@ public data class RequestMetaInfo @JvmOverloads constructor(
          * @param clock The clock to use for generating the timestamp.
          * @return A new RequestMetadata instance with the timestamp from the provided clock.
          */
-        public fun create(clock: Clock): RequestMetaInfo = RequestMetaInfo(clock.now())
+        public fun create(clock: KoogClock): RequestMetaInfo = RequestMetaInfo(clock.now())
 
         /**
          * An empty instance of [RequestMetaInfo] with the timestamp set to a distant past.
@@ -454,7 +454,7 @@ public data class ResponseMetaInfo @JvmOverloads constructor(
          */
         @JvmOverloads
         public fun create(
-            clock: Clock,
+            clock: KoogClock,
             totalTokensCount: Int? = null,
             inputTokensCount: Int? = null,
             outputTokensCount: Int? = null,

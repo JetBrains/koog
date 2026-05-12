@@ -27,7 +27,7 @@ class SingleRunStrategyTests {
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
         }
 
-        val agent = AIAgent.invoke(
+        val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry

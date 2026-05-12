@@ -6,6 +6,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -13,16 +14,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 class ManualToolJsonFixProcessorTest {
     private companion object {
         private val serializer = KotlinxSerializer()
 
-        private val testClock: Clock = object : Clock {
-            override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-        }
+        private val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
         private val testMetaInfo = ResponseMetaInfo.create(testClock)
 

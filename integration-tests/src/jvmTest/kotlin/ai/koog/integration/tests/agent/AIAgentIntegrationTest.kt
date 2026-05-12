@@ -13,6 +13,8 @@ import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
@@ -58,6 +60,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.typeToken
+import ai.koog.utils.time.KoogClock
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -90,7 +93,6 @@ import kotlin.io.path.readBytes
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -148,10 +150,22 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 ),
                 Arguments.of(HistoryCompressionStrategy.FromLastNMessages(1), "FromLastNMessages(1)"),
                 Arguments.of(
-                    HistoryCompressionStrategy.FromTimestamp(Clock.System.now().minus(1.seconds)),
+                    HistoryCompressionStrategy.FromTimestamp(KoogClock.System.now().minus(1.seconds)),
                     "FromTimestamp"
                 ),
-                Arguments.of(HistoryCompressionStrategy.Chunked(2), "Chunked(2)")
+                Arguments.of(HistoryCompressionStrategy.Chunked(2), "Chunked(2)"),
+                Arguments.of(
+                    HistoryCompressionStrategy.FactRetrieval(
+                        listOf(
+                            Concept(
+                                keyword = "user-identity",
+                                description = "Who the user is, including any self-description they have provided.",
+                                factType = FactType.MULTIPLE
+                            )
+                        )
+                    ),
+                    "FactRetrieval"
+                )
             )
         }
     }
@@ -369,7 +383,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             runWithTracking { eventHandlerConfig, state ->
                 val executor = getExecutor(model)
 
-                val agent = AIAgent.invoke(
+                val agent = AIAgent(
                     promptExecutor = executor,
                     systemPrompt = systemPrompt + "JUST CALL THE TOOLS, NO QUESTIONS ASKED!",
                     strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
@@ -960,12 +974,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         @Suppress("DEPRECATION")
         val checkpoint = AgentCheckpointData(
             checkpointId = "last-input-checkpoint",
-            createdAt = Clock.System.now(),
+            createdAt = KoogClock.System.now(),
             nodePath = path(sessionId, strategyName, node2Name),
             lastInput = JSONPrimitive("Node 1 output"),
             messageHistory = listOf(
-                Message.User("Restored user message", metaInfo = RequestMetaInfo(Clock.System.now())),
-                Message.Assistant("Restored assistant message", metaInfo = ResponseMetaInfo(Clock.System.now()))
+                Message.User("Restored user message", metaInfo = RequestMetaInfo(KoogClock.System.now())),
+                Message.Assistant("Restored assistant message", metaInfo = ResponseMetaInfo(KoogClock.System.now()))
             ),
             version = 0
         )
@@ -1009,7 +1023,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         val checkpoint = AgentCheckpointData(
             checkpointId = "invalid-checkpoint",
-            createdAt = Clock.System.now(),
+            createdAt = KoogClock.System.now(),
             nodePath = path(sessionId, strategyName, "MissingNode"),
             lastOutput = JSONPrimitive("missing"),
             messageHistory = emptyList(),

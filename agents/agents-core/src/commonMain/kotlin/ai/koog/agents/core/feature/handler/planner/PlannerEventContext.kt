@@ -10,24 +10,38 @@ import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
  * Extends the base event handler context to include functionality and behavior dedicated to managing
  * the lifecycle and operations of planner agents.
  */
-public interface PlannerEventContext : AgentLifecycleEventContext
+public interface PlannerEventContext : AgentLifecycleEventContext {
+    /**
+     * The Agent context associated with the planner execution.
+     */
+    public val context: AIAgentContext
+
+    /**
+     * The current state of the planner execution.
+     */
+    public val state: Any
+
+    /**
+     * The current plan being executed or planned.
+     */
+    public val plan: Any?
+
+    /**
+     * The index of the current step within the plan.
+     */
+    public val stepIndex: Int
+}
 
 /**
  * Represents the context for a buildPlan operation starting event.
- *
- * @property eventId The unique identifier for the event;
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property context The context associated with the planner's execution;
- * @property state The current state;
- * @property currentPlan The current plan (null on first call).
  */
 public class PlanCreationStartingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    public val context: AIAgentContext,
-    public val state: Any,
-    public val currentPlan: Any?,
-    public val stepIndex: Int,
+    override val context: AIAgentContext,
+    override val state: Any,
+    override val plan: Any?,
+    override val stepIndex: Int,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.BuildPlanStarting
 }
@@ -35,81 +49,58 @@ public class PlanCreationStartingContext(
 /**
  * Represents the context for a buildPlan operation completed event.
  *
- * @property eventId The unique identifier for the event;
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property context The context associated with the planner's execution;
- * @property state The current state;
- * @property currentPlan The previous plan (null on first call);
- * @property newPlan The newly built plan.
+ * @property updatedPlan The newly built plan.
  */
 public class PlanCreationCompletedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    public val context: AIAgentContext,
-    public val state: Any,
-    public val currentPlan: Any?,
-    public val newPlan: Any,
-    public val stepIndex: Int,
+    override val context: AIAgentContext,
+    override val state: Any,
+    override val plan: Any?,
+    override val stepIndex: Int,
+    public val updatedPlan: Any,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.BuildPlanCompleted
 }
 
 /**
  * Represents the context for an executeStep operation starting event.
- *
- * @property eventId The unique identifier for the event;
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property context The context associated with the planner's execution;
- * @property state The current state;
- * @property plan The current plan.
  */
 public class StepExecutionStartingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    public val context: AIAgentContext,
-    public val state: Any,
-    public val plan: Any,
-    public val stepIndex: Int,
+    override val context: AIAgentContext,
+    override val state: Any,
+    override val plan: Any,
+    override val stepIndex: Int,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ExecuteStepStarting
 }
 
 /**
  * Represents the context for an executeStep operation completed event.
- *
- * @property eventId The unique identifier for the event;
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property context The context associated with the planner's execution;
- * @property state The state after step execution;
- * @property plan The current plan;
  */
 public class StepExecutionCompletedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    public val context: AIAgentContext,
-    public val state: Any,
-    public val plan: Any,
-    public val stepIndex: Int,
+    override val context: AIAgentContext,
+    override val state: Any,
+    override val plan: Any,
+    override val stepIndex: Int,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ExecuteStepCompleted
 }
 
 /**
  * Represents the context for an isPlanCompleted check starting event.
- *
- * @property eventId The unique identifier for the event;
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property context The context associated with the planner's execution;
- * @property state The current state;
- * @property plan The current plan.
  */
 public class PlanCompletionEvaluationStartingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    public val context: AIAgentContext,
-    public val state: Any,
-    public val plan: Any,
-    public val stepIndex: Int,
+    override val context: AIAgentContext,
+    override val state: Any,
+    override val plan: Any,
+    override val stepIndex: Int,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.IsPlanCompletedStarting
 }
@@ -117,21 +108,16 @@ public class PlanCompletionEvaluationStartingContext(
 /**
  * Represents the context for an isPlanCompleted check completed event.
  *
- * @property eventId The unique identifier for the event;
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property context The context associated with the planner's execution;
- * @property state The current state;
- * @property plan The current plan;
  * @property isCompleted The result of the completion check.
  */
 public class PlanCompletionEvaluationCompletedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    public val context: AIAgentContext,
-    public val state: Any,
-    public val plan: Any,
+    override val context: AIAgentContext,
+    override val state: Any,
+    override val plan: Any,
+    override val stepIndex: Int,
     public val isCompleted: Boolean,
-    public val stepIndex: Int,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.IsPlanCompletedCompleted
 }

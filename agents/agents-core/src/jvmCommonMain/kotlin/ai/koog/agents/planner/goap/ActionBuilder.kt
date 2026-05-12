@@ -9,9 +9,10 @@ package ai.koog.agents.planner.goap
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.withContextReentrant
 
-@OptIn(InternalAgentsApi::class)
+@OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
 public actual class ActionBuilder<State> : ActionBuilderApi<State> {
     private val delegate = ActionBuilderImpl<State>()
     public actual override fun name(name: String): ActionBuilder<State> = apply { delegate.name(name) }
@@ -33,7 +34,7 @@ public actual class ActionBuilder<State> : ActionBuilderApi<State> {
     @Deprecated("Use execute(ExecuteSync) instead.", ReplaceWith("execute(execute)"))
     public fun executeSync(execute: ExecuteSync<State>): ActionBuilder<State> =
         execute { context, state ->
-            context.config.runOnStrategyDispatcher {
+            withContextReentrant(context.config.strategyDispatcher) {
                 execute.execute(context, state)
             }
         }
@@ -45,7 +46,7 @@ public actual class ActionBuilder<State> : ActionBuilderApi<State> {
     @JvmName("execute")
     public fun javaApiExecuteSynchronously(execute: ExecuteSync<State>): ActionBuilder<State> =
         execute { context, state ->
-            context.config.runOnStrategyDispatcher {
+            withContextReentrant(context.config.strategyDispatcher) {
                 execute.execute(context, state)
             }
         }

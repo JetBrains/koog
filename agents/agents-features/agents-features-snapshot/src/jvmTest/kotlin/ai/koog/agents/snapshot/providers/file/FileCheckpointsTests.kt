@@ -15,6 +15,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
 import java.nio.file.Path
@@ -23,7 +24,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -119,7 +119,7 @@ class FileCheckpointsTests {
 
     @Test
     fun testRestoreFromSingleCheckpoint() = runTest {
-        val time = Clock.System.now()
+        val time = KoogClock.System.now()
         val agentId = "testAgentId"
         val sessionId = "testSessionId"
 
@@ -161,7 +161,7 @@ class FileCheckpointsTests {
 
     @Test
     fun testRestoreFromSingleCheckpointWithNodeOutput() = runTest {
-        val time = Clock.System.now()
+        val time = KoogClock.System.now()
         val agentId = "testAgentId"
         val sessionId = "testSessionId"
 
@@ -203,7 +203,7 @@ class FileCheckpointsTests {
 
     @Test
     fun testRestoreFromLatestCheckpoint() = runTest {
-        val time = Clock.System.now()
+        val time = KoogClock.System.now()
         val agentId = "testAgentId"
         val sessionId = "testSessionId"
 

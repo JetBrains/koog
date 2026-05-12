@@ -12,7 +12,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 
 /**
  * A builder for creating [PlannerAIAgent] instances.
@@ -30,7 +30,7 @@ public class PlannerAIAgentBuilder<Input, Output>(
     private var missingToolsConversionStrategy: MissingToolsConversionStrategy =
         MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON)
     private var maxIterations: Int = 50
-    private var clock: Clock = Clock.System
+    private var clock: KoogClock = KoogClock.System
     private var featureInstallers: MutableList<(PlannerAIAgent.FeatureContext.() -> Unit)> = mutableListOf()
 
     /**

@@ -1,6 +1,6 @@
 package ai.koog.agents.core.feature.handler.subgraph
 
-import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
@@ -10,24 +10,31 @@ import ai.koog.serialization.TypeToken
 /**
  * Represents the context for handling subgraph-specific events for graph strategies within the framework.
  */
-public interface SubgraphExecutionEventContext : AgentLifecycleEventContext
+public interface SubgraphExecutionEventContext : AgentLifecycleEventContext {
+    /**
+     * The context in which the subgraph is being executed.
+     */
+    public val context: AIAgentContext
+
+    /**
+     * The subgraph instance that is being executed.
+     */
+    public val subgraph: AIAgentSubgraphBase<*, *>
+}
 
 /**
  * The context for handling a subgraph execution starting event.
  *
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property subgraph The subgraph instance that is about to be executed.
- * @property context The context in which the subgraph is being executed.
  * @property input The input data for the subgraph execution.
  * @property inputType The type of the input data for the subgraph execution.
  */
 public data class SubgraphExecutionStartingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    val subgraph: AIAgentSubgraphBase<*, *>,
-    val context: AIAgentGraphContextBase,
-    val input: Any?,
-    val inputType: TypeToken,
+    override val context: AIAgentContext,
+    override val subgraph: AIAgentSubgraphBase<*, *>,
+    public val input: Any?,
+    public val inputType: TypeToken,
 ) : SubgraphExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.SubgraphExecutionStarting
 }
@@ -35,22 +42,19 @@ public data class SubgraphExecutionStartingContext(
 /**
  * The context for handling a subgraph execution completed event.
  *
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property subgraph The subgraph instance that was executed.
- * @property context The context in which the subgraph was executed.
  * @property input The input data for the subgraph execution.
- * @property output The output data from the subgraph execution.
  * @property inputType The type of the input data for the subgraph execution.
+ * @property output The output data from the subgraph execution.
  * @property outputType The type of the output data for the subgraph execution.
  */
 public data class SubgraphExecutionCompletedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    val subgraph: AIAgentSubgraphBase<*, *>,
-    val context: AIAgentGraphContextBase,
-    val input: Any?,
+    override val context: AIAgentContext,
+    override val subgraph: AIAgentSubgraphBase<*, *>,
+    public val input: Any?,
+    public val inputType: TypeToken,
     val output: Any?,
-    val inputType: TypeToken,
     val outputType: TypeToken,
 ) : SubgraphExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.SubgraphExecutionCompleted
@@ -59,9 +63,6 @@ public data class SubgraphExecutionCompletedContext(
 /**
  * The context for handling a subgraph execution failed event.
  *
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property subgraph The subgraph instance that failed to execute.
- * @property context The context in which the subgraph failed to execute.
  * @property input The input data for the subgraph execution.
  * @property inputType The type of the input data for the subgraph execution.
  * @property error The exception that caused the subgraph execution to fail.
@@ -69,11 +70,11 @@ public data class SubgraphExecutionCompletedContext(
 public data class SubgraphExecutionFailedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    val subgraph: AIAgentSubgraphBase<*, *>,
-    val context: AIAgentGraphContextBase,
-    val input: Any?,
-    val inputType: TypeToken,
-    val error: Throwable
+    override val context: AIAgentContext,
+    override val subgraph: AIAgentSubgraphBase<*, *>,
+    public val input: Any?,
+    public val inputType: TypeToken,
+    public val error: Throwable
 ) : SubgraphExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.SubgraphExecutionFailed
 }

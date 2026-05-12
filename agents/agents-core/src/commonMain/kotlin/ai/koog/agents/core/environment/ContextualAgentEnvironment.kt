@@ -69,6 +69,7 @@ public class ContextualAgentEnvironment(
             context.pipeline.onToolValidationFailed(
                 eventId = eventId,
                 executionInfo = context.executionInfo,
+                context = context,
                 runId = context.runId,
                 toolCallId = toolCall.id,
                 toolName = tool,
@@ -76,7 +77,6 @@ public class ContextualAgentEnvironment(
                 toolArgs = toolArgs,
                 message = message,
                 error = e,
-                context = context
             )
             return ReceivedToolResult(
                 id = toolCall.id,
@@ -101,12 +101,12 @@ public class ContextualAgentEnvironment(
         context.pipeline.onToolCallStarting(
             eventId = eventId,
             executionInfo = context.executionInfo,
+            context = context,
             runId = context.runId,
             toolCallId = toolCall.id,
             toolName = toolCall.tool,
             toolDescription = toolDescription,
             toolArgs = toolArgs,
-            context = context
         )
 
         val featureMetadata = context.pipeline.collectToolCallMetadata(
@@ -160,13 +160,13 @@ public class ContextualAgentEnvironment(
                 context.pipeline.onToolCallCompleted(
                     eventId = eventId,
                     executionInfo = executionInfo,
+                    context = context,
                     runId = context.runId,
                     toolCallId = toolResult.id,
                     toolName = toolResult.tool,
                     toolDescription = toolResult.toolDescription,
                     toolArgs = toolResult.toolArgs,
                     toolResult = toolResult.result,
-                    context = context
                 )
             }
 
@@ -174,6 +174,7 @@ public class ContextualAgentEnvironment(
                 context.pipeline.onToolCallFailed(
                     eventId = eventId,
                     executionInfo = executionInfo,
+                    context = context,
                     runId = context.runId,
                     toolCallId = toolResult.id,
                     toolName = toolResult.tool,
@@ -181,7 +182,6 @@ public class ContextualAgentEnvironment(
                     toolArgs = toolResult.toolArgs,
                     message = toolResult.content,
                     error = toolResultKind.error,
-                    context = context
                 )
             }
 
@@ -189,6 +189,7 @@ public class ContextualAgentEnvironment(
                 context.pipeline.onToolValidationFailed(
                     eventId = eventId,
                     executionInfo = executionInfo,
+                    context = context,
                     runId = context.runId,
                     toolCallId = toolResult.id,
                     toolName = toolResult.tool,
@@ -196,7 +197,6 @@ public class ContextualAgentEnvironment(
                     toolArgs = toolResult.toolArgs,
                     message = toolResult.content,
                     error = toolResultKind.error,
-                    context = context
                 )
             }
         }

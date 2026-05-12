@@ -9,6 +9,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -109,7 +110,7 @@ public fun koogMessageToSpringMessage(message: Message): SpringMessage {
  */
 public fun springGenerationToKoogResponses(
     generation: Generation,
-    clock: kotlin.time.Clock = kotlin.time.Clock.System,
+    clock: KoogClock = KoogClock.System,
     usage: Usage? = null
 ): List<Message.Response> {
     val assistantMessage = generation.output

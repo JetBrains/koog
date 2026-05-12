@@ -1,22 +1,17 @@
 # Long-term memory
 
-Feature (Experimental)
-
 The `LongTermMemory` feature adds persistent memory to Koog AI agents via two independent group of settings:
 - **Retrieval** — augments LLM prompts with relevant context from a memory storage (Retrieval-Augmented Generation or RAG)
 - **Ingestion** — persists conversation messages into a memory storage for future retrieval
 
 ## Quick Start
 
-> **Note:** `LongTermMemory` is an experimental API. Annotate your code with `@OptIn(ExperimentalAgentsApi::class)` or add `@file:OptIn(ExperimentalAgentsApi::class)` at the top of your file.
 
 === "Kotlin"
 
     ```kotlin
-    @OptIn(ExperimentalAgentsApi::class)
     val myStorage = InMemoryRecordStorage() // or your vector DB adapter
 
-    @OptIn(ExperimentalAgentsApi::class)
     val agent = AIAgent(
         promptExecutor = executor,
         strategy = singleRunStrategy(),
@@ -65,7 +60,6 @@ Use retrieval without ingestion when you have a pre-populated knowledge base:
 === "Kotlin"
 
     ```kotlin
-    @OptIn(ExperimentalAgentsApi::class)
     install(LongTermMemory) {
         retrieval {
             storage = myVectorDbStorage
@@ -96,23 +90,22 @@ Use retrieval without ingestion when you have a pre-populated knowledge base:
 | `UserPromptAugmenter()` | Inserts context as a separate user message before the last user message |
 | `PromptAugmenter { prompt, context -> ... }` | Custom augmentation via lambda |
 
-### Query Extractors
+### Search Query Providers
 
-By default, the retrieval flow uses the last user message as the search query. You can customize this by providing a `QueryExtractor`:
+By default, the retrieval flow uses the last user message as the search query. You can customize this by providing a `SearchQueryProvider`:
 
-| Extractor | Behavior |
+| Provider | Behavior |
 |---|---|
-| `LastUserMessageQueryExtractor()` | Uses the content of the last user message (default) |
-| `QueryExtractor { prompt -> ... }` | Custom extraction via lambda |
+| `LastUserMessageQueryProvider()` | Uses the content of the last user message (default) |
+| `SearchQueryProvider { prompt -> ... }` | Custom query derivation via lambda |
 
 === "Kotlin"
 
     ```kotlin
-    @OptIn(ExperimentalAgentsApi::class)
     install(LongTermMemory) {
         retrieval {
             storage = myStorage
-            queryExtractor = QueryExtractor { prompt ->
+            searchQueryProvider = SearchQueryProvider { prompt ->
                 // Combine the last two user messages as the search query
                 prompt.messages
                     .filter { it.role == Message.Role.User }
@@ -129,7 +122,7 @@ By default, the retrieval flow uses the last user message as the search query. Y
     ```java
     var retrievalSettings = new LongTermMemory.RetrievalSettingsBuilder()
         .withStorage(myStorage)
-        .withQueryExtractor(prompt -> {
+        .withSearchQueryProvider(prompt -> {
             var userMessages = prompt.getMessages().stream()
                 .filter(m -> m.getRole() == Message.Role.User)
                 .toList();
@@ -153,15 +146,13 @@ Use ingestion without retrieval to build up a memory storage over time:
 === "Kotlin"
 
     ```kotlin
-    @OptIn(ExperimentalAgentsApi::class)
     install(LongTermMemory) {
         ingestion {
             storage = myVectorDbStorage
             namespace = "my-collection"  // optional: scope to a specific namespace/collection
-            extractionStrategy = FilteringExtractionStrategy(
+            documentExtractor = MessagePassingDocumentExtractor(
                 messageRolesToExtract = setOf(Message.Role.User, Message.Role.Assistant)
             )
-            timing = IngestionTiming.ON_LLM_CALL
         }
     }
     ```
@@ -171,32 +162,24 @@ Use ingestion without retrieval to build up a memory storage over time:
     ```java
     var ingestionSettings = new LongTermMemory.IngestionSettingsBuilder()
         .withStorage(myVectorDbStorage)
-        .withExtractionStrategy(
-            ExtractionStrategy.builder()
+        .withDocumentExtractor(
+            DocumentExtractor.builder()
                 .filtering()
                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
-                .withLastMessageOnly(false)
                 .build()
         )
-        .withTiming(IngestionTiming.ON_LLM_CALL)
         .build();
     ```
 
-### Ingestion Timing
-
-| Timing | Behavior |
-|---|---|
-| `ON_LLM_CALL` | Prompt messages are ingested before each LLM call starts; assistant output is ingested after completion or stream completion. Enables intra-session RAG. |
-| `ON_AGENT_COMPLETION` | The final accumulated session prompt/history is ingested once at agent completion. |
+Ingestion runs once when the agent run completes: the final accumulated session prompt/history is passed to the configured `documentExtractor` as a single batch.
 
 ## Disabling Automatic Behavior
 
-By default, retrieval and ingestion run automatically (before and after LLM calls, respectively). You can disable automatic behavior while still having access to the configured storage and strategies from within strategy nodes:
+By default, retrieval and ingestion run automatically (retrieval runs before each LLM call; ingestion runs once when the agent completes). You can disable automatic behavior while still having access to the configured storage and strategies from within strategy nodes:
 
 === "Kotlin"
 
     ```kotlin
-    @OptIn(ExperimentalAgentsApi::class)
     install(LongTermMemory) {
         retrieval {
             storage = myStorage
@@ -237,7 +220,6 @@ This gives you three clean modes:
 Use `withLongTermMemory { }` inside a strategy node to directly search or add records:
 
 ```kotlin
-@OptIn(ExperimentalAgentsApi::class)
 val myNode by node<String, Unit> {
     withLongTermMemory {
         // Manually add records
@@ -254,20 +236,18 @@ val myNode by node<String, Unit> {
 Use `longTermMemory()` to get the feature instance directly:
 
 ```kotlin
-@OptIn(ExperimentalAgentsApi::class)
 val myNode by node<String, Unit> {
     val memory = longTermMemory()
     val storage = memory.ingestionStorage
 }
 ```
 
-## Custom Extraction Strategy
+## Custom Document Extractor
 
-Implement `ExtractionStrategy` to control how messages are transformed before storage:
+Implement `DocumentExtractor` to control how messages are transformed before storage:
 
 ```kotlin
-@OptIn(ExperimentalAgentsApi::class)
-val summarizingExtractor = ExtractionStrategy { messages ->
+val summarizingExtractor = DocumentExtractor { messages ->
     messages
         .filter { it.role == Message.Role.Assistant }
         .map { MemoryRecord(content = summarize(it.content)) }
@@ -276,7 +256,7 @@ val summarizingExtractor = ExtractionStrategy { messages ->
 install(LongTermMemory) {
     ingestion {
         storage = myStorage
-        extractionStrategy = summarizingExtractor
+        documentExtractor = summarizingExtractor
     }
 }
 ```
@@ -295,10 +275,10 @@ class MyVectorDbStorage : SearchStorage<TextDocument, SearchRequest>, WriteStora
 
     override suspend fun add(
         records: List<TextDocument>, namespace: String?
-    ) {
-        // Upsert into your vector DB
+    ): List<String> {
+        // Upsert into your vector DB and return the IDs of added records
     }
 }
 ```
 
-For testing, use the built-in `InMemoryRecordStorage` which keeps records in memory. It accepts both `KeywordSearchRequest` and `SimilaritySearchRequest`, but implements both as simple case-insensitive substring matching (no vector embeddings).
+For testing, use the built-in `InMemoryRecordStorage` which keeps records in memory. It supports both `KeywordSearchRequest` (implemented as case-insensitive substring matching) and `SimilaritySearchRequest` (implemented as a Jaccard coefficient over case-insensitive word sets); no vector embeddings are used.

@@ -1,9 +1,7 @@
 package ai.koog.agents.longtermmemory.feature;
 
 import ai.koog.agents.core.agent.AIAgent;
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi;
-import ai.koog.agents.longtermmemory.ingestion.IngestionTiming;
-import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy;
+import ai.koog.agents.longtermmemory.ingestion.extraction.DocumentExtractor;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
 import ai.koog.agents.testing.tools.MockPromptExecutor;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
@@ -23,47 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Java tests for configuring {@link LongTermMemory} ingestion settings from Java code.
  * Each test case demonstrates a different ingestion configuration using builders.
  */
-@ExperimentalAgentsApi
 public class LongTermMemoryIngestionJavaTest {
     private static final JSONSerializer serializer = new JacksonSerializer();
 
     @Test
-    public void testIngestionWithFilteringExtractorAndOnLlmCallTiming() {
-        InMemoryRecordStorage storage = new InMemoryRecordStorage();
-
-        var agent = AIAgent.builder()
-            .promptExecutor(
-                MockPromptExecutor.builder(serializer)
-                    .mockLLMAnswer("The capital of France is Paris.").asDefaultResponse()
-                    .build()
-            )
-            .llmModel(OpenAIModels.Chat.GPT4o)
-            .systemPrompt("You are a helpful assistant.")
-            .install(LongTermMemory.Feature, config ->
-                config.ingestion(
-                    new LongTermMemory.IngestionSettingsBuilder()
-                        .withStorage(storage)
-                        .withExtractionStrategy(
-                            ExtractionStrategy.builder()
-                                .filtering()
-                                .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
-                                .withLastMessageOnly(false)
-                                .build()
-                        )
-                        .withTiming(IngestionTiming.ON_LLM_CALL)
-                        .build()
-                )
-            )
-            .build();
-
-        String result = (String) agent.run("What is the capital of France?");
-
-        assertNotNull(result);
-        assertFalse(result.isEmpty());
-    }
-
-    @Test
-    public void testIngestionWithFilteringExtractorAndOnAgentCompletionTiming() {
+    public void testIngestionWithFilteringExtractor() {
         InMemoryRecordStorage storage = new InMemoryRecordStorage();
 
         var agent = AIAgent.builder()
@@ -78,48 +40,12 @@ public class LongTermMemoryIngestionJavaTest {
                 config.ingestion(
                     new LongTermMemory.IngestionSettingsBuilder()
                         .withStorage(storage)
-                        .withExtractionStrategy(
-                            ExtractionStrategy.builder()
+                        .withDocumentExtractor(
+                            DocumentExtractor.builder()
                                 .filtering()
                                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
                                 .build()
                         )
-                        .withTiming(IngestionTiming.ON_AGENT_COMPLETION)
-                        .build()
-                )
-            )
-            .build();
-
-        String result = (String) agent.run("Hello");
-
-        assertNotNull(result);
-        assertFalse(result.isEmpty());
-    }
-
-    @Test
-    public void testIngestionWithLastMessageOnlyExtractor() {
-        InMemoryRecordStorage storage = new InMemoryRecordStorage();
-
-        var agent = AIAgent.builder()
-            .promptExecutor(
-                MockPromptExecutor.builder(serializer)
-                    .mockLLMAnswer("answer").asDefaultResponse()
-                    .build()
-            )
-            .llmModel(OpenAIModels.Chat.GPT4o)
-            .systemPrompt("You are a helpful assistant.")
-            .install(LongTermMemory.Feature, config ->
-                config.ingestion(
-                    new LongTermMemory.IngestionSettingsBuilder()
-                        .withStorage(storage)
-                        .withExtractionStrategy(
-                            ExtractionStrategy.builder()
-                                .filtering()
-                                .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.Assistant)))
-                                .withLastMessageOnly(true)
-                                .build()
-                        )
-                        .withTiming(IngestionTiming.ON_LLM_CALL)
                         .build()
                 )
             )
@@ -147,13 +73,12 @@ public class LongTermMemoryIngestionJavaTest {
                 config.ingestion(
                     new LongTermMemory.IngestionSettingsBuilder()
                         .withStorage(storage)
-                        .withExtractionStrategy(
-                            ExtractionStrategy.builder()
+                        .withDocumentExtractor(
+                            DocumentExtractor.builder()
                                 .filtering()
                                 .withExtractRoles(new HashSet<>(Arrays.asList(Message.Role.User, Message.Role.Assistant)))
                                 .build()
                         )
-                        .withTiming(IngestionTiming.ON_AGENT_COMPLETION)
                         .build()
                 );
                 config.retrieval(
@@ -162,6 +87,7 @@ public class LongTermMemoryIngestionJavaTest {
                         .withSearchStrategy(query ->
                             new SimilaritySearchRequest(query, 15, 0, 0.5, null)
                         )
+                        .withFailurePolicy(FailurePolicy.LOG_AND_CONTINUE)
                         .build()
                 );
             })

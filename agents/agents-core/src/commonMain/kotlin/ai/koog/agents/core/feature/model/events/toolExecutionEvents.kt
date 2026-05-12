@@ -5,8 +5,8 @@ import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
-import kotlin.time.Clock
 
 /**
  * Represents an event triggered when a tool is called within the system.
@@ -32,7 +32,7 @@ public data class ToolCallStartingEvent(
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: JSONObject,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -47,7 +47,7 @@ public data class ToolCallStartingEvent(
         toolCallId: String?,
         toolName: String,
         toolArgs: JSONObject,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = ToolCallStartingEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
@@ -89,7 +89,7 @@ public data class ToolValidationFailedEvent(
     val toolDescription: String?,
     val message: String?,
     val error: AIAgentError,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -105,7 +105,7 @@ public data class ToolValidationFailedEvent(
         toolName: String,
         toolArgs: JSONObject,
         error: String,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = ToolValidationFailedEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
@@ -154,7 +154,7 @@ public data class ToolCallFailedEvent(
     val toolArgs: JSONObject,
     val toolDescription: String?,
     val error: AIAgentError?,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -170,7 +170,7 @@ public data class ToolCallFailedEvent(
         toolName: String,
         toolArgs: JSONObject,
         error: AIAgentError,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = ToolCallFailedEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
@@ -214,7 +214,7 @@ public data class ToolCallCompletedEvent(
     val toolArgs: JSONObject,
     val toolDescription: String?,
     val result: JSONElement?,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -230,7 +230,7 @@ public data class ToolCallCompletedEvent(
         toolName: String,
         toolArgs: JSONObject,
         result: String?,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = ToolCallCompletedEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(

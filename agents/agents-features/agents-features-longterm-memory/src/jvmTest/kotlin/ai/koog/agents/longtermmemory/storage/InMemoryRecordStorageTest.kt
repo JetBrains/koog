@@ -2,6 +2,7 @@ package ai.koog.agents.longtermmemory.storage
 
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.rag.base.storage.search.KeywordSearchRequest
+import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -197,6 +198,102 @@ class InMemoryRecordStorageTest {
         )
 
         assertEquals(listOf("id-1", "id-2"), ids)
+    }
+
+    @Test
+    fun testSearchBySimilarity() = runTest {
+        val repository = InMemoryRecordStorage()
+        repository.add(
+            listOf(
+                MemoryRecord(id = "id-1", content = "Kotlin is a modern programming language"),
+                MemoryRecord(id = "id-2", content = "Java is also a programming language"),
+                MemoryRecord(id = "id-3", content = "Bananas are yellow fruits")
+            ),
+            defaultNamespace,
+        )
+
+        val results = repository.search(
+            SimilaritySearchRequest(queryText = "Kotlin programming language"),
+            defaultNamespace
+        )
+
+        assertEquals(2, results.size)
+        assertEquals("id-1", results[0].document.id)
+        assertEquals("id-2", results[1].document.id)
+        assertTrue(results[0].score.value > results[1].score.value)
+    }
+
+    @Test
+    fun testSearchBySimilarityWithMinScore() = runTest {
+        val repository = InMemoryRecordStorage()
+        repository.add(
+            listOf(
+                MemoryRecord(id = "id-1", content = "Kotlin is a modern programming language"),
+                MemoryRecord(id = "id-2", content = "Java is also a programming language"),
+            ),
+            defaultNamespace,
+        )
+
+        val allResults = repository.search(
+            SimilaritySearchRequest(queryText = "Kotlin programming language"),
+            defaultNamespace
+        )
+        val topScore = allResults.first().score.value
+
+        val filtered = repository.search(
+            SimilaritySearchRequest(queryText = "Kotlin programming language", minScore = topScore),
+            defaultNamespace
+        )
+
+        assertEquals(1, filtered.size)
+        assertEquals("id-1", filtered[0].document.id)
+    }
+
+    @Test
+    fun testSearchBySimilarityWithLimitAndOffset() = runTest {
+        val repository = InMemoryRecordStorage()
+        repository.add(
+            listOf(
+                MemoryRecord(id = "id-1", content = "Kotlin is a modern programming language"),
+                MemoryRecord(id = "id-2", content = "Java is also a programming language"),
+                MemoryRecord(id = "id-3", content = "Programming in general is fun"),
+            ),
+            defaultNamespace,
+        )
+
+        val limited = repository.search(
+            SimilaritySearchRequest(queryText = "Kotlin programming language", limit = 1),
+            defaultNamespace
+        )
+        assertEquals(1, limited.size)
+        assertEquals("id-1", limited[0].document.id)
+
+        val offset = repository.search(
+            SimilaritySearchRequest(queryText = "Kotlin programming language", limit = 1, offset = 1),
+            defaultNamespace
+        )
+        assertEquals(1, offset.size)
+        assertEquals("id-2", offset[0].document.id)
+    }
+
+    @Test
+    fun testSearchBySimilarityExcludesNonOverlapping() = runTest {
+        val repository = InMemoryRecordStorage()
+        repository.add(
+            listOf(
+                MemoryRecord(id = "id-1", content = "Kotlin programming language"),
+                MemoryRecord(id = "id-2", content = "Bananas are yellow fruits"),
+            ),
+            defaultNamespace,
+        )
+
+        val results = repository.search(
+            SimilaritySearchRequest(queryText = "Kotlin programming language"),
+            defaultNamespace
+        )
+
+        assertEquals(1, results.size)
+        assertEquals("id-1", results[0].document.id)
     }
 
     @Test

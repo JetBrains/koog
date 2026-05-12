@@ -89,7 +89,7 @@ public class AcpAgent(
      *     override val sessionId: SessionId,
      *     private val promptExecutor: PromptExecutor,
      *     private val protocol: Protocol,
-     *     private val clock: Clock,
+     *     private val clock: KoogClock,
      *     // other parameters...
      * ) : AgentSession {
      *   override suspend fun prompt(

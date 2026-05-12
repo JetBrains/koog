@@ -37,8 +37,7 @@ A strategy graph consists of nodes connected by edges that represent transitions
 - **Conditions**: rules that determine when to follow a particular edge.
 
 - **Subgraph**: a self-contained unit of processing within an agent strategy, with its own set of tools, context, and
-responsibilities. Information about subgraph operations can be either encapsulated within the subgraph or transferred between
-subgraphs using the AgentMemory feature.
+responsibilities.
 
 ## Tools
 
@@ -66,17 +65,3 @@ To learn more, see [History compression](history-compression.md).
 
 - **EventHandler**: a feature that enables monitoring and responding to various agent events, providing hooks for tracking agent lifecycle, handling errors, and processing tool invocations 
   throughout the workflow.
-
-### AgentMemory feature
-
-- **AgentMemory**: a feature that enables AI agents to store, retrieve, and use information across conversations. To learn more, see [AgentMemory](features/agent-memory.md).
-
-- **Concept**: a category of information with associated metadata in the AgentMemory feature, including a keyword,
-description, and fact type. Concepts are fundamental building blocks of the AgentMemory system that the agent can remember and recall.
-To learn more, see [AgentMemory](features/agent-memory.md).
-
-- **Fact**: an individual piece of information stored in the AgentMemory system.
-Facts are associated with concepts and can either have a single value or multiple values.
-To learn more, see [AgentMemory](features/agent-memory.md).
-
-- **Memory scope**: the context in which facts are relevant. To learn more, see [AgentMemory](features/agent-memory.md).

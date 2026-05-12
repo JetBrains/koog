@@ -1,9 +1,9 @@
 package ai.koog.prompt.message
 
 import ai.koog.agents.annotations.JavaAPI
+import ai.koog.utils.time.KoogClock
 import ai.koog.utils.time.toKotlinInstant
 import kotlinx.serialization.json.JsonObject
-import kotlin.time.Clock
 import kotlin.time.Instant
 import java.time.Instant as JavaInstant
 
@@ -49,7 +49,7 @@ public class RequestMetaInfoBuilder {
      * If no timestamp is set, the current system time is used.
      */
     public fun build(): RequestMetaInfo = RequestMetaInfo(
-        timestamp = timestamp ?: Clock.System.now(),
+        timestamp = timestamp ?: KoogClock.System.now(),
         metadata = metadata
     )
 }
@@ -140,7 +140,7 @@ public class ResponseMetaInfoBuilder {
      * If no timestamp is set, the current system time is used.
      */
     public fun build(): ResponseMetaInfo = ResponseMetaInfo(
-        timestamp = timestamp ?: Clock.System.now(),
+        timestamp = timestamp ?: KoogClock.System.now(),
         totalTokensCount = totalTokensCount,
         inputTokensCount = inputTokensCount,
         outputTokensCount = outputTokensCount,

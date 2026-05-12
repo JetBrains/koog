@@ -30,10 +30,10 @@ import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.Serializable
-import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -402,7 +402,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
         public fun prompt(
             name: String = "agent",
             llmParams: LLMParams = LLMParams(),
-            clock: Clock = Clock.System,
+            clock: KoogClock = KoogClock.System,
             build: PromptBuilder.() -> Unit
         ) {
             prompt = koogPrompt(name, llmParams, clock, build)

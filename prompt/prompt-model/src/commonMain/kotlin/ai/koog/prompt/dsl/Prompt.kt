@@ -5,12 +5,12 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.Schema
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
-import kotlin.time.Clock
 import kotlin.time.Duration
 
 /**
@@ -37,13 +37,13 @@ public data class Prompt @JvmOverloads constructor(
          * Constructs a new `PromptBuilder` instance for creating and configuring a `Prompt`.
          *
          * @param id The unique identifier for the prompt.
-         * @param clock The clock used for timestamping or time-related operations. Defaults to `Clock.System` if not provided.
+         * @param clock The clock used for timestamping or time-related operations. Defaults to [KoogClock.System] if not provided.
          * @return A new instance of `PromptBuilder` with the specified ID and clock.
          */
         @JvmStatic
         @JvmOverloads
         @JavaAPI
-        public fun builder(id: String, clock: Clock = Clock.System): PromptBuilder = PromptBuilder(id, clock = clock)
+        public fun builder(id: String, clock: KoogClock = KoogClock.System): PromptBuilder = PromptBuilder(id, clock = clock)
 
         /**
          * Represents an empty state for a [Prompt] object. This variable is initialized
@@ -60,7 +60,7 @@ public data class Prompt @JvmOverloads constructor(
          *
          * @param id The unique identifier for the `Prompt` being built.
          * @param params The configuration parameters for the `Prompt` with a default value of `LLMParams()`.
-         * @param clock The clock to use for generating timestamps, defaults to Clock.System.
+         * @param clock The clock to use for generating timestamps, defaults to [KoogClock.System].
          * @param init The initialization logic applied to the `PromptBuilder`.
          * @return The constructed `Prompt` object.
          */
@@ -68,7 +68,7 @@ public data class Prompt @JvmOverloads constructor(
         public fun build(
             id: String,
             params: LLMParams = LLMParams(),
-            clock: Clock = Clock.System,
+            clock: KoogClock = KoogClock.System,
             init: PromptBuilder.() -> Unit
         ): Prompt {
             val builder = PromptBuilder(id, params, clock)
@@ -80,11 +80,11 @@ public data class Prompt @JvmOverloads constructor(
          * Constructs a new [Prompt] instance by applying the provided initialization logic to a [PromptBuilder].
          *
          * @param prompt The base [Prompt] used for initializing the [PromptBuilder].
-         * @param clock The clock to use for generating timestamps, defaults to Clock.System.
+         * @param clock The clock to use for generating timestamps, defaults to [KoogClock.System].
          * @param init The initialization block applied to configure the [PromptBuilder].
          * @return A new [Prompt] instance configured with the specified initialization logic.
          */
-        public fun build(prompt: Prompt, clock: Clock = Clock.System, init: PromptBuilder.() -> Unit): Prompt {
+        public fun build(prompt: Prompt, clock: KoogClock = KoogClock.System, init: PromptBuilder.() -> Unit): Prompt {
             return PromptBuilder.from(prompt, clock).also(init).build()
         }
     }

@@ -41,27 +41,3 @@ public actual class AIAgentGraphStrategy<TInput, TOutput> actual constructor(
         public fun builder(strategyName: String = "graphStrategy"): GraphStrategyBuilder = GraphStrategyBuilder(strategyName)
     }
 }
-
-private fun f() {
-    val graph = AIAgentGraphStrategy.builder()
-        .withInput(String::class.java)
-        .withOutput(String::class.java)
-
-    graph.edge(
-        AIAgentEdge.builder()
-            .from(graph.nodeStart)
-            .to(graph.nodeFinish)
-            .onCondition { it.isNotEmpty() }
-            .transformed<Int> { x -> 1000 }
-            .transformed { it.toString() }
-            .build()
-    )
-
-    val subg = AIAgentSubgraph.builder()
-        .withInput(String::class.java)
-        .withVerification { "tell me" }
-        .build()
-
-    graph.edge(graph.nodeStart, graph.nodeFinish)
-    graph.edge(graph.nodeStart, subg)
-}

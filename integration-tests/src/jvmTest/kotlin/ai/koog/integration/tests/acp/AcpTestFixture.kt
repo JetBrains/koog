@@ -11,6 +11,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.utils.time.KoogClock
 import com.agentclientprotocol.agent.Agent
 import com.agentclientprotocol.agent.AgentInfo
 import com.agentclientprotocol.agent.AgentSession
@@ -58,7 +59,6 @@ import kotlinx.io.buffered
 import kotlinx.serialization.json.JsonElement
 import java.nio.channels.Channels
 import java.nio.channels.Pipe
-import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -124,7 +124,7 @@ suspend fun setupAcpClient(
     val support = agentSupport ?: TestKoogAgentSupport(
         promptExecutor = promptExecutor,
         protocol = agentProtocol,
-        clock = Clock.System,
+        clock = KoogClock.System,
         randomNumberTool = randomNumberTool,
         model = model,
         loadSession = loadSession,
@@ -177,7 +177,7 @@ class TestKoogAgentSession(
     override val sessionId: SessionId,
     private val promptExecutor: PromptExecutor,
     private val protocol: Protocol,
-    private val clock: Clock,
+    private val clock: KoogClock,
     private val randomNumberTool: RandomNumberTool,
     private val model: LLModel,
     private val audioSupported: Boolean = true,
@@ -243,7 +243,7 @@ class TestKoogAgentSession(
 
 class TestKoogAgentSupport(
     private val promptExecutor: PromptExecutor,
-    private val clock: Clock,
+    private val clock: KoogClock,
     val protocol: Protocol,
     private val randomNumberTool: RandomNumberTool,
     private val model: LLModel,

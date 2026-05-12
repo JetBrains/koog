@@ -2,7 +2,7 @@ package ai.koog.prompt.executor.clients.openai.base
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.ktor.fromKtorClient
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.http.client.post
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -32,6 +32,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.requireEndFrame
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
@@ -41,7 +42,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIContent
@@ -65,14 +65,15 @@ public abstract class OpenAIBaseSettings(
  *
  * @param settings Configuration settings including base URL, API paths, and timeout configuration.
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Must have authentication
- *   and other request defaults (base URL, timeouts, headers) already embedded. To use a Ktor-backed client
- *   with standard OpenAI-compatible defaults, use the secondary constructor that accepts an [HttpClient] and an API key.
- * @param clock Clock instance used for tracking response metadata timestamps. Defaults to Clock.System.
+ *   and other request defaults (base URL, timeouts, headers) already embedded. To use a factory-backed client
+ *   with standard OpenAI-compatible defaults, use the secondary constructor that accepts a [KoogHttpClient.Factory]
+ *   and an API key.
+ * @param clock [KoogClock] used for tracking response metadata timestamps. Defaults to [KoogClock.System].
  */
 public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse, TStreamResponse : OpenAIBaseLLMStreamResponse>(
     settings: OpenAIBaseSettings,
     protected val httpClient: KoogHttpClient,
-    protected val clock: Clock = Clock.System,
+    protected val clock: KoogClock = KoogClock.System,
     protected val logger: KLogger,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
 ) : LLMClient() {
@@ -90,21 +91,43 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     protected val json: Json = defaultJson
 
     /**
-     * Secondary constructor for creating a client backed by a Ktor [HttpClient].
+     * Secondary constructor for creating a client backed by a [KoogHttpClient.Factory].
      * Configures authentication, base URL, timeouts, and JSON serialization automatically from [apiKey] and [settings].
      */
     @JvmOverloads
     public constructor(
         apiKey: String,
         settings: OpenAIBaseSettings,
-        baseClient: HttpClient = HttpClient(),
-        clientName: String = "OpenAICompatibleClient",
-        clock: Clock = Clock.System,
+        httpClientFactory: KoogHttpClient.Factory,
+        clientName: String,
+        clock: KoogClock = KoogClock.System,
         logger: KLogger,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
     ) : this(
         settings = settings,
-        httpClient = createConfiguredHttpClient(apiKey, settings, logger, baseClient, clientName),
+        httpClient = createConfiguredHttpClient(apiKey, settings, httpClientFactory, clientName),
+        clock = clock,
+        logger = logger,
+        toolsConverter = toolsConverter
+    )
+
+    /**
+     * Secondary constructor for creating a client backed by a Ktor [HttpClient].
+     * Configures authentication, base URL, timeouts, and JSON serialization automatically from [apiKey] and [settings].
+     */
+    @Deprecated("Use constructor with KoogHttpClient.Factory and provide KtorKoogHttpClient.Factory")
+    @JvmOverloads
+    public constructor(
+        apiKey: String,
+        settings: OpenAIBaseSettings,
+        baseClient: HttpClient = HttpClient(),
+        clientName: String = "OpenAICompatibleClient",
+        clock: KoogClock = KoogClock.System,
+        logger: KLogger,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
+    ) : this(
+        settings = settings,
+        httpClient = createConfiguredHttpClient(apiKey, settings, KtorKoogHttpClient.Factory(baseClient), clientName),
         clock = clock,
         logger = logger,
         toolsConverter = toolsConverter
@@ -120,22 +143,43 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             namingStrategy = JsonNamingStrategy.SnakeCase
         }
 
+        /**
+         * Creates a configured HTTP client for OpenAI-compatible provider client constructors.
+         */
+        public fun createConfiguredHttpClient(
+            apiKey: String,
+            settings: OpenAIBaseSettings,
+            httpClientFactory: KoogHttpClient.Factory,
+            clientName: String
+        ): KoogHttpClient = httpClientFactory.create(
+            clientName = clientName,
+            baseUrl = settings.baseUrl,
+            headers = mapOf("Authorization" to "Bearer $apiKey"),
+            queryParameters = emptyMap(),
+            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis,
+            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
+            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
+            json = defaultJson,
+        )
+
+        @Deprecated(
+            "Use createConfiguredHttpClient with KoogHttpClient.Factory",
+            ReplaceWith(
+                "createConfiguredHttpClient(apiKey, settings, KtorKoogHttpClient.Factory(), clientName)",
+                "ai.koog.http.client.ktor.KtorKoogHttpClient.Factory"
+            ),
+        )
         public fun createConfiguredHttpClient(
             apiKey: String,
             settings: OpenAIBaseSettings,
             logger: KLogger,
             baseClient: HttpClient = HttpClient(),
             clientName: String
-        ): KoogHttpClient = KoogHttpClient.fromKtorClient(
-            clientName = clientName,
-            logger = logger,
-            baseClient = baseClient,
-            baseUrl = settings.baseUrl,
-            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis,
-            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
-            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
-            json = defaultJson,
-            headers = mapOf("Authorization" to "Bearer $apiKey"),
+        ): KoogHttpClient = createConfiguredHttpClient(
+            apiKey = apiKey,
+            settings = settings,
+            httpClientFactory = KtorKoogHttpClient.Factory(baseClient = baseClient, logger = logger),
+            clientName = clientName
         )
     }
 

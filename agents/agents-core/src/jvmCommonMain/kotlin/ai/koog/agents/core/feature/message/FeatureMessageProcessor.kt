@@ -1,8 +1,8 @@
 package ai.koog.agents.core.feature.message
 
 import ai.koog.agents.annotations.JavaAPI
-import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.utils.runBlockingIfRequired
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.runBlockingReentrant
 import ai.koog.utils.io.Closeable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -67,9 +67,9 @@ public actual abstract class FeatureMessageProcessor actual constructor() : Clos
     @JavaAPI
     @JvmOverloads
     @JvmName("initialize")
-    @OptIn(InternalAgentsApi::class)
+    @OptIn(InternalKoogUtils::class)
     public fun javaNonSuspendInitialize(executorService: ExecutorService? = null) {
-        runBlockingIfRequired(executorService?.asCoroutineDispatcher() ?: Dispatchers.Default) {
+        runBlockingReentrant(executorService?.asCoroutineDispatcher() ?: Dispatchers.Default) {
             initialize()
         }
     }
@@ -85,9 +85,9 @@ public actual abstract class FeatureMessageProcessor actual constructor() : Clos
     @JavaAPI
     @JvmOverloads
     @JvmName("onMessage")
-    @OptIn(InternalAgentsApi::class)
+    @OptIn(InternalKoogUtils::class)
     public fun javaNonSuspendOnMessage(message: FeatureMessage, executorService: ExecutorService? = null) {
-        runBlockingIfRequired(executorService?.asCoroutineDispatcher() ?: Dispatchers.Default) {
+        runBlockingReentrant(executorService?.asCoroutineDispatcher() ?: Dispatchers.Default) {
             onMessage(message)
         }
     }

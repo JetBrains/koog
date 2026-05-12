@@ -4,8 +4,8 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONPrimitive
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
-import kotlin.time.Clock
 
 /**
  * Represents an event triggered when the execution of a specific AI agent node starts.
@@ -32,7 +32,7 @@ public data class NodeExecutionStartingEvent(
     val runId: String,
     val nodeName: String,
     val input: JSONElement?,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -49,7 +49,7 @@ public data class NodeExecutionStartingEvent(
         runId: String,
         nodeName: String,
         input: String,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = NodeExecutionStartingEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
@@ -85,7 +85,7 @@ public data class NodeExecutionCompletedEvent(
     val nodeName: String,
     val input: JSONElement?,
     val output: JSONElement?,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -103,7 +103,7 @@ public data class NodeExecutionCompletedEvent(
         nodeName: String,
         input: String,
         output: String,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = NodeExecutionCompletedEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
@@ -138,7 +138,7 @@ public data class NodeExecutionFailedEvent(
     val nodeName: String,
     val input: JSONElement?,
     val error: AIAgentError,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
@@ -155,7 +155,7 @@ public data class NodeExecutionFailedEvent(
         runId: String,
         nodeName: String,
         error: AIAgentError,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = NodeExecutionFailedEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(

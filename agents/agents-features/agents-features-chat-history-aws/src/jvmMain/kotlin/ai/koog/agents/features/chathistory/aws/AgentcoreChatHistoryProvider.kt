@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory
  * @param totalEventsLimit Optional cap on the total number of events to fetch during [load].
  * @param ignoreUnsupportedValues If `true`, non-conversational message/role types are silently skipped.
  *   If `false`, they cause an [IllegalStateException].
- * @throws AgentcoreMemoryException.ConfigurationException if [memoryId] is blank.
+ * @throws AgentcoreShortTermMemoryException.ConfigurationException if [memoryId] is blank.
  */
 public class AgentcoreChatHistoryProvider @JvmOverloads constructor(
     public val client: BedrockAgentCoreClient,
@@ -56,7 +56,7 @@ public class AgentcoreChatHistoryProvider @JvmOverloads constructor(
 
     init {
         if (memoryId.isBlank()) {
-            throw AgentcoreMemoryException.ConfigurationException("memoryId cannot be null or empty")
+            throw AgentcoreShortTermMemoryException.ConfigurationException("memoryId cannot be null or empty")
         }
     }
 
@@ -91,7 +91,7 @@ public class AgentcoreChatHistoryProvider @JvmOverloads constructor(
             val response = client.createEvent(request)
             logger.debug("Created an event with id ${response.event?.eventId}")
         } catch (e: SdkBaseException) {
-            throw AgentcoreMemoryException.WriteException(
+            throw AgentcoreShortTermMemoryException.WriteException(
                 "Failed to save messages for conversation: $conversationId",
                 e
             )
@@ -185,7 +185,7 @@ public class AgentcoreChatHistoryProvider @JvmOverloads constructor(
             allEvents.reverse()
             return allEvents
         } catch (e: SdkBaseException) {
-            throw AgentcoreMemoryException.ReadException(
+            throw AgentcoreShortTermMemoryException.ReadException(
                 "Failed to fetch events for actor: $actorId, session: $sessionId",
                 e
             )

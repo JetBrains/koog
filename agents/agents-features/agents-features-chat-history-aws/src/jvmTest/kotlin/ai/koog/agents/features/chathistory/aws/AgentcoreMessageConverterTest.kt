@@ -5,6 +5,7 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.utils.time.KoogClock
 import aws.sdk.kotlin.services.bedrockagentcore.model.Content
 import aws.sdk.kotlin.services.bedrockagentcore.model.Conversational
 import aws.sdk.kotlin.services.bedrockagentcore.model.PayloadType
@@ -16,7 +17,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.time.Clock
 
 class AgentcoreMessageConverterTest {
 
@@ -120,7 +120,7 @@ class AgentcoreMessageConverterTest {
             role = Role.User
             content = Content.Text("Hello from user")
         }
-        val message = AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, Clock.System.now())
+        val message = AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, KoogClock.System.now())
 
         assertIs<Message.User>(message)
         assertEquals("Hello from user", message.content)
@@ -132,7 +132,7 @@ class AgentcoreMessageConverterTest {
             role = Role.Assistant
             content = Content.Text("Hello from assistant")
         }
-        val message = AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, Clock.System.now())
+        val message = AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, KoogClock.System.now())
 
         assertIs<Message.Assistant>(message)
         assertEquals("Hello from assistant", message.content)
@@ -144,7 +144,7 @@ class AgentcoreMessageConverterTest {
             role = Role.Tool
             content = Content.Text("tool output")
         }
-        assertNull(AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, Clock.System.now(), ignoreUnsupportedValues = true))
+        assertNull(AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, KoogClock.System.now(), ignoreUnsupportedValues = true))
     }
 
     @Test
@@ -154,7 +154,7 @@ class AgentcoreMessageConverterTest {
             content = Content.Text("tool output")
         }
         assertFailsWith<IllegalStateException> {
-            AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, Clock.System.now(), ignoreUnsupportedValues = false)
+            AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, KoogClock.System.now(), ignoreUnsupportedValues = false)
         }
     }
 
@@ -164,7 +164,7 @@ class AgentcoreMessageConverterTest {
             role = Role.Other
             content = Content.Text("other")
         }
-        assertNull(AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, Clock.System.now()))
+        assertNull(AgentcoreMessageConverter.conversationalToMessage(conversational, randomEventId, KoogClock.System.now()))
     }
 
     // --- eventId metadata tests ---
@@ -175,7 +175,7 @@ class AgentcoreMessageConverterTest {
             role = Role.User
             content = Content.Text("Hello")
         }
-        val message = AgentcoreMessageConverter.conversationalToMessage(conversational, eventId = "evt-123", Clock.System.now())
+        val message = AgentcoreMessageConverter.conversationalToMessage(conversational, eventId = "evt-123", KoogClock.System.now())
 
         assertNotNull(message)
         assertEquals("evt-123", AgentcoreMessageConverter.getEventId(message))
@@ -193,7 +193,7 @@ class AgentcoreMessageConverterTest {
     fun testUserMessageRoundTrip() {
         val original = Message.User("round trip test", RequestMetaInfo.Empty)
         val payload = AgentcoreMessageConverter.messageToPayload(original)!!
-        val restored = AgentcoreMessageConverter.conversationalToMessage(payload.value, randomEventId, Clock.System.now())
+        val restored = AgentcoreMessageConverter.conversationalToMessage(payload.value, randomEventId, KoogClock.System.now())
 
         assertIs<Message.User>(restored)
         assertEquals(original.content, restored.content)
@@ -203,7 +203,7 @@ class AgentcoreMessageConverterTest {
     fun testAssistantMessageRoundTrip() {
         val original = Message.Assistant("round trip assistant", ResponseMetaInfo.Empty)
         val payload = AgentcoreMessageConverter.messageToPayload(original)!!
-        val restored = AgentcoreMessageConverter.conversationalToMessage(payload.value, randomEventId, Clock.System.now())
+        val restored = AgentcoreMessageConverter.conversationalToMessage(payload.value, randomEventId, KoogClock.System.now())
 
         assertIs<Message.Assistant>(restored)
         assertEquals(original.content, restored.content)
@@ -221,7 +221,7 @@ class AgentcoreMessageConverterTest {
         val payloads = originals.mapNotNull { AgentcoreMessageConverter.messageToPayload(it) }
         assertEquals(2, payloads.size)
 
-        val restored = payloads.mapNotNull { AgentcoreMessageConverter.conversationalToMessage(it.value, randomEventId, Clock.System.now()) }
+        val restored = payloads.mapNotNull { AgentcoreMessageConverter.conversationalToMessage(it.value, randomEventId, KoogClock.System.now()) }
         assertEquals(2, restored.size)
         assertIs<Message.User>(restored[0])
         assertEquals("Hello", restored[0].content)

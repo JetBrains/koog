@@ -9,16 +9,14 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrames
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 class TestLLMExecutor : PromptExecutor() {
     companion object {
-        val testClock: Clock = object : Clock {
-            override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-        }
+        val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
         const val DEFAULT_ASSISTANT_RESPONSE = "Default test response"
     }
@@ -27,12 +25,17 @@ class TestLLMExecutor : PromptExecutor() {
     var tldrCount = 0
         private set
 
+    // Track the number of fact-extraction responses produced
+    var factCount = 0
+        private set
+
     // Store the messages for inspection
     val messages = mutableListOf<Message>()
 
     // Reset the state for a new test
     fun reset() {
         tldrCount = 0
+        factCount = 0
         messages.clear()
     }
 
@@ -70,6 +73,27 @@ class TestLLMExecutor : PromptExecutor() {
             )
             messages.add(tldrResponse)
             return tldrResponse
+        }
+
+        // For FactRetrieval compression: return a structured JSON response
+        if (prompt.messages.any { it.content.contains("specialized information extractor") }) {
+            factCount++
+            val isMultiple = prompt.messages.any {
+                it.content.contains("\"facts\" array") || it.content.contains("facts found")
+            }
+            val factResponse = if (isMultiple) {
+                Message.Assistant(
+                    """{"facts": [{"fact": "Extracted fact #$factCount A"}, {"fact": "Extracted fact #$factCount B"}]}""",
+                    metaInfo = ResponseMetaInfo.create(testClock)
+                )
+            } else {
+                Message.Assistant(
+                    """{"fact": "Extracted single fact #$factCount"}""",
+                    metaInfo = ResponseMetaInfo.create(testClock)
+                )
+            }
+            messages.add(factResponse)
+            return factResponse
         }
 
         val response = Message.Assistant(DEFAULT_ASSISTANT_RESPONSE, metaInfo = ResponseMetaInfo.create(testClock))

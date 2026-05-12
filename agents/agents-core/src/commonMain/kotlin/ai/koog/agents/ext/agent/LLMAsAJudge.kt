@@ -5,11 +5,10 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.prompt.dsl.prompt
+import ai.koog.agents.core.utils.buildPromptAsXml
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Message
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmName
 
@@ -106,34 +105,7 @@ public suspend fun <T> AIAgentGraphContextBase.setupLLMAsAJudge(
     val initialPrompt = prompt.copy()
     val initialModel = model
 
-    prompt = prompt("critic") {
-        // Combine all history into one message with XML tags
-        // to prevent LLM from continuing answering in a tool_call -> tool_result pattern
-        val combinedMessage = buildString {
-            append("<previous_conversation>\n")
-            initialPrompt.messages.forEach { message ->
-                when (message) {
-                    is Message.System -> append("<system>\n${message.content}\n</system>\n")
-                    is Message.User -> append("<user>\n${message.content}\n</user>\n")
-                    is Message.Assistant -> append("<assistant>\n${message.content}\n</assistant>\n")
-                    is Message.Reasoning -> append("<thinking>\n${message.content}\n</thinking>\n")
-                    is Message.Tool.Call -> append(
-                        "<tool_call tool=${message.tool}>\n${message.content}\n</tool_call>\n"
-                    )
-
-                    is Message.Tool.Result -> append(
-                        "<tool_result tool=${message.tool}>\n${message.content}\n</tool_result>\n"
-                    )
-                }
-            }
-            append("</previous_conversation>\n")
-        }
-
-        // Put Critic Task as a System instruction
-        system(task)
-        // And rest of the history -- in a combined XML message
-        user(combinedMessage)
-    }
+    prompt = buildPromptAsXml(initialPrompt.messages, task, "critic", "previous_conversation")
 
     if (llmModel != null) {
         model = llmModel
