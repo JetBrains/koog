@@ -76,6 +76,26 @@ version = run {
 
 fun isCustomReleaseBranch(branchName: String): Boolean = branchName.matches(Regex("""^(release\/)?\d+\.\d+\.\d+$"""))
 
+/*
+ * Tracks isBeta extra property, which defaults to false.
+ * Subprojects can set it to true to indicate that the published module
+ * should not be considered stable. Unstable modules get a "-beta" suffix
+ * in their version.
+ */
+subprojects {
+    extra["isBeta"] = false
+
+    afterEvaluate {
+        group = rootProject.group
+        // Append "-beta" to version for modules that are "isBeta=true"
+        version = if (extra["isBeta"] as Boolean) {
+            "${rootProject.version}-beta"
+        } else {
+            rootProject.version
+        }
+    }
+}
+
 buildscript {
     dependencies {
         classpath(platform(libs.okhttp.bom))
