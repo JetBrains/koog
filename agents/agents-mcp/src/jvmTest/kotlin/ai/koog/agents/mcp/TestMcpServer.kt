@@ -13,6 +13,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -49,7 +50,11 @@ class TestMcpServer(
     private val transportMode: TestTransportMode = TestTransportMode.SSE,
 ) {
     private var serverJob: Job? = null
+
+    @Volatile
     private var embeddedServer: EmbeddedServer<*, *>? = null
+
+    @Volatile
     private var isRunning = false
 
     /** The actual port the server is listening on. Valid after [start] returns. */
@@ -124,32 +129,41 @@ class TestMcpServer(
     fun start() = runBlocking {
         if (isRunning) return@runBlocking
 
+        val ready = CompletableDeferred<Int>()
+
         serverJob = CoroutineScope(Dispatchers.SuitableForIO).launch {
-            val emb = embeddedServer(CIO, host = "0.0.0.0", port = port) {
-                when (transportMode) {
-                    TestTransportMode.SSE -> mcp { configureServer() }
-                    TestTransportMode.StreamableHttp -> mcpStreamableHttp { configureServer() }
+            try {
+                val emb = embeddedServer(CIO, host = "0.0.0.0", port = port) {
+                    when (transportMode) {
+                        TestTransportMode.SSE -> mcp { configureServer() }
+                        TestTransportMode.StreamableHttp -> mcpStreamableHttp { configureServer() }
+                    }
                 }
+                embeddedServer = emb
+
+                // Signal readiness once CIO has bound the listening socket. Runs concurrently
+                // with emb.start(wait = true) below, which blocks until the engine stops.
+                launch {
+                    while (isActive) {
+                        val connectors = emb.engine.resolvedConnectors()
+                        if (connectors.isNotEmpty()) {
+                            ready.complete(connectors.first().port)
+                            return@launch
+                        }
+                        delay(50.milliseconds)
+                    }
+                }
+
+                emb.start(wait = true)
+                isRunning = false
+            } catch (t: Throwable) {
+                // Surface startup failure to start() instead of leaving it to time out.
+                ready.completeExceptionally(t)
+                throw t
             }
-            embeddedServer = emb
-            emb.start(wait = true)
-            isRunning = false
         }
 
-        withTimeout(10.seconds) {
-            while (embeddedServer == null || !embeddedServer!!.application.isActive) {
-                delay(100.milliseconds)
-            }
-            while (isActive) {
-                val connectors = embeddedServer!!.engine.resolvedConnectors()
-                if (connectors.isNotEmpty()) {
-                    resolvedPort = connectors.first().port
-                    break
-                }
-                delay(50.milliseconds)
-            }
-        }
-
+        resolvedPort = withTimeout(10.seconds) { ready.await() }
         isRunning = true
         println("Test MCP server started on port $resolvedPort (transport: $transportMode)")
     }
