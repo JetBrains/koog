@@ -211,7 +211,7 @@ public class Persistence(
                         agentContext = eventCtx.context,
                         state = eventCtx.state,
                         stateType = eventCtx.stateType!!,
-                        plan = eventCtx.newPlan,
+                        plan = eventCtx.updatedPlan,
                         planType = eventCtx.planType!!,
                         executionPoint = PlannerAgentExecutionPoint.PlanCreated,
                         version = parent?.version?.plus(1) ?: 0L,
