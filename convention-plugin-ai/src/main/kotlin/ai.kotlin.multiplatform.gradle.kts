@@ -15,6 +15,11 @@ plugins {
     id("signing")
 }
 
+// Per-module opt-out for the wasmJs target. Modules that depend on libraries with no wasmJs publication,
+// for example, the "OTel Kotlin SDK 0.3.0" set `koog.target.wasmJs=false` in their gradle.properties.
+// The target is not registered at all, and no wasm-js publication is produced.
+val isWasmJsIncluded = (findProperty("koog.target.wasmJs") as? String)?.toBoolean() ?: true
+
 kotlin {
     // Tiers are in accordance with <https://kotlinlang.org/docs/native-target-support.html>
     // Tier 1
@@ -45,10 +50,12 @@ kotlin {
         configureTests()
     }
 
-    wasmJs {
-        browser()
-        nodejs()
-        binaries.library()
+    if (isWasmJsIncluded) {
+        wasmJs {
+            browser()
+            nodejs()
+            binaries.library()
+        }
     }
 
     applyDefaultHierarchyTemplate()
@@ -92,12 +99,14 @@ kotlin {
             dependsOn(nonJvmCommonTest)
         }
 
-        wasmJsMain {
-            dependsOn(nonJvmCommonMain)
-        }
+        if (isWasmJsIncluded) {
+            wasmJsMain {
+                dependsOn(nonJvmCommonMain)
+            }
 
-        wasmJsTest {
-            dependsOn(nonJvmCommonTest)
+            wasmJsTest {
+                dependsOn(nonJvmCommonTest)
+            }
         }
 
         jvmMain {

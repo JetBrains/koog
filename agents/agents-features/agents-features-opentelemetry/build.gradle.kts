@@ -115,16 +115,4 @@ extensions.configure<LibraryAndroidComponentsExtension> {
     }
 }
 
-// OTel Kotlin SDK 0.3.0 doesn't publish wasmJs artifacts, so the wasmJs target can't
-// actually compile against OTel. We keep the target registered (so its KMP publication
-// has the standard `agents-features-opentelemetry-wasm-js` coordinates that KMP consumers
-// expect) but exclude OTel from wasmJs configurations and skip wasmJs tasks so nothing
-// tries to build/publish broken wasmJs artifacts.
-configurations.matching { it.name.startsWith("wasmJs") }.configureEach {
-    exclude(group = "io.opentelemetry.kotlin")
-}
-tasks.matching { it.name.startsWith("wasmJs") || it.name == "compileKotlinWasmJs" || it.name == "compileTestKotlinWasmJs" }.configureEach {
-    onlyIf("OTel Kotlin SDK 0.3.0 does not publish wasmJs artifacts") { false }
-}
-
 publishToMaven()
