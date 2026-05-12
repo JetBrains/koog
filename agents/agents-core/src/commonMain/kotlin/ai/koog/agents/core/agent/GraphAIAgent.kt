@@ -22,7 +22,6 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.TypeToken
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlin.reflect.KType
 
 /**
  * Represents an implementation of an AI agent that provides functionalities to execute prompts,
@@ -59,73 +58,6 @@ public open class GraphAIAgent<Input, Output>(
     logger = logger,
     id = id,
 ) {
-    /**
-     * Secondary constructor for initializing a [GraphAIAgent] with [KType] parameters.
-     *
-     * @param inputType Represents the input type of the agent as a `KType`.
-     * @param outputType Represents the output type of the agent as a `KType`.
-     * @param promptExecutor The `PromptExecutor` responsible for processing LLM prompts within the agent.
-     * @param agentConfig The configuration settings for the AI agent, including prompts, models, and execution limits.
-     * @param strategy The graph strategy for handling input/output transformations during agent execution.
-     * @param toolRegistry A registry of tools available for use by the agent, defaulting to an empty registry.
-     * @param id An optional identifier for the agent, allowing for multiple agents with unique IDs.
-     * @param clock Clock instance used by the agent, defaulting to the system clock.
-     * @param installFeatures A lambda for installing custom features in the agent's feature context.
-     */
-    @Deprecated("Use constructor without `inputType` and `outputType`.")
-    public constructor(
-        inputType: KType,
-        outputType: KType,
-        promptExecutor: PromptExecutor,
-        agentConfig: AIAgentConfig,
-        strategy: AIAgentGraphStrategy<Input, Output>,
-        toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-        id: String? = null,
-        clock: KoogClock = KoogClock.System,
-        installFeatures: FeatureContext.() -> Unit = {}
-    ) : this(
-        promptExecutor,
-        agentConfig,
-        strategy,
-        toolRegistry,
-        id,
-        clock,
-        installFeatures
-    )
-
-    /**
-     * @param inputType [TypeToken] representing [Input] - agent input.
-     * @param outputType [TypeToken] representing [Output] - agent output.
-     * @param promptExecutor Executor used to manage and execute prompt strings.
-     * @param strategy The execution strategy defining how the agent processes input and produces output.
-     * @param agentConfig Configuration details for the local agent that define its operational parameters.
-     * @param toolRegistry Registry of tools the agent can interact with, defaulting to an empty registry.
-     * @param installFeatures Lambda for installing additional features within the agent environment.
-     * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
-     * @param clock The clock used to calculate message timestamps
-     * @constructor Initializes the AI agent instance and prepares the feature context and pipeline for use.
-     */
-    @Deprecated("Use constructor without `inputType` and `outputType`")
-    public constructor(
-        inputType: TypeToken,
-        outputType: TypeToken,
-        promptExecutor: PromptExecutor,
-        agentConfig: AIAgentConfig,
-        strategy: AIAgentGraphStrategy<Input, Output>,
-        toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-        id: String? = null,
-        clock: KoogClock = KoogClock.System,
-        installFeatures: FeatureContext.() -> Unit = {}
-    ) : this(
-        promptExecutor,
-        agentConfig,
-        strategy,
-        toolRegistry,
-        id,
-        clock,
-        installFeatures
-    )
-
     private companion object {
         private val logger = KotlinLogging.logger {}
     }

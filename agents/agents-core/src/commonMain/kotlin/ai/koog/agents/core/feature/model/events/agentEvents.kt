@@ -24,29 +24,7 @@ public data class AgentStartingEvent(
     val agentId: String,
     val runId: String,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated. Creates an instance of [AgentStartingEvent].
-     * Note! Do not relay on [executionInfo] parameter in this constructor.
-     */
-    @Deprecated(
-        message = "Please use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("AgentStartingEvent(executionInfo, agentId, runId)")
-    )
-    public constructor(
-        agentId: String,
-        runId: String
-    ) : this(
-        eventId = AgentStartingEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = AgentStartingEvent::class.simpleName.toString(),
-        ),
-        agentId = agentId,
-        runId = runId
-    )
-}
+) : DefinedFeatureEvent()
 
 /**
  * Event representing the completion of an AI Agent's execution.
@@ -70,31 +48,7 @@ public data class AgentCompletedEvent(
     val runId: String,
     val result: String?,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated. Creates an instance of [AgentCompletedEvent].
-     * Note! Do not relay on [executionInfo] parameter in this constructor.
-     */
-    @Deprecated(
-        message = "Please use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("AgentCompletedEvent(executionInfo, agentId, runId, result)")
-    )
-    public constructor(
-        agentId: String,
-        runId: String,
-        result: String?
-    ) : this(
-        eventId = AgentCompletedEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = AgentCompletedEvent::class.simpleName.toString(),
-        ),
-        agentId = agentId,
-        runId = runId,
-        result = result
-    )
-}
+) : DefinedFeatureEvent()
 
 /**
  * Represents an event triggered when an AI agent run encounters an error.
@@ -118,31 +72,7 @@ public data class AgentExecutionFailedEvent(
     val runId: String,
     val error: AIAgentError?,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated. Creates an instance of [AgentExecutionFailedEvent].
-     * Note! Do not relay on [executionInfo] parameter in this constructor.
-     */
-    @Deprecated(
-        message = "Please use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("AgentExecutionFailedEvent(executionInfo, agentId, runId, error)")
-    )
-    public constructor(
-        agentId: String,
-        runId: String,
-        error: AIAgentError
-    ) : this(
-        eventId = AgentExecutionFailedEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = AgentExecutionFailedEvent::class.simpleName.toString(),
-        ),
-        agentId = agentId,
-        runId = runId,
-        error = error
-    )
-}
+) : DefinedFeatureEvent()
 
 /**
  * Represents an event that signifies the closure or termination of an AI agent identified
@@ -159,52 +89,4 @@ public data class AgentClosingEvent(
     override val executionInfo: AgentExecutionInfo,
     val agentId: String,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated. Creates an instance of [AgentClosingEvent].
-     * Note! Do not relay on [executionInfo] parameter in this constructor.
-     */
-    @Deprecated(
-        message = "Please use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("AgentClosingEvent(executionInfo, agentId)")
-    )
-    public constructor(
-        agentId: String
-    ) : this(
-        eventId = AgentClosingEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = AgentClosingEvent::class.simpleName.toString(),
-        ),
-        agentId = agentId
-    )
-}
-
-//region Deprecated
-
-@Deprecated(
-    message = "Use AgentStartingEvent instead",
-    replaceWith = ReplaceWith("AgentStartingEvent")
-)
-public typealias AIAgentStartedEvent = AgentStartingEvent
-
-@Deprecated(
-    message = "Use AgentCompletedEvent instead",
-    replaceWith = ReplaceWith("AgentCompletedEvent")
-)
-public typealias AIAgentFinishedEvent = AgentCompletedEvent
-
-@Deprecated(
-    message = "Use AgentExecutionFailedEvent instead",
-    replaceWith = ReplaceWith("AgentExecutionFailedEvent")
-)
-public typealias AIAgentRunErrorEvent = AgentExecutionFailedEvent
-
-@Deprecated(
-    message = "Use AgentClosingEvent instead",
-    replaceWith = ReplaceWith("AgentClosingEvent")
-)
-public typealias AIAgentBeforeCloseEvent = AgentClosingEvent
-
-//endregion Deprecated
+) : DefinedFeatureEvent()

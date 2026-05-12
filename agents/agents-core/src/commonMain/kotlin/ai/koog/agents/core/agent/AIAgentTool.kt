@@ -10,67 +10,18 @@ import ai.koog.agents.core.tools.schema.getJsonSchema
 import ai.koog.agents.core.tools.schema.toToolParameter
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONSerializer
-import ai.koog.serialization.KSerializerTypeToken
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.annotations.InternalKoogSerializationApi
 import ai.koog.serialization.kotlinx.KotlinxDelegateSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONElement
 import ai.koog.serialization.kotlinx.toKotlinxJsonElement
 import ai.koog.serialization.typeToken
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.fetchAndIncrement
 import kotlin.coroutines.cancellation.CancellationException
-
-/**
- * Converts the current AI agent into a tool to allow using it in other agents as a tool.
- *
- * @param agentName Agent name that would be a tool name for this agent tool.
- * @param agentDescription Agent description that would be a tool description for this agent tool.
- * @param inputDescription An optional description of the agent's input. Required for primitive types only!
- *  * If not specified for a primitive input type (ex: String, Int, ...), an empty input description will be sent to LLM.
- *  * Does not have any effect for non-primitive [Input] type with @LLMDescription annotations.
- * @param inputSerializer Serializer to deserialize tool arguments to agent input.
- * @param outputSerializer Serializer to serialize agent output to tool result.
- * @param json Optional [Json] instance to customize de/serialization behavior.
- * @return A special tool that wraps the agent functionality.
- */
-@InternalAgentToolsApi
-@Deprecated(
-    level = DeprecationLevel.WARNING,
-    message = "Please use `AIAgentService.createAgentTool(...)`, instead." +
-        "Converting an instance of `AIAgent` into a tool is error-prone because `AIAgent` is essentially a single-use instance," +
-        "while tools can be run multiple times, and moreover - in parallel - by another `AIAgent`. " +
-        "That would cause an error."
-)
-public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
-    agentName: String,
-    agentDescription: String,
-    inputDescription: String? = null,
-    inputSerializer: KSerializer<Input> = serializer(),
-    outputSerializer: KSerializer<Output> = serializer(),
-    json: Json = Json.Default,
-): Tool<AgentToolInput<Input>, AgentToolResult<Output>> {
-    val service = when (this) {
-        is GraphAIAgent -> AIAgentService.fromAgent(this)
-        is FunctionalAIAgent -> AIAgentService.fromAgent(this)
-        else -> throw UnsupportedOperationException("`asTool` can only be used for `GraphAIAgent` or `FunctionalAIAgent`")
-    }
-
-    @Suppress("DEPRECATION")
-    return service.createAgentTool(
-        agentName = agentName,
-        agentDescription = agentDescription,
-        inputDescription = inputDescription,
-        inputSerializer = inputSerializer,
-        outputSerializer = outputSerializer,
-        parentAgentId = this.id
-    )
-}
 
 /**
  * AIAgentTool is a generic tool that wraps an AI agent to facilitate integration
@@ -119,26 +70,6 @@ public class AIAgentTool<Input, Output> @OptIn(InternalAgentToolsApi::class) con
     private companion object {
         private val json = Json.Default
     }
-
-    @Deprecated("Use constructor with TypeToken instead of KSerializer")
-    @OptIn(InternalKoogSerializationApi::class)
-    public constructor(
-        agentService: AIAgentService<Input, Output, *>,
-        agentName: String,
-        agentDescription: String,
-        inputDescription: String,
-        inputSerializer: KSerializer<Input>,
-        outputSerializer: KSerializer<Output>,
-        parentAgentId: String? = null
-    ) : this(
-        agentService = agentService,
-        agentName = agentName,
-        agentDescription = agentDescription,
-        inputDescription = inputDescription,
-        inputType = KSerializerTypeToken(inputSerializer),
-        outputType = KSerializerTypeToken(outputSerializer),
-        parentAgentId = parentAgentId
-    )
 
     @OptIn(ExperimentalAtomicApi::class)
     private val toolCallNumber: AtomicInt = AtomicInt(0)

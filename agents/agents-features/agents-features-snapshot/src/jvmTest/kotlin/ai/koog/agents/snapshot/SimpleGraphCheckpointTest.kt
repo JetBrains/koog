@@ -66,12 +66,13 @@ class SimpleGraphCheckpointTest {
         // Run the agent
         val result = agent.run("Start the test", null)
 
-        // Verify that the result contains the expected output from the teleported node
+        // Verify that the result contains the expected output from the teleported node.
+        // With lastOutput semantics, teleport jumps to AFTER Node1 (i.e. into teleportNode),
+        // which sees teleportState.teleported=true and emits "Already teleported, passing by".
         assertEquals(
             "Start the test\n" +
                 "Node 1 output\n" +
                 "Teleported\n" +
-                "Node 1 output\n" +
                 "Already teleported, passing by\n" +
                 "Node 2 output",
             result

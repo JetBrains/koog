@@ -2,6 +2,7 @@ package ai.koog.agents.core
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
@@ -11,8 +12,8 @@ object CalculatorTools {
         name: String,
         description: String,
     ) : Tool<CalculatorTool.Args, CalculatorTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = name,
         description = description
     ) {

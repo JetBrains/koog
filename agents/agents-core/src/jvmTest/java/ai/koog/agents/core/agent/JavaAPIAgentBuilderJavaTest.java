@@ -40,8 +40,8 @@ public class JavaAPIAgentBuilderJavaTest {
                     .build()
             )
             .maxAgentIterations(100)
-            .llmRequestExecutorService(Executors.newSingleThreadExecutor())
-            .strategyExecutorService(Executors.newSingleThreadExecutor())
+            .llmRequestExecutor(Executors.newSingleThreadExecutor())
+            .strategyExecutor(Executors.newSingleThreadExecutor())
             .build();
     }
 

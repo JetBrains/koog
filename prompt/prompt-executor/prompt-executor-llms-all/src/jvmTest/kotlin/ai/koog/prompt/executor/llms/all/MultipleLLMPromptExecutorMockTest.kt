@@ -143,7 +143,7 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = GoogleModels.Gemini2_0Flash)
+        val response = executor.execute(prompt = prompt, model = GoogleModels.Gemini2_5Flash)
         val textContent = assertIs<MessagePart.Text>(response.parts.first())
 
         assertEquals(
@@ -198,7 +198,7 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, GoogleModels.Gemini2_0Flash)
+        val responseChunks = executor.executeStreaming(prompt, GoogleModels.Gemini2_5Flash)
             .filterTextOnly()
             .toList()
 

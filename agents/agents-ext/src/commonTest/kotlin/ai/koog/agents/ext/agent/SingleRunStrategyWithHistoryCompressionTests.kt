@@ -8,6 +8,7 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -15,7 +16,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 object CreateTool : SimpleTool<CreateTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "create",
     description = "Create something"
 ) {

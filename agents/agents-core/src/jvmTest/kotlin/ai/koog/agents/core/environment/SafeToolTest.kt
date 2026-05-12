@@ -11,6 +11,7 @@ import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONElement
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
@@ -100,8 +101,8 @@ class SafeToolTest {
     }
 
     private object EchoTool : Tool<EchoTool.Echo, EchoTool.Echo>(
-        argsSerializer = Echo.serializer(),
-        resultSerializer = Echo.serializer(),
+        argsType = typeToken<Echo>(),
+        resultType = typeToken<Echo>(),
         name = "string_echo",
         description = "String echo tool"
     ) {

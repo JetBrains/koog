@@ -2,10 +2,11 @@ package ai.koog.agents.features.tokenizer.feature
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 abstract class TestTool(name: String) : SimpleTool<TestTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = name,
     description = "$name description"
 ) {

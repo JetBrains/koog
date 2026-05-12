@@ -3,6 +3,7 @@ package ai.koog.agents.examples.tripplanning
 import ai.koog.agents.examples.tripplanning.api.OpenMeteoClient
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.mcp.defaultStdioTransport
+import ai.koog.agents.mcp.metadata.McpServerInfo
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
@@ -31,7 +32,10 @@ suspend fun main() {
                 LLMProvider.Google to GoogleLLMClient(googleAiKey)
             ),
             openMeteoClient = OpenMeteoClient(),
-            googleMapsMcpRegistry = McpToolRegistryProvider.fromTransport(googleMapsMcp),
+            googleMapsMcpRegistry = McpToolRegistryProvider.fromTransport(
+                googleMapsMcp,
+                McpServerInfo(command = "google-maps-mcp"),
+            ),
             onToolCallEvent = {
                 println("Tool called: $it")
             },

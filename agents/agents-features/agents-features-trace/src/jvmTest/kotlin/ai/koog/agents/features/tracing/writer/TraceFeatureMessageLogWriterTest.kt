@@ -37,6 +37,7 @@ import ai.koog.agents.features.tracing.mock.toolCallMessage
 import ai.koog.agents.features.tracing.mock.toolCallMessagePart
 import ai.koog.agents.features.tracing.mock.userMessage
 import ai.koog.agents.features.tracing.traceString
+import ai.koog.agents.testing.agent.agentExecutionInfo
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.Prompt
@@ -244,8 +245,10 @@ class TraceFeatureMessageLogWriterTest {
         val actualMessages = listOf(
             FeatureStringMessage("Test string message"),
             AgentStartingEvent(
+                eventId = AgentStartingEvent::class.simpleName.toString(),
+                executionInfo = agentExecutionInfo(agentId),
                 agentId = agentId,
-                runId = runId
+                runId = runId,
             )
         )
 

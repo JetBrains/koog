@@ -468,6 +468,8 @@ public data class RequestMetaInfo @JvmOverloads constructor(
  * @property totalTokensCount The total number of tokens involved in the response, including both input and output tokens, or null if not available.
  * @property inputTokensCount The number of tokens used in the input, or null if not available.
  * @property outputTokensCount The number of tokens generated in the output, or null if not available.
+ * @property metadata Additional metadata as a JSON object.
+ *                    This can be used to store custom metadata that doesn't fit into the standard fields.
  * @property timestamp The timestamp indicating when the response was created.
  * @property modelId The ID of the model used for generating the response, or null if not available.
  * @property metadata Additional metadata associated with the response, or null if not available.

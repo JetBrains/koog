@@ -3,12 +3,8 @@ package ai.koog.agents.core.tools
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.schema.defaultJsonSchemaConfig
 import ai.koog.agents.core.tools.schema.getToolDescriptor
-import ai.koog.serialization.KSerializerTypeToken
 import ai.koog.serialization.TypeToken
-import ai.koog.serialization.annotations.InternalKoogSerializationApi
 import kotlinx.schema.generator.json.JsonSchemaConfig
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
 
 /**
  * A tool with a no-metadata [execute] shape. The runtime dispatches it through
@@ -48,36 +44,6 @@ public abstract class Tool<TArgs, TResult>(
         descriptor = getToolDescriptor(argsType, name, description, jsonSchemaConfig)
     )
 
-    //region Deprecated constructors
-
-    @Deprecated("Use TypeToken constructors instead")
-    @OptIn(InternalKoogSerializationApi::class)
-    public constructor(
-        argsSerializer: KSerializer<TArgs>,
-        resultSerializer: KSerializer<TResult>,
-        descriptor: ToolDescriptor,
-    ) : this(
-        argsType = KSerializerTypeToken(argsSerializer),
-        resultType = KSerializerTypeToken(resultSerializer),
-        descriptor = descriptor,
-    )
-
-    @Deprecated("Use TypeToken constructors instead")
-    @Suppress("DEPRECATION")
-    @OptIn(InternalAgentToolsApi::class, InternalKoogSerializationApi::class)
-    public constructor(
-        argsSerializer: KSerializer<TArgs>,
-        resultSerializer: KSerializer<TResult>,
-        name: String,
-        description: String,
-    ) : this(
-        argsSerializer = argsSerializer,
-        resultSerializer = resultSerializer,
-        descriptor = getToolDescriptor(KSerializerTypeToken(argsSerializer), name, description)
-    )
-
-    //endregion
-
     /**
      * Executes the tool's logic with the provided arguments.
      *
@@ -97,19 +63,4 @@ public abstract class Tool<TArgs, TResult>(
 
     final override suspend fun execute(args: TArgs, metadata: ToolCallMetadata): TResult =
         execute(args)
-
-    /**
-     * Base type, representing tool arguments.
-     */
-    @Deprecated("Extending Tool.Args is no longer required.")
-    @Suppress("DEPRECATION")
-    public interface Args : ToolArgs
-
-    /**
-     * Args implementation that can be used for tools that expect no arguments.
-     */
-    @Deprecated("Extending Tool.Args is no longer required.")
-    @Suppress("DEPRECATION")
-    @Serializable
-    public data object EmptyArgs : Args
 }

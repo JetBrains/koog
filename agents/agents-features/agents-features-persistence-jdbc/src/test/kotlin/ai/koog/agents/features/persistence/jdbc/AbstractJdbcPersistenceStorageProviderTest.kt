@@ -1,6 +1,7 @@
 package ai.koog.agents.features.persistence.jdbc
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
@@ -38,10 +39,12 @@ abstract class AbstractJdbcPersistenceStorageProviderTest {
     ): AgentCheckpointData = AgentCheckpointData(
         checkpointId = checkpointId,
         createdAt = KoogClock.System.now(),
-        nodePath = nodePath,
-        lastOutput = JSONPrimitive("test-output"),
         messageHistory = messages,
-        version = version
+        version = version,
+        graphProperties = GraphCheckpointProperties(
+            nodePath = nodePath,
+            lastOutput = JSONPrimitive("test-output")
+        )
     )
 
     @Test
@@ -56,7 +59,7 @@ abstract class AbstractJdbcPersistenceStorageProviderTest {
         val loaded = p.getCheckpoints(sessionId)
         assertEquals(1, loaded.size)
         assertEquals(checkpoint.checkpointId, loaded[0].checkpointId)
-        assertEquals(checkpoint.nodePath, loaded[0].nodePath)
+        assertEquals(checkpoint.graphProperties?.nodePath, loaded[0].graphProperties?.nodePath)
         assertEquals(checkpoint.version, loaded[0].version)
     }
 
@@ -113,10 +116,10 @@ abstract class AbstractJdbcPersistenceStorageProviderTest {
         val loadedB = p.getCheckpoints("session-b")
 
         assertEquals(1, loadedA.size)
-        assertEquals("graph/nodeA", loadedA[0].nodePath)
+        assertEquals("graph/nodeA", loadedA[0].graphProperties?.nodePath)
 
         assertEquals(1, loadedB.size)
-        assertEquals("graph/nodeB", loadedB[0].nodePath)
+        assertEquals("graph/nodeB", loadedB[0].graphProperties?.nodePath)
     }
 
     @Test
@@ -285,7 +288,7 @@ abstract class AbstractJdbcPersistenceStorageProviderTest {
 
         val loaded = p.getCheckpoints(sessionId)
         assertEquals(1, loaded.size)
-        assertEquals("graph/updated", loaded[0].nodePath)
+        assertEquals("graph/updated", loaded[0].graphProperties?.nodePath)
         assertEquals(2L, loaded[0].version)
     }
 
@@ -303,10 +306,10 @@ abstract class AbstractJdbcPersistenceStorageProviderTest {
         p.saveCheckpoint(sessionId, cp2)
         p.saveCheckpoint(sessionId, cp3)
 
-        val filter = JdbcPersistenceFilter { it.nodePath == "graph/nodeA" }
+        val filter = JdbcPersistenceFilter { it.graphProperties?.nodePath == "graph/nodeA" }
         val filtered = p.getCheckpoints(sessionId, filter)
         assertEquals(2, filtered.size)
-        assertTrue(filtered.all { it.nodePath == "graph/nodeA" })
+        assertTrue(filtered.all { it.graphProperties?.nodePath == "graph/nodeA" })
     }
 
     @Test
@@ -326,7 +329,7 @@ abstract class AbstractJdbcPersistenceStorageProviderTest {
 
         val loaded = run2.getCheckpoints(sessionId)
         assertEquals(1, loaded.size)
-        assertEquals("graph/step1", loaded[0].nodePath)
+        assertEquals("graph/step1", loaded[0].graphProperties?.nodePath)
 
         val cp2 = createTestCheckpoint(version = 2L, nodePath = "graph/step2")
         run2.saveCheckpoint(sessionId, cp2)

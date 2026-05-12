@@ -4,6 +4,7 @@ import ai.koog.agents.features.sql.providers.H2PersistenceStorageProvider
 import ai.koog.agents.features.sql.providers.MySQLPersistenceStorageProvider
 import ai.koog.agents.features.sql.providers.PostgresPersistenceStorageProvider
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -170,14 +171,16 @@ object SQLPersistentAgentExample {
         return AgentCheckpointData(
             checkpointId = checkpointId,
             createdAt = KoogClock.System.now(),
-            nodePath = "example-node",
-            lastInput = JSONPrimitive("Sample input for $checkpointId"),
             messageHistory = listOf(
                 Message.System("You are a helpful assistant", RequestMetaInfo.create(KoogClock.System)),
                 Message.User("Hello, agent!", RequestMetaInfo.create(KoogClock.System)),
                 Message.Assistant("Hello! How can I help you today?", ResponseMetaInfo.create(KoogClock.System))
             ),
-            version = version
+            version = version,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = "example-node",
+                lastOutput = JSONPrimitive("Sample input for $checkpointId"),
+            ),
         )
     }
 }

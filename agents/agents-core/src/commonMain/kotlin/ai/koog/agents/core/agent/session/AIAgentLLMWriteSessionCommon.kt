@@ -117,14 +117,6 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     }
 
     /**
-     * Updates the current prompt by applying modifications defined in the provided block.
-     */
-    @Deprecated("Use `appendPrompt` instead", ReplaceWith("appendPrompt(body)"))
-    public fun updatePrompt(body: PromptBuilder.() -> Unit) {
-        appendPrompt(body)
-    }
-
-    /**
      * Rewrites the current prompt by applying a transformation function.
      */
     public fun rewritePrompt(body: (prompt: Prompt) -> Prompt) {

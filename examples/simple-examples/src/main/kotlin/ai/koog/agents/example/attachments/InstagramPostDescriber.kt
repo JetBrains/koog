@@ -62,7 +62,7 @@ suspend fun main() {
         println("Anthropic response:")
         anthropicExecutor.execute(prompt, AnthropicModels.Sonnet_4).textContent().also(::println)
         println("Google response:")
-        googleExecutor.execute(prompt, GoogleModels.Gemini2_0Flash).textContent().also(::println)
+        googleExecutor.execute(prompt, GoogleModels.Gemini2_5Flash).textContent().also(::println)
     } finally {
         ollamaExecutor.close()
         openaiExecutor.close()

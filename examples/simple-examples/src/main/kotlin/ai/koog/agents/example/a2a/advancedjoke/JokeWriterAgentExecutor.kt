@@ -86,8 +86,6 @@ private fun jokeWriterAgent(
     )
 
     return GraphAIAgent(
-        inputType = typeToken<A2AMessage>(),
-        outputType = typeToken<Unit>(),
         promptExecutor = promptExecutor,
         strategy = jokeWriterStrategy(),
         agentConfig = agentConfig,

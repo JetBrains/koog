@@ -38,7 +38,6 @@ An edge is created using the `edge` function and the `forwardTo` infix function:
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
@@ -101,7 +100,6 @@ You can transform the output before passing it to the target node by using the `
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
@@ -298,7 +296,6 @@ Here is an example of a basic strategy graph:
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
@@ -397,7 +394,6 @@ For the graph created in the previous example, you can run:
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.asMermaidDiagram
-    import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
@@ -484,7 +480,6 @@ For long-running conversations, the history can grow large and consume a lot of 
 For workflows that require executing multiple tools in parallel, you can use the `nodeExecuteToolsAndGetResults` node with `parallel = true`:
 
 <!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
@@ -563,7 +558,6 @@ For more information related to parallel node execution and a detailed reference
 For complex workflows that require different paths based on certain conditions, you can use conditional branching:
 
 <!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
@@ -618,7 +612,6 @@ The tone analysis strategy is a good example of a tool-based strategy that inclu
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel

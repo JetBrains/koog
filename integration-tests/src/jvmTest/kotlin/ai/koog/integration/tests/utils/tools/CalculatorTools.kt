@@ -6,8 +6,8 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.Prompt
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 
 @Serializable
 enum class CalculatorOperation {
@@ -28,7 +28,7 @@ data class SimpleCalculatorArgs(
 )
 
 object CalculatorToolNoArgs : SimpleTool<Unit>(
-    argsSerializer = Unit.serializer(),
+    argsType = typeToken<Unit>(),
     name = "calculator_no_args",
     description = "A simple calculator that performs basic calculations. No parameters needed."
 ) {
@@ -38,7 +38,7 @@ object CalculatorToolNoArgs : SimpleTool<Unit>(
 }
 
 object SimpleCalculatorTool : SimpleTool<SimpleCalculatorArgs>(
-    argsSerializer = SimpleCalculatorArgs.serializer(),
+    argsType = typeToken<SimpleCalculatorArgs>(),
     name = "simple_calculator",
     description = "A simple calculator that can add, subtract, multiply, and divide two integers."
 ) {
@@ -62,8 +62,8 @@ object SimpleCalculatorTool : SimpleTool<SimpleCalculatorArgs>(
 }
 
 object CalculatorTool : Tool<SimpleCalculatorArgs, Int>(
-    argsSerializer = SimpleCalculatorArgs.serializer(),
-    resultSerializer = Int.serializer(),
+    argsType = typeToken<SimpleCalculatorArgs>(),
+    resultType = typeToken<Int>(),
     name = "calculator",
     description = "A simple calculator that can add, subtract, multiply, and divide two integers."
 ) {
@@ -82,7 +82,7 @@ data class CalculateSumArgs(
 )
 
 object CalculateSumTool : SimpleTool<CalculateSumArgs>(
-    argsSerializer = CalculateSumArgs.serializer(),
+    argsType = typeToken<CalculateSumArgs>(),
     name = "calculate_sum",
     description = "Calculate the sum of a list of amounts"
 ) {

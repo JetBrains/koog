@@ -27,7 +27,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlin.reflect.KProperty
-import kotlin.reflect.KType
 
 /**
  * Abstract base class for building AI agent subgraphs.
@@ -199,39 +198,6 @@ public class AIAgentSubgraphBuilder<Input, Output>(
     BaseBuilder<AIAgentSubgraphDelegate<Input, Output>> {
     override val nodeStart: StartNode<Input> = StartNode(subgraphName = name, type = inputType)
     override val nodeFinish: FinishNode<Output> = FinishNode(subgraphName = name, type = outputType)
-
-    /**
-     * Constructs an instance of AIAgentSubgraphBuilder with the provided parameters, using KTypes
-     * for input and output type representation.
-     *
-     * This constructor is deprecated. All [KType] parameters should be replaced by the use of [TypeToken] instead.
-     *
-     * @param name An optional name for the subgraph being built.
-     * @param inputType The type of the input data for the subgraph, represented as a [KType].
-     * @param outputType The type of the output data for the subgraph, represented as a [KType].
-     * @param toolSelectionStrategy The strategy used to select the tools for this subgraph.
-     * @param llmModel An optional Large Language Model ([LLModel]) to be used within the subgraph.
-     * @param llmParams An optional set of parameters ([LLMParams]) for configuring the LLM behavior.
-     * @param responseProcessor An optional [ResponseProcessor] for post-processing responses in the subgraph.
-     */
-    @Deprecated("KTypes usage in graphs and nodes is deprecated. Please, use TypeTokens instead.")
-    public constructor(
-        name: String? = null,
-        inputType: KType,
-        outputType: KType,
-        toolSelectionStrategy: ToolSelectionStrategy,
-        llmModel: LLModel?,
-        llmParams: LLMParams?,
-        responseProcessor: ResponseProcessor? = null,
-    ) : this(
-        name,
-        typeToken(inputType),
-        typeToken(outputType),
-        toolSelectionStrategy,
-        llmModel,
-        llmParams,
-        responseProcessor
-    )
 
     override fun build(): AIAgentSubgraphDelegate<Input, Output> {
         require(isFinishReachable(nodeStart)) {

@@ -2,11 +2,11 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 
 object DummyTool : SimpleTool<Unit>(
-    argsSerializer = Unit.serializer(),
+    argsType = typeToken<Unit>(),
     name = "dummy_tool",
     description = "Dummy tool for testing"
 ) {
@@ -14,7 +14,7 @@ object DummyTool : SimpleTool<Unit>(
 }
 
 object CreateTool : SimpleTool<CreateTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "create",
     description = "Create something"
 ) {

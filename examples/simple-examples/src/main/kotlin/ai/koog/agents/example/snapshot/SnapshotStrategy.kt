@@ -2,10 +2,9 @@ package ai.koog.agents.example.snapshot
 
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.snapshot.feature.withPersistence
-import kotlinx.serialization.json.JsonPrimitive
+import ai.koog.serialization.JSONPrimitive
 import ai.koog.agents.core.dsl.builder.node
 
 private fun simpleNode(
@@ -24,7 +23,7 @@ private fun teleportNode(
     if (!teleportState.teleported) {
         teleportState.teleported = true
         withPersistence {
-            setExecutionPoint(it, "Node1", listOf(), JsonPrimitive("Teleported!!!"))
+            setExecutionPointAfterNode(it, "Node1", listOf(), JSONPrimitive("Teleported!!!"))
             return@withPersistence "Teleported"
         }
     } else {

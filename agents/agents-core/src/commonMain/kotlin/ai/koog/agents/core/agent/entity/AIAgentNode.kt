@@ -6,11 +6,9 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate
 import ai.koog.agents.core.dsl.builder.EdgeTransformationDslMarker
 import ai.koog.agents.core.utils.Some
-import ai.koog.serialization.KotlinTypeToken
 import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
-import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 
 /**
@@ -270,25 +268,7 @@ public class StartNode<TInput> internal constructor(
     inputType = type,
     outputType = type,
     execute = { input -> input }
-) {
-    /**
-     * Constructs a [StartNode] using a [KType] to represent the input and output type.
-     *
-     * This constructor is deprecated. Prefer the primary constructor which accepts a [TypeToken],
-     * as the use of [KType] in graphs and nodes has been deprecated due to potential limitations
-     * and performance considerations. The provided [type] is internally wrapped into a [KotlinTypeToken].
-     *
-     * @param subgraphName An optional name for the subgraph this node is part of. If `null`,
-     * the default prefix "__start__" is used as the node name.
-     * @param type A [KType] representing the type of [TInput] processed by this node.
-     * Internally converted to a [KotlinTypeToken].
-     */
-    @Deprecated("KTypes usage in graphs and nodes is deprecated. Please, use TypeTokens instead.")
-    public constructor(
-        subgraphName: String? = null,
-        type: KType,
-    ) : this(subgraphName, KotlinTypeToken(type))
-}
+)
 
 /**
  * Represents a specialized node within an AI agent strategy graph that marks the endpoint of a subgraph.
@@ -319,20 +299,4 @@ public class FinishNode<TOutput> internal constructor(
     override fun addEdge(edge: AIAgentEdge<TOutput, *>) {
         throw IllegalStateException("${this::class.simpleName} cannot have outgoing edges")
     }
-
-    /**
-     * Secondary constructor for [FinishNode] allowing initialization with a [KType] instead of a [TypeToken].
-     *
-     * Prefer the primary constructor which accepts a [TypeToken] for enhanced type handling and
-     * consistency within the framework. The provided [type] is internally wrapped into a [KotlinTypeToken].
-     *
-     * @param subgraphName Optional name of the corresponding subgraph associated with this [FinishNode].
-     * If provided, it contributes to forming a unique identifier for the node.
-     * @param type The [KType] used as an alternative representation of the output type [TOutput].
-     */
-    @Deprecated("Use Kotlin TypeToken instead of KType for type representation")
-    public constructor(
-        subgraphName: String? = null,
-        type: KType,
-    ) : this(subgraphName, KotlinTypeToken(type))
 }

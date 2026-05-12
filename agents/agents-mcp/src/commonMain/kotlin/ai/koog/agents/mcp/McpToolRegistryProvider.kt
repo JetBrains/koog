@@ -139,23 +139,6 @@ public object McpToolRegistryProvider {
      * transforms them into the agent framework's Tool interface, and registers them in a ToolRegistry.
      *
      * @param mcpClient The MCP client connected to an MCP server.
-     * @return A ToolRegistry containing all tools from the MCP server.
-     */
-    @Deprecated("Use fromClient with serverInfo param")
-    public suspend fun fromClient(
-        mcpClient: Client,
-        mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
-    ): ToolRegistry {
-        return fromClient(mcpClient, McpServerInfo(url = null, command = null), mcpToolParser)
-    }
-
-    /**
-     * Creates a ToolRegistry with tools from an existing MCP client.
-     *
-     * This method retrieves all available tools from the MCP server using the provided client,
-     * transforms them into the agent framework's Tool interface, and registers them in a ToolRegistry.
-     *
-     * @param mcpClient The MCP client connected to an MCP server.
      * @param serverInfo Information about the MCP server.
      * @return A ToolRegistry containing all tools from the MCP server.
      */
@@ -199,34 +182,6 @@ public object McpToolRegistryProvider {
                 logger.error(e) { "Failed to parse descriptor parameters for tool: ${sdkTool.name}" }
             }
         }
-    }
-
-    /**
-     * Creates a ToolRegistry with tools from an MCP server using provided transport for communication.
-     *
-     * This method establishes a connection to an MCP server through provided transport.
-     * It's typically used when the MCP server is running as a separate process (e.g., a Docker container or a CLI tool).
-     *
-     * @param transport The transport to use.
-     * @param name The name of the MCP client.
-     * @param version The version of the MCP client.
-     * @return A ToolRegistry containing all tools from the MCP server.
-     */
-    @Deprecated("Use from fromTransport with `serverInfo`")
-    public suspend fun fromTransport(
-        transport: Transport,
-        mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
-        name: String = DEFAULT_MCP_CLIENT_NAME,
-        version: String = DEFAULT_MCP_CLIENT_VERSION,
-    ): ToolRegistry {
-        // Create the MCP client
-        val mcpClient = Client(clientInfo = Implementation(name = name, version = version))
-
-        // Connect to the MCP server
-        mcpClient.connect(transport)
-
-        @Suppress("DEPRECATION")
-        return fromClient(mcpClient, mcpToolParser)
     }
 
     /**

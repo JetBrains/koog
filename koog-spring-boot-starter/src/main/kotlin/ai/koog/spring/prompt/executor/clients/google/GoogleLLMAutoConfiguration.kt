@@ -2,7 +2,8 @@ package ai.koog.spring.prompt.executor.clients.google
 
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.ollama.OllamaKoogProperties
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
@@ -81,8 +82,8 @@ public class GoogleLLMAutoConfiguration(
      */
     @Bean
     @ConditionalOnBean(GoogleLLMClient::class)
-    public fun googleExecutor(client: GoogleLLMClient): SingleLLMPromptExecutor {
-        logger.info("Creating SingleLLMPromptExecutor (googleExecutor) for GoogleLLMClient")
-        return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
+    public fun googleExecutor(client: GoogleLLMClient): MultiLLMPromptExecutor {
+        logger.info("Creating MultiLLMPromptExecutor (googleExecutor) for GoogleLLMClient")
+        return MultiLLMPromptExecutor(LLMProvider.Google to client.toRetryingClient(properties.retry))
     }
 }

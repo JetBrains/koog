@@ -117,8 +117,6 @@ class AIAgentServiceTest {
             strategy = strat,
             promptExecutor = executor,
             agentConfig = cfg,
-            inputType = typeToken<String>(),
-            outputType = typeToken<String>()
         )
 
         val serviceFromGraph = AIAgentService.fromAgent<String, String>(graphAgent)

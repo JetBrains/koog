@@ -8,11 +8,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 import kotlin.io.path.pathString
+import ai.koog.serialization.typeToken
 
 object ProjectGeneratorTools {
     class CreateFileTool(val rootProjectPath: Path) : Tool<CreateFileTool.Args, CreateFileTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = "create_file",
         description = "Creates a file under the provided relative path, with the specified content"
     ) {
@@ -44,8 +45,8 @@ object ProjectGeneratorTools {
     }
 
     class ReadFileTool(val rootProjectPath: Path) : Tool<ReadFileTool.Args, ReadFileTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = "read_file",
         description = "Reads a file under the provided RELATIVE path, with the specified content"
     ) {
@@ -92,8 +93,8 @@ object ProjectGeneratorTools {
     }
 
     class LSDirectoriesTool(val rootProjectPath: Path) : Tool<LSDirectoriesTool.Args, LSDirectoriesTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = "ls_directory",
         description = "Lists all the files and directories under the provided RELATIVE path"
     ) {
@@ -141,8 +142,8 @@ object ProjectGeneratorTools {
 
     class CreateDirectoryTool(val rootProjectPath: Path) :
         Tool<CreateDirectoryTool.Args, CreateDirectoryTool.Result>(
-            argsSerializer = Args.serializer(),
-            resultSerializer = Result.serializer(),
+            argsType = typeToken<Args>(),
+            resultType = typeToken<Result>(),
             name = "create_directory",
             description = "Creates a directory under the provided relative path"
         ) {
@@ -171,8 +172,8 @@ object ProjectGeneratorTools {
 
     class DeleteDirectoryTool(val rootProjectPath: Path) :
         Tool<DeleteDirectoryTool.Args, DeleteDirectoryTool.Result>(
-            argsSerializer = Args.serializer(),
-            resultSerializer = Result.serializer(),
+            argsType = typeToken<Args>(),
+            resultType = typeToken<Result>(),
             name = "delete_directory",
             description = "Removes a directory under the provided relative path"
         ) {
@@ -206,8 +207,8 @@ object ProjectGeneratorTools {
     }
 
     class DeleteFileTool(val rootProjectPath: Path) : Tool<DeleteFileTool.Args, DeleteFileTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = "delete_file",
         description = "Deletes a file under the provided relative path"
     ) {
@@ -239,8 +240,8 @@ object ProjectGeneratorTools {
     }
 
     class RunCommand(val rootProjectPath: Path) : Tool<RunCommand.Args, RunCommand.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = "run_bash_command",
         description = "Runs the provided bash command in the project root directory"
     ) {

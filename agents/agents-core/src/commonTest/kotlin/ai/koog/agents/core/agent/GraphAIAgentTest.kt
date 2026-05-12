@@ -8,7 +8,6 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertFalse
@@ -34,8 +33,6 @@ class GraphAIAgentTest {
 
         val agent = GraphAIAgent(
             id = "test-agent",
-            inputType = typeToken<String>(),
-            outputType = typeToken<String>(),
             promptExecutor = getMockExecutor(serializer) { },
             agentConfig = agentConfig,
             strategy = strategy,

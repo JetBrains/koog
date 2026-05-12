@@ -32,17 +32,10 @@ public class GraphAgentContextData(
     override val storage: JSONObject,
     override val agentIterations: Int,
     internal val nodePath: String,
-    @Deprecated("Use lastOutput instead, lastOutput will be removed in future versions")
-    internal val lastInput: JSONElement = JSONNull,
     internal val lastOutput: JSONElement = JSONNull,
     override val rollbackStrategy: RollbackStrategy,
     override val additionalRollbackActions: suspend (AIAgentContext) -> Unit = {}
-) : AgentContextData() {
-    init {
-        require(lastInput == JSONNull || lastOutput == JSONNull) { "`lastInput` and `lastOutput` cannot be both set" }
-        require(lastInput == JSONNull || lastOutput == JSONNull) { "`lastInput` (until 0.6.0) or `lastOutput` (since 0.6.1) must be set" }
-    }
-}
+) : AgentContextData()
 
 @InternalAgentsApi
 public class PlannerAgentContextData(

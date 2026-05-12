@@ -12,14 +12,11 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.serialization.KSerializerTypeToken
 import ai.koog.serialization.TypeToken
-import ai.koog.serialization.annotations.InternalKoogSerializationApi
 import ai.koog.serialization.typeToken
 import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.KSerializer
 import kotlin.jvm.JvmStatic
 import kotlin.jvm.JvmSynthetic
 
@@ -292,9 +289,6 @@ public constructor(
     override val toolRegistry: ToolRegistry,
     public val installFeatures: FeatureContext.() -> Unit
 ) : AIAgentServiceBase<Input, Output, GraphAIAgent<Input, Output>>() {
-    private val inputType = strategy.inputType
-    private val outputType = strategy.outputType
-
     @InternalAgentsApi
     override fun createManagedAgent(
         id: String?,
@@ -302,8 +296,6 @@ public constructor(
         agentConfig: AIAgentConfig,
         clock: KoogClock,
     ): GraphAIAgent<Input, Output> = GraphAIAgent(
-        inputType = inputType,
-        outputType = outputType,
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry + additionalToolRegistry,
@@ -391,39 +383,4 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     inputType = inputType,
     outputType = outputType,
     parentAgentId = parentAgentId
-)
-
-/**
- * Creates an [AIAgent] and converts it to a [Tool] that can be used by other AI Agents.
- *
- * @param agentName Agent name that would be a tool name for this agent tool.
- * @param agentDescription Agent description that would be a tool description for this agent tool.
- * @param inputDescription An optional description of the agent's input. Required for primitive types only!
- *  * If not specified for a primitive input type (ex: String, Int, ...), an empty input description will be sent to LLM.
- *  * Does not have any effect for non-primitive [Input] type with @LLMDescription annotations.
- * @param inputSerializer Serializer to deserialize tool arguments to agent input.
- * @param outputSerializer Serializer to serialize agent output to a tool result.
- * @return A special tool that wraps the agent functionality.
- * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
- * @param clock The clock instance used to manage time-related operations. Defaults to `KoogClock.System`.
- * @return A tool instance configured with the provided parameters, representing the AI agent.
- */
-@Deprecated("Use createAgentTool with TypeToken instead of KSerializer")
-@OptIn(InternalAgentToolsApi::class, InternalKoogSerializationApi::class)
-public inline fun <reified Input, reified Output> AIAgentService<Input, Output, *>.createAgentTool(
-    agentName: String,
-    agentDescription: String,
-    inputDescription: String? = null,
-    inputSerializer: KSerializer<Input>,
-    outputSerializer: KSerializer<Output>,
-    parentAgentId: String? = null,
-    clock: KoogClock = KoogClock.System
-): Tool<AgentToolInput<Input>, AgentToolResult<Output>> = createAgentTool(
-    agentName = agentName,
-    agentDescription = agentDescription,
-    inputDescription = inputDescription,
-    inputType = KSerializerTypeToken(inputSerializer),
-    outputType = KSerializerTypeToken(outputSerializer),
-    parentAgentId = parentAgentId,
-    clock = clock
 )

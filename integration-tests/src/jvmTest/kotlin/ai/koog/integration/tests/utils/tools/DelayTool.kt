@@ -2,6 +2,7 @@ package ai.koog.integration.tests.utils.tools
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 
@@ -14,7 +15,7 @@ data class DelayArgs(
 )
 
 object DelayTool : SimpleTool<DelayArgs>(
-    argsSerializer = DelayArgs.serializer(),
+    argsType = typeToken<DelayArgs>(),
     name = "delay",
     description = "A tool that introduces a delay to simulate a time-consuming operation."
 ) {

@@ -6,13 +6,14 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
 object Tools {
     object PlusTool : Tool<PlusTool.Args, PlusTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         name = "plus",
         description = "Adds a and b"
     ) {
@@ -34,8 +35,8 @@ object Tools {
     }
 
     object StringTool : Tool<StringTool.Args, StringTool.Result>(
-        argsSerializer = Args.serializer(),
-        resultSerializer = Result.serializer(),
+        argsType = typeToken<Args>(),
+        resultType = typeToken<Result>(),
         descriptor = ToolDescriptor(
             name = "string_tool",
             description = "A tool that takes string parameters",

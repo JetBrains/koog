@@ -19,6 +19,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -271,7 +272,7 @@ class FunctionalAIAgentTest {
 
     object QATools {
         object TestEngine : SimpleTool<Spacecraft>(
-            argsSerializer = Spacecraft.serializer(),
+            argsType = typeToken<Spacecraft>(),
             name = "test_engine",
             description = "Performs testing of the spacecraft engine."
         ) {
@@ -279,7 +280,7 @@ class FunctionalAIAgentTest {
         }
 
         object TestBody : SimpleTool<Spacecraft>(
-            argsSerializer = Spacecraft.serializer(),
+            argsType = typeToken<Spacecraft>(),
             name = "test_body",
             description = "Performs testing of the spacecraft bofy."
         ) {
@@ -287,7 +288,7 @@ class FunctionalAIAgentTest {
         }
 
         object TestBuild : SimpleTool<Spacecraft>(
-            argsSerializer = Spacecraft.serializer(),
+            argsType = typeToken<Spacecraft>(),
             name = "test_build",
             description = "Tests how spacecraft is built."
         ) {
@@ -301,7 +302,7 @@ class FunctionalAIAgentTest {
     // Define sample tools for subtasks, similar in spirit to QATools so tool lists are not empty
     object ArchitectureTools {
         object AnalyzeRequirements : SimpleTool<AnalyzeRequirements.Requirements>(
-            argsSerializer = Requirements.serializer(),
+            argsType = typeToken<Requirements>(),
             name = "analyze_requirements",
             description = "Analyzes high-level mission requirements."
         ) {
@@ -314,7 +315,7 @@ class FunctionalAIAgentTest {
         }
 
         object DraftArchitecture : SimpleTool<Architecture>(
-            argsSerializer = Architecture.serializer(),
+            argsType = typeToken<Architecture>(),
             name = "draft_architecture",
             description = "Drafts an initial spacecraft architecture proposal."
         ) {
@@ -326,7 +327,7 @@ class FunctionalAIAgentTest {
 
     object BuildEngineTools {
         object EstimateThrust : SimpleTool<Architecture>(
-            argsSerializer = Architecture.serializer(),
+            argsType = typeToken<Architecture>(),
             name = "estimate_thrust",
             description = "Estimates required thrust for the given architecture."
         ) {
@@ -334,7 +335,7 @@ class FunctionalAIAgentTest {
         }
 
         object SelectFuelType : SimpleTool<Architecture>(
-            argsSerializer = Architecture.serializer(),
+            argsType = typeToken<Architecture>(),
             name = "select_fuel_type",
             description = "Selects suitable fuel type based on mission profile and constraints."
         ) {
@@ -346,7 +347,7 @@ class FunctionalAIAgentTest {
 
     object BuildBodyTools {
         object ComputeMassBudget : SimpleTool<Architecture>(
-            argsSerializer = Architecture.serializer(),
+            argsType = typeToken<Architecture>(),
             name = "compute_mass_budget",
             description = "Computes mass budget for the spacecraft body."
         ) {
@@ -354,7 +355,7 @@ class FunctionalAIAgentTest {
         }
 
         object ChooseMaterial : SimpleTool<Architecture>(
-            argsSerializer = Architecture.serializer(),
+            argsType = typeToken<Architecture>(),
             name = "choose_material",
             description = "Chooses hull material given constraints."
         ) {
@@ -366,7 +367,7 @@ class FunctionalAIAgentTest {
 
     object AssemblyTools {
         object CheckInterfaces : SimpleTool<Assembly>(
-            argsSerializer = Assembly.serializer(),
+            argsType = typeToken<Assembly>(),
             name = "check_interfaces",
             description = "Checks mechanical, power, and data interfaces between components."
         ) {
@@ -375,7 +376,7 @@ class FunctionalAIAgentTest {
         }
 
         object ComputeDryMass : SimpleTool<Assembly>(
-            argsSerializer = Assembly.serializer(),
+            argsType = typeToken<Assembly>(),
             name = "compute_dry_mass",
             description = "Computes total dry mass of the assembly."
         ) {
@@ -544,7 +545,7 @@ class FunctionalAIAgentTest {
         taskDescription = "Create the body for the given architecture: $architecture" +
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
         tools = BuildBodyTools.tools,
-        llmModel = GoogleModels.Gemini2_0Flash,
+        llmModel = GoogleModels.Gemini2_5Flash,
         parallelTools = false
     )
 

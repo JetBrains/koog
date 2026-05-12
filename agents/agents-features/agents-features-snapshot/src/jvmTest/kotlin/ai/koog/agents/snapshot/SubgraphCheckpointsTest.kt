@@ -189,7 +189,7 @@ class SubgraphCheckpointsTest {
             version = 1L,
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(agentId, "repeated-subgraphs-test", "sg1", "sgNode1"),
-                lastInput = JSONPrimitive("Input at checkpoint")
+                lastOutput = JSONPrimitive("Input at checkpoint")
             ),
             plannerProperties = null,
             properties = null,

@@ -1,7 +1,6 @@
 package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
@@ -15,7 +14,6 @@ import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
-import kotlin.jvm.JvmName
 
 /**
  * Represents a condition for a tool call and its corresponding result.
@@ -826,31 +824,6 @@ public class MockExecutorDSLBuilder(
         action: suspend () -> String
     ): Unit =
         alwaysDoes { action() }
-
-    /**
-     * Convenience extension function for configuring a text tool to always execute the specified action
-     * and return its string result.
-     *
-     * @param action A function that produces the string result
-     * @return The result of the alwaysDoes call
-     */
-    @JvmName("alwaysTellsText")
-    public infix fun <Args> MockToolReceiver<Args, ToolResult.Text>.alwaysTells(
-        action: suspend () -> String
-    ): Unit =
-        alwaysDoes { ToolResult.Text(action()) }
-
-    /**
-     * Convenience extension function for configuring a text tool to execute the specified action
-     * and return its string result when it receives matching arguments.
-     *
-     * @param action A function that produces the string result
-     * @return The result of the does call
-     */
-    public infix fun <Args> MockToolReceiver<Args, ToolResult.Text>.doesStr(
-        action: suspend () -> String
-    ): MockToolReceiver.MockToolResponseBuilder<Args, ToolResult.Text> =
-        does { ToolResult.Text(action()) }
 
     /**
      * Builds and returns a PromptExecutor configured with the mock responses and tool actions.

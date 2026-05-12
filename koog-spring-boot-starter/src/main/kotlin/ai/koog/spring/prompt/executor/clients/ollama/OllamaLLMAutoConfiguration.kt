@@ -1,7 +1,8 @@
 package ai.koog.spring.prompt.executor.clients.ollama
 
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfiguration
@@ -70,8 +71,8 @@ public class OllamaLLMAutoConfiguration(
      */
     @Bean
     @ConditionalOnBean(OllamaClient::class)
-    public fun ollamaExecutor(client: OllamaClient): SingleLLMPromptExecutor {
-        logger.info("Creating SingleLLMPromptExecutor (ollamaExecutor) for OllamaClient")
-        return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
+    public fun ollamaExecutor(client: OllamaClient): MultiLLMPromptExecutor {
+        logger.info("Creating MultiLLMPromptExecutor (ollamaExecutor) for OllamaClient")
+        return MultiLLMPromptExecutor(LLMProvider.Ollama to client.toRetryingClient(properties.retry))
     }
 }

@@ -1,17 +1,6 @@
-@file:Suppress("MissingKDocForPublicAPI")
-
 package ai.koog.agents.snapshot.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-
-@Deprecated(
-    "`PersistencyStorageProvider` has been renamed to `PersistenceStorageProvider`",
-    replaceWith = ReplaceWith(
-        expression = "PersistenceStorageProvider",
-        "ai.koog.agents.snapshot.feature.PersistenceStorageProvider"
-    )
-)
-public typealias PersistencyStorageProvider<Filter> = PersistenceStorageProvider<Filter>
 
 /**
  * Storage provider (ex: database, S3, file) to be used in [ai.koog.agents.snapshot.feature.Persistence] feature.

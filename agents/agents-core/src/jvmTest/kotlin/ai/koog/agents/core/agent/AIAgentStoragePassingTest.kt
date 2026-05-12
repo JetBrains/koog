@@ -60,26 +60,6 @@ class AIAgentStoragePassingTest {
         edge(readNode forwardTo nodeFinish)
     }
 
-    @Suppress("DEPRECATION")
-    private fun legacyStoreApiStrategy() = strategy("legacy-store-api") {
-        val writeNode by node<String, String>("writeLegacyStorage") {
-            store(greetingKey, "legacy-value")
-            val stored = storage.get(greetingKey)
-            "greeting=$stored"
-        }
-
-        val removeNode by node<String, String>("removeLegacyStorage") {
-            val beforeRemove = get<String>(greetingKey)
-            val removed = remove(greetingKey)
-            val afterRemove = storage.get(greetingKey)
-            "before=$beforeRemove, removed=$removed, after=$afterRemove"
-        }
-
-        edge(nodeStart forwardTo writeNode)
-        edge(writeNode forwardTo removeNode)
-        edge(removeNode forwardTo nodeFinish)
-    }
-
     private fun storageAddNewKeyStrategy() = strategy("storage-add-new-key") {
         val addNode by node<String, String>("addNewKey") {
             storage.set(counterKey, 99)
@@ -337,20 +317,5 @@ class AIAgentStoragePassingTest {
         assertEquals(1, capturedContexts.size)
         assertEquals("hello", capturedContexts.single().storage.get(greetingKey))
         assertNotSame(capturedContexts.single().storage, externalStorage)
-    }
-
-    @Test
-    fun testLegacyStoreApiRemainsIndependentFromConcurrentStorageApi() = runTest {
-        val agent = AIAgent(
-            promptExecutor = getMockExecutor(serializer) { },
-            strategy = legacyStoreApiStrategy(),
-            agentConfig = agentConfig,
-            toolRegistry = ToolRegistry.EMPTY,
-        )
-
-        val session = agent.createSession("test-session")
-        val output = session.run(input = "ignored")
-
-        assertEquals("before=legacy-value, removed=true, after=null", output)
     }
 }

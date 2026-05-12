@@ -34,7 +34,7 @@ class SubgraphSetExecutionPointTest {
     fun test_singleSubgraph_teleportForward() = runTest {
         val agent = AIAgent(
             promptExecutor = getMockExecutor(serializer) { },
-            strategy = createSimpleTeleportSubgraphStrategy(path = path("teleport-test", "Node2")),
+            strategy = createSimpleTeleportSubgraphStrategy(path = path("teleport-test", "sg1")),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -73,7 +73,6 @@ class SubgraphSetExecutionPointTest {
                 "Node 1 output\n" +
                 "sg1 node output\n" +
                 "Teleported\n" +
-                "Node 1 output\n" +
                 "sg1 node output\n" +
                 "Already teleported, passing by\n" +
                 "sg2 node output\n" +
@@ -86,7 +85,7 @@ class SubgraphSetExecutionPointTest {
     fun test_singleSubgraph_teleportInsideSubgraph_teleportForward() = runTest {
         val agent = AIAgent(
             promptExecutor = getMockExecutor(serializer) { },
-            strategy = createSimpleTeleportSubgraphStrategy("sgNode2"),
+            strategy = createSimpleTeleportSubgraphStrategy("teleport"),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -126,7 +125,6 @@ class SubgraphSetExecutionPointTest {
                 "Node 1 output\n" +
                 "sg1 node output\n" +
                 "Teleported\n" +
-                "sg1 node output\n" +
                 "Already teleported, passing by\n" +
                 "sg2 node output\n" +
                 "Node 2 output",
@@ -155,7 +153,6 @@ class SubgraphSetExecutionPointTest {
                 "sg2Node1 node output\n" +
                 "sg2Node2 node output\n" +
                 "Teleported\n" +
-                "sgNode2 node output\n" +
                 "Node 2 output",
             output
         )
@@ -182,7 +179,6 @@ class SubgraphSetExecutionPointTest {
                 "sg2Node1 node output\n" +
                 "sg2Node2 node output\n" +
                 "Teleported\n" +
-                "sgNode1 node output\n" +
                 "sg2Node1 node output\n" +
                 "sg2Node2 node output\n" +
                 "Already teleported, passing by\n" +

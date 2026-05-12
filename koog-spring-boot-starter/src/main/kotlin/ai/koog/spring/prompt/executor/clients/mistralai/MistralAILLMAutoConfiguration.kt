@@ -2,7 +2,8 @@ package ai.koog.spring.prompt.executor.clients.mistralai
 
 import ai.koog.prompt.executor.clients.mistralai.MistralAIClientSettings
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.slf4j.LoggerFactory
@@ -79,8 +80,8 @@ public class MistralAILLMAutoConfiguration(
      */
     @Bean
     @ConditionalOnBean(MistralAILLMClient::class)
-    public fun mistralAIExecutor(client: MistralAILLMClient): SingleLLMPromptExecutor {
-        logger.info("Creating SingleLLMPromptExecutor (MistralAIExecutor) for MistralAILLMClient")
-        return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
+    public fun mistralAIExecutor(client: MistralAILLMClient): MultiLLMPromptExecutor {
+        logger.info("Creating MultiLLMPromptExecutor (MistralAIExecutor) for MistralAILLMClient")
+        return MultiLLMPromptExecutor(LLMProvider.MistralAI to client.toRetryingClient(properties.retry))
     }
 }
