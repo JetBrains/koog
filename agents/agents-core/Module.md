@@ -83,50 +83,9 @@ val result = agent.execute("Calculate the square root of 16")
 ### Passing metadata to tool calls
 
 Caller code and installed features can thread per-call metadata (for example a trace span id) into
-`Tool.execute` through the environment, without modifying the tool's argument schema.
-
-Callers can pass metadata directly:
-
-```kotlin
-val safeTool = context.findTool(MyTool)
-safeTool.execute(args, serializer, ToolCallMetadata.of("trace.span.id" to currentSpan().id))
-```
-
-Or via the environment:
-
-```kotlin
-environment.executeTool(toolCall, ToolCallMetadata.of("trace.span.id" to currentSpan().id))
-```
-
-Features can contribute metadata for every tool call in an agent run by registering a handler
-during installation:
-
-```kotlin
-override fun install(config: MyConfig, pipeline: AIAgentGraphPipeline) {
-    pipeline.provideToolCallMetadata(this) { eventContext ->
-        mapOf("trace.span.id" to currentSpan()?.id)
-    }
-}
-```
-
-Contributions from multiple features are merged in installation order; later features overwrite
-earlier ones on key collision. Caller-supplied metadata then takes precedence over every feature
-contribution, so an explicit call-site override is never silently replaced.
-
-After the merge, the framework injects the live `AIAgentContext` under a reserved key. Tools that
-need access to the agent's full state (LLM context, run id, configuration, storage, ...) read it
-through the typed `agentContext` extension on `ToolCallMetadata`:
-
-```kotlin
-override suspend fun execute(args: Args, metadata: ToolCallMetadata): Result {
-    val runId = metadata.agentContext?.runId
-    // ...
-}
-```
-
-The framework's value always wins over caller and feature entries, so the property reflects the
-real context driving the current call. When `Tool.execute(args, metadata)` is invoked outside an
-agent run (for example from a unit test), `metadata.agentContext` returns `null`.
+`Tool.execute` through the environment, without modifying the tool's argument schema. See
+[Class-based tools](https://docs.koog.ai/class-based-tools/) on the documentation site for usage
+and code samples, including the typed `agentContext` accessor and caller/feature precedence rules.
 
 ### Standard Feature Events
 

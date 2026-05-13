@@ -16,25 +16,10 @@ Tools are designed to be executed within an environment context, ensuring proper
 
 ### Passing metadata to a tool
 
-Tools can receive caller- and feature-contributed per-call metadata (e.g. a trace span id, a
-correlation id) alongside their typed arguments. Metadata is a side channel: it is not part of the
-tool's argument schema and is not serialized to the LLM.
-
-Override the metadata-aware `execute` overload when the tool needs the context. The single-argument
-`execute(args)` overload is provided by the base class and routes through the metadata-aware overload
-with `ToolCallMetadata.EMPTY`, so a tool that only cares about metadata does not need to override it:
-
-```kotlin
-class TracingTool : Tool<MyArgs, String>(...) {
-    override suspend fun execute(args: MyArgs, metadata: ToolCallMetadata): String {
-        val spanId = metadata["trace.span.id"] as? String
-        // ... use spanId
-    }
-}
-```
-
-Existing tools that only override `execute(args)` continue to work: the default implementation of
-`execute(args, metadata)` delegates to that overload, dropping metadata.
+Tools can receive caller- and feature-contributed per-call metadata alongside their typed arguments,
+through a side channel that is not part of the tool's argument schema and is not serialized to the
+LLM. See [Class-based tools](https://docs.koog.ai/class-based-tools/) on the documentation site for
+usage and code samples.
 
 ### Using in your project
 
