@@ -5,7 +5,7 @@ import ai.koog.agents.core.agent.context.AIAgentPlannerContext;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.core.tools.ToolRegistryBuilder;
 import ai.koog.agents.core.planner.AIAgentPlannerStrategy;
-import ai.koog.agents.planner.JavaAIAgentPlanner;
+import ai.koog.agents.core.planner.JavaAIAgentPlanner;
 import ai.koog.agents.planner.Planners;
 import ai.koog.agents.planner.goap.GoapAgentState;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
