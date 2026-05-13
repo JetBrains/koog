@@ -14,8 +14,30 @@ class ToolCallMetadataTest {
     fun testEmptyIsEmpty() {
         assertTrue(ToolCallMetadata.EMPTY.isEmpty())
         assertFalse(ToolCallMetadata.EMPTY.isNotEmpty())
-        assertTrue(ToolCallMetadata.EMPTY.asMap().isEmpty())
         assertTrue(ToolCallMetadata.EMPTY.keys.isEmpty())
+        assertEquals(0, ToolCallMetadata.EMPTY.size)
+    }
+
+    @Test
+    fun testImplementsMapByDelegation() {
+        val metadata = ToolCallMetadata.of("a" to 1, "b" to "two")
+        val asMap: Map<String, Any?> = metadata
+
+        assertEquals(2, asMap.size)
+        assertEquals(1, asMap["a"])
+        assertEquals("two", asMap["b"])
+        assertTrue(asMap.containsKey("a"))
+        assertEquals(setOf("a", "b"), asMap.keys)
+    }
+
+    @Test
+    fun testEqualsAndHashCodeHonorMapContract() {
+        val metadata = ToolCallMetadata.of("k" to 1)
+        val plain: Map<String, Any?> = mapOf("k" to 1)
+
+        assertEquals(plain, metadata)
+        assertEquals(metadata, plain)
+        assertEquals(plain.hashCode(), metadata.hashCode())
     }
 
     @Test

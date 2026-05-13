@@ -8,46 +8,16 @@ package ai.koog.agents.core.tools
  * cases are cross-cutting concerns such as a distributed-tracing span identifier, a run-scoped correlation
  * id, or a per-call feature flag contributed by an installed feature.
  *
- * Instances can be constructed from a `Map`, built via [of], or combined with [plus]. The [EMPTY] singleton
- * represents the absence of metadata and is the default passed through the framework.
+ * The class implements [Map] over [String] keys to [Any]`?` values by delegating to the underlying
+ * map, so all standard read-only map operations ([get], [containsKey], [isEmpty], [keys], the `in`
+ * operator, and so on) are available directly on the instance without bespoke wrappers.
  *
- * @property values The underlying key-value map. Null values are permitted and retained as-is.
+ * Instances can be constructed from a [Map], built via [of], or combined with [plus]. The [EMPTY]
+ * singleton represents the absence of metadata and is the default passed through the framework.
  */
 public class ToolCallMetadata(
-    private val values: Map<String, Any?>,
-) {
-    /**
-     * Returns the value associated with [key], or `null` if no entry exists for that key.
-     *
-     * Note: a `null` return is ambiguous. The key may be absent, or the stored value may be `null`.
-     * Use [contains] to disambiguate.
-     */
-    public operator fun get(key: String): Any? = values[key]
-
-    /**
-     * Returns `true` if this metadata contains an entry for [key], even if its value is `null`.
-     */
-    public operator fun contains(key: String): Boolean = key in values
-
-    /**
-     * Returns `true` when this metadata carries no entries.
-     */
-    public fun isEmpty(): Boolean = values.isEmpty()
-
-    /**
-     * Returns `true` when this metadata carries at least one entry.
-     */
-    public fun isNotEmpty(): Boolean = values.isNotEmpty()
-
-    /**
-     * Returns the set of keys present in this metadata.
-     */
-    public val keys: Set<String> get() = values.keys
-
-    /**
-     * Returns a read-only view of the underlying map.
-     */
-    public fun asMap(): Map<String, Any?> = values
+    private val content: Map<String, Any?>,
+) : Map<String, Any?> by content {
 
     /**
      * Returns a new [ToolCallMetadata] containing entries from this instance plus [other]. Entries in
@@ -56,7 +26,7 @@ public class ToolCallMetadata(
     public operator fun plus(other: ToolCallMetadata): ToolCallMetadata {
         if (other.isEmpty()) return this
         if (this.isEmpty()) return other
-        return ToolCallMetadata(values + other.values)
+        return ToolCallMetadata(content + other.content)
     }
 
     /**
@@ -65,18 +35,14 @@ public class ToolCallMetadata(
      */
     public operator fun plus(other: Map<String, Any?>): ToolCallMetadata {
         if (other.isEmpty()) return this
-        return ToolCallMetadata(values + other)
+        return ToolCallMetadata(content + other)
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is ToolCallMetadata) return false
-        return values == other.values
-    }
+    override fun equals(other: Any?): Boolean = content == other
 
-    override fun hashCode(): Int = values.hashCode()
+    override fun hashCode(): Int = content.hashCode()
 
-    override fun toString(): String = "ToolCallMetadata($values)"
+    override fun toString(): String = "ToolCallMetadata($content)"
 
     public companion object {
         /**
