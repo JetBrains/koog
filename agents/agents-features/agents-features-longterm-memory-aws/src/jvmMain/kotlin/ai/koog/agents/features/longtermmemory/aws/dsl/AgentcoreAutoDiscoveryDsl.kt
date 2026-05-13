@@ -121,7 +121,7 @@ public data class AgentcoreStrategyOverride(
  *
  * @param client Bedrock AgentCore (runtime) client used for retrieval.
  * @param memoryId AgentCore memory store identifier.
- * @param discovered list of strategies returned by [ai.koog.agents.features.longtermmemory.aws.discovery.AgentcoreStrategyDiscovery.discover].
+ * @param discoveredStrategies list of strategies returned by [ai.koog.agents.features.longtermmemory.aws.discovery.AgentcoreStrategyDiscovery.discover].
  * @param actorId actor (end-user) id used to resolve namespaces; must not be blank.
  * @param sessionId session id used to resolve namespaces for session-scoped strategies
  *   (SUMMARY, EPISODIC). Required when at least one such strategy survives filtering.
@@ -131,14 +131,14 @@ public data class AgentcoreStrategyOverride(
 public fun LongTermMemory.RetrievalSettingsBuilder.agentcoreDiscovered(
     client: BedrockAgentCoreClient,
     memoryId: String,
-    discovered: List<AgentcoreDiscoveredStrategy>,
+    discoveredStrategies: List<AgentcoreDiscoveredStrategy>,
     actorId: String,
     sessionId: String? = null,
     block: AgentcoreAutoDiscoveryBuilder.() -> Unit = {},
 ) {
     require(memoryId.isNotBlank()) { "memoryId must not be blank" }
     require(actorId.isNotBlank()) { "actorId must not be blank" }
-    check(discovered.isNotEmpty()) {
+    check(discoveredStrategies.isNotEmpty()) {
         "No supported AgentCore memory strategies found for memory '$memoryId'. " +
             "Run AgentcoreStrategyDiscovery(controlClient).discover('$memoryId') and check that the memory " +
             "has at least one SEMANTIC, USER_PREFERENCE, SUMMARIZATION or EPISODIC strategy configured."
@@ -148,7 +148,7 @@ public fun LongTermMemory.RetrievalSettingsBuilder.agentcoreDiscovered(
 
     // Warn on configure(...) / exclude(...) calls that don't match any discovered strategyId.
     // This is a typo trap rather than a correctness bug, so we log a warning instead of failing.
-    val discoveredIds = discovered.mapTo(mutableSetOf()) { it.strategyId }
+    val discoveredIds = discoveredStrategies.mapTo(mutableSetOf()) { it.strategyId }
     val unknownExclusions = builder.excludedIds() - discoveredIds
     if (unknownExclusions.isNotEmpty()) {
         logger.warn(
@@ -170,9 +170,9 @@ public fun LongTermMemory.RetrievalSettingsBuilder.agentcoreDiscovered(
         )
     }
 
-    val activeStrategies = discovered.filterNot { builder.isExcluded(it.strategyId) }
+    val activeStrategies = discoveredStrategies.filterNot { builder.isExcluded(it.strategyId) }
     check(activeStrategies.isNotEmpty()) {
-        "All ${discovered.size} discovered AgentCore strategies for memory '$memoryId' were excluded; " +
+        "All ${discoveredStrategies.size} discovered AgentCore strategies for memory '$memoryId' were excluded; " +
             "remove some exclude(...) calls or drop the agentcoreDiscovered(...) block entirely."
     }
 

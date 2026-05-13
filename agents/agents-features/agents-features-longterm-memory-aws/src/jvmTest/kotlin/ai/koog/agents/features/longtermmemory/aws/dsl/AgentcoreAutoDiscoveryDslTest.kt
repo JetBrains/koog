@@ -45,7 +45,7 @@ class AgentcoreAutoDiscoveryDslTest {
         settings.agentcoreDiscovered(
             client = client,
             memoryId = memoryId,
-            discovered = discovered,
+            discoveredStrategies = discovered,
             actorId = actorId,
             sessionId = sessionId,
             block = block,
@@ -321,7 +321,7 @@ class AgentcoreAutoDiscoveryDslTest {
             settings.agentcoreDiscovered(
                 client = client,
                 memoryId = "  ",
-                discovered = listOf(semantic("sem-1")),
+                discoveredStrategies = listOf(semantic("sem-1")),
                 actorId = actorId,
                 sessionId = null,
             )

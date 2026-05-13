@@ -6,7 +6,9 @@ import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.chathistory.aws.AgentcoreChatHistoryProvider
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceResolver
+import ai.koog.agents.features.longtermmemory.aws.discovery.AgentcoreStrategyDiscovery
 import ai.koog.agents.features.longtermmemory.aws.dsl.agentcore
+import ai.koog.agents.features.longtermmemory.aws.dsl.agentcoreDiscovered
 import ai.koog.agents.longtermmemory.feature.LongTermMemory
 import ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter
 import ai.koog.integration.tests.utils.TestCredentials.readAwsAccessKeyIdFromEnv
@@ -299,6 +301,80 @@ class AgentCoreLTMIntegrationTest {
         } catch (e: org.awaitility.core.ConditionTimeoutException) {
             throw AssertionError(
                 "Agent should eventually answer 'Paris' from EPISODIC LTM. " +
+                    "Last answer after ${attempt.get()} attempts: ${lastAnswer.get()}"
+            )
+        }
+    }
+
+    /**
+     * Demonstrates the [agentcoreDiscovered] DSL: instead of registering each strategy
+     * manually (`semantic(...) / userPreferences(...) / summary(...)`), discover all
+     * supported strategies on the memory at runtime via [AgentcoreStrategyDiscovery] —
+     * which takes the [BedrockAgentCoreControlClient] created in [setup] — and let the
+     * DSL emit one composite retrieval that fans out across every discovered strategy.
+     *
+     * Uses the SEMANTIC scenario for seeding/asserting because it's the fastest to
+     * extract; the DSL itself transparently issues subrequests for every discovered
+     * strategy on the memory.
+     */
+    @Test
+    fun `agent answers from LTM via agentcoreDiscovered DSL`(): Unit = runBlocking {
+        val actorId = "ltm-actor-discovered-${UUID.randomUUID()}"
+        val sessionId = "ltm-session-discovered-${UUID.randomUUID()}"
+        val conversationId = "$actorId:$sessionId"
+        val scenario = scenarioFor(StrategyKind.SEMANTIC)
+
+        println("[discovered] seeding actor=$actorId session=$sessionId")
+        seedViaChatMemory(sessionId, conversationId, scenario.seedTurns)
+
+        // BedrockAgentCoreControlClient is passed from the test environment (created
+        // in setup()) into AgentcoreStrategyDiscovery, which queries the memory for
+        // all configured strategies.
+        val discovered = AgentcoreStrategyDiscovery(controlClient).discover(memoryId)
+        check(discovered.isNotEmpty()) {
+            "AgentcoreStrategyDiscovery returned no strategies for memory '$memoryId'."
+        }
+
+        val agent = AIAgent(
+            promptExecutor = llmExecutor,
+            llmModel = BedrockModels.AmazonNovaMicro,
+            toolRegistry = ToolRegistry.EMPTY,
+            systemPrompt = "You are a helpful assistant. Use any provided context about the user to answer.",
+        ) {
+            install(LongTermMemory) {
+                retrieval {
+                    agentcoreDiscovered(
+                        client = agentCoreClient,
+                        memoryId = memoryId,
+                        discoveredStrategies = discovered,
+                        actorId = actorId,
+                        sessionId = sessionId,
+                    )
+                }
+            }
+        }
+
+        val start = System.currentTimeMillis()
+        val attempt = java.util.concurrent.atomic.AtomicInteger(0)
+        val lastAnswer = java.util.concurrent.atomic.AtomicReference("")
+        try {
+            org.awaitility.kotlin.await
+                .atMost(java.time.Duration.ofMillis(RETRY_BUDGET_MS))
+                .pollDelay(java.time.Duration.ofMillis(INITIAL_WAIT_MS))
+                .pollInterval(java.time.Duration.ofMillis(RETRY_INTERVAL_MS))
+                .until {
+                    val n = attempt.incrementAndGet()
+                    val elapsed = (System.currentTimeMillis() - start) / 1000
+                    val answer = runBlocking { agent.run(scenario.question, conversationId) }
+                    lastAnswer.set(answer)
+                    val preview = answer.take(140).replace("\n", " ")
+                    val match = answer.contains(scenario.expectedKeyword, ignoreCase = true)
+                    println("[discovered] attempt #$n @ ${elapsed}s: ${if (match) "MATCH" else "no match yet"} -> $preview")
+                    match
+                }
+        } catch (e: org.awaitility.core.ConditionTimeoutException) {
+            throw AssertionError(
+                "Agent should eventually answer '${scenario.expectedKeyword}' via agentcoreDiscovered DSL. " +
                     "Last answer after ${attempt.get()} attempts: ${lastAnswer.get()}"
             )
         }
