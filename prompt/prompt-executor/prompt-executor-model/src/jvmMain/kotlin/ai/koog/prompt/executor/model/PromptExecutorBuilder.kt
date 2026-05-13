@@ -223,12 +223,12 @@ public class PromptExecutorBuilder {
     ): PromptExecutorBuilder = apply {
         addClient(
             OllamaClient(
-                baseUrl,
-                baseClient,
-                timeoutConfig,
-                clock,
-                contextWindowStrategy,
-                toolDescriptorConverter
+                baseUrl = baseUrl,
+                baseClient = baseClient,
+                timeoutConfig = timeoutConfig,
+                clock = clock,
+                contextWindowStrategy = contextWindowStrategy,
+                toolDescriptorConverter = toolDescriptorConverter,
             )
         )
     }

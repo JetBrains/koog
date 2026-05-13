@@ -1,4 +1,8 @@
+@file:JvmName("Utils")
+
 package ai.koog.http.client
+
+import kotlin.jvm.JvmName
 
 /**
  * Merges header groups into a single map.

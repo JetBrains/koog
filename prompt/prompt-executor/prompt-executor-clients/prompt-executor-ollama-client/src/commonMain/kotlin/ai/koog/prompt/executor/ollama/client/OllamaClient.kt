@@ -142,8 +142,10 @@ public class OllamaClient @JvmOverloads constructor(
      */
     @JvmOverloads
     public constructor(
-        baseUrl: String = DEFAULT_BASE_URL,
         httpClientFactory: KoogHttpClient.Factory,
+        baseUrl: String = DEFAULT_BASE_URL,
+        headers: Map<String, String> = emptyMap(),
+        queryParameters: Map<String, String> = emptyMap(),
         timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
         clock: KoogClock = KoogClock.System,
         contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
@@ -152,8 +154,8 @@ public class OllamaClient @JvmOverloads constructor(
         httpClient = httpClientFactory.create(
             clientName = CLIENT_NAME,
             baseUrl = baseUrl,
-            headers = emptyMap(),
-            queryParameters = emptyMap(),
+            headers = headers,
+            queryParameters = queryParameters,
             requestTimeoutMillis = timeoutConfig.requestTimeoutMillis,
             connectTimeoutMillis = timeoutConfig.connectTimeoutMillis,
             socketTimeoutMillis = timeoutConfig.socketTimeoutMillis,
@@ -171,13 +173,17 @@ public class OllamaClient @JvmOverloads constructor(
     public constructor(
         baseUrl: String = DEFAULT_BASE_URL,
         baseClient: HttpClient = HttpClient(),
+        headers: Map<String, String> = emptyMap(),
+        queryParameters: Map<String, String> = emptyMap(),
         timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
         clock: KoogClock = KoogClock.System,
         contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
         toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
     ) : this(
-        baseUrl = baseUrl,
         httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
+        baseUrl = baseUrl,
+        headers = headers,
+        queryParameters = queryParameters,
         timeoutConfig = timeoutConfig,
         clock = clock,
         contextWindowStrategy = contextWindowStrategy,
@@ -396,12 +402,24 @@ public class OllamaClient @JvmOverloads constructor(
                 path = DEFAULT_EMBEDDINGS_PATH,
                 request = EmbeddingRequestDTO(model = model.id, input = text)
             )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: KoogHttpClientException) {
-            throw LLMClientException(
+            val exception = LLMClientException(
                 clientName,
                 "Embedding request failed (HTTP ${e.statusCode}): ${e.errorBody}",
                 cause = e
             )
+            logger.error(exception) { exception.message }
+            throw exception
+        } catch (e: Exception) {
+            val exception = LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+            logger.error(exception) { exception.message }
+            throw exception
         }
 
         val embeddingResponse = ollamaJson.decodeFromString<EmbeddingBatchResponseDTO>(responseBody)
