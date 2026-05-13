@@ -150,7 +150,7 @@ public interface KoogHttpClient : AutoCloseable {
     }
 
     /**
-     * Companion anchor used by extensions such as [defaultFactoryHolder].
+     * Companion anchor for [KoogHttpClient]-related extension functions.
      */
     public companion object {}
 }

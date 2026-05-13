@@ -5,15 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.parallel.Execution
-import org.junit.jupiter.api.parallel.ExecutionMode
 
-/**
- * State-mutating tests share a singleton holder; no reset operation exists by design.
- * Each test either does not touch holder state (pure resolver tests) or sets a known
- * value of its own before asserting (last-write-wins).
- */
-@Execution(ExecutionMode.SAME_THREAD)
 class DefaultHttpClientFactoryHolderTest {
 
     @Test
@@ -30,8 +22,12 @@ class DefaultHttpClientFactoryHolderTest {
         }
         val message = ex.message.orEmpty()
         assertTrue(
-            "DefaultHttpClientFactoryHolder.setDefault" in message,
-            "Expected zero-provider error to point at setDefault(), got: $message"
+            "No KoogHttpClient.Factory provider found" in message,
+            "Expected zero-provider error to explain the cause, got: $message"
+        )
+        assertTrue(
+            "pass a KoogHttpClient.Factory explicitly" in message,
+            "Expected zero-provider error to mention explicit factory as a remediation, got: $message"
         )
     }
 
@@ -44,29 +40,13 @@ class DefaultHttpClientFactoryHolderTest {
         }
         val message = ex.message.orEmpty()
         assertTrue(
-            "DefaultHttpClientFactoryHolder.setDefault" in message,
-            "Expected multiple-provider error to suggest setDefault(), got: $message"
+            "Exclude all but one provider module" in message,
+            "Expected multiple-provider error to suggest module exclusion, got: $message"
         )
         assertTrue(
             "StubFactory" in message,
             "Expected multiple-provider error to list discovered classes, got: $message"
         )
-    }
-
-    @Test
-    fun testSetDefaultStoresFactory() {
-        val stub = StubFactory("Set")
-        DefaultHttpClientFactoryHolder.setDefault(stub)
-        assertSame(stub, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
-    }
-
-    @Test
-    fun testSetDefaultOverwritesPreviousValue() {
-        val first = StubFactory("First")
-        val second = StubFactory("Second")
-        DefaultHttpClientFactoryHolder.setDefault(first)
-        DefaultHttpClientFactoryHolder.setDefault(second)
-        assertSame(second, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
     }
 }
 

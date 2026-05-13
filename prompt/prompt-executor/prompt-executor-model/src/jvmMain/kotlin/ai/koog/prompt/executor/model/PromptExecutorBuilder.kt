@@ -84,27 +84,14 @@ public class PromptExecutorBuilder {
     }
 
     /**
-     * Adds an OpenAI client backed by the default [KoogHttpClient.Factory] from
-     * [DefaultHttpClientFactoryHolder].
+     * Adds an OpenAI client. [httpClientFactory] defaults to
+     * [DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory].
      */
     @JvmOverloads
     public fun openAI(
         apiKey: String,
         settings: OpenAIClientSettings = OpenAIClientSettings(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder =
-        openAI(apiKey, settings, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(), clock, toolsConverter)
-
-    /**
-     * Adds an OpenAI client backed by [httpClientFactory], which produces a configured
-     * [KoogHttpClient] with authentication, base URL, and timeouts derived from [apiKey] and [settings].
-     */
-    @JvmOverloads
-    public fun openAI(
-        apiKey: String,
-        settings: OpenAIClientSettings = OpenAIClientSettings(),
-        httpClientFactory: KoogHttpClient.Factory,
+        httpClientFactory: KoogHttpClient.Factory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
@@ -112,118 +99,42 @@ public class PromptExecutorBuilder {
     }
 
     /**
-     * Adds an OpenAI client backed by a pre-configured [httpClient]. The caller is responsible
-     * for embedding authentication headers, base URL, and timeouts before constructing the client.
-     */
-    @JvmOverloads
-    public fun openAI(
-        settings: OpenAIClientSettings = OpenAIClientSettings(),
-        httpClient: KoogHttpClient,
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(OpenAILLMClient(settings, httpClient, clock, toolsConverter))
-    }
-
-    /**
-     * Adds an Anthropic client backed by the default [KoogHttpClient.Factory] from
-     * [DefaultHttpClientFactoryHolder].
+     * Adds an Anthropic client. [httpClientFactory] defaults to
+     * [DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory].
      */
     @JvmOverloads
     public fun anthropic(
         apiKey: String,
         settings: AnthropicClientSettings = AnthropicClientSettings(),
-        clock: KoogClock = KoogClock.System,
-    ): PromptExecutorBuilder =
-        anthropic(apiKey, settings, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(), clock)
-
-    /**
-     * Adds an Anthropic client backed by [httpClientFactory], which produces a configured
-     * [KoogHttpClient] with authentication, base URL, and timeouts derived from [apiKey] and [settings].
-     */
-    @JvmOverloads
-    public fun anthropic(
-        apiKey: String,
-        settings: AnthropicClientSettings = AnthropicClientSettings(),
-        httpClientFactory: KoogHttpClient.Factory,
+        httpClientFactory: KoogHttpClient.Factory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         clock: KoogClock = KoogClock.System,
     ): PromptExecutorBuilder = apply {
         addClient(AnthropicLLMClient(apiKey, settings, httpClientFactory, clock))
     }
 
     /**
-     * Adds an Anthropic client backed by a pre-configured [httpClient]. The caller is responsible
-     * for embedding authentication headers, base URL, and timeouts before constructing the client.
-     */
-    @JvmOverloads
-    public fun anthropic(
-        settings: AnthropicClientSettings = AnthropicClientSettings(),
-        httpClient: KoogHttpClient,
-        clock: KoogClock = KoogClock.System,
-    ): PromptExecutorBuilder = apply {
-        addClient(AnthropicLLMClient(settings, httpClient, clock))
-    }
-
-    /**
-     * Adds a Google AI client backed by the default [KoogHttpClient.Factory] from
-     * [DefaultHttpClientFactoryHolder].
+     * Adds a Google AI client. [httpClientFactory] defaults to
+     * [DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory].
      */
     @JvmOverloads
     public fun google(
         apiKey: String,
         settings: GoogleClientSettings = GoogleClientSettings(),
-        clock: KoogClock = KoogClock.System,
-    ): PromptExecutorBuilder =
-        google(apiKey, settings, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(), clock)
-
-    /**
-     * Adds a Google AI client backed by [httpClientFactory], which produces a configured
-     * [KoogHttpClient] with authentication, base URL, and timeouts derived from [apiKey] and [settings].
-     */
-    @JvmOverloads
-    public fun google(
-        apiKey: String,
-        settings: GoogleClientSettings = GoogleClientSettings(),
-        httpClientFactory: KoogHttpClient.Factory,
+        httpClientFactory: KoogHttpClient.Factory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         clock: KoogClock = KoogClock.System,
     ): PromptExecutorBuilder = apply {
         addClient(GoogleLLMClient(apiKey, settings, httpClientFactory, clock))
     }
 
     /**
-     * Adds a Google AI client backed by a pre-configured [httpClient]. The caller is responsible
-     * for embedding authentication, base URL, and timeouts before constructing the client.
-     */
-    @JvmOverloads
-    public fun google(
-        settings: GoogleClientSettings = GoogleClientSettings(),
-        httpClient: KoogHttpClient,
-        clock: KoogClock = KoogClock.System,
-    ): PromptExecutorBuilder = apply {
-        addClient(GoogleLLMClient(settings, httpClient, clock))
-    }
-
-    /**
-     * Adds a DeepSeek client backed by the default [KoogHttpClient.Factory] from
-     * [DefaultHttpClientFactoryHolder].
+     * Adds a DeepSeek client. [httpClientFactory] defaults to
+     * [DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory].
      */
     @JvmOverloads
     public fun deepseek(
         apiKey: String,
         settings: DeepSeekClientSettings = DeepSeekClientSettings(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder =
-        deepseek(apiKey, settings, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(), clock, toolsConverter)
-
-    /**
-     * Adds a DeepSeek client backed by [httpClientFactory].
-     */
-    @JvmOverloads
-    public fun deepseek(
-        apiKey: String,
-        settings: DeepSeekClientSettings = DeepSeekClientSettings(),
-        httpClientFactory: KoogHttpClient.Factory,
+        httpClientFactory: KoogHttpClient.Factory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
@@ -231,39 +142,14 @@ public class PromptExecutorBuilder {
     }
 
     /**
-     * Adds a DeepSeek client backed by a pre-configured [httpClient].
-     */
-    @JvmOverloads
-    public fun deepseek(
-        settings: DeepSeekClientSettings = DeepSeekClientSettings(),
-        httpClient: KoogHttpClient,
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(DeepSeekLLMClient(settings, httpClient, clock, toolsConverter))
-    }
-
-    /**
-     * Adds a Mistral AI client backed by the default [KoogHttpClient.Factory] from
-     * [DefaultHttpClientFactoryHolder].
+     * Adds a Mistral AI client. [httpClientFactory] defaults to
+     * [DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory].
      */
     @JvmOverloads
     public fun mistral(
         apiKey: String,
         settings: MistralAIClientSettings = MistralAIClientSettings(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder =
-        mistral(apiKey, settings, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(), clock, toolsConverter)
-
-    /**
-     * Adds a Mistral AI client backed by [httpClientFactory].
-     */
-    @JvmOverloads
-    public fun mistral(
-        apiKey: String,
-        settings: MistralAIClientSettings = MistralAIClientSettings(),
-        httpClientFactory: KoogHttpClient.Factory,
+        httpClientFactory: KoogHttpClient.Factory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
@@ -271,45 +157,13 @@ public class PromptExecutorBuilder {
     }
 
     /**
-     * Adds a Mistral AI client backed by a pre-configured [httpClient].
-     */
-    @JvmOverloads
-    public fun mistral(
-        settings: MistralAIClientSettings = MistralAIClientSettings(),
-        httpClient: KoogHttpClient,
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(MistralAILLMClient(settings, httpClient, clock, toolsConverter))
-    }
-
-    /**
-     * Adds an Ollama client backed by the default [KoogHttpClient.Factory] from
-     * [DefaultHttpClientFactoryHolder].
+     * Adds an Ollama client. [httpClientFactory] defaults to
+     * [DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory].
      */
     @JvmOverloads
     public fun ollama(
         baseUrl: String = "http://localhost:11434",
-        timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-        clock: KoogClock = KoogClock.System,
-        contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
-        toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = ollama(
-        baseUrl,
-        DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
-        timeoutConfig,
-        clock,
-        contextWindowStrategy,
-        toolDescriptorConverter,
-    )
-
-    /**
-     * Adds an Ollama client backed by [httpClientFactory].
-     */
-    @JvmOverloads
-    public fun ollama(
-        baseUrl: String = "http://localhost:11434",
-        httpClientFactory: KoogHttpClient.Factory,
+        httpClientFactory: KoogHttpClient.Factory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
         clock: KoogClock = KoogClock.System,
         contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
@@ -328,40 +182,14 @@ public class PromptExecutorBuilder {
     }
 
     /**
-     * Adds an Ollama client backed by a pre-configured [httpClient]. The caller is responsible
-     * for embedding the Ollama base URL and timeouts before constructing the client.
-     */
-    @JvmOverloads
-    public fun ollama(
-        httpClient: KoogHttpClient,
-        clock: KoogClock = KoogClock.System,
-        contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
-        toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(OllamaClient(httpClient, clock, contextWindowStrategy, toolDescriptorConverter))
-    }
-
-    /**
-     * Adds an OpenRouter client backed by the default [KoogHttpClient.Factory] from
-     * [DefaultHttpClientFactoryHolder].
+     * Adds an OpenRouter client. [httpClientFactory] defaults to
+     * [DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory].
      */
     @JvmOverloads
     public fun openRouter(
         apiKey: String,
         settings: OpenRouterClientSettings = OpenRouterClientSettings(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder =
-        openRouter(apiKey, settings, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(), clock, toolsConverter)
-
-    /**
-     * Adds an OpenRouter client backed by [httpClientFactory].
-     */
-    @JvmOverloads
-    public fun openRouter(
-        apiKey: String,
-        settings: OpenRouterClientSettings = OpenRouterClientSettings(),
-        httpClientFactory: KoogHttpClient.Factory,
+        httpClientFactory: KoogHttpClient.Factory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
@@ -369,56 +197,18 @@ public class PromptExecutorBuilder {
     }
 
     /**
-     * Adds an OpenRouter client backed by a pre-configured [httpClient].
-     */
-    @JvmOverloads
-    public fun openRouter(
-        settings: OpenRouterClientSettings = OpenRouterClientSettings(),
-        httpClient: KoogHttpClient,
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(OpenRouterLLMClient(settings, httpClient, clock, toolsConverter))
-    }
-
-    /**
-     * Adds a Dashscope client backed by the default [KoogHttpClient.Factory] from
-     * [DefaultHttpClientFactoryHolder].
+     * Adds a Dashscope client. [httpClientFactory] defaults to
+     * [DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory].
      */
     @JvmOverloads
     public fun dashscope(
         apiKey: String,
         settings: DashscopeClientSettings = DashscopeClientSettings(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder =
-        dashscope(apiKey, settings, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(), clock, toolsConverter)
-
-    /**
-     * Adds a Dashscope client backed by [httpClientFactory].
-     */
-    @JvmOverloads
-    public fun dashscope(
-        apiKey: String,
-        settings: DashscopeClientSettings = DashscopeClientSettings(),
-        httpClientFactory: KoogHttpClient.Factory,
+        httpClientFactory: KoogHttpClient.Factory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
         addClient(DashscopeLLMClient(apiKey, settings, httpClientFactory, clock, toolsConverter))
-    }
-
-    /**
-     * Adds a Dashscope client backed by a pre-configured [httpClient].
-     */
-    @JvmOverloads
-    public fun dashscope(
-        settings: DashscopeClientSettings = DashscopeClientSettings(),
-        httpClient: KoogHttpClient,
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(DashscopeLLMClient(settings, httpClient, clock, toolsConverter))
     }
 
     /**

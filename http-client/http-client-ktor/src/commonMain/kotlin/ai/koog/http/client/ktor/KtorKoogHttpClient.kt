@@ -1,6 +1,5 @@
 package ai.koog.http.client.ktor
 
-import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
 import ai.koog.http.client.mergeHeaders
@@ -282,7 +281,7 @@ public class KtorKoogHttpClient internal constructor(
     }
 
     /**
-     * Companion anchor for [KtorKoogHttpClient] extensions such as [installAsDefault].
+     * Companion anchor for [KtorKoogHttpClient]-related extension functions.
      */
     public companion object {}
 
@@ -368,16 +367,3 @@ public fun KoogHttpClient.Companion.fromKtorClient(
     baseClient: HttpClient = HttpClient(),
     configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit = {}
 ): KoogHttpClient = KtorKoogHttpClient(clientName, logger, baseClient, configurer)
-
-/**
- * Installs a default [KtorKoogHttpClient.Factory] into [DefaultHttpClientFactoryHolder].
- *
- * Call this once at application startup on targets that lack a runtime discovery mechanism
- * for [KoogHttpClient.Factory] providers (JS, native, Wasm). On JVM, the same factory is
- * registered automatically through the `ServiceLoader` SPI when `http-client-ktor` is on the
- * runtime classpath.
- */
-@Experimental
-public fun KtorKoogHttpClient.Companion.installAsDefault() {
-    DefaultHttpClientFactoryHolder.setDefault(KtorKoogHttpClient.Factory())
-}
