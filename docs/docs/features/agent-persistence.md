@@ -16,9 +16,24 @@ A checkpoint captures the complete state of an agent at a specific point in its 
 - Message history (all interactions between user, system, assistant, and tools)
 - Current node being executed
 - Input data for the current node
+- `AIAgentStorage` contents (key-value data stored during execution)
 - Timestamp of creation
 
 Checkpoints are identified by unique IDs and are associated with a specific agent.
+
+### `AIAgentStorage` persistence
+
+When a checkpoint is created, the framework serializes all values currently held in `AIAgentStorage` and includes them in the checkpoint.
+On restore, those values are deserialized and made available to the resumed agent exactly as they were at the time of the checkpoint.
+
+**Only serializable values are persisted.**
+The serializer used is the one configured in `AIAgentConfig` via its `serializer` property.
+Values that cannot be encoded by that serializer are silently skipped and will not be present in the restored storage.
+
+Non-serializable values are dropped silently when the checkpoint is written.
+If a value is missing after restoring from a checkpoint, verify that its type is serializable by the configured serializer.
+
+See [Serialization](../serialization.md) for more information.
 
 ## Installation
 
