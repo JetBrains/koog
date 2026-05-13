@@ -231,7 +231,8 @@ class EventHandlerTest {
             toolDescription = dummyToolDescription,
             content = dummyTool.result,
             resultKind = ToolResultKind.Success,
-            result = dummyToolResultEncoded
+            result = dummyToolResultEncoded,
+            resultObject = "Dummy result"
         )
 
         val expectedEvents = listOf(
