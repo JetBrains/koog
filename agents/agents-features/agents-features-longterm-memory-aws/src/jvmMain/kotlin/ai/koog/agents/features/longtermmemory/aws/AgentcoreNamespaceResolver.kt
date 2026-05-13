@@ -64,6 +64,7 @@ public fun interface AgentcoreNamespaceResolver {
         /**
          * Default resolver that produces AWS's documented namespace layout.
          */
+        @JvmStatic
         public val Default: AgentcoreNamespaceResolver = AgentcoreNamespaceResolver { scope ->
             require(scope.strategyId.isNotBlank()) { "strategyId must not be blank" }
             require(scope.actorId.isNotBlank()) { "actorId must not be blank" }

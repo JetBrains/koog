@@ -57,6 +57,23 @@ public data class AgentcoreStrategyOverride(
         episodesTopK?.let { require(it > 0) { "episodesTopK must be positive, was $it" } }
         reflectionsTopK?.let { require(it > 0) { "reflectionsTopK must be positive, was $it" } }
     }
+
+    public companion object {
+        /**
+         * Returns a new [AgentcoreAutoDiscoveryBuilder.StrategyOverrideBuilder] for [strategyId].
+         *
+         * Intended for Java callers who cannot use the Kotlin DSL `configure(strategyId) { }` overload:
+         * ```java
+         * AgentcoreStrategyOverride override = AgentcoreStrategyOverride.builder("sem-1")
+         *     .topK(10)
+         *     .minScore(0.7)
+         *     .build();
+         * ```
+         */
+        @JvmStatic
+        public fun builder(strategyId: String): AgentcoreAutoDiscoveryBuilder.StrategyOverrideBuilder =
+            AgentcoreAutoDiscoveryBuilder.StrategyOverrideBuilder(strategyId)
+    }
 }
 
 /**
@@ -382,8 +399,8 @@ public class AgentcoreAutoDiscoveryBuilder internal constructor() {
      * Convenience overload: create an [AgentcoreStrategyOverride] from a builder block.
      */
     public fun configure(strategyId: String, block: StrategyOverrideBuilder.() -> Unit) {
-        val ob = StrategyOverrideBuilder().apply(block)
-        configure(ob.build(strategyId))
+        val ob = StrategyOverrideBuilder(strategyId).apply(block)
+        configure(ob.build())
     }
 
     /**
@@ -401,11 +418,15 @@ public class AgentcoreAutoDiscoveryBuilder internal constructor() {
     internal fun overrideIds(): Set<String> = overrides.keys.toSet()
 
     /**
-     * Fluent builder for [AgentcoreStrategyOverride] used by the
-     * `configure(strategyId) { ... }` convenience overload.
+     * Fluent builder for [AgentcoreStrategyOverride].
+     *
+     * Used by the `configure(strategyId) { ... }` Kotlin DSL convenience overload and
+     * by Java callers via [AgentcoreStrategyOverride.builder].
+     *
+     * @param strategyId the strategy this override is bound to (must not be blank).
      */
     @AgentcoreLtmDsl
-    public class StrategyOverrideBuilder internal constructor() {
+    public class StrategyOverrideBuilder(private val strategyId: String) {
         public var topK: Int? = null
         public var minScore: Double? = null
         public var filterExpression: String? = null
@@ -414,7 +435,30 @@ public class AgentcoreAutoDiscoveryBuilder internal constructor() {
         public var namespacePattern: String? = null
         public var reflectionsNamespacePattern: String? = null
 
-        internal fun build(strategyId: String): AgentcoreStrategyOverride = AgentcoreStrategyOverride(
+        /** Java-friendly fluent setter for [topK]. */
+        public fun topK(value: Int): StrategyOverrideBuilder = apply { topK = value }
+
+        /** Java-friendly fluent setter for [minScore]. */
+        public fun minScore(value: Double): StrategyOverrideBuilder = apply { minScore = value }
+
+        /** Java-friendly fluent setter for [filterExpression]. */
+        public fun filterExpression(value: String): StrategyOverrideBuilder = apply { filterExpression = value }
+
+        /** Java-friendly fluent setter for [episodesTopK]. */
+        public fun episodesTopK(value: Int): StrategyOverrideBuilder = apply { episodesTopK = value }
+
+        /** Java-friendly fluent setter for [reflectionsTopK]. */
+        public fun reflectionsTopK(value: Int): StrategyOverrideBuilder = apply { reflectionsTopK = value }
+
+        /** Java-friendly fluent setter for [namespacePattern]. */
+        public fun namespacePattern(value: String): StrategyOverrideBuilder = apply { namespacePattern = value }
+
+        /** Java-friendly fluent setter for [reflectionsNamespacePattern]. */
+        public fun reflectionsNamespacePattern(value: String): StrategyOverrideBuilder =
+            apply { reflectionsNamespacePattern = value }
+
+        /** Builds and returns the configured [AgentcoreStrategyOverride]. */
+        public fun build(): AgentcoreStrategyOverride = AgentcoreStrategyOverride(
             strategyId = strategyId,
             topK = topK,
             minScore = minScore,
