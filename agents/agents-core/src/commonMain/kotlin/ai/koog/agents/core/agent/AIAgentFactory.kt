@@ -4,9 +4,9 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy
+import ai.koog.agents.core.planner.PlannerAIAgent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.planner.AIAgentPlannerStrategy
-import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel

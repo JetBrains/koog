@@ -1,5 +1,6 @@
 package ai.koog.agents.planner
 
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.goap.GOAPPlannerBuilder
 import ai.koog.agents.planner.goap.GoapAgentState
 import ai.koog.agents.planner.llm.SimpleLLMPlannerBuilder

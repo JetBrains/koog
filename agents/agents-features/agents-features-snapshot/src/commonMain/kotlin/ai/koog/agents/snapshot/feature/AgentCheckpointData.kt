@@ -8,7 +8,7 @@ import ai.koog.agents.core.agent.context.GraphAgentContextData
 import ai.koog.agents.core.agent.context.PlannerAgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.planner.PlannerAgentExecutionPoint
+import ai.koog.agents.core.planner.PlannerAgentExecutionPoint
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement

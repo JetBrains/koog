@@ -2,6 +2,7 @@ package ai.koog.agents.planner;
 
 import ai.koog.agents.annotations.JavaAPI;
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext;
+import ai.koog.agents.core.planner.AIAgentPlanner;
 import ai.koog.serialization.TypeToken;
 import kotlin.coroutines.Continuation;
 import org.jetbrains.annotations.NotNull;

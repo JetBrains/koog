@@ -2,6 +2,7 @@
 package ai.koog.agents.planner
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.planner.PlannerAIAgent
 import ai.koog.agents.planner.goap.GoapAgentState
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt

@@ -1,7 +1,7 @@
 package ai.koog.agents.planner.goap
 
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy
 import ai.koog.agents.core.utils.ConfigureAction
-import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.serialization.TypeToken
 import kotlin.jvm.JvmOverloads
 import kotlin.math.exp

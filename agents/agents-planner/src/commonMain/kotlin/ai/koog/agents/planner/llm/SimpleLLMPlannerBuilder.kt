@@ -1,10 +1,10 @@
 package ai.koog.agents.planner.llm
 
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-import ai.koog.agents.planner.AIAgentPlannerStrategy
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy
 
 /**
- * Builder for LLM-based [ai.koog.agents.planner.AIAgentPlannerStrategy] operating on a [String] state.
+ * Builder for LLM-based [AIAgentPlannerStrategy] operating on a [String] state.
  *
  * Obtain via [ai.koog.agents.planner.Planners.llmBased].
  */

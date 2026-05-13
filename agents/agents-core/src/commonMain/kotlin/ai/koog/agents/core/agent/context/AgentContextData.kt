@@ -3,7 +3,7 @@
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.planner.PlannerAgentExecutionPoint
+import ai.koog.agents.core.planner.PlannerAgentExecutionPoint
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONNull

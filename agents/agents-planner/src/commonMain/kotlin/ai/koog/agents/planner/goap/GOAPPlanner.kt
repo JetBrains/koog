@@ -1,7 +1,7 @@
 package ai.koog.agents.planner.goap
 
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext
-import ai.koog.agents.planner.AIAgentPlanner
+import ai.koog.agents.core.planner.AIAgentPlanner
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.typeToken
 

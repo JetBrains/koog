@@ -3,8 +3,8 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy
 import ai.koog.agents.core.utils.ConfigureAction
-import ai.koog.agents.planner.AIAgentPlannerStrategy
 
 /**
  * Common chained implementation for [AIAgentBuilder] actual classes.

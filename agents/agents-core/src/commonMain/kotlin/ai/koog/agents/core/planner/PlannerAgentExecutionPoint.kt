@@ -1,4 +1,4 @@
-package ai.koog.agents.planner
+package ai.koog.agents.core.planner
 
 import kotlinx.serialization.Serializable
 

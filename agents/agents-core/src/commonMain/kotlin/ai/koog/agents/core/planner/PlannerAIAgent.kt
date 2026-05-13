@@ -1,4 +1,4 @@
-package ai.koog.agents.planner
+package ai.koog.agents.core.planner
 
 import ai.koog.agents.core.agent.AIAgentBase
 import ai.koog.agents.core.agent.config.AIAgentConfig

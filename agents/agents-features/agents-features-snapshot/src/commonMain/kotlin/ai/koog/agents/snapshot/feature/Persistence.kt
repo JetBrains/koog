@@ -23,9 +23,9 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy
+import ai.koog.agents.core.planner.PlannerAgentExecutionPoint
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.planner.AIAgentPlannerStrategy
-import ai.koog.agents.planner.PlannerAgentExecutionPoint
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement

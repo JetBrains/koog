@@ -2,6 +2,8 @@
 package ai.koog.agents.planner
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy
+import ai.koog.agents.core.planner.PlannerAIAgent
 import ai.koog.agents.planner.llm.PlanStep
 import ai.koog.agents.planner.llm.SimpleLLMPlanner
 import ai.koog.agents.planner.llm.SimplePlan

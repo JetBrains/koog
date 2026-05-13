@@ -9,10 +9,10 @@ import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy
+import ai.koog.agents.core.planner.PlannerAIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
-import ai.koog.agents.planner.AIAgentPlannerStrategy
-import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.utils.time.KoogClock
 
