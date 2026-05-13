@@ -201,7 +201,7 @@ public class FunctionalAgentBuilder<Input, Output>(
  * @param featureInstallers A list of feature installers that enhance the agent's behavior with additional functionality.
  */
 public class PlannerAgentBuilder<Input, Output>(
-    private val strategy: AIAgentPlannerStrategy<Input, Output, *>,
+    private val strategy: AIAgentPlannerStrategy<Input, Output>,
     promptExecutor: PromptExecutor? = null,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,

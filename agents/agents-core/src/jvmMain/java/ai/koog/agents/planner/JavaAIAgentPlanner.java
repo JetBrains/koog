@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @JavaAPI
-public abstract class JavaAIAgentPlanner<State, Plan> extends AIAgentPlanner<State, Plan> {
+public abstract class JavaAIAgentPlanner<Input, Output, State, Plan> extends AIAgentPlanner<Input, Output, State, Plan> {
 
     public JavaAIAgentPlanner(Class<State> stateType, Class<Plan> planType) {
         super(TypeToken.of(stateType), TypeToken.of(planType));

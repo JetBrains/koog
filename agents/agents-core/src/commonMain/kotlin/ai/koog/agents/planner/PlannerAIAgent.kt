@@ -20,7 +20,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlin.jvm.JvmStatic
 
 /**
  * Represents an instance of planner agent using [AIAgentPlannerStrategy].
@@ -37,7 +36,7 @@ import kotlin.jvm.JvmStatic
 public class PlannerAIAgent<Input, Output>(
     public val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
-    override val strategy: AIAgentPlannerStrategy<Input, Output, *>,
+    override val strategy: AIAgentPlannerStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     public val clock: KoogClock = KoogClock.System,
@@ -47,19 +46,8 @@ public class PlannerAIAgent<Input, Output>(
     logger = logger,
     id = id,
 ) {
-    /**
-     * Companion object providing the static `builder()` method.
-     */
-    public companion object {
+    private companion object {
         private val logger = KotlinLogging.logger {}
-
-        /**
-         * Creates a new instance of [PlannerAIAgentBuilder] for configuring and building a planner AI agent.
-         */
-        @JvmStatic
-        public fun <Input, Output> builder(
-            strategy: AIAgentPlannerStrategy<Input, Output, *>
-        ): PlannerAIAgentBuilder<Input, Output> = PlannerAIAgentBuilder(strategy)
     }
 
     override val pipeline: AIAgentPlannerPipeline = AIAgentPlannerPipeline(agentConfig, clock)

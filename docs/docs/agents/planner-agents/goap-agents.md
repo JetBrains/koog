@@ -47,7 +47,7 @@ while the LLM performs the actual content generation within each action.
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.core.agent.config.AIAgentConfig
-    import ai.koog.agents.planner.AIAgentPlannerStrategy
+    import ai.koog.agents.planner.goap
     import ai.koog.agents.planner.goap.GoapAgentState
     import ai.koog.prompt.dsl.prompt
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -69,7 +69,7 @@ while the LLM performs the actual content generation within each action.
     }
 
     // Create GOAP planner with LLM-powered actions
-    val planner = AIAgentPlannerStrategy.goap("content-planner", ::ContentState) {
+    val planner = goap("content-planner", ::ContentState) {
         // Define actions with preconditions and beliefs
         action(
             name = "Create outline",
@@ -164,7 +164,7 @@ while the LLM performs the actual content generation within each action.
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
-    import ai.koog.agents.planner.AIAgentPlannerStrategy;
+    import ai.koog.agents.planner.Planners;
     import ai.koog.agents.planner.goap.GoapAgentState;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
@@ -216,8 +216,7 @@ while the LLM performs the actual content generation within each action.
             .openAI("OPENAI_API_KEY")
             .build();
 
-        var strategy = AIAgentPlannerStrategy.builder("content-planner")
-            .goap(ContentState::new)
+        var strategy = Planners.goap("content-planner", ContentState::new)
             .action("Create outline", builder -> builder
                 .precondition(state -> !state.hasOutline)
                 .belief(state -> state.copy(true, "Outline", false, "", false, false))
@@ -309,7 +308,7 @@ you can define custom cost functions for actions and goals to guide the planner:
 
     <!--- INCLUDE
     import ai.koog.agents.planner.goap.GoapAgentState
-    import ai.koog.agents.planner.AIAgentPlannerStrategy
+    import ai.koog.agents.planner.goap
     data class MyState(
         val topic: String,
         val operationDone: Boolean = true,
@@ -318,7 +317,7 @@ you can define custom cost functions for actions and goals to guide the planner:
         override val agentInput = topic
         override fun provideOutput(): String = ""
     }
-    val planner = AIAgentPlannerStrategy.goap("content-planner", ::MyState) {
+    val planner = goap("content-planner", ::MyState) {
     -->
     <!--- SUFFIX
     }
@@ -343,7 +342,7 @@ you can define custom cost functions for actions and goals to guide the planner:
     
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
-    import ai.koog.agents.planner.AIAgentPlannerStrategy;
+    import ai.koog.agents.planner.Planners;
     import ai.koog.agents.planner.goap.GoapAgentState;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
@@ -371,8 +370,7 @@ you can define custom cost functions for actions and goals to guide the planner:
             }
         }
         public static void main(String[] args) {
-            var planner = AIAgentPlannerStrategy.builder("content-planner")
-                .goap(MyState::new)
+            var planner = Planners.goap("content-planner", MyState::new)
     -->
     <!--- SUFFIX
             .build();
@@ -408,7 +406,7 @@ This allows the planner to make plans based on expected outcomes while handling 
 
     <!--- INCLUDE
     import ai.koog.agents.planner.goap.GoapAgentState
-    import ai.koog.agents.planner.AIAgentPlannerStrategy
+    import ai.koog.agents.planner.goap
     data class MyState(
         val topic: String,
         val taskComplete: Boolean = true,
@@ -418,7 +416,7 @@ This allows the planner to make plans based on expected outcomes while handling 
         override fun provideOutput(): String = ""
     }
     fun performComplexTask(): Boolean = true
-    val planner = AIAgentPlannerStrategy.goap("content-planner", ::MyState) {
+    val planner = goap("content-planner", ::MyState) {
     -->
     <!--- SUFFIX
     }
@@ -447,7 +445,7 @@ This allows the planner to make plans based on expected outcomes while handling 
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
-    import ai.koog.agents.planner.AIAgentPlannerStrategy;
+    import ai.koog.agents.planner.Planners;
     import ai.koog.agents.planner.goap.GoapAgentState;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
@@ -478,8 +476,7 @@ This allows the planner to make plans based on expected outcomes while handling 
             return true;
         }
         public static void main(String[] args) {
-            var planner = AIAgentPlannerStrategy.builder("content-planner")
-                .goap(MyState::new)
+            var planner = Planners.goap("content-planner", MyState::new)
     -->
     <!--- SUFFIX
             .build();

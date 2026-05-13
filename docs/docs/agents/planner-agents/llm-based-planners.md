@@ -78,6 +78,7 @@ The following example shows how to create a simple planner agent using `SimpleLL
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.agents.planner.AIAgentPlannerStrategy;
+    import ai.koog.agents.planner.Planners;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     class exampleLLMBasedPlanner01 {
@@ -89,9 +90,8 @@ The following example shows how to create a simple planner agent using `SimpleLL
     -->
     ```java
     // Create the planner strategy with LLM-based planner
-    AIAgentPlannerStrategy<String, String, ?> strategy =
-        AIAgentPlannerStrategy.builder("simple-planner")
-            .llmBasedPlanner()
+    AIAgentPlannerStrategy<String, String> strategy =
+        Planners.llmBased("simple-planner")
             .build();
 
     // Create the OpenAI executor

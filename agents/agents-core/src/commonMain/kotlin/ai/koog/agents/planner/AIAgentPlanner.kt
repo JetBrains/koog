@@ -13,17 +13,23 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 /**
  * An abstract base planner component, which can be used to implement different types of AI agent planner execution flows.
  *
- * An entry point is an [execute] method, which accepts an initial arbitrary [State] and returns the final [State] after the execution.
+ * An entry point is an [execute] method, which accepts an [Input] and returns the [Output] after the execution.
  *
  * Planner flow works as follows:
- * 1. Build a plan: [buildPlan]
- * 2. Execute a step in the plan: [executeStep]
- * 3. Repeat steps 1 and 2 until the plan is considered completed. Then the final [State] is returned.
+ * 1. Initialize state from input: [initializeState]
+ * 2. Build a plan: [buildPlan]
+ * 3. Execute a step in the plan: [executeStep]
+ * 4. Repeat steps 2 and 3 until the plan is considered completed.
+ * 5. Extract output from the final state: [provideOutput]
  *
+ * @param Input The type of input provided to the planner.
+ * @param Output The type of output produced by the planner.
+ * @param State The internal state type managed by the planner.
+ * @param Plan The type of plan produced by [buildPlan].
  * @param stateType [TypeToken] of the [State].
  * @param planType [TypeToken] of the [Plan].
  */
-public abstract class AIAgentPlanner<State : Any, Plan : Any>(
+public abstract class AIAgentPlanner<Input, Output, State : Any, Plan : Any>(
     public val stateType: TypeToken? = null,
     public val planType: TypeToken? = null,
 ) {
@@ -31,6 +37,16 @@ public abstract class AIAgentPlanner<State : Any, Plan : Any>(
     private companion object {
         private val logger = KotlinLogging.logger { }
     }
+
+    /**
+     * Initializes the planner [State] from the given [Input].
+     */
+    protected abstract fun initializeState(input: Input): State
+
+    /**
+     * Extracts the [Output] from the final [State].
+     */
+    protected abstract fun provideOutput(state: State): Output
 
     /**
      * Builds a plan
@@ -64,18 +80,18 @@ public abstract class AIAgentPlanner<State : Any, Plan : Any>(
      * the plan is considered successfully completed or a max number of iterations is reached.
      *
      * @param context AI Agent's context
-     * @param input The initial state to be used as the starting point for the execution process.
-     * @return The final state after the execution of the plans.
+     * @param input The input to be used as the starting point for the execution process.
+     * @return The output after the execution of the plans.
      * @throws AIAgentMaxNumberOfIterationsReachedException If the maximum number of iterations defined in the agent's
      * configuration is exceeded.
      */
     @OptIn(InternalAgentsApi::class)
     internal suspend fun execute(
         context: AIAgentPlannerContext,
-        input: State
-    ): State {
+        input: Input
+    ): Output {
         logger.debug { formatLog(context, "Starting planner execution") }
-        var state = input
+        var state = initializeState(input)
         var plan: Plan? = null
 
         val contextData = context.getPlannerAgentContextData()
@@ -153,7 +169,7 @@ public abstract class AIAgentPlanner<State : Any, Plan : Any>(
         }
 
         logger.debug { formatLog(context, "Finished planner execution") }
-        return state
+        return provideOutput(state)
     }
 
     private fun formatLog(context: AIAgentContext, message: String): String =

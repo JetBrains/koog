@@ -190,7 +190,7 @@ public class Persistence(
             persistence.rollbackToolRegistry = config.rollbackToolRegistry
 
             pipeline.interceptStrategyStarting(this) { ctx ->
-                val planner = (ctx.strategy as AIAgentPlannerStrategy<*, *, *>).planner
+                val planner = (ctx.strategy as AIAgentPlannerStrategy<*, *>).planner
 
                 require(planner.stateType != null && planner.planType != null) {
                     "State and plan types must be explicitly specified for the planner persistence"

@@ -134,7 +134,7 @@ public fun <Input, Output> AIAgent(
 public fun <Input, Output> AIAgent(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfig,
-    strategy: AIAgentPlannerStrategy<Input, Output, *>,
+    strategy: AIAgentPlannerStrategy<Input, Output>,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     clock: KoogClock = KoogClock.System,
@@ -294,7 +294,7 @@ public fun <Input, Output> AIAgent(
 public fun <Input, Output> AIAgent(
     promptExecutor: PromptExecutor,
     llmModel: LLModel,
-    strategy: AIAgentPlannerStrategy<Input, Output, *>,
+    strategy: AIAgentPlannerStrategy<Input, Output>,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     systemPrompt: String? = null,
     temperature: Double? = null,

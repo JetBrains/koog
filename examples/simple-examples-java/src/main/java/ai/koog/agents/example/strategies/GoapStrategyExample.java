@@ -2,7 +2,7 @@ package ai.koog.agents.example.strategies;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.example.ApiKeyService;
-import ai.koog.agents.planner.AIAgentPlannerStrategy;
+import ai.koog.agents.planner.Planners;
 import ai.koog.agents.planner.goap.GoapAgentState;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.model.PromptExecutor;
@@ -74,8 +74,7 @@ public class GoapStrategyExample {
             .openAI(ApiKeyService.getOpenAIApiKey())
             .build();
 
-        var strategy = AIAgentPlannerStrategy.builder("my-strategy")
-            .goap(MyState::new)
+        var strategy = Planners.goap("my-strategy", MyState::new)
             .goal("solve the task", builder ->
                 builder.condition(state -> state.assessment != null && state.assessment.correct)
             )
