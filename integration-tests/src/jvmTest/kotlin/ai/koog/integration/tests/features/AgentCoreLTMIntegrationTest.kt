@@ -226,8 +226,8 @@ class AgentCoreLTMIntegrationTest {
             .memory?.strategies.orEmpty()
             .firstOrNull { it.type == MemoryStrategyType.Episodic }
             ?: error("Memory '$memoryId' has no EPISODIC strategy configured")
-        val strategyId = episodic.strategyId ?: error("EPISODIC strategy has no id")
-        val namespaceTemplate = episodic.namespaces?.firstOrNull() ?: error("EPISODIC strategy has no namespace")
+        val strategyId = episodic.strategyId
+        val namespaceTemplate = episodic.namespaceTemplates.firstOrNull() ?: error("EPISODIC strategy has no namespace")
         val resolver = namespaceResolverFor(namespaceTemplate)
 
         val actorId = "ltm-actor-episodic-${UUID.randomUUID()}"
@@ -326,8 +326,8 @@ class AgentCoreLTMIntegrationTest {
                 MemoryStrategyType.Summarization -> StrategyKind.SUMMARY
                 else -> null
             } ?: return@mapNotNull null
-            val namespaceTemplate = s.namespaces?.firstOrNull() ?: return@mapNotNull null
-            val strategyId = s.strategyId ?: return@mapNotNull null
+            val namespaceTemplate = s.namespaceTemplates.firstOrNull() ?: return@mapNotNull null
+            val strategyId = s.strategyId
             DiscoveredStrategy(kind, strategyId, namespaceTemplate)
         }
     }
