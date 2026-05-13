@@ -7,8 +7,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.planner.AIAgentPlanner
 import ai.koog.agents.planner.AIAgentPlannerStrategy
 import ai.koog.agents.planner.PlannerAgentExecutionPoint
+import ai.koog.agents.planner.goap
 import ai.koog.agents.planner.goap.GoapAgentState
-import ai.koog.agents.planner.goap.goap
 import ai.koog.agents.planner.llm.PlanStep
 import ai.koog.agents.planner.llm.SimpleLLMPlanner
 import ai.koog.agents.planner.llm.SimplePlan
@@ -63,13 +63,16 @@ class PlannerPersistenceTests {
 
     class TestPlanner(
         var failAt: PlannerExecutionPoint? = null
-    ) : AIAgentPlanner<Int, Int>(
+    ) : AIAgentPlanner<Int, Int, Int, Int>(
         stateType = typeToken<Int>(),
         planType = typeToken<Int>()
     ) {
         var buildPlanCalls = 0
         var executeStepCalls = 0
         var isPlanCompletedCalls = 0
+
+        override fun initializeState(input: Int): Int = input
+        override fun provideOutput(state: Int): Int = state
 
         override suspend fun buildPlan(context: AIAgentPlannerContext, state: Int, plan: Int?): Int {
             buildPlanCalls++
@@ -185,8 +188,8 @@ class PlannerPersistenceTests {
     data class GoapTestState(
         val stepOneDone: Boolean = false,
         val goalReached: Boolean = false
-    ) : GoapAgentState<Unit, GoapTestState>() {
-        override val agentInput: Unit = Unit
+    ) : GoapAgentState<GoapTestState, GoapTestState>() {
+        override val agentInput: GoapTestState = this
         override fun provideOutput(): GoapTestState = this
     }
 
@@ -197,7 +200,7 @@ class PlannerPersistenceTests {
         var stepOneCallCount = 0
         var reachGoalCallCount = 0
 
-        val planner = goap<GoapTestState>(typeToken<GoapTestState>()) {
+        val strategy = goap<GoapTestState, GoapTestState, GoapTestState>("goap-strategy", { input -> input }) {
             action(
                 name = "Step one",
                 precondition = { true },
@@ -224,7 +227,7 @@ class PlannerPersistenceTests {
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = AIAgentPlannerStrategy("test", planner),
+            strategy = strategy,
             agentConfig = AIAgentConfig(
                 prompt = Prompt.Empty,
                 model = OllamaModels.Meta.LLAMA_3_2,

@@ -33,6 +33,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(project(":agents:agents-test"))
+                implementation(project(":agents:agents-planner"))
                 implementation(libs.mockk)
                 implementation(libs.awaitility)
                 implementation(libs.testcontainers)

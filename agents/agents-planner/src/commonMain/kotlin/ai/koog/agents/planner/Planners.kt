@@ -3,6 +3,7 @@ package ai.koog.agents.planner
 import ai.koog.agents.planner.goap.GOAPPlannerBuilder
 import ai.koog.agents.planner.goap.GoapAgentState
 import ai.koog.agents.planner.llm.SimpleLLMPlannerBuilder
+import ai.koog.serialization.typeToken
 import kotlin.jvm.JvmStatic
 import kotlin.jvm.JvmSynthetic
 
@@ -61,9 +62,9 @@ public object Planners {
  * Creates a GOAP strategy using a Kotlin DSL block.
  */
 @JvmSynthetic
-public fun <Input, Output, State : GoapAgentState<Input, Output>> goap(
+public inline fun <Input, Output, reified State : GoapAgentState<Input, Output>> goap(
     name: String,
-    initializeState: (Input) -> State,
+    noinline initializeState: (Input) -> State,
     configure: GOAPPlannerBuilder<Input, Output, State>.() -> Unit
 ): AIAgentPlannerStrategy<Input, Output> =
-    GOAPPlannerBuilder(name, initializeState).apply(configure).build()
+    GOAPPlannerBuilder(name, initializeState).apply(configure).apply { stateType(typeToken<State>()) }.build()
