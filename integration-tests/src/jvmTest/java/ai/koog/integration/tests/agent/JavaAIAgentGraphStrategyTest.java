@@ -620,7 +620,6 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
                 new Message.User("Restored user message", new RequestMetaInfo(now, null)),
                 new Message.Assistant("Restored assistant message", new ResponseMetaInfo(now, null, null, null))
             ),
-            null,
             0L,
             null
         );
@@ -672,7 +671,6 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             null,
             JSONPrimitive.of("missing"),
             List.of(),
-            null,
             0L,
             null
         );
