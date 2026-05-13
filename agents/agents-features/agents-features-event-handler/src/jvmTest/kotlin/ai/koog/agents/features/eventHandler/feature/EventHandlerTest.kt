@@ -533,9 +533,11 @@ class EventHandlerTest {
             val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
 
             edge(nodeStart forwardTo streamAndCollect)
-            edge(streamAndCollect forwardTo nodeFinish transformed { messages ->
-                messages.firstOrNull()?.content ?: ""
-            })
+            edge(
+                streamAndCollect forwardTo nodeFinish transformed { messages ->
+                    messages.firstOrNull()?.content ?: ""
+                }
+            )
         }
 
         val toolRegistry = ToolRegistry { tool(DummyTool()) }
@@ -601,9 +603,11 @@ class EventHandlerTest {
             val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
 
             edge(nodeStart forwardTo streamAndCollect)
-            edge(streamAndCollect forwardTo nodeFinish transformed { messages ->
-                messages.firstOrNull()?.content ?: ""
-            })
+            edge(
+                streamAndCollect forwardTo nodeFinish transformed { messages ->
+                    messages.firstOrNull()?.content ?: ""
+                }
+            )
         }
 
         val toolRegistry = ToolRegistry { tool(DummyTool()) }
@@ -805,7 +809,7 @@ class EventHandlerTest {
             systemPrompt = """
                     You are a helpful assistant.
                     You must use `guesser` tool to answer all questions.
-                """.trimIndent(),
+            """.trimIndent(),
             toolRegistry = ToolRegistry {
                 tool(GuesserTool)
             },

@@ -85,7 +85,6 @@ public fun PromptBuilder.ToolMessageBuilder.result(result: ReceivedToolResult) {
     result(result.toMessage(clock))
 }
 
-
 /**
  * Serializer for [ReceivedToolResult] that serializes all fields except [resultObject].
  * */

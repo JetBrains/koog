@@ -18,15 +18,11 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
-import ai.koog.serialization.JSONObject
-import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.serialization.kotlinx.toKotlinxJsonElement
 import ai.koog.serialization.typeToken
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
@@ -207,7 +203,7 @@ class PersistenceRunsTwiceTest {
             systemPrompt = """
                     You are a helpful assistant.
                     You must use `guesser` tool to answer all questions.
-                """.trimIndent(),
+            """.trimIndent(),
             toolRegistry = ToolRegistry {
                 tool(GuesserTool)
             },
@@ -268,10 +264,13 @@ class PersistenceRunsTwiceTest {
         )
 
         assertNull(lastOutputValue.resultObject)
-        assertEquals(buildJsonObject {
-            put("x", JsonPrimitive(100500))
-            put("y", JsonPrimitive("Hidden Value"))
-        }, lastOutputValue.result?.toKotlinxJsonElement())
+        assertEquals(
+            buildJsonObject {
+                put("x", JsonPrimitive(100500))
+                put("y", JsonPrimitive("Hidden Value"))
+            },
+            lastOutputValue.result?.toKotlinxJsonElement()
+        )
         assertEquals("guesser", lastOutputValue.tool)
         assertEquals("encoded_result(\"Hidden Value\")", lastOutputValue.content)
 

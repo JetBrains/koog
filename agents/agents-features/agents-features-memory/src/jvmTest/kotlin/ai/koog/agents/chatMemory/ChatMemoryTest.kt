@@ -1147,7 +1147,7 @@ class ChatMemoryTest {
             systemPrompt = """
                     You are a helpful assistant.
                     You must use `guesser` tool to answer all questions.
-                """.trimIndent(),
+            """.trimIndent(),
             toolRegistry = ToolRegistry {
                 tool(GuesserTool)
             },
