@@ -150,6 +150,12 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          */
         @JvmField
         public val Vertex: VertexLLMProvider = VertexLLMProvider
+
+        /**
+         * Represents the SiliconFlow provider
+         */
+        @JvmField
+        public val SiliconFlow: SiliconFlowProvider = SiliconFlowProvider
     }
 }
 
@@ -324,3 +330,10 @@ public object AzureLLMProvider : LLMProvider("azure", "Azure OpenAI")
  */
 @Serializable
 public object VertexLLMProvider : LLMProvider("vertex", "Google VertexAI")
+
+/**
+ * Represents the SiliconFlow provider for Large Language Models (LLMs).
+ * SiliconFlow is identified by its unique ID ("siliconflow") and display name ("SiliconFlow").
+ */
+@Serializable
+public object SiliconFlowProvider : LLMProvider("siliconflow", "SiliconFlow")

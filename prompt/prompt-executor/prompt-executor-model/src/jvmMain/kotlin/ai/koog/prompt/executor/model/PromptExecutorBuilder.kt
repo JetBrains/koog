@@ -21,6 +21,8 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
+import ai.koog.prompt.executor.clients.siliconflow.SiliconFlowLLMClient
+import ai.koog.prompt.executor.clients.siliconflow.SiliconFlowSettings
 import ai.koog.prompt.executor.llms.ExperimentalRoutingApi
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor
@@ -279,6 +281,30 @@ public class PromptExecutorBuilder {
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
         addClient(DashscopeLLMClient(apiKey, settings, baseClient, clock, toolsConverter))
+    }
+
+    /**
+     * Adds a SiliconFlow client.
+     *
+     * Multiple SiliconFlow clients are allowed — adding more than one will result in
+     * a [RoutingLLMPromptExecutor] being created at [build] time.
+     *
+     * @param apiKey The API key for authenticating with the SiliconFlow API.
+     * @param settings Configuration settings for the SiliconFlow client. Defaults to [SiliconFlowSettings].
+     * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
+     * @param clock The clock used for time-related operations. Defaults to [Clock.System].
+     * @param toolsConverter Tool descriptor schema generator. Defaults to [OpenAICompatibleToolDescriptorSchemaGenerator].
+     * @return This builder instance for chaining.
+     */
+    @JvmOverloads
+    public fun siliconFlow(
+        apiKey: String,
+        settings: SiliconFlowSettings = SiliconFlowSettings(),
+        baseClient: HttpClient = HttpClient(),
+        clock: Clock = Clock.System,
+        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
+    ): PromptExecutorBuilder = apply {
+        addClient(SiliconFlowLLMClient(apiKey, settings, baseClient, clock, toolsConverter))
     }
 
     /**
