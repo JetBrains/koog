@@ -36,7 +36,10 @@ public object LiteRTLLModels : LLModelDefinitions {
         maxOutputTokens = 4_096,
     )
 
-    val Gemma4E2B: LLModel = LLModel(
+    /**
+     * https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm
+     */
+    public val Gemma4E2B: LLModel = LLModel(
         provider = LiteRTLLMProvider,
         id = "gemma-4-E2B-it.litertlm",
         capabilities = listOf(
@@ -46,7 +49,10 @@ public object LiteRTLLModels : LLModelDefinitions {
         contextLength = 128_000,
     )
 
-    val Gemma4E4B: LLModel = LLModel(
+    /**
+     * https://huggingface.co/litert-community/gemma-4-E4B-it-litert-lm
+     */
+    public val Gemma4E4B: LLModel = LLModel(
         provider = LiteRTLLMProvider,
         id = "gemma-4-E4B-it.litertlm",
         capabilities = listOf(
