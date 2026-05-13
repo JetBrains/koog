@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
+import ai.koog.serialization.TypeToken
 
 /**
  * Defines the context specifically for handling planner-related events within the AI agent framework.
@@ -22,9 +23,19 @@ public interface PlannerEventContext : AgentLifecycleEventContext {
     public val state: Any
 
     /**
+     * The [TypeToken] of the state
+     */
+    public val stateType: TypeToken?
+
+    /**
      * The current plan being executed or planned.
      */
     public val plan: Any?
+
+    /**
+     * The [TypeToken] of the plan
+     */
+    public val planType: TypeToken?
 
     /**
      * The index of the current step within the plan.
@@ -40,7 +51,9 @@ public class PlanCreationStartingContext(
     override val executionInfo: AgentExecutionInfo,
     override val context: AIAgentContext,
     override val state: Any,
+    override val stateType: TypeToken?,
     override val plan: Any?,
+    override val planType: TypeToken?,
     override val stepIndex: Int,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.BuildPlanStarting
@@ -56,7 +69,9 @@ public class PlanCreationCompletedContext(
     override val executionInfo: AgentExecutionInfo,
     override val context: AIAgentContext,
     override val state: Any,
+    override val stateType: TypeToken?,
     override val plan: Any?,
+    override val planType: TypeToken?,
     override val stepIndex: Int,
     public val updatedPlan: Any,
 ) : PlannerEventContext {
@@ -71,7 +86,9 @@ public class StepExecutionStartingContext(
     override val executionInfo: AgentExecutionInfo,
     override val context: AIAgentContext,
     override val state: Any,
+    override val stateType: TypeToken?,
     override val plan: Any,
+    override val planType: TypeToken?,
     override val stepIndex: Int,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ExecuteStepStarting
@@ -85,7 +102,9 @@ public class StepExecutionCompletedContext(
     override val executionInfo: AgentExecutionInfo,
     override val context: AIAgentContext,
     override val state: Any,
+    override val stateType: TypeToken?,
     override val plan: Any,
+    override val planType: TypeToken?,
     override val stepIndex: Int,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ExecuteStepCompleted
@@ -99,7 +118,9 @@ public class PlanCompletionEvaluationStartingContext(
     override val executionInfo: AgentExecutionInfo,
     override val context: AIAgentContext,
     override val state: Any,
+    override val stateType: TypeToken?,
     override val plan: Any,
+    override val planType: TypeToken?,
     override val stepIndex: Int,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.IsPlanCompletedStarting
@@ -115,7 +136,9 @@ public class PlanCompletionEvaluationCompletedContext(
     override val executionInfo: AgentExecutionInfo,
     override val context: AIAgentContext,
     override val state: Any,
+    override val stateType: TypeToken?,
     override val plan: Any,
+    override val planType: TypeToken?,
     override val stepIndex: Int,
     public val isCompleted: Boolean,
 ) : PlannerEventContext {

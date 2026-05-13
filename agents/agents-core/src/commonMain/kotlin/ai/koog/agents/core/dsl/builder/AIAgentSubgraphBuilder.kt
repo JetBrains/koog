@@ -4,7 +4,7 @@ package ai.koog.agents.core.dsl.builder
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.context.getAgentContextData
+import ai.koog.agents.core.agent.context.getGraphAgentContextData
 import ai.koog.agents.core.agent.entity.AIAgentEdge
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
@@ -490,9 +490,9 @@ public fun <Input, Output> parallel(
                         val nodeContext = initialContext.fork()
                         val nodeOutput = node.execute(nodeContext, input)
 
-                        if (nodeOutput == null && nodeContext.getAgentContextData() != null) {
+                        if (nodeOutput == null && nodeContext.getGraphAgentContextData() != null) {
                             throw IllegalStateException(
-                                "Checkpoints are not supported in parallel execution. Node: ${node.name}, Context: ${nodeContext.getAgentContextData()}"
+                                "Checkpoints are not supported in parallel execution. Node: ${node.name}, Context: ${nodeContext.getGraphAgentContextData()}"
                             )
                         }
 

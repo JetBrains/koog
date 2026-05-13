@@ -1,9 +1,12 @@
+package ai.koog.agents.snapshot
+
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -182,10 +185,12 @@ class SubgraphCheckpointsTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-1",
             createdAt = KoogClock.System.now(),
-            nodePath = path(agentId, "repeated-subgraphs-test", "sg1", "sgNode1"),
-            lastInput = JSONPrimitive("Input at checkpoint"),
             messageHistory = listOf(),
-            version = 1L
+            version = 1L,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(agentId, "repeated-subgraphs-test", "sg1", "sgNode1"),
+                lastInput = JSONPrimitive("Input at checkpoint")
+            )
         )
 
         inMemoryPersistence.saveCheckpoint(agentId, checkpoint)

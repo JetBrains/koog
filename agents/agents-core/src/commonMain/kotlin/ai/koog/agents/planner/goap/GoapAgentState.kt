@@ -8,11 +8,13 @@ package ai.koog.agents.planner.goap
  *
  * @param Input The type of the input data for the agent.
  * @param Output The type of the output data produced by the agent.
- * @property agentInput The initial input provided to the agent.
  */
-public abstract class GoapAgentState<Input, Output>(
-    public val agentInput: Input
-) {
+public abstract class GoapAgentState<Input, Output> {
+    /**
+     * The initial input provided to the agent.
+     */
+    public abstract val agentInput: Input
+
     /**
      * Provides an output based on the current state of the implementing class.
      *

@@ -1,4 +1,7 @@
+package ai.koog.agents.snapshot
+
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.tombstoneCheckpoint
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.prompt.message.Message
@@ -14,8 +17,6 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.time.Instant
 
 class CheckpointSerializationTest {
@@ -31,29 +32,25 @@ class CheckpointSerializationTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "cp-1",
             createdAt = now,
-            nodePath = "NodeA",
-            lastOutput = JSONPrimitive("last-input"),
             messageHistory = sampleMessages(now),
-            version = 0L
+            version = 0L,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = "NodeA",
+                lastOutput = JSONPrimitive("last-input")
+            )
         )
 
         val json = PersistenceUtils.defaultCheckpointJson
-        val serialized = json.encodeToString(AgentCheckpointData.serializer(), checkpoint)
+        val serialized = json.encodeToString(checkpoint)
 
-        // properties should be omitted due to explicitNulls = false
-        assertFalse(
-            serialized.contains("\"properties\""),
-            "Serialized JSON should not contain 'properties' when it is null"
-        )
-
-        val restored = json.decodeFromString(AgentCheckpointData.serializer(), serialized)
+        val restored = json.decodeFromString<AgentCheckpointData>(serialized)
 
         // Thorough field-by-field assertions
         assertEquals("cp-1", restored.checkpointId)
         assertEquals(now, restored.createdAt)
-        assertEquals("NodeA", restored.nodePath)
-        assertEquals(JSONPrimitive("last-input"), restored.lastOutput)
-        assertNull(restored.properties, "properties should be null after deserialization when omitted in JSON")
+        val nodePath = restored.graphProperties?.nodePath
+        assertEquals("NodeA", nodePath)
+        assertEquals(JSONPrimitive("last-input"), restored.graphProperties?.lastOutput)
 
         // Message history assertions
         assertEquals(2, restored.messageHistory.size)
@@ -92,16 +89,18 @@ class CheckpointSerializationTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "cp-2",
             createdAt = now,
-            nodePath = "NodeB",
-            lastOutput = JSONObject(mapOf("inputKey" to JSONPrimitive("inputVal"))),
             messageHistory = sampleMessages(now),
             properties = properties,
-            version = 0L
+            version = 0L,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = "NodeB",
+                lastOutput = JSONObject(mapOf("inputKey" to JSONPrimitive("inputVal")))
+            )
         )
 
         val json = PersistenceUtils.defaultCheckpointJson
-        val serialized = json.encodeToString(AgentCheckpointData.serializer(), checkpoint)
-        val restored = json.decodeFromString(AgentCheckpointData.serializer(), serialized)
+        val serialized = json.encodeToString(checkpoint)
+        val restored = json.decodeFromString<AgentCheckpointData>(serialized)
 
         // Full equality as a check
         assertEquals(checkpoint, restored)
@@ -111,8 +110,8 @@ class CheckpointSerializationTest {
     fun `serialize and deserialize tombstone checkpoint`() {
         val checkpoint = tombstoneCheckpoint(KoogClock.System.now(), 0L)
         val json = PersistenceUtils.defaultCheckpointJson
-        val serialized = json.encodeToString(AgentCheckpointData.serializer(), checkpoint)
-        val restored = json.decodeFromString(AgentCheckpointData.serializer(), serialized)
+        val serialized = json.encodeToString(checkpoint)
+        val restored = json.decodeFromString<AgentCheckpointData>(serialized)
 
         // Full equality as a final check
         assertEquals(checkpoint, restored)

@@ -1,8 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Properties
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.jvm")

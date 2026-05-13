@@ -2,8 +2,6 @@ import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 import org.gradle.kotlin.dsl.implementation
 import org.gradle.kotlin.dsl.project
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.multiplatform")

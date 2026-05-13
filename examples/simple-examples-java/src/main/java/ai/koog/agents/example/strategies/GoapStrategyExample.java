@@ -29,8 +29,12 @@ public class GoapStrategyExample {
         public SolutionAssessment assessment = null;
 
         public MyState(String agentInput) {
-            super(agentInput);
             problem = agentInput;
+        }
+
+        @Override
+        public String getAgentInput() {
+            return problem;
         }
 
         public MyState copy(String newSolution, SolutionAssessment newAssessment) {

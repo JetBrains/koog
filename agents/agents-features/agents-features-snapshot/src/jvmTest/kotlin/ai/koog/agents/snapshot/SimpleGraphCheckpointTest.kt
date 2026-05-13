@@ -1,3 +1,5 @@
+package ai.koog.agents.snapshot
+
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
@@ -127,7 +129,8 @@ class SimpleGraphCheckpointTest {
         val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull()
         assertNotNull(checkpoint, "No checkpoint was created")
         val expectedPath = path(agentId, checkpointStrategyName, checkpointNodeId)
-        assertEquals(expectedPath, checkpoint?.nodePath, "Checkpoint has incorrect node ID")
+        val nodePath = checkpoint?.graphProperties?.nodePath
+        assertEquals(expectedPath, nodePath, "Checkpoint has incorrect node ID")
     }
 
     @Test
@@ -172,11 +175,13 @@ class SimpleGraphCheckpointTest {
         agent.run("Start the test", null)
 
         // Verify that a checkpoint was created and saved
-        val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull() ?: error("checkpoint is null")
+        val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull()
+            ?: error("checkpoint is null")
 
         val expectedPath = "$agentId${DEFAULT_AGENT_PATH_SEPARATOR}$checkpointStrategyName${DEFAULT_AGENT_PATH_SEPARATOR}$checkpointNodeId"
         assertNotNull(checkpoint, "No checkpoint was created")
-        assertEquals(expectedPath, checkpoint.nodePath, "Checkpoint has incorrect node ID")
+        val nodePath = checkpoint.graphProperties?.nodePath
+        assertEquals(expectedPath, nodePath, "Checkpoint has incorrect node ID")
         assertEquals(3, checkpoint.messageHistory.size)
         assertEquals(input, checkpoint.messageHistory[0].content)
         assertEquals("Node 1 output", checkpoint.messageHistory[1].content)

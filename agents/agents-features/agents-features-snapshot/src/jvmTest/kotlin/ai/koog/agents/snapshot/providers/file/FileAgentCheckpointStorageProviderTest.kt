@@ -1,6 +1,7 @@
 package ai.koog.agents.snapshot.providers.file
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -49,10 +50,12 @@ class FileAgentCheckpointStorageProviderTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = checkpointId,
             createdAt = createdAt,
-            nodePath = nodeId,
-            lastOutput = lastInput,
             messageHistory = messageHistory,
-            version = 0L
+            version = 0L,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = nodeId,
+                lastOutput = lastInput
+            )
         )
 
         val agentId = "testAgentId"
@@ -67,8 +70,9 @@ class FileAgentCheckpointStorageProviderTest {
         val retrievedCheckpoint = checkpoints.first()
         assertEquals(checkpointId, retrievedCheckpoint.checkpointId)
         assertEquals(createdAt, retrievedCheckpoint.createdAt)
-        assertEquals(nodeId, retrievedCheckpoint.nodePath)
-        assertEquals(lastInput, retrievedCheckpoint.lastOutput)
+        val retrievedNodePath = retrievedCheckpoint.graphProperties?.nodePath
+        assertEquals(nodeId, retrievedNodePath)
+        assertEquals(lastInput, retrievedCheckpoint.graphProperties?.lastOutput)
         assertEquals(messageHistory.size, retrievedCheckpoint.messageHistory.size)
 
         // Check first message (User)
@@ -92,10 +96,12 @@ class FileAgentCheckpointStorageProviderTest {
         val laterCheckpoint = AgentCheckpointData(
             checkpointId = laterCheckpointId,
             createdAt = laterCreatedAt,
-            nodePath = nodeId,
-            lastOutput = lastInput,
             messageHistory = messageHistory,
-            version = checkpoint.version.plus(1)
+            version = checkpoint.version.plus(1),
+            graphProperties = GraphCheckpointProperties(
+                nodePath = nodeId,
+                lastOutput = lastInput
+            )
         )
 
         // Save the later checkpoint

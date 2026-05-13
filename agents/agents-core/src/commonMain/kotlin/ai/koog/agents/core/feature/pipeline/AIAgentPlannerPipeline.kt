@@ -13,6 +13,7 @@ import ai.koog.agents.core.feature.handler.planner.PlanCreationCompletedContext
 import ai.koog.agents.core.feature.handler.planner.PlanCreationStartingContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionStartingContext
+import ai.koog.serialization.TypeToken
 import ai.koog.utils.time.KoogClock
 
 /**
@@ -57,7 +58,9 @@ public expect open class AIAgentPlannerPipeline(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any?,
+        planType: TypeToken?,
         stepIndex: Int,
     )
 
@@ -78,7 +81,9 @@ public expect open class AIAgentPlannerPipeline(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any?,
+        planType: TypeToken?,
         stepIndex: Int,
         updatedPlan: Any,
     )
@@ -99,7 +104,9 @@ public expect open class AIAgentPlannerPipeline(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any,
+        planType: TypeToken?,
         stepIndex: Int
     )
 
@@ -119,7 +126,9 @@ public expect open class AIAgentPlannerPipeline(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any,
+        planType: TypeToken?,
         stepIndex: Int,
     )
 
@@ -139,7 +148,9 @@ public expect open class AIAgentPlannerPipeline(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any,
+        planType: TypeToken?,
         stepIndex: Int,
     )
 
@@ -160,7 +171,9 @@ public expect open class AIAgentPlannerPipeline(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any,
+        planType: TypeToken?,
         stepIndex: Int,
         isCompleted: Boolean,
     )

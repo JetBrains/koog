@@ -103,7 +103,7 @@ public class FunctionalAIAgent<Input, Output>(
             config = agentConfig,
             llm = initialLLMContext,
             stateManager = AIAgentStateManager(),
-            storage = AIAgentStorage(),
+            storage = AIAgentStorage(agentConfig.serializer),
             strategyName = strategy.name,
             pipeline = pipeline,
             executionInfo = executionInfo,

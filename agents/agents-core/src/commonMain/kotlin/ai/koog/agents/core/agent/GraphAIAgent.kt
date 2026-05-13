@@ -170,7 +170,7 @@ public open class GraphAIAgent<Input, Output>(
 
     override suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentGraphContextBase {
         val stateManager = AIAgentStateManager()
-        val storage = AIAgentStorage()
+        val storage = AIAgentStorage(agentConfig.serializer)
 
         val executionInfo = AgentExecutionInfo(parent = null, partName = id)
         val initialEnvironment = prepareAgentEnvironment(eventId = eventId, executionInfo = executionInfo)

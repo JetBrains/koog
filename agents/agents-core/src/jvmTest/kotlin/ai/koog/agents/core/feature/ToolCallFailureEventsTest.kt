@@ -2,7 +2,7 @@ package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.environment.ReceivedToolResult
@@ -56,7 +56,7 @@ class ToolCallFailureEventsTest {
     }
 
     private object ToolFailureCaptureFeature : AIAgentGraphFeature<ToolFailureCaptureConfig, Unit> {
-        override val key = AIAgentStorageKey<Unit>("tool_failure_capture")
+        override val key = createStorageKey<Unit>("tool_failure_capture")
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig,

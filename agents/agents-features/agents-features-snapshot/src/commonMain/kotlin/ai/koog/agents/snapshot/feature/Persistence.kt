@@ -4,26 +4,33 @@ import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.core.agent.context.AgentContextData
+import ai.koog.agents.core.agent.context.GraphAgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
-import ai.koog.agents.core.agent.context.agentContextDataAdditionalKey
 import ai.koog.agents.core.agent.context.featureOrThrow
+import ai.koog.agents.core.agent.context.graphAgentContextDataAdditionalKey
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.agents.core.agent.session.AdditionalInputs
 import ai.koog.agents.core.agent.session.feature
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.planner.AIAgentPlannerStrategy
+import ai.koog.agents.planner.PlannerAgentExecutionPoint
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONObject
+import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.kotlinx.toKoogJSONElement
 import ai.koog.serialization.kotlinx.toKoogJSONObject
@@ -73,10 +80,13 @@ public typealias Persistency = Persistence
  * using the [PersistenceFeatureConfig.enableAutomaticPersistence] option.
  *
  * @property persistenceStorageProvider The provider responsible for storing and retrieving checkpoints
+ * @property serializer The JSON serializer.
+ * @property clock The clock used for timestamping checkpoints
  */
 @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class, InternalAgentsApi::class)
 public class Persistence(
     private val persistenceStorageProvider: PersistenceStorageProvider<*>,
+    internal val serializer: JSONSerializer,
     internal val clock: KoogClock = KoogClock.System,
 ) {
     /**
@@ -106,10 +116,13 @@ public class Persistence(
     /**
      * Companion object implementing agent feature, handling [Persistence] creation and installation.
      */
-    public companion object Feature : AIAgentGraphFeature<PersistenceFeatureConfig, Persistence> {
+    public companion object Feature :
+        AIAgentGraphFeature<PersistenceFeatureConfig, Persistence>,
+        AIAgentPlannerFeature<PersistenceFeatureConfig, Persistence> {
+
         private val logger = KotlinLogging.logger { }
 
-        override val key: AIAgentStorageKey<Persistence> = AIAgentStorageKey("agents-features-snapshot")
+        override val key: AIAgentStorageKey<Persistence> = createStorageKey<Persistence>("agents-features-snapshot")
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig
@@ -119,7 +132,7 @@ public class Persistence(
             config: PersistenceFeatureConfig,
             pipeline: AIAgentGraphPipeline,
         ): Persistence {
-            val persistence = Persistence(config.storage)
+            val persistence = Persistence(config.storage, pipeline.config.serializer)
             persistence.rollbackStrategy = config.rollbackStrategy
             persistence.rollbackToolRegistry = config.rollbackToolRegistry
 
@@ -133,7 +146,8 @@ public class Persistence(
                 val checkpoint = persistence.rollbackToLatestCheckpoint(ctx.context)
 
                 if (checkpoint != null) {
-                    logger.info { "Restoring checkpoint: ${checkpoint.checkpointId} to node ${checkpoint.nodePath}" }
+                    val nodePath = checkpoint.graphProperties?.nodePath
+                    logger.info { "Restoring checkpoint: ${checkpoint.checkpointId} to node $nodePath" }
                 } else {
                     logger.info { "No non-tombstone checkpoint found, starting from the beginning" }
                 }
@@ -170,6 +184,82 @@ public class Persistence(
             return persistence
         }
 
+        override fun install(config: PersistenceFeatureConfig, pipeline: AIAgentPlannerPipeline): Persistence {
+            val persistence = Persistence(config.storage, pipeline.config.serializer)
+            persistence.rollbackStrategy = config.rollbackStrategy
+            persistence.rollbackToolRegistry = config.rollbackToolRegistry
+
+            pipeline.interceptStrategyStarting(this) { ctx ->
+                val planner = (ctx.strategy as AIAgentPlannerStrategy<*, *, *>).planner
+
+                require(planner.stateType != null && planner.planType != null) {
+                    "State and plan types must be explicitly specified for the planner persistence"
+                }
+
+                val checkpoint = persistence.rollbackToLatestCheckpoint(ctx.context)
+
+                if (checkpoint != null) {
+                    logger.info { "Restoring checkpoint: ${checkpoint.checkpointId}" }
+                } else {
+                    logger.info { "No non-tombstone checkpoint found, starting from the beginning" }
+                }
+            }
+
+            if (config.enableAutomaticPersistence) {
+                // if any of the type tokens are null, onStrategyStarting will fail
+
+                pipeline.interceptPlanCreationCompleted(this) { eventCtx ->
+                    val parent = persistence.getLatestCheckpoint(eventCtx.context.runId)
+                    persistence.createPlannerCheckpoint(
+                        agentContext = eventCtx.context,
+                        state = eventCtx.state,
+                        stateType = eventCtx.stateType!!,
+                        plan = eventCtx.updatedPlan,
+                        planType = eventCtx.planType!!,
+                        executionPoint = PlannerAgentExecutionPoint.PlanCreated,
+                        version = parent?.version?.plus(1) ?: 0L,
+                    )
+                }
+
+                pipeline.interceptStepExecutionCompleted(this) { eventCtx ->
+                    val parent = persistence.getLatestCheckpoint(eventCtx.context.runId)
+                    persistence.createPlannerCheckpoint(
+                        agentContext = eventCtx.context,
+                        state = eventCtx.state,
+                        stateType = eventCtx.stateType!!,
+                        plan = eventCtx.plan,
+                        planType = eventCtx.planType!!,
+                        executionPoint = PlannerAgentExecutionPoint.StepExecuted,
+                        version = parent?.version?.plus(1) ?: 0L,
+                    )
+                }
+
+                pipeline.interceptPlanCompletionEvaluationCompleted(this) { eventCtx ->
+                    val parent = persistence.getLatestCheckpoint(eventCtx.context.runId)
+                    persistence.createPlannerCheckpoint(
+                        agentContext = eventCtx.context,
+                        state = eventCtx.state,
+                        stateType = eventCtx.stateType!!,
+                        plan = eventCtx.plan,
+                        planType = eventCtx.planType!!,
+                        executionPoint = PlannerAgentExecutionPoint.PlanCompletionEvaluated(eventCtx.isCompleted),
+                        version = parent?.version?.plus(1) ?: 0L,
+                    )
+                }
+
+                pipeline.interceptStrategyCompleted(this) { ctx ->
+                    val parent = persistence.getLatestCheckpoint(ctx.context.runId)
+                    persistence.createTombstoneCheckpoint(
+                        ctx.context.runId,
+                        persistence.clock.now(),
+                        parent?.version?.plus(1) ?: 0L
+                    )
+                }
+            }
+
+            return persistence
+        }
+
         /**
          * Runs the agent from a previously saved checkpoint.
          *
@@ -178,7 +268,7 @@ public class Persistence(
          * **not** need to be installed on the agent for this to work.
          *
          * @param agent The agent to run.
-         * @param agentInput The input to provide to the agent.
+         * @param input The input to provide to the agent.
          * @param checkpoint The checkpoint data to restore from.
          * @param rollbackStrategy The strategy to use when restoring state. Defaults to [RollbackStrategy.Default].
          * @param sessionId Optional session identifier. A random UUID is generated if not provided.
@@ -186,11 +276,14 @@ public class Persistence(
          */
         public suspend fun <Input, Output> runFromCheckpoint(
             agent: AIAgent<Input, Output>,
-            agentInput: Input,
+            input: Input,
             checkpoint: AgentCheckpointData,
             rollbackStrategy: RollbackStrategy = RollbackStrategy.Default,
             sessionId: String? = null,
-        ): Output = runFromCheckpoint(agent.createSession(sessionId), agentInput, checkpoint, rollbackStrategy)
+        ): Output {
+            val session = agent.createSession(sessionId)
+            return runFromCheckpoint(session, input, checkpoint, rollbackStrategy)
+        }
 
         /**
          * Runs the session from a previously saved checkpoint.
@@ -211,8 +304,9 @@ public class Persistence(
             checkpoint: AgentCheckpointData,
             rollbackStrategy: RollbackStrategy = RollbackStrategy.Default,
         ): Output {
-            val storage = AIAgentStorage()
-            storage.set(agentContextDataAdditionalKey, checkpoint.toAgentContextData(rollbackStrategy))
+            val serializer = session.pipeline()?.config?.serializer ?: throw IllegalStateException("Agent config not found in session pipeline")
+            val storage = AIAgentStorage(serializer)
+            storage.set(graphAgentContextDataAdditionalKey, checkpoint.toAgentContextData(rollbackStrategy) as GraphAgentContextData)
             return session.run(input, AdditionalInputs.Storage(storage))
         }
 
@@ -262,7 +356,7 @@ public class Persistence(
         checkpointId: String? = null,
     ): AgentCheckpointData? {
         val inputJson: JSONElement? = try {
-            agentContext.config.serializer.encodeToJSONElement(lastInput, lastInputType)
+            serializer.encodeToJSONElement(lastInput, lastInputType)
         } catch (_: Exception) {
             null
         }
@@ -274,16 +368,17 @@ public class Persistence(
             return null
         }
 
-        val checkpoint = agentContext.llm.readSession {
-            return@readSession AgentCheckpointData(
-                checkpointId = checkpointId ?: Uuid.random().toString(),
-                messageHistory = prompt.messages,
+        val checkpoint = AgentCheckpointData(
+            checkpointId = checkpointId ?: Uuid.random().toString(),
+            messageHistory = agentContext.getHistory(),
+            storage = JSONObject(agentContext.storage.toSerializedMap()),
+            createdAt = clock.now(),
+            version = version,
+            graphProperties = GraphCheckpointProperties(
                 nodePath = agentContext.executionInfo.path(),
-                lastInput = inputJson,
-                createdAt = KoogClock.System.now(),
-                version = version,
-            )
-        }
+                lastInput = inputJson
+            ),
+        )
 
         saveCheckpoint(agentContext.runId, checkpoint)
         return checkpoint
@@ -310,7 +405,7 @@ public class Persistence(
         checkpointId: String? = null,
     ): AgentCheckpointData? {
         val outputJson = try {
-            agentContext.config.serializer.encodeToJSONElement(lastOutput, lastOutputType)
+            serializer.encodeToJSONElement(lastOutput, lastOutputType)
         } catch (_: Exception) {
             null
         }
@@ -322,16 +417,68 @@ public class Persistence(
             return null
         }
 
-        val checkpoint = agentContext.llm.readSession {
-            return@readSession AgentCheckpointData(
-                checkpointId = checkpointId ?: Uuid.random().toString(),
-                messageHistory = prompt.messages,
+        val checkpoint = AgentCheckpointData(
+            checkpointId = checkpointId ?: Uuid.random().toString(),
+            messageHistory = agentContext.getHistory(),
+            storage = JSONObject(agentContext.storage.toSerializedMap()),
+            createdAt = clock.now(),
+            version = version,
+            graphProperties = GraphCheckpointProperties(
                 nodePath = agentContext.executionInfo.path(),
-                lastOutput = outputJson,
-                createdAt = KoogClock.System.now(),
-                version = version,
+                lastOutput = outputJson
             )
+        )
+
+        saveCheckpoint(agentContext.runId, checkpoint)
+        return checkpoint
+    }
+
+    /**
+     * Creates a checkpoint of the agent's current state.
+     *
+     * This method captures the agent's message history, current state, and plan.
+     *
+     * @param agentContext The context of the agent to checkpoint.
+     * @param state The current state of the agent.
+     * @param plan The current plan of the agent.
+     * @param executionPoint The execution point of the planner agent.
+     */
+    public suspend fun createPlannerCheckpoint(
+        agentContext: AIAgentContext,
+        state: Any,
+        stateType: TypeToken,
+        plan: Any,
+        planType: TypeToken,
+        executionPoint: PlannerAgentExecutionPoint,
+        version: Long,
+        checkpointId: String? = null,
+    ): AgentCheckpointData? {
+        val stateJson = try {
+            agentContext.config.serializer.encodeToJSONElement(state, stateType)
+        } catch (_: Exception) {
+            logger.warn { "Failed to serialize state for planner checkpoint, skipping checkpoint creation..." }
+            return null
         }
+
+        val planJson = try {
+            agentContext.config.serializer.encodeToJSONElement(plan, planType)
+        } catch (_: Exception) {
+            logger.warn { "Failed to serialize plan for planner checkpoint, skipping checkpoint creation..." }
+            return null
+        }
+
+        val checkpoint = AgentCheckpointData(
+            checkpointId = checkpointId ?: Uuid.random().toString(),
+            messageHistory = agentContext.getHistory(),
+            storage = JSONObject(agentContext.storage.toSerializedMap()),
+            createdAt = clock.now(),
+            version = version,
+            plannerProperties = PlannerCheckpointProperties(
+                executionPoint = executionPoint,
+                state = stateJson,
+                plan = planJson
+            )
+        )
 
         saveCheckpoint(agentContext.runId, checkpoint)
         return checkpoint
@@ -409,9 +556,10 @@ public class Persistence(
         input: JSONElement,
     ) {
         agentContext.store(
-            AgentContextData(
-                messageHistory,
-                agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath,
+            GraphAgentContextData(
+                messageHistory = messageHistory,
+                storage = JSONObject(agentContext.storage.toSerializedMap()),
+                nodePath = agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath,
                 lastInput = input,
                 rollbackStrategy = rollbackStrategy
             )
@@ -446,9 +594,10 @@ public class Persistence(
         output: JSONElement,
     ) {
         agentContext.store(
-            AgentContextData(
-                messageHistory,
-                agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath,
+            GraphAgentContextData(
+                messageHistory = messageHistory,
+                storage = JSONObject(agentContext.storage.toSerializedMap()),
+                nodePath = agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath,
                 lastOutput = output,
                 rollbackStrategy = rollbackStrategy
             )
@@ -473,35 +622,34 @@ public class Persistence(
         checkpointId: String,
         agentContext: AIAgentContext
     ): AgentCheckpointData? {
-        val checkpoint: AgentCheckpointData? = getCheckpointById(agentContext.runId, checkpointId)
-        if (checkpoint != null) {
-            agentContext.store(
-                checkpoint.toAgentContextData(rollbackStrategy) { context ->
-                    messageHistoryDiff(
-                        currentMessages = context.llm.prompt.messages,
-                        checkpointMessages = checkpoint.messageHistory
-                    )
-                        .filterIsInstance<Message.Tool.Call>()
-                        .reversed()
-                        .forEach { toolCall ->
-                            rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
-                                val toolArgs = try {
-                                    toolCall.contentJsonResult
-                                        .getOrNull()
-                                        ?.toKoogJSONObject()
-                                        ?.let { rollbackTool.decodeArgs(it, agentContext.config.serializer) }
-                                } catch (e: CancellationException) {
-                                    throw e
-                                } catch (_: Exception) {
-                                    null
-                                }
-                                rollbackTool.executeUnsafe(toolArgs)
-                            }
-                        }
-                }
+        val checkpoint = getCheckpointById(agentContext.runId, checkpointId) ?: return null
+
+        val rollbackAction: suspend (AIAgentContext) -> Unit = { context ->
+            messageHistoryDiff(
+                currentMessages = context.llm.readSession { prompt.messages },
+                checkpointMessages = checkpoint.messageHistory
             )
+                .filterIsInstance<Message.Tool.Call>()
+                .reversed()
+                .forEach { toolCall ->
+                    rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
+                        val toolArgs = try {
+                            toolCall.contentJsonResult
+                                .getOrNull()
+                                ?.toKoogJSONObject()
+                                ?.let { rollbackTool.decodeArgs(it, serializer) }
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {
+                            null
+                        }
+                        rollbackTool.executeUnsafe(toolArgs)
+                    }
+                }
         }
 
+        val contextData = checkpoint.toAgentContextData(rollbackStrategy, rollbackAction) ?: return null
+        agentContext.store(contextData)
         return checkpoint
     }
 
@@ -538,12 +686,9 @@ public class Persistence(
     public suspend fun rollbackToLatestCheckpoint(
         agentContext: AIAgentContext
     ): AgentCheckpointData? {
-        val checkpoint: AgentCheckpointData? = getLatestCheckpoint(agentContext.runId)
-        if (checkpoint?.isTombstone() ?: true) {
-            return null
-        }
-
-        agentContext.store(checkpoint.toAgentContextData(rollbackStrategy))
+        val checkpoint = getLatestCheckpoint(agentContext.runId)
+        val contextData = checkpoint?.toAgentContextData(rollbackStrategy) ?: return null
+        agentContext.store(contextData)
         return checkpoint
     }
 }

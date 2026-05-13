@@ -1,7 +1,7 @@
 package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import straightForwardGraphNoCheckpoint
+import ai.koog.agents.snapshot.straightForwardGraphNoCheckpoint
 
 object JavaTestHelper {
     @JvmStatic

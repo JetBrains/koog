@@ -30,6 +30,7 @@ import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
 import ai.koog.prompt.message.RequestMetaInfo;
 import ai.koog.prompt.message.ResponseMetaInfo;
+import ai.koog.serialization.JSONPrimitive;
 import ai.koog.serialization.TypeToken;
 import ai.koog.serialization.JSONElementKt;
 import org.junit.jupiter.api.Test;
@@ -668,7 +669,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             now,
             sessionId + "/" + strategyName + "/MissingNode",
             null,
-            JSONElementKt.JSONPrimitive("missing"),
+            JSONPrimitive.of("missing"),
             List.of(),
             0L,
             null

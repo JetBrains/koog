@@ -1,3 +1,5 @@
+package ai.koog.agents.snapshot
+
 import java.util.concurrent.LinkedBlockingQueue
 
 internal class TestAgentLogsCollector {

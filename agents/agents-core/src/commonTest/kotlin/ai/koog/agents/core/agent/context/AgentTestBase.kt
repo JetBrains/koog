@@ -93,7 +93,7 @@ open class AgentTestBase {
     }
 
     protected fun createTestStorage(): AIAgentStorage {
-        return AIAgentStorage()
+        return AIAgentStorage(KotlinxSerializer())
     }
 
     protected open fun createTestContext(

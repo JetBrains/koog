@@ -2,11 +2,12 @@ package ai.koog.agents.planner
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext
+import ai.koog.agents.core.agent.context.getPlannerAgentContextData
+import ai.koog.agents.core.agent.context.removePlannerAgentContextData
 import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.serialization.TypeToken
-import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
@@ -20,17 +21,12 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  * 3. Repeat steps 1 and 2 until the plan is considered completed. Then the final [State] is returned.
  *
  * @param stateType [TypeToken] of the [State].
+ * @param planType [TypeToken] of the [Plan].
  */
 public abstract class AIAgentPlanner<State : Any, Plan : Any>(
-    // FIXME: require the type explicitly when we decide, what to do with it in Java API
-    stateType: TypeToken? = null,
+    public val stateType: TypeToken? = null,
+    public val planType: TypeToken? = null,
 ) {
-    /**
-     * [TypeToken] of the [State]
-     */
-    public val stateType: TypeToken = stateType ?: typeToken<Any?>().also {
-        logger.warn { "State type is not specified, some agent features might behave unexpectedly." }
-    }
 
     private companion object {
         private val logger = KotlinLogging.logger { }
@@ -80,36 +76,64 @@ public abstract class AIAgentPlanner<State : Any, Plan : Any>(
     ): State {
         logger.debug { formatLog(context, "Starting planner execution") }
         var state = input
-        var previousPlan: Plan? = null
+        var plan: Plan? = null
+
+        val contextData = context.getPlannerAgentContextData()
+        context.removePlannerAgentContextData()
+        var executionPoint = contextData?.executionPoint
+        if (contextData != null) {
+            state = context.config.serializer.decodeFromJSONElement(contextData.state, stateType!!)
+            plan = context.config.serializer.decodeFromJSONElement(contextData.plan, planType!!)
+        }
 
         while (true) {
+            if (executionPoint is PlannerAgentExecutionPoint.PlanCompletionEvaluated) {
+                if (executionPoint.isCompleted) {
+                    break
+                } else {
+                    executionPoint = null
+                }
+            }
+
             val stepIndex = context.stateManager.withStateLock { state ->
                 state.iterations
             }
 
-            val plan = context.with(partName = "buildPlan-${stepIndex + 1}") { executionInfo, eventId ->
-                context.pipeline.onPlanCreationStarting(eventId, executionInfo, context, state, previousPlan, stepIndex + 1)
-                val newPlan = buildPlan(context, state, previousPlan)
-                context.pipeline.onPlanCreationCompleted(eventId, executionInfo, context, state, previousPlan, stepIndex + 1, newPlan)
-                newPlan
+            if (executionPoint == null) {
+                context.with(partName = "buildPlan-${stepIndex + 1}") { executionInfo, eventId ->
+                    context.pipeline.onPlanCreationStarting(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex + 1)
+                    val newPlan = buildPlan(context, state, plan)
+                    context.pipeline.onPlanCreationCompleted(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex + 1, newPlan)
+                    plan = newPlan
+                }
+            }
+
+            if (executionPoint is PlannerAgentExecutionPoint.PlanCreated) {
+                executionPoint = null
             }
 
             logger.debug { formatLog(context, "Executing plan step #${stepIndex + 1}") }
 
-            // Execute step
-            context.with(partName = "executeStep-${stepIndex + 1}") { stepExecutionInfo, stepEventId ->
-                context.pipeline.onStepExecutionStarting(stepEventId, stepExecutionInfo, context, state, plan, stepIndex + 1)
-                state = executeStep(context, state, plan)
-                context.pipeline.onStepExecutionCompleted(stepEventId, stepExecutionInfo, context, state, plan, stepIndex + 1)
+            if (executionPoint == null) {
+                // Execute step
+                context.with(partName = "executeStep-${stepIndex + 1}") { stepExecutionInfo, stepEventId ->
+                    context.pipeline.onStepExecutionStarting(stepEventId, stepExecutionInfo, context, state, stateType, plan!!, planType, stepIndex + 1)
+                    state = executeStep(context, state, plan)
+                    context.pipeline.onStepExecutionCompleted(stepEventId, stepExecutionInfo, context, state, stateType, plan, planType, stepIndex + 1)
+                }
+            }
+
+            if (executionPoint is PlannerAgentExecutionPoint.StepExecuted) {
+                executionPoint = null
             }
 
             logger.debug { formatLog(context, "Finished executing plan step #${stepIndex + 1}") }
 
             // Check if plan is completed
             val isCompleted = context.with(partName = "isPlanCompleted-${stepIndex + 1}") { executionInfo, eventId ->
-                context.pipeline.onPlanCompletionEvaluationStarting(eventId, executionInfo, context, state, plan, stepIndex + 1)
+                context.pipeline.onPlanCompletionEvaluationStarting(eventId, executionInfo, context, state, stateType, plan!!, planType, stepIndex + 1)
                 val completed = isPlanCompleted(context, state, plan)
-                context.pipeline.onPlanCompletionEvaluationCompleted(eventId, executionInfo, context, state, plan, stepIndex + 1, completed)
+                context.pipeline.onPlanCompletionEvaluationCompleted(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex + 1, completed)
                 completed
             }
 
@@ -126,8 +150,6 @@ public abstract class AIAgentPlanner<State : Any, Plan : Any>(
             }
 
             if (isCompleted) break
-
-            previousPlan = plan
         }
 
         logger.debug { formatLog(context, "Finished planner execution") }

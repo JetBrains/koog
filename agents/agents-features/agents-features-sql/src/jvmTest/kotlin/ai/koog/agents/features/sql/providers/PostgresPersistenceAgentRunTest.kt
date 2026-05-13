@@ -155,7 +155,7 @@ class PostgresPersistenceAgentRunTest {
 
         val cp1 = createTestCheckpoint("cp-1", time = time, version = 0, nodePath = path(agentId, "straight-forward", "Node2"))
         val cp2 = createTestCheckpoint("cp-2", version = cp1.version + 1, time = time, nodePath = path(agentId, "straight-forward", "Node2"))
-        val tomb = tombstoneCheckpoint(time = KoogClock.System.now(), version = cp2.version + 1)
+        val tomb = tombstoneCheckpoint(createdAt = KoogClock.System.now(), version = cp2.version + 1)
 
         // Save in order: cp1 -> cp2 -> tombstone
         provider.saveCheckpoint(agentId, cp1)
@@ -198,7 +198,7 @@ class PostgresPersistenceAgentRunTest {
 
         val cp1 = createTestCheckpoint("cp-1", version = 0, time = time, nodePath = path(agentId, stratName, "Node2"))
         val cp2 = createTestCheckpoint("cp-2", version = cp1.version + 1, time = time, nodePath = path(agentId, stratName, "Node2"))
-        val tomb = tombstoneCheckpoint(time = KoogClock.System.now(), version = cp2.version + 1)
+        val tomb = tombstoneCheckpoint(createdAt = KoogClock.System.now(), version = cp2.version + 1)
         val cp3 = createTestCheckpoint("cp-3", version = tomb.version + 1, time = time, nodePath = path(agentId, stratName, "Node1"))
 
         // Save in order: cp1 -> cp2 -> tombstone -> cp3

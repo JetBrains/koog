@@ -1,6 +1,9 @@
+package ai.koog.agents.snapshot
+
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -28,10 +31,12 @@ class PersistenceRestoreStrategyTests {
         val checkpoint = AgentCheckpointData(
             checkpointId = "chk-1",
             createdAt = KoogClock.System.now(),
-            nodePath = "$agentId/restore-strategy/Node2",
-            lastInput = JSONPrimitive("input-for-node2"),
             messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(KoogClock.System.now()))),
-            version = 0L
+            version = 0L,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = "$agentId/restore-strategy/Node2",
+                lastInput = JSONPrimitive("input-for-node2")
+            )
         )
 
         provider.saveCheckpoint(sessionId, checkpoint)

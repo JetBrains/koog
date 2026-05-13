@@ -60,7 +60,7 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
 
         when (sessionInputs) {
             is AdditionalInputs.None -> {}
-            is AdditionalInputs.Storage -> context.storage.putAll(sessionInputs.storage.toMap())
+            is AdditionalInputs.Storage -> context.storage.putAll(sessionInputs.storage)
         }
 
         val runResult = try {
@@ -119,7 +119,7 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
                 is AdditionalInputs.None -> {}
                 is AdditionalInputs.Storage -> {
                     sessionInputs.storage.clear()
-                    sessionInputs.storage.putAll(context.storage.toMap())
+                    sessionInputs.storage.putAll(context.storage)
                 }
             }
         }

@@ -1,5 +1,7 @@
 package ai.koog.agents.core.agent.entity
 
+import ai.koog.serialization.JSONElement
+
 /**
  * API for [AIAgentStorage]
  */
@@ -39,14 +41,6 @@ public interface AIAgentStorageAPI {
     public suspend fun <T : Any> remove(key: AIAgentStorageKey<T>): T?
 
     /**
-     * Converts the storage to a map representation.
-     *
-     * @return A map containing all key-value pairs currently stored in the system, where keys are of type [AIAgentStorageKey]
-     * and values are of type [Any].
-     */
-    public suspend fun toMap(): Map<AIAgentStorageKey<*>, Any>
-
-    /**
      * Adds all key-value pairs from the given map to the storage.
      *
      * @param map A map containing keys of type [AIAgentStorageKey] and their associated values of type [Any].
@@ -55,7 +49,38 @@ public interface AIAgentStorageAPI {
     public suspend fun putAll(map: Map<AIAgentStorageKey<*>, Any>)
 
     /**
+     * Puts the contents of the [other] storage instance into the current storage.
+     * This method combines key-value pairs from the specified storage with the current one.
+     * If a key exists in both storages, the value from the given storage will overwrite the existing value.
+     *
+     * @param other The [AIAgentStorage] instance whose key-value pairs should be merged into the current storage.
+     */
+    public suspend fun putAll(other: AIAgentStorage)
+
+    /**
+     * Creates a copy of the current storage.
+     */
+    public suspend fun copy(): AIAgentStorage
+
+    /**
      * Clears all data from the storage.
      */
     public suspend fun clear()
+
+    /**
+     * Returns serialized storage entries keyed by [AIAgentStorageKey.name].
+     *
+     * Entries whose values cannot be serialized are omitted.
+     */
+    public suspend fun toSerializedMap(): Map<String, JSONElement>
+
+    /**
+     * Adds serialized storage entries from the given map.
+     *
+     * Each map key is treated as an [AIAgentStorageKey.name]. Later calls to methods like [get] will match entries
+     * by that key name.
+     *
+     * @param map serialized values keyed by storage key name.
+     */
+    public suspend fun putAllSerialized(map: Map<String, JSONElement>)
 }

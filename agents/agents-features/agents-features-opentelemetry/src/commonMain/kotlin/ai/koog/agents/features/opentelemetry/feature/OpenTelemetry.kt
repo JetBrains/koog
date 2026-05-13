@@ -2,6 +2,7 @@ package ai.koog.agents.features.opentelemetry.feature
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -70,7 +71,7 @@ public class OpenTelemetry {
 
         private val logger = KotlinLogging.logger { }
 
-        override val key: AIAgentStorageKey<OpenTelemetry> = AIAgentStorageKey("agents-features-opentelemetry")
+        override val key: AIAgentStorageKey<OpenTelemetry> = createStorageKey<OpenTelemetry>("agents-features-opentelemetry")
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig

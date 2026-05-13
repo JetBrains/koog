@@ -17,7 +17,8 @@ class GOAPPlannerAgentTest {
         val hasKey: Boolean = false,
         val doorUnlocked: Boolean = false,
         val treasureFound: Boolean = false
-    ) : GoapAgentState<Unit, SimpleState>(Unit) {
+    ) : GoapAgentState<Unit, SimpleState>() {
+        override val agentInput: Unit = Unit
         override fun provideOutput(): SimpleState = this
     }
 
@@ -92,7 +93,8 @@ class GOAPPlannerAgentTest {
     data class PathState(
         val hasItem: Boolean = false,
         val goalReached: Boolean = false
-    ) : GoapAgentState<Unit, PathState>(Unit) {
+    ) : GoapAgentState<Unit, PathState>() {
+        override val agentInput: Unit = Unit
         override fun provideOutput(): PathState = this
     }
 
@@ -164,7 +166,8 @@ class GOAPPlannerAgentTest {
         val hasAxe: Boolean = false,
         val hasPickaxe: Boolean = false,
         val hasShelter: Boolean = false
-    ) : GoapAgentState<Unit, ComplexState>(Unit) {
+    ) : GoapAgentState<Unit, ComplexState>() {
+        override val agentInput: Unit = Unit
         override fun provideOutput(): ComplexState = this
     }
 

@@ -24,7 +24,7 @@ import kotlin.jvm.JvmSynthetic
  */
 public class AIAgentPlannerStrategy<Input, Output, State : Any>(
     override val name: String,
-    private val planner: AIAgentPlanner<State, *>,
+    public val planner: AIAgentPlanner<State, *>,
     private val initializeState: (Input) -> State,
     private val provideOutput: (State) -> Output,
 ) : AIAgentStrategy<Input, Output, AIAgentPlannerContext> {

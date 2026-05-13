@@ -1,12 +1,16 @@
+package ai.koog.agents.snapshot.providers.file
+
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
+import ai.koog.agents.snapshot.createCheckpointGraphWithRollback
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.isTombstone
-import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider
+import ai.koog.agents.snapshot.straightForwardGraphNoCheckpoint
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
@@ -126,13 +130,15 @@ class FileCheckpointsTests {
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodePath = path(agentId, "straight-forward", "Node2"),
-            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            version = 0L
+            version = 0L,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(agentId, "straight-forward", "Node2"),
+                lastInput = JSONPrimitive("Test input")
+            )
         )
 
         provider.saveCheckpoint(sessionId, testCheckpoint)
@@ -168,14 +174,16 @@ class FileCheckpointsTests {
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodePath = path(agentId, "straight-forward", "Node2"),
-            lastOutput = JSONPrimitive("Test output"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time)),
                 Message.User("Node 2 output (already calculated)", metaInfo = RequestMetaInfo(time))
             ),
-            version = 0L
+            version = 0L,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(agentId, "straight-forward", "Node2"),
+                lastOutput = JSONPrimitive("Test output")
+            )
         )
 
         provider.saveCheckpoint(sessionId, testCheckpoint)
@@ -210,25 +218,29 @@ class FileCheckpointsTests {
         val testCheckpoint2 = AgentCheckpointData(
             checkpointId = "testCheckpointId2",
             createdAt = time - 10.seconds,
-            nodePath = path(agentId, "straight-forward", "Node1"),
-            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("Earlier message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Earlier response", metaInfo = ResponseMetaInfo(time))
             ),
-            version = 0L
+            version = 0L,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(agentId, "straight-forward", "Node1"),
+                lastInput = JSONPrimitive("Test input")
+            )
         )
 
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodePath = path(agentId, "straight-forward", "Node2"),
-            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            version = testCheckpoint2.version.plus(1)
+            version = testCheckpoint2.version.plus(1),
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(agentId, "straight-forward", "Node2"),
+                lastInput = JSONPrimitive("Test input")
+            )
         )
 
         provider.saveCheckpoint(sessionId, testCheckpoint)

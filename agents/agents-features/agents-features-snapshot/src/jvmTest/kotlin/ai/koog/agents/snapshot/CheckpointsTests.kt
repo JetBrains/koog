@@ -1,10 +1,14 @@
 @file:Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
 
+package ai.koog.agents.snapshot
+
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.GraphAIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.session.callTool
 import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
@@ -31,6 +35,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.RollbackToolRegistry
 import ai.koog.agents.snapshot.feature.withPersistence
@@ -393,13 +398,15 @@ class CheckpointsTests {
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodePath = path(convId, "straight-forward", "Node2"),
-            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(convId, "straight-forward", "Node2"),
+                lastInput = JSONPrimitive("Test input")
+            )
         )
 
         checkpointStorageProvider.saveCheckpoint(convId, testCheckpoint)
@@ -434,25 +441,29 @@ class CheckpointsTests {
         val testCheckpoint2 = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node1"),
-            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node1"),
+                lastInput = JSONPrimitive("Test input")
+            )
         )
 
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node2"),
-            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            version = testCheckpoint2.version + 1
+            version = testCheckpoint2.version + 1,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node2"),
+                lastInput = JSONPrimitive("Test input")
+            )
         )
 
         checkpointStorageProvider.saveCheckpoint(sessionId, testCheckpoint2)
@@ -709,13 +720,12 @@ class CheckpointsTests {
             lastMessageHistory
         )
 
-        assertTrue(
-            lastCheckpoint.nodePath.endsWith("executeTool"),
-            message = "Last checkpoint node should be `executeTool`"
-        )
+        val nodePath = lastCheckpoint.graphProperties?.nodePath
+        assertEquals(nodePath?.endsWith("executeTool"), true, "Last checkpoint node should be `executeTool`")
 
+        val lastOutput = lastCheckpoint.graphProperties?.lastOutput
         assertTrue(
-            lastCheckpoint.lastOutput.toString().contains("Ferdinand Magellan"),
+            lastOutput.toString().contains("Ferdinand Magellan"),
             message = "Last checkpointed node should be an `executeTool` with \"Ferdinand Magellan\" as an output (already calculated)"
         )
 
@@ -742,6 +752,53 @@ class CheckpointsTests {
             """.trimIndent(),
             tracer.traceAsString().trimIndent()
         )
+    }
+
+    @Test
+    fun testStorageIsSavedInCheckpoint() = runTest {
+        val storageKey = createStorageKey<String>("test-value")
+        val checkpointProvider = InMemoryPersistenceStorageProvider()
+        val sessionId = "storage-checkpoint-session"
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) { },
+            strategy = strategy("storage-checkpoint") {
+                // write a key to the storage that will be persisted in the checkpoint
+                val writeNode by node<String, String>("writeNode") {
+                    storage.set(storageKey, "persisted-value")
+                    it
+                }
+
+                val checkpointNode by node<String, String>("checkpointNode") {
+                    withPersistence { ctx ->
+                        createCheckpointAfterNode(
+                            agentContext = ctx,
+                            nodePath = ctx.executionInfo.path(),
+                            lastOutput = it,
+                            lastOutputType = typeToken<String>(),
+                            version = 0L
+                        )
+                    }
+                    it
+                }
+
+                nodeStart then writeNode then checkpointNode then nodeFinish
+            },
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry
+        ) {
+            install(Persistence) {
+                storage = checkpointProvider
+            }
+        }
+
+        agent.run("start", sessionId = sessionId)
+
+        // get second to last checkpoint because the latest checkpoint is a tombstone checkpoint that doesn't have storage and message history
+        val checkpoint = checkpointProvider.getCheckpoints(sessionId).let { it[it.lastIndex - 1] }
+        val restoredStorage = AIAgentStorage(serializer)
+        restoredStorage.putAllSerialized(checkpoint.storage?.entries ?: emptyMap())
+        assertEquals("persisted-value", restoredStorage.get(storageKey))
     }
 
     /**
@@ -882,31 +939,33 @@ class CheckpointsTests {
         )
 
         checkpointStorage.removeCheckpoints()
+
+        val nodePathStr = lastCheckpoint.graphProperties?.nodePath!!
         checkpointStorage.saveCheckpoint(
             agent.id,
             lastCheckpoint.copy(
                 version = 0,
-                lastOutput = null,
-                lastInput = Json.encodeToJsonElement(
-                    Message.Tool.Call(
-                        id = "call-1",
-                        tool = "ask",
-                        content = "{\"message\":\"Who discovered this?\"}",
-                        metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-02T22:35:01+01:00"))
-                    )
-                ).toKoogJSONElement()
+                graphProperties = GraphCheckpointProperties(
+                    nodePath = nodePathStr,
+                    lastInput = Json.encodeToJsonElement(
+                        Message.Tool.Call(
+                            id = "call-1",
+                            tool = "ask",
+                            content = "{\"message\":\"Who discovered this?\"}",
+                            metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-02T22:35:01+01:00"))
+                        )
+                    ).toKoogJSONElement()
+                )
             )
         )
 
         println(checkpointStorage.getLatestCheckpoint(agent.id))
 
-        assertTrue(
-            lastCheckpoint.nodePath.endsWith("executeTool"),
-            message = "Last checkpoint node should be `executeTool`"
-        )
+        assertEquals(nodePathStr?.endsWith("executeTool"), true, "Last checkpoint node should be `executeTool`")
 
+        val lastOutput = lastCheckpoint.graphProperties?.lastOutput
         assertTrue(
-            lastCheckpoint.lastOutput.toString().contains("Ferdinand Magellan"),
+            lastOutput.toString().contains("Ferdinand Magellan"),
             message = "Last checkpointed node should be an `executeTool` with \"Ferdinand Magellan\" as an output (already calculated)"
         )
 
