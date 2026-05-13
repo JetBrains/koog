@@ -9,7 +9,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.utils.time.KoogClock
 import com.google.ai.edge.litertlm.Backend
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.ExperimentalTime
 
 /**
@@ -19,13 +18,15 @@ import kotlin.time.ExperimentalTime
  *   Defaults to [LiteRTLLModels.FunctionGemma].
  * @property modelsPath Absolute path on the device where `.litertlm` model files are stored.
  * @property cacheDir Absolute path used by the LiteRT engine for intermediate caches.
+ *   When `null`, LiteRT defaults to the directory of the model file. Set to `":nocache"`
+ *   to disable caching entirely (see LiteRT's `EngineConfig.cacheDir` contract).
  * @property backend LiteRT compute backend (e.g. CPU, GPU). Defaults to [Backend.CPU].
  * @property clock Clock instance used for response timestamp metadata.
  */
 public data class LiteRTClientConfig(
     val defaultModel: LLModel = LiteRTLLModels.FunctionGemma,
     val modelsPath: String = "/data/local/tmp/llm",
-    val cacheDir: String = "/data/local/tmp/llm/cache",
+    val cacheDir: String? = null,
     val backend: Backend = Backend.CPU(),
     @OptIn(ExperimentalTime::class)
     val clock: KoogClock = KoogClock.System,
@@ -35,8 +36,9 @@ public data class LiteRTClientConfig(
  * [LLMClient] implementation that runs inference on-device using the LiteRT runtime.
  *
  * Delegates to an internal [LiteRTLLMSession] which manages the LiteRT [Engine] and
- * [Conversation] lifecycle. Tool support is not yet wired through to LiteRT; tool
- * arguments passed to [execute] are ignored and an empty list is forwarded to the session.
+ * [Conversation] lifecycle. Tools are forwarded to LiteRT as part of the
+ * [Conversation] configuration; tool execution itself is performed by the koog
+ * agent framework, not by LiteRT (`automaticToolCalling = false`).
  *
  * @param config Configuration specifying model paths, backend, and runtime options.
  */
@@ -72,8 +74,7 @@ public class LiteRTLLMClient(config: LiteRTClientConfig) : LLMClient() {
     override fun llmProvider(): LLMProvider = LiteRTLLMProvider
 
     /** Closes the underlying [LiteRTLLMSession] and releases all LiteRT resources. */
-    @OptIn(ExperimentalAtomicApi::class)
     override fun close() {
-        session.close()
+        kotlinx.coroutines.runBlocking { session.close() }
     }
 }

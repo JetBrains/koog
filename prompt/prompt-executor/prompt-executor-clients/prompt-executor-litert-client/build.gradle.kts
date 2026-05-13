@@ -19,6 +19,12 @@ kotlin {
                 implementation(libs.kotlinx.serialization.json)
             }
         }
+
+        androidUnitTest {
+            dependencies {
+                implementation(project(":test-utils"))
+            }
+        }
     }
 
     explicitApi()

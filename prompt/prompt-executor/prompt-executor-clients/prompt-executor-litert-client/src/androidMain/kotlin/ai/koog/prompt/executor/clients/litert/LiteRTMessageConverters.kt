@@ -9,11 +9,15 @@ import ai.koog.utils.time.KoogClock
 import com.google.ai.edge.litertlm.Content
 import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.OpenApiTool
+import com.google.ai.edge.litertlm.ToolCall
 import io.modelcontextprotocol.kotlin.sdk.types.toJson
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import com.google.ai.edge.litertlm.Message as LitertMessage
 
@@ -24,10 +28,23 @@ import com.google.ai.edge.litertlm.Message as LitertMessage
  * are each mapped to a separate [Message.Tool.Call]. Non-text content parts are
  * not supported and will throw [UnsupportedOperationException].
  *
+ * LiteRT [ToolCall] does not expose a stable call id. Koog uses tool-call ids to
+ * correlate [Message.Tool.Result] with [Message.Tool.Call]. Therefore this client
+ * currently supports only a single tool call per LiteRT response. Multiple tool
+ * calls must either be rejected or handled by synthesizing stable ids and batching
+ * tool responses back to LiteRT in order. Until proper support exists, this
+ * function fails fast with [UnsupportedOperationException] when more than one
+ * tool call is present.
+ *
  * @param clock Clock used to populate [ResponseMetaInfo] timestamps.
  * @return List containing assistant and/or tool-call messages derived from the response.
  */
 internal fun LitertMessage.toKoogMessages(clock: KoogClock): List<Message.Response> {
+    if (toolCalls.size > 1) {
+        throw UnsupportedOperationException(
+            "LiteRT client does not currently support multiple tool calls in one response because LiteRT ToolCall has no id for result correlation"
+        )
+    }
     return buildList {
         if (contents.contents.isNotEmpty()) {
             val parts = contents.contents.map {
@@ -50,7 +67,7 @@ internal fun LitertMessage.toKoogMessages(clock: KoogClock): List<Message.Respon
                     Message.Tool.Call(
                         id = null,
                         tool = toolCall.name,
-                        content = toolCall.arguments.toJson().toString(),
+                        content = JsonObject(toolCall.arguments.toJson()).toString(),
                         metaInfo = ResponseMetaInfo.create(clock),
                     )
                 )
@@ -62,21 +79,77 @@ internal fun LitertMessage.toKoogMessages(clock: KoogClock): List<Message.Respon
 /**
  * Converts a koog [Message] to a LiteRT [LitertMessage].
  *
- * Maps each [Message.Role] to the corresponding LiteRT factory:
- * - [Message.Role.System] → `LitertMessage.system`
- * - [Message.Role.User] → `LitertMessage.user`
- * - [Message.Role.Assistant] → `LitertMessage.model`
- * - [Message.Role.Tool] → `LitertMessage.tool`
+ * Dispatch is by message subtype so tool-call round trips are preserved:
+ * - [Message.System] → `LitertMessage.system`
+ * - [Message.User] → `LitertMessage.user`
+ * - [Message.Assistant] → `LitertMessage.model`
+ * - [Message.Tool.Call] → `LitertMessage.model` carrying the call in `toolCalls`
+ * - [Message.Tool.Result] → `LitertMessage.tool` with a [Content.ToolResponse]
  *
- * [Message.Role.Reasoning] is not yet supported and throws [UnsupportedOperationException].
+ * [Message.Reasoning] is not yet supported and throws [UnsupportedOperationException].
  */
 internal fun Message.toLitertMessage(): LitertMessage {
-    return when (role) {
-        Message.Role.System -> LitertMessage.system(content)
-        Message.Role.User -> LitertMessage.user(content)
-        Message.Role.Assistant -> LitertMessage.model(content)
-        Message.Role.Tool -> LitertMessage.tool(Contents.of(content))
-        Message.Role.Reasoning -> throw UnsupportedOperationException("Reasoning is not yet supported")
+    return when (this) {
+        is Message.System -> LitertMessage.system(content)
+        is Message.User -> LitertMessage.user(content)
+        is Message.Assistant -> LitertMessage.model(content)
+        is Message.Tool.Call -> {
+            val args = parseToolArguments(content)
+            LitertMessage.model(
+                contents = Contents.of(emptyList()),
+                toolCalls = listOf(ToolCall(name = tool, arguments = args)),
+            )
+        }
+        is Message.Tool.Result -> {
+            val parsedResponse: Any? = parseToolResponse(content)
+            LitertMessage.tool(Contents.of(Content.ToolResponse(name = tool, response = parsedResponse)))
+        }
+        is Message.Reasoning -> throw UnsupportedOperationException("Reasoning is not yet supported")
+    }
+}
+
+/**
+ * Parses a tool-call arguments JSON string into a `Map<String, Any?>` for LiteRT's [ToolCall].
+ *
+ * Returns an empty map if [content] is blank or cannot be parsed as a JSON object.
+ */
+private fun parseToolArguments(content: String): Map<String, Any?> {
+    if (content.isBlank()) return emptyMap()
+    return runCatching {
+        Json.parseToJsonElement(content).jsonObject.mapValues { (_, v) -> v.toAnyOrNull() }
+    }.getOrElse { emptyMap() }
+}
+
+/**
+ * Parses a tool-result JSON string into a structured value (Map/List/primitive) for
+ * LiteRT's [Content.ToolResponse]. Falls back to the raw string when the content is
+ * not valid JSON, which is acceptable because [Content.ToolResponse.response] is `Any?`.
+ */
+private fun parseToolResponse(content: String): Any? {
+    if (content.isBlank()) return content
+    return runCatching { Json.parseToJsonElement(content).toAnyOrNull() }.getOrDefault(content)
+}
+
+/**
+ * Converts a [JsonElement] tree into plain Kotlin values:
+ * `JsonNull` → `null`, primitives → `String`/`Long`/`Double`/`Boolean`,
+ * `JsonArray` → `List<Any?>`, `JsonObject` → `Map<String, Any?>`.
+ */
+private fun JsonElement.toAnyOrNull(): Any? {
+    return when (this) {
+        is kotlinx.serialization.json.JsonNull -> null
+        is JsonPrimitive -> {
+            if (isString) {
+                content
+            } else {
+                content.toLongOrNull()
+                    ?: content.toDoubleOrNull()
+                    ?: content.toBooleanStrictOrNull()
+                    ?: content
+            }
+        }
+        is kotlinx.serialization.json.JsonArray -> map { it.toAnyOrNull() }
+        is kotlinx.serialization.json.JsonObject -> mapValues { (_, v) -> v.toAnyOrNull() }
     }
 }
 
