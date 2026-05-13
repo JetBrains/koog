@@ -52,8 +52,9 @@ public class AgentcoreStrategyDiscovery(
         require(memoryId.isNotBlank()) { "memoryId must not be blank" }
 
         logger.info("Discovering AgentCore memory strategies for memoryId='{}'", memoryId)
-        val response = controlClient.getMemory(GetMemoryRequest { this.memoryId = memoryId })
-        val strategies = response.memory?.strategies.orEmpty()
+        val memory = controlClient.getMemory(GetMemoryRequest { this.memoryId = memoryId }).memory
+        logger.debug("AgentCore memory with memoryId='{}': name='{}', status='{}'", memoryId, memory?.name, memory?.status)
+        val strategies = memory?.strategies.orEmpty()
 
         if (strategies.isEmpty()) {
             logger.warn("No strategies found on AgentCore memory '{}'", memoryId)

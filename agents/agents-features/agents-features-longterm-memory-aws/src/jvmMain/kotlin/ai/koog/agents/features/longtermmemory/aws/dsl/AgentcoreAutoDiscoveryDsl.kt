@@ -223,6 +223,12 @@ private fun appendSubrequestsFor(
             kind = "namespacePattern",
         )
     } ?: strategy.defaultNamespace
+    if (strategy.type.requiresSession()) {
+        require(primaryTemplate.contains("{sessionId}")) {
+            "Strategy '${strategy.strategyId}' (${strategy.type}) requires a session-scoped namespace " +
+                "but discovered template '$primaryTemplate' has no {sessionId} placeholder."
+        }
+    }
     val primaryResolver = AgentcoreNamespaceResolver.fromAwsTemplate(primaryTemplate)
 
     when (strategy.type) {
