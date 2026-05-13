@@ -3,18 +3,31 @@ package ai.koog.agents.chatMemory
 import ai.koog.agents.chatMemory.feature.ChatHistoryProvider
 import ai.koog.agents.chatMemory.feature.ChatMemory
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.functionalStrategy
+import ai.koog.agents.core.agent.singleRunStrategy
+import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.agents.testing.tools.mockLLMToolCall
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -1087,5 +1100,114 @@ class ChatMemoryTest {
         assertTrue(saved.none { it.content.contains("Q1") }, "Q1 should be outside the window")
         assertTrue(saved.any { it.content.contains("Q2") }, "Q2 should be in the window")
         assertTrue(saved.any { it.content.contains("Q3") }, "Q3 should be in the window")
+    }
+
+    @Serializable
+    data class CustomInput(
+        val question: String
+    )
+
+    @Serializable
+    data class CustomOutput(
+        val x: Int,
+        val y: String
+    )
+
+    object GuesserTool : Tool<CustomInput, CustomOutput>(
+        argsType = typeToken<CustomInput>(),
+        resultType = typeToken<CustomOutput>(),
+        name = "guesser",
+        description = "Very important tool. You MUST call it ALWAYS and exactly once!"
+    ) {
+        override suspend fun execute(args: CustomInput): CustomOutput = CustomOutput(x = 100500, y = "Hidden Value")
+
+        override fun encodeResultToString(result: CustomOutput, serializer: JSONSerializer): String {
+            return "encoded_result(\"${result.y}\")"
+        }
+    }
+
+    @OptIn(InternalAgentsApi::class)
+    @Test
+    fun `test ReceivedToolResult contains resultObject that is NOT persisted via ChatMemory`() = runTest {
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        val promptExecutor = getMockExecutor {
+            mockLLMToolCall(
+                GuesserTool,
+                CustomInput(question = "What is the secret value?")
+            ) onRequestEquals "Tell me the secret!"
+
+            mockLLMAnswer("Done! Value is Hidden Value") onRequestEquals "encoded_result(\"Hidden Value\")"
+        }
+
+        val events = mutableListOf<String>()
+
+        val agent = AIAgent(
+            promptExecutor = promptExecutor,
+            systemPrompt = """
+                    You are a helpful assistant.
+                    You must use `guesser` tool to answer all questions.
+                """.trimIndent(),
+            toolRegistry = ToolRegistry {
+                tool(GuesserTool)
+            },
+            strategy = singleRunStrategy(runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL),
+            llmModel = AnthropicModels.Sonnet_4_5
+        ) {
+            install(ChatMemory) {
+                chatHistoryProvider = historyProvider
+            }
+
+            handleEvents {
+                onToolCallStarting { ctx ->
+                    events += "onToolCallStarting(${ctx.toolName}, args=${ctx.toolArgs})"
+                }
+                onNodeExecutionCompleted { ctx ->
+                    if (ctx.node.name == "nodeExecuteTool") {
+                        val output = (ctx.output as ReceivedToolResult)
+                        events += "finished: nodeExecuteTool(receivedObject=${output.resultObject}, type=${output.resultObject!!::class.simpleName})"
+                    }
+                }
+                onNodeExecutionStarting { ctx ->
+                    val input = ctx.input
+                    if (input is Message.Tool.Call) {
+                        events += "started: nodeExecuteTool(tool=${input.tool}, content=${input.content})"
+                    }
+                }
+                onToolCallCompleted { ctx ->
+                    events += "onToolCallCompleted(guesser, toolResult=${ctx.toolResult})"
+                }
+                onLLMCallStarting { ctx ->
+                    events += "onLLMCallStarting(${ctx.prompt.messages.last().content})"
+                }
+            }
+        }
+
+        val result = agent.run("Tell me the secret!", "session-01")
+        assertEquals("Done! Value is Hidden Value", result)
+
+        val expectedEvents = listOf(
+            "onLLMCallStarting(Tell me the secret!)",
+            "started: nodeExecuteTool(tool=guesser, content={\"question\":\"What is the secret value?\"})",
+            "onToolCallStarting(guesser, args={\"question\":\"What is the secret value?\"})",
+            "onToolCallCompleted(guesser, toolResult={\"x\":100500, \"y\":\"Hidden Value\"})",
+            "finished: nodeExecuteTool(receivedObject=CustomOutput(x=100500, y=Hidden Value), type=CustomOutput)",
+            "onLLMCallStarting(encoded_result(\"Hidden Value\"))"
+        )
+
+        assertEquals(expectedEvents.size, events.size)
+        assertContentEquals(expectedEvents, events)
+
+        val savedMessages = historyProvider.history["session-01"]!!.map { it.content }
+        val expectedMessages = listOf(
+            "You are a helpful assistant.\nYou must use `guesser` tool to answer all questions.",
+            "Tell me the secret!",
+            "{\"question\":\"What is the secret value?\"}",
+            "encoded_result(\"Hidden Value\")",
+            "Done! Value is Hidden Value",
+        )
+
+        assertEquals(expectedMessages.size, savedMessages.size)
+        assertContentEquals(expectedMessages, savedMessages)
     }
 }
