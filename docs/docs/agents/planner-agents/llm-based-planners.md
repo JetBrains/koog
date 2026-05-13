@@ -31,8 +31,8 @@ The following example shows how to create a simple planner agent using `SimpleLL
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.config.AIAgentConfig
-    import ai.koog.agents.planner.AIAgentPlannerStrategy
-    import ai.koog.agents.planner.PlannerAIAgent
+    import ai.koog.agents.core.planner.AIAgentPlannerStrategy
+    import ai.koog.agents.core.planner.PlannerAIAgent
     import ai.koog.agents.planner.llm.SimpleLLMPlanner
     import ai.koog.prompt.dsl.prompt
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -77,7 +77,7 @@ The following example shows how to create a simple planner agent using `SimpleLL
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
-    import ai.koog.agents.planner.AIAgentPlannerStrategy;
+    import ai.koog.agents.core.planner.AIAgentPlannerStrategy;
     import ai.koog.agents.planner.Planners;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;

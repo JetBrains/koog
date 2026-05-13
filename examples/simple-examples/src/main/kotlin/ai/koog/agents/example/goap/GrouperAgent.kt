@@ -3,7 +3,7 @@ package ai.koog.agents.example.goap
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.example.ApiKeyService
-import ai.koog.agents.planner.PlannerAIAgent
+import ai.koog.agents.core.planner.PlannerAIAgent
 import ai.koog.agents.planner.goap
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
