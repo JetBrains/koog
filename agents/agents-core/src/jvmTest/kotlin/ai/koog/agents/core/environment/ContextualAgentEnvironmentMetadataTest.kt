@@ -4,6 +4,7 @@ package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.agent.context.AgentTestBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.tools.AgentContextAwareTool
 import ai.koog.agents.core.agent.tools.agentContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -88,7 +89,7 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
         val capturing = CapturingEnvironment()
         val context = createTestContext(environment = capturing)
         val pipeline = context.pipeline
-        val feature = TestFeature(AIAgentStorageKey("trace-feature"))
+        val feature = TestFeature(createStorageKey("trace-feature"))
         pipeline.provideToolCallMetadata(feature) {
             mapOf("trace.span.id" to "feature-span")
         }
@@ -108,7 +109,7 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
         val capturing = CapturingEnvironment()
         val context = createTestContext(environment = capturing)
         val pipeline = context.pipeline
-        val feature = TestFeature(AIAgentStorageKey("trace-feature"))
+        val feature = TestFeature(createStorageKey("trace-feature"))
         pipeline.provideToolCallMetadata(feature) {
             mapOf("trace.span.id" to "feature-span")
         }
@@ -128,10 +129,10 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
         val context = createTestContext(environment = capturing)
         val pipeline = context.pipeline
 
-        pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("first"))) {
+        pipeline.provideToolCallMetadata(TestFeature(createStorageKey("first"))) {
             mapOf("shared" to "first", "only-first" to "1")
         }
-        pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("second"))) {
+        pipeline.provideToolCallMetadata(TestFeature(createStorageKey("second"))) {
             mapOf("shared" to "second", "only-second" to "2")
         }
 
@@ -163,7 +164,7 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
         val capturing = CapturingEnvironment()
         val context = createTestContext(environment = capturing)
         val pipeline = context.pipeline
-        pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("f"))) {
+        pipeline.provideToolCallMetadata(TestFeature(createStorageKey("f"))) {
             mapOf("trace.span.id" to "span")
         }
 
@@ -211,7 +212,7 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
         val capturing = CapturingEnvironment()
         val context = createTestContext(environment = capturing)
         val pipeline = context.pipeline
-        pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("spoofer"))) {
+        pipeline.provideToolCallMetadata(TestFeature(createStorageKey("spoofer"))) {
             mapOf(AgentContextAwareTool.AgentContextKey to "feature-spoof")
         }
         val wrapper = ContextualAgentEnvironment(capturing, context)

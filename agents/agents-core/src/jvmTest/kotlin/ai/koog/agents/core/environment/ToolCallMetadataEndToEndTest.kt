@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentTestBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.tools.AgentContextAwareTool
 import ai.koog.agents.core.agent.tools.agentContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -102,7 +103,7 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
         val tool = MetadataObservingTool()
         val generic = environmentWith(tool)
         val context = createTestContext(environment = generic)
-        val feature = TestFeature(AIAgentStorageKey("trace-feature"))
+        val feature = TestFeature(createStorageKey("trace-feature"))
         context.pipeline.provideToolCallMetadata(feature) {
             mapOf("trace.span.id" to "feature-span", "feature.key" to "f")
         }
@@ -122,7 +123,7 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
         val tool = MetadataObservingTool()
         val generic = environmentWith(tool)
         val context = createTestContext(environment = generic)
-        context.pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("tracer"))) {
+        context.pipeline.provideToolCallMetadata(TestFeature(createStorageKey("tracer"))) {
             mapOf("trace.span.id" to "feature-span", "only-feature" to "F")
         }
         val contextual = ContextualAgentEnvironment(generic, context)
@@ -145,10 +146,10 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
         val tool = MetadataObservingTool()
         val generic = environmentWith(tool)
         val context = createTestContext(environment = generic)
-        context.pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("first"))) {
+        context.pipeline.provideToolCallMetadata(TestFeature(createStorageKey("first"))) {
             mapOf("shared" to "first", "only-first" to "1")
         }
-        context.pipeline.provideToolCallMetadata(TestFeature(AIAgentStorageKey("second"))) {
+        context.pipeline.provideToolCallMetadata(TestFeature(createStorageKey("second"))) {
             mapOf("shared" to "second", "only-second" to "2")
         }
         val contextual = ContextualAgentEnvironment(generic, context)
