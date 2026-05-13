@@ -1,7 +1,6 @@
 @file:Suppress(
     "MissingKDocForPublicAPI",
     "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING",
-    "ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT"
 )
 
 package ai.koog.agents.planner.goap
@@ -13,18 +12,8 @@ import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.concurrency.withContextReentrant
 
 @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
-public actual class ActionBuilder<State> : ActionBuilderApi<State> {
-    private val delegate = ActionBuilderImpl<State>()
-
-    public actual override fun name(name: String): ActionBuilder<State> = apply { delegate.name(name) }
-    public actual override fun description(description: String?): ActionBuilder<State> =
-        apply { delegate.description(description) }
-    public actual override fun precondition(precondition: Condition<State>): ActionBuilder<State> =
-        apply { delegate.precondition(precondition) }
-    public actual override fun belief(belief: Belief<State>): ActionBuilder<State> = apply { delegate.belief(belief) }
-    public actual override fun cost(cost: Cost<State>): ActionBuilder<State> = apply { delegate.cost(cost) }
-    public actual override fun execute(execute: Execute<State>): ActionBuilder<State> =
-        apply { delegate.execute(execute) }
+public actual class ActionBuilder<State> : ActionBuilderCommon<State, ActionBuilder<State>>() {
+    actual override fun self(): ActionBuilder<State> = this
 
     @JavaAPI
     @Deprecated("Use execute(ExecuteSync) instead.", ReplaceWith("execute(execute)"))
@@ -35,6 +24,9 @@ public actual class ActionBuilder<State> : ActionBuilderApi<State> {
             }
         }
 
+    /**
+     * Synchronous GOAP action execution.
+     */
     @JavaAPI
     @JvmName("execute")
     public fun javaApiExecuteSynchronously(execute: ExecuteSync<State>): ActionBuilder<State> =
@@ -43,8 +35,6 @@ public actual class ActionBuilder<State> : ActionBuilderApi<State> {
                 execute.execute(context, state)
             }
         }
-
-    public actual override fun build(): Action<State> = delegate.build()
 
     /**
      * Synchronous GOAP action execution for Java interop.
