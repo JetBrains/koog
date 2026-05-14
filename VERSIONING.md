@@ -62,8 +62,6 @@ A stable module at version `X.Y.Z` is always compatible with a beta module at ve
 
 | Module | Version |
 |--------|---------|
-| `a2a` | `1.0.0` |
-| `a2a-transport` | `1.0.0` |
 | `agents` | `1.0.0` |
 | `agents-core` | `1.0.0` |
 | `agents-features` | `1.0.0` |
@@ -113,7 +111,6 @@ A stable module at version `X.Y.Z` is always compatible with a beta module at ve
 | `prompt-structure` | `1.0.0` |
 | `prompt-tokenizer` | `1.0.0` |
 | `prompt-xml` | `1.0.0` |
-| `rag` | `1.0.0` |
 | `rag-base` | `1.0.0` |
 | `serialization` | `1.0.0` |
 | `serialization-core` | `1.0.0` |
