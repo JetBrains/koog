@@ -32,8 +32,8 @@ public object LiteRTLLModels : LLModelDefinitions {
             LLMCapability.Tools,
             LLMCapability.Completion
         ),
-        contextLength = 200_000,
-        maxOutputTokens = 4_096,
+        contextLength = 32_000,
+        maxOutputTokens = 1_024,
     )
 
     /**
@@ -46,7 +46,8 @@ public object LiteRTLLModels : LLModelDefinitions {
             LLMCapability.Tools,
             LLMCapability.Completion,
         ),
-        contextLength = 128_000,
+        contextLength = 32_000,
+        maxOutputTokens = 4_096,
     )
 
     /**
@@ -59,17 +60,28 @@ public object LiteRTLLModels : LLModelDefinitions {
             LLMCapability.Tools,
             LLMCapability.Completion,
         ),
-        contextLength = 128_000,
+        contextLength = 32_000,
+        maxOutputTokens = 4_096,
+    )
+
+    /**
+     * List of the supported models by the LiteRT provider.
+     */
+    private val supportedModels: List<LLModel> = listOf(
+        FunctionGemma,
+        Gemma4E2B,
+        Gemma4E4B
     )
 
     private val customModels = mutableListOf<LLModel>()
 
     /** All available models, combining the built-in [FunctionGemma] with any custom models. */
     override val models: List<LLModel>
-        get() = listOf(FunctionGemma) + customModels
+        get() = supportedModels + customModels
 
     /** Registers [model] as an additional on-device model available for inference. */
     override fun addCustomModel(model: LLModel) {
+        require(model.provider == LiteRTLLMProvider) { "Model provider must be LiteRT" }
         customModels.add(model)
     }
 }
