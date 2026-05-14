@@ -12,7 +12,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.annotations.InternalKoogUtils
-import java.util.concurrent.ExecutorService
 
 /**
  * A builder class responsible for creating and managing subtasks within the context of an AI agent's functional operations.
@@ -61,7 +60,6 @@ public class SubtaskBuilder(
  * @param responseProcessor Optional processor for post-processing LLM responses.
  * @param runMode Specifies the mode in which tools should be called (e.g., sequentially).
  * @param assistantResponseRepeatMax Optional maximum number of response repetitions allowed for the assistant.
- * @param executorService Optional executor service for managing asynchronous operations.
  */
 public class SubtaskBuilderWithOutput<Output : Any>(
     public val context: AIAgentFunctionalContextBase<*>,
@@ -73,7 +71,6 @@ public class SubtaskBuilderWithOutput<Output : Any>(
     public var responseProcessor: ResponseProcessor? = null,
     public var runMode: ToolCalls = ToolCalls.SEQUENTIAL,
     public var assistantResponseRepeatMax: Int? = null,
-    public var executorService: ExecutorService? = null,
 ) {
 
     /**
@@ -169,20 +166,12 @@ public class SubtaskBuilderWithOutput<Output : Any>(
         apply { this.assistantResponseRepeatMax = max }
 
     /**
-     * Configures the subtask builder to use the specified ExecutorService for task execution.
-     *
-     * @param service the ExecutorService to be used for managing task execution.
-     */
-    public fun withExecutorService(service: ExecutorService): SubtaskBuilderWithOutput<Output> =
-        apply { this.executorService = service }
-
-    /**
      * Executes the defined task within the configured context and returns the output.
      * The method handles different output options (`OutputOption.ByClass` and `OutputOption.ByFinishTool`)
      * and executes subtasks using the provided input, tools, and configuration parameters.
      */
     @OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
-    public fun run(): Output = context.config.runBlockingOnStrategyDispatcher(executorService) {
+    public fun run(): Output = context.config.runBlockingOnStrategyDispatcher {
         @Suppress("UNCHECKED_CAST")
         when (output) {
             is OutputOption.ByClass<Output> -> {

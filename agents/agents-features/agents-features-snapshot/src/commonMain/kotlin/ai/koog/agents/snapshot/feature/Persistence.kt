@@ -41,6 +41,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
+import kotlin.jvm.JvmSynthetic
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
@@ -274,6 +275,7 @@ public class Persistence(
          * @param sessionId Optional session identifier. A random UUID is generated if not provided.
          * @return The output produced by the agent after resuming from the checkpoint.
          */
+        @JvmSynthetic
         public suspend fun <Input, Output> runFromCheckpoint(
             agent: AIAgent<Input, Output>,
             input: Input,
@@ -298,6 +300,7 @@ public class Persistence(
          * @param rollbackStrategy The strategy to use when restoring state. Defaults to [RollbackStrategy.Default].
          * @return The output produced by the session after resuming from the checkpoint.
          */
+        @JvmSynthetic
         public suspend fun <Input, Output, TContext : AIAgentContext> runFromCheckpoint(
             session: AIAgentRunSession<Input, Output, TContext>,
             input: Input,

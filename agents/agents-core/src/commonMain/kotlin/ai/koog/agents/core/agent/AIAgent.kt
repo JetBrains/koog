@@ -7,6 +7,7 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.session.AIAgentRunSession
 import ai.koog.utils.io.Closeable
 import kotlin.jvm.JvmStatic
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Represents a basic interface for AI agent.
@@ -29,6 +30,7 @@ public expect abstract class AIAgent<Input, Output>() : Closeable {
      * @param agentInput The input for the agent.
      * @return The output produced by the agent.
      */
+    @JvmSynthetic
     public abstract suspend fun run(agentInput: Input, sessionId: String? = null): Output
 
     /**

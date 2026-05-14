@@ -14,10 +14,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.concurrency.runBlockingReentrant
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.jdk9.asPublisher
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Flow
 
 /**
@@ -33,20 +30,17 @@ public actual abstract class LLMClient actual constructor() : LLMClientAPI, LLME
      * @param prompt The prompt to execute
      * @param model The LLM model to use
      * @param tools Optional list of tools that can be used by the LLM
-     * @param executorService An optional [ExecutorService] that can be provided to control the execution context.
      * @return List of response messages
      */
     @OptIn(InternalKoogUtils::class)
     @JavaAPI
     @JvmOverloads
-    public fun execute(
+    @JvmName("execute")
+    public fun executeBlocking(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor> = emptyList(),
-        executorService: ExecutorService? = null
-    ): List<Message.Response> = runBlockingReentrant(
-        executorService?.asCoroutineDispatcher() ?: Dispatchers.IO
-    ) {
+        tools: List<ToolDescriptor> = emptyList()
+    ): List<Message.Response> = runBlockingReentrant {
         execute(prompt, model, tools)
     }
 
@@ -56,20 +50,17 @@ public actual abstract class LLMClient actual constructor() : LLMClientAPI, LLME
      * @param prompt The prompt to execute
      * @param tools Optional list of tools that can be used by the LLM
      * @param model The LLM model to use
-     * @param executorService An optional [ExecutorService] that can be provided to control the execution context.
-     *  @return List of LLM choices
+     * @return List of LLM choices
      */
     @OptIn(InternalKoogUtils::class)
     @JavaAPI
     @JvmOverloads
-    public fun executeMultipleChoices(
+    @JvmName("executeMultipleChoices")
+    public fun executeMultipleChoicesBlocking(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor> = emptyList(),
-        executorService: ExecutorService? = null
-    ): List<LLMChoice> = runBlockingReentrant(
-        executorService?.asCoroutineDispatcher() ?: Dispatchers.IO
-    ) {
+        tools: List<ToolDescriptor> = emptyList()
+    ): List<LLMChoice> = runBlockingReentrant {
         executeMultipleChoices(prompt, model, tools)
     }
 
@@ -95,33 +86,27 @@ public actual abstract class LLMClient actual constructor() : LLMClientAPI, LLME
      *
      * @param prompt The input prompt to be analyzed for moderation.
      * @param model The language model to be used for conducting the moderation analysis.
-     * @param executorService An optional [ExecutorService] that can be provided to control the execution context.
      * @return The result of the moderation analysis, encapsulated in a ModerationResult object.
      */
     @OptIn(InternalKoogUtils::class)
     @JavaAPI
-    @JvmOverloads
-    public fun moderate(
+    @JvmName("moderate")
+    public fun moderateBlocking(
         prompt: Prompt,
-        model: LLModel,
-        executorService: ExecutorService? = null
-    ): ModerationResult = runBlockingReentrant(
-        executorService?.asCoroutineDispatcher() ?: Dispatchers.IO
-    ) {
+        model: LLModel
+    ): ModerationResult = runBlockingReentrant {
         moderate(prompt, model)
     }
 
     /**
      * Retrieves a list of ids of available Large Language Models (LLMs) supported by the client.
-     * @param executorService An optional [ExecutorService] that can be provided to control the execution context.
+     *
      * @return A list of model ids instances representing the available LLMs.
      */
     @OptIn(InternalKoogUtils::class)
     @JavaAPI
-    @JvmOverloads
-    public fun models(executorService: ExecutorService? = null): List<LLModel> = runBlockingReentrant(
-        executorService?.asCoroutineDispatcher() ?: Dispatchers.IO
-    ) {
+    @JvmName("models")
+    public fun modelsBlocking(): List<LLModel> = runBlockingReentrant {
         models()
     }
 }

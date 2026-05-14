@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
+import kotlin.jvm.JvmSynthetic
 import kotlin.reflect.KClass
 import kotlin.time.Instant
 
@@ -139,6 +140,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a request without tool usage and appends all received responses to the prompt.
      */
+    @JvmSynthetic
     public suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
         return readSession.requestLLMMultipleWithoutTools().also { responses ->
             appendPrompt { messages(responses) }
@@ -148,6 +150,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a request without tool usage and appends the received response to the prompt.
      */
+    @JvmSynthetic
     public suspend fun requestLLMWithoutTools(): Message.Response {
         return readSession.requestLLMWithoutTools().also { response -> appendPrompt { message(response) } }
     }
@@ -155,6 +158,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a request that enforces tool calling and appends the received response to the prompt.
      */
+    @JvmSynthetic
     public suspend fun requestLLMOnlyCallingTools(): Message.Response {
         return readSession.requestLLMOnlyCallingTools()
             .also { response -> appendPrompt { message(response) } }
@@ -163,6 +167,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a request that enforces tool calling and appends all received responses to the prompt.
      */
+    @JvmSynthetic
     public suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
         return readSession.requestLLMMultipleOnlyCallingTools()
             .also { responses -> appendPrompt { messages(responses) } }
@@ -171,6 +176,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a request while forcing a specific tool and appends the response to the prompt.
      */
+    @JvmSynthetic
     public suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
         return readSession.requestLLMForceOneTool(tool)
             .also { response -> appendPrompt { message(response) } }
@@ -179,6 +185,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a request while forcing a specific tool and appends the response to the prompt.
      */
+    @JvmSynthetic
     public suspend fun requestLLMForceOneTool(tool: ToolBase<*, *>): Message.Response {
         return readSession.requestLLMForceOneTool(tool)
             .also { response -> appendPrompt { message(response) } }
@@ -187,6 +194,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a request to LLM and appends the response to the prompt.
      */
+    @JvmSynthetic
     public suspend fun requestLLM(): Message.Response {
         return readSession.requestLLM().also { response ->
             appendPrompt { message(response) }
@@ -196,6 +204,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a streaming request to LLM.
      */
+    @JvmSynthetic
     public suspend fun requestLLMStreaming(): Flow<StreamFrame> {
         return readSession.requestLLMStreaming()
     }
@@ -203,6 +212,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a moderation request using the specified moderating model or the session model.
      */
+    @JvmSynthetic
     public suspend fun requestModeration(moderatingModel: LLModel? = null): ModerationResult {
         return readSession.requestModeration(moderatingModel)
     }
@@ -210,6 +220,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a request to LLM and appends all received responses to the prompt.
      */
+    @JvmSynthetic
     public suspend fun requestLLMMultiple(): List<Message.Response> {
         return readSession.requestLLMMultiple().also { responses ->
             appendPrompt {
@@ -221,6 +232,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a request to LLM and gets a structured response, appending the assistant message on success.
      */
+    @JvmSynthetic
     public suspend fun <T> requestLLMStructured(
         config: StructuredRequestConfig<T>,
         fixingParser: StructureFixingParser? = null
@@ -245,6 +257,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a request to LLM and gets a structured response, appending the assistant message on success.
      */
+    @JvmSynthetic
     public suspend fun <T> requestLLMStructured(
         serializer: KSerializer<T>,
         examples: List<T> = emptyList(),
@@ -258,6 +271,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Parses a structured response from an assistant message using the specified configuration.
      */
+    @JvmSynthetic
     public suspend fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
         config: StructuredRequestConfig<T>,
@@ -269,6 +283,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Sends a request to LLM and returns all available response choices.
      */
+    @JvmSynthetic
     public suspend fun requestLLMMultipleChoices(): List<LLMChoice> {
         return readSession.requestLLMMultipleChoices()
     }
@@ -276,6 +291,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
     /**
      * Streams a response from LLM, optionally adding a structure definition to the prompt beforehand.
      */
+    @JvmSynthetic
     public suspend fun requestLLMStreaming(definition: StructureDefinition? = null): Flow<StreamFrame> {
         if (definition != null) {
             val prompt = prompt(prompt, clock) {
@@ -453,6 +469,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
      * Default is `null`, which means entire history will be used.
      * @param preserveMemory Whether to preserve memory-related messages in the history.
      */
+    @JvmSynthetic
     public suspend fun replaceHistoryWithTLDR(
         strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
         preserveMemory: Boolean = true

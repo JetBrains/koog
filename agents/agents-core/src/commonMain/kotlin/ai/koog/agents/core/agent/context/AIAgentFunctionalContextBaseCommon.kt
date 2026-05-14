@@ -38,6 +38,7 @@ import ai.koog.serialization.typeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
+import kotlin.jvm.JvmSynthetic
 import kotlin.reflect.KClass
 
 /**
@@ -72,6 +73,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
     @Suppress("DEPRECATION")
     override fun remove(key: AIAgentStorageKey<*>): Boolean = storeMap.remove(key) != null
 
+    @JvmSynthetic
     override suspend fun getHistory(): List<Message> {
         return llm.readSession { prompt.messages }
     }
@@ -84,6 +86,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param message The content of the message to be sent to the LLM.
      * @param allowToolCalls Specifies whether tool calls are allowed during the LLM interaction. Defaults to `true`.
      */
+    @JvmSynthetic
     public suspend fun requestLLM(
         message: String,
         allowToolCalls: Boolean = true
@@ -181,6 +184,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      *
      * @return The latest token usage information as an integer.
      */
+    @JvmSynthetic
     public suspend fun latestTokenUsage(): Int {
         return llm.readSession { prompt.latestTokenUsage }
     }
@@ -227,6 +231,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param structureDefinition Optional structure to guide the LLM response.
      * @return A flow of [StreamFrame] objects from the LLM response.
      */
+    @JvmSynthetic
     public suspend fun requestLLMStreaming(
         message: String,
         structureDefinition: StructureDefinition? = null
@@ -247,6 +252,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param message The content of the message to be sent to the LLM.
      * @return A list of LLM responses.
      */
+    @JvmSynthetic
     public suspend fun requestLLMMultiple(message: String): List<Message.Response> {
         return llm.writeSession {
             updatePrompt {
@@ -264,6 +270,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param message The content of the message to be sent to the LLM.
      * @return The LLM response containing tool calls.
      */
+    @JvmSynthetic
     public suspend fun requestLLMOnlyCallingTools(message: String): Message.Response {
         return llm.writeSession {
             updatePrompt {
@@ -282,6 +289,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param tool The tool descriptor that the LLM must use.
      * @return The LLM response containing the tool call.
      */
+    @JvmSynthetic
     public suspend fun requestLLMForceOneTool(
         message: String,
         tool: ToolDescriptor
@@ -303,6 +311,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param tool The tool that the LLM must use.
      * @return The LLM response containing the tool call.
      */
+    @JvmSynthetic
     public suspend fun requestLLMForceOneTool(
         message: String,
         tool: Tool<*, *>
@@ -322,6 +331,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param toolCall The tool call to execute.
      * @return The result of the tool execution.
      */
+    @JvmSynthetic
     public suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
         return environment.executeTool(toolCall)
     }
@@ -334,6 +344,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param parallelTools Specifies whether tools should be executed in parallel.
      * @return A list of results from the executed tool calls.
      */
+    @JvmSynthetic
     public suspend fun executeMultipleTools(
         toolCalls: List<Message.Tool.Call>,
         parallelTools: Boolean = false
@@ -351,6 +362,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param toolResult The tool result to add to the prompt.
      * @return The LLM response.
      */
+    @JvmSynthetic
     public suspend fun sendToolResult(toolResult: ReceivedToolResult): Message.Response {
         return llm.writeSession {
             updatePrompt {
@@ -369,6 +381,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param results The list of tool results to add to the prompt.
      * @return A list of LLM responses.
      */
+    @JvmSynthetic
     public suspend fun sendMultipleToolResults(
         results: List<ReceivedToolResult>
     ): List<Message.Response> {
@@ -391,6 +404,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param doUpdatePrompt Specifies whether to add tool call details to the prompt.
      * @return The result of the tool execution.
      */
+    @JvmSynthetic
     public suspend fun <ToolArg, TResult> executeSingleTool(
         tool: Tool<ToolArg, TResult>,
         toolArgs: ToolArg,
@@ -428,6 +442,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param strategy Determines which messages to include in compression.
      * @param preserveMemory Specifies whether to retain message memory after compression.
      */
+    @JvmSynthetic
     public suspend fun compressHistory(
         strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
         preserveMemory: Boolean = true

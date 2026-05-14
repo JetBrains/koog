@@ -8,7 +8,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import org.junit.jupiter.api.Test
-import java.util.concurrent.Executors
 import java.util.function.BiFunction
 import kotlin.test.assertEquals
 
@@ -38,13 +37,8 @@ class JavaAPIAgentCreationAndRunTest {
             .promptExecutor(executor)
             .build()
 
-        val pool = Executors.newSingleThreadExecutor()
-        try {
-            // Use Java-facing overloads
-            val result = agent.javaNonSuspendRun("xyz", null, pool)
-            assertEquals("Echo: xyz", result)
-        } finally {
-            pool.shutdownNow()
-        }
+        // Use Java-facing overloads
+        val result = agent.runBlocking("xyz", null)
+        assertEquals("Echo: xyz", result)
     }
 }

@@ -23,6 +23,7 @@ import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Common base implementation for read-only LLM sessions shared across platform-specific actual classes.
@@ -80,6 +81,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
     /**
      * Executes a request for the provided prompt and tools and returns all response messages.
      */
+    @JvmSynthetic
     public suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
         val preparedPrompt = preparePrompt(prompt, tools)
         return executor.executeProcessed(
@@ -93,6 +95,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
     /**
      * Executes a request for the provided prompt and tools and returns the first response.
      */
+    @JvmSynthetic
     public suspend fun executeSingle(prompt: Prompt, tools: List<ToolDescriptor>): Message.Response =
         executeMultiple(prompt, tools).first()
 
@@ -101,6 +104,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      *
      * @return A list of response messages from the language model.
      */
+    @JvmSynthetic
     public suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
         validateSession()
 
@@ -116,6 +120,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      *
      * @return The response message from the language model after executing the request.
      */
+    @JvmSynthetic
     public suspend fun requestLLMWithoutTools(): Message.Response {
         validateSession()
         val promptWithDisabledTools = prompt
@@ -130,6 +135,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      *
      * @return The first tool call response if present, otherwise the first assistant response.
      */
+    @JvmSynthetic
     public suspend fun requestLLMOnlyCallingTools(): Message.Response {
         validateSession()
         val promptWithOnlyCallingTools = prompt.withUpdatedParams {
@@ -146,6 +152,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      *
      * @return A list of responses from the language model.
      */
+    @JvmSynthetic
     public suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
         validateSession()
         val promptWithOnlyCallingTools = prompt.withUpdatedParams {
@@ -160,6 +167,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * @param tool The tool descriptor to force in the request.
      * @return The response from the language model.
      */
+    @JvmSynthetic
     public suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
         validateSession()
         check(tools.contains(tool)) { "Unable to force call to tool `${tool.name}` because it is not defined" }
@@ -178,6 +186,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * @param tool The tool to force in the request.
      * @return The response from the language model.
      */
+    @JvmSynthetic
     public suspend fun requestLLMForceOneTool(tool: ToolBase<*, *>): Message.Response {
         return requestLLMForceOneTool(tool.descriptor)
     }
@@ -187,6 +196,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      *
      * @return The first response message from the LLM after executing the request.
      */
+    @JvmSynthetic
     public suspend fun requestLLM(): Message.Response {
         validateSession()
         return executeMultiple(prompt, tools).first { it !is Message.Reasoning }
@@ -197,6 +207,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      *
      * @return A flow of streamed response frames.
      */
+    @JvmSynthetic
     public suspend fun requestLLMStreaming(): Flow<StreamFrame> {
         validateSession()
         return executeStreaming(prompt, tools)
@@ -208,6 +219,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * @param moderatingModel Optional model used for moderation.
      * @return Moderation result for the current prompt.
      */
+    @JvmSynthetic
     public suspend fun requestModeration(moderatingModel: LLModel? = null): ModerationResult {
         validateSession()
         val preparedPrompt = preparePrompt(prompt, emptyList())
@@ -219,6 +231,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      *
      * @return A list of responses from the language model.
      */
+    @JvmSynthetic
     public suspend fun requestLLMMultiple(): List<Message.Response> {
         validateSession()
         return executeMultiple(prompt, tools)
@@ -229,6 +242,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      *
      * @param config A configuration defining structures and behavior.
      */
+    @JvmSynthetic
     public suspend fun <T> requestLLMStructured(
         config: StructuredRequestConfig<T>,
         fixingParser: StructureFixingParser? = null
@@ -251,6 +265,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * @param examples Optional examples that help the model follow the target format.
      * @param fixingParser Optional parser for malformed structured responses.
      */
+    @JvmSynthetic
     public suspend fun <T> requestLLMStructured(
         serializer: KSerializer<T>,
         examples: List<T> = emptyList(),
@@ -291,6 +306,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * @param config Configuration describing the expected structure.
      * @param fixingParser Optional parser for malformed structured responses.
      */
+    @JvmSynthetic
     public suspend fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
         config: StructuredRequestConfig<T>,
@@ -300,6 +316,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
     /**
      * Sends a request to the language model and returns all available response choices.
      */
+    @JvmSynthetic
     public suspend fun requestLLMMultipleChoices(): List<LLMChoice> {
         validateSession()
         val preparedPrompt = preparePrompt(prompt, tools)

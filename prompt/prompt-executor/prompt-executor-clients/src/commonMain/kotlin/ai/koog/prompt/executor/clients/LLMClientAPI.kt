@@ -11,6 +11,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.flow.Flow
+import kotlin.jvm.JvmSynthetic
 
 /**
  * API for [LLMClient]
@@ -64,6 +65,7 @@ public interface LLMClientAPI : AutoCloseable {
      * @param model The LLM model to use
      *  @return List of LLM choices
      */
+    @JvmSynthetic
     public suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
@@ -78,6 +80,7 @@ public interface LLMClientAPI : AutoCloseable {
      * @param model The language model to be used for conducting the moderation analysis.
      * @return The result of the moderation analysis, encapsulated in a ModerationResult object.
      */
+    @JvmSynthetic
     public suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult
 
     /**
@@ -85,6 +88,7 @@ public interface LLMClientAPI : AutoCloseable {
      *
      * @return A list of model ids instances representing the available LLMs.
      */
+    @JvmSynthetic
     public suspend fun models(): List<LLModel> {
         throw UnsupportedOperationException("Not implemented for this client")
     }

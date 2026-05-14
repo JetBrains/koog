@@ -95,7 +95,7 @@ public class AIAgentServiceIntegrationTest extends KoogJavaTestBase {
 
         ToolRegistry emptyRegistry = ToolRegistry.builder().build();
         String result = service.createAgentAndRun("What is 2+2?", "one-shot-agent",
-            emptyRegistry, service.getAgentConfig(), null,  KoogClock.System);
+            emptyRegistry, service.getAgentConfig(), KoogClock.System);
 
         assertNotNull(result);
         assertFalse(result.isEmpty());

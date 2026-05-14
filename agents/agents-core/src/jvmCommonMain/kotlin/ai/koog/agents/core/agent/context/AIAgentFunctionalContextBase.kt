@@ -26,11 +26,9 @@ import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredResponse
 import ai.koog.utils.annotations.InternalKoogUtils
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.serializer
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Flow
 import kotlin.reflect.KClass
 
@@ -157,10 +155,8 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     public fun executionInfo(): AgentExecutionInfo = executionInfo
 
     @JavaAPI
-    @JvmOverloads
-    public fun getHistory(
-        executorService: ExecutorService? = null
-    ): List<Message> = config.runBlockingOnLLMDispatcher(executorService) {
+    @JvmName("getHistory")
+    public fun getHistoryBlocking(): List<Message> = config.runBlockingOnLLMDispatcher {
         getHistory()
     }
 
@@ -170,34 +166,26 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      * @param message The input message to be sent to the LLM.
      * @param allowToolCalls Determines whether the LLM is allowed to use tools during its response generation.
      *                       Defaults to true.
-     * @param executorService An optional `ExecutorService` instance that enables custom thread management for the request.
-     *                        Defaults to null.
      * @return A [Message.Response] object containing the message received from the LLM.
      */
     @JavaAPI
     @JvmOverloads
-    public fun requestLLM(
+    @JvmName("requestLLM")
+    public fun requestLLMBlocking(
         message: String,
-        allowToolCalls: Boolean = true,
-        executorService: ExecutorService? = null
-    ): Message.Response = config.runBlockingOnLLMDispatcher(executorService) {
+        allowToolCalls: Boolean = true
+    ): Message.Response = config.runBlockingOnLLMDispatcher {
         requestLLM(message, allowToolCalls)
     }
 
     /**
      * Retrieves the most recent token usage count synchronously.
      *
-     * This method executes the `latestTokenUsage` function on the main dispatcher. It can leverage
-     * an optional `ExecutorService` to provide a custom thread management mechanism.
-     *
-     * @param executorService An optional `ExecutorService` instance for managing thread execution. Defaults to `null`.
      * @return The latest token usage count as an integer.
      */
     @JavaAPI
-    @JvmOverloads
-    public fun latestTokenUsage(
-        executorService: ExecutorService? = null
-    ): Int = config.runBlockingOnLLMDispatcher(executorService) {
+    @JvmName("latestTokenUsage")
+    public fun latestTokenUsageBlocking(): Int = config.runBlockingOnLLMDispatcher {
         latestTokenUsage()
     }
 
@@ -227,17 +215,16 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      *
      * @param message The message or query to be sent to the LLM for processing.
      * @param structureDefinition An optional parameter specifying the structured data definition for parsing or validating the response.
-     * @param executorService An optional executor service to be used for managing coroutine execution. Defaults to null, which will use the default executor service.
      * @return A `Publisher` that emits `StreamFrame` objects representing the streamed response from the LLM.
      */
     @JavaAPI
     @JvmOverloads
-    public fun requestLLMStreaming(
+    @JvmName("requestLLMStreaming")
+    public fun requestLLMStreamingBlocking(
         message: String,
-        structureDefinition: StructureDefinition?,
-        executorService: ExecutorService? = null
+        structureDefinition: StructureDefinition? = null
     ): Flow.Publisher<StreamFrame> {
-        val dispatcher = executorService?.asCoroutineDispatcher() ?: config.llmRequestDispatcher
+        val dispatcher = config.llmRequestDispatcher
 
         return Flow.Publisher { subscriber ->
             val scope = CoroutineScope(dispatcher)
@@ -268,15 +255,13 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      * Sends a request to the Large Language Model (LLM) and retrieves multiple responses.
      *
      * @param message The input message to be sent to the LLM.
-     * @param executorService An optional `ExecutorService` instance for managing thread execution. Defaults to `null`.
      * @return A list of [Message.Response] objects containing the LLM responses to the provided message.
      */
     @JavaAPI
-    @JvmOverloads
-    public fun requestLLMMultiple(
-        message: String,
-        executorService: ExecutorService? = null
-    ): List<Message.Response> = config.runBlockingOnLLMDispatcher(executorService) {
+    @JvmName("requestLLMMultiple")
+    public fun requestLLMMultipleBlocking(
+        message: String
+    ): List<Message.Response> = config.runBlockingOnLLMDispatcher {
         requestLLMMultiple(message)
     }
 
@@ -284,15 +269,13 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      * Executes a request to the LLM, restricting the process to only calling external tools as needed.
      *
      * @param message The input message or query to be processed by the LLM.
-     * @param executorService Optional executor service to specify custom threading behavior; if null, a default executor is used.
      * @return The response generated by the LLM, encapsulated in a Message.Response object.
      */
     @JavaAPI
-    @JvmOverloads
-    public fun requestLLMOnlyCallingTools(
-        message: String,
-        executorService: ExecutorService? = null
-    ): Message.Response = config.runBlockingOnLLMDispatcher(executorService) {
+    @JvmName("requestLLMOnlyCallingTools")
+    public fun requestLLMOnlyCallingToolsBlocking(
+        message: String
+    ): Message.Response = config.runBlockingOnLLMDispatcher {
         requestLLMOnlyCallingTools(message)
     }
 
@@ -302,17 +285,14 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      *
      * @param message The input message or prompt to be processed by the LLM.
      * @param tool The specific tool descriptor that defines the tool to be used.
-     * @param executorService An optional custom executor service for handling the request.
-     *                        Defaults to null, in which case the default dispatcher is used.
      * @return The response generated by the LLM system as a `Message.Response` object.
      */
     @JavaAPI
-    @JvmOverloads
-    public fun requestLLMForceOneTool(
+    @JvmName("requestLLMForceOneTool")
+    public fun requestLLMForceOneToolBlocking(
         message: String,
-        tool: ToolDescriptor,
-        executorService: ExecutorService? = null
-    ): Message.Response = config.runBlockingOnLLMDispatcher(executorService) {
+        tool: ToolDescriptor
+    ): Message.Response = config.runBlockingOnLLMDispatcher {
         requestLLMForceOneTool(message, tool)
     }
 
@@ -321,33 +301,28 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      *
      * @param message The message to be sent to the LLM.
      * @param tool The tool that the LLM is forced to use in processing the message.
-     * @param executorService Optional parameter for an ExecutorService to control the dispatching of the request.
-     * If not provided, a default dispatcher will be used.
      * @return A Message.Response object containing the result from the LLM after processing the request.
      */
     @JavaAPI
-    @JvmOverloads
-    public fun requestLLMForceOneTool(
+    @JvmName("requestLLMForceOneTool")
+    public fun requestLLMForceOneToolBlocking(
         message: String,
-        tool: Tool<*, *>,
-        executorService: ExecutorService? = null
-    ): Message.Response = config.runBlockingOnLLMDispatcher(executorService) {
+        tool: Tool<*, *>
+    ): Message.Response = config.runBlockingOnLLMDispatcher {
         requestLLMForceOneTool(message, tool)
     }
 
     /**
-     * Executes the specified tool call using an optional executor service.
+     * Executes the specified tool call.
      *
      * @param toolCall the tool call to be executed
-     * @param executorService the executor service to run the tool call on, defaults to null
      * @return the result of the executed tool call
      */
     @JavaAPI
-    @JvmOverloads
-    public fun executeTool(
-        toolCall: Message.Tool.Call,
-        executorService: ExecutorService? = null
-    ): ReceivedToolResult = config.runBlockingOnStrategyDispatcher(executorService) {
+    @JvmName("executeTool")
+    public fun executeToolBlocking(
+        toolCall: Message.Tool.Call
+    ): ReceivedToolResult = config.runBlockingOnStrategyDispatcher {
         executeTool(toolCall)
     }
 
@@ -356,16 +331,14 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      *
      * @param toolCalls a list of tool call objects to be executed
      * @param parallelTools a boolean flag indicating whether the tool calls should be executed in parallel
-     * @param executorService an optional executor service to manage parallel execution; if not provided, a default executor is used
      * @return a list of results obtained from executing the provided tool calls
      */
     @JavaAPI
-    @JvmOverloads
-    public fun executeMultipleTools(
+    @JvmName("executeMultipleTools")
+    public fun executeMultipleToolsBlocking(
         toolCalls: List<Message.Tool.Call>,
-        parallelTools: Boolean,
-        executorService: ExecutorService? = null
-    ): List<ReceivedToolResult> = config.runBlockingOnStrategyDispatcher(executorService) {
+        parallelTools: Boolean
+    ): List<ReceivedToolResult> = config.runBlockingOnStrategyDispatcher {
         executeMultipleTools(toolCalls, parallelTools)
     }
 
@@ -373,15 +346,13 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      * Sends the provided tool result for processing.
      *
      * @param toolResult The result from a tool that is to be sent for further processing.
-     * @param executorService An optional executor service to manage thread execution. If null, a default dispatcher will be used.
      * @return A response message object after processing the tool result.
      */
     @JavaAPI
-    @JvmOverloads
-    public fun sendToolResult(
-        toolResult: ReceivedToolResult,
-        executorService: ExecutorService? = null
-    ): Message.Response = config.runBlockingOnLLMDispatcher(executorService) {
+    @JvmName("sendToolResult")
+    public fun sendToolResultBlocking(
+        toolResult: ReceivedToolResult
+    ): Message.Response = config.runBlockingOnLLMDispatcher {
         sendToolResult(toolResult)
     }
 
@@ -389,15 +360,13 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      * Sends multiple tool results for processing and returns the corresponding responses.
      *
      * @param results A list of ReceivedToolResult representing the tool results to be processed.
-     * @param executorService An optional ExecutorService to run the dispatch operation. If null, a default executor is used.
      * @return A list of Message.Response objects representing the responses after processing the tool results.
      */
     @JavaAPI
-    @JvmOverloads
-    public fun sendMultipleToolResults(
-        results: List<ReceivedToolResult>,
-        executorService: ExecutorService? = null
-    ): List<Message.Response> = config.runBlockingOnLLMDispatcher(executorService) {
+    @JvmName("sendMultipleToolResults")
+    public fun sendMultipleToolResultsBlocking(
+        results: List<ReceivedToolResult>
+    ): List<Message.Response> = config.runBlockingOnLLMDispatcher {
         sendMultipleToolResults(results)
     }
 
@@ -407,36 +376,32 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      * @param tool The tool to be executed.
      * @param toolArgs The arguments to be passed to the tool.
      * @param doUpdatePrompt A flag indicating whether to update the prompt during execution.
-     * @param executorService The executor service to be used for execution. If null, a default dispatcher will be used.
      * @return The result of the executed tool wrapped in a SafeTool.Result.
      */
     @JavaAPI
     @JvmOverloads
-    public fun <ToolArg, ToolResult> executeSingleTool(
+    @JvmName("executeSingleTool")
+    public fun <ToolArg, ToolResult> executeSingleToolBlocking(
         tool: Tool<ToolArg, ToolResult>,
         toolArgs: ToolArg,
-        doUpdatePrompt: Boolean,
-        executorService: ExecutorService? = null
-    ): SafeTool.Result<ToolResult> = config.runBlockingOnStrategyDispatcher(executorService) {
+        doUpdatePrompt: Boolean = true
+    ): SafeTool.Result<ToolResult> = config.runBlockingOnStrategyDispatcher {
         executeSingleTool(tool, toolArgs, doUpdatePrompt)
     }
 
     /**
      * Compresses the historical data of a tool's operations using the specified compression strategy.
-     * This method is designed for optimizing memory usage by reducing the size of stored historical data.
      *
      * @param strategy the strategy to use for compressing the history, defaults to the whole history compression strategy
      * @param preserveMemory a flag indicating whether to prioritize memory preservation during compression, defaults to true
-     * @param executorService an optional executor service to perform the operation asynchronously, defaults to null
-     * @return Unit
      */
     @JavaAPI
     @JvmOverloads
-    public fun compressHistory(
+    @JvmName("compressHistory")
+    public fun compressHistoryBlocking(
         strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
-        preserveMemory: Boolean = true,
-        executorService: ExecutorService? = null
-    ): Unit = config.runBlockingOnLLMDispatcher(executorService) {
+        preserveMemory: Boolean = true
+    ): Unit = config.runBlockingOnLLMDispatcher {
         compressHistory(strategy, preserveMemory)
     }
 

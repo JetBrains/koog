@@ -4,12 +4,9 @@ import ai.koog.agents.annotations.JavaAPI
 import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.concurrency.runBlockingReentrant
 import ai.koog.utils.io.Closeable
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.util.concurrent.ExecutorService
 
 /**
  * Abstract class responsible for processing feature messages within the system.
@@ -60,16 +57,12 @@ public actual abstract class FeatureMessageProcessor actual constructor() : Clos
     /**
      * Initializes the feature output stream provider to ensure it is ready for use.
      * This is a blocking version of [initialize] for use from Java code.
-     *
-     * @param executorService An optional [ExecutorService] to provide a coroutine context for execution.
-     *                        If not provided, [Dispatchers.Default] is used.
      */
     @JavaAPI
-    @JvmOverloads
     @JvmName("initialize")
     @OptIn(InternalKoogUtils::class)
-    public fun javaNonSuspendInitialize(executorService: ExecutorService? = null) {
-        runBlockingReentrant(executorService?.asCoroutineDispatcher() ?: Dispatchers.Default) {
+    public fun initializeBlocking() {
+        runBlockingReentrant {
             initialize()
         }
     }
@@ -79,15 +72,12 @@ public actual abstract class FeatureMessageProcessor actual constructor() : Clos
      * This is a blocking version of [onMessage] for use from Java code.
      *
      * @param message The incoming feature message to be evaluated and potentially processed.
-     * @param executorService An optional [ExecutorService] to provide a coroutine context for execution.
-     *                        If not provided, [Dispatchers.Default] is used.
      */
     @JavaAPI
-    @JvmOverloads
     @JvmName("onMessage")
     @OptIn(InternalKoogUtils::class)
-    public fun javaNonSuspendOnMessage(message: FeatureMessage, executorService: ExecutorService? = null) {
-        runBlockingReentrant(executorService?.asCoroutineDispatcher() ?: Dispatchers.Default) {
+    public fun onMessageBlocking(message: FeatureMessage) {
+        runBlockingReentrant {
             onMessage(message)
         }
     }
