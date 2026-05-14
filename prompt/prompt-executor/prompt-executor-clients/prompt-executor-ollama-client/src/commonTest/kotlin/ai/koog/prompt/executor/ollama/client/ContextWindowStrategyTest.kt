@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.ollama.client
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatMessageDTO
@@ -9,7 +10,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.PromptTokenizer
 import ai.koog.utils.time.KoogClock
-import ai.koog.http.client.ktor.KtorKoogHttpClient
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test

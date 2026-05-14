@@ -1,6 +1,6 @@
 package ai.koog.agents.example.chat;
 
-import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOllamaAIExecutor;
+import static ai.koog.prompt.executor.llms.all.SimplePromptExecutors.simpleOllamaAIExecutor;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;

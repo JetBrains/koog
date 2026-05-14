@@ -202,7 +202,7 @@ class MistralAILLMClientTest {
         }
         val http = HttpClient(engine) {}
         val settings = MistralAIClientSettings()
-        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, settings = settings, clock = FixedClock)
+        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, settings = settings, clock = FixedClock)
 
         val prompt = Prompt.build(id = "p1", clock = FixedClock) { user("Hello") }
 
@@ -227,7 +227,7 @@ class MistralAILLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
         val prompt = Prompt.build(id = "p-multi", clock = FixedClock) {
             user("Give two options")
         }.withUpdatedParams {
@@ -254,7 +254,7 @@ class MistralAILLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
         val schemaJson = buildJsonObject {
             put("type", "object")
             putJsonObject("properties") {
@@ -287,7 +287,7 @@ class MistralAILLMClientTest {
 
     @Test
     fun testExecuteStreaming() = runTest {
-        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey ="test-key", clock = FixedClock)
+        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = "test-key", clock = FixedClock)
 
         val prompt = Prompt.build(id = "p-stream", clock = FixedClock) { user("Stream it") }
         val flow = client.executeStreaming(prompt, MistralAIModels.Chat.MistralMedium31)
@@ -306,7 +306,7 @@ class MistralAILLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
 
         val prompt = Prompt.build(id = "p-tool-response", clock = FixedClock) {
             user("What is the weather in Boston?")
@@ -348,7 +348,7 @@ class MistralAILLMClientTest {
                 socketTimeoutMillis = 3456
             )
         )
-        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, settings = settings, clock = FixedClock)
+        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, settings = settings, clock = FixedClock)
 
         val prompt = Prompt.build(id = "p1", clock = FixedClock) {
             user("This is a test message for moderation")
@@ -373,7 +373,7 @@ class MistralAILLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client = MistralAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
         val prompt = Prompt.build(id = "p-multi", clock = FixedClock) {
             user("Give two options")
         }.withUpdatedParams {

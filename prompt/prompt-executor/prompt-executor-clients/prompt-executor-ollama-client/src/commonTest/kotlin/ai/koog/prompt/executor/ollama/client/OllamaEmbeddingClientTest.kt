@@ -1,8 +1,8 @@
 package ai.koog.prompt.executor.ollama.client
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingBatchRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingRequestDTO
-import ai.koog.http.client.ktor.KtorKoogHttpClient
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond

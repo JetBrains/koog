@@ -1,10 +1,14 @@
 package ai.koog.integration.tests.base;
 
+import static ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactories.anthropicClient;
+import static ai.koog.prompt.executor.clients.google.GoogleClientFactories.googleClient;
+import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactories.openAIClient;
+
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.prompt.executor.clients.LLMClient;
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
-import ai.koog.prompt.executor.clients.google.GoogleLLMClient;
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
+import ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactories;
+import ai.koog.prompt.executor.clients.google.GoogleClientFactories;
+import ai.koog.prompt.executor.clients.openai.OpenAIClientFactories;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.llm.LLModel;
@@ -44,11 +48,11 @@ public abstract class KoogJavaTestBase {
     protected MultiLLMPromptExecutor createExecutor(LLModel model) {
         LLMClient client;
         if (model.getProvider() == LLMProvider.OpenAI) {
-            client = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
+            client = openAIClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
         } else if (model.getProvider() == LLMProvider.Anthropic) {
-            client = new AnthropicLLMClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
+            client = anthropicClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
         } else if (model.getProvider() == LLMProvider.Google) {
-            client = new GoogleLLMClient(TestCredentials.INSTANCE.readTestGoogleAIKeyFromEnv());
+            client = googleClient(TestCredentials.INSTANCE.readTestGoogleAIKeyFromEnv());
         } else {
             throw new IllegalArgumentException("Unsupported provider: " + model.getProvider());
         }

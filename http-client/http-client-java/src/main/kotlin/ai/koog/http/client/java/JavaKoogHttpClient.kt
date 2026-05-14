@@ -344,7 +344,13 @@ public class JavaKoogHttpClient internal constructor(
 
     override fun close() {}
 
-    public class Factory(
+    /**
+     * [ai.koog.http.client.KoogHttpClient.Factory] implementation backed by the JDK
+     * [java.net.http.HttpClient].
+     *
+     * @property logger Logger used by created clients.
+     */
+    public class Factory @JvmOverloads public constructor(
         private val logger: KLogger = KotlinLogging.logger {}
     ) : KoogHttpClient.Factory {
         override fun create(

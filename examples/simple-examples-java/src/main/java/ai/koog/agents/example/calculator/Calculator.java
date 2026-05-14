@@ -1,7 +1,7 @@
 package ai.koog.agents.example.calculator;
 
-import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOllamaAIExecutor;
-import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOpenAIExecutor;
+import static ai.koog.prompt.executor.llms.all.SimplePromptExecutors.simpleOllamaAIExecutor;
+import static ai.koog.prompt.executor.llms.all.SimplePromptExecutors.simpleOpenAIExecutor;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.agent.entity.AIAgentEdge;

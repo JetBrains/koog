@@ -44,7 +44,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should use null maxTokens if unspecified`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
         val request = client.createGoogleRequest(
             prompt = Prompt(
@@ -59,7 +59,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should use maxTokens from user specified parameters when available`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
         val request = client.createGoogleRequest(
             prompt = Prompt(
@@ -75,7 +75,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should handle Null parameter type`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         val tool = ToolDescriptor(
@@ -116,7 +116,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should handle AnyOf parameter type`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         val tool = ToolDescriptor(
@@ -183,7 +183,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should handle complex AnyOf with Null`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         val tool = ToolDescriptor(
@@ -233,7 +233,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should map GoogleParams to generationConfig`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         val params = GoogleParams(
@@ -269,7 +269,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should map JSON Basic schema to responseSchema`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         val schema = LLMParams.Schema.JSON.Basic(
@@ -291,7 +291,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should map JSON Standard schema to responseJsonSchema`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         val schema = LLMParams.Schema.JSON.Standard(
@@ -313,7 +313,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `toolChoice Auto None Required should map to Google function calling modes`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         fun getMode(tc: LLMParams.ToolChoice): GoogleFunctionCallingMode? {
@@ -332,7 +332,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `toolChoice Named should set ANY with allowedFunctionNames`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
         val req = client.createGoogleRequest(
             prompt = Prompt(
@@ -351,7 +351,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `processGoogleCandidate should handle InlineData image part`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val imageData = "png-bytes".encodeToByteArray()
         val candidate = GoogleCandidate(
             content = GoogleContent(
@@ -376,7 +376,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `processGoogleCandidate should handle InlineData generic file part`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val fileData = "pdf-bytes".encodeToByteArray()
         val candidate = GoogleCandidate(
             content = GoogleContent(
@@ -401,7 +401,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest groups parallel Tool Results into single content`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="test")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val request = client.createGoogleRequest(
             Prompt(
                 messages = listOf(
@@ -432,7 +432,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest attaches signature from Reasoning and fallback to subsequent calls`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="test")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val request = client.createGoogleRequest(
             Prompt(
                 messages = listOf(
@@ -482,7 +482,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `processGoogleCandidate creates Reasoning before FunctionCall with signature`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="test")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val candidate = GoogleCandidate(
             content = GoogleContent(
                 role = "model",
@@ -507,7 +507,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `processGoogleCandidate creates Reasoning from Text with thought=true`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="test")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val candidate = GoogleCandidate(
             content = GoogleContent(
                 role = "model",
@@ -624,7 +624,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest includes Reasoning as Text part with thought=true`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="test")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val request = client.createGoogleRequest(
             Prompt(
                 messages = listOf(
@@ -653,7 +653,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `processGoogleCandidate creates Reasoning for InlineData with signature`() {
-        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="test")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val candidate = GoogleCandidate(
             content = GoogleContent(
                 role = "model",

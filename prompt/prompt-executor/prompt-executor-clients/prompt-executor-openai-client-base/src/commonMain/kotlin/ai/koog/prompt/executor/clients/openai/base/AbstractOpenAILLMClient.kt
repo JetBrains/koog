@@ -137,7 +137,6 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
             json = defaultJson,
         )
-
     }
 
     /**

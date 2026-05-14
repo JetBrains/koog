@@ -1,12 +1,12 @@
 package ai.koog.prompt.executor.ollama.client
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatMessageDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.http.client.ktor.KtorKoogHttpClient
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest

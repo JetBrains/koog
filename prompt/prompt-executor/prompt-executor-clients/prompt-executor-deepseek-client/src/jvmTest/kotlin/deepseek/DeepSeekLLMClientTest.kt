@@ -185,7 +185,7 @@ class DeepSeekLLMClientTest {
         }
         val http = HttpClient(engine) {}
         val settings = DeepSeekClientSettings()
-        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, settings = settings, clock = FixedClock)
+        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, settings = settings, clock = FixedClock)
 
         val prompt = Prompt.build(id = "p1", clock = FixedClock) { user("Hello") }
 
@@ -210,7 +210,7 @@ class DeepSeekLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
         val prompt = Prompt.build(id = "p-multi", clock = FixedClock) {
             user("Give two options")
         }.withUpdatedParams {
@@ -237,7 +237,7 @@ class DeepSeekLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
         val schemaJson = buildJsonObject { }
 
         val schema = LLMParams.Schema.JSON.Basic("Person", schemaJson)
@@ -263,7 +263,7 @@ class DeepSeekLLMClientTest {
 
     @Test
     fun testExecuteStreaming() = runTest {
-        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey ="test-key", clock = FixedClock)
+        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = "test-key", clock = FixedClock)
 
         val prompt = Prompt.build(id = "p-stream", clock = FixedClock) { user("Stream it") }
         val flow = client.executeStreaming(prompt, DeepSeekModels.DeepSeekChat)
@@ -282,7 +282,7 @@ class DeepSeekLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
 
         val prompt = Prompt.build(id = "p-tool-response", clock = FixedClock) {
             user("What is the weather in Boston?")
@@ -311,7 +311,7 @@ class DeepSeekLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
 
         val prompt = Prompt(
             messages = listOf(
@@ -371,7 +371,7 @@ class DeepSeekLLMClientTest {
                 socketTimeoutMillis = 3456
             )
         )
-        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, settings = settings, clock = FixedClock)
+        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, settings = settings, clock = FixedClock)
 
         val prompt = Prompt.build(id = "p1", clock = FixedClock) { user("Hi!") }
         val ex = assertFailsWith<UnsupportedOperationException> {
@@ -390,7 +390,7 @@ class DeepSeekLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client = DeepSeekLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
         val prompt = Prompt.build(id = "p-multi", clock = FixedClock) {
             user("Give two options")
         }.withUpdatedParams {

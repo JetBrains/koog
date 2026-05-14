@@ -327,7 +327,7 @@ public class OkHttpKoogHttpClient internal constructor(
      *
      * @property logger Logger used by created clients.
      */
-    public class Factory(
+    public class Factory @JvmOverloads public constructor(
         private val logger: KLogger = KotlinLogging.logger {}
     ) : KoogHttpClient.Factory {
         override fun create(

@@ -67,7 +67,7 @@ class OpenAIChatCompletionLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = OpenAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client = OpenAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
 
         val prompt = Prompt.build(id = "p-tool-response", clock = FixedClock, params = OpenAIChatParams()) {
             user("What is the weather in Boston?")

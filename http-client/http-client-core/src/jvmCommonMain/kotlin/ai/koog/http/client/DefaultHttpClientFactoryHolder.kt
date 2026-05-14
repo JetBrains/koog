@@ -39,7 +39,7 @@ public object DefaultHttpClientFactoryHolder {
 
             else -> error(
                 "Multiple KoogHttpClient.Factory providers found on the classpath: " +
-                    providers.joinToString { it::class.simpleName ?: "<anonymous>" } +
+                    providers.joinToString { it.javaClass.name } +
                     ". Exclude all but one provider module from your build, or pass a " +
                     "KoogHttpClient.Factory explicitly at the call site."
             )
