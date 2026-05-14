@@ -11,6 +11,7 @@ import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -29,7 +30,7 @@ import kotlinx.serialization.json.JsonObject
  * @property result The result produced by the tool.
  * @property resultObject The raw result object produced by the tool. This value will not survive serialization, hence it should be used with caution and is marked as `@InternalAgentsApi`.
  */
-@Serializable(with = ReceivedToolResultSerializer::class)
+@Serializable
 public data class ReceivedToolResult(
     val id: String?,
     val tool: String,
@@ -38,7 +39,7 @@ public data class ReceivedToolResult(
     val content: String,
     val resultKind: ToolResultKind,
     val result: JSONElement?,
-    @property:InternalAgentsApi val resultObject: Any? = null,
+    @property:InternalAgentsApi @property:Transient val resultObject: Any? = null,
 ) {
     @Deprecated("Use the constructor with JSONElement instead of JsonElement")
     public constructor(
@@ -83,52 +84,4 @@ public data class ReceivedToolResult(
  */
 public fun PromptBuilder.ToolMessageBuilder.result(result: ReceivedToolResult) {
     result(result.toMessage(clock))
-}
-
-/**
- * Serializer for [ReceivedToolResult] that serializes all fields except [resultObject].
- * */
-internal class ReceivedToolResultSerializer : KSerializer<ReceivedToolResult> {
-    @Serializable
-    private data class Surrogate(
-        val id: String?,
-        val tool: String,
-        val toolArgs: JSONObject,
-        val toolDescription: String?,
-        val content: String,
-        val resultKind: ToolResultKind,
-        val result: JSONElement?,
-    )
-
-    private val delegate = Surrogate.serializer()
-
-    override val descriptor: SerialDescriptor = delegate.descriptor
-
-    override fun serialize(encoder: Encoder, value: ReceivedToolResult) {
-        delegate.serialize(
-            encoder,
-            Surrogate(
-                id = value.id,
-                tool = value.tool,
-                toolArgs = value.toolArgs,
-                toolDescription = value.toolDescription,
-                content = value.content,
-                resultKind = value.resultKind,
-                result = value.result,
-            )
-        )
-    }
-
-    override fun deserialize(decoder: Decoder): ReceivedToolResult {
-        val surrogate = delegate.deserialize(decoder)
-        return ReceivedToolResult(
-            id = surrogate.id,
-            tool = surrogate.tool,
-            toolArgs = surrogate.toolArgs,
-            toolDescription = surrogate.toolDescription,
-            content = surrogate.content,
-            resultKind = surrogate.resultKind,
-            result = surrogate.result,
-        )
-    }
 }
