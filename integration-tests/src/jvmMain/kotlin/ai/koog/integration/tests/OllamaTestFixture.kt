@@ -1,6 +1,5 @@
 package ai.koog.integration.tests
 
-import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.executor.ollama.client.OllamaModels
@@ -127,20 +126,14 @@ class OllamaTestFixture {
         val baseUrl = "http://$host:$port"
         waitForOllamaServer(baseUrl)
 
-        client = OllamaClient(
-            baseUrl = baseUrl,
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
-        )
+        client = OllamaClient(baseUrl)
     }
 
     /**
      * Set up the client with connection to locally running Ollama.
      */
     private fun setupLocal(localUrl: String) {
-        client = OllamaClient(
-            baseUrl = localUrl,
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
-        )
+        client = OllamaClient(localUrl)
     }
 
     private fun cleanContainer() {

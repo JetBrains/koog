@@ -3,7 +3,6 @@ package ai.koog.prompt.executor.clients.anthropic
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.anthropic.models.CacheTtl
 import ai.koog.prompt.message.ContentPart
@@ -27,7 +26,7 @@ class AnthropicCacheControlTest {
         isLenient = true
     }
 
-    private val client = AnthropicLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey ="test-key")
+    private val client = AnthropicLLMClient(apiKey = "test-key")
     private val model = AnthropicModels.Sonnet_4
     private val metaInfo = RequestMetaInfo.create(KoogClock.System)
 

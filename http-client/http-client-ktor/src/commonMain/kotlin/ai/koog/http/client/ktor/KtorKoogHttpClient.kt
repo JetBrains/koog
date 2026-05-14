@@ -281,15 +281,7 @@ public class KtorKoogHttpClient internal constructor(
     }
 
     /**
-     * Companion anchor for [KtorKoogHttpClient]-related extension functions.
-     */
-    public companion object {}
-
-    /**
      * [KoogHttpClient.Factory] implementation backed by Ktor [HttpClient].
-     *
-     * The primary constructor is `@JvmOverloads` so that JVM consumers (including reflective
-     * instantiation by `ServiceLoader`) see a no-arg constructor.
      *
      * @property baseClient Base Ktor client used to create configured clients.
      * @property withSse Whether created clients should install Ktor SSE support.

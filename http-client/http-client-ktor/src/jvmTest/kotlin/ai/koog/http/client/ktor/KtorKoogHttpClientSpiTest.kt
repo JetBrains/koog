@@ -2,11 +2,9 @@ package ai.koog.http.client.ktor
 
 import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.defaultFactoryHolder
 import java.util.ServiceLoader
 import kotlin.test.Test
 import kotlin.test.assertNotNull
-import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class KtorKoogHttpClientSpiTest {
@@ -31,10 +29,5 @@ class KtorKoogHttpClientSpiTest {
             resolved is KtorKoogHttpClient.Factory,
             "Expected the holder to resolve KtorKoogHttpClient.Factory via ServiceLoader"
         )
-    }
-
-    @Test
-    fun testDiscoverabilityBridgeFromKoogHttpClientCompanion() {
-        assertSame(DefaultHttpClientFactoryHolder, KoogHttpClient.defaultFactoryHolder)
     }
 }

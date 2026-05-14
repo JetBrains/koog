@@ -66,7 +66,7 @@ public class OpenAILLMAutoConfiguration(
         logger.info("Creating OpenAILLMClient client with baseUrl=${properties.baseUrl}")
         return OpenAILLMClient(
             apiKey = properties.apiKey,
-            settings = OpenAIClientSettings(baseUrl = properties.baseUrl),
+            settings = OpenAIClientSettings(baseUrl = properties.baseUrl)
         )
     }
 

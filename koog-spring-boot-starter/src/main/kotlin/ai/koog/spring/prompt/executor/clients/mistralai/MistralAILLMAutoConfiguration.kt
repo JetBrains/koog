@@ -66,7 +66,7 @@ public class MistralAILLMAutoConfiguration(
         logger.info("Creating mistralAILLMClient client with baseUrl=${properties.baseUrl}")
         return MistralAILLMClient(
             apiKey = properties.apiKey,
-            settings = MistralAIClientSettings(baseUrl = properties.baseUrl),
+            settings = MistralAIClientSettings(baseUrl = properties.baseUrl)
         )
     }
 

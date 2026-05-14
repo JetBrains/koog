@@ -27,7 +27,6 @@ import ai.koog.integration.tests.utils.tools.files.DeleteFile
 import ai.koog.integration.tests.utils.tools.files.ListFiles
 import ai.koog.integration.tests.utils.tools.files.MockFileSystem
 import ai.koog.integration.tests.utils.tools.files.ReadFile
-import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
@@ -274,18 +273,9 @@ open class AIAgentTestBase {
         initialExecutor: MultiLLMPromptExecutor? = null,
     ): AIAgent<String, String> {
         val executor = if (initialExecutor == null) {
-            val openAIClient = OpenAILLMClient(
-                apiKey = readTestOpenAIKeyFromEnv(),
-                httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
-            )
-            val anthropicClient = AnthropicLLMClient(
-                apiKey = readTestAnthropicKeyFromEnv(),
-                httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
-            )
-            val googleClient = GoogleLLMClient(
-                apiKey = readTestGoogleAIKeyFromEnv(),
-                httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
-            )
+            val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv())
+            val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
+            val googleClient = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
             MultiLLMPromptExecutor(
                 LLMProvider.OpenAI to openAIClient,
                 LLMProvider.Anthropic to anthropicClient,
@@ -380,18 +370,9 @@ open class AIAgentTestBase {
         model: LLModel,
         emptyAgentRegistry: Boolean = true,
     ): AIAgent<String, String> {
-        val openAIClient = OpenAILLMClient(
-            apiKey = readTestOpenAIKeyFromEnv(),
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
-        )
-        val anthropicClient = AnthropicLLMClient(
-            apiKey = readTestAnthropicKeyFromEnv(),
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
-        )
-        val googleClient = GoogleLLMClient(
-            apiKey = readTestGoogleAIKeyFromEnv(),
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
-        )
+        val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv())
+        val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
+        val googleClient = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
 
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient,

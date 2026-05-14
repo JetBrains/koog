@@ -182,7 +182,12 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
             Message.System(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT, RequestMetaInfo(testClock.now())),
             Message.User(userInput, RequestMetaInfo(testClock.now())),
             toolCallMessage(toolCallId, TestGetWeatherTool.name, """{"location":"$location"}"""),
-            Message.Tool.Result(toolCallId, TestGetWeatherTool.name, mockToolCallResponse.toolResult, RequestMetaInfo(testClock.now())),
+            Message.Tool.Result(
+                toolCallId,
+                TestGetWeatherTool.name,
+                mockToolCallResponse.toolResult,
+                RequestMetaInfo(testClock.now())
+            ),
         )
 
         val expectedOutputMessages2 = listOf(
@@ -523,7 +528,12 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         val testData = OpenTelemetryTestData()
         val result = runCatching {
             AIAgent(
-                promptExecutor = MultiLLMPromptExecutor(OpenAILLMClient(apiKey = "fake-key", httpClientFactory = KtorKoogHttpClient.Factory(failingHttpClient))),
+                promptExecutor = MultiLLMPromptExecutor(
+                    OpenAILLMClient(
+                        apiKey = "fake-key",
+                        httpClientFactory = KtorKoogHttpClient.Factory(failingHttpClient)
+                    )
+                ),
                 llmModel = OpenTelemetryTestAPI.Parameter.defaultModel,
                 strategy = singleRunStrategy(),
                 systemPrompt = OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT

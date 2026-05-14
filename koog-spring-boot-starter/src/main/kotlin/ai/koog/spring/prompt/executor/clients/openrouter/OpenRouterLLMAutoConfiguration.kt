@@ -58,7 +58,7 @@ public class OpenRouterLLMAutoConfiguration(
         logger.info("Creating OpenRouterLLMClient with baseUrl=${properties.baseUrl}")
         return OpenRouterLLMClient(
             apiKey = properties.apiKey,
-            settings = OpenRouterClientSettings(baseUrl = properties.baseUrl),
+            settings = OpenRouterClientSettings(baseUrl = properties.baseUrl)
         )
     }
 

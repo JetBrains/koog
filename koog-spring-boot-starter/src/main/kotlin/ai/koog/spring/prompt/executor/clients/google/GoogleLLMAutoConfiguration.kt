@@ -66,7 +66,7 @@ public class GoogleLLMAutoConfiguration(
         logger.info("Creating GoogleLLMClient with baseUrl=${properties.baseUrl}")
         return GoogleLLMClient(
             apiKey = properties.apiKey,
-            settings = GoogleClientSettings(baseUrl = properties.baseUrl),
+            settings = GoogleClientSettings(baseUrl = properties.baseUrl)
         )
     }
 

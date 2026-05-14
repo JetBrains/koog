@@ -10,7 +10,6 @@ import ai.koog.integration.tests.utils.TestCredentials.readTestGoogleAIKeyFromEn
 import ai.koog.integration.tests.utils.TestCredentials.readTestMistralAiKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestOpenRouterKeyFromEnv
-import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.bedrock.BedrockAPIMethod
@@ -30,18 +29,15 @@ import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 fun getLLMClientForProvider(provider: LLMProvider): LLMClient {
     return when (provider) {
         LLMProvider.Anthropic -> AnthropicLLMClient(
-            apiKey = readTestAnthropicKeyFromEnv(),
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+            readTestAnthropicKeyFromEnv()
         )
 
         LLMProvider.OpenAI -> OpenAILLMClient(
-            apiKey = readTestOpenAIKeyFromEnv(),
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+            readTestOpenAIKeyFromEnv()
         )
 
         LLMProvider.OpenRouter -> OpenRouterLLMClient(
-            apiKey = readTestOpenRouterKeyFromEnv(),
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+            readTestOpenRouterKeyFromEnv()
         )
 
         LLMProvider.Bedrock -> BedrockLLMClient(
@@ -60,13 +56,11 @@ fun getLLMClientForProvider(provider: LLMProvider): LLMClient {
         )
 
         LLMProvider.Google -> GoogleLLMClient(
-            apiKey = readTestGoogleAIKeyFromEnv(),
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+            readTestGoogleAIKeyFromEnv()
         )
 
         LLMProvider.MistralAI -> MistralAILLMClient(
-            apiKey = readTestMistralAiKeyFromEnv(),
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+            readTestMistralAiKeyFromEnv()
         )
 
         else -> throw IllegalArgumentException("Unsupported provider: $provider")

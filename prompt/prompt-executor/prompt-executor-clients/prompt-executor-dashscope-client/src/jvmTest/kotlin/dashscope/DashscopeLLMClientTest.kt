@@ -179,7 +179,12 @@ class DashscopeLLMClientTest {
         }
         val http = HttpClient(engine) {}
         val settings = DashscopeClientSettings()
-        val client = DashscopeLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, settings = settings, clock = FixedClock)
+        val client = DashscopeLLMClient(
+            httpClientFactory = KtorKoogHttpClient.Factory(http),
+            apiKey = key,
+            settings = settings,
+            clock = FixedClock
+        )
 
         val prompt = Prompt.build(id = "p1", clock = FixedClock) { user("Hello") }
 
@@ -204,7 +209,8 @@ class DashscopeLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = DashscopeLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client =
+            DashscopeLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
         val prompt = Prompt.build(id = "p-multi", clock = FixedClock) {
             user("Give two options")
         }.withUpdatedParams {
@@ -231,7 +237,8 @@ class DashscopeLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = DashscopeLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client =
+            DashscopeLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
         val schemaJson = buildJsonObject {
             put(
                 "type",
@@ -263,7 +270,11 @@ class DashscopeLLMClientTest {
 
     @Test
     fun testExecuteStreaming() = runTest {
-        val client = DashscopeLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey ="test-key", clock = FixedClock)
+        val client = DashscopeLLMClient(
+            httpClientFactory = KtorKoogHttpClient.Factory(http),
+            apiKey = "test-key",
+            clock = FixedClock
+        )
 
         val prompt = Prompt.build(id = "p-stream", clock = FixedClock) { user("Stream it") }
         val flow = client.executeStreaming(prompt, DashscopeModels.QWEN_FLASH)
@@ -282,7 +293,8 @@ class DashscopeLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = DashscopeLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client =
+            DashscopeLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
 
         val prompt = Prompt.build(id = "p-tool-response", clock = FixedClock) {
             user("What is the weather in Boston?")
@@ -310,7 +322,12 @@ class DashscopeLLMClientTest {
                 socketTimeoutMillis = 3456
             )
         )
-        val client = DashscopeLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, settings = settings, clock = FixedClock)
+        val client = DashscopeLLMClient(
+            httpClientFactory = KtorKoogHttpClient.Factory(http),
+            apiKey = key,
+            settings = settings,
+            clock = FixedClock
+        )
 
         val prompt = Prompt.build(id = "p1", clock = FixedClock) { user("Hi!") }
         val ex = assertFailsWith<UnsupportedOperationException> {
@@ -329,7 +346,8 @@ class DashscopeLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = DashscopeLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey =key, clock = FixedClock)
+        val client =
+            DashscopeLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
         val prompt = Prompt.build(id = "p-multi", clock = FixedClock) {
             user("Give two options")
         }.withUpdatedParams {

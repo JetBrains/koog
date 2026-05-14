@@ -70,7 +70,7 @@ public class DeepSeekLLMAutoConfiguration(
         logger.info("Creating DeepSeekLLMClient with baseUrl=${properties.baseUrl}")
         return DeepSeekLLMClient(
             apiKey = properties.apiKey,
-            settings = DeepSeekClientSettings(baseUrl = properties.baseUrl),
+            settings = DeepSeekClientSettings(baseUrl = properties.baseUrl)
         )
     }
 

@@ -64,7 +64,7 @@ public class AnthropicLLMAutoConfiguration(
         logger.info("Creating AnthropicLLMClient with baseUrl=${properties.baseUrl}")
         return AnthropicLLMClient(
             apiKey = properties.apiKey,
-            settings = AnthropicClientSettings(baseUrl = properties.baseUrl),
+            settings = AnthropicClientSettings(baseUrl = properties.baseUrl)
         )
     }
 

@@ -1,7 +1,6 @@
 package ai.koog.agents.features.opentelemetry.integration
 
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
-import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
@@ -871,10 +870,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val strategy = strategy("embeddings-tracing-strategy") {
                 val embeddingsNode by node<String, String>("embeddings-call") { _ ->
-                    val client = OpenAILLMClient(
-                        apiKey = openaiKey,
-                        httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
-                    )
+                    val client = OpenAILLMClient(openaiKey)
                     val vectors: List<List<Double>> = texts.map { t -> client.embed(t, model) }
                     val dim = if (vectors.isNotEmpty()) vectors.first().size else 0
                     "model=$${model.id}; count=${vectors.size}; dim=$dim"
