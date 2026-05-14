@@ -45,7 +45,7 @@ Here is an example:
     **/
     -->
     ```java
-    OpenAILLMClient openAIClient = new OpenAILLMClient(System.getenv("OPENAI_API_KEY"));
+    OpenAILLMClient openAIClient = openAIClient(System.getenv("OPENAI_API_KEY"));
     MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(openAIClient);
     ```
     <!--- KNIT example-prompt-executors-java-01.java -->
@@ -87,8 +87,8 @@ To create a prompt executor that works with multiple LLM providers, do the follo
     **/
     -->
     ```java
-    OpenAILLMClient openAIClient = new OpenAILLMClient(System.getenv("OPENAI_API_KEY"));
-    OllamaClient ollamaClient = new OllamaClient();
+    OpenAILLMClient openAIClient = openAIClient(System.getenv("OPENAI_API_KEY"));
+    OllamaClient ollamaClient = ollamaClient();
 
     MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(openAIClient, ollamaClient);
     ```
@@ -140,9 +140,9 @@ This is useful for avoiding rate limits, improving throughput, and implementing 
     -->
     ```java
     // Create multiple client instances
-    OpenAILLMClient openAI1 = new OpenAILLMClient("openai-key-1");
-    OpenAILLMClient openAI2 = new OpenAILLMClient("openai-key-2");
-    AnthropicLLMClient anthropic = new AnthropicLLMClient("anthropic-key");
+    OpenAILLMClient openAI1 = openAIClient("openai-key-1");
+    OpenAILLMClient openAI2 = openAIClient("openai-key-2");
+    AnthropicLLMClient anthropic = anthropicClient("anthropic-key");
 
     // Create router with round-robin strategy
     RoundRobinRouter router = new RoundRobinRouter(openAI1, openAI2, anthropic);
@@ -342,9 +342,9 @@ Here is an example of switching between providers:
     -->
     ```java
     // Create LLM clients for OpenAI, Anthropic, and Google providers
-    OpenAILLMClient openAIClient = new OpenAILLMClient("OPENAI_API_KEY");
-    AnthropicLLMClient anthropicClient = new AnthropicLLMClient("ANTHROPIC_API_KEY");
-    GoogleLLMClient googleClient = new GoogleLLMClient("GOOGLE_API_KEY");
+    OpenAILLMClient openAIClient = openAIClient("OPENAI_API_KEY");
+    AnthropicLLMClient anthropicClient = anthropicClient("ANTHROPIC_API_KEY");
+    GoogleLLMClient googleClient = googleClient("GOOGLE_API_KEY");
 
     // Create a MultiLLMPromptExecutor that maps LLM providers to LLM clients
     MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(
@@ -411,8 +411,8 @@ To configure the fallback mechanism, pass fallback settings when creating a `Mul
     **/
     -->
     ```java
-    OpenAILLMClient openAIClient = new OpenAILLMClient(System.getenv("OPENAI_API_KEY"));
-    OllamaClient ollamaClient = new OllamaClient();
+    OpenAILLMClient openAIClient = openAIClient(System.getenv("OPENAI_API_KEY"));
+    OllamaClient ollamaClient = ollamaClient();
 
     MultiLLMPromptExecutor multiExecutor = new MultiLLMPromptExecutor(
         Map.of(

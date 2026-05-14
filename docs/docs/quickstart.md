@@ -426,7 +426,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
         }
 
         // Create an LLM client
-        DeepSeekLLMClient deepSeekClient = new DeepSeekLLMClient(apiKey);
+        DeepSeekLLMClient deepSeekClient = deepSeekClient(apiKey);
 
         // Create an agent
         AIAgent<String, String> agent = AIAgent.builder()

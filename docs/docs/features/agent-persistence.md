@@ -68,7 +68,7 @@ To use the Agent Persistence feature, add it to your agent's configuration:
 
     <!--- INCLUDE
     /**
-    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
+    var executor = SimplePromptExecutors.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
@@ -124,7 +124,7 @@ Set the storage provider that will be used to save and retrieve checkpoints:
 
     <!--- INCLUDE
     /**
-    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
+    var executor = SimplePromptExecutors.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
@@ -182,7 +182,7 @@ To disable continuous persistence, use the code below:
 
     <!--- INCLUDE
     /**
-    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
+    var executor = SimplePromptExecutors.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
@@ -360,7 +360,7 @@ With Koog Persistence you can achieve that by providing a `RollbackToolRegistry`
 
     <!--- INCLUDE
     /**
-    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
+    var executor = SimplePromptExecutors.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
@@ -550,7 +550,7 @@ feature in your agent.
 
     <!--- INCLUDE
     /**
-    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
+    var executor = SimplePromptExecutors.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/

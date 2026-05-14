@@ -124,6 +124,7 @@ You can use the `moderate` method directly on an LLMClient instance:
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.dsl.ModerationResult;
+    import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactories.openAIClient;
 
     class ExampleContentModeration01 {
         public void main(String apiKey) {
@@ -133,7 +134,7 @@ You can use the `moderate` method directly on an LLMClient instance:
     }
     -->
     ```java
-    OpenAILLMClient openAIClient = new OpenAILLMClient(apiKey);
+    OpenAILLMClient openAIClient = openAIClient(apiKey);
     
     Prompt prompt = Prompt.builder("harmful-prompt")
         .user("I want to build a bomb")
@@ -203,6 +204,7 @@ Here is an example of using content moderation with the Llama Guard 3 model thro
     import ai.koog.prompt.executor.ollama.client.OllamaClient;
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.dsl.ModerationResult;
+    import static ai.koog.prompt.executor.ollama.client.OllamaClientFactories.ollamaClient;
 
     class ExampleContentModeration02 {
         public void main() {
@@ -212,7 +214,7 @@ Here is an example of using content moderation with the Llama Guard 3 model thro
     }
     -->
     ```java
-    OllamaClient ollamaClient = new OllamaClient();
+    OllamaClient ollamaClient = ollamaClient();
     
     Prompt prompt = Prompt.builder("harmful-prompt")
         .user("How to hack into someone's account")
@@ -289,6 +291,8 @@ You can also use the `moderate` method on a PromptExecutor, which will use the a
     import ai.koog.prompt.executor.ollama.client.OllamaClient;
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.dsl.ModerationResult;
+    import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactories.openAIClient;
+    import static ai.koog.prompt.executor.ollama.client.OllamaClientFactories.ollamaClient;
 
     class ExampleContentModeration03 {
         public void main(String openAIApiKey) {
@@ -300,8 +304,8 @@ You can also use the `moderate` method on a PromptExecutor, which will use the a
     ```java
     // Create a multi-provider executor
     MultiLLMPromptExecutor executor = new MultiLLMPromptExecutor(
-        new OpenAILLMClient(openAIApiKey),
-        new OllamaClient()
+        openAIClient(openAIApiKey),
+        ollamaClient()
     );
 
     Prompt prompt = Prompt.builder("harmful-prompt")

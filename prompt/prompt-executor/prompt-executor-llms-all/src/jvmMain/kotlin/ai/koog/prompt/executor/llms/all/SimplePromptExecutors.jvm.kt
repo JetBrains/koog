@@ -1,3 +1,6 @@
+@file:JvmMultifileClass
+@file:JvmName("SimplePromptExecutors")
+
 package ai.koog.prompt.executor.llms.all
 
 import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
@@ -5,6 +8,8 @@ import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.clients.bedrock.StaticBearerTokenProvider
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
+import kotlin.jvm.JvmMultifileClass
+import kotlin.jvm.JvmName
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with a `BedrockLLMClient`.

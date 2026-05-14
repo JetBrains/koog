@@ -79,7 +79,7 @@ Here is an example that uses `OpenAILLMClient` to run prompts:
     ```java
     // Create an OpenAI client
     String apiKey = System.getenv("OPENAI_API_KEY");
-    OpenAILLMClient client = new OpenAILLMClient(apiKey);
+    OpenAILLMClient client = openAIClient(apiKey);
 
     // Create a prompt
     Prompt prompt = Prompt.builder("prompt_name")
@@ -169,7 +169,7 @@ See the [Streaming API documentation](../streaming-api.md) for more details on w
     ```java
     // Set up the OpenAI client with your API key
     String token = System.getenv("OPENAI_API_KEY");
-    OpenAILLMClient client = new OpenAILLMClient(token);
+    OpenAILLMClient client = openAIClient(token);
 
     Prompt prompt = Prompt.builder("stream_demo")
                 .user("Stream this response in short chunks.")
@@ -262,7 +262,7 @@ being executed.
     -->
     ```java
     String apiKey = System.getenv("OPENAI_API_KEY");
-    OpenAILLMClient client = new OpenAILLMClient(apiKey);
+    OpenAILLMClient client = openAIClient(apiKey);
 
     // Configure parameters (LLMParams constructor requires all 8 arguments in Java)
     LLMParams params = new LLMParams(
@@ -336,7 +336,7 @@ To get a list of available model IDs supported by the LLM client, use the `model
     -->
     ```java
     String apiKey = System.getenv("OPENAI_API_KEY");
-    OpenAILLMClient client = new OpenAILLMClient(apiKey);
+    OpenAILLMClient client = openAIClient(apiKey);
 
     List<LLModel> models = client.models();
     for (LLModel model : models) {
@@ -416,7 +416,7 @@ You can use the `moderate()` method with a moderation model to check whether a p
     -->
     ```java
     String apiKey = System.getenv("OPENAI_API_KEY");
-    OpenAILLMClient client = new OpenAILLMClient(apiKey);
+    OpenAILLMClient client = openAIClient(apiKey);
 
     Prompt prompt = Prompt.builder("moderation")
         .user("This is a test message that may contain offensive content.")

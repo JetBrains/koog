@@ -1,6 +1,11 @@
+@file:JvmMultifileClass
+@file:JvmName("SimplePromptExecutors")
+
 package ai.koog.prompt.executor.llms.all
 
 import ai.koog.http.client.KoogHttpClient
+import kotlin.jvm.JvmMultifileClass
+import kotlin.jvm.JvmName
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient

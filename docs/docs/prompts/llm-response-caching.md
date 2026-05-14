@@ -80,7 +80,7 @@ Here is an example:
             .build();
 
     // Create a prompt executor
-    OpenAILLMClient client = new OpenAILLMClient(System.getenv("OPENAI_API_KEY"));
+    OpenAILLMClient client = openAIClient(System.getenv("OPENAI_API_KEY"));
     MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(client);
 
     // Create a cached prompt executor
