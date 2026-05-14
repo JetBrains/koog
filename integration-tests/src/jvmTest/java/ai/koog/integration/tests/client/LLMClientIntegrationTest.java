@@ -16,6 +16,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactories.anthropicClient;
+import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactories.openAIClient;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LLMClientIntegrationTest extends KoogJavaTestBase {
@@ -30,7 +32,7 @@ public class LLMClientIntegrationTest extends KoogJavaTestBase {
 
     @Test
     public void integration_OpenAILLMClient() {
-        OpenAILLMClient client = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
+        OpenAILLMClient client = openAIClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
         resourcesToClose.add((AutoCloseable) client);
 
         assertEquals(LLMProvider.OpenAI, client.llmProvider());
@@ -47,7 +49,7 @@ public class LLMClientIntegrationTest extends KoogJavaTestBase {
 
     @Test
     public void integration_AnthropicLLMClient() {
-        AnthropicLLMClient client = new AnthropicLLMClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
+        AnthropicLLMClient client = anthropicClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
         resourcesToClose.add((AutoCloseable) client);
 
         assertEquals(LLMProvider.Anthropic, client.llmProvider());
@@ -64,8 +66,8 @@ public class LLMClientIntegrationTest extends KoogJavaTestBase {
 
     @Test
     public void integration_MultiLLMPromptExecutor() {
-        OpenAILLMClient openAIClient = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
-        AnthropicLLMClient anthropicClient = new AnthropicLLMClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
+        OpenAILLMClient openAIClient = openAIClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
+        AnthropicLLMClient anthropicClient = anthropicClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
 
         resourcesToClose.add((AutoCloseable) openAIClient);
         resourcesToClose.add((AutoCloseable) anthropicClient);
