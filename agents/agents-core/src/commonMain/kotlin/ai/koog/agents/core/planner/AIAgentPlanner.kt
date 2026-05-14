@@ -28,6 +28,10 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  * @param Plan The type of plan produced by [buildPlan].
  * @param stateType [TypeToken] of the [State].
  * @param planType [TypeToken] of the [Plan].
+ *
+ * [stateType] and [planType] are required for features which require serialization, e.g. persistence.
+ * if you use such features, you should provide the type tokens for the state and plan types.
+ * otherwise these parameters can be omitted.
  */
 public abstract class AIAgentPlanner<Input, Output, State : Any, Plan : Any>(
     public val stateType: TypeToken? = null,

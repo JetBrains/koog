@@ -7,13 +7,27 @@ import kotlin.coroutines.Continuation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * AIAgentPlanner implementation for Java.
+ */
 @JavaAPI
 public abstract class JavaAIAgentPlanner<Input, Output, State, Plan> extends AIAgentPlanner<Input, Output, State, Plan> {
 
+    /**
+     * Constructor for JavaAIAgentPlanner.
+     *
+     * @param stateType The type of the state.
+     * @param planType The type of the plan.
+     */
     public JavaAIAgentPlanner(Class<State> stateType, Class<Plan> planType) {
         super(TypeToken.of(stateType), TypeToken.of(planType));
     }
 
+    /**
+     * Simplified constructor for JavaAIAgentPlanner.
+     * note: if you use features which require serialization, you should use the other constructor
+     * and provide the type tokens for the state and plan types.
+     */
     public JavaAIAgentPlanner() {
         super();
     }
