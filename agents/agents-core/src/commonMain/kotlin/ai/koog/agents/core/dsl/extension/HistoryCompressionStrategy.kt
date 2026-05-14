@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.prompt.Prompts.summarizeInTLDR
 import ai.koog.prompt.message.Message
 import kotlin.jvm.JvmField
+import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
 import kotlin.time.Instant
 
@@ -239,6 +240,30 @@ public abstract class HistoryCompressionStrategy {
          */
         @JvmStatic
         @KtLintIgnoreNaming
-        public fun FactRetrieval(concepts: List<Concept>): HistoryCompressionStrategy = FactRetrievalHistoryCompressionStrategy(concepts)
+        public fun FactRetrieval(concepts: List<Concept>): HistoryCompressionStrategy =
+            FactRetrievalHistoryCompressionStrategy(concepts)
+
+        /**
+         * A strategy for compressing history by extracting structured facts about predefined concepts
+         * fro m the current conversation history using an LLM, then replacing the full history with a
+         * compact assistant message that contains those extracted facts.
+         *
+         * This strategy preserves all system messages as well as the first user message
+         * (if present) and memory messages (if provided), then appends a single assistant message
+         * summarising the extracted facts and the approximate number of tool interactions that occurred.
+         *
+         * [System, User, Assistant, ToolCall, ToolResult, Assistant]
+         * ->
+         * [System, User, Memory, Assistant([CONTEXT RESTORATION] facts about configured concepts)]
+         *
+         * @param concepts A variable number of [Concept] objects that define the topics for which facts
+         *                 are to be extracted from the conversation history.
+         * @return A [HistoryCompressionStrategy] configured for fact-based history compression.
+         */
+        @JvmStatic
+        @JvmOverloads
+        @KtLintIgnoreNaming
+        public fun FactRetrieval(vararg concepts: Concept): HistoryCompressionStrategy = FactRetrieval(concepts.toList())
+
     }
 }

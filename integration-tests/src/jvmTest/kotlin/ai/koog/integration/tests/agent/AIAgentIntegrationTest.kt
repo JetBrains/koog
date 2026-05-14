@@ -157,12 +157,10 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 Arguments.of(HistoryCompressionStrategy.Chunked(2), "Chunked(2)"),
                 Arguments.of(
                     HistoryCompressionStrategy.FactRetrieval(
-                        listOf(
-                            Concept(
-                                keyword = "user-identity",
-                                description = "Who the user is, including any self-description they have provided.",
-                                factType = FactType.MULTIPLE
-                            )
+                        Concept(
+                            keyword = "user-identity",
+                            description = "Who the user is, including any self-description they have provided.",
+                            factType = FactType.MULTIPLE
                         )
                     ),
                     "FactRetrieval"
