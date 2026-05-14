@@ -26,6 +26,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(project(":test-utils"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
             }
         }
 
