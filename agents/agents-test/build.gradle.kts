@@ -1,6 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
-
 plugins {
     id("ai.kotlin.multiplatform")
     alias(libs.plugins.kotlin.serialization)
@@ -12,7 +11,6 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-core"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
                 api(project(":prompt:prompt-tokenizer"))
 
                 api(kotlin("test"))

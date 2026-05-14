@@ -134,6 +134,11 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
+      - name: Check beta and stable module dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |-
+          ./gradlew listModules
+
       - name: JvmTest with Gradle Wrapper and Kover coverage
         if: matrix.os == 'ubuntu-latest'
         run: |-

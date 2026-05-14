@@ -1,6 +1,7 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 import ai.koog.gradle.xcframework.XCFrameworkConfig.configureFrameworkExportsIfRequested
 
+val isBeta by extra(true)
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -53,26 +54,10 @@ val excluded = setOf(
     ":agents:agents-features:agents-features-longterm-memory-aws", // Optional AWS LongTermMemory provider
 
     project.path, // the current project should not depend on itself
-    ":koog-agents-additions"
+    ":koog-agents"
 )
 
-val betaModules = setOf(
-    ":agents:agents-features:agents-features-longterm-memory",
-    ":agents:agents-mcp",
-    ":agents:agents-planner",
-    ":prompt:prompt-cache:prompt-cache-redis",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-client",
-    ":prompt:prompt-executor:prompt-executor-llms-all",
-    ":rag:rag-vector"
-)
-
-// Non-beta modules ONLY:
-val included = setOf(
+val stableModules = setOf(
     ":agents:agents-core",
     ":agents:agents-features:agents-features-event-handler",
     ":agents:agents-features:agents-features-memory",
@@ -105,8 +90,24 @@ val included = setOf(
     ":http-client:http-client-core",
     ":http-client:http-client-ktor",
     ":serialization:serialization-core",
-    ":rag:rag-base",
     ":utils",
+    ":rag:rag-base",
+)
+
+// Beta modules ONLY:
+val included = setOf(
+    ":agents:agents-features:agents-features-longterm-memory",
+    ":agents:agents-mcp",
+    ":agents:agents-planner",
+    ":prompt:prompt-cache:prompt-cache-redis",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-client",
+    ":prompt:prompt-executor:prompt-executor-llms-all",
+    ":rag:rag-vector"
 )
 
 // Modules that do not publish a wasmJs artifact. They are filtered out of the
@@ -120,7 +121,7 @@ val wasmJsExcluded = setOf(
 kotlin {
     val projects = rootProject.subprojects
         .filterNot { it.path in excluded }
-        .filterNot { it.path in betaModules }
+        .filterNot { it.path in stableModules }
         .filter { it.buildFile.exists() }
     val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
 

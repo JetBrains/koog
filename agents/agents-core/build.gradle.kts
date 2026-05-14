@@ -49,6 +49,7 @@ kotlin {
                 implementation(project(":agents:agents-test"))
                 implementation(project(":test-utils"))
                 implementation(libs.kotest.assertions.json)
+                implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
             }
         }
 

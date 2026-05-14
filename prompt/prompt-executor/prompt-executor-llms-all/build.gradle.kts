@@ -1,5 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
+val isBeta by extra(true)
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -20,7 +21,6 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
                 api(project(":agents:agents-core"))
-                api(project(":agents:agents-ext"))
                 api(project(":agents:agents-tools"))
                 api(project(":agents:agents-features:agents-features-event-handler"))
                 api(project(":agents:agents-features:agents-features-trace"))

@@ -1,6 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
-
 plugins {
     id("ai.kotlin.multiplatform")
 }

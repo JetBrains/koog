@@ -329,6 +329,82 @@ tasks.register("compileTestKotlinAll") {
     dependsOn(subprojects.map { it.getKotlinCompileTasks("test") })
 }
 
+tasks.register("listModules") {
+    description = "Lists modules grouped by stability and reports stable modules that depend on beta modules."
+    group = "help"
+
+    doLast {
+        val testModules = listOf(":integration-tests", ":examples", ":a2a-test", ":docs")
+        val betaModules = subprojects.filter { (it.extra["isBeta"] as? Boolean) == true }.sortedBy { it.path }
+            .filterNot { it.path in testModules }
+        val stableModules = subprojects.filter { (it.extra["isBeta"] as? Boolean) != true }.sortedBy { it.path }
+            .filterNot { it.path in testModules }
+
+        println("beta modules:")
+        betaModules.forEach { println("  ${it.path}") }
+
+        println("\nstable modules:")
+        stableModules.forEach { println("  ${it.path}") }
+
+        // Collect direct project-to-project dependencies for every subproject
+        val directDeps: Map<String, Set<String>> = subprojects.associate { subproject ->
+            val deps = mutableSetOf<String>()
+            subproject.configurations
+                .filter { !it.name.contains("test", ignoreCase = true) }
+                .forEach { config ->
+                    try {
+                        config.dependencies
+                            .withType<ProjectDependency>()
+                            .filterNot { it.dependencyProject.path in testModules }
+                            .forEach { dep ->
+                                deps += dep.path
+                            }
+                    } catch (_: Exception) {
+                        // some configurations may not be resolvable at this point – skip them
+                    }
+                }
+            subproject.path to deps
+        }
+
+        val reversedDependencies = mutableMapOf<String, MutableSet<String>>()
+        directDeps.forEach { (module, deps) ->
+            deps.forEach { dep ->
+                reversedDependencies.putIfAbsent(dep, mutableSetOf())
+                reversedDependencies[dep]!! += module
+            }
+        }
+
+        val transitiveViolations = mutableMapOf<String, List<String>>()
+        val visitedModules = mutableSetOf<String>()
+        fun transitiveDeps(betaModule: String, currentModule: String, path: List<String>) {
+            if (currentModule in visitedModules) return
+            visitedModules += currentModule
+            if (currentModule in stableModules.map { it.path }) {
+                transitiveViolations.putIfAbsent(currentModule, path)
+            }
+
+            reversedDependencies[currentModule]?.forEach { dependingModule ->
+                transitiveDeps(betaModule, dependingModule, path + currentModule)
+            }
+        }
+
+        betaModules.forEach { betaModule ->
+            transitiveDeps(betaModule = betaModule.path, currentModule = betaModule.path, path = emptyList())
+        }
+
+        if (transitiveViolations.isNotEmpty()) {
+            val errorMessage = buildString {
+                appendLine("Stable modules depending on beta modules:")
+                transitiveViolations.forEach { (stableModule, path) ->
+                    appendLine("  $stableModule <---- ${path.reversed().joinToString(" <---- ") { it }}")
+                }
+            }
+
+            error(errorMessage)
+        }
+    }
+}
+
 apply<CheckSplitPackagesPlugin>()
 
 extensions.getByType<CheckSplitPackagesExtension>().apply {

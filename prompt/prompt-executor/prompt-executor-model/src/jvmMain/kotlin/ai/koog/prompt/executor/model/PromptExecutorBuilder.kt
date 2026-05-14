@@ -10,19 +10,9 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
-import ai.koog.prompt.executor.clients.dashscope.DashscopeClientSettings
-import ai.koog.prompt.executor.clients.dashscope.DashscopeLLMClient
-import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
-import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
-import ai.koog.prompt.executor.clients.google.GoogleClientSettings
-import ai.koog.prompt.executor.clients.google.GoogleLLMClient
-import ai.koog.prompt.executor.clients.mistralai.MistralAIClientSettings
-import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
-import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
-import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.ExperimentalRoutingApi
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor
@@ -113,50 +103,6 @@ public class PromptExecutorBuilder {
     }
 
     /**
-     * Adds a Google AI client. [httpClientFactory] defaults to
-     * [HttpClientFactoryResolver.resolve].
-     */
-    @JvmOverloads
-    public fun google(
-        apiKey: String,
-        settings: GoogleClientSettings = GoogleClientSettings(),
-        httpClientFactory: KoogHttpClient.Factory = HttpClientFactoryResolver.resolve(),
-        clock: KoogClock = KoogClock.System,
-    ): PromptExecutorBuilder = apply {
-        addClient(GoogleLLMClient(apiKey, settings, httpClientFactory, clock))
-    }
-
-    /**
-     * Adds a DeepSeek client. [httpClientFactory] defaults to
-     * [HttpClientFactoryResolver.resolve].
-     */
-    @JvmOverloads
-    public fun deepseek(
-        apiKey: String,
-        settings: DeepSeekClientSettings = DeepSeekClientSettings(),
-        httpClientFactory: KoogHttpClient.Factory = HttpClientFactoryResolver.resolve(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(DeepSeekLLMClient(apiKey, settings, httpClientFactory, clock, toolsConverter))
-    }
-
-    /**
-     * Adds a Mistral AI client. [httpClientFactory] defaults to
-     * [HttpClientFactoryResolver.resolve].
-     */
-    @JvmOverloads
-    public fun mistral(
-        apiKey: String,
-        settings: MistralAIClientSettings = MistralAIClientSettings(),
-        httpClientFactory: KoogHttpClient.Factory = HttpClientFactoryResolver.resolve(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(MistralAILLMClient(apiKey, settings, httpClientFactory, clock, toolsConverter))
-    }
-
-    /**
      * Adds an Ollama client. [httpClientFactory] defaults to
      * [HttpClientFactoryResolver.resolve].
      */
@@ -179,36 +125,6 @@ public class PromptExecutorBuilder {
                 toolDescriptorConverter = toolDescriptorConverter,
             )
         )
-    }
-
-    /**
-     * Adds an OpenRouter client. [httpClientFactory] defaults to
-     * [HttpClientFactoryResolver.resolve].
-     */
-    @JvmOverloads
-    public fun openRouter(
-        apiKey: String,
-        settings: OpenRouterClientSettings = OpenRouterClientSettings(),
-        httpClientFactory: KoogHttpClient.Factory = HttpClientFactoryResolver.resolve(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(OpenRouterLLMClient(apiKey, settings, httpClientFactory, clock, toolsConverter))
-    }
-
-    /**
-     * Adds a Dashscope client. [httpClientFactory] defaults to
-     * [HttpClientFactoryResolver.resolve].
-     */
-    @JvmOverloads
-    public fun dashscope(
-        apiKey: String,
-        settings: DashscopeClientSettings = DashscopeClientSettings(),
-        httpClientFactory: KoogHttpClient.Factory = HttpClientFactoryResolver.resolve(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(DashscopeLLMClient(apiKey, settings, httpClientFactory, clock, toolsConverter))
     }
 
     /**

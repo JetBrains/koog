@@ -15,7 +15,7 @@ import ai.koog.agents.core.dsl.builder.BaseBuilder
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.typeToken
@@ -69,7 +69,7 @@ public class DummyAIAgentContext(
 
     @OptIn(InternalAgentsApi::class)
     private var _pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(
-        _config ?: AIAgentConfig(Prompt.Empty, OllamaModels.Meta.LLAMA_3_2, 100)
+        _config ?: AIAgentConfig(Prompt.Empty, OpenAIModels.Chat.GPT5, 100)
     )
 
     override val environment: AIAgentEnvironment
