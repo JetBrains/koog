@@ -18,8 +18,13 @@ kotlin {
                 api(libs.jetbrains.annotations)
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
-                implementation(libs.logback.classic)
                 implementation(libs.oshai.kotlin.logging)
+            }
+        }
+
+        jvmMain {
+            dependencies {
+                implementation(libs.logback.classic)
             }
         }
 

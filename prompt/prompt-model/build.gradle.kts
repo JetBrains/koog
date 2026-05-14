@@ -19,12 +19,6 @@ kotlin {
             }
         }
 
-        jvmMain {
-            dependencies {
-                implementation(project(":agents:agents-utils"))
-            }
-        }
-
         commonTest {
             dependencies {
                 implementation(project(":test-utils"))

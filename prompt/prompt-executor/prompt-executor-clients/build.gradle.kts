@@ -12,7 +12,7 @@ kotlin {
                 api(project(":agents:agents-tools"))
                 api(libs.kotlinx.coroutines.core)
                 api(project(":prompt:prompt-structure"))
-                api(libs.oshai.kotlin.logging)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
         androidMain {
