@@ -1,6 +1,5 @@
 package ai.koog.spring.prompt.executor.clients.openai
 
-import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
@@ -68,7 +67,6 @@ public class OpenAILLMAutoConfiguration(
         return OpenAILLMClient(
             apiKey = properties.apiKey,
             settings = OpenAIClientSettings(baseUrl = properties.baseUrl),
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         )
     }
 

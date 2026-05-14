@@ -1,21 +1,27 @@
 package ai.koog.prompt.executor.llms.all
 
-import ai.koog.http.client.DefaultHttpClientFactoryHolder
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIServiceVersion
+import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.ollama.client.OllamaClient
 
 /**
- * Convenience overload that resolves [ai.koog.http.client.KoogHttpClient.Factory] from
- * [DefaultHttpClientFactoryHolder]. JVM and Android only.
+ * Convenience overload that constructs the underlying client via its JVM no-factory entry point
+ * (resolves the default [ai.koog.http.client.KoogHttpClient.Factory] at call time). JVM and Android only.
  *
  * @see simpleOpenAIExecutor
  */
 public fun simpleOpenAIExecutor(apiToken: String): SingleLLMPromptExecutor =
-    simpleOpenAIExecutor(apiToken, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
+    SingleLLMPromptExecutor(OpenAILLMClient(apiToken))
 
 /**
- * Convenience overload that resolves [ai.koog.http.client.KoogHttpClient.Factory] from
- * [DefaultHttpClientFactoryHolder]. JVM and Android only.
+ * Convenience overload that constructs the underlying client via its JVM no-factory entry point
+ * (resolves the default [ai.koog.http.client.KoogHttpClient.Factory] at call time). JVM and Android only.
  *
  * @see simpleAzureOpenAIExecutor
  */
@@ -24,17 +30,16 @@ public fun simpleAzureOpenAIExecutor(
     deploymentName: String,
     version: AzureOpenAIServiceVersion,
     apiToken: String,
-): SingleLLMPromptExecutor = simpleAzureOpenAIExecutor(
-    resourceName = resourceName,
-    deploymentName = deploymentName,
-    version = version,
-    apiToken = apiToken,
-    httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(
+    OpenAILLMClient(
+        apiKey = apiToken,
+        settings = AzureOpenAIClientSettings(resourceName, deploymentName, version),
+    )
 )
 
 /**
- * Convenience overload that resolves [ai.koog.http.client.KoogHttpClient.Factory] from
- * [DefaultHttpClientFactoryHolder]. JVM and Android only.
+ * Convenience overload that constructs the underlying client via its JVM no-factory entry point
+ * (resolves the default [ai.koog.http.client.KoogHttpClient.Factory] at call time). JVM and Android only.
  *
  * @see simpleAzureOpenAIExecutor
  */
@@ -42,58 +47,55 @@ public fun simpleAzureOpenAIExecutor(
     baseUrl: String,
     version: AzureOpenAIServiceVersion,
     apiToken: String,
-): SingleLLMPromptExecutor = simpleAzureOpenAIExecutor(
-    baseUrl = baseUrl,
-    version = version,
-    apiToken = apiToken,
-    httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(
+    OpenAILLMClient(
+        apiKey = apiToken,
+        settings = AzureOpenAIClientSettings(baseUrl, version),
+    )
 )
 
 /**
- * Convenience overload that resolves [ai.koog.http.client.KoogHttpClient.Factory] from
- * [DefaultHttpClientFactoryHolder]. JVM and Android only.
+ * Convenience overload that constructs the underlying client via its JVM no-factory entry point
+ * (resolves the default [ai.koog.http.client.KoogHttpClient.Factory] at call time). JVM and Android only.
  *
  * @see simpleAnthropicExecutor
  */
 public fun simpleAnthropicExecutor(apiKey: String): SingleLLMPromptExecutor =
-    simpleAnthropicExecutor(apiKey, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
+    SingleLLMPromptExecutor(AnthropicLLMClient(apiKey))
 
 /**
- * Convenience overload that resolves [ai.koog.http.client.KoogHttpClient.Factory] from
- * [DefaultHttpClientFactoryHolder]. JVM and Android only.
+ * Convenience overload that constructs the underlying client via its JVM no-factory entry point
+ * (resolves the default [ai.koog.http.client.KoogHttpClient.Factory] at call time). JVM and Android only.
  *
  * @see simpleOpenRouterExecutor
  */
 public fun simpleOpenRouterExecutor(apiKey: String): SingleLLMPromptExecutor =
-    simpleOpenRouterExecutor(apiKey, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
+    SingleLLMPromptExecutor(OpenRouterLLMClient(apiKey))
 
 /**
- * Convenience overload that resolves [ai.koog.http.client.KoogHttpClient.Factory] from
- * [DefaultHttpClientFactoryHolder]. JVM and Android only.
+ * Convenience overload that constructs the underlying client via its JVM no-factory entry point
+ * (resolves the default [ai.koog.http.client.KoogHttpClient.Factory] at call time). JVM and Android only.
  *
  * @see simpleGoogleAIExecutor
  */
 public fun simpleGoogleAIExecutor(apiKey: String): SingleLLMPromptExecutor =
-    simpleGoogleAIExecutor(apiKey, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
+    SingleLLMPromptExecutor(GoogleLLMClient(apiKey))
 
 /**
- * Convenience overload that resolves [ai.koog.http.client.KoogHttpClient.Factory] from
- * [DefaultHttpClientFactoryHolder]. JVM and Android only.
+ * Convenience overload that constructs the underlying client via its JVM no-factory entry point
+ * (resolves the default [ai.koog.http.client.KoogHttpClient.Factory] at call time). JVM and Android only.
  *
  * @see simpleOllamaAIExecutor
  */
 public fun simpleOllamaAIExecutor(
     baseUrl: String = "http://localhost:11434",
-): SingleLLMPromptExecutor = simpleOllamaAIExecutor(
-    baseUrl = baseUrl,
-    httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
-)
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OllamaClient(baseUrl = baseUrl))
 
 /**
- * Convenience overload that resolves [ai.koog.http.client.KoogHttpClient.Factory] from
- * [DefaultHttpClientFactoryHolder]. JVM and Android only.
+ * Convenience overload that constructs the underlying client via its JVM no-factory entry point
+ * (resolves the default [ai.koog.http.client.KoogHttpClient.Factory] at call time). JVM and Android only.
  *
  * @see simpleMistralAIExecutor
  */
 public fun simpleMistralAIExecutor(apiKey: String): SingleLLMPromptExecutor =
-    simpleMistralAIExecutor(apiKey, DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory())
+    SingleLLMPromptExecutor(MistralAILLMClient(apiKey))

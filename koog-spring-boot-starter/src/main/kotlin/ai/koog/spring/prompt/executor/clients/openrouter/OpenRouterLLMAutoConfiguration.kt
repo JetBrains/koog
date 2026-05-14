@@ -1,6 +1,5 @@
 package ai.koog.spring.prompt.executor.clients.openrouter
 
-import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
@@ -60,7 +59,6 @@ public class OpenRouterLLMAutoConfiguration(
         return OpenRouterLLMClient(
             apiKey = properties.apiKey,
             settings = OpenRouterClientSettings(baseUrl = properties.baseUrl),
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         )
     }
 

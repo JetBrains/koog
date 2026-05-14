@@ -1,6 +1,5 @@
 package ai.koog.spring.prompt.executor.clients.anthropic
 
-import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
@@ -66,7 +65,6 @@ public class AnthropicLLMAutoConfiguration(
         return AnthropicLLMClient(
             apiKey = properties.apiKey,
             settings = AnthropicClientSettings(baseUrl = properties.baseUrl),
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         )
     }
 

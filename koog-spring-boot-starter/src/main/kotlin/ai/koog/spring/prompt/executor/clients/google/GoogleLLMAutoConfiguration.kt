@@ -1,6 +1,5 @@
 package ai.koog.spring.prompt.executor.clients.google
 
-import ai.koog.http.client.DefaultHttpClientFactoryHolder
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
@@ -68,7 +67,6 @@ public class GoogleLLMAutoConfiguration(
         return GoogleLLMClient(
             apiKey = properties.apiKey,
             settings = GoogleClientSettings(baseUrl = properties.baseUrl),
-            httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
         )
     }
 
