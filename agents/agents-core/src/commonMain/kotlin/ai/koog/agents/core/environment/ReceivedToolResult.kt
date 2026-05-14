@@ -9,12 +9,8 @@ import ai.koog.serialization.JSONObject
 import ai.koog.serialization.kotlinx.toKoogJSONElement
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.utils.time.KoogClock
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
