@@ -329,14 +329,19 @@ public open class GoogleLLMClient @JvmOverloads constructor(
     internal fun createGoogleRequest(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): GoogleRequest {
         val systemMessageParts = mutableListOf<GooglePart.Text>()
         val contents = mutableListOf<GoogleContent>()
+        val pendingTextParts = mutableListOf<GooglePart.Text>()
         val pendingCalls = mutableListOf<GooglePart.FunctionCall>()
         val pendingResults = mutableListOf<GooglePart.FunctionResponse>()
         var lastSignature: String? = null
         val isThinkingModel = model.supports(LLMCapability.Thinking)
 
-        fun flushCalls() {
-            if (pendingCalls.isNotEmpty()) {
-                contents += GoogleContent(role = "model", parts = pendingCalls.toList())
+        fun flushModel() {
+            if (pendingTextParts.isNotEmpty() || pendingCalls.isNotEmpty()) {
+                contents += GoogleContent(
+                    role = "model",
+                    parts = pendingTextParts.toList() + pendingCalls.toList()
+                )
+                pendingTextParts.clear()
                 pendingCalls.clear()
             }
         }
@@ -349,7 +354,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         }
 
         fun flushAll() {
-            flushCalls()
+            flushModel()
             flushResults()
         }
 
@@ -366,21 +371,16 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                 }
 
                 is Message.Assistant -> {
-                    flushAll()
-                    contents.add(
-                        GoogleContent(
-                            role = "model",
-                            parts = listOf(GooglePart.Text(message.content))
-                        )
-                    )
+                    // A new model turn starts here, so close any pending user turn (tool results) first.
+                    flushResults()
+                    // Buffer assistant text so it merges with any following Tool.Calls in the same model turn.
+                    pendingTextParts.add(GooglePart.Text(message.content))
                 }
 
                 is Message.Reasoning -> {
-                    // Reasoning indicates a new step - flush previous step
-                    flushAll()
-
                     if (message.content.isNotBlank()) {
-                        // If content is present, it's a "Thought Summary" -> Convert to Text part with thought=true
+                        // Thought summaries become their own model turn — close any pending model + user turns.
+                        flushAll()
                         contents.add(
                             GoogleContent(
                                 role = "model",
@@ -394,13 +394,17 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                             )
                         )
                     } else {
-                        // If content is empty/blank, it's strictly a signature carrier for the next Tool.Call
+                        // Empty content: strictly a signature carrier for the next Tool.Call.
+                        // It belongs to the same logical model turn as the upcoming Tool.Call,
+                        // so do NOT close pendingTextParts/pendingCalls — only close any pending user turn.
+                        flushResults()
                         lastSignature = message.encrypted
                     }
                 }
 
                 is Message.Tool.Result -> {
-                    // Just buffer results. We only flush when we know the current tool turn is complete.
+                    // Tool results start a user turn; close any pending model turn first.
+                    flushModel()
                     pendingResults.add(
                         GooglePart.FunctionResponse(
                             functionResponse = GoogleData.FunctionResponse(
@@ -759,21 +763,15 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             }
         }
 
-        return when {
-            // When the model calls tools, keep Reasoning (for signature) and Tool.Call, filter out Assistant text
-            responses.any { it is Message.Tool.Call } -> responses.filter { it is Message.Reasoning || it is Message.Tool.Call }
-
-            // If no messages where returned, return an empty message and check finishReason
-            responses.isEmpty() -> listOf(
+        return responses.ifEmpty {
+            // If no messages were returned, return an empty message and check finishReason
+            listOf(
                 Message.Assistant(
                     content = "",
                     finishReason = candidate.finishReason,
                     metaInfo = metaInfo
                 )
             )
-
-            // Just return responses
-            else -> responses
         }
     }
 
