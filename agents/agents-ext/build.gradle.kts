@@ -26,6 +26,7 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(project(":agents:agents-test"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
                 implementation(project(":test-utils"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
             }
