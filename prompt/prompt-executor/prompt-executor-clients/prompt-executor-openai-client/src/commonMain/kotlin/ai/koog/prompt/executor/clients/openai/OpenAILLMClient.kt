@@ -82,7 +82,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIConte
  * @property moderationsPath The path of the OpenAI Moderations API. Defaults to "v1/moderations".
  * @property modelsPath The path of the OpenAI Models API. Defaults to "v1/models".
  */
-public class OpenAIClientSettings(
+public open class OpenAIClientSettings(
     baseUrl: String = "https://api.openai.com",
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
     chatCompletionsPath: String = "v1/chat/completions",

@@ -150,6 +150,12 @@ public abstract class LLMProvider(public val id: String, public val display: Str
          */
         @JvmField
         public val Vertex: VertexLLMProvider = VertexLLMProvider
+
+        /**
+         * Represents the LM Studio provider for locally hosted OpenAI-compatible models.
+         */
+        @JvmField
+        public val LMStudio: LMStudioLLMProvider = LMStudioLLMProvider
     }
 }
 
@@ -324,3 +330,11 @@ public object AzureLLMProvider : LLMProvider("azure", "Azure OpenAI")
  */
 @Serializable
 public object VertexLLMProvider : LLMProvider("vertex", "Google VertexAI")
+
+/**
+ * Represents the LM Studio provider for locally hosted OpenAI-compatible models.
+ *
+ * LM Studio is identified by its unique ID ("lmstudio") and display name ("LM Studio").
+ */
+@Serializable
+public object LMStudioLLMProvider : LLMProvider("lmstudio", "LM Studio")
