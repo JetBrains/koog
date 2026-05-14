@@ -9,6 +9,7 @@ opentelemetry = "1.61.0"
 [libraries]
 # Koog
 koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
+koog-agents-additions = { module = "ai.koog:koog-agents-additions", version.ref = "koogBeta" }
 koog-agents-ext = { module = "ai.koog:agents-ext", version.ref = "koogBeta" }
 koog-serialization-jackson = { module = "ai.koog:serialization-jackson", version.ref = "koog" }
 koog-agents-features-sql = { module = "ai.koog:agents-features-sql", version.ref = "koog" }
