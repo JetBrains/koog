@@ -119,6 +119,10 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
     </dependency>
     ```
 2. Make sure that you have `mavenCentral` in the list of repositories.
+## Versioning
+
+Koog framework is stable and follows semantic versioning. See [VERSIONING.md](VERSIONING.md) for details.
+
 ## Contributing
 Read the [Contributing Guidelines](CONTRIBUTING.md).
 
