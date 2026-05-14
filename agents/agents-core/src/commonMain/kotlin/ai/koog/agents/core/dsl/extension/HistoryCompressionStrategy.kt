@@ -264,6 +264,5 @@ public abstract class HistoryCompressionStrategy {
         @JvmOverloads
         @KtLintIgnoreNaming
         public fun FactRetrieval(vararg concepts: Concept): HistoryCompressionStrategy = FactRetrieval(concepts.toList())
-
     }
 }
