@@ -262,6 +262,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                 is AnthropicContent.Thinking -> {
                                     emitReasoningDelta(
                                         text = contentBlock.thinking,
+                                        encrypted = contentBlock.signature.takeUnless { it.isEmpty() },
                                         index = response.index
                                             ?: throw LLMClientException(clientName, "Thinking index is missing")
                                     )
@@ -300,6 +301,15 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                         emitReasoningDelta(
                                             text = delta.thinking
                                                 ?: throw LLMClientException(clientName, "Reasoning delta is missing"),
+                                            index = response.index
+                                                ?: throw LLMClientException(clientName, "Reasoning index is missing")
+                                        )
+                                    }
+
+                                    AnthropicStreamDeltaContentType.SIGNATURE_DELTA.value -> {
+                                        emitReasoningDelta(
+                                            encrypted = delta.signature
+                                                ?: throw LLMClientException(clientName, "Signature delta is missing"),
                                             index = response.index
                                                 ?: throw LLMClientException(clientName, "Reasoning index is missing")
                                         )

@@ -155,18 +155,31 @@ public class StreamFrameFlowBuilder(
 
     /**
      * Emits a [StreamFrame.ReasoningDelta] with the given [text].
+     *
+     * [encrypted] is buffered into the pending reasoning so it is carried over to the eventual
+     * [StreamFrame.ReasoningComplete]; [StreamFrame.ReasoningDelta] itself does not expose it.
      */
-    public suspend fun emitReasoningDelta(id: String? = null, text: String? = null, summary: String? = null, index: Int? = null) {
+    public suspend fun emitReasoningDelta(
+        id: String? = null,
+        text: String? = null,
+        summary: String? = null,
+        encrypted: String? = null,
+        index: Int? = null
+    ) {
         tryEmitPendingToolCall()
         tryEmitPendingText()
         val previous: PendingReasoning? = pendingReasoningRef.load()
         if (previous == null) {
-            pendingReasoningRef.store(PendingReasoning(id = id, textDelta = text, summaryDelta = summary, index = index))
+            pendingReasoningRef.store(
+                PendingReasoning(id = id, textDelta = text, summaryDelta = summary, encrypted = encrypted, index = index)
+            )
         } else if (id != previous.id) {
             tryEmitPendingReasoning()
-            pendingReasoningRef.store(PendingReasoning(id = id, textDelta = text, summaryDelta = summary, index = index))
+            pendingReasoningRef.store(
+                PendingReasoning(id = id, textDelta = text, summaryDelta = summary, encrypted = encrypted, index = index)
+            )
         } else {
-            pendingReasoningRef.store(previous.appendDelta(id, text, summary, index))
+            pendingReasoningRef.store(previous.appendDelta(id, text, summary, encrypted, index))
         }
         flowCollector.emitReasoningDelta(id, text, summary, index)
     }
@@ -239,6 +252,7 @@ public class StreamFrameFlowBuilder(
                 id = pendingReasoning.id,
                 text = pendingReasoning.textDelta?.let { listOf(pendingReasoning.textDelta) } ?: emptyList(),
                 summary = pendingReasoning.summaryDelta?.let { listOf(pendingReasoning.summaryDelta) },
+                encrypted = pendingReasoning.encrypted,
                 index = pendingReasoning.index
             )
         }
@@ -288,14 +302,25 @@ public class StreamFrameFlowBuilder(
         val id: String?,
         val textDelta: String?,
         val summaryDelta: String?,
+        val encrypted: String?,
         val index: Int?
     ) {
-        fun appendDelta(id: String?, textDelta: String?, summaryDelta: String?, index: Int?): PendingReasoning {
+        fun appendDelta(
+            id: String?,
+            textDelta: String?,
+            summaryDelta: String?,
+            encrypted: String?,
+            index: Int?
+        ): PendingReasoning {
             require(this.index == index)
             require(this.id == id)
             val newTextDelta = if (textDelta == null) this.textDelta else (this.textDelta ?: "") + textDelta
             val newSummaryDelta = if (summaryDelta == null) this.summaryDelta else (this.summaryDelta ?: "") + summaryDelta
-            return copy(textDelta = newTextDelta, summaryDelta = newSummaryDelta)
+            return copy(
+                textDelta = newTextDelta,
+                summaryDelta = newSummaryDelta,
+                encrypted = encrypted ?: this.encrypted
+            )
         }
     }
 }
