@@ -95,13 +95,13 @@ public class JavaAPIAgentBuilderJavaTest {
         assertEquals("assistant-reply", out);
     }
 
-    static class MyJavaStrategy extends NonSuspendAIAgentFunctionalStrategy<String, String> {
+    static class MyJavaStrategy extends AIAgentFunctionalStrategyBlocking<String, String> {
         public MyJavaStrategy() {
             super("my");
         }
 
         @Override
-        public String executeStrategy(AIAgentFunctionalContext context, String input) {
+        public String executeBlocking(AIAgentFunctionalContext context, String input) {
             // Use a writeSession to temporarily change prompt, then restore
             String content = context.llm().writeSession(session -> {
                 var original = session.getPrompt();

@@ -10,21 +10,19 @@ import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.concurrency.withContextReentrant
 
 /**
- * [AIAgentStrategy] that is executed in non-suspend context using [java.util.concurrent.ExecutorService] provided in [ai.koog.agents.core.agent.config.AIAgentConfig].
+ * [AIAgentStrategy] that is executed in a blocking manner using dispatcher provided in [ai.koog.agents.core.agent.config.AIAgentConfig].
  *
- * See [executeStrategy]
+ * See [executeBlocking]
  * */
 @OptIn(InternalAgentsApi::class)
 @JavaAPI
-public abstract class NonSuspendAIAgentStrategy<TInput, TOutput, TContext : AIAgentContext> :
+public abstract class AIAgentStrategyBlocking<TInput, TOutput, TContext : AIAgentContext> :
     AIAgentStrategy<TInput, TOutput, TContext> {
 
     /**
-     * Executes the AI agent's strategy asynchronously using the provided [context] and [input].
+     * Executes the AI agent's strategy in a blocking manner using the provided [context] and [input].
      *
-     * The strategy is executed on the main dispatcher that is either:
-     *  a) [ai.koog.agents.core.agent.config.AIAgentConfig.strategyDispatcher] from [AIAgentContext.config] of the provided [context]
-     *  b) [kotlinx.coroutines.Dispatchers.Default]
+     * The strategy is executed on the main dispatcher that is either [ai.koog.agents.core.agent.config.AIAgentConfig.strategyDispatcher]
      *
      * @param context The execution context in which the AI agent operates. It provides access to the agent's
      * environment, configuration, lifecycle state, and other components required for processing.
@@ -32,10 +30,10 @@ public abstract class NonSuspendAIAgentStrategy<TInput, TOutput, TContext : AIAg
      * by the implementation of the strategy and is used to derive an appropriate output.
      * @return Result of the agent of [TOutput] type.
      */
-    public abstract fun executeStrategy(context: TContext, input: TInput): TOutput
+    public abstract fun executeBlocking(context: TContext, input: TInput): TOutput
 
     final override suspend fun execute(context: TContext, input: TInput): TOutput? =
         withContextReentrant(context.config.strategyDispatcher) {
-            executeStrategy(context, input)
+            executeBlocking(context, input)
         }
 }

@@ -49,7 +49,7 @@ public actual class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateO
     @JavaAPI
     @EdgeTransformationDslMarker
     @JvmName("onCondition")
-    public fun javaNonSuspendOnCondition(
+    public fun onConditionBlocking(
         block: ContextualCondition<IntermediateOutput>
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> {
         return AIAgentEdgeBuilderIntermediate(
@@ -78,10 +78,10 @@ public actual class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateO
     @JavaAPI
     @EdgeTransformationDslMarker
     @JvmName("onCondition")
-    public fun javaNonSuspendOnCondition(
+    public fun onConditionBlocking(
         block: SimpleCondition<IntermediateOutput>
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> =
-        javaNonSuspendOnCondition { output, ctx ->
+        onConditionBlocking { output, ctx ->
             block.invoke(output)
         }
 
@@ -94,7 +94,7 @@ public actual class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateO
      */
     @EdgeTransformationDslMarker
     @JvmName("transformed")
-    public infix fun <NewIntermediateOutput> javaNonSuspendTransformed(
+    public infix fun <NewIntermediateOutput> transformedBlocking(
         block: ContextualTransformation<IntermediateOutput, NewIntermediateOutput>
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, NewIntermediateOutput, OutgoingInput> {
         return AIAgentEdgeBuilderIntermediate(
@@ -119,10 +119,10 @@ public actual class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateO
      */
     @EdgeTransformationDslMarker
     @JvmName("transformed")
-    public infix fun <NewIntermediateOutput> javaNonSuspendTransformed(
+    public infix fun <NewIntermediateOutput> transformedBlocking(
         block: SimpleTransformation<IntermediateOutput, NewIntermediateOutput>
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, NewIntermediateOutput, OutgoingInput> =
-        javaNonSuspendTransformed { output, ctx ->
+        transformedBlocking { output, ctx ->
             block.invoke(output)
         }
 }
