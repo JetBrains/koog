@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -24,8 +25,11 @@ public class LLMClientIntegrationTest extends KoogJavaTestBase {
 
     private void assertValidResponse(Message.Assistant response) {
         assertNotNull(response);
-//        String content = response.get(0).getTextContent();
-//        assertFalse(content.isEmpty());
+        String content = response.getParts().stream()
+            .filter(part -> part instanceof MessagePart.Text)
+            .map(part -> ((MessagePart.Text) part).getText())
+            .collect(java.util.stream.Collectors.joining());
+        assertFalse(content.isEmpty());
     }
 
     @Test
