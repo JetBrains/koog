@@ -8,7 +8,7 @@ import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
@@ -67,7 +67,7 @@ suspend fun main() {
             )
             edge(callLLM forwardTo callAskUserTool onToolCalls { true })
             edge(
-                callLLM forwardTo callLLM onTextParts { true }
+                callLLM forwardTo callLLM onTextMessage { true }
                     asUserMessage { "Please call `${AskUser.name}` tool instead of chatting" }
             )
             edge(callAskUserTool forwardTo requestClassification)

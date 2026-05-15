@@ -14,7 +14,6 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutToolsWithUserText
 import ai.koog.agents.core.dsl.extension.onIsInstance
-import ai.koog.agents.core.dsl.extension.onTextParts
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -24,6 +23,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import ai.koog.agents.core.dsl.builder.node
+import ai.koog.agents.core.dsl.extension.onTextMessage
 
 interface PlannerNode {
     suspend fun execute(dispatcher: CoroutineDispatcher)
@@ -205,16 +205,16 @@ suspend fun planWork(
         edge(setup forwardTo tryFindingSequentialSubtasks transformed { initialTaskDescription })
 
         edge(tryFindingParallelSubtasks forwardTo callTool onToolCalls { true })
-        edge(tryFindingParallelSubtasks forwardTo parseLLMResponse onTextParts { true })
+        edge(tryFindingParallelSubtasks forwardTo parseLLMResponse onTextMessage { true })
 
         edge(tryFindingSequentialSubtasks forwardTo callTool onToolCalls { true })
-        edge(tryFindingSequentialSubtasks forwardTo parseLLMResponse onTextParts { true })
+        edge(tryFindingSequentialSubtasks forwardTo parseLLMResponse onTextMessage { true })
 
         edge(callTool forwardTo resumeAfterTool)
         edge(resumeAfterTool forwardTo callTool onToolCalls { true })
-        edge(resumeAfterTool forwardTo parseLLMResponse onTextParts { true })
+        edge(resumeAfterTool forwardTo parseLLMResponse onTextMessage { true })
         edge(askLLM forwardTo callTool onToolCalls { true })
-        edge(askLLM forwardTo parseLLMResponse onTextParts { true })
+        edge(askLLM forwardTo parseLLMResponse onTextMessage { true })
 
         edge(
             parseLLMResponse forwardTo retryPlanning<ParsingErrorMessage>(nextNode = askLLM) onIsInstance

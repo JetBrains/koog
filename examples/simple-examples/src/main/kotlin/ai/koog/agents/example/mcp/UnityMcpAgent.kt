@@ -6,7 +6,7 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -94,7 +94,7 @@ fun main() {
                             }}"
                     }
                 )
-                edge(nodePlanIngredients forwardTo interactionWithUnity onTextParts { true })
+                edge(nodePlanIngredients forwardTo interactionWithUnity onTextMessage { true })
                 edge(interactionWithUnity forwardTo nodeFinish)
             }
 

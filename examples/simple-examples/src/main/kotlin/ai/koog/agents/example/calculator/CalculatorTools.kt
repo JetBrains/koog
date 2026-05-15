@@ -7,8 +7,8 @@ import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
@@ -73,14 +73,14 @@ object CalculatorStrategy {
     val strategy = strategy<String, String>("test") {
         val nodeCallLLM by nodeLLMRequest()
         val nodeExecuteToolMultiple by nodeExecuteToolsAndGetResults(parallel = true)
-        val nodeSendToolResultMultiple by nodeSendToolReceivedResults()
+        val nodeSendToolResultMultiple by nodeLLMSendToolResults()
         val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResults>()
 
         edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
 
         edge(
             (nodeCallLLM forwardTo nodeFinish)
-                onTextParts { true }
+                onTextMessage { true }
         )
 
         edge(
@@ -107,7 +107,7 @@ object CalculatorStrategy {
 
         edge(
             (nodeSendToolResultMultiple forwardTo nodeFinish)
-                onTextParts { true }
+                onTextMessage { true }
         )
     }
 }

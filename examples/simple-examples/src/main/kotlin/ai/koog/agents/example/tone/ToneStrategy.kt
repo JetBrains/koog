@@ -8,8 +8,8 @@ import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 
 /**
@@ -19,7 +19,7 @@ fun toneStrategy(name: String): AIAgentGraphStrategy<String, String> {
     return strategy<String, String>(name) {
         val nodeSendInput by nodeLLMRequest()
         val nodeExecuteTool by nodeExecuteToolsAndGetResults()
-        val nodeSendToolResult by nodeSendToolReceivedResults()
+        val nodeSendToolResult by nodeLLMSendToolResults()
         val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResults>()
 
         // Define the flow of the agent
@@ -28,7 +28,7 @@ fun toneStrategy(name: String): AIAgentGraphStrategy<String, String> {
         // If the LLM responds with a message, finish
         edge(
             (nodeSendInput forwardTo nodeFinish)
-                onTextParts { true }
+                onTextMessage { true }
         )
 
         // If the LLM calls a tool, execute it
@@ -60,7 +60,7 @@ fun toneStrategy(name: String): AIAgentGraphStrategy<String, String> {
         // If the LLM responds with a message, finish
         edge(
             (nodeSendToolResult forwardTo nodeFinish)
-                onTextParts { true }
+                onTextMessage { true }
         )
     }
 }

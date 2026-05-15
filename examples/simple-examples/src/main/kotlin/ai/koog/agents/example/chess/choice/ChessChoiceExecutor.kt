@@ -8,8 +8,8 @@ import ai.koog.agents.core.dsl.extension.ReceivedToolResults
 import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
@@ -35,15 +35,15 @@ fun main(): Unit = runBlocking {
     val strategy = strategy<String, String>("chess_strategy") {
         val nodeCallLLM by nodeLLMRequest("sendInput")
         val nodeExecuteTool by nodeExecuteToolsAndGetResults("nodeExecuteTool")
-        val nodeSendToolResult by nodeSendToolReceivedResults("nodeSendToolResult")
+        val nodeSendToolResult by nodeLLMSendToolResults("nodeSendToolResult")
         val nodeTrimHistory by nodeTrimHistory<ReceivedToolResults>()
 
         edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
         edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
-        edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
+        edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
         edge(nodeExecuteTool forwardTo nodeTrimHistory)
         edge(nodeTrimHistory forwardTo nodeSendToolResult)
-        edge(nodeSendToolResult forwardTo nodeFinish onTextParts { true })
+        edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
         edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
     }
 

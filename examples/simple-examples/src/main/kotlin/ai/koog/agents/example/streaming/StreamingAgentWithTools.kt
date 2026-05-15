@@ -7,7 +7,7 @@ import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
@@ -127,5 +127,5 @@ fun streamingWithToolsStrategy() = strategy("streaming_loop") {
     edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
     edge(nodeCallLLM forwardTo executeMultipleTools onToolCalls { true })
     edge(executeMultipleTools forwardTo nodeCallLLM)
-    edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
+    edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
 }
