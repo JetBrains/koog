@@ -1,6 +1,6 @@
 package ai.koog.prompt.executor.llms.all
 
-import ai.koog.http.client.DefaultHttpClientFactoryHolder
+import ai.koog.http.client.HttpClientFactoryResolver
 import ai.koog.http.client.ktor.KtorKoogHttpClient
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -19,7 +19,7 @@ class DefaultFactoryDiscoveryTest {
 
     @Test
     fun testDefaultFactoryIsKtorBacked() {
-        val resolved = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory()
+        val resolved = HttpClientFactoryResolver.resolve()
         assertTrue(
             resolved is KtorKoogHttpClient.Factory,
             "Expected the default KoogHttpClient.Factory resolved from :prompt-executor-llms-all " +

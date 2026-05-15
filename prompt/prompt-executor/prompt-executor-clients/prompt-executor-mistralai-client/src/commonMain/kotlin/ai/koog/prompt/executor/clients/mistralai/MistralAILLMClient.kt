@@ -242,7 +242,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         val mistralAIResponse = try {
             httpClient.post(
                 path = settings.embeddingsPath,
-                request = request,
+                requestBody = request,
                 requestBodyType = MistralAIEmbeddingRequest::class,
                 responseType = MistralAIEmbeddingResponse::class
             )
@@ -307,7 +307,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         val response = try {
             httpClient.post(
                 path = settings.moderationPath,
-                request = request,
+                requestBody = request,
                 requestBodyType = MistralAIModerationRequest::class,
                 responseType = MistralAIModerationResponse::class
             )

@@ -7,7 +7,7 @@ import ai.koog.agents.features.chatmemory.sql.SQLChatHistoryProviderJvm;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 
-import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactories.openAIClient;
+import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;

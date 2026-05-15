@@ -120,24 +120,24 @@ public class OkHttpKoogHttpClient internal constructor(
 
     override suspend fun <T : Any, R : Any> post(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         responseType: KClass<R>,
         parameters: Map<String, String>,
         headers: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
-        val requestBody = prepareRequestBody(request, requestBodyType, headers.headerValue("Content-Type"))
+        val preparedRequestBody = prepareRequestBody(requestBody, requestBodyType, headers.headerValue("Content-Type"))
 
         val httpRequest = Request.Builder()
             .url(buildUrl(path, parameters))
             .headers(
                 mergeHeaders(
                     defaultHeaders,
-                    mapOf("Content-Type" to requestBody.contentType().toString()),
+                    mapOf("Content-Type" to preparedRequestBody.contentType().toString()),
                     headers,
                 ).toHeaders()
             )
-            .post(requestBody)
+            .post(preparedRequestBody)
             .build()
 
         val response: Response = okHttpClient.newCall(httpRequest).execute()
@@ -149,7 +149,7 @@ public class OkHttpKoogHttpClient internal constructor(
 
     override fun <T : Any, R : Any, O : Any> sse(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
@@ -157,7 +157,7 @@ public class OkHttpKoogHttpClient internal constructor(
         parameters: Map<String, String>,
         headers: Map<String, String>
     ): Flow<O> = callbackFlow {
-        val requestBody = prepareRequestBody(request, requestBodyType, headers.headerValue("Content-Type"))
+        val preparedRequestBody = prepareRequestBody(requestBody, requestBodyType, headers.headerValue("Content-Type"))
 
         val httpRequest = Request.Builder()
             .url(buildUrl(path, parameters))
@@ -165,7 +165,7 @@ public class OkHttpKoogHttpClient internal constructor(
                 mergeHeaders(
                     defaultHeaders,
                     mapOf(
-                        "Content-Type" to requestBody.contentType().toString(),
+                        "Content-Type" to preparedRequestBody.contentType().toString(),
                         "Accept" to "text/event-stream",
                         "Cache-Control" to "no-cache",
                         "Connection" to "keep-alive",
@@ -174,7 +174,7 @@ public class OkHttpKoogHttpClient internal constructor(
                 )
                     .toHeaders()
             )
-            .post(requestBody)
+            .post(preparedRequestBody)
             .build()
 
         val eventSourceListener = object : EventSourceListener() {
@@ -228,23 +228,23 @@ public class OkHttpKoogHttpClient internal constructor(
 
     override fun <T : Any> lines(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         parameters: Map<String, String>,
         headers: Map<String, String>
     ): Flow<String> = callbackFlow {
-        val requestBody = prepareRequestBody(request, requestBodyType, headers.headerValue("Content-Type"))
+        val preparedRequestBody = prepareRequestBody(requestBody, requestBodyType, headers.headerValue("Content-Type"))
 
         val httpRequest = Request.Builder()
             .url(buildUrl(path, parameters))
             .headers(
                 mergeHeaders(
                     defaultHeaders,
-                    mapOf("Content-Type" to requestBody.contentType().toString()),
+                    mapOf("Content-Type" to preparedRequestBody.contentType().toString()),
                     headers,
                 ).toHeaders()
             )
-            .post(requestBody)
+            .post(preparedRequestBody)
             .build()
 
         val call = okHttpClient.newCall(httpRequest)
@@ -303,16 +303,16 @@ public class OkHttpKoogHttpClient internal constructor(
      * Common logic of preparing the request body.
      */
     private fun <T : Any> prepareRequestBody(
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         contentType: String? = null,
     ): RequestBody {
         return if (requestBodyType == String::class) {
             @Suppress("UNCHECKED_CAST")
-            (request as String).toRequestBody((contentType ?: "text/plain").toMediaType())
+            (requestBody as String).toRequestBody((contentType ?: "text/plain").toMediaType())
         } else {
             val serializer = serializer(requestBodyType.java)
-            val jsonString = json.encodeToString(serializer, request)
+            val jsonString = json.encodeToString(serializer, requestBody)
             jsonString.toRequestBody((contentType ?: "application/json").toMediaType())
         }
     }

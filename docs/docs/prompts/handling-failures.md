@@ -490,7 +490,7 @@ Here is an example of error handling in Kotlin and Java:
     import org.slf4j.LoggerFactory;
     import java.util.List;
     import java.util.function.Consumer;
-    import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactories.openAIClient;
+    import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
     class exampleHandlingFailuresJava05 {
         public static void main(String[] args) {
     -->

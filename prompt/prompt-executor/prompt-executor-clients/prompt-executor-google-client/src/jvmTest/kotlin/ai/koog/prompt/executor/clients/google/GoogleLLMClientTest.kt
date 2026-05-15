@@ -551,7 +551,7 @@ class GoogleLLMClientTest {
 
             override suspend fun <T : Any, R : Any> post(
                 path: String,
-                request: T,
+                requestBody: T,
                 requestBodyType: KClass<T>,
                 responseType: KClass<R>,
                 parameters: Map<String, String>,
@@ -560,7 +560,7 @@ class GoogleLLMClientTest {
 
             override fun <T : Any, R : Any, O : Any> sse(
                 path: String,
-                request: T,
+                requestBody: T,
                 requestBodyType: KClass<T>,
                 dataFilter: (String?) -> Boolean,
                 decodeStreamingResponse: (String) -> R,
@@ -569,7 +569,7 @@ class GoogleLLMClientTest {
                 headers: Map<String, String>,
             ): Flow<O> {
                 path shouldBe "v1beta/models/${model.id}:streamGenerateContent"
-                request.shouldBeInstanceOf<GoogleRequest>()
+                requestBody.shouldBeInstanceOf<GoogleRequest>()
 
                 val response = GoogleResponse(
                     candidates = listOf(
@@ -597,7 +597,7 @@ class GoogleLLMClientTest {
 
             override fun <T : Any> lines(
                 path: String,
-                request: T,
+                requestBody: T,
                 requestBodyType: KClass<T>,
                 parameters: Map<String, String>,
                 headers: Map<String, String>,

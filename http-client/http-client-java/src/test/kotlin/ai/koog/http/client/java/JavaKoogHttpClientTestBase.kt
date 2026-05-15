@@ -100,7 +100,7 @@ abstract class JavaKoogHttpClientTestBase : BaseKoogHttpClientTest() {
 
             val result = client.post<BaseKoogHttpClientTest.TestRequest, BaseKoogHttpClientTest.TestResponse>(
                 path = "echo",
-                request = BaseKoogHttpClientTest.TestRequest("hello"),
+                requestBody = BaseKoogHttpClientTest.TestRequest("hello"),
                 parameters = mapOf("request" to "one")
             )
 

@@ -10,7 +10,7 @@ import java.util.ServiceLoader
  * multiple providers are on the classpath, pass a [KoogHttpClient.Factory] directly to the
  * relevant LLM client constructor or builder method instead of relying on the discovered default.
  */
-public object DefaultHttpClientFactoryHolder {
+public object HttpClientFactoryResolver {
 
     private val cached: KoogHttpClient.Factory by lazy {
         resolveFactoryFromProviders(loadKoogHttpClientFactories())
@@ -23,7 +23,7 @@ public object DefaultHttpClientFactoryHolder {
      *
      * Throws [IllegalStateException] when zero or more than one provider is found.
      */
-    public fun getDefaultHttpClientFactory(): KoogHttpClient.Factory = cached
+    public fun resolve(): KoogHttpClient.Factory = cached
 
     internal fun resolveFactoryFromProviders(
         providers: List<KoogHttpClient.Factory>

@@ -6,19 +6,19 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-class DefaultHttpClientFactoryHolderTest {
+class HttpClientFactoryResolverTest {
 
     @Test
     fun testResolveFactoryFromProvidersReturnsSingle() {
         val provider = StubFactory("StubFactory-A")
-        val resolved = DefaultHttpClientFactoryHolder.resolveFactoryFromProviders(listOf(provider))
+        val resolved = HttpClientFactoryResolver.resolveFactoryFromProviders(listOf(provider))
         assertSame(provider, resolved)
     }
 
     @Test
     fun testResolveFactoryFromProvidersThrowsWhenZero() {
         val ex = assertFailsWith<IllegalStateException> {
-            DefaultHttpClientFactoryHolder.resolveFactoryFromProviders(emptyList())
+            HttpClientFactoryResolver.resolveFactoryFromProviders(emptyList())
         }
         val message = ex.message.orEmpty()
         assertTrue(
@@ -36,7 +36,7 @@ class DefaultHttpClientFactoryHolderTest {
         val first = StubFactory("StubFactory-A")
         val second = StubFactory("StubFactory-B")
         val ex = assertFailsWith<IllegalStateException> {
-            DefaultHttpClientFactoryHolder.resolveFactoryFromProviders(listOf(first, second))
+            HttpClientFactoryResolver.resolveFactoryFromProviders(listOf(first, second))
         }
         val message = ex.message.orEmpty()
         assertTrue(

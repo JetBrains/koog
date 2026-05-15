@@ -245,7 +245,7 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         val response = try {
             httpClient.post(
                 path = settings.embeddingsPath,
-                request = request,
+                requestBody = request,
                 requestBodyType = OpenRouterEmbeddingRequest::class,
                 responseType = OpenRouterEmbeddingResponse::class
             )

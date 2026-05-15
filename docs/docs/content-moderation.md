@@ -124,7 +124,7 @@ You can use the `moderate` method directly on an LLMClient instance:
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.dsl.ModerationResult;
-    import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactories.openAIClient;
+    import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
 
     class ExampleContentModeration01 {
         public void main(String apiKey) {
@@ -204,7 +204,7 @@ Here is an example of using content moderation with the Llama Guard 3 model thro
     import ai.koog.prompt.executor.ollama.client.OllamaClient;
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.dsl.ModerationResult;
-    import static ai.koog.prompt.executor.ollama.client.OllamaClientFactories.ollamaClient;
+    import static ai.koog.prompt.executor.ollama.client.OllamaClientFactory.ollamaClient;
 
     class ExampleContentModeration02 {
         public void main() {
@@ -291,8 +291,8 @@ You can also use the `moderate` method on a PromptExecutor, which will use the a
     import ai.koog.prompt.executor.ollama.client.OllamaClient;
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.dsl.ModerationResult;
-    import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactories.openAIClient;
-    import static ai.koog.prompt.executor.ollama.client.OllamaClientFactories.ollamaClient;
+    import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
+    import static ai.koog.prompt.executor.ollama.client.OllamaClientFactory.ollamaClient;
 
     class ExampleContentModeration03 {
         public void main(String openAIApiKey) {

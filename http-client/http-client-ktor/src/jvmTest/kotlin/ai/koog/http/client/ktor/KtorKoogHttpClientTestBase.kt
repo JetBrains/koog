@@ -125,7 +125,7 @@ abstract class KtorKoogHttpClientTestBase : BaseKoogHttpClientTest() {
 
         val response = client.post<TestRequest, TestResponse>(
             path = "v1/messages",
-            request = TestRequest("hello")
+            requestBody = TestRequest("hello")
         )
 
         assertEquals("ok", response.response)

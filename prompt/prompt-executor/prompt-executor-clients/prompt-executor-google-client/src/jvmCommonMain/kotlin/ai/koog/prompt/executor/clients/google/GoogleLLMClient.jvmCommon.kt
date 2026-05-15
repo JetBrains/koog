@@ -1,8 +1,8 @@
-@file:JvmName("GoogleClientFactories")
+@file:JvmName("GoogleClientFactory")
 
 package ai.koog.prompt.executor.clients.google
 
-import ai.koog.http.client.DefaultHttpClientFactoryHolder
+import ai.koog.http.client.HttpClientFactoryResolver
 import ai.koog.utils.time.KoogClock
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
@@ -10,7 +10,7 @@ import kotlin.jvm.JvmOverloads
 /**
  * JVM convenience for constructing [GoogleLLMClient] without an explicit
  * [ai.koog.http.client.KoogHttpClient.Factory]: the default factory is resolved at call time from
- * [DefaultHttpClientFactoryHolder].
+ * [HttpClientFactoryResolver].
  *
  * Non-JVM targets must use the primary constructor and pass a factory explicitly.
  */
@@ -23,6 +23,6 @@ public fun GoogleLLMClient(
 ): GoogleLLMClient = GoogleLLMClient(
     apiKey = apiKey,
     settings = settings,
-    httpClientFactory = DefaultHttpClientFactoryHolder.getDefaultHttpClientFactory(),
+    httpClientFactory = HttpClientFactoryResolver.resolve(),
     clock = clock,
 )

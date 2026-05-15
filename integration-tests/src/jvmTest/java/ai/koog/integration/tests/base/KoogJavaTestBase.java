@@ -1,14 +1,14 @@
 package ai.koog.integration.tests.base;
 
-import static ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactories.anthropicClient;
-import static ai.koog.prompt.executor.clients.google.GoogleClientFactories.googleClient;
-import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactories.openAIClient;
+import static ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactory.anthropicClient;
+import static ai.koog.prompt.executor.clients.google.GoogleClientFactory.googleClient;
+import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
 
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.prompt.executor.clients.LLMClient;
-import ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactories;
-import ai.koog.prompt.executor.clients.google.GoogleClientFactories;
-import ai.koog.prompt.executor.clients.openai.OpenAIClientFactories;
+import ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactory;
+import ai.koog.prompt.executor.clients.google.GoogleClientFactory;
+import ai.koog.prompt.executor.clients.openai.OpenAIClientFactory;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.llm.LLModel;

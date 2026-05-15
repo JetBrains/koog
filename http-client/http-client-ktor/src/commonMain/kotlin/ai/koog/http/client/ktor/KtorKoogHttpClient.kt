@@ -130,7 +130,7 @@ public class KtorKoogHttpClient internal constructor(
 
     override suspend fun <T : Any, R : Any> post(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         responseType: KClass<R>,
         parameters: Map<String, String>,
@@ -139,9 +139,9 @@ public class KtorKoogHttpClient internal constructor(
         val response = ktorClient.post(path) {
             if (requestBodyType == String::class) {
                 @Suppress("UNCHECKED_CAST")
-                setBody(request as String)
+                setBody(requestBody as String)
             } else {
-                setBody(request, TypeInfo(requestBodyType))
+                setBody(requestBody, TypeInfo(requestBodyType))
             }
             parameters.forEach { (key, value) ->
                 parameter(key, value)
@@ -154,7 +154,7 @@ public class KtorKoogHttpClient internal constructor(
 
     override fun <T : Any, R : Any, O : Any> sse(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
@@ -185,9 +185,9 @@ public class KtorKoogHttpClient internal constructor(
                     )
                     if (requestBodyType == String::class) {
                         @Suppress("UNCHECKED_CAST")
-                        setBody(request as String)
+                        setBody(requestBody as String)
                     } else {
-                        setBody(request, TypeInfo(requestBodyType))
+                        setBody(requestBody, TypeInfo(requestBodyType))
                     }
                 }
             ) {
@@ -227,7 +227,7 @@ public class KtorKoogHttpClient internal constructor(
 
     override fun <T : Any> lines(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         parameters: Map<String, String>,
         headers: Map<String, String>,
@@ -242,9 +242,9 @@ public class KtorKoogHttpClient internal constructor(
                 applyRequestHeaders(headers)
                 if (requestBodyType == String::class) {
                     @Suppress("UNCHECKED_CAST")
-                    setBody(request as String)
+                    setBody(requestBody as String)
                 } else {
-                    setBody(request, TypeInfo(requestBodyType))
+                    setBody(requestBody, TypeInfo(requestBodyType))
                 }
             }.execute { response: HttpResponse ->
                 if (!response.status.isSuccess()) {

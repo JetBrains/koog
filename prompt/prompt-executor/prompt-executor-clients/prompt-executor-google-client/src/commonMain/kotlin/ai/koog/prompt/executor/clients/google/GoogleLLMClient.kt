@@ -183,7 +183,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         try {
             httpClient.sse(
                 path = "${settings.defaultPath}/${model.id}:${settings.streamGenerateContentMethod}",
-                request = request,
+                requestBody = request,
                 requestBodyType = GoogleRequest::class,
                 dataFilter = { it != "[DONE]" },
                 decodeStreamingResponse = { json.decodeFromString<GoogleResponse>(it) },
@@ -272,7 +272,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         try {
             httpClient.post(
                 path = "${settings.defaultPath}/${model.id}:${settings.generateContentMethod}",
-                request = request,
+                requestBody = request,
                 requestBodyType = GoogleRequest::class,
                 responseType = GoogleResponse::class,
             )
@@ -855,7 +855,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         try {
             val response = httpClient.post(
                 path = "${settings.defaultPath}/${model.id}:${settings.embedContentMethod}",
-                request = request,
+                requestBody = request,
                 requestBodyType = GoogleEmbeddingRequest::class,
                 responseType = GoogleEmbeddingResponse::class,
             )
@@ -901,7 +901,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         try {
             val response = httpClient.post(
                 path = "${settings.defaultPath}/${model.id}:${settings.batchEmbedContentsMethod}",
-                request = request,
+                requestBody = request,
                 requestBodyType = GoogleEmbeddingBatchRequest::class,
                 responseType = GoogleEmbeddingBatchResponse::class,
             )

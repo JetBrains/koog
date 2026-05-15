@@ -134,25 +134,25 @@ public class JavaKoogHttpClient internal constructor(
 
     override suspend fun <T : Any, R : Any> post(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         responseType: KClass<R>,
         parameters: Map<String, String>,
         headers: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
-        val requestBody = prepareRequestBody(request, requestBodyType)
+        val preparedRequestBody = prepareRequestBody(requestBody, requestBodyType)
 
         val httpRequest = HttpRequest.newBuilder()
             .uri(buildUri(path, parameters))
             .headers(
                 mergeHeaders(
                     this@JavaKoogHttpClient.headers,
-                    mapOf("Content-Type" to requestBody.contentType),
+                    mapOf("Content-Type" to preparedRequestBody.contentType),
                     headers,
                 )
             )
             .defaultTimeout()
-            .POST(HttpRequest.BodyPublishers.ofString(requestBody.body))
+            .POST(HttpRequest.BodyPublishers.ofString(preparedRequestBody.body))
             .build()
 
         val response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString())
@@ -162,7 +162,7 @@ public class JavaKoogHttpClient internal constructor(
 
     override fun <T : Any, R : Any, O : Any> sse(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
@@ -170,7 +170,7 @@ public class JavaKoogHttpClient internal constructor(
         parameters: Map<String, String>,
         headers: Map<String, String>
     ): Flow<O> = callbackFlow {
-        val requestBody = prepareRequestBody(request, requestBodyType)
+        val preparedRequestBody = prepareRequestBody(requestBody, requestBodyType)
 
         val httpRequest = HttpRequest.newBuilder()
             .uri(buildUri(path, parameters))
@@ -178,7 +178,7 @@ public class JavaKoogHttpClient internal constructor(
                 mergeHeaders(
                     this@JavaKoogHttpClient.headers,
                     mapOf(
-                        "Content-Type" to requestBody.contentType,
+                        "Content-Type" to preparedRequestBody.contentType,
                         "Accept" to "text/event-stream",
                         "Cache-Control" to "no-cache",
                     ),
@@ -186,7 +186,7 @@ public class JavaKoogHttpClient internal constructor(
                 )
             )
             .defaultTimeout()
-            .POST(HttpRequest.BodyPublishers.ofString(requestBody.body))
+            .POST(HttpRequest.BodyPublishers.ofString(preparedRequestBody.body))
             // Note: "Connection" header is restricted in Java HttpClient and managed automatically
             .build()
 
@@ -258,24 +258,24 @@ public class JavaKoogHttpClient internal constructor(
 
     override fun <T : Any> lines(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         parameters: Map<String, String>,
         headers: Map<String, String>
     ): Flow<String> = callbackFlow {
-        val requestBody = prepareRequestBody(request, requestBodyType)
+        val preparedRequestBody = prepareRequestBody(requestBody, requestBodyType)
 
         val httpRequest = HttpRequest.newBuilder()
             .uri(buildUri(path, parameters))
             .headers(
                 mergeHeaders(
                     this@JavaKoogHttpClient.headers,
-                    mapOf("Content-Type" to requestBody.contentType),
+                    mapOf("Content-Type" to preparedRequestBody.contentType),
                     headers,
                 )
             )
             .defaultTimeout()
-            .POST(HttpRequest.BodyPublishers.ofString(requestBody.body))
+            .POST(HttpRequest.BodyPublishers.ofString(preparedRequestBody.body))
             .build()
 
         val responseFuture = httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofLines())
@@ -330,15 +330,15 @@ public class JavaKoogHttpClient internal constructor(
      * Common logic of preparing the request body.
      */
     private fun <T : Any> prepareRequestBody(
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
     ): RequestBody {
         return if (requestBodyType == String::class) {
             @Suppress("UNCHECKED_CAST")
-            RequestBody(body = request as String, contentType = "text/plain")
+            RequestBody(body = requestBody as String, contentType = "text/plain")
         } else {
             val serializer = serializer(requestBodyType.java)
-            RequestBody(body = json.encodeToString(serializer, request), contentType = "application/json")
+            RequestBody(body = json.encodeToString(serializer, requestBody), contentType = "application/json")
         }
     }
 

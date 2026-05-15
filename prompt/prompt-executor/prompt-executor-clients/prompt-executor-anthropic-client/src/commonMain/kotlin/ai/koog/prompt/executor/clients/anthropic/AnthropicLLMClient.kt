@@ -164,7 +164,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         return try {
             httpClient.post(
                 path = settings.messagesPath,
-                request = request,
+                requestBody = request,
                 requestBodyType = String::class,
                 responseType = AnthropicResponse::class,
             )
@@ -209,7 +209,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             try {
                 httpClient.sse(
                     path = settings.messagesPath,
-                    request = request,
+                    requestBody = request,
                     requestBodyType = String::class,
                     decodeStreamingResponse = { json.decodeFromString<AnthropicStreamResponse>(it) },
                     processStreamingChunk = { it }

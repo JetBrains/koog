@@ -39,8 +39,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactories.anthropicClient;
-import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactories.openAIClient;
+import static ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactory.anthropicClient;
+import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
 
 import java.io.InputStream;
 import java.nio.file.Path;

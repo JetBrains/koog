@@ -10,7 +10,7 @@ import kotlin.reflect.KClass
  *
  * This client is intended for tests where you want to:
  * - verify the requested path,
- * - inspect the request payload,
+ * - inspect the request body,
  * - and return a controlled response based on the requested response type.
  *
  * GET requests are not expected and will fail fast.
@@ -40,21 +40,21 @@ public class CapturingKoogHttpClient(
 
     override suspend fun <T : Any, R : Any> post(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         responseType: KClass<R>,
         parameters: Map<String, String>,
         headers: Map<String, String>,
     ): R {
         lastPath = path
-        lastRequest = request
+        lastRequest = requestBody
         @Suppress("UNCHECKED_CAST")
         return responder(responseType) as R
     }
 
     override fun <T : Any, R : Any, O : Any> sse(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
@@ -65,7 +65,7 @@ public class CapturingKoogHttpClient(
 
     override fun <T : Any> lines(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         parameters: Map<String, String>,
         headers: Map<String, String>,

@@ -74,7 +74,7 @@ abstract class BaseKoogHttpClientTest {
 
         val result: String = client.post(
             path = mockServer.url("/echo"),
-            request = "PAYLOAD"
+            requestBody = "PAYLOAD"
         )
 
         assertEquals(responseBody, result)
@@ -100,7 +100,7 @@ abstract class BaseKoogHttpClientTest {
 
         val result: String = client.post(
             path = mockServer.url("/echo"),
-            request = "{}",
+            requestBody = "{}",
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
         )
 
@@ -150,7 +150,7 @@ abstract class BaseKoogHttpClientTest {
 
         val result: TestResponse = client.post(
             path = mockServer.url("/echo"),
-            request = TestRequest("How are you?"),
+            requestBody = TestRequest("How are you?"),
             requestBodyType = TestRequest::class,
             responseType = TestResponse::class
         )
@@ -176,7 +176,7 @@ abstract class BaseKoogHttpClientTest {
         try {
             client.post<String, String>(
                 path = mockServer.url("/fail"),
-                request = "PAYLOAD",
+                requestBody = "PAYLOAD",
             )
             fail("Expected an exception for non-success status")
         } catch (e: KoogHttpClientException) {
@@ -202,7 +202,7 @@ abstract class BaseKoogHttpClientTest {
 
         val flow = client.sse(
             path = mockServer.url("/stream"),
-            request = "{}",
+            requestBody = "{}",
             requestBodyType = String::class,
             dataFilter = { it != "[DONE]" },
             decodeStreamingResponse = { it },
@@ -232,7 +232,7 @@ abstract class BaseKoogHttpClientTest {
 
         val flow = client.sse(
             path = mockServer.url("/stream"),
-            request = "{}",
+            requestBody = "{}",
             requestBodyType = String::class,
             dataFilter = { it != "[DONE]" },
             decodeStreamingResponse = { it },
@@ -290,7 +290,7 @@ abstract class BaseKoogHttpClientTest {
 
         val collected = client.lines(
             path = mockServer.url("/stream"),
-            request = "{}"
+            requestBody = "{}"
         ).toList()
 
         assertEquals(lines, collected)
@@ -314,7 +314,7 @@ abstract class BaseKoogHttpClientTest {
 
         val collected = client.lines(
             path = mockServer.url("/stream"),
-            request = "{}",
+            requestBody = "{}",
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
         ).toList()
 
@@ -338,7 +338,7 @@ abstract class BaseKoogHttpClientTest {
 
         val collected = client.lines(
             path = mockServer.url("/stream"),
-            request = "{}"
+            requestBody = "{}"
         ).toList()
 
         assertEquals(listOf("""{"i":1}""", """{"i":2}"""), collected)
@@ -359,7 +359,7 @@ abstract class BaseKoogHttpClientTest {
 
         val collected = client.lines(
             path = mockServer.url("/stream"),
-            request = "{}"
+            requestBody = "{}"
         ).toList()
 
         assertTrue(collected.isEmpty())
@@ -383,7 +383,7 @@ abstract class BaseKoogHttpClientTest {
         val failure = assertThrows<KoogHttpClientException> {
             client.lines(
                 path = mockServer.url("/stream"),
-                request = "{}"
+                requestBody = "{}"
             ).toList()
         }
         assertEquals(client.clientName, failure.clientName)
@@ -416,7 +416,7 @@ abstract class BaseKoogHttpClientTest {
         // When: client collects only the first 3 lines, causing upstream cancellation
         val collected = client.lines(
             path = mockServer.url("/stream"),
-            request = "{}"
+            requestBody = "{}"
         ).take(3).toList()
 
         // Then: client received correct lines
@@ -453,7 +453,7 @@ abstract class BaseKoogHttpClientTest {
 
         val result: String = client.post(
             path = mockServer.url("/echo"),
-            request = "PAYLOAD",
+            requestBody = "PAYLOAD",
             parameters = expectedParameters
         )
 

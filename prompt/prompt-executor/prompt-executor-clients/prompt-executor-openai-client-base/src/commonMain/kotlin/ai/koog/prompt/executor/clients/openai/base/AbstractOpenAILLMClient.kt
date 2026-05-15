@@ -204,7 +204,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             channelFlow {
                 httpClient.sse(
                     path = chatCompletionsPath,
-                    request = request,
+                    requestBody = request,
                     requestBodyType = String::class,
                     dataFilter = { it != "[DONE]" },
                     decodeStreamingResponse = ::decodeStreamingResponse,
@@ -246,7 +246,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
 
         val llmTools = tools.takeIf { it.isNotEmpty() }?.map { it.toOpenAIChatTool() }
         val messages = convertPromptToMessages(prompt, model)
-        val request = serializeProviderChatRequest(
+        val requestBody = serializeProviderChatRequest(
             messages = messages,
             model = model,
             tools = llmTools,
@@ -258,7 +258,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         return try {
             httpClient.post<String, String>(
                 path = chatCompletionsPath,
-                request = request
+                requestBody = requestBody
             ).let(::decodeResponse)
         } catch (e: CancellationException) {
             throw e

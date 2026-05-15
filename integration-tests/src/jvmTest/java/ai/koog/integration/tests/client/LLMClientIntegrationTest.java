@@ -16,8 +16,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactories.anthropicClient;
-import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactories.openAIClient;
+import static ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactory.anthropicClient;
+import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LLMClientIntegrationTest extends KoogJavaTestBase {

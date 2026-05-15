@@ -363,7 +363,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         return try {
             httpClient.sse(
                 path = settings.responsesAPIPath,
-                request = request,
+                requestBody = request,
                 requestBodyType = String::class,
                 decodeStreamingResponse = {
                     json.decodeFromString<OpenAIStreamEvent>(it)
@@ -506,7 +506,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         val openAIResponse = try {
             httpClient.post(
                 path = settings.embeddingsPath,
-                request = request,
+                requestBody = request,
                 requestBodyType = OpenAIEmbeddingRequest::class,
                 responseType = OpenAIEmbeddingResponse::class
             )
@@ -590,7 +590,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             try {
                 httpClient.post(
                     path = settings.moderationsPath,
-                    request = request,
+                    requestBody = request,
                     requestBodyType = OpenAIModerationRequest::class,
                     responseType = OpenAIModerationResponse::class
                 )
@@ -751,7 +751,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
         return httpClient.post(
             path = settings.responsesAPIPath,
-            request = request,
+            requestBody = request,
             requestBodyType = String::class,
             responseType = OpenAIResponsesAPIResponse::class
         )

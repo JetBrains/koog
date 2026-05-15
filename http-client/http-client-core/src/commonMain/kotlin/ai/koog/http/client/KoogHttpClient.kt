@@ -43,12 +43,12 @@ public interface KoogHttpClient : AutoCloseable {
     ): R
 
     /**
-     * Sends an HTTP POST request to the specified `path` with the provided `request` payload.
+     * Sends an HTTP POST request to the specified `path` with the provided request body.
      * The type of the request body and the expected response must be explicitly specified
      * using `requestBodyType` and `responseType`, respectively.
      *
      * @param path The endpoint path to which the HTTP POST request is sent.
-     * @param request The request payload to be sent in the POST request.
+     * @param requestBody The request body to be sent in the POST request.
      * @param requestBodyType The Kotlin class reference representing the type of the request body.
      * @param responseType The Kotlin class reference representing the expected type of the response.
      * @param parameters Optional query parameters merged with default query parameters configured on the client.
@@ -59,7 +59,7 @@ public interface KoogHttpClient : AutoCloseable {
      */
     public suspend fun <T : Any, R : Any> post(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         responseType: KClass<R>,
         parameters: Map<String, String> = emptyMap(),
@@ -69,11 +69,11 @@ public interface KoogHttpClient : AutoCloseable {
     /**
      * Initiates a Server-Sent Events (SSE) streaming operation over an HTTP POST request.
      *
-     * This function sends a request to the specified `path` with the given `request` payload,
+     * This function sends a request to the specified `path` with the given request body,
      * processes the streamed chunks of data from the server, and emits the processed results as a flow of strings.
      *
      * @param path The endpoint path to which the SSE POST request is sent.
-     * @param request The request payload to be sent in the POST request.
+     * @param requestBody The request body to be sent in the POST request.
      * @param requestBodyType The Kotlin class reference representing the type of the request body.
      * @param dataFilter A lambda function that determines whether a received streaming data chunk should be processed.
      * It takes the raw data as a string and returns `true` if the data should be included, or `false` otherwise.
@@ -89,7 +89,7 @@ public interface KoogHttpClient : AutoCloseable {
      */
     public fun <T : Any, R : Any, O : Any> sse(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean = { true },
         decodeStreamingResponse: (String) -> R,
@@ -102,7 +102,7 @@ public interface KoogHttpClient : AutoCloseable {
      * Sends an HTTP POST request and emits each non-blank UTF-8 line of the response body as it arrives.
      *
      * @param path The endpoint path to which the HTTP POST request is sent.
-     * @param request The request payload to be sent in the POST request.
+     * @param requestBody The request body to be sent in the POST request.
      * @param requestBodyType The Kotlin class reference representing the type of the request body.
      * @param parameters Optional query parameters merged with default query parameters configured on the client.
      * @param headers Optional request headers merged with headers configured on the client. Headers with the same
@@ -112,7 +112,7 @@ public interface KoogHttpClient : AutoCloseable {
      */
     public fun <T : Any> lines(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         parameters: Map<String, String> = emptyMap(),
         headers: Map<String, String> = emptyMap(),
@@ -158,10 +158,10 @@ public interface KoogHttpClient : AutoCloseable {
 }
 
 /**
- * Sends an HTTP POST request to the specified `path` with the provided `request` payload.
+ * Sends an HTTP POST request to the specified `path` with the provided request body.
  *
  * @param path The endpoint path to which the HTTP POST request is sent.
- * @param request The request payload to be sent in the POST request.
+ * @param requestBody The request body to be sent in the POST request.
  * @param parameters Optional query parameters merged with default query parameters configured on the client.
  * @param headers Optional request headers merged with headers configured on the client. Headers with the same
  * name replace configured or inferred header values; other configured headers are preserved.
@@ -170,10 +170,10 @@ public interface KoogHttpClient : AutoCloseable {
  */
 public suspend inline fun <reified T : Any, reified R : Any> KoogHttpClient.post(
     path: String,
-    request: T,
+    requestBody: T,
     parameters: Map<String, String> = emptyMap(),
     headers: Map<String, String> = emptyMap(),
-): R = post(path, request, T::class, R::class, parameters, headers)
+): R = post(path, requestBody, T::class, R::class, parameters, headers)
 
 /**
  * Sends an HTTP GET request to the specified `path` with the provided parameters.
@@ -194,11 +194,11 @@ public suspend inline fun <reified R : Any> KoogHttpClient.get(
 /**
  * Initiates a Server-Sent Events (SSE) streaming operation over an HTTP POST request.
  *
- * This function sends a request to the specified `path` with the given `request` payload,
+ * This function sends a request to the specified `path` with the given request body,
  * processes the streamed chunks of data from the server, and emits the processed results as a flow of strings.
  *
  * @param path The endpoint path to which the SSE POST request is sent.
- * @param request The request payload to be sent in the POST request.
+ * @param requestBody The request body to be sent in the POST request.
  * @param dataFilter A lambda function that determines whether a received streaming data chunk should be processed.
  * It takes the raw data as a string and returns `true` if the data should be included, or `false` otherwise.
  * Defaults to accepting all non-null chunks.
@@ -213,7 +213,7 @@ public suspend inline fun <reified R : Any> KoogHttpClient.get(
  */
 public inline fun <reified T : Any, reified R : Any, O : Any> KoogHttpClient.sse(
     path: String,
-    request: T,
+    requestBody: T,
     noinline dataFilter: (String?) -> Boolean = { true },
     noinline decodeStreamingResponse: (String) -> R,
     noinline processStreamingChunk: (R) -> O?,
@@ -221,7 +221,7 @@ public inline fun <reified T : Any, reified R : Any, O : Any> KoogHttpClient.sse
     headers: Map<String, String> = emptyMap(),
 ): Flow<O> = sse(
     path = path,
-    request = request,
+    requestBody = requestBody,
     requestBodyType = T::class,
     dataFilter = dataFilter,
     decodeStreamingResponse = decodeStreamingResponse,
@@ -234,7 +234,7 @@ public inline fun <reified T : Any, reified R : Any, O : Any> KoogHttpClient.sse
  * Sends an HTTP POST request and emits each non-blank UTF-8 line of the response body as it arrives.
  *
  * @param path The endpoint path to which the HTTP POST request is sent.
- * @param request The request payload to be sent in the POST request.
+ * @param requestBody The request body to be sent in the POST request.
  * @param parameters Optional query parameters merged with default query parameters configured on the client.
  * @param headers Optional request headers merged with headers configured on the client. Headers with the same
  * name replace configured or inferred header values; other configured headers are preserved.
@@ -243,7 +243,7 @@ public inline fun <reified T : Any, reified R : Any, O : Any> KoogHttpClient.sse
  */
 public inline fun <reified T : Any> KoogHttpClient.lines(
     path: String,
-    request: T,
+    requestBody: T,
     parameters: Map<String, String> = emptyMap(),
     headers: Map<String, String> = emptyMap(),
-): Flow<String> = lines(path, request, T::class, parameters, headers)
+): Flow<String> = lines(path, requestBody, T::class, parameters, headers)
