@@ -1,7 +1,7 @@
 [versions]
 # Published to maven local automatically during initialization and before each compilation
 koog = "99-SNAPSHOT"
-koogBeta = "99-SNAPSHOT-beta"
+koogBeta = "99-beta-SNAPSHOT"
 jackson = "2.21.1"
 logback = "1.5.13"
 opentelemetry = "1.61.0"
