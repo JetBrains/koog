@@ -100,10 +100,40 @@ public abstract class AIAgentPlanner<Input, Output, State : Any, Plan : Any>(
 
         val contextData = context.getPlannerAgentContextData()
         context.removePlannerAgentContextData()
+
         var executionPoint = contextData?.executionPoint
+
+        // Restore from checkpoint if it's set
         if (contextData != null) {
+            // Restore state
             state = context.config.serializer.decodeFromJSONElement(contextData.state, stateType!!)
+            // Restore plan
             plan = context.config.serializer.decodeFromJSONElement(contextData.plan, planType!!)
+
+            // Restore LLM session
+            context.llm.writeSession {
+                // Restore LLM model
+                contextData.llmModel?.let { model = it }
+
+                // Restore messages and LLM params
+                prompt = prompt.copy(
+                    messages = contextData.messageHistory,
+                    params = contextData.llmParams ?: prompt.params
+                )
+
+                contextData.tools?.let { toolNames ->
+                    // Restore tools
+                    tools = toolNames.map { toolName ->
+                        tools.find { it.name == toolName }
+                            ?: throw NoSuchElementException(
+                                "Tool $toolName not found when restoring from checkpoint. Make sure it's registered in ToolRegistry"
+                            )
+                    }
+                }
+            }
+
+            // Restore storage
+            context.storage.putAllSerialized(contextData.storage.entries)
         }
 
         while (true) {

@@ -11,7 +11,6 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
-import ai.koog.prompt.message.Message
 import ai.koog.serialization.TypeToken
 
 /**
@@ -47,22 +46,20 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override val strategyName: String get() = underlyingContextBase.strategyName
     override val pipeline: AIAgentGraphPipeline get() = underlyingContextBase.pipeline
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Use context.storage.set() instead", level = DeprecationLevel.WARNING)
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
         underlyingContextBase.store(key, value)
     }
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Use context.storage.get() instead", level = DeprecationLevel.WARNING)
     override fun <T> get(key: AIAgentStorageKey<*>): T? {
         return underlyingContextBase.get(key)
     }
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Use context.storage.remove() instead", level = DeprecationLevel.WARNING)
     override fun remove(key: AIAgentStorageKey<*>): Boolean {
         return underlyingContextBase.remove(key)
     }
-
-    override suspend fun getHistory(): List<Message> = underlyingContextBase.getHistory()
 
     /**
      * Creates a copy of the current AIAgentContextBase object with the specified parameters.

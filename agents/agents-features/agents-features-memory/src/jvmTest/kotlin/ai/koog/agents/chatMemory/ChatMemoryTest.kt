@@ -68,9 +68,8 @@ class ChatMemoryTest {
     private val dumpHistoryStrategy = functionalStrategy<String, List<Message>> { input ->
         llm.writeSession {
             appendPrompt { user(input) }
+            prompt.messages
         }
-
-        getHistory()
     }
 
     private fun createGraphAgent(

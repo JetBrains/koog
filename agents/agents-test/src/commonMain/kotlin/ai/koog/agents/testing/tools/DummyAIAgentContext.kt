@@ -109,22 +109,20 @@ public class DummyAIAgentContext(
             _executionInfo = value
         }
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Use context.storage.set() instead", level = DeprecationLevel.WARNING)
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
         throw NotImplementedError("store() is not supported for mock")
     }
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Use context.storage.get() instead", level = DeprecationLevel.WARNING)
     override fun <T> get(key: AIAgentStorageKey<*>): T {
         throw NotImplementedError("get() is not supported for mock")
     }
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Use context.storage.remove() instead", level = DeprecationLevel.WARNING)
     override fun remove(key: AIAgentStorageKey<*>): Boolean {
         throw NotImplementedError("remove() is not supported for mock")
     }
-
-    override suspend fun getHistory(): List<Message> = emptyList()
 
     /**
      * Creates a new instance of `AIAgentContextBase` with the specified parameters,

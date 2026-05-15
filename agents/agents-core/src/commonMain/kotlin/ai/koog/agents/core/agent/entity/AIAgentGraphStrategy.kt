@@ -117,12 +117,29 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
             data.lastOutput != JSONNull -> setExecutionPointAfterNode(nodePath, data.lastOutput, agentContext)
 
             // Unexpected state, either input (before 0.6.1) or output (since 0.6.1) should be saved in checkpoints:
-            else -> {}
+            else -> throw IllegalStateException("Unexpected state in checkpoints: lastInput and lastOutput are both null")
         }
 
-        // Reset the message history:
-        agentContext.llm.withPrompt {
-            this.withMessages { (data.messageHistory) }
+        // Restore LLM session
+        agentContext.llm.writeSession {
+            // Restore LLM model
+            data.llmModel?.let { model = it }
+
+            // Restore messages and LLM params
+            prompt = prompt.copy(
+                messages = data.messageHistory,
+                params = data.llmParams ?: prompt.params
+            )
+
+            data.tools?.let { toolNames ->
+                // Restore tools
+                tools = toolNames.map { toolName ->
+                    tools.find { it.name == toolName }
+                        ?: throw NoSuchElementException(
+                            "Tool $toolName not found when restoring from checkpoint. Make sure it's registered in ToolRegistry"
+                        )
+                }
+            }
         }
 
         // Restore the storage

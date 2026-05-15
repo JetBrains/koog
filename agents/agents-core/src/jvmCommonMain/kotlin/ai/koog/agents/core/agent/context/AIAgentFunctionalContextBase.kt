@@ -155,12 +155,6 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
     @JavaAPI
     public fun executionInfo(): AgentExecutionInfo = executionInfo
 
-    @JavaAPI
-    @JvmName("getHistory")
-    public fun getHistoryBlocking(): List<Message> = config.runBlockingOnLLMDispatcher {
-        getHistory()
-    }
-
     /**
      * Sends a request to the Large Language Model (LLM) with tools enabled and retrieves its response.
      * To run the request without tool calls, use [requestLLMWithoutTools].

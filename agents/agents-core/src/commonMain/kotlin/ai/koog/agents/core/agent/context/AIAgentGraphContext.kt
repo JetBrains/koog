@@ -10,7 +10,6 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.lock.RWLock
-import ai.koog.prompt.message.Message
 import ai.koog.serialization.TypeToken
 
 /**
@@ -226,26 +225,20 @@ public class AIAgentGraphContext(
      */
     private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Use context.storage.set() instead", level = DeprecationLevel.WARNING)
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
         storeMap[key] = value
     }
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Use context.storage.get() instead", level = DeprecationLevel.WARNING)
     override fun <T> get(key: AIAgentStorageKey<*>): T? {
         @Suppress("UNCHECKED_CAST")
         return storeMap[key] as T?
     }
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Use context.storage.remove() instead", level = DeprecationLevel.WARNING)
     override fun remove(key: AIAgentStorageKey<*>): Boolean {
         return storeMap.remove(key) != null
-    }
-
-    override suspend fun getHistory(): List<Message> {
-        return llm.readSession {
-            prompt.messages
-        }
     }
 
     /**

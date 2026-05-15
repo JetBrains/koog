@@ -4,7 +4,9 @@ package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.planner.PlannerAgentExecutionPoint
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONNull
 import ai.koog.serialization.JSONObject
@@ -12,6 +14,10 @@ import ai.koog.serialization.JSONObject
 @InternalAgentsApi
 public sealed class AgentContextData {
     internal abstract val messageHistory: List<Message>
+    internal abstract val llmParams: LLMParams?
+    internal abstract val llmModel: LLModel?
+    internal abstract val tools: List<String>?
+    internal abstract val storage: JSONObject
     internal abstract val rollbackStrategy: RollbackStrategy
     internal abstract val additionalRollbackActions: suspend (AIAgentContext) -> Unit
 }
@@ -19,7 +25,10 @@ public sealed class AgentContextData {
 @InternalAgentsApi
 public class GraphAgentContextData(
     override val messageHistory: List<Message>,
-    internal val storage: JSONObject,
+    override val llmParams: LLMParams?,
+    override val llmModel: LLModel?,
+    override val tools: List<String>?,
+    override val storage: JSONObject,
     internal val nodePath: String,
     @Deprecated("Use lastOutput instead, lastOutput will be removed in future versions")
     internal val lastInput: JSONElement = JSONNull,
@@ -38,6 +47,10 @@ public class PlannerAgentContextData(
     override val messageHistory: List<Message>,
     internal val state: JSONElement,
     internal val plan: JSONElement,
+    override val llmParams: LLMParams?,
+    override val llmModel: LLModel?,
+    override val tools: List<String>?,
+    override val storage: JSONObject,
     internal val executionPoint: PlannerAgentExecutionPoint,
     override val rollbackStrategy: RollbackStrategy,
     override val additionalRollbackActions: suspend (AIAgentContext) -> Unit = {}

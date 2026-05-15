@@ -139,11 +139,6 @@ public interface AIAgentContext {
      */
     @Deprecated("Use context.storage.remove() instead", level = DeprecationLevel.WARNING)
     public fun remove(key: AIAgentStorageKey<*>): Boolean
-
-    /**
-     * Retrieves the history of messages exchanged during the agent's execution.
-     */
-    public suspend fun getHistory(): List<Message>
 }
 
 /**

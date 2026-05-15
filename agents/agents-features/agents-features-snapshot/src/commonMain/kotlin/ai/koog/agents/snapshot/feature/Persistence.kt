@@ -372,17 +372,22 @@ public class Persistence(
             return null
         }
 
-        val checkpoint = AgentCheckpointData(
-            checkpointId = checkpointId ?: Uuid.random().toString(),
-            messageHistory = agentContext.getHistory(),
-            storage = JSONObject(agentContext.storage.toSerializedMap()),
-            createdAt = clock.now(),
-            version = version,
-            graphProperties = GraphCheckpointProperties(
-                nodePath = agentContext.executionInfo.path(),
-                lastInput = inputJson
-            ),
-        )
+        val checkpoint = agentContext.llm.readSession {
+            AgentCheckpointData(
+                checkpointId = checkpointId ?: Uuid.random().toString(),
+                messageHistory = prompt.messages,
+                storage = JSONObject(agentContext.storage.toSerializedMap()),
+                llmParams = prompt.params,
+                llmModel = model,
+                tools = tools.map { it.name },
+                createdAt = clock.now(),
+                version = version,
+                graphProperties = GraphCheckpointProperties(
+                    nodePath = nodePath,
+                    lastInput = inputJson
+                ),
+            )
+        }
 
         saveCheckpoint(agentContext.runId, checkpoint)
         return checkpoint
@@ -421,17 +426,22 @@ public class Persistence(
             return null
         }
 
-        val checkpoint = AgentCheckpointData(
-            checkpointId = checkpointId ?: Uuid.random().toString(),
-            messageHistory = agentContext.getHistory(),
-            storage = JSONObject(agentContext.storage.toSerializedMap()),
-            createdAt = clock.now(),
-            version = version,
-            graphProperties = GraphCheckpointProperties(
-                nodePath = agentContext.executionInfo.path(),
-                lastOutput = outputJson
+        val checkpoint = agentContext.llm.readSession {
+            AgentCheckpointData(
+                checkpointId = checkpointId ?: Uuid.random().toString(),
+                messageHistory = prompt.messages,
+                storage = JSONObject(agentContext.storage.toSerializedMap()),
+                llmParams = prompt.params,
+                llmModel = model,
+                tools = tools.map { it.name },
+                createdAt = clock.now(),
+                version = version,
+                graphProperties = GraphCheckpointProperties(
+                    nodePath = nodePath,
+                    lastOutput = outputJson
+                )
             )
-        )
+        }
 
         saveCheckpoint(agentContext.runId, checkpoint)
         return checkpoint
@@ -471,18 +481,23 @@ public class Persistence(
             return null
         }
 
-        val checkpoint = AgentCheckpointData(
-            checkpointId = checkpointId ?: Uuid.random().toString(),
-            messageHistory = agentContext.getHistory(),
-            storage = JSONObject(agentContext.storage.toSerializedMap()),
-            createdAt = clock.now(),
-            version = version,
-            plannerProperties = PlannerCheckpointProperties(
-                executionPoint = executionPoint,
-                state = stateJson,
-                plan = planJson
+        val checkpoint = agentContext.llm.readSession {
+            AgentCheckpointData(
+                checkpointId = checkpointId ?: Uuid.random().toString(),
+                messageHistory = prompt.messages,
+                storage = JSONObject(agentContext.storage.toSerializedMap()),
+                llmParams = prompt.params,
+                llmModel = model,
+                tools = tools.map { it.name },
+                createdAt = clock.now(),
+                version = version,
+                plannerProperties = PlannerCheckpointProperties(
+                    executionPoint = executionPoint,
+                    state = stateJson,
+                    plan = planJson
+                )
             )
-        )
+        }
 
         saveCheckpoint(agentContext.runId, checkpoint)
         return checkpoint
@@ -559,15 +574,20 @@ public class Persistence(
         messageHistory: List<Message>,
         input: JSONElement,
     ) {
-        agentContext.store(
-            GraphAgentContextData(
-                messageHistory = messageHistory,
-                storage = JSONObject(agentContext.storage.toSerializedMap()),
-                nodePath = agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath,
-                lastInput = input,
-                rollbackStrategy = rollbackStrategy
+        agentContext.llm.readSession {
+            agentContext.store(
+                GraphAgentContextData(
+                    messageHistory = messageHistory,
+                    llmParams = prompt.params,
+                    llmModel = model,
+                    tools = tools.map { it.name },
+                    storage = JSONObject(agentContext.storage.toSerializedMap()),
+                    nodePath = agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath,
+                    lastInput = input,
+                    rollbackStrategy = rollbackStrategy
+                )
             )
-        )
+        }
     }
 
     @Deprecated("Use setExecutionPointAfterNode with JSONElement instead of JsonElement")
@@ -597,15 +617,20 @@ public class Persistence(
         messageHistory: List<Message>,
         output: JSONElement,
     ) {
-        agentContext.store(
-            GraphAgentContextData(
-                messageHistory = messageHistory,
-                storage = JSONObject(agentContext.storage.toSerializedMap()),
-                nodePath = agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath,
-                lastOutput = output,
-                rollbackStrategy = rollbackStrategy
+        agentContext.llm.readSession {
+            agentContext.store(
+                GraphAgentContextData(
+                    messageHistory = messageHistory,
+                    llmParams = prompt.params,
+                    llmModel = model,
+                    tools = tools.map { it.name },
+                    storage = JSONObject(agentContext.storage.toSerializedMap()),
+                    nodePath = agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath,
+                    lastOutput = output,
+                    rollbackStrategy = rollbackStrategy
+                )
             )
-        )
+        }
     }
 
     /**

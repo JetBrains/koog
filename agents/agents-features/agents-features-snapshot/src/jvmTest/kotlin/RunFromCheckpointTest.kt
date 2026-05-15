@@ -17,9 +17,11 @@ import ai.koog.agents.snapshot.straightForwardGraphNoCheckpoint
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
@@ -284,8 +286,8 @@ class RunFromCheckpointTest {
     }
 
     @Test
-    fun testRunFromCheckpointRestoresStorage() = runTest {
-        val sessionId = "test-session-storage"
+    fun testRunFromCheckpointRestoresContextData() = runTest {
+        val sessionId = "test-session-context"
         val time = Clock.System.now()
         val greetingKey = createStorageKey<String>("greeting")
         val greetingText = "hello from checkpoint"
@@ -295,24 +297,40 @@ class RunFromCheckpointTest {
             .apply { set(greetingKey, greetingText) }
             .let { JSONObject(it.toSerializedMap()) }
 
+        val expectedModel = OllamaModels.Meta.LLAMA_3_2.copy(id = "checkpoint-model")
+        val expectedParams = LLMParams(temperature = 0.42)
+        val expectedTools = listOf(SayToUser.name)
+
         val checkpoint = AgentCheckpointData(
-            checkpointId = "checkpoint-storage",
+            checkpointId = "checkpoint-context",
             createdAt = time,
             messageHistory = emptyList(),
             storage = storageJson,
+            llmModel = expectedModel,
+            llmParams = expectedParams,
+            tools = expectedTools,
             version = 0,
             graphProperties = GraphCheckpointProperties(
-                nodePath = path(sessionId, "storage-reading", "Node1"),
+                nodePath = path(sessionId, "context-reading", "Node1"),
                 lastOutput = JSONPrimitive("Node 1 output"),
             )
         )
 
+        var capturedModel: LLModel? = null
+        var capturedParams: LLMParams? = null
+        var capturedTools: List<String>? = null
+
         val agent = AIAgent(
             promptExecutor = getMockExecutor(serializer) { },
-            strategy = strategy("storage-reading") {
+            strategy = strategy("context-reading") {
                 val node1 by node<String, String>("Node1") { it }
 
-                val readNode by node<String, String>("readStorage") {
+                val readNode by node<String, String>("readContext") {
+                    llm.readSession {
+                        capturedModel = model
+                        capturedParams = prompt.params
+                        capturedTools = tools.map { it.name }
+                    }
                     "greeting=${storage.get(greetingKey)}"
                 }
 
@@ -330,6 +348,9 @@ class RunFromCheckpointTest {
         )
 
         assertEquals("greeting=$greetingText", output)
+        assertEquals(expectedModel, capturedModel)
+        assertEquals(expectedParams, capturedParams)
+        assertEquals(expectedTools, capturedTools)
     }
 
     @Test

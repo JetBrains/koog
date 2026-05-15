@@ -136,7 +136,7 @@ private fun nodeForSecondTry(
 private fun createCheckpointNode(name: String? = null, checkpointId: String) =
     node<String, String>(name) { input ->
         withPersistence { ctx ->
-            createCheckpoint(ctx, name!!, input, typeToken<String>(), 0L, checkpointId)
+            createCheckpoint(ctx, ctx.executionInfo.path(), input, typeToken<String>(), 0L, checkpointId)
             llm.writeSession {
                 appendPrompt {
                     user {
