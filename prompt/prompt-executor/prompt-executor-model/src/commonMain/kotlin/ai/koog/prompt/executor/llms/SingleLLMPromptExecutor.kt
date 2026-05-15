@@ -13,6 +13,7 @@ import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Executes prompts using a direct client for communication with large language model (LLM) providers.
@@ -43,6 +44,7 @@ public open class SingleLLMPromptExecutor(
         return response
     }
 
+    @JvmSynthetic
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,

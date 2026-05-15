@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlin.jvm.JvmOverloads
+import kotlin.jvm.JvmSynthetic
 
 /**
  * MultiLLMPromptExecutor is a class responsible for executing prompts
@@ -177,6 +178,7 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
      * @param model The LLM model to use for execution.
      * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
      **/
+    @JvmSynthetic
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,

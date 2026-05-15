@@ -25,6 +25,7 @@ public interface LLMClientAPI : AutoCloseable {
      * @param tools Optional list of tools that can be used by the LLM
      * @return List of response messages
      */
+    @JvmSynthetic
     public suspend fun execute(
         prompt: Prompt,
         model: LLModel,
@@ -38,6 +39,7 @@ public interface LLMClientAPI : AutoCloseable {
      * @param model The LLM model to use
      * @return Flow of response chunks
      */
+    @JvmSynthetic
     public fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
@@ -51,6 +53,7 @@ public interface LLMClientAPI : AutoCloseable {
      * @param tools Optional list of tools that can be used by the LLM
      * @return Flow of response chunks
      */
+    @JvmSynthetic
     public fun executeStreaming(
         prompt: Prompt,
         model: LLModel,

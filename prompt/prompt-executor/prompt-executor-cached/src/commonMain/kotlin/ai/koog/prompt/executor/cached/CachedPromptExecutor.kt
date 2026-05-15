@@ -16,6 +16,7 @@ import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlin.jvm.JvmSynthetic
 
 /**
  * A CodePromptExecutor that caches responses from a nested executor.
@@ -37,6 +38,7 @@ public class CachedPromptExecutor(
         return getOrPut(prompt, tools, model)
     }
 
+    @JvmSynthetic
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,

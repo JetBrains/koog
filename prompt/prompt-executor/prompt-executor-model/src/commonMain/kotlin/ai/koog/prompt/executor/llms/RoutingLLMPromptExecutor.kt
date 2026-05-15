@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlin.jvm.JvmOverloads
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Executes prompts with load balancing across multiple LLM clients.
@@ -143,6 +144,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      * @param model The LLM model to use for execution.
      * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
      **/
+    @JvmSynthetic
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,

@@ -71,7 +71,8 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
      */
     @JavaAPI
     @JvmOverloads
-    public fun executeStreamingWithPublisher(
+    @JvmName("executeStreaming")
+    public fun executeStreamingBlocking(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList(),

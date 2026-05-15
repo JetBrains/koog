@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlin.jvm.JvmSynthetic
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -81,6 +82,7 @@ public class ContextualPromptExecutor(
      * @param tools The list of available tool descriptors for the streaming call
      * @return A Flow of StreamFrame objects representing the streaming response
      */
+    @JvmSynthetic
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,

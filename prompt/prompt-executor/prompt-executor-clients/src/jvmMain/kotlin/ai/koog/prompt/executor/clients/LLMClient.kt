@@ -75,7 +75,8 @@ public actual abstract class LLMClient actual constructor() : LLMClientAPI, LLME
      */
     @JavaAPI
     @JvmOverloads
-    public fun executeStreamingWithPublisher(
+    @JvmName("executeStreaming")
+    public fun executeStreamingBlocking(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList(),

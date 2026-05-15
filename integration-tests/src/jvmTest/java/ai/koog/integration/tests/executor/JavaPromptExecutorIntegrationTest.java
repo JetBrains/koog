@@ -180,7 +180,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .withParams(params);
 
         JavaUtils.StreamCollectionResult result =
-            JavaUtils.collectFrames(executor.executeStreamingWithPublisher(prompt, model));
+            JavaUtils.collectFrames(executor.executeStreaming(prompt, model));
 
         if (result.getError() != null) {
             fail("Streaming failed with error: " + result.getError().getClass().getSimpleName() + " - " + result.getError().getMessage());
@@ -242,7 +242,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .withParams(params);
 
         JavaUtils.StreamCollectionResult result =
-            JavaUtils.collectFrames(executor.executeStreamingWithPublisher(prompt, model));
+            JavaUtils.collectFrames(executor.executeStreaming(prompt, model));
         if (result.getError() != null) {
             fail("Streaming failed with error: " + result.getError().getClass().getSimpleName() + " - " + result.getError().getMessage());
         }
@@ -420,7 +420,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             .withParams(params);
 
         JavaUtils.StreamCollectionResult result = JavaUtils.collectFrames(
-            executor.executeStreamingWithPublisher(prompt, model, List.of(SimpleCalculatorTool.INSTANCE.getDescriptor()))
+            executor.executeStreaming(prompt, model, List.of(SimpleCalculatorTool.INSTANCE.getDescriptor()))
         );
         if (result.getError() != null) {
             fail("Streaming with tools failed: " + result.getError().getClass().getSimpleName() + " - " + result.getError().getMessage());

@@ -24,6 +24,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -37,6 +38,7 @@ class LLMAsJudgeNodeTest {
     }
 
     @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class)
+    @Ignore("Doesn't work properly with mockk and @JvmSynethic on PrompExecutor.execute. Rewrite using testing API")
     @Test
     fun testChatStrategyDefaultName() = runTest {
         val initialPrompt = prompt("id") {

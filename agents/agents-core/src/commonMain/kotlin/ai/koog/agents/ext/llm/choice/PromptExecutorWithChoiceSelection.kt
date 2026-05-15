@@ -9,6 +9,7 @@ import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
+import kotlin.jvm.JvmSynthetic
 
 /**
  * A specialized implementation of `PromptExecutor` that enhances the standard execution process
@@ -35,6 +36,7 @@ public class PromptExecutorWithChoiceSelection(
         return choiceSelectionStrategy.choose(prompt, choices)
     }
 
+    @JvmSynthetic
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
