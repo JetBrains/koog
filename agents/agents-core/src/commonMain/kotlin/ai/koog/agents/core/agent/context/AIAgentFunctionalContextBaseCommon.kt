@@ -88,6 +88,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      *
      * @param body Lambda to modify the prompt using [PromptBuilder].
      */
+    @JvmSynthetic
     public suspend fun appendPrompt(body: PromptBuilder.() -> Unit) {
         llm.writeSession { appendPrompt { body() } }
     }
@@ -125,6 +126,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      *
      * @param message The content of the message to be sent to the LLM.
      */
+    @JvmSynthetic
     public suspend fun requestLLMWithoutTools(message: String): Message.Assistant {
         return llm.writeSession {
             appendPrompt { user(message) }
@@ -138,6 +140,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      *
      * @param message The content of the message to be sent to the LLM.
      */
+    @JvmSynthetic
     public suspend fun requestLLMOnlyCallingTools(message: String): Message.Assistant {
         return llm.writeSession {
             appendPrompt { user(message) }
@@ -153,6 +156,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param tool The tool descriptor that the LLM must use.
      * @return The LLM response containing the tool call.
      */
+    @JvmSynthetic
     public suspend fun requestLLMForceOneTool(
         message: String,
         tool: ToolDescriptor
@@ -174,6 +178,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param tool The tool that the LLM must use.
      * @return The LLM response containing the tool call.
      */
+    @JvmSynthetic
     public suspend fun requestLLMForceOneTool(
         message: String,
         tool: Tool<*, *>
@@ -257,6 +262,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * Sends a [Message.User] to the LLM and returns the response.
      * Corresponds to [nodeLLMRequest].
      */
+    @JvmSynthetic
     public suspend fun requestLLM(message: Message.User): Message.Assistant {
         return llm.writeSession {
             appendPrompt { message(message) }
@@ -268,6 +274,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * Sends a [Message.User] to the LLM, restricting it to only calling tools.
      * Corresponds to [nodeLLMRequestOnlyCallingTools].
      */
+    @JvmSynthetic
     public suspend fun requestLLMOnlyCallingTools(message: Message.User): Message.Assistant {
         return llm.writeSession {
             appendPrompt { message(message) }
@@ -279,7 +286,8 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * Sends a [Message.User] to the LLM without allowing tool calls.
      * Corresponds to [nodeLLMRequestWithoutTools].
      */
-    public suspend fun requestLLMWithoutToolsWithUserText(message: Message.User): Message.Assistant {
+    @JvmSynthetic
+    public suspend fun requestLLMWithoutTools(message: Message.User): Message.Assistant {
         return llm.writeSession {
             appendPrompt { message(message) }
             requestLLMWithoutTools()
@@ -290,6 +298,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * Sends a [Message.User] to the LLM and forces it to use a specific tool.
      * Corresponds to [nodeLLMRequestForceOneTool].
      */
+    @JvmSynthetic
     public suspend fun requestLLMForceOneTool(message: Message.User, tool: ToolDescriptor): Message.Assistant {
         return llm.writeSession {
             appendPrompt { message(message) }
@@ -301,6 +310,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * Sends a [Message.User] to the LLM and forces it to use a specific tool.
      * Corresponds to [nodeLLMRequestForceOneTool].
      */
+    @JvmSynthetic
     public suspend fun requestLLMForceOneTool(message: Message.User, tool: Tool<*, *>): Message.Assistant {
         return requestLLMForceOneTool(message, tool.descriptor)
     }
@@ -309,6 +319,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * Sends a string message to the LLM and returns multiple response choices.
      * Corresponds to [nodeLLMRequestMultipleChoicesWithUserText].
      */
+    @JvmSynthetic
     public suspend fun requestLLMMultipleChoices(message: String): LLMChoice {
         return llm.writeSession {
             appendPrompt { user(message) }
@@ -320,6 +331,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * Sends a [Message.User] to the LLM and returns multiple response choices.
      * Corresponds to [nodeLLMRequestMultipleChoices].
      */
+    @JvmSynthetic
     public suspend fun requestLLMMultipleChoices(message: Message.User): LLMChoice {
         return llm.writeSession {
             appendPrompt { message(message) }
@@ -413,6 +425,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param includeCurrentPrompt Whether to include the current conversation prompt in the moderation context.
      */
     @OptIn(DetachedPromptExecutorAPI::class)
+    @JvmSynthetic
     public suspend fun moderateMessage(
         message: Message,
         moderatingModel: LLModel? = null,
@@ -510,6 +523,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param message The assistant message containing tool calls to execute.
      * @param parallelTools Whether to execute tools in parallel.
      */
+    @JvmSynthetic
     public suspend fun executeTools(
         message: Message.Assistant,
         parallelTools: Boolean = false
@@ -522,6 +536,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * Sends tool results to the LLM, restricting it to only calling tools.
      * Corresponds to [nodeSendToolReceivedResultsOnlyCallingTools].
      */
+    @JvmSynthetic
     public suspend fun sendToolResultsOnlyCallingTools(
         results: List<ReceivedToolResult>
     ): Message.Assistant {
@@ -537,6 +552,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * Sends tool results to the LLM without allowing further tool calls.
      * Corresponds to [nodeSendToolReceivedResultsWithoutTools].
      */
+    @JvmSynthetic
     public suspend fun sendToolResultsWithoutTools(
         results: List<ReceivedToolResult>
     ): Message.Assistant {
@@ -552,6 +568,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * Sends tool results to the LLM and forces it to use a specific tool.
      * Corresponds to [nodeSendToolReceivedResultsForceOneTool].
      */
+    @JvmSynthetic
     public suspend fun sendToolResultsForceOneTool(
         results: List<ReceivedToolResult>,
         tool: ToolDescriptor
@@ -568,6 +585,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * Sends tool results to the LLM and returns multiple response choices.
      * Corresponds to [nodeSendToolReceivedResultsMultipleChoices].
      */
+    @JvmSynthetic
     public suspend fun sendToolResultsMultipleChoices(
         results: List<ReceivedToolResult>
     ): LLMChoice {
@@ -639,12 +657,22 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
     // Conditions
     // ================
 
+    /**
+     * Creates a [Message.User] with the provided text.
+     * @param text Text of the user message.
+     */
+    @JvmSynthetic
     public suspend fun asUserMessage(text: String): Message.User {
         return llm.writeSession {
             userMessage(text)
         }
     }
 
+    /**
+     * Creates a [Message.User] with the provided tool results.
+     * @param results List of the tool results of the user message.
+     */
+    @JvmSynthetic
     public suspend fun asUserMessage(results: List<ReceivedToolResult>): Message.User {
         return llm.writeSession {
             userMessage(results.map { it.toMessagePart() })

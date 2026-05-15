@@ -296,8 +296,8 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
                     .collect(Collectors.toCollection(ArrayList::new));
 
                 if (!calls.isEmpty()) {
-                    List<ReceivedToolResult> results = context.executeMultipleTools(calls, true);
-                    Message.Assistant finalResponse = context.sendMultipleToolResults(results);
+                    List<ReceivedToolResult> results = context.executeTools(calls, true);
+                    Message.Assistant finalResponse = context.sendToolResults(results);
                     return textContent(finalResponse);
                 }
 

@@ -186,7 +186,7 @@ public actual abstract class AIAgentFunctionalContextBase<Pipeline : AIAgentPipe
      * @return A [Message.Assistant] object containing the message received from the LLM.
      */
     @JavaAPI
-    @JvmName("requestLLMWithout")
+    @JvmName("requestLLMWithoutTools")
     public fun requestLLMWithoutToolsBlocking(
         message: String,
     ): Message.Assistant = config.runBlockingOnLLMDispatcher {
