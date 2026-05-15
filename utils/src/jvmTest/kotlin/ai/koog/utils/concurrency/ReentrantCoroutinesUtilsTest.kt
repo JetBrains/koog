@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Disabled
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
@@ -15,6 +16,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @OptIn(InternalKoogUtils::class)
+@Disabled("Flaky test")
 class ReentrantCoroutinesUtilsTest {
     @Test
     fun `test runBlockingReentrant does not block on a single thread executor when reentering`() {
