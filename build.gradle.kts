@@ -93,9 +93,9 @@ subprojects {
             val additions = rootProject.version.toString().substringAfter("-", "")
 
             if (additions.isEmpty()) {
-                "${mainVersion}-beta"
+                "$mainVersion-beta"
             } else {
-                "${mainVersion}-beta-$additions"
+                "$mainVersion-beta-$additions"
             }
         } else {
             rootProject.version
