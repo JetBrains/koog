@@ -208,7 +208,7 @@ The examples above demonstrate different ways to mock tools, from simple to more
 
 ### Enabling testing mode
 
-To enable the testing mode on an agent, use the `withTesting()` function within the AIAgent constructor block:
+To enable the testing mode on an agent, use the `withTesting()` function (Kotlin) or the testing feature installation (Java) within the AIAgent configuration:
 
 === "Kotlin"
 

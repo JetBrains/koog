@@ -1,6 +1,7 @@
 # Event handlers
 
-You can monitor and respond to specific events during the agent workflow by using event handlers for logging, testing, debugging, and extending agent behavior.
+You can monitor and respond to specific events during the agent workflow by using event handlers for logging, testing, 
+debugging, and extending agent behavior.
 
 ## Feature overview
 
@@ -88,7 +89,7 @@ To install the feature and configure event handlers for the agent, do the follow
 
 For more details about event handler configuration, see [API reference](api:agents-features-event-handler::ai.koog.agents.features.eventHandler.feature.EventHandlerConfig).
 
-You can also set up event handlers using the `handleEvents` extension function when creating an agent.
+In Kotlin, you can also set up event handlers using the `handleEvents` extension function when creating an agent.
 This function also installs the event handler feature and configures event handlers for the agent. Here is an example:
 
 === "Kotlin"
@@ -120,28 +121,3 @@ This function also installs the event handler feature and configures event handl
     ```
     <!--- KNIT example-event-handlers-02.kt -->
 
-=== "Java"
-
-    <!--- INCLUDE
-    /**
-    -->
-    <!--- SUFFIX
-    **/
-    -->
-    ```java
-    AIAgent<String, String> agent = AIAgent.builder()
-        .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
-        .llmModel(OllamaModels.Meta.LLAMA_3_2)
-        .install(EventHandler.Feature, cfg -> {
-            // Handle tool calls
-            cfg.onToolCallStarting(ctx -> {
-                System.out.println("Tool called: " + ctx.getToolName() + " with args " + ctx.getToolArgs());
-            });
-            // Handle event triggered when the agent completes its execution
-            cfg.onAgentCompleted(ctx -> {
-                System.out.println("Agent finished with result: " + ctx.getResult());
-            });
-        })
-        .build();
-    ```
-    <!--- KNIT example-event-handlers-java-02.java -->

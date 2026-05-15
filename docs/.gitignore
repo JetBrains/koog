@@ -1,3 +1,5 @@
 site/
 src/main/
 hooks/__pycache__/
+__pycache__/
+*.pyc
