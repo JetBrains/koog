@@ -10,8 +10,11 @@ import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.serialization.typeToken
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import kotlin.test.Test
@@ -90,5 +93,61 @@ class AIAgentSubgraphFinishToolTest {
         )
 
         finishTool.descriptor shouldBe expectedDescriptor
+    }
+
+    @Serializable
+    sealed interface SealedOutput {
+        @Serializable
+        @SerialName("sealed_a")
+        data class A(val payload: String) : SealedOutput
+
+        @Serializable
+        @SerialName("sealed_b")
+        data class B(val number: Int) : SealedOutput
+    }
+
+    @Test
+    fun `generates ToolDescriptor for sealed output with anyOf and discriminator`() {
+        val finishTool = FinishTool<SealedOutput>(typeToken<SealedOutput>())
+        val resultParameter = finishTool.descriptor.requiredParameters.single { it.name == "result" }
+
+        val anyOf = resultParameter.type
+        check(anyOf is ToolParameterType.AnyOf) {
+            "Expected result parameter to be AnyOf for sealed output, got: $anyOf"
+        }
+        anyOf.types.size shouldBe 2
+
+        anyOf.types.forEach { branchDescriptor ->
+            val branch = branchDescriptor.type
+            check(branch is ToolParameterType.Object) {
+                "Expected each branch to be Object, got: $branch"
+            }
+            val discriminator = branch.properties.firstOrNull { it.name == "type" }
+            check(discriminator != null) {
+                "Each branch must declare a type discriminator property, got: $branch"
+            }
+            val enumType = discriminator.type
+            check(enumType is ToolParameterType.Enum && enumType.entries.size == 1) {
+                "Discriminator must be a single-value enum (const), got: ${discriminator.type}"
+            }
+        }
+    }
+
+    @Test
+    fun `parses sealed output branches`() = runTest {
+        val finishTool = FinishTool<SealedOutput>(typeToken<SealedOutput>())
+
+        val rawA = Json.Default.parseToJsonElement(
+            "{\"result\":{\"type\":\"sealed_a\",\"payload\":\"hello\"}}"
+        ).jsonObject.toKoogJSONObject()
+        val rawB = Json.Default.parseToJsonElement(
+            "{\"result\":{\"type\":\"sealed_b\",\"number\":42}}"
+        ).jsonObject.toKoogJSONObject()
+
+        finishTool.decodeArgs(rawA, serializer) shouldBe SealedOutput.A("hello")
+        finishTool.decodeArgs(rawB, serializer) shouldBe SealedOutput.B(42)
+
+        finishTool.encodeArgs(SealedOutput.A("hello"), serializer) shouldBe rawA
+        finishTool.encodeArgs(SealedOutput.B(42), serializer) shouldBe rawB
     }
 }
