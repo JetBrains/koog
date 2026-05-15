@@ -272,6 +272,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
      *
      * @param transformation A function that converts the intermediate output to a String for the user message.
      */
+    @JvmOverloads
     public fun asUserMessage(
         transformation: SimpleTransformation<IntermediateOutput, String> = { it.toString() }
     ): FullAgentEdgeBuilder<IncomingOutput, Message.User, OutgoingInput> =

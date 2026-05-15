@@ -95,21 +95,21 @@ public class Calculator {
                     // start → callLLM (wrap the agent's String input as a user message)
                     graph.edge(
                         AIAgentEdge.builder().from(graph.nodeStart).to(nodeCallLLM)
-                            .asUserMessage(s -> s)
+                            .asUserMessage()
                             .build()
                     );
 
                     // callLLM → finish (when LLM returns a text response)
                     graph.edge(
                         AIAgentEdge.builder().from(nodeCallLLM).to(graph.nodeFinish)
-                            .onTextParts()
+                            .onTextMessage()
                             .build()
                     );
 
                     // callLLM → executeTools (when LLM returns tool calls)
                     graph.edge(
                         AIAgentEdge.builder().from(nodeCallLLM).to(nodeExecuteTools)
-                            .onToolCalls(call -> true)
+                            .onToolCalls()
                             .build()
                     );
 
@@ -137,14 +137,14 @@ public class Calculator {
                     // sendResults → executeTools (when LLM requests more tool calls)
                     graph.edge(
                         AIAgentEdge.builder().from(nodeSendResults).to(nodeExecuteTools)
-                            .onToolCalls(call -> true)
+                            .onToolCalls()
                             .build()
                     );
 
                     // sendResults → finish (when LLM returns a final text response)
                     graph.edge(
                         AIAgentEdge.builder().from(nodeSendResults).to(graph.nodeFinish)
-                            .onTextParts()
+                            .onTextMessage()
                             .build()
                     );
 
