@@ -591,7 +591,7 @@ public inline fun <reified Input : Any> subgraphWithVerification(
     tools: List<ToolBase<*, *>>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
-    parallelTools: Boolean,
+    parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
