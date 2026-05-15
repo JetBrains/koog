@@ -3,9 +3,11 @@ rootProject.name = "koog"
 pluginManagement {
     includeBuild("convention-plugin-ai")
     repositories {
-        google()
-        gradlePluginPortal()
+        maven("https://cache-redirector.jetbrains.com/plugins.gradle.org/m2")
+        maven("https://cache-redirector.jetbrains.com/maven-central")
         maven(url = "https://packages.jetbrains.team/maven/p/jcs/maven")
+        google()
+//        gradlePluginPortal()
     }
 }
 
