@@ -49,6 +49,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":test-utils"))
+                implementation(project(":http-client:http-client-java"))
                 implementation(libs.mockito.junit.jupiter)
                 implementation(libs.assertj.core)
             }
