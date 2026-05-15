@@ -249,17 +249,14 @@ For more information, see the detailed API reference for [AIAgentLLMReadSession]
 
 The most common methods for making LLM requests are:
 
-1. `requestLLM()`: makes a request to the LLM with the current prompt and tools, returning a single response.
+1. `requestLLM()`: makes a request to the LLM with the current prompt and tools, returning a response.
 
-2. `requestLLMMultiple()`: makes a request to the LLM with the current prompt and tools, returning multiple
-   responses.
-
-3. `requestLLMWithoutTools()`: makes a request to the LLM with the current prompt but without any tools, returning a
+2. `requestLLMWithoutTools()`: makes a request to the LLM with the current prompt but without any tools, returning a
    single response.
 
-4. `requestLLMForceOneTool()`: makes a request to the LLM with the current prompt and tools, forcing the use of one tool.
+3. `requestLLMForceOneTool()`: makes a request to the LLM with the current prompt and tools, forcing the use of one tool.
 
-5. `requestLLMOnlyCallingTools()`: makes a request to the LLM that should be processed by only using tools.
+4. `requestLLMOnlyCallingTools()`: makes a request to the LLM that should be processed by only using tools.
 
 Example:
 
@@ -284,9 +281,6 @@ Example:
 
         // Make a request without tools
         val responseWithoutTools = requestLLMWithoutTools()
-
-        // Make a request that returns multiple responses
-        val responses = requestLLMMultiple()
     }
     ```
     <!--- KNIT example-sessions-04.kt -->
@@ -318,8 +312,6 @@ Example:
         // Make a request without tools
         var responseWithoutTools = session.requestLLMWithoutTools();
 
-        // Make a request that returns multiple responses
-        var responses = session.requestLLMMultiple();
         return null;
     });
     ```

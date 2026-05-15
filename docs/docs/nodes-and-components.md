@@ -411,7 +411,7 @@ graph LR
 
 ### LLM request node with multiple responses
 
-A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled. For details, see [nodeLLMRequestMultiple](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple) (Kotlin) or [AIAgentNode.llmRequestMultiple()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmRequestMultiple) (Java).
+A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled. For details, see [nodeLLMRequest](api:agents-core::ai.koog.agents.core.dsl.extension.nodeLLMRequest) (Kotlin) or [AIAgentNode.llmRequest()](api:agents-core::ai.koog.agents.core.agent.entity.AIAgentNode.Companion.llmRequest) (Java).
 
 ```mermaid
 graph LR
