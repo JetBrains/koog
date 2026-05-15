@@ -9,8 +9,8 @@ import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMModerateMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.agents.ext.agent.subgraphWithVerification
@@ -27,13 +27,13 @@ class MermaidDiagramGeneratorTest {
         val myStrategy = strategy<String, String>("my-strategy") {
             val nodeCallLLM by nodeLLMRequest()
             val executeToolCall by nodeExecuteToolsAndGetResults()
-            val sendToolResult by nodeSendToolReceivedResults()
+            val sendToolResult by nodeLLMSendToolResults()
 
             edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
-            edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
             edge(nodeCallLLM forwardTo executeToolCall onToolCalls { true })
             edge(executeToolCall forwardTo sendToolResult)
-            edge(sendToolResult forwardTo nodeFinish onTextParts { true })
+            edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
             edge(sendToolResult forwardTo executeToolCall onToolCalls { true })
         }
 
@@ -71,7 +71,7 @@ class MermaidDiagramGeneratorTest {
             val nodeCallLLM by nodeLLMRequest("CallLLM")
 
             val nodeExecuteTool by nodeExecuteToolsAndGetResults("ExecuteTool")
-            val nodeSendToolResult by nodeSendToolReceivedResults("SendToolResult")
+            val nodeSendToolResult by nodeLLMSendToolResults("SendToolResult")
 
             edge(
                 nodeStart forwardTo moderateInput asUserMessage { it },
@@ -89,10 +89,10 @@ class MermaidDiagramGeneratorTest {
                     transformed { "Moderation Error" },
             )
 
-            edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
             edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
-            edge(nodeSendToolResult forwardTo nodeFinish onTextParts { true })
+            edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
             edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
         }
 
@@ -225,7 +225,7 @@ class MermaidDiagramGeneratorTest {
         val myStrategy = strategy<String, String>("object-test") {
             val nodeCallLLM by nodeLLMRequest()
             edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
-            edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
         }
 
         val fromExtension = myStrategy.asMermaidDiagram()

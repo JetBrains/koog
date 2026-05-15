@@ -11,8 +11,8 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
@@ -101,7 +101,7 @@ internal object OpenTelemetryTestAPI {
             val nodeSendInput by nodeLLMRequest("test-llm-call")
 
             edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
-            edge(nodeSendInput forwardTo nodeFinish onTextParts { true })
+            edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
         }
         internal val singleLLMCallFunctionalStrategy =
             functionalStrategy<String, String>(Parameter.DEFAULT_STRATEGY_NAME) { input ->
@@ -117,13 +117,13 @@ internal object OpenTelemetryTestAPI {
         internal val singleToolCallGraphStrategy = strategy(Parameter.DEFAULT_STRATEGY_NAME) {
             val nodeCallLLM by nodeLLMRequest("test-llm-call")
             val nodeExecuteTool by nodeExecuteToolsAndGetResults("test-tool-call")
-            val nodeSendToolResult by nodeSendToolReceivedResults("test-node-llm-send-tool-result")
+            val nodeSendToolResult by nodeLLMSendToolResults("test-node-llm-send-tool-result")
 
             edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
             edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
-            edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
-            edge(nodeSendToolResult forwardTo nodeFinish onTextParts { true })
+            edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
             edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
         }
         internal val singleToolCallFunctionalStrategy =

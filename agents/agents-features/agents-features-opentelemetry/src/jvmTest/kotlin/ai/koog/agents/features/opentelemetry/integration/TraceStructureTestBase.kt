@@ -8,8 +8,8 @@ import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
@@ -83,7 +83,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 val llmRequest by nodeLLMRequest("llm-call")
 
                 edge(nodeStart forwardTo llmRequest asUserMessage { it })
-                edge(llmRequest forwardTo nodeFinish onTextParts { true })
+                edge(llmRequest forwardTo nodeFinish onTextMessage { true })
             }
 
             val model = OpenAIModels.Chat.GPT4o
@@ -183,12 +183,12 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val strategy = strategy("llm-tool-llm-strategy") {
                 val llmRequest by nodeLLMRequest("LLM Request")
                 val executeTool by nodeExecuteToolsAndGetResults("Execute Tool")
-                val sendToolResult by nodeSendToolReceivedResults("Send Tool Result")
+                val sendToolResult by nodeLLMSendToolResults("Send Tool Result")
 
                 edge(nodeStart forwardTo llmRequest asUserMessage { it })
                 edge(llmRequest forwardTo executeTool onToolCalls { true })
                 edge(executeTool forwardTo sendToolResult)
-                edge(sendToolResult forwardTo nodeFinish onTextParts { true })
+                edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
             }
 
             val model = OpenAIModels.Chat.GPT4o
@@ -315,17 +315,17 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val strategy = strategy("multiple-tool-calls-strategy") {
                 val llmRequest by nodeLLMRequest("Initial LLM Request")
                 val executeTool1 by nodeExecuteToolsAndGetResults("Execute Tool 1")
-                val sendToolResult1 by nodeSendToolReceivedResults("Send Tool Result 1")
+                val sendToolResult1 by nodeLLMSendToolResults("Send Tool Result 1")
                 val executeTool2 by nodeExecuteToolsAndGetResults("Execute Tool 2")
-                val sendToolResult2 by nodeSendToolReceivedResults("Send Tool Result 2")
+                val sendToolResult2 by nodeLLMSendToolResults("Send Tool Result 2")
 
                 edge(nodeStart forwardTo llmRequest asUserMessage { it })
                 edge(llmRequest forwardTo executeTool1 onToolCalls { true })
                 edge(executeTool1 forwardTo sendToolResult1)
                 edge(sendToolResult1 forwardTo executeTool2 onToolCalls { true })
-                edge(sendToolResult1 forwardTo nodeFinish onTextParts { true })
+                edge(sendToolResult1 forwardTo nodeFinish onTextMessage { true })
                 edge(executeTool2 forwardTo sendToolResult2)
-                edge(sendToolResult2 forwardTo nodeFinish onTextParts { true })
+                edge(sendToolResult2 forwardTo nodeFinish onTextMessage { true })
             }
 
             val model = OpenAIModels.Chat.GPT4o
@@ -479,7 +479,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val strategy = strategy("test-strategy") {
                 val nodeSendInput by nodeLLMRequest("test-llm-call")
                 edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
-                edge(nodeSendInput forwardTo nodeFinish onTextParts { true })
+                edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
             }
 
             val mockExecutor = getMockExecutor(serializer, testClock) {
@@ -677,12 +677,12 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val strategy = strategy("llm-tool-llm-strategy") {
                 val llmRequest by nodeLLMRequest("LLM Request")
                 val executeTool by nodeExecuteToolsAndGetResults("Execute Tool")
-                val sendToolResult by nodeSendToolReceivedResults("Send Tool Result")
+                val sendToolResult by nodeLLMSendToolResults("Send Tool Result")
 
                 edge(nodeStart forwardTo llmRequest asUserMessage { it })
                 edge(llmRequest forwardTo executeTool onToolCalls { true })
                 edge(executeTool forwardTo sendToolResult)
-                edge(sendToolResult forwardTo nodeFinish onTextParts { true })
+                edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
             }
 
             val model = OpenAIModels.Chat.GPT4o

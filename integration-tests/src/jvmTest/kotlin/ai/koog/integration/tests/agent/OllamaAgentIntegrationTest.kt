@@ -11,8 +11,8 @@ import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.subgraphWithTask
@@ -106,15 +106,15 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
 
             val callLLM by nodeLLMRequest()
             val callTool by nodeExecuteToolsAndGetResults()
-            val sendToolResult by nodeSendToolReceivedResults()
+            val sendToolResult by nodeLLMSendToolResults()
 
             edge(nodeStart forwardTo definePrompt transformed {})
             edge(definePrompt forwardTo callLLM transformed { agentInput<String>() } asUserMessage { it })
             edge(callLLM forwardTo callTool onToolCalls { true })
             edge(callTool forwardTo sendToolResult)
             edge(sendToolResult forwardTo callTool onToolCalls { true })
-            edge(sendToolResult forwardTo nodeFinish onTextParts { true })
-            edge(callLLM forwardTo nodeFinish onTextParts { true })
+            edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
+            edge(callLLM forwardTo nodeFinish onTextMessage { true })
         }
 
         val askVerifyAnswer by subgraph<String, String>("verify-answer") {
@@ -145,15 +145,15 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
 
             val callLLM by nodeLLMRequest()
             val callTool by nodeExecuteToolsAndGetResults()
-            val sendToolResult by nodeSendToolReceivedResults()
+            val sendToolResult by nodeLLMSendToolResults()
 
             edge(nodeStart forwardTo definePrompt transformed {})
             edge(definePrompt forwardTo callLLM transformed { agentInput<String>() } asUserMessage { it })
             edge(callLLM forwardTo callTool onToolCalls { true })
             edge(callTool forwardTo sendToolResult)
             edge(sendToolResult forwardTo callTool onToolCalls { true })
-            edge(sendToolResult forwardTo nodeFinish onTextParts { true })
-            edge(callLLM forwardTo nodeFinish onTextParts { true })
+            edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
+            edge(callLLM forwardTo nodeFinish onTextMessage { true })
         }
 
         nodeStart then askCapitalSubgraph then askVerifyAnswer then nodeFinish

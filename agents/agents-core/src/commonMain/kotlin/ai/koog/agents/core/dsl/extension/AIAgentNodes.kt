@@ -87,6 +87,11 @@ public suspend fun <T> AIAgentGraphContextBase.appendPromptImpl(
 
 //region LLMRequest
 
+/**
+ * A node that appends a user text message to the prompt and requests a response from the LLM.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequestWithUserText(
     name: String? = null,
@@ -100,6 +105,12 @@ public fun nodeLLMRequestWithUserText(
         }
     }
 
+/**
+ * A node that appends a user text message to the prompt and requests a response from the LLM,
+ * forcing it to call one of the available tools (no plain-text replies allowed).
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequestOnlyCallingToolsWithUserText(
     name: String? = null,
@@ -113,6 +124,12 @@ public fun nodeLLMRequestOnlyCallingToolsWithUserText(
         }
     }
 
+/**
+ * A node that appends a user text message to the prompt and requests a response from the LLM,
+ * without exposing any tools (pure text response only).
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequestWithoutToolsWithUserText(
     name: String? = null,
@@ -126,6 +143,13 @@ public fun nodeLLMRequestWithoutToolsWithUserText(
         }
     }
 
+/**
+ * A node that appends a user text message to the prompt and requests a response from the LLM,
+ * forcing it to call exactly the specified tool.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param tool The descriptor of the tool the LLM must call.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequestForceOneToolWithUserText(
     name: String? = null,
@@ -140,6 +164,12 @@ public fun nodeLLMRequestForceOneToolWithUserText(
         }
     }
 
+/**
+ * A node that appends a user text message to the prompt and requests multiple completion choices
+ * from the LLM, returning them as an [LLMChoice].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequestMultipleChoicesWithUserText(
     name: String? = null,
@@ -155,6 +185,14 @@ public fun nodeLLMRequestMultipleChoicesWithUserText(
 
 // Region Streaming
 
+/**
+ * A node that appends a user text message to the prompt and requests a streaming response from the LLM,
+ * applying [transformStreamData] to convert the raw [StreamFrame] flow into a flow of [T].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param structureDefinition An optional structure definition to guide the streaming response format.
+ * @param transformStreamData A suspend function that transforms the [StreamFrame] flow into a [Flow] of [T].
+ */
 @AIAgentBuilderDslMarker
 public fun <T> nodeLLMRequestStreamingWithUserText(
     name: String? = null,
@@ -170,6 +208,13 @@ public fun <T> nodeLLMRequestStreamingWithUserText(
         }
     }
 
+/**
+ * A node that appends a user text message to the prompt and requests a streaming response from the LLM,
+ * returning raw [StreamFrame] elements.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param structureDefinition An optional structure definition to guide the streaming response format.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequestStreamingWithUserText(
     name: String? = null,
@@ -179,6 +224,14 @@ public fun nodeLLMRequestStreamingWithUserText(
 
 // Region Structured
 
+/**
+ * A node that appends a user text message to the prompt and requests a structured response from the LLM
+ * using the provided [config].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param config Configuration describing the expected structured output format.
+ * @param fixingParser An optional parser used to attempt recovery if the LLM returns malformed structured output.
+ */
 @AIAgentBuilderDslMarker
 public fun <T> nodeLLMRequestStructuredWithUserText(
     name: String? = null,
@@ -195,6 +248,14 @@ public fun <T> nodeLLMRequestStructuredWithUserText(
         }
     }
 
+/**
+ * A node that appends a user text message to the prompt and requests a structured response from the LLM,
+ * inferring the output schema from the reified type [T].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param examples Optional list of example values of type [T] to guide the LLM's output.
+ * @param fixingParser An optional parser used to attempt recovery if the LLM returns malformed structured output.
+ */
 @AIAgentBuilderDslMarker
 public inline fun <reified T> nodeLLMRequestStructuredWithUserText(
     name: String? = null,
@@ -219,6 +280,11 @@ public inline fun <reified T> nodeLLMRequestStructuredWithUserText(
 
 //region LLMRequest
 
+/**
+ * A node that appends a [Message.User] to the prompt and requests a response from the LLM.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequest(
     name: String? = null,
@@ -232,6 +298,12 @@ public fun nodeLLMRequest(
         }
     }
 
+/**
+ * A node that appends a [Message.User] to the prompt and requests a response from the LLM,
+ * forcing it to call one of the available tools (no plain-text replies allowed).
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequestOnlyCallingTools(
     name: String? = null,
@@ -245,6 +317,12 @@ public fun nodeLLMRequestOnlyCallingTools(
         }
     }
 
+/**
+ * A node that appends a [Message.User] to the prompt and requests a response from the LLM,
+ * without exposing any tools (pure text response only).
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequestWithoutTools(
     name: String? = null,
@@ -258,6 +336,13 @@ public fun nodeLLMRequestWithoutTools(
         }
     }
 
+/**
+ * A node that appends a [Message.User] to the prompt and requests a response from the LLM,
+ * forcing it to call exactly the specified tool.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param tool The descriptor of the tool the LLM must call.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequestForceOneTool(
     name: String? = null,
@@ -272,6 +357,12 @@ public fun nodeLLMRequestForceOneTool(
         }
     }
 
+/**
+ * A node that appends a [Message.User] to the prompt and requests multiple completion choices
+ * from the LLM, returning them as an [LLMChoice].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequestMultipleChoices(
     name: String? = null,
@@ -288,7 +379,7 @@ public fun nodeLLMRequestMultipleChoices(
 // Region Streaming
 
 /**
- * [InternalAgentsApi] method. Appends a message to the prompt and requests a streaming response from the LLM.
+ * [InternalAgentsApi] method. Appends a [Message.User] to the prompt and requests a streaming response from the LLM.
  *
  * @param input The user message to append to the prompt.
  * @param structureDefinition An optional structure definition to customize the streaming response.
@@ -305,6 +396,14 @@ public suspend fun <T> AIAgentGraphContextBase.requestStreamingImpl(
     requestStreaming(structureDefinition, transformStreamData)
 }
 
+/**
+ * A node that appends a [Message.User] to the prompt and requests a streaming response from the LLM,
+ * applying [transformStreamData] to convert the raw [StreamFrame] flow into a flow of [T].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param structureDefinition An optional structure definition to guide the streaming response format.
+ * @param transformStreamData A suspend function that transforms the [StreamFrame] flow into a [Flow] of [T].
+ */
 @AIAgentBuilderDslMarker
 public fun <T> nodeLLMRequestStreaming(
     name: String? = null,
@@ -320,6 +419,13 @@ public fun <T> nodeLLMRequestStreaming(
         }
     }
 
+/**
+ * A node that appends a [Message.User] to the prompt and requests a streaming response from the LLM,
+ * returning raw [StreamFrame] elements.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param structureDefinition An optional structure definition to guide the streaming response format.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeLLMRequestStreaming(
     name: String? = null,
@@ -328,6 +434,14 @@ public fun nodeLLMRequestStreaming(
 
 // Region Structured
 
+/**
+ * A node that appends a [Message.User] to the prompt and requests a structured response from the LLM
+ * using the provided [config].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param config Configuration describing the expected structured output format.
+ * @param fixingParser An optional parser used to attempt recovery if the LLM returns malformed structured output.
+ */
 @AIAgentBuilderDslMarker
 public fun <T> nodeLLMRequestStructured(
     name: String? = null,
@@ -344,6 +458,14 @@ public fun <T> nodeLLMRequestStructured(
         }
     }
 
+/**
+ * A node that appends a [Message.User] to the prompt and requests a structured response from the LLM,
+ * inferring the output schema from the reified type [T].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param examples Optional list of example values of type [T] to guide the LLM's output.
+ * @param fixingParser An optional parser used to attempt recovery if the LLM returns malformed structured output.
+ */
 @AIAgentBuilderDslMarker
 public inline fun <reified T> nodeLLMRequestStructured(
     name: String? = null,
@@ -364,6 +486,14 @@ public inline fun <reified T> nodeLLMRequestStructured(
 
 // Region Moderate
 
+/**
+ * A node that runs content moderation on an incoming [Message] using the LLM.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param moderatingModel An optional [LLModel] to use for moderation; defaults to the agent's current model.
+ * @param includeCurrentPrompt If `true`, the full current prompt context is included alongside the message
+ *   when running moderation; otherwise only the single message is sent.
+ */
 @OptIn(DetachedPromptExecutorAPI::class)
 @AIAgentBuilderDslMarker
 public fun nodeLLMModerateMessage(
@@ -457,21 +587,31 @@ private suspend fun executeTools(
     }
 }
 
+/** Wraps a list of pending tool calls produced by an LLM response. */
 @Serializable
 public data class ToolCalls(
     val toolCalls: List<MessagePart.Tool.Call>
 )
 
+/** Wraps a list of tool results ready to be sent back to the LLM. */
 @Serializable
 public data class ToolResults(
     val toolCalls: List<MessagePart.Tool.Result>
 )
 
+/** Wraps a list of [ReceivedToolResult] values returned by the agent environment after tool execution. */
 @Serializable
 public data class ReceivedToolResults(
     val toolResults: List<ReceivedToolResult>
 )
 
+/**
+ * A node that executes the tool calls contained in a [ToolCalls] input, writes the results into the
+ * LLM session as a user message, and returns that [Message.User].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param parallel If `true`, all tool calls are executed concurrently; otherwise they run sequentially.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeExecuteTools(
     name: String? = null,
@@ -486,6 +626,13 @@ public fun nodeExecuteTools(
 
 // Region ReceivedToolResult
 
+/**
+ * A node that executes the tool calls in a [ToolCalls] input and returns the raw [ReceivedToolResults]
+ * without writing them into the LLM session.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param parallel If `true`, all tool calls are executed concurrently; otherwise they run sequentially.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeExecuteToolsAndGetResults(
     name: String? = null,
@@ -495,8 +642,14 @@ public fun nodeExecuteToolsAndGetResults(
         ReceivedToolResults(executeTools(environment, it.toolCalls, parallel))
     }
 
+/**
+ * A node that appends tool results from [ReceivedToolResults] to the prompt as a user message and
+ * requests a follow-up response from the LLM.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
 @AIAgentBuilderDslMarker
-public fun nodeSendToolReceivedResults(
+public fun nodeLLMSendToolResults(
     name: String? = null
 ): AIAgentNodeDelegate<ReceivedToolResults, Message.Assistant> =
     node(name) {
@@ -511,8 +664,14 @@ public fun nodeSendToolReceivedResults(
         }
     }
 
+/**
+ * A node that appends tool results from [ReceivedToolResults] to the prompt as a user message and
+ * requests a follow-up response from the LLM, forcing it to call one of the available tools.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
 @AIAgentBuilderDslMarker
-public fun nodeSendToolReceivedResultsOnlyCallingTools(
+public fun nodeLLMSendToolResultsOnlyCallingTools(
     name: String? = null,
 ): AIAgentNodeDelegate<ReceivedToolResults, Message.Assistant> =
     node(name) {
@@ -526,8 +685,14 @@ public fun nodeSendToolReceivedResultsOnlyCallingTools(
         }
     }
 
+/**
+ * A node that appends tool results from [ReceivedToolResults] to the prompt as a user message and
+ * requests a follow-up response from the LLM, without exposing any tools (pure text response only).
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
 @AIAgentBuilderDslMarker
-public fun nodeSendToolReceivedResultsWithoutTools(
+public fun nodeLLMSendToolResultsWithoutTools(
     name: String? = null,
 ): AIAgentNodeDelegate<ReceivedToolResults, Message.Assistant> =
     node(name) {
@@ -541,8 +706,15 @@ public fun nodeSendToolReceivedResultsWithoutTools(
         }
     }
 
+/**
+ * A node that appends tool results from [ReceivedToolResults] to the prompt as a user message and
+ * requests a follow-up response from the LLM, forcing it to call exactly the specified tool.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param tool The descriptor of the tool the LLM must call.
+ */
 @AIAgentBuilderDslMarker
-public fun nodeSendToolReceivedResultsForceOneTool(
+public fun nodeLLMSendToolResultsForceOneTool(
     name: String? = null,
     tool: ToolDescriptor
 ): AIAgentNodeDelegate<ReceivedToolResults, Message.Assistant> =
@@ -557,8 +729,14 @@ public fun nodeSendToolReceivedResultsForceOneTool(
         }
     }
 
+/**
+ * A node that appends tool results from [ReceivedToolResults] to the prompt as a user message and
+ * requests multiple completion choices from the LLM, returning them as an [LLMChoice].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
 @AIAgentBuilderDslMarker
-public fun nodeSendToolReceivedResultsMultipleChoices(
+public fun nodeLLMSendToolResultsMultipleChoices(
     name: String? = null,
 ): AIAgentNodeDelegate<ReceivedToolResults, LLMChoice> =
     node(name) {
@@ -572,6 +750,13 @@ public fun nodeSendToolReceivedResultsMultipleChoices(
         }
     }
 
+/**
+ * A node that executes a single [MessagePart.Tool.Call] and returns the [ReceivedToolResult]
+ * without writing anything into the LLM session.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param parallel Unused in the single-tool variant; kept for API consistency.
+ */
 @AIAgentBuilderDslMarker
 public fun nodeExecuteSingleTool(
     name: String? = null,

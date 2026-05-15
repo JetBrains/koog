@@ -14,8 +14,8 @@ import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.ReceivedToolResults
 import ai.koog.agents.core.dsl.extension.ToolCalls
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithUserText
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
@@ -736,7 +736,7 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
             requestLLM()
         }
     }
-    val sendToolsResults by nodeSendToolReceivedResults()
+    val sendToolsResults by nodeLLMSendToolResults()
 
     nodeStart then setupTask
     edge(setupTask forwardTo nodeCallLLM)
@@ -744,7 +744,7 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
 
     edge(nodeDecide forwardTo callToolsHacked onToolCalls { true })
 
-    edge(nodeDecide forwardTo handleAssistantMessage onTextParts { true })
+    edge(nodeDecide forwardTo handleAssistantMessage onTextMessage { true })
 
     edge(handleAssistantMessage forwardTo nodeDecide)
 

@@ -8,6 +8,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlin.jvm.JvmOverloads
 import kotlin.time.Instant
 
+/** A list of [Message.Assistant] responses representing multiple completion choices from the LLM. */
 public typealias LLMChoice = List<Message.Assistant>
 
 /**
@@ -38,6 +39,14 @@ public sealed interface Message {
      */
     public val metaInfo: MessageMetaInfo
 
+    /**
+     * A system-role message used to set the behaviour or persona of the assistant.
+     * Only [MessagePart.Text] parts are supported.
+     *
+     * @property parts The text parts that make up the system prompt.
+     * @property metaInfo Request metadata such as timestamp.
+     * @property id Optional unique identifier for the message.
+     */
     @Serializable
     public data class System @JvmOverloads constructor(
         override val parts: List<MessagePart.Text>,
@@ -47,7 +56,7 @@ public sealed interface Message {
         override val role: Role = Role.System
 
         /**
-         * Text content constructor
+         * Convenience constructor that wraps a single [MessagePart.Text] in a list.
          */
         @JvmOverloads
         public constructor(
@@ -61,7 +70,10 @@ public sealed interface Message {
         )
 
         /**
-         * Text content constructor
+         * Convenience constructor that creates a [MessagePart.Text] from a raw string.
+         *
+         * @param content The plain-text content of the system message.
+         * @param cache Optional cache-control directive for the message part.
          */
         @JvmOverloads
         public constructor(
@@ -76,6 +88,13 @@ public sealed interface Message {
         )
     }
 
+    /**
+     * A user-role message sent to the LLM. May contain text, attachments, or tool results.
+     *
+     * @property parts The request parts (text, attachments, or tool results) of the message.
+     * @property metaInfo Request metadata such as timestamp.
+     * @property id Optional unique identifier for the message.
+     */
     @Serializable
     public data class User @JvmOverloads constructor(
         override val parts: List<MessagePart.RequestPart>,
@@ -85,7 +104,7 @@ public sealed interface Message {
         override val role: Role = Role.User
 
         /**
-         * Content part constructor
+         * Convenience constructor that wraps a single [MessagePart.RequestPart] in a list.
          */
         @JvmOverloads
         public constructor(
@@ -99,7 +118,10 @@ public sealed interface Message {
         )
 
         /**
-         * Text content constructor
+         * Convenience constructor that creates a [MessagePart.Text] from a raw string.
+         *
+         * @param content The plain-text content of the user message.
+         * @param cache Optional cache-control directive for the message part.
          */
         @JvmOverloads
         public constructor(
@@ -114,6 +136,15 @@ public sealed interface Message {
         )
     }
 
+    /**
+     * An assistant-role message returned by the LLM. May contain text, reasoning, and/or tool calls.
+     *
+     * @property parts The response parts (text, reasoning, tool calls) produced by the LLM.
+     * @property metaInfo Response metadata including token counts and timestamp.
+     * @property finishReason The reason the LLM stopped generating (e.g. `"stop"`, `"tool_calls"`), or null if unknown.
+     * @property rawResponse The raw JSON response body from the provider, or null if not captured.
+     * @property id Optional unique identifier for the message.
+     */
     @Serializable
     public data class Assistant @JvmOverloads constructor(
         override val parts: List<MessagePart.ResponsePart>,
@@ -126,7 +157,7 @@ public sealed interface Message {
         override val role: Role = Role.Assistant
 
         /**
-         * Content part constructor
+         * Convenience constructor that wraps a single [MessagePart.ResponsePart] in a list.
          */
         @JvmOverloads
         public constructor(
@@ -144,7 +175,9 @@ public sealed interface Message {
         )
 
         /**
-         * Text content constructor
+         * Convenience constructor that creates a [MessagePart.Text] from a raw string.
+         *
+         * @param content The plain-text content of the assistant message.
          */
         @JvmOverloads
         public constructor(
@@ -184,14 +217,28 @@ public sealed interface Message {
     }
 }
 
+/**
+ * A discrete piece of content within a [Message]. Parts are typed by their direction and purpose:
+ * [RequestPart] parts go to the LLM, [ResponsePart] parts come from the LLM, and [ContentPart]
+ * parts (text, attachments) are valid in both directions.
+ */
 @Serializable
 public sealed interface MessagePart {
 
+    /**
+     * A part that can appear in a request sent to the LLM.
+     * All request parts carry an optional [cacheControl] directive.
+     */
     @Serializable
     public sealed interface RequestPart : MessagePart {
+        /** Optional cache-control directive for the provider's prompt-caching feature. */
         public val cacheControl: CacheControl?
     }
 
+    /**
+     * A part that can appear in a response received from the LLM
+     * (e.g. text, reasoning, or tool calls).
+     */
     @Serializable
     public sealed interface ResponsePart : MessagePart
 
@@ -241,6 +288,11 @@ public sealed interface MessagePart {
         public val id: String? = null,
     ) : ResponsePart {
 
+        /**
+         * Convenience constructor for a single reasoning string.
+         *
+         * @param content The reasoning text, wrapped in a single-element list.
+         */
         @JvmOverloads
         public constructor(
             content: String,
@@ -270,7 +322,7 @@ public sealed interface MessagePart {
          *
          * @property id The unique identifier of the tool call.
          * @property tool The name of the tool being called.
-         * @property args The args of the tool call.
+         * @property args The JSON-encoded arguments for the tool call.
          */
         @Serializable
         public data class Call @JvmOverloads constructor(
@@ -280,10 +332,16 @@ public sealed interface MessagePart {
         ) : Tool, ResponsePart {
 
             // TODO: replace with JSONObject?
+            /** Lazily parsed [JsonObject] view of [args]. */
             val argsJson: JsonObject by lazy {
                 Json.parseToJsonElement(args).jsonObject
             }
 
+            /**
+             * Convenience constructor that accepts a [JsonObject] and serialises it to [args].
+             *
+             * @param args The tool arguments as a [JsonObject].
+             */
             @JvmOverloads
             public constructor(
                 id: String? = null,

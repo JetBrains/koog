@@ -9,7 +9,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.features.opentelemetry.AgentType
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.MockToolCallResponse
@@ -185,8 +185,13 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
             Message.User(userInput, RequestMetaInfo(testClock.now())),
             toolCallMessage(toolCallId, TestGetWeatherTool.name, """{"location":"$location"}"""),
             Message.User(
-                parts = listOf(MessagePart.Tool.Result(
-                id = toolCallId, tool = TestGetWeatherTool.name, output = mockToolCallResponse.toolResult)),
+                parts = listOf(
+                    MessagePart.Tool.Result(
+                        id = toolCallId,
+                        tool = TestGetWeatherTool.name,
+                        output = mockToolCallResponse.toolResult
+                    )
+                ),
                 metaInfo = RequestMetaInfo(testClock.now())
             ),
         )
@@ -341,14 +346,14 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                 val nodeSubgraphLLMCall by nodeLLMRequest(subgraphLLMCallNodeName)
 
                 edge(nodeStart forwardTo nodeSubgraphLLMCall asUserMessage { it })
-                edge(nodeSubgraphLLMCall forwardTo nodeFinish onTextParts { true })
+                edge(nodeSubgraphLLMCall forwardTo nodeFinish onTextMessage { true })
             }
 
             val nodeLLMCall by nodeLLMRequest(rootNodeCallLLMName)
 
             edge(nodeStart forwardTo subgraph)
             edge(subgraph forwardTo nodeLLMCall asUserMessage { it })
-            edge(nodeLLMCall forwardTo nodeFinish onTextParts { true })
+            edge(nodeLLMCall forwardTo nodeFinish onTextMessage { true })
         }
 
         val executor = getMockExecutor(serializer, testClock) {
@@ -451,7 +456,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
             val nodeLLMCall by nodeLLMRequest(nodeLLMCallName)
 
             edge(nodeStart forwardTo nodeLLMCall asUserMessage { it })
-            edge(nodeLLMCall forwardTo nodeFinish onTextParts { true })
+            edge(nodeLLMCall forwardTo nodeFinish onTextMessage { true })
         }
 
         // Use tokenizer in the prompt executor to count tokens

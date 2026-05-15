@@ -7,7 +7,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
@@ -32,6 +32,6 @@ public fun singleRunStrategy(parallelTools: Boolean = false): AIAgentGraphStrate
 
     edge(nodeStart forwardTo nodeLLMRequest asUserMessage { it })
     edge(nodeLLMRequest forwardTo nodeExecuteTool onToolCalls { true })
-    edge(nodeLLMRequest forwardTo nodeFinish onTextParts { true })
+    edge(nodeLLMRequest forwardTo nodeFinish onTextMessage { true })
     edge(nodeExecuteTool forwardTo nodeLLMRequest)
 }

@@ -685,7 +685,7 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
      * @param response The response message to evaluate, which may or may not be of type [Message.Assistant].
      * @param action A lambda function to execute if the response is an instance of [Message.Assistant].
      */
-    public fun onTextParts(
+    public fun onTextMessage(
         response: Message.Assistant,
         action: (List<MessagePart.Text>) -> Unit
     ) {

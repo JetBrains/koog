@@ -7,7 +7,7 @@ import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
@@ -57,5 +57,5 @@ public fun singleRunStrategyWithHistoryCompression(
     edge(nodeExecuteTool forwardTo nodeLLMRequest onCondition { llm.readSession { !config.isHistoryTooBig(prompt) } })
     edge(compressHistory forwardTo nodeLLMRequest)
     edge(nodeLLMRequest forwardTo nodeExecuteTool onToolCalls { true })
-    edge(nodeLLMRequest forwardTo nodeFinish onTextParts { true })
+    edge(nodeLLMRequest forwardTo nodeFinish onTextMessage { true })
 }

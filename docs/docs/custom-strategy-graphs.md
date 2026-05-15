@@ -93,7 +93,7 @@ Conditions determine when to follow a particular edge in the strategy graph. The
 |---------------------|------------------------------------------------------------------------------------------|
 | onCondition         | A general-purpose condition that takes a lambda expression that returns a boolean value. |
 | onToolCalls         | A condition that matches when the LLM calls one or more tools.                           |
-| onTextParts         | A condition that matches when the LLM responds with a text message.                      |
+| onTextMessage         | A condition that matches when the LLM responds with a text message.                      |
 | onToolNotCalled     | A condition that matches when the LLM does not call a tool.                              |
 
 You can transform the output before passing it to the target node by using the `transformed` function:
@@ -306,21 +306,21 @@ Here is an example of a basic strategy graph:
     import ai.koog.agents.core.dsl.extension.asUserMessage
     import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-    import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-    import ai.koog.agents.core.dsl.extension.onTextParts
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+    import ai.koog.agents.core.dsl.extension.onTextMessage
     import ai.koog.agents.core.dsl.extension.onToolCalls
     -->
     ```kotlin
     val myStrategy = strategy<String, String>("my-strategy") {
         val nodeCallLLM by nodeLLMRequest()
         val executeToolCall by nodeExecuteToolsAndGetResults()
-        val sendToolResult by nodeSendToolReceivedResults()
+        val sendToolResult by nodeLLMSendToolResults()
     
         edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
-        edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
+        edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
         edge(nodeCallLLM forwardTo executeToolCall onToolCalls { true })
         edge(executeToolCall forwardTo sendToolResult)
-        edge(sendToolResult forwardTo nodeFinish onTextParts { true })
+        edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
         edge(sendToolResult forwardTo executeToolCall onToolCalls { true })
     }
     ```
@@ -366,7 +366,7 @@ Here is an example of a basic strategy graph:
     graph.edge(AIAgentEdge.builder()
         .from(nodeCallLLM)
         .to(graph.nodeFinish)
-        .onTextParts()
+        .onTextMessage()
         .build());
 
     graph.edge(nodeExecuteTool, nodeSendToolResult);
@@ -374,7 +374,7 @@ Here is an example of a basic strategy graph:
     graph.edge(AIAgentEdge.builder()
         .from(nodeSendToolResult)
         .to(graph.nodeFinish)
-        .onTextParts()
+        .onTextMessage()
         .build());
 
     graph.edge(AIAgentEdge.builder()
@@ -405,19 +405,19 @@ For the graph created in the previous example, you can run:
     import ai.koog.agents.core.dsl.extension.asUserMessage
     import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-    import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-    import ai.koog.agents.core.dsl.extension.onTextParts
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+    import ai.koog.agents.core.dsl.extension.onTextMessage
     import ai.koog.agents.core.dsl.extension.onToolCalls
     fun main() {
         val myStrategy = strategy<String, String>("my-strategy") {
             val nodeCallLLM by nodeLLMRequest()
             val executeToolCall by nodeExecuteToolsAndGetResults()
-            val sendToolResult by nodeSendToolReceivedResults()
+            val sendToolResult by nodeLLMSendToolResults()
             edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
-            edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
             edge(nodeCallLLM forwardTo executeToolCall onToolCalls { true })
             edge(executeToolCall forwardTo sendToolResult)
-            edge(sendToolResult forwardTo nodeFinish onTextParts { true })
+            edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
             edge(sendToolResult forwardTo executeToolCall onToolCalls { true })
         }
     -->
@@ -491,7 +491,7 @@ import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.ToolCalls
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 
 val strategy = strategy<String, String>("strategy_name") {
     val someNode by node<String, ToolCalls> { ToolCalls(emptyList()) }
@@ -501,7 +501,7 @@ val strategy = strategy<String, String>("strategy_name") {
 -->
 ```kotlin
 val executeMultipleTools by nodeExecuteToolsAndGetResults(parallel = true)
-val processMultipleResults by nodeSendToolReceivedResults()
+val processMultipleResults by nodeLLMSendToolResults()
 
 edge(someNode forwardTo executeMultipleTools)
 edge(executeMultipleTools forwardTo processMultipleResults)
@@ -628,8 +628,8 @@ import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 -->
@@ -638,7 +638,7 @@ fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy
     return strategy(name) {
         val nodeSendInput by nodeLLMRequest()
         val nodeExecuteTool by nodeExecuteToolsAndGetResults()
-        val nodeSendToolResult by nodeSendToolReceivedResults()
+        val nodeSendToolResult by nodeLLMSendToolResults()
         val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResults>()
 
         // Define the flow of the agent
@@ -647,7 +647,7 @@ fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy
         // If the LLM responds with a message, finish
         edge(
             (nodeSendInput forwardTo nodeFinish)
-                    onTextParts { true }
+                onTextMessage { true }
         )
 
         // If the LLM calls a tool, execute it
@@ -679,7 +679,7 @@ fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy
         // If the LLM responds with a message, finish
         edge(
             (nodeSendToolResult forwardTo nodeFinish)
-                    onTextParts { true }
+                onTextMessage { true }
         )
     }
 }

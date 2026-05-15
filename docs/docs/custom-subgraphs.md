@@ -166,12 +166,12 @@ The following code sample shows an actual implementation of a custom subgraph:
             // Define nodes and edges for this subgraph
             val sendInput by nodeLLMRequest()
             val executeToolCall by nodeExecuteToolsAndGetResults()
-            val sendToolResult by nodeSendToolReceivedResults()
+            val sendToolResult by nodeLLMSendToolResults()
 
             edge(nodeStart forwardTo sendInput asUserMessage { it })
             edge(sendInput forwardTo executeToolCall onToolCalls { true })
             edge(executeToolCall forwardTo sendToolResult)
-            edge(sendToolResult forwardTo nodeFinish onTextParts { true })
+            edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
         }
     }
     ```
@@ -231,7 +231,7 @@ The following code sample shows an actual implementation of a custom subgraph:
                 .edge(AIAgentEdge.builder()
                     .from(sendToolResult)
                     .to(subgraph.nodeFinish)
-                    .onTextParts()
+                    .onTextMessage()
                     .build()
                 )
                 .build();
@@ -564,8 +564,8 @@ The code sample includes three defined subgraphs, `researchSubgraph`, `planSubgr
     import ai.koog.agents.core.dsl.extension.asUserMessage
     import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-    import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-    import ai.koog.agents.core.dsl.extension.onTextParts
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+    import ai.koog.agents.core.dsl.extension.onTextMessage
     import ai.koog.agents.core.dsl.extension.onToolCalls
     import ai.koog.agents.core.tools.SimpleTool
     import ai.koog.agents.core.tools.ToolDescriptor
@@ -617,13 +617,13 @@ The code sample includes three defined subgraphs, `researchSubgraph`, `planSubgr
         ) {
             val nodeCallLLM by nodeLLMRequest("call_llm")
             val nodeExecuteTool by nodeExecuteToolsAndGetResults()
-            val nodeSendToolResult by nodeSendToolReceivedResults()
+            val nodeSendToolResult by nodeLLMSendToolResults()
 
             edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
             edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
             edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
-            edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
         }
 
         val planSubgraph by subgraph(
@@ -647,7 +647,7 @@ The code sample includes three defined subgraphs, `researchSubgraph`, `planSubgr
 
             edge(nodeStart forwardTo nodeUpdatePrompt)
             edge(nodeUpdatePrompt forwardTo nodeCallLLM transformed { "Task: $agentInput" } asUserMessage { it })
-            edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
         }
 
         val executeSubgraph by subgraph<String, String>(
@@ -670,14 +670,14 @@ The code sample includes three defined subgraphs, `researchSubgraph`, `planSubgr
             }
             val nodeCallLLM by nodeLLMRequest("call_llm")
             val nodeExecuteTool by nodeExecuteToolsAndGetResults()
-            val nodeSendToolResult by nodeSendToolReceivedResults()
+            val nodeSendToolResult by nodeLLMSendToolResults()
 
             edge(nodeStart forwardTo nodeUpdatePrompt)
             edge(nodeUpdatePrompt forwardTo nodeCallLLM transformed { "Task: $agentInput" } asUserMessage { it })
             edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
             edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
-            edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
         }
 
         nodeStart then researchSubgraph then planSubgraph then executeSubgraph then nodeFinish

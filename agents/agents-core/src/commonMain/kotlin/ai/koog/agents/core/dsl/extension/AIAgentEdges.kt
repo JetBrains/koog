@@ -62,7 +62,7 @@ public inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reif
  * @param block A function that converts the intermediate output to a String for the user message.
  */
 @EdgeTransformationDslMarker
-public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onTextParts(
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onTextMessage(
     block: suspend (MessagePart.Text) -> Boolean,
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, String, OutgoingInput> {
     return onMessageParts(MessagePart.Text::class)

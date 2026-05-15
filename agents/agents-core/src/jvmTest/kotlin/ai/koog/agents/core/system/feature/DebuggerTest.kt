@@ -4,13 +4,12 @@ import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.FINISH_NOD
 import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.START_NODE_PREFIX
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
@@ -146,13 +145,13 @@ class DebuggerTest {
             val strategy = strategy<String, String>(strategyName) {
                 val nodeSendInput by nodeLLMRequest(nodeSendLLMCallName)
                 val nodeExecuteTool by nodeExecuteToolsAndGetResults(nodeExecuteToolName)
-                val nodeSendToolResult by nodeSendToolReceivedResults(nodeSendToolResultName)
+                val nodeSendToolResult by nodeLLMSendToolResults(nodeSendToolResultName)
 
                 edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
                 edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
-                edge(nodeSendInput forwardTo nodeFinish onTextParts { true })
+                edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
                 edge(nodeExecuteTool forwardTo nodeSendToolResult)
-                edge(nodeSendToolResult forwardTo nodeFinish onTextParts { true })
+                edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
                 edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
             }
 

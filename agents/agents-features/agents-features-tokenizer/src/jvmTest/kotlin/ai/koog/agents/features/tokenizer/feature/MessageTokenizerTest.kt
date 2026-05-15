@@ -7,8 +7,8 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.feature.withTesting
@@ -91,7 +91,7 @@ class MessageTokenizerTest {
         val testStrategy = strategy("test") {
             val callLLM by nodeLLMRequest()
             val callTool by nodeExecuteToolsAndGetResults()
-            val sendToolResul by nodeSendToolReceivedResults()
+            val sendToolResul by nodeLLMSendToolResults()
 
             val checkTokens by node<String, String> {
                 val totalTokens = llm.readSession {
@@ -103,10 +103,10 @@ class MessageTokenizerTest {
 
             edge(nodeStart forwardTo callLLM asUserMessage { it })
             edge(callLLM forwardTo callTool onToolCalls { true })
-            edge(callLLM forwardTo checkTokens onTextParts { true })
+            edge(callLLM forwardTo checkTokens onTextMessage { true })
             edge(callTool forwardTo sendToolResul)
             edge(sendToolResul forwardTo callTool onToolCalls { true })
-            edge(sendToolResul forwardTo checkTokens onTextParts { true })
+            edge(sendToolResul forwardTo checkTokens onTextMessage { true })
             edge(checkTokens forwardTo nodeFinish)
         }
 

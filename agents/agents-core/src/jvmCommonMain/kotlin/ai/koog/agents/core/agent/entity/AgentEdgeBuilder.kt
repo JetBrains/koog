@@ -273,7 +273,7 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
      * @param transformation A function that converts the intermediate output to a String for the user message.
      */
     public fun asUserMessage(
-        transformation: SimpleTransformation<IntermediateOutput, String>
+        transformation: SimpleTransformation<IntermediateOutput, String> = { it.toString() }
     ): FullAgentEdgeBuilder<IncomingOutput, Message.User, OutgoingInput> =
         transformed<Message.User> { output, ctx ->
             ctx.llm.writeSession { session ->
@@ -295,12 +295,9 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
             .transformed<List<T>> { (it as Message).parts.filter { part -> clazz.isInstance(part) }.map { part -> clazz.cast(part) } }
 
     /**
-     * Creates an edge that extracts text content from message parts using the provided filter predicate.
-     * Only text parts for which [transformation] returns `true` are included, joined by newlines.
-     *
-     * @param transformation A predicate that determines whether a text part should be included.
+     * Creates an edge that extracts text content from message parts.
      */
-    public fun onTextParts(): FullAgentEdgeBuilder<IncomingOutput, String, OutgoingInput> =
+    public fun onTextMessage(): FullAgentEdgeBuilder<IncomingOutput, String, OutgoingInput> =
         onMessageParts(MessagePart.Text::class.java)
             .transformed<String> { textParts ->
                 textParts.joinToString("\n") { it.text }
@@ -312,8 +309,9 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
      *
      * @param condition A predicate that determines whether a tool call should be accepted.
      */
+    @JvmOverloads
     public fun onToolCalls(
-        condition: SimpleCondition<MessagePart.Tool.Call>
+        condition: SimpleCondition<MessagePart.Tool.Call> = { true }
     ): FullAgentEdgeBuilder<IncomingOutput, ToolCalls, OutgoingInput> =
         onMessageParts(MessagePart.Tool.Call::class.java)
             .onCondition { toolCalls -> toolCalls.any { condition.invoke(it) } }

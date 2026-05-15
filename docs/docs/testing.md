@@ -1076,7 +1076,7 @@ For more complex agents with multiple subgraphs, you can also test the graph str
             ) {
                 val callLLM by nodeLLMRequest(allowToolCalls = false)
                 val executeTool by nodeExecuteToolsAndGetResults()
-                val sendToolResult by nodeSendToolReceivedResults()
+                val sendToolResult by nodeLLMSendToolResults()
                 val giveFeedback by node<String, String> { input ->
                     llm.writeSession {
                         appendPrompt {
@@ -1088,7 +1088,7 @@ For more complex agents with multiple subgraphs, you can also test the graph str
 
                 edge(nodeStart forwardTo callLLM asUserMessage { it })
                 edge(callLLM forwardTo executeTool onToolCalls { true })
-                edge(callLLM forwardTo giveFeedback onTextParts { true })
+                edge(callLLM forwardTo giveFeedback onTextMessage { true })
                 edge(giveFeedback forwardTo giveFeedback transformed { it })
                 edge(executeTool forwardTo nodeFinish transformed { it.toolResults.first().output })
             }

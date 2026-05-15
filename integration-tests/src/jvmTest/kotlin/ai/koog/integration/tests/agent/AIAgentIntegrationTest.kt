@@ -21,8 +21,8 @@ import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.reActStrategy
@@ -235,18 +235,18 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             name = "compress_history",
             strategy = strategy
         )
-        val sendToolResult by nodeSendToolReceivedResults("send_tool_result")
+        val sendToolResult by nodeLLMSendToolResults("send_tool_result")
 
         edge(nodeStart forwardTo callLLM asUserMessage { it })
         if (compressBeforeToolResult) {
             edge(callLLM forwardTo executeTool onToolCalls { true })
             executeTool then compressToolResult then sendToolResult
             edge(sendToolResult forwardTo executeTool onToolCalls { it.tool == SimpleCalculatorTool.name })
-            edge(sendToolResult forwardTo nodeFinish onTextParts { true } transformed { it to llm.prompt.messages })
+            edge(sendToolResult forwardTo nodeFinish onTextMessage { true } transformed { it to llm.prompt.messages })
         } else {
             callLLM then compressResponse
             edge(compressResponse forwardTo executeTool onToolCalls { it.tool == SimpleCalculatorTool.name })
-            edge(compressResponse forwardTo nodeFinish onTextParts { true } transformed { it to llm.prompt.messages })
+            edge(compressResponse forwardTo nodeFinish onTextMessage { true } transformed { it to llm.prompt.messages })
             executeTool then sendToolResult then compressResponse
         }
     }
@@ -465,7 +465,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val customStrategy = strategy("test-without-tools") {
             val callLLM by nodeLLMRequestWithoutTools(name = "callLLM")
             edge(nodeStart forwardTo callLLM asUserMessage { it })
-            edge(callLLM forwardTo nodeFinish onTextParts { true })
+            edge(callLLM forwardTo nodeFinish onTextMessage { true })
         }
 
         withRetry(times = 3, testName = "integration_testRequestLLMWithoutTools[${model.id}]") {
@@ -848,7 +848,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         with(checkpointStorageProvider.getCheckpoints(agent.id)) {
             size shouldBeGreaterThanOrEqual 3
-            map { it.nodePath }.toSet() shouldNotBeNull {
+            mapNotNull { (it.properties?.entries?.get("nodePath") as? JSONPrimitive)?.toString() }.toSet() shouldNotBeNull {
                 shouldForAny { it.shouldContain(hello) }
                 shouldForAny { it.shouldContain(world) }
                 shouldForAny { it.shouldContain(bye) }
@@ -1337,7 +1337,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     )
 
                     edge(nodeStart forwardTo callLLM asUserMessage { it })
-                    edge(callLLM forwardTo nodeCompressHistory onTextParts { true })
+                    edge(callLLM forwardTo nodeCompressHistory onTextMessage { true })
                     edge(nodeCompressHistory forwardTo nodeFinish transformed { it to llm.prompt.messages })
                 }
 
@@ -1549,11 +1549,11 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                             val response = requestLLMForceOneTool(testTool)
 
                             assertTrue(
-                                response is MessagePart.Tool.Call,
+                                response.parts.all { it is MessagePart.Tool.Call || it is MessagePart.Reasoning },
                                 "Forced tool request should return Tool.Call for model $model, but was ${response::class.simpleName}"
                             )
 
-                            val toolCallMessages = prompt.messages.filterIsInstance<MessagePart.Tool.Call>()
+                            val toolCallMessages = prompt.messages.flatMap { it.parts.filterIsInstance<MessagePart.Tool.Call>() }
                                 .filter { it.tool == testTool.name }
                             toolCallMessages.shouldHaveSize(1)
                         }

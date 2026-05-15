@@ -69,7 +69,7 @@ public class JavaGraphStrategyTest {
                 graph.edge(AIAgentEdge.builder()
                     .from(llmNode)
                     .to(graph.nodeFinish)
-                    .onTextParts()
+                    .onTextMessage()
                     .build()
                 );
 

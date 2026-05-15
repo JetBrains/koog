@@ -10,9 +10,9 @@ import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.nodeSetStructuredOutput
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.dsl.extension.onToolResults
 import ai.koog.prompt.executor.model.StructureFixingParser
@@ -47,7 +47,7 @@ public fun chatAgentStrategy(): AIAgentGraphStrategy<String, String> = strategy(
     edge(nodeStart forwardTo nodeLLMRequest asUserMessage { it })
 
     edge(nodeLLMRequest forwardTo nodeExecuteTools onToolCalls { true })
-    edge(nodeLLMRequest forwardTo giveFeedbackToCallTools onTextParts { true })
+    edge(nodeLLMRequest forwardTo giveFeedbackToCallTools onTextMessage { true })
     edge(
         nodeExecuteTools forwardTo nodeFinish
             onToolResults { it.tool == "__exit__" }
@@ -149,7 +149,8 @@ public fun reActStrategy(
     edge(nodeSetup forwardTo nodeRequestLLMReason asUserMessage { "$it\n$reasoningPrompt" })
     edge(nodeRequestLLMReason forwardTo nodeRequestLLMWithTools)
     edge(nodeRequestLLMWithTools forwardTo nodeExecuteTools onToolCalls { true })
-    edge(nodeRequestLLMWithTools forwardTo nodeFinish onTextParts { true })
+    edge(nodeRequestLLMWithTools forwardTo nodeFinish onTextMessage { true })
+    edge(nodeExecuteTools forwardTo nodeRequestLLMReason)
 }
 
 /**
@@ -195,7 +196,7 @@ public inline fun <reified Input, reified Output> structuredOutputWithToolsStrat
     val transformInput by node<Input, String> { transform(it) }
     val callLLM by nodeLLMRequest()
     val executeTools by nodeExecuteToolsAndGetResults(parallel = parallelTools)
-    val sendToolResult by nodeSendToolReceivedResults()
+    val sendToolResult by nodeLLMSendToolResults()
     val transformToStructuredOutput by node<Message.Assistant, Output> { response ->
         llm.writeSession {
             parseResponseToStructuredResponse(response, config, fixingParser).data

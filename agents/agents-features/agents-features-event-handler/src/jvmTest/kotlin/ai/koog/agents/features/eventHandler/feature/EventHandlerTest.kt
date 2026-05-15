@@ -12,8 +12,8 @@ import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
@@ -188,13 +188,13 @@ class EventHandlerTest {
         val strategy = strategy(strategyName) {
             val nodeSendInput by nodeLLMRequest("test-llm-call")
             val nodeExecuteTool by nodeExecuteToolsAndGetResults("test-tool-call")
-            val nodeSendToolResult by nodeSendToolReceivedResults("test-node-llm-send-tool-result")
+            val nodeSendToolResult by nodeLLMSendToolResults("test-node-llm-send-tool-result")
 
             edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
             edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
-            edge(nodeSendInput forwardTo nodeFinish onTextParts { true })
+            edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
-            edge(nodeSendToolResult forwardTo nodeFinish onTextParts { true })
+            edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
             edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
         }
 

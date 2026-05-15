@@ -21,8 +21,8 @@ import ai.koog.agents.core.dsl.extension.nodeDoNothing
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.message.FeatureMessageProcessor
@@ -649,17 +649,17 @@ class CheckpointsTests {
             strategy = strategy("simple-with-interrupt") {
                 val callLLM by nodeLLMRequest()
                 val executeTool by nodeExecuteToolsAndGetResults()
-                val sendToolResult by nodeSendToolReceivedResults()
+                val sendToolResult by nodeLLMSendToolResults()
 
                 val nodeThrow by node<Any?, String> { throw Exception("TERMINATED AFTER THIRD TOOL CALL") }
 
                 edge(nodeStart forwardTo callLLM asUserMessage { it })
                 edge(callLLM forwardTo executeTool onToolCalls { true })
-                edge(callLLM forwardTo nodeFinish onTextParts { true })
+                edge(callLLM forwardTo nodeFinish onTextMessage { true })
                 edge(executeTool forwardTo sendToolResult onCondition { !agentInterrupted() })
                 edge(executeTool forwardTo nodeThrow onCondition { agentInterrupted() })
                 edge(sendToolResult forwardTo executeTool onToolCalls { true })
-                edge(sendToolResult forwardTo nodeFinish onTextParts { true })
+                edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
             },
             agentConfig = agentConfig,
             toolRegistry = localToolRegistry
@@ -864,17 +864,17 @@ class CheckpointsTests {
             strategy = strategy("simple-with-interrupt") {
                 val callLLM by nodeLLMRequest()
                 val executeTool by nodeExecuteToolsAndGetResults()
-                val sendToolResult by nodeSendToolReceivedResults()
+                val sendToolResult by nodeLLMSendToolResults()
 
                 val nodeThrow by node<Any?, String> { throw Exception("TERMINATED AFTER THIRD TOOL CALL") }
 
                 edge(nodeStart forwardTo callLLM asUserMessage { it })
                 edge(callLLM forwardTo executeTool onToolCalls { true })
-                edge(callLLM forwardTo nodeFinish onTextParts { true })
+                edge(callLLM forwardTo nodeFinish onTextMessage { true })
                 edge(executeTool forwardTo sendToolResult onCondition { !agentInterrupted() })
                 edge(executeTool forwardTo nodeThrow onCondition { agentInterrupted() })
                 edge(sendToolResult forwardTo executeTool onToolCalls { true })
-                edge(sendToolResult forwardTo nodeFinish onTextParts { true })
+                edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
             },
             agentConfig = agentConfig,
             toolRegistry = localToolRegistry

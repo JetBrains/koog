@@ -686,7 +686,7 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
-    import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
     val strategy = strategy<String, String>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -694,7 +694,7 @@ Here is an example:
     -->
     ```kotlin
     val executeTool by nodeExecuteToolsAndGetResults()
-    val sendToolResultToLLM by nodeSendToolReceivedResults()
+    val sendToolResultToLLM by nodeLLMSendToolResults()
     edge(executeTool forwardTo sendToolResultToLLM)
     ```
     <!--- KNIT example-nodes-and-component-08.kt -->
@@ -834,7 +834,7 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
-    import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
     import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
     val strategy = strategy<String, String>("strategy_name") {
     -->
@@ -843,7 +843,7 @@ Here is an example:
     -->
     ```kotlin
     val executeMultipleTools by nodeExecuteToolsAndGetResults(parallel = true)
-    val sendMultipleToolResultsToLLM by nodeSendToolReceivedResults()
+    val sendMultipleToolResultsToLLM by nodeLLMSendToolResults()
     edge(executeMultipleTools forwardTo sendMultipleToolResultsToLLM)
     ```
     <!--- KNIT example-nodes-and-component-10.kt -->
@@ -1273,13 +1273,13 @@ You can use this strategy when you need to run straightforward processes that do
     public fun singleRunStrategy(): AIAgentGraphStrategy<String, String> = strategy("single_run") {
         val nodeCallLLM by nodeLLMRequest("sendInput")
         val nodeExecuteTool by nodeExecuteToolsAndGetResults("nodeExecuteTool")
-        val nodeSendToolResult by nodeSendToolReceivedResults("nodeSendToolResult")
+        val nodeSendToolResult by nodeLLMSendToolResults("nodeSendToolResult")
 
         edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
         edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
-        edge(nodeCallLLM forwardTo nodeFinish onTextParts { true })
+        edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
         edge(nodeExecuteTool forwardTo nodeSendToolResult)
-        edge(nodeSendToolResult forwardTo nodeFinish onTextParts { true })
+        edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
         edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
     }
     ```
@@ -1326,7 +1326,7 @@ You can use this strategy when you need to run straightforward processes that do
         strategy.edge(AIAgentEdge.builder()
             .from(nodeCallLLM)
             .to(strategy.nodeFinish)
-            .onTextParts()
+            .onTextMessage()
             .build());
 
         strategy.edge(nodeExecuteTool, nodeSendToolResult);
@@ -1334,7 +1334,7 @@ You can use this strategy when you need to run straightforward processes that do
         strategy.edge(AIAgentEdge.builder()
             .from(nodeSendToolResult)
             .to(strategy.nodeFinish)
-            .onTextParts()
+            .onTextMessage()
             .build());
 
         strategy.edge(AIAgentEdge.builder()
@@ -1368,7 +1368,7 @@ It typically executes tools based on the LLM decisions and processes the results
         return strategy(name) {
             val nodeSendInput by nodeLLMRequest()
             val nodeExecuteTool by nodeExecuteToolsAndGetResults()
-            val nodeSendToolResult by nodeSendToolReceivedResults()
+            val nodeSendToolResult by nodeLLMSendToolResults()
 
             // Define the flow of the agent
             edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
@@ -1376,7 +1376,7 @@ It typically executes tools based on the LLM decisions and processes the results
             // If the LLM responds with a message, finish
             edge(
                 (nodeSendInput forwardTo nodeFinish)
-                        onTextParts { true }
+                        onTextMessage { true }
             )
 
             // If the LLM calls a tool, execute it
@@ -1397,7 +1397,7 @@ It typically executes tools based on the LLM decisions and processes the results
             // If the LLM responds with a message, finish
             edge(
                 (nodeSendToolResult forwardTo nodeFinish)
-                        onTextParts { true }
+                        onTextMessage { true }
             )
         }
     }
@@ -1442,7 +1442,7 @@ It typically executes tools based on the LLM decisions and processes the results
         strategy.edge(AIAgentEdge.builder()
             .from(nodeSendInput)
             .to(strategy.nodeFinish)
-            .onTextParts()
+            .onTextMessage()
             .build());
 
         // If the LLM calls a tool, execute it
@@ -1466,7 +1466,7 @@ It typically executes tools based on the LLM decisions and processes the results
         strategy.edge(AIAgentEdge.builder()
             .from(nodeSendToolResult)
             .to(strategy.nodeFinish)
-            .onTextParts()
+            .onTextMessage()
             .build());
 
         return strategy.build();

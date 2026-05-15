@@ -4,8 +4,8 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeSendToolReceivedResults
-import ai.koog.agents.core.dsl.extension.onTextParts
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI
@@ -120,19 +120,19 @@ class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
         val strategy = strategy("test-tool-calls-strategy") {
             val nodeCallLLM by nodeLLMRequest("test-llm-call")
             val nodeExecuteTool by nodeExecuteToolsAndGetResults("test-multiple-tool-calls")
-            val nodeSendToolResult by nodeSendToolReceivedResults("test-node-llm-send-multiple-tool-results")
+            val nodeSendToolResult by nodeLLMSendToolResults("test-node-llm-send-multiple-tool-results")
 
             edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
             edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
             edge(
                 nodeCallLLM forwardTo nodeFinish
-                    onTextParts { true }
+                    onTextMessage { true }
             )
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
             edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
             edge(
                 nodeSendToolResult forwardTo nodeFinish
-                    onTextParts { true }
+                    onTextMessage { true }
             )
         }
 
