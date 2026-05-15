@@ -93,12 +93,23 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
     }
 
     /**
+     * Sends a request to the underlying LLM and returns the first non-reasoning response.
+     *
+     * @return The first response message from the LLM after executing the request.
+     */
+    @JvmSynthetic
+    public suspend fun requestLLM(): Message.Assistant {
+        validateSession()
+        return execute(prompt, tools)
+    }
+
+    /**
      * Sends a request to the language model without utilizing any tools and returns multiple responses.
      *
      * @return A list of response messages from the language model.
      */
     @JvmSynthetic
-    public suspend fun requestLLMMWithoutTools(): Message.Assistant {
+    public suspend fun requestLLMWithoutTools(): Message.Assistant {
         validateSession()
 
         val promptWithDisabledTools = prompt
@@ -114,7 +125,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      * @return A list of responses from the language model.
      */
     @JvmSynthetic
-    public suspend fun requestLLMMultipleOnlyCallingTools(): Message.Assistant {
+    public suspend fun requestLLMOnlyCallingTools(): Message.Assistant {
         validateSession()
         val promptWithOnlyCallingTools = prompt.withUpdatedParams {
             toolChoice = LLMParams.ToolChoice.Required
@@ -150,17 +161,6 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
     }
 
     /**
-     * Sends a request to the underlying LLM and returns the first non-reasoning response.
-     *
-     * @return The first response message from the LLM after executing the request.
-     */
-    @JvmSynthetic
-    public suspend fun requestLLM(): Message.Assistant {
-        validateSession()
-        return execute(prompt, tools)
-    }
-
-    /**
      * Sends a streaming request to the underlying LLM and returns the streamed response.
      *
      * @return A flow of streamed response frames.
@@ -182,17 +182,6 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
         validateSession()
         val preparedPrompt = preparePrompt(prompt, emptyList())
         return executor.moderate(preparedPrompt, moderatingModel ?: model)
-    }
-
-    /**
-     * Sends a request to the language model and returns all response messages.
-     *
-     * @return A list of responses from the language model.
-     */
-    @JvmSynthetic
-    public suspend fun requestLLMMultiple(): Message.Assistant {
-        validateSession()
-        return execute(prompt, tools)
     }
 
     /**

@@ -150,7 +150,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
      */
     @JvmSynthetic
     public suspend fun requestLLMWithoutTools(): Message.Assistant {
-        return readSession.requestLLMMWithoutTools().also { response ->
+        return readSession.requestLLMWithoutTools().also { response ->
             appendPrompt { message(response) }
         }
     }
@@ -160,7 +160,7 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
      */
     @JvmSynthetic
     public suspend fun requestLLMOnlyCallingTools(): Message.Assistant {
-        return readSession.requestLLMMultipleOnlyCallingTools()
+        return readSession.requestLLMOnlyCallingTools()
             .also { response -> appendPrompt { message(response) } }
     }
 

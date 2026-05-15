@@ -40,8 +40,8 @@ public actual class AIAgentLLMReadSession actual constructor(
 ) : AIAgentLLMReadSessionCommon(executor, tools, prompt, model, responseProcessor, config) {
 
     @JavaAPI
-    @JvmName("executeMultiple")
-    public fun executeMultipleBlocking(
+    @JvmName("execute")
+    public fun executeBlocking(
         prompt: Prompt,
         tools: List<ToolDescriptor>
     ): Message.Assistant = config.runBlockingOnStrategyDispatcher {
@@ -49,20 +49,10 @@ public actual class AIAgentLLMReadSession actual constructor(
     }
 
     @JavaAPI
-    @JvmName("executeSingle")
-    public fun executeSingleBlocking(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>
-    ): Message.Assistant = config.runBlockingOnStrategyDispatcher {
-        executeSingle(prompt, tools)
+    @JvmName("requestLLM")
+    public fun requestLLMBlocking(): Message.Assistant = config.runBlockingOnStrategyDispatcher {
+        requestLLM()
     }
-
-    @JavaAPI
-    @JvmName("requestLLMMultipleWithoutTools")
-    public fun requestLLMMultipleWithoutToolsBlocking(): Message.Assistant =
-        config.runBlockingOnStrategyDispatcher {
-            requestLLMMWithoutTools()
-        }
 
     @JavaAPI
     @JvmName("requestLLMWithoutTools")
@@ -76,13 +66,6 @@ public actual class AIAgentLLMReadSession actual constructor(
     public fun requestLLMOnlyCallingToolsBlocking(): Message.Assistant =
         config.runBlockingOnStrategyDispatcher {
             requestLLMOnlyCallingTools()
-        }
-
-    @JavaAPI
-    @JvmName("requestLLMMultipleOnlyCallingTools")
-    public fun requestLLMMultipleOnlyCallingToolsBlocking(): Message.Assistant =
-        config.runBlockingOnStrategyDispatcher {
-            requestLLMMultipleOnlyCallingTools()
         }
 
     @JavaAPI
@@ -102,12 +85,6 @@ public actual class AIAgentLLMReadSession actual constructor(
     }
 
     @JavaAPI
-    @JvmName("requestLLM")
-    public fun requestLLMBlocking(): Message.Assistant = config.runBlockingOnStrategyDispatcher {
-        requestLLM()
-    }
-
-    @JavaAPI
     @JvmName("requestLLMStreaming")
     public fun requestLLMStreamingBlocking(): Publisher<StreamFrame> =
         config.runBlockingOnStrategyDispatcher {
@@ -122,13 +99,6 @@ public actual class AIAgentLLMReadSession actual constructor(
     ): ModerationResult = config.runBlockingOnStrategyDispatcher {
         requestModeration(moderatingModel)
     }
-
-    @JavaAPI
-    @JvmName("requestLLMMultiple")
-    public fun requestLLMMultipleBlocking(): Message.Assistant =
-        config.runBlockingOnStrategyDispatcher {
-            requestLLMMultiple()
-        }
 
     @JavaAPI
     @JvmOverloads

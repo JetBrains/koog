@@ -46,7 +46,17 @@ public actual class AIAgentLLMWriteSession actual constructor(
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
     clock: KoogClock
-) : AIAgentLLMWriteSessionCommon(environment, executor, tools, toolRegistry, prompt, model, responseProcessor, config, clock) {
+) : AIAgentLLMWriteSessionCommon(
+    environment,
+    executor,
+    tools,
+    toolRegistry,
+    prompt,
+    model,
+    responseProcessor,
+    config,
+    clock
+) {
 
     /**
      * Appends a prompt using the provided prompt update action.
@@ -64,11 +74,10 @@ public actual class AIAgentLLMWriteSession actual constructor(
     }
 
     @JavaAPI
-    @JvmName("requestLLMMultipleWithoutTools")
-    public fun requestLLMMultipleWithoutToolsBlocking(): List<Message.Assistant> =
-        config.runBlockingOnStrategyDispatcher {
-            requestLLMMultipleWithoutTools()
-        }
+    @JvmName("requestLLM")
+    public fun requestLLMBlocking(): Message.Assistant = config.runBlockingOnStrategyDispatcher {
+        this@AIAgentLLMWriteSession.requestLLM()
+    }
 
     @JavaAPI
     @JvmName("requestLLMWithoutTools")
@@ -85,13 +94,6 @@ public actual class AIAgentLLMWriteSession actual constructor(
         }
 
     @JavaAPI
-    @JvmName("requestLLMMultipleOnlyCallingTools")
-    public fun requestLLMMultipleOnlyCallingToolsBlocking(): List<Message.Assistant> =
-        config.runBlockingOnStrategyDispatcher {
-            requestLLMMultipleOnlyCallingTools()
-        }
-
-    @JavaAPI
     @JvmName("requestLLMForceOneTool")
     public fun requestLLMForceOneToolBlocking(
         tool: ToolDescriptor
@@ -105,12 +107,6 @@ public actual class AIAgentLLMWriteSession actual constructor(
         tool: ToolBase<*, *>
     ): Message.Assistant = config.runBlockingOnStrategyDispatcher {
         requestLLMForceOneTool(tool)
-    }
-
-    @JavaAPI
-    @JvmName("requestLLM")
-    public fun requestLLMBlocking(): Message.Assistant = config.runBlockingOnStrategyDispatcher {
-        this@AIAgentLLMWriteSession.requestLLM()
     }
 
     @JavaAPI
@@ -136,13 +132,6 @@ public actual class AIAgentLLMWriteSession actual constructor(
     ): ModerationResult = config.runBlockingOnStrategyDispatcher {
         requestModeration(moderatingModel)
     }
-
-    @JavaAPI
-    @JvmName("requestLLMMultiple")
-    public fun requestLLMMultipleBlocking(): List<Message.Assistant> =
-        config.runBlockingOnStrategyDispatcher {
-            requestLLMMultiple()
-        }
 
     @JavaAPI
     @JvmOverloads
