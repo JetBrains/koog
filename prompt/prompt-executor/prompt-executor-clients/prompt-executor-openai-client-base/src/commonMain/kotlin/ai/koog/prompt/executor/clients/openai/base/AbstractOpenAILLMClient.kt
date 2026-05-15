@@ -303,7 +303,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             httpClient.post<String, String>(
                 path = chatCompletionsPath,
                 request = request
-            )
+            ).let(::decodeResponse)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -312,7 +312,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                 message = e.message,
                 cause = e
             )
-        }.let(::decodeResponse)
+        }
     }
 
     @OptIn(ExperimentalUuidApi::class)
