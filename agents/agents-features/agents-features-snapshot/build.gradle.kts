@@ -1,4 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
+import org.gradle.kotlin.dsl.implementation
+import org.gradle.kotlin.dsl.project
 
 
 plugins {
@@ -22,6 +24,7 @@ kotlin {
             dependencies {
                 implementation(project(":test-utils"))
                 implementation(project(":agents:agents-ext"))
+                implementation(project(":agents:agents-features:agents-features-event-handler"))
             }
         }
 
