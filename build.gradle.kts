@@ -89,7 +89,14 @@ subprojects {
         group = rootProject.group
         // Append "-beta" to version for modules that are "isBeta=true"
         version = if (extra["isBeta"] as Boolean) {
-            "${rootProject.version}-beta"
+            val mainVersion = rootProject.version.toString().substringBefore("-")
+            val additions = rootProject.version.toString().substringAfter("-", "")
+
+            if (additions.isEmpty()) {
+                "${mainVersion}-beta"
+            } else {
+                "${mainVersion}-beta-$additions"
+            }
         } else {
             rootProject.version
         }

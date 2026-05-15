@@ -38,6 +38,8 @@ kotlin {
             dependencies {
                 implementation(project(":agents:agents-test"))
                 implementation(project(":agents:agents-planner"))
+                implementation(project(":agents:agents-ext"))
+                implementation(project(":agents:agents-features:agents-features-trace"))
                 implementation(libs.mockk)
                 implementation(libs.awaitility)
                 implementation(libs.testcontainers)
