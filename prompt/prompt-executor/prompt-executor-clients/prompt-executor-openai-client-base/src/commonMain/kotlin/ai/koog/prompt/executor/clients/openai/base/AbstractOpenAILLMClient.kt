@@ -290,7 +290,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                             add(
                                 OpenAIMessage.Tool(
                                     content = OpenAIContent.Text(part.output),
-                                    toolCallId = message.id ?: Uuid.random().toString()
+                                    toolCallId = part.id ?: Uuid.random().toString()
                                 )
                             )
                         }
@@ -314,12 +314,14 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                                 // FIXME: how to handle multiple reasoning messages
                                 reasoningContent = message.parts.filterIsInstance<MessagePart.Reasoning>()
                                     .firstOrNull()?.content?.firstOrNull(),
-                                toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>().map {
-                                    OpenAIToolCall(
-                                        it.id ?: Uuid.random().toString(),
-                                        function = OpenAIFunction(it.tool, Json.encodeToString(it.args))
-                                    )
-                                }
+                                toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
+                                    .takeIf { it.isNotEmpty() }
+                                    ?.map {
+                                        OpenAIToolCall(
+                                            it.id ?: Uuid.random().toString(),
+                                            function = OpenAIFunction(it.tool, Json.encodeToString(it.args))
+                                        )
+                                    }
                             )
                         )
                     }

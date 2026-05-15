@@ -74,7 +74,6 @@ import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.booleans.shouldNotBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
-import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.collections.shouldNotContainAnyOf
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -86,7 +85,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
-import org.assertj.core.error.ShouldContainAnyOf.shouldContainAnyOf
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -895,7 +893,7 @@ abstract class ExecutorIntegrationTestBase {
             user("Respond with a short message.")
         }
         with(getLLMClient(model).execute(prompt, model)) {
-            parts.shouldContainAnyOf(MessagePart.Text)
+            parts.shouldForAny { it is MessagePart.Text }
         }
     }
 
