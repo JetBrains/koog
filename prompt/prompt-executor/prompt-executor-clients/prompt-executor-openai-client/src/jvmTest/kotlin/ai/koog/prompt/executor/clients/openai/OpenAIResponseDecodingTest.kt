@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openai
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
 import io.ktor.client.HttpClient
@@ -28,7 +29,10 @@ class OpenAIResponseDecodingTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = OpenAILLMClient(apiKey = "test-key", baseClient = http)
+        val client = OpenAILLMClient(
+            apiKey = "test-key",
+            httpClientFactory = KtorKoogHttpClient.Factory(baseClient = http)
+        )
 
         // And: sample prompt
         val prompt = Prompt.build(id = "p-decode-fail", params = OpenAIChatParams()) {
