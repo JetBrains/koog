@@ -38,6 +38,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
+import kotlin.collections.emptyList
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -175,7 +176,9 @@ class PlannerPersistenceTests {
                 executionPoint = executionPoint,
                 state = JSONPrimitive(state),
                 plan = JSONPrimitive(plan)
-            )
+            ),
+            graphProperties = null,
+            properties = null,
         )
 
         testStorage.saveCheckpoint(runId, checkpoint)

@@ -376,10 +376,11 @@ public class Persistence(
             AgentCheckpointData(
                 checkpointId = checkpointId ?: Uuid.random().toString(),
                 messageHistory = prompt.messages,
-                storage = JSONObject(agentContext.storage.toSerializedMap()),
                 llmParams = prompt.params,
                 llmModel = model,
                 tools = tools.map { it.name },
+                storage = JSONObject(agentContext.storage.toSerializedMap()),
+                agentIterations = agentContext.stateManager.withStateLock { it.iterations },
                 createdAt = clock.now(),
                 version = version,
                 graphProperties = GraphCheckpointProperties(
@@ -430,10 +431,11 @@ public class Persistence(
             AgentCheckpointData(
                 checkpointId = checkpointId ?: Uuid.random().toString(),
                 messageHistory = prompt.messages,
-                storage = JSONObject(agentContext.storage.toSerializedMap()),
                 llmParams = prompt.params,
                 llmModel = model,
                 tools = tools.map { it.name },
+                storage = JSONObject(agentContext.storage.toSerializedMap()),
+                agentIterations = agentContext.stateManager.withStateLock { it.iterations },
                 createdAt = clock.now(),
                 version = version,
                 graphProperties = GraphCheckpointProperties(
@@ -485,10 +487,11 @@ public class Persistence(
             AgentCheckpointData(
                 checkpointId = checkpointId ?: Uuid.random().toString(),
                 messageHistory = prompt.messages,
-                storage = JSONObject(agentContext.storage.toSerializedMap()),
                 llmParams = prompt.params,
                 llmModel = model,
                 tools = tools.map { it.name },
+                storage = JSONObject(agentContext.storage.toSerializedMap()),
+                agentIterations = agentContext.stateManager.withStateLock { it.iterations },
                 createdAt = clock.now(),
                 version = version,
                 plannerProperties = PlannerCheckpointProperties(
@@ -582,6 +585,7 @@ public class Persistence(
                     llmModel = model,
                     tools = tools.map { it.name },
                     storage = JSONObject(agentContext.storage.toSerializedMap()),
+                    agentIterations = agentContext.stateManager.withStateLock { it.iterations },
                     nodePath = agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath,
                     lastInput = input,
                     rollbackStrategy = rollbackStrategy
@@ -625,6 +629,7 @@ public class Persistence(
                     llmModel = model,
                     tools = tools.map { it.name },
                     storage = JSONObject(agentContext.storage.toSerializedMap()),
+                    agentIterations = agentContext.stateManager.withStateLock { it.iterations },
                     nodePath = agentContext.agentId + DEFAULT_AGENT_PATH_SEPARATOR + nodePath,
                     lastOutput = output,
                     rollbackStrategy = rollbackStrategy

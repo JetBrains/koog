@@ -144,6 +144,11 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
 
         // Restore the storage
         agentContext.storage.putAllSerialized(data.storage.entries)
+
+        // Restore agent iterations
+        agentContext.stateManager.withStateLock { state ->
+            state.iterations = data.agentIterations
+        }
     }
 
     private fun setExecutionPointImpl(pathSegments: List<String>, node: AIAgentNodeBase<*, *>, input: Any?) {

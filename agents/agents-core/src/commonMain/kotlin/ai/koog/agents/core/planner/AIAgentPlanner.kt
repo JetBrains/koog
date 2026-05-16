@@ -134,6 +134,11 @@ public abstract class AIAgentPlanner<Input, Output, State : Any, Plan : Any>(
 
             // Restore storage
             context.storage.putAllSerialized(contextData.storage.entries)
+
+            // Restore agent iterations
+            context.stateManager.withStateLock { state ->
+                state.iterations = contextData.agentIterations
+            }
         }
 
         while (true) {

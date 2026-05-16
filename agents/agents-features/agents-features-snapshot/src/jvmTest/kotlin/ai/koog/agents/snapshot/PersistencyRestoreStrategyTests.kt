@@ -36,7 +36,9 @@ class PersistenceRestoreStrategyTests {
             graphProperties = GraphCheckpointProperties(
                 nodePath = "$agentId/restore-strategy/Node2",
                 lastInput = JSONPrimitive("input-for-node2")
-            )
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         provider.saveCheckpoint(sessionId, checkpoint)

@@ -18,6 +18,7 @@ public sealed class AgentContextData {
     internal abstract val llmModel: LLModel?
     internal abstract val tools: List<String>?
     internal abstract val storage: JSONObject
+    internal abstract val agentIterations: Int
     internal abstract val rollbackStrategy: RollbackStrategy
     internal abstract val additionalRollbackActions: suspend (AIAgentContext) -> Unit
 }
@@ -29,6 +30,7 @@ public class GraphAgentContextData(
     override val llmModel: LLModel?,
     override val tools: List<String>?,
     override val storage: JSONObject,
+    override val agentIterations: Int,
     internal val nodePath: String,
     @Deprecated("Use lastOutput instead, lastOutput will be removed in future versions")
     internal val lastInput: JSONElement = JSONNull,
@@ -51,6 +53,7 @@ public class PlannerAgentContextData(
     override val llmModel: LLModel?,
     override val tools: List<String>?,
     override val storage: JSONObject,
+    override val agentIterations: Int,
     internal val executionPoint: PlannerAgentExecutionPoint,
     override val rollbackStrategy: RollbackStrategy,
     override val additionalRollbackActions: suspend (AIAgentContext) -> Unit = {}

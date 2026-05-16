@@ -414,7 +414,9 @@ class CheckpointsTests {
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(convId, "straight-forward", "Node2"),
                 lastInput = JSONPrimitive("Test input")
-            )
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         checkpointStorageProvider.saveCheckpoint(convId, testCheckpoint)
@@ -457,7 +459,9 @@ class CheckpointsTests {
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(sessionId, "straight-forward", "Node1"),
                 lastInput = JSONPrimitive("Test input")
-            )
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         val testCheckpoint = AgentCheckpointData(
@@ -471,7 +475,9 @@ class CheckpointsTests {
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(sessionId, "straight-forward", "Node2"),
                 lastInput = JSONPrimitive("Test input")
-            )
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         checkpointStorageProvider.saveCheckpoint(sessionId, testCheckpoint2)
@@ -826,10 +832,11 @@ class CheckpointsTests {
         restoredStorage.putAllSerialized(checkpoint.storage?.entries ?: emptyMap())
         assertEquals("persisted-value", restoredStorage.get(storageKey))
 
-        // Verify LLM model, params, and tools are saved
+        // Verify LLM model, params, tools, and iteration count are saved
         assertEquals(OllamaModels.Meta.LLAMA_3_2, checkpoint.llmModel)
         assertEquals(expectedLlmParams, checkpoint.llmParams)
         assertEquals(listOf(SayToUser.name), checkpoint.tools)
+        assertEquals(3, checkpoint.agentIterations)
     }
 
     /**

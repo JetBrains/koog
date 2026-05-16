@@ -56,7 +56,9 @@ class FileAgentCheckpointStorageProviderTest {
             graphProperties = GraphCheckpointProperties(
                 nodePath = nodeId,
                 lastOutput = lastInput
-            )
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         val agentId = "testAgentId"
@@ -102,7 +104,9 @@ class FileAgentCheckpointStorageProviderTest {
             graphProperties = GraphCheckpointProperties(
                 nodePath = nodeId,
                 lastOutput = lastInput
-            )
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         // Save the later checkpoint

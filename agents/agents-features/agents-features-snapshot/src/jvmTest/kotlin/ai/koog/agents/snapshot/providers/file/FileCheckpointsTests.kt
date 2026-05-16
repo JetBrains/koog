@@ -138,7 +138,9 @@ class FileCheckpointsTests {
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(agentId, "straight-forward", "Node2"),
                 lastInput = JSONPrimitive("Test input")
-            )
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         provider.saveCheckpoint(sessionId, testCheckpoint)
@@ -183,7 +185,9 @@ class FileCheckpointsTests {
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(agentId, "straight-forward", "Node2"),
                 lastOutput = JSONPrimitive("Test output")
-            )
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         provider.saveCheckpoint(sessionId, testCheckpoint)
@@ -226,7 +230,9 @@ class FileCheckpointsTests {
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(agentId, "straight-forward", "Node1"),
                 lastInput = JSONPrimitive("Test input")
-            )
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         val testCheckpoint = AgentCheckpointData(
@@ -240,7 +246,9 @@ class FileCheckpointsTests {
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(agentId, "straight-forward", "Node2"),
                 lastInput = JSONPrimitive("Test input")
-            )
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         provider.saveCheckpoint(sessionId, testCheckpoint)

@@ -300,6 +300,7 @@ class RunFromCheckpointTest {
         val expectedModel = OllamaModels.Meta.LLAMA_3_2.copy(id = "checkpoint-model")
         val expectedParams = LLMParams(temperature = 0.42)
         val expectedTools = listOf(SayToUser.name)
+        val expectedIterations = 5
 
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-context",
@@ -309,6 +310,7 @@ class RunFromCheckpointTest {
             llmModel = expectedModel,
             llmParams = expectedParams,
             tools = expectedTools,
+            agentIterations = expectedIterations,
             version = 0,
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(sessionId, "context-reading", "Node1"),
@@ -319,6 +321,7 @@ class RunFromCheckpointTest {
         var capturedModel: LLModel? = null
         var capturedParams: LLMParams? = null
         var capturedTools: List<String>? = null
+        var capturedIterations: Int? = null
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor(serializer) { },
@@ -330,6 +333,9 @@ class RunFromCheckpointTest {
                         capturedModel = model
                         capturedParams = prompt.params
                         capturedTools = tools.map { it.name }
+                    }
+                    capturedIterations = stateManager.withStateLock {
+                        it.iterations - 1 // to account for the previous node
                     }
                     "greeting=${storage.get(greetingKey)}"
                 }
@@ -351,6 +357,7 @@ class RunFromCheckpointTest {
         assertEquals(expectedModel, capturedModel)
         assertEquals(expectedParams, capturedParams)
         assertEquals(expectedTools, capturedTools)
+        assertEquals(expectedIterations, capturedIterations)
     }
 
     @Test

@@ -38,7 +38,9 @@ class CheckpointSerializationTest {
             graphProperties = GraphCheckpointProperties(
                 nodePath = "NodeA",
                 lastOutput = JSONPrimitive("last-input")
-            )
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         val json = PersistenceUtils.defaultCheckpointJson
@@ -96,7 +98,8 @@ class CheckpointSerializationTest {
             graphProperties = GraphCheckpointProperties(
                 nodePath = "NodeB",
                 lastOutput = JSONObject(mapOf("inputKey" to JSONPrimitive("inputVal")))
-            )
+            ),
+            plannerProperties = null,
         )
 
         val json = PersistenceUtils.defaultCheckpointJson
