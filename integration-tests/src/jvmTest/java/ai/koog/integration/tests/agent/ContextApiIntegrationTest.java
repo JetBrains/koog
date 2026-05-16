@@ -356,7 +356,9 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
                 context.requestLLM("First question: What is 2+2?");
                 context.requestLLM("Second question: What is 3*3?");
 
-                List<Message> history = context.getHistory();
+                List<Message> history = context
+                    .getLlm()
+                    .readSession(it -> it.getPrompt().getMessages());
                 int historySize = history.size();
 
                 return "History contains " + historySize + " messages";

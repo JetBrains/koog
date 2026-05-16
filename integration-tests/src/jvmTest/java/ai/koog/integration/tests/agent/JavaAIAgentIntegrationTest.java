@@ -318,7 +318,11 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
                 context.requestLLMWithoutTools("Acknowledge the context in one short sentence.");
                 context.compressHistory(strategy, true);
                 compressionsApplied.incrementAndGet();
-                historyAfterCompression.set(new ArrayList<>(context.getHistory()));
+                historyAfterCompression.set(
+                    context
+                        .getLlm()
+                        .readSession(it -> it.getPrompt().getMessages())
+                );
                 return assistantText(context.requestLLMWithoutTools("Who am I according to instructions? Reply shortly."));
             })
             .install(EventHandler.Feature, config ->
@@ -374,7 +378,11 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
 
                 context.compressHistory(HistoryCompressionStrategy.FromLastNMessages(2), true);
                 afterCompressCalls.incrementAndGet();
-                historyAfterCompression.set(new ArrayList<>(context.getHistory()));
+                historyAfterCompression.set(
+                    context
+                        .getLlm()
+                        .readSession(it -> it.getPrompt().getMessages())
+                );
 
                 return assistantText(afterToolResult);
             })
