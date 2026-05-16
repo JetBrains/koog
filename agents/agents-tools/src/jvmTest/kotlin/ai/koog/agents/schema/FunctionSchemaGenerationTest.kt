@@ -23,6 +23,7 @@ class FunctionSchemaGenerationTest {
         val floatProperty: Float,
         val booleanNullableProperty: Boolean?,
         val nullableProperty: String? = null,
+        val nullableNestedObject: NestedProperty? = null,
         val listProperty: List<String> = emptyList(),
         val mapProperty: Map<String, Int> = emptyMap(),
         @property:LLMDescription("A custom nested property")
@@ -147,6 +148,16 @@ class FunctionSchemaGenerationTest {
                     )
                 ),
                 ToolParameterDescriptor(
+                    name = "nullableNestedObject",
+                    description = "Nested property class",
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
+                            ToolParameterDescriptor(type = nestedObject, name = "", description = ""),
+                        )
+                    )
+                ),
+                ToolParameterDescriptor(
                     name = "listProperty",
                     description = "",
                     type = ToolParameterType.List(ToolParameterType.String),
@@ -252,6 +263,7 @@ class FunctionSchemaGenerationTest {
                 "floatProperty",
                 "booleanNullableProperty",
                 "nullableProperty",
+                "nullableNestedObject",
                 "listProperty",
                 "mapProperty",
                 "nestedProperty",
