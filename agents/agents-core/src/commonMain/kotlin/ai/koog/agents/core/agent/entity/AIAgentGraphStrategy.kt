@@ -117,7 +117,7 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
             data.lastOutput != JSONNull -> setExecutionPointAfterNode(nodePath, data.lastOutput, agentContext)
 
             // Unexpected state, either input (before 0.6.1) or output (since 0.6.1) should be saved in checkpoints:
-            else -> throw IllegalStateException("Unexpected state in checkpoints: lastInput and lastOutput are both null")
+            else -> logger.warn { "Unexpected state in checkpoint: neither input nor output was saved" }
         }
 
         // Restore LLM session
