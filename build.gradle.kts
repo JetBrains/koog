@@ -118,10 +118,9 @@ plugins {
 
 allprojects {
     repositories {
-        maven("https://cache-redirector.jetbrains.com/plugins.gradle.org/m2")
         maven("https://cache-redirector.jetbrains.com/maven-central")
         google()
-        mavenCentral()
+//        mavenCentral()
         // For testing dev versions of dependencies
         mavenLocal()
     }
