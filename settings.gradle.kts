@@ -5,9 +5,9 @@ pluginManagement {
     repositories {
         maven("https://cache-redirector.jetbrains.com/plugins.gradle.org/m2")
         maven("https://cache-redirector.jetbrains.com/maven-central")
-        google()
-        gradlePluginPortal()
         maven(url = "https://packages.jetbrains.team/maven/p/jcs/maven")
+        google()
+//        gradlePluginPortal()
     }
 }
 
