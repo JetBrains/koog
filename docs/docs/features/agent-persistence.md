@@ -14,8 +14,11 @@ It lets you save and restore the state of an agent at specific points during exe
 A checkpoint captures the complete state of an agent at a specific point in its execution, including:
 
 - Message history (all interactions between user, system, assistant, and tools)
-- Current node being executed
-- Input data for the current node
+- Last node that was successfully executed
+- Output data from that node
+- Selected LLM
+- Common LLM parameters
+- Selected tools
 - `AIAgentStorage` contents (key-value data stored during execution)
 - Timestamp of creation
 
