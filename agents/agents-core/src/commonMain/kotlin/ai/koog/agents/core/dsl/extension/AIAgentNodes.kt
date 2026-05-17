@@ -495,7 +495,6 @@ public inline fun <reified T> nodeLLMRequestStructured(
 @Serializable
 public data class ModeratedMessage(val message: Message, val moderationResult: ModerationResult)
 
-
 /**
  * A node that runs content moderation on an incoming [Message] using the LLM.
  *
