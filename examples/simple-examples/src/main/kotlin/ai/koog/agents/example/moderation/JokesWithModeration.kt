@@ -1,10 +1,8 @@
 package ai.koog.agents.example.moderation
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.entity.createStorageKey
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMModerateMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.example.ApiKeyService
@@ -12,7 +10,6 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import kotlinx.coroutines.runBlocking
 
@@ -23,24 +20,8 @@ import kotlinx.coroutines.runBlocking
  * - Implements a mechanism to regenerate jokes until they are deemed non-harmful.
  */
 fun main() = runBlocking {
-    // The new Message API moved moderation node output from "moderated message + result" to just `ModerationResult`.
-    // We use storage to keep the most recently moderated input/joke so transitions can recover the original text.
-    val userMessageKey = createStorageKey<Message.User>("moderation-user-message")
-    val jokeMessageKey = createStorageKey<Message.Assistant>("moderation-joke-message")
-
-    fun Message.Assistant.text(): String =
-        parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
-
     val moderatingStrategy = strategy<String, String>("sage-joke-gen") {
         val callLLM by nodeLLMRequest()
-        val saveUserMessage by node<Message.User, Message> { message ->
-            storage.set(userMessageKey, message)
-            message
-        }
-        val saveJokeMessage by node<Message.Assistant, Message> { message ->
-            storage.set(jokeMessageKey, message)
-            message
-        }
         val moderateInput by nodeLLMModerateMessage(moderatingModel = OpenAIModels.Moderation.Omni)
         val moderateJoke by nodeLLMModerateMessage(
             moderatingModel = OpenAIModels.Moderation.Omni,
@@ -48,51 +29,45 @@ fun main() = runBlocking {
         )
 
         // Moderate user input
-        edge(
-            nodeStart forwardTo saveUserMessage
-                transformed { Message.User(it, metaInfo = RequestMetaInfo.Empty) }
-        )
-        edge(saveUserMessage forwardTo moderateInput)
+        edge(nodeStart forwardTo moderateInput transformed { Message.User(it, metaInfo = RequestMetaInfo.Empty) })
 
         edge(
             moderateInput forwardTo callLLM
-                onCondition { !it.isHarmful }
-                transformed { storage.getValue(userMessageKey) }
+                onCondition { !it.moderationResult.isHarmful }
+                asUserMessage { it.message.textContent() }
         )
 
         edge(
             moderateInput forwardTo nodeFinish
-                onCondition { it.isHarmful }
+                onCondition { it.moderationResult.isHarmful }
                 transformed { "You have requested harmful content. Sorry, I can't generate a joke for you." }
         )
 
         // Moderate every joke
-        edge(callLLM forwardTo saveJokeMessage)
-        edge(saveJokeMessage forwardTo moderateJoke)
+        edge(callLLM forwardTo moderateJoke)
         // Accept good jokes
         edge(
             moderateJoke forwardTo nodeFinish
-                onCondition { !it.isHarmful }
-                transformed { storage.getValue(jokeMessageKey).text() }
+                onCondition { !it.moderationResult.isHarmful }
+                transformed { it.message.textContent() }
         )
         // Give feedback to re-generate joke if it's harmful
         edge(
             moderateJoke forwardTo callLLM
-                onCondition { it.isHarmful }
-                transformed { moderationResult ->
-                    val feedback = markdown {
-                        h1("You must re-generate the joke to make it not harmful")
+                onCondition { it.moderationResult.isHarmful }
+                asUserMessage { moderatedMessage ->
+                markdown {
+                    h1("You must re-generate the joke to make it not harmful")
 
-                        text("The following moderation categories were detected: ")
-                        bulleted {
-                            moderationResult.violatedCategories.forEach { category ->
-                                // Tell specifically what moderation categories were violated
-                                item(category.name)
-                            }
+                    text("The following moderation categories were detected: ")
+                    bulleted {
+                        moderatedMessage.moderationResult.violatedCategories.forEach { category ->
+                            // Tell specifically what moderation categories were violated
+                            item(category.name)
                         }
                     }
-                    Message.User(feedback, metaInfo = RequestMetaInfo.Empty)
                 }
+            }
         )
     }
 

@@ -79,13 +79,13 @@ class MermaidDiagramGeneratorTest {
 
             edge(
                 moderateInput forwardTo nodeCallLLM
-                    onCondition { !it.isHarmful }
+                    onCondition { !it.moderationResult.isHarmful }
                     transformed { Message.User("", metaInfo = RequestMetaInfo.Empty) },
             )
 
             edge(
                 moderateInput forwardTo nodeFinish
-                    onCondition { it.isHarmful }
+                    onCondition { it.moderationResult.isHarmful }
                     transformed { "Moderation Error" },
             )
 
