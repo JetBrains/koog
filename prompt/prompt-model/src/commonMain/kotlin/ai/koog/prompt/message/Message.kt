@@ -41,10 +41,18 @@ public sealed interface Message {
      * @return A single string with the concatenated text content of all `MessagePart.Text` elements,
      *         separated by the specified delimiter.
      */
-    @JvmOverloads
     public fun textContent(
-        separator: String = "\n",
+        separator: String,
     ): String = parts.filterIsInstance<MessagePart.Text>().joinToString(separator = separator) { it.text }
+
+    /**
+     * Extracts and concatenates the textual content from all `MessagePart.Text` elements in the message.
+     * Messages are joined by a newline character ("\n").
+     *
+     * @return A single string with the concatenated text content of all `MessagePart.Text` elements,
+     *         separated by a newline character.
+     */
+    public fun textContent(): String = textContent(separator = "\n")
 
     /**
      * Stores metadata information for the current message instance, such as token count and timestamp.
