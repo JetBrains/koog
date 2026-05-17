@@ -16,6 +16,7 @@ jobs:
 
   deploy-dokka-docs:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     env:
       BRANCH_KOOG_IS_RELEASING_FROM: ${{ github.ref_name }}
     steps:
