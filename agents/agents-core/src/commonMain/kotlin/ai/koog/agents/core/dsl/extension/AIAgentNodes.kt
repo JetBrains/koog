@@ -487,6 +487,16 @@ public inline fun <reified T> nodeLLMRequestStructured(
 // Region Moderate
 
 /**
+ * Represents a message that has undergone moderation and the result of the moderation.
+ *
+ * @property message The original message being moderated.
+ * @property moderationResult The result of the moderation.
+ * */
+@Serializable
+public data class ModeratedMessage(val message: Message, val moderationResult: ModerationResult)
+
+
+/**
  * A node that runs content moderation on an incoming [Message] using the LLM.
  *
  * @param name Optional node name, defaults to delegate's property name.
@@ -500,8 +510,8 @@ public fun nodeLLMModerateMessage(
     name: String? = null,
     moderatingModel: LLModel? = null,
     includeCurrentPrompt: Boolean = false,
-): AIAgentNodeDelegate<Message, ModerationResult> =
-    node<Message, ModerationResult>(name) { message ->
+): AIAgentNodeDelegate<Message, ModeratedMessage> =
+    node<Message, ModeratedMessage>(name) { message ->
         val moderationPrompt = if (includeCurrentPrompt) {
             prompt(llm.prompt) { message(message) }
         } else {
@@ -510,7 +520,7 @@ public fun nodeLLMModerateMessage(
 
         val moderationResult = llm.promptExecutor.moderate(moderationPrompt, moderatingModel ?: llm.model)
 
-        moderationResult
+        ModeratedMessage(message, moderationResult)
     }
 
 // ================
