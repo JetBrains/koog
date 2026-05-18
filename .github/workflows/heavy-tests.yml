@@ -103,7 +103,7 @@ jobs:
           node-version: 20
 
       - name: Install CLI agents globally
-        run: npm install -g @openai/codex @anthropic-ai/claude-code
+        run: npm install -g @openai/codex@0.130.0 @anthropic-ai/claude-code@2.1.140
 
       - name: Build cli-agents Docker image
         if: ${{ matrix.job-name == 'cli-agent-tests (linux)' }}
