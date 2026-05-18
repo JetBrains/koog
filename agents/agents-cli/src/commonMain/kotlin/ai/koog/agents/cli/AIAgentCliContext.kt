@@ -10,7 +10,6 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
-import ai.koog.prompt.message.Message
 
 /**
  * Context for CLI-based AI agents.
@@ -45,9 +44,6 @@ public class AIAgentCliContext(
 
     override fun remove(key: AIAgentStorageKey<*>): Boolean =
         storeMap.remove(key) != null
-
-    override suspend fun getHistory(): List<Message> =
-        llm.prompt.messages
 
     /**
      * Copies the current [AIAgentCliContext] with the specified parameters.

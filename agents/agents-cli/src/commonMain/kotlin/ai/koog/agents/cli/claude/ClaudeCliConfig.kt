@@ -87,7 +87,7 @@ public object ClaudeCliHelper {
 
             systemMessages.forEach { systemMessage ->
                 add("--append-system-prompt")
-                add(systemMessage.content)
+                add(systemMessage.parts.joinToString("\n"))
             }
 
             permissionMode?.let {

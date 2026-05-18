@@ -3,7 +3,7 @@ package ai.koog.integration.tests.agent;
 import ai.koog.agents.cli.CliAIAgent;
 import ai.koog.agents.cli.CliAIAgentResponse;
 import ai.koog.agents.cli.CliAgentStructuredResponse;
-import ai.koog.cli.transport.CliTransport;
+import ai.koog.agents.cli.transport.CliTransport;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.StructuredResults;
 import ai.koog.integration.tests.utils.TestCredentials;

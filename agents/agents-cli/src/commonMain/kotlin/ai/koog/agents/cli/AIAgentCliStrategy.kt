@@ -3,7 +3,6 @@ package ai.koog.agents.cli
 import ai.koog.agents.cli.transport.CliEvent
 import ai.koog.agents.cli.transport.CliNotFoundException
 import ai.koog.agents.cli.transport.CliUnavailable
-import ai.koog.agents.core.agent.context.AIAgentCliContext
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging

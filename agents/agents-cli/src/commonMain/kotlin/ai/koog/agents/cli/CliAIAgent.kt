@@ -37,6 +37,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.Structure
 import ai.koog.prompt.structure.json.JsonStructure
+import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -146,7 +147,7 @@ public class CliAIAgent<Input, Output> internal constructor(
             config = agentConfig,
             llm = initialLLMContext,
             stateManager = AIAgentStateManager(),
-            storage = AIAgentStorage(),
+            storage = AIAgentStorage(KotlinxSerializer()),
             strategyName = strategy.name,
             pipeline = pipeline,
             executionInfo = executionInfo,
@@ -651,7 +652,7 @@ public class CliAIAgent<Input, Output> internal constructor(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
+        ): Message.Assistant {
             throw NotImplementedError("DummyPromptExecutor does not support execution")
         }
 

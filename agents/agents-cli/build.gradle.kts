@@ -35,6 +35,12 @@ kotlin {
                 implementation(libs.kotest.assertions.json)
             }
         }
+
+        jvmTest {
+            dependencies {
+                implementation(kotlin("test-junit5"))
+            }
+        }
     }
 
     explicitApi()

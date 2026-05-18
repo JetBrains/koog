@@ -2,14 +2,14 @@ package ai.koog.integration.tests.agent
 
 import ai.koog.agents.cli.CliAIAgent
 import ai.koog.agents.cli.CliAIAgentResponse
+import ai.koog.agents.cli.asNode
 import ai.koog.agents.cli.codex.CodexSandboxMode
+import ai.koog.agents.cli.transport.CliTransport
+import ai.koog.agents.cli.transport.DockerCliTransport
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.asNode
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.cli.transport.CliTransport
-import ai.koog.cli.transport.DockerCliTransport
 import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.annotations.Retry
