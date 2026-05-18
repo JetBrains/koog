@@ -103,10 +103,10 @@ public abstract class AIAgentLLMWriteSessionCommon internal constructor(
         return SafeTool(tool, environment, clock)
     }
 
-    public fun userMessage(parts: List<MessagePart.RequestPart>): Message.User =
+    internal fun userMessage(parts: List<MessagePart.RequestPart>): Message.User =
         Message.User(parts = parts, metaInfo = RequestMetaInfo.create(clock))
 
-    public fun userMessage(text: String): Message.User =
+    internal fun userMessage(text: String): Message.User =
         Message.User(parts = listOf(MessagePart.Text(text)), metaInfo = RequestMetaInfo.create(clock))
 
     /**

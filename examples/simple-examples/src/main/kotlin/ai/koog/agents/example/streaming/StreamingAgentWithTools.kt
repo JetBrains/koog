@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
@@ -124,7 +123,7 @@ fun streamingWithToolsStrategy() = strategy("streaming_loop") {
     }
     val executeMultipleTools by nodeExecuteTools(parallel = true)
 
-    edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
+    edge(nodeStart forwardTo nodeCallLLM)
     edge(nodeCallLLM forwardTo executeMultipleTools onToolCalls { true })
     edge(executeMultipleTools forwardTo nodeCallLLM)
     edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })

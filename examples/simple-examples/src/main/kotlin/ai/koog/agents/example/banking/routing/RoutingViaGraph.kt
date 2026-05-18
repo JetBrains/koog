@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
@@ -54,7 +53,7 @@ suspend fun main() {
             val callLLM by nodeLLMRequest()
             val callAskUserTool by nodeExecuteTools()
 
-            edge(nodeStart forwardTo requestClassification asUserMessage { it })
+            edge(nodeStart forwardTo requestClassification)
             edge(
                 requestClassification forwardTo nodeFinish
                     onCondition { it.isSuccess }
@@ -63,12 +62,12 @@ suspend fun main() {
             edge(
                 requestClassification forwardTo callLLM
                     onCondition { it.isFailure }
-                    asUserMessage { "Failed to understand the user's intent" }
+                    transformed { "Failed to understand the user's intent" }
             )
             edge(callLLM forwardTo callAskUserTool onToolCalls { true })
             edge(
                 callLLM forwardTo callLLM onTextMessage { true }
-                    asUserMessage { "Please call `${AskUser.name}` tool instead of chatting" }
+                    transformed { "Please call `${AskUser.name}` tool instead of chatting" }
             )
             edge(callAskUserTool forwardTo requestClassification)
         }

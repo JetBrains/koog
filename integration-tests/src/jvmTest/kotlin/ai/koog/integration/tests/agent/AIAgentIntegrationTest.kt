@@ -16,8 +16,7 @@ import ai.koog.agents.core.dsl.extension.Concept
 import ai.koog.agents.core.dsl.extension.FactType
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.ReceivedToolResults
-import ai.koog.agents.core.dsl.extension.asUserMessage
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
@@ -226,7 +225,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         compressBeforeToolResult: Boolean,
     ) = strategy<String, Pair<String, List<Message>>>("history-compression-with-tools-test") {
         val callLLM by nodeLLMRequest(name = "callLLM")
-        val executeTool by nodeExecuteToolsAndGetResults("execute_tool")
+        val executeTool by nodeExecuteTools("execute_tool")
         val compressResponse by nodeLLMCompressHistory<Message.Assistant>(
             name = "compress_history",
             strategy = strategy
@@ -237,7 +236,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         )
         val sendToolResult by nodeLLMSendToolResults("send_tool_result")
 
-        edge(nodeStart forwardTo callLLM asUserMessage { it })
+        edge(nodeStart forwardTo callLLM)
         if (compressBeforeToolResult) {
             edge(callLLM forwardTo executeTool onToolCalls { true })
             executeTool then compressToolResult then sendToolResult
@@ -464,7 +463,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         val customStrategy = strategy("test-without-tools") {
             val callLLM by nodeLLMRequestWithoutTools(name = "callLLM")
-            edge(nodeStart forwardTo callLLM asUserMessage { it })
+            edge(nodeStart forwardTo callLLM)
             edge(callLLM forwardTo nodeFinish onTextMessage { true })
         }
 
@@ -1336,7 +1335,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                         strategy = strategy
                     )
 
-                    edge(nodeStart forwardTo callLLM asUserMessage { it })
+                    edge(nodeStart forwardTo callLLM)
                     edge(callLLM forwardTo nodeCompressHistory onTextMessage { true })
                     edge(nodeCompressHistory forwardTo nodeFinish transformed { it to llm.prompt.messages })
                 }

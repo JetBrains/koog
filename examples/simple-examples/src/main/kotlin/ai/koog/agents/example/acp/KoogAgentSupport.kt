@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTool
@@ -127,7 +126,7 @@ class KoogAgentSession(
         }
 
         edge(nodeStart forwardTo nodePlanPrompt)
-        edge(nodePlanPrompt forwardTo nodeCreatePlan asUserMessage { it })
+        edge(nodePlanPrompt forwardTo nodeCreatePlan)
         edge(nodeCreatePlan forwardTo nodeSendPlan onCondition { it.isSuccess } transformed { it.getOrThrow().data })
         edge(nodeSendPlan forwardTo executePlan)
         edge(executePlan forwardTo nodeFinish)

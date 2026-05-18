@@ -5,10 +5,8 @@ import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.ToolCalls
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeAppendPrompt
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
 import ai.koog.agents.core.feature.model.AIAgentError
@@ -91,9 +89,9 @@ class TraceFeatureMessageTestWriterTest {
             val llmRequest1 by nodeLLMRequestWithoutTools("LLM Request 2")
 
             edge(nodeStart forwardTo setPrompt)
-            edge(setPrompt forwardTo llmRequest0 asUserMessage { it })
+            edge(setPrompt forwardTo llmRequest0)
             edge(llmRequest0 forwardTo appendPrompt transformed { _ -> "" })
-            edge(appendPrompt forwardTo llmRequest1 asUserMessage { "" })
+            edge(appendPrompt forwardTo llmRequest1 transformed { "" })
             edge(
                 llmRequest1 forwardTo nodeFinish transformed { input ->
                     input.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
@@ -137,7 +135,7 @@ class TraceFeatureMessageTestWriterTest {
         val toolName = "there is no tool with this name"
         val rawToolArgs = "{}"
         val strategy = strategy<String, String>("tracing-tool-call-test") {
-            val callTool by nodeExecuteToolsAndGetResults("Tool call")
+            val callTool by nodeExecuteTools("Tool call")
             edge(
                 nodeStart forwardTo callTool transformed { _ ->
                     ToolCalls(
@@ -179,7 +177,7 @@ class TraceFeatureMessageTestWriterTest {
     @Test
     fun `test existing tool call`() = runBlocking {
         val strategy = strategy<String, String>("tracing-tool-call-test") {
-            val callTool by nodeExecuteToolsAndGetResults("Tool call")
+            val callTool by nodeExecuteTools("Tool call")
             edge(
                 nodeStart forwardTo callTool transformed { _ ->
                     ToolCalls(
@@ -218,7 +216,7 @@ class TraceFeatureMessageTestWriterTest {
     @Test
     fun `test recursive tool call`() = runBlocking {
         val strategy = strategy<String, String>("recursive-tool-call-test") {
-            val callTool by nodeExecuteToolsAndGetResults("Tool call")
+            val callTool by nodeExecuteTools("Tool call")
             edge(
                 nodeStart forwardTo callTool transformed { _ ->
                     ToolCalls(
@@ -260,7 +258,7 @@ class TraceFeatureMessageTestWriterTest {
         val dummyTool = DummyTool()
 
         val strategy = strategy<String, String>("llm-tool-call-test") {
-            val callTool by nodeExecuteToolsAndGetResults("Tool call")
+            val callTool by nodeExecuteTools("Tool call")
             edge(
                 nodeStart forwardTo callTool transformed { _ ->
                     ToolCalls(
@@ -382,7 +380,7 @@ class TraceFeatureMessageTestWriterTest {
         val strategy = strategy<String, String>(strategyName) {
             val streamAndCollect by nodeLLMRequestStreaming(nodeLLMRequestStreamingName)
 
-            edge(nodeStart forwardTo streamAndCollect asUserMessage { it })
+            edge(nodeStart forwardTo streamAndCollect)
             edge(streamAndCollect forwardTo nodeFinish transformed { it.collectText() })
         }
 
@@ -499,7 +497,7 @@ class TraceFeatureMessageTestWriterTest {
         val strategy = strategy<String, String>(strategyName) {
             val streamAndCollect by nodeLLMRequestStreaming(nodeStreamingFailedName)
 
-            edge(nodeStart forwardTo streamAndCollect asUserMessage { it })
+            edge(nodeStart forwardTo streamAndCollect)
             edge(streamAndCollect forwardTo nodeFinish transformed { it.collectText() })
         }
 

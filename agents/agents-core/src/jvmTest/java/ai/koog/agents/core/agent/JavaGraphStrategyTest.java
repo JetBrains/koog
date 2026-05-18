@@ -61,9 +61,6 @@ public class JavaGraphStrategyTest {
                 graph.edge(AIAgentEdge.builder()
                     .from(graph.nodeStart)
                     .to(llmNode)
-                    .asUserMessage(input -> {
-                        return input;
-                    })
                     .build()
                 );
                 graph.edge(AIAgentEdge.builder()

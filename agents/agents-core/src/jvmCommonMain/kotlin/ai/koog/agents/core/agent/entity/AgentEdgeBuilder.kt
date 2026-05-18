@@ -268,21 +268,6 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     )
 
     /**
-     * Creates an edge that transforms an intermediate output into a [Message.User] using the provided transform.
-     *
-     * @param transformation A function that converts the intermediate output to a String for the user message.
-     */
-    @JvmOverloads
-    public fun asUserMessage(
-        transformation: SimpleTransformation<IntermediateOutput, String> = { it.toString() }
-    ): FullAgentEdgeBuilder<IncomingOutput, Message.User, OutgoingInput> =
-        transformed<Message.User> { output, ctx ->
-            ctx.llm.writeSession { session ->
-                session.userMessage(transformation.invoke(output))
-            }
-        }
-
-    /**
      * Filters the intermediate output to only [Message] instances that contain parts of type [T],
      * and transforms the output to a list of those parts.
      *
@@ -294,6 +279,32 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     ): FullAgentEdgeBuilder<IncomingOutput, List<T>, OutgoingInput> =
         onCondition { it is Message && (it as Message).parts.any { part -> clazz.isInstance(part) } }
             .transformed<List<T>> { (it as Message).parts.filter { part -> clazz.isInstance(part) }.map { part -> clazz.cast(part) } }
+
+    /**
+     * Transforms the intermediate output of the edge by applying the given action.
+     * This is an alias for [transformed] providing naming consistency with the node builder API.
+     *
+     * @param action A contextual transformation function that takes an intermediate output
+     *               and an AI agent graph context as input, and produces a compatible output.
+     * @return A builder instance configured to handle the transformed outputs.
+     */
+    @JavaAPI
+    public fun <NewOutput : OutgoingInput> withAction(
+        action: ContextualTransformation<IntermediateOutput, NewOutput>
+    ): CompatibleFullAgentEdgeBuilder<IncomingOutput, NewOutput, OutgoingInput> = transformed(action)
+
+    /**
+     * Transforms the intermediate output of the edge by applying the given action.
+     * This is an alias for [transformed] providing naming consistency with the node builder API.
+     *
+     * @param action A simple transformation function that takes an intermediate output
+     *               and produces a compatible output.
+     * @return A builder instance configured to handle the transformed outputs.
+     */
+    @JavaAPI
+    public fun <NewOutput : OutgoingInput> withAction(
+        action: SimpleTransformation<IntermediateOutput, NewOutput>
+    ): CompatibleFullAgentEdgeBuilder<IncomingOutput, NewOutput, OutgoingInput> = transformed(action)
 
     /**
      * Creates an edge that extracts text content from message parts.

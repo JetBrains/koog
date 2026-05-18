@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
 import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.ext.agent.subgraphWithTask
@@ -87,7 +86,7 @@ fun main() {
                 }
 
                 edge(
-                    nodeStart forwardTo nodePlanIngredients asUserMessage { input ->
+                    nodeStart forwardTo nodePlanIngredients transformed { input ->
                         "Create detailed plan for $input" +
                             "unsing next tools: ${toolRegistry.tools.joinToString("\n") {
                                 it.name + "\ndescription:" + it.descriptor

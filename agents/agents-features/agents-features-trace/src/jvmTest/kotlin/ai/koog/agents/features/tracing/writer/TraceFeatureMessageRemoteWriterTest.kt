@@ -3,8 +3,7 @@ package ai.koog.agents.features.tracing.writer
 import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.FINISH_NODE_PREFIX
 import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.START_NODE_PREFIX
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.onTextMessage
@@ -130,8 +129,8 @@ class TraceFeatureMessageRemoteWriterTest {
                     val llmCallNode by nodeLLMRequest("test LLM call")
                     val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
-                    edge(nodeStart forwardTo llmCallNode asUserMessage { "Test LLM call prompt" })
-                    edge(llmCallNode forwardTo llmCallWithToolsNode asUserMessage { "Test LLM call with tools prompt" })
+                    edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
+                    edge(llmCallNode forwardTo llmCallWithToolsNode transformed { "Test LLM call with tools prompt" })
                     edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                 }
 
@@ -236,10 +235,10 @@ class TraceFeatureMessageRemoteWriterTest {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
                 val strategy = strategy(strategyName) {
                     val nodeSendInput by nodeLLMRequest("test-llm-call")
-                    val nodeExecuteTool by nodeExecuteToolsAndGetResults("test-tool-call")
+                    val nodeExecuteTool by nodeExecuteTools("test-tool-call")
                     val nodeSendToolResult by nodeLLMSendToolResults("test-node-llm-send-tool-result")
 
-                    edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+                    edge(nodeStart forwardTo nodeSendInput)
                     edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
                     edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
                     edge(nodeExecuteTool forwardTo nodeSendToolResult)
@@ -630,9 +629,9 @@ class TraceFeatureMessageRemoteWriterTest {
                         val llmCallNode by nodeLLMRequest("test LLM call")
                         val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
-                        edge(nodeStart forwardTo llmCallNode asUserMessage { "Test LLM call prompt" })
+                        edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
                         edge(
-                            llmCallNode forwardTo llmCallWithToolsNode asUserMessage {
+                            llmCallNode forwardTo llmCallWithToolsNode transformed {
                                 "Test LLM call with tools prompt"
                             }
                         )
@@ -773,10 +772,10 @@ class TraceFeatureMessageRemoteWriterTest {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
                 val strategy = strategy(strategyName) {
                     val nodeSendInput by nodeLLMRequest(nodeSendInputName)
-                    val nodeExecuteTool by nodeExecuteToolsAndGetResults(nodeExecuteToolName)
+                    val nodeExecuteTool by nodeExecuteTools(nodeExecuteToolName)
                     val nodeSendToolResult by nodeLLMSendToolResults(nodeSendToolResultName)
 
-                    edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+                    edge(nodeStart forwardTo nodeSendInput)
                     edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
                     edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
                     edge(nodeExecuteTool forwardTo nodeSendToolResult)

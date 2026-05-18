@@ -7,7 +7,6 @@ import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.features.opentelemetry.AgentType
@@ -345,14 +344,14 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
             val subgraph by subgraph<String, String>(subgraphName) {
                 val nodeSubgraphLLMCall by nodeLLMRequest(subgraphLLMCallNodeName)
 
-                edge(nodeStart forwardTo nodeSubgraphLLMCall asUserMessage { it })
+                edge(nodeStart forwardTo nodeSubgraphLLMCall)
                 edge(nodeSubgraphLLMCall forwardTo nodeFinish onTextMessage { true })
             }
 
             val nodeLLMCall by nodeLLMRequest(rootNodeCallLLMName)
 
             edge(nodeStart forwardTo subgraph)
-            edge(subgraph forwardTo nodeLLMCall asUserMessage { it })
+            edge(subgraph forwardTo nodeLLMCall)
             edge(nodeLLMCall forwardTo nodeFinish onTextMessage { true })
         }
 
@@ -455,7 +454,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         val strategy = strategy<String, String>("test-strategy") {
             val nodeLLMCall by nodeLLMRequest(nodeLLMCallName)
 
-            edge(nodeStart forwardTo nodeLLMCall asUserMessage { it })
+            edge(nodeStart forwardTo nodeLLMCall)
             edge(nodeLLMCall forwardTo nodeFinish onTextMessage { true })
         }
 

@@ -30,18 +30,6 @@ public inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reif
 }
 
 /**
- * Creates an edge that transforms an intermediate output into a [Message.User] using the provided transform.
- *
- * @param transform A function that converts the intermediate output to a String for the user message.
- */
-@EdgeTransformationDslMarker
-public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.asUserMessage(
-    transform: suspend (IntermediateOutput) -> String
-): AIAgentEdgeBuilderIntermediate<IncomingOutput, Message.User, OutgoingInput> {
-    return transformed { llm.writeSession { userMessage(transform(it)) } }
-}
-
-/**
  * Creates an edge that filters outputs based on their MessagePart subtype.
  *
  * @param klass The MessagePart subclass to filter against

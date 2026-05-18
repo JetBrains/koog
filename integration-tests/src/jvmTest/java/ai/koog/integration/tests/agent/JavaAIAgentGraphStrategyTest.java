@@ -1,18 +1,15 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
-import ai.koog.agents.core.agent.context.RollbackStrategy;
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase;
-import ai.koog.agents.core.agent.entity.AIAgentEdge;
-import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
-import ai.koog.agents.core.agent.entity.AIAgentNode;
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
-import ai.koog.agents.core.agent.entity.CompressHistoryNodeBuilder;
-import ai.koog.agents.core.tools.Tool;
+import ai.koog.agents.core.agent.context.RollbackStrategy;
+import ai.koog.agents.core.agent.entity.*;
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
+import ai.koog.agents.core.tools.Tool;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.core.tools.annotations.LLMDescription;
 import ai.koog.agents.core.tools.reflect.ToolSet;
+import ai.koog.agents.ext.agent.CriticResult;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
 import ai.koog.agents.snapshot.feature.AgentCheckpointData;
 import ai.koog.agents.snapshot.feature.Persistence;
@@ -23,19 +20,17 @@ import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.integration.tests.utils.annotations.Retry;
-import ai.koog.agents.ext.agent.CriticResult;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.llm.LLMCapability;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
-import ai.koog.prompt.message.MessagePart;
 import ai.koog.prompt.message.RequestMetaInfo;
 import ai.koog.prompt.message.ResponseMetaInfo;
+import ai.koog.serialization.JSONElementKt;
 import ai.koog.serialization.JSONPrimitive;
 import ai.koog.serialization.TypeToken;
-import ai.koog.serialization.JSONElementKt;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,7 +44,6 @@ import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static ai.koog.utils.concurrency.ReentrantCoroutineUtilsKt.runBlockingReentrant;
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,28 +63,18 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             .withInput(String.class)
             .withOutput(String.class);
 
-        var preprocess = AIAgentNode.builder("preprocess")
-            .withInput(String.class)
-            .withOutput(Message.User.class)
-            .withAction((input, ctx) -> new Message.User(
-                "Reply with the single word hello to: " + input,
-                new RequestMetaInfo(kotlin.time.Clock.System.INSTANCE.now(), null)
-            ))
-            .build();
-
         var llm = AIAgentNode.llmRequest("llm");
-        var extractContent = AIAgentNode.builder("extract-content")
-            .withInput(Message.Assistant.class)
-            .withOutput(String.class)
-            .withAction((response, ctx) -> assistantContent(response, ""))
-            .build();
 
-        strategy.edge(strategy.nodeStart, preprocess);
-        strategy.edge(preprocess, llm);
-        strategy.edge(llm, extractContent);
         strategy.edge(AIAgentEdge.builder()
-            .from(extractContent)
+            .from(strategy.nodeStart)
+            .to(llm)
+            .withAction((input, ctx) -> "Reply with the single word hello to: " + input)
+            .build());
+
+        strategy.edge(AIAgentEdge.builder()
+            .from(llm)
             .to(strategy.nodeFinish)
+            .onTextMessage()
             .build());
 
         AIAgent<String, String> agent = AIAgent.builder()
@@ -111,12 +95,12 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             () -> assertFalse(result.isBlank(), "Graph result should not be blank"),
             () -> assertTrue(containsIgnoreCase(result, "hello"), "Graph result should contain the expected hello reply, but was: " + result),
             () -> assertEquals(
-                List.of("preprocess", "llm", "extract-content"),
+                List.of("llm"),
                 withoutGraphBoundaryNodes(events.nodeNames),
                 "Expected node execution order for typed-node graph"
             ),
             () -> assertEquals(
-                List.of("preprocess", "llm", "extract-content"),
+                List.of("llm"),
                 withoutGraphBoundaryNodes(events.completedNodeNames),
                 "Expected node completion order for typed-node graph"
             )
@@ -348,36 +332,26 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             .withInput(String.class)
             .withOutput(String.class);
 
-        var wrapAsUserFirst = toUserMessageNode("wrap-as-user-first");
         var firstLlm = AIAgentNode.llmRequest("first-llm");
-        var extractFirstResponse = AIAgentNode.builder("extract-first-response")
-            .withInput(Message.Assistant.class)
-            .withOutput(String.class)
-            .withAction((response, ctx) -> assistantContent(response, "No response"))
-            .build();
         var compress = new CompressHistoryNodeBuilder("compress")
             .withInput(String.class)
             .compressionStrategy(HistoryCompressionStrategy.WholeHistory)
             .preserveMemory(true)
             .build();
-        var wrapAsUserFinal = toUserMessageNode("wrap-as-user-final");
         var finalLlm = AIAgentNode.llmRequest("final-llm");
-        var extractFinalResponse = AIAgentNode.builder("extract-final-response")
-            .withInput(Message.Assistant.class)
-            .withOutput(String.class)
-            .withAction((response, ctx) -> assistantContent(response, ""))
-            .build();
 
-        strategy.edge(strategy.nodeStart, wrapAsUserFirst);
-        strategy.edge(wrapAsUserFirst, firstLlm);
-        strategy.edge(firstLlm, extractFirstResponse);
-        strategy.edge(extractFirstResponse, compress);
-        strategy.edge(compress, wrapAsUserFinal);
-        strategy.edge(wrapAsUserFinal, finalLlm);
-        strategy.edge(finalLlm, extractFinalResponse);
+        strategy.edge(strategy.nodeStart, firstLlm);
         strategy.edge(AIAgentEdge.builder()
-            .from(extractFinalResponse)
+            .from(firstLlm)
+            .to(compress)
+            .onTextMessage()
+            .build());
+
+        strategy.edge(compress, finalLlm);
+        strategy.edge(AIAgentEdge.builder()
+            .from(finalLlm)
             .to(strategy.nodeFinish)
+            .onTextMessage()
             .build());
 
         AIAgent<String, String> agent = AIAgent.builder()
@@ -824,25 +798,6 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         return nodeNames.stream()
             .filter(nodeName -> !"__start__".equals(nodeName) && !"__finish__".equals(nodeName))
             .toList();
-    }
-
-    private static String assistantContent(Message.Assistant response, String fallback) {
-        String text = response.getParts().stream()
-            .filter(p -> p instanceof MessagePart.Text)
-            .map(p -> ((MessagePart.Text) p).getText())
-            .collect(Collectors.joining("\n"));
-        return text.isEmpty() ? fallback : text;
-    }
-
-    private static AIAgentNode<String, Message.User> toUserMessageNode(String name) {
-        return AIAgentNode.builder(name)
-            .withInput(String.class)
-            .withOutput(Message.User.class)
-            .withAction((input, ctx) -> new Message.User(
-                input,
-                new RequestMetaInfo(kotlin.time.Clock.System.INSTANCE.now(), null)
-            ))
-            .build();
     }
 
     private static boolean containsIgnoreCase(String text, String expected) {

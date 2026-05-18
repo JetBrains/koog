@@ -326,7 +326,6 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
     import ai.koog.agents.core.dsl.extension.nodeDoNothing
-    import ai.koog.agents.core.dsl.extension.asUserMessage
     val strategy = strategy<String, String>("strategy_name") {
         val getUserQuestion by nodeDoNothing<String>()
     -->
@@ -335,7 +334,7 @@ Here is an example:
     -->
     ```kotlin
     val requestLLM by nodeLLMRequest("requestLLM")
-    edge(getUserQuestion forwardTo requestLLM asUserMessage { it })
+    edge(getUserQuestion forwardTo requestLLM)
     ```
     <!--- KNIT example-nodes-and-component-04.kt -->
 
@@ -366,7 +365,6 @@ Here is an example:
     strategy.edge(AIAgentEdge.builder()
         .from(getUserQuestion)
         .to(requestLLM)
-        .asUserMessage(s -> s)
         .build());
     ```
     <!--- KNIT exampleNodesAndComponentsJava04.java -->
@@ -444,7 +442,6 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
     import ai.koog.agents.core.dsl.extension.nodeDoNothing
-    import ai.koog.agents.core.dsl.extension.asUserMessage
     val strategy = strategy<String, String>("strategy_name") {
         val getComplexUserQuestion by nodeDoNothing<String>()
     -->
@@ -453,7 +450,7 @@ Here is an example:
     -->
     ```kotlin
     val requestLLMMultipleTools by nodeLLMRequest()
-    edge(getComplexUserQuestion forwardTo requestLLMMultipleTools asUserMessage { it })
+    edge(getComplexUserQuestion forwardTo requestLLMMultipleTools)
     ```
     <!--- KNIT example-nodes-and-component-05.kt -->
 
@@ -484,7 +481,6 @@ Here is an example:
     strategy.edge(AIAgentEdge.builder()
         .from(getComplexUserQuestion)
         .to(requestLLMMultipleTools)
-        .asUserMessage(s -> s)
         .build());
     ```
     <!--- KNIT exampleNodesAndComponentsJava05.java -->
@@ -607,7 +603,7 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
-    import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTools
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
     import ai.koog.agents.core.dsl.extension.onToolCalls
     val strategy = strategy<String, String>("strategy_name") {
@@ -617,7 +613,7 @@ Here is an example:
     -->
     ```kotlin
     val requestLLM by nodeLLMRequest()
-    val executeTool by nodeExecuteToolsAndGetResults()
+    val executeTool by nodeExecuteTools()
     edge(requestLLM forwardTo executeTool onToolCalls { true })
     ```
     <!--- KNIT example-nodes-and-component-07.kt -->
@@ -647,7 +643,7 @@ Here is an example:
     strategy.edge(AIAgentEdge.builder()
         .from(requestLLM)
         .to(executeTool)
-        .onToolCalls(call -> true)
+        .onToolCalls()
         .build());
     ```
     <!--- KNIT exampleNodesAndComponentsJava07.java -->
@@ -685,7 +681,7 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
-    import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTools
     import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
     val strategy = strategy<String, String>("strategy_name") {
     -->
@@ -693,7 +689,7 @@ Here is an example:
     }
     -->
     ```kotlin
-    val executeTool by nodeExecuteToolsAndGetResults()
+    val executeTool by nodeExecuteTools()
     val sendToolResultToLLM by nodeLLMSendToolResults()
     edge(executeTool forwardTo sendToolResultToLLM)
     ```
@@ -716,7 +712,7 @@ Here is an example:
     -->
     ```java
     var executeTool = AIAgentNode.executeTools("executeTool");
-    var sendToolResultToLLM = AIAgentNode.llmRequest("sendToolResultToLLM");
+    var sendToolResultToLLM = AIAgentNode.llmSendToolResults("sendToolResultToLLM");
 
     strategy.edge(executeTool, sendToolResultToLLM);
     ```
@@ -756,7 +752,7 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-    import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTools
     import ai.koog.agents.core.dsl.extension.onToolCalls
     val strategy = strategy<String, String>("strategy_name") {
     -->
@@ -765,7 +761,7 @@ Here is an example:
     -->
     ```kotlin
     val requestLLMMultipleTools by nodeLLMRequest()
-    val executeMultipleTools by nodeExecuteToolsAndGetResults(parallel = true)
+    val executeMultipleTools by nodeExecuteTools(parallel = true)
     edge(requestLLMMultipleTools forwardTo executeMultipleTools onToolCalls { true })
     ```
     <!--- KNIT example-nodes-and-component-09.kt -->
@@ -796,7 +792,7 @@ Here is an example:
     strategy.edge(AIAgentEdge.builder()
         .from(requestLLMMultipleTools)
         .to(executeMultipleTools)
-        .onToolCalls(call -> true)
+        .onToolCalls()
         .build());
     ```
     <!--- KNIT exampleNodesAndComponentsJava09.java -->
@@ -835,16 +831,16 @@ Here is an example:
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
-    import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTools
     val strategy = strategy<String, String>("strategy_name") {
     -->
     <!--- SUFFIX
     }
     -->
     ```kotlin
-    val executeMultipleTools by nodeExecuteToolsAndGetResults(parallel = true)
-    val sendMultipleToolResultsToLLM by nodeLLMSendToolResults()
-    edge(executeMultipleTools forwardTo sendMultipleToolResultsToLLM)
+    val executeTools by nodeExecuteTools(parallel = true)
+    val sendToolResultsToLLM by nodeLLMSendToolResults()
+    edge(executeTools forwardTo sendToolResultsToLLM)
     ```
     <!--- KNIT example-nodes-and-component-10.kt -->
 
@@ -865,10 +861,10 @@ Here is an example:
     }
     -->
     ```java
-    var executeMultipleTools = AIAgentNode.executeTools("executeMultipleTools");
-    var sendMultipleToolResultsToLLM = AIAgentNode.llmRequest("sendMultipleToolResultsToLLM");
+    var executeTools = AIAgentNode.executeTools("executeTools");
+    var sendToolResultsToLLM = AIAgentNode.llmSendToolResults("sendToolResultsToLLM");
 
-    strategy.edge(executeMultipleTools, sendMultipleToolResultsToLLM);
+    strategy.edge(executeTools, sendToolResultsToLLM);
     ```
     <!--- KNIT exampleNodesAndComponentsJava10.java -->
 
@@ -999,7 +995,6 @@ Transform the output of built-in nodes like `nodeLLMRequest` (Kotlin) or `AIAgen
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-    import ai.koog.agents.core.dsl.extension.asUserMessage
     import ai.koog.prompt.message.MessagePart
     val strategy = strategy<String, Int>("strategy_name") {
     -->
@@ -1011,7 +1006,7 @@ Transform the output of built-in nodes like `nodeLLMRequest` (Kotlin) or `AIAgen
         assistantMessage.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }.length
     }
 
-    edge(nodeStart forwardTo lengthNode asUserMessage { it })
+    edge(nodeStart forwardTo lengthNode)
     edge(lengthNode forwardTo nodeFinish)
     ```
     <!--- KNIT example-nodes-and-component-13.kt -->
@@ -1052,7 +1047,6 @@ Transform the output of built-in nodes like `nodeLLMRequest` (Kotlin) or `AIAgen
     strategy.edge(AIAgentEdge.builder()
         .from(strategy.nodeStart)
         .to(llmRequest)
-        .asUserMessage(s -> s)
         .build());
     strategy.edge(llmRequest, lengthNode);
     strategy.edge(lengthNode, strategy.nodeFinish);
@@ -1272,10 +1266,10 @@ You can use this strategy when you need to run straightforward processes that do
     ```kotlin
     public fun singleRunStrategy(): AIAgentGraphStrategy<String, String> = strategy("single_run") {
         val nodeCallLLM by nodeLLMRequest("sendInput")
-        val nodeExecuteTool by nodeExecuteToolsAndGetResults("nodeExecuteTool")
+        val nodeExecuteTool by nodeExecuteTools("nodeExecuteTool")
         val nodeSendToolResult by nodeLLMSendToolResults("nodeSendToolResult")
 
-        edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
+        edge(nodeStart forwardTo nodeCallLLM)
         edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
         edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
         edge(nodeExecuteTool forwardTo nodeSendToolResult)
@@ -1309,18 +1303,17 @@ You can use this strategy when you need to run straightforward processes that do
 
         var nodeCallLLM = AIAgentNode.llmRequest("sendInput");
         var nodeExecuteTool = AIAgentNode.executeTools("nodeExecuteTool");
-        var nodeSendToolResult = AIAgentNode.llmRequest("nodeSendToolResult");
+        var nodeSendToolResult = AIAgentNode.llmSendToolResults("nodeSendToolResult");
 
         strategy.edge(AIAgentEdge.builder()
             .from(strategy.nodeStart)
             .to(nodeCallLLM)
-            .asUserMessage(input -> input)
             .build());
 
         strategy.edge(AIAgentEdge.builder()
             .from(nodeCallLLM)
             .to(nodeExecuteTool)
-            .onToolCalls(call -> true)
+            .onToolCalls()
             .build());
 
         strategy.edge(AIAgentEdge.builder()
@@ -1340,7 +1333,7 @@ You can use this strategy when you need to run straightforward processes that do
         strategy.edge(AIAgentEdge.builder()
             .from(nodeSendToolResult)
             .to(nodeExecuteTool)
-            .onToolCalls(call -> true)
+            .onToolCalls()
             .build());
 
         return strategy.build();
@@ -1367,11 +1360,11 @@ It typically executes tools based on the LLM decisions and processes the results
     fun toolBasedStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy<String, String> {
         return strategy(name) {
             val nodeSendInput by nodeLLMRequest()
-            val nodeExecuteTool by nodeExecuteToolsAndGetResults()
+            val nodeExecuteTool by nodeExecuteTools()
             val nodeSendToolResult by nodeLLMSendToolResults()
 
             // Define the flow of the agent
-            edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+            edge(nodeStart forwardTo nodeSendInput)
 
             // If the LLM responds with a message, finish
             edge(
@@ -1429,13 +1422,12 @@ It typically executes tools based on the LLM decisions and processes the results
 
         var nodeSendInput = AIAgentNode.llmRequest("nodeSendInput");
         var nodeExecuteTool = AIAgentNode.executeTools("nodeExecuteTool");
-        var nodeSendToolResult = AIAgentNode.llmRequest("nodeSendToolResult");
+        var nodeSendToolResult = AIAgentNode.llmSendToolResults("nodeSendToolResult");
 
         // Define the flow of the agent
         strategy.edge(AIAgentEdge.builder()
             .from(strategy.nodeStart)
             .to(nodeSendInput)
-            .asUserMessage(input -> input)
             .build());
 
         // If the LLM responds with a message, finish
@@ -1459,7 +1451,7 @@ It typically executes tools based on the LLM decisions and processes the results
         strategy.edge(AIAgentEdge.builder()
             .from(nodeSendToolResult)
             .to(nodeExecuteTool)
-            .onToolCalls(call -> true)
+            .onToolCalls()
             .build());
 
         // If the LLM responds with a message, finish

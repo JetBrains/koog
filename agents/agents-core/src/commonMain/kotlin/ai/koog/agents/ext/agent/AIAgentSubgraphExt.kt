@@ -13,7 +13,7 @@ import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.ReceivedToolResults
 import ai.koog.agents.core.dsl.extension.ToolCalls
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithUserText
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
@@ -682,7 +682,7 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
     // Helper node to overcome problems of the current api and repeat less code when writing routing conditions
     val nodeDecide by node<Message.Assistant, Message.Assistant> { it }
 
-    val nodeCallLLM by nodeLLMRequestWithUserText()
+    val nodeCallLLM by nodeLLMRequest()
 
     val callToolsHacked by node<ToolCalls, ReceivedToolResults> { message ->
         val (finishToolCalls, regularToolCalls) = message.toolCalls.partition { it.tool == finishTool.name }

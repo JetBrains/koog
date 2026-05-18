@@ -2,7 +2,6 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
@@ -31,11 +30,16 @@ class AIAgentGenericTypesTest {
 
         val customStrategy = strategy<CustomInput, CustomOutput>("custom-strategy") {
             val processInput = { input: CustomInput -> input.query }
-            val processOutput = { output: Message.Assistant -> CustomOutput(result = output.parts.filterIsInstance<MessagePart.Text>().first().text, confidence = 0.95) }
+            val processOutput = { output: Message.Assistant ->
+                CustomOutput(
+                    result = output.parts.filterIsInstance<MessagePart.Text>().first().text,
+                    confidence = 0.95
+                )
+            }
 
             val callLLM by nodeLLMRequest()
 
-            edge(nodeStart forwardTo callLLM asUserMessage { input -> processInput(input) })
+            edge(nodeStart forwardTo callLLM transformed { processInput(it) })
             edge(callLLM forwardTo nodeFinish transformed { output -> processOutput(output) })
         }
 
@@ -69,7 +73,7 @@ class AIAgentGenericTypesTest {
 
             val callLLM by nodeLLMRequest()
 
-            edge(nodeStart forwardTo callLLM asUserMessage { input -> convertToString(input) })
+            edge(nodeStart forwardTo callLLM transformed { convertToString(it) })
             edge(callLLM forwardTo nodeFinish transformed { output -> parseResponse(output) })
         }
 

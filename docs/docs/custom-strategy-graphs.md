@@ -303,8 +303,7 @@ Here is an example of a basic strategy graph:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
     import ai.koog.agents.core.dsl.builder.subgraph
-    import ai.koog.agents.core.dsl.extension.asUserMessage
-    import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTools
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
     import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
     import ai.koog.agents.core.dsl.extension.onTextMessage
@@ -313,10 +312,10 @@ Here is an example of a basic strategy graph:
     ```kotlin
     val myStrategy = strategy<String, String>("my-strategy") {
         val nodeCallLLM by nodeLLMRequest()
-        val executeToolCall by nodeExecuteToolsAndGetResults()
+        val executeToolCall by nodeExecuteTools()
         val sendToolResult by nodeLLMSendToolResults()
     
-        edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
+        edge(nodeStart forwardTo nodeCallLLM)
         edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
         edge(nodeCallLLM forwardTo executeToolCall onToolCalls { true })
         edge(executeToolCall forwardTo sendToolResult)
@@ -349,18 +348,17 @@ Here is an example of a basic strategy graph:
 
     var nodeCallLLM = AIAgentNode.llmRequest("sendInput");
     var nodeExecuteTool = AIAgentNode.executeTools("nodeExecuteTool");
-    var nodeSendToolResult = AIAgentNode.llmRequest("nodeSendToolResult");
+    var nodeSendToolResult = AIAgentNode.llmSendToolResults("nodeSendToolResult");
 
     graph.edge(AIAgentEdge.builder()
         .from(graph.nodeStart)
         .to(nodeCallLLM)
-        .asUserMessage(input -> input)
         .build());
 
     graph.edge(AIAgentEdge.builder()
         .from(nodeCallLLM)
         .to(nodeExecuteTool)
-        .onToolCalls(call -> true)
+        .onToolCalls()
         .build());
 
     graph.edge(AIAgentEdge.builder()
@@ -380,7 +378,7 @@ Here is an example of a basic strategy graph:
     graph.edge(AIAgentEdge.builder()
         .from(nodeSendToolResult)
         .to(nodeExecuteTool)
-        .onToolCalls(call -> true)
+        .onToolCalls()
         .build());
 
     var strategy = graph.build();
@@ -402,8 +400,7 @@ For the graph created in the previous example, you can run:
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
     import ai.koog.agents.core.dsl.builder.subgraph
-    import ai.koog.agents.core.dsl.extension.asUserMessage
-    import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTools
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
     import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
     import ai.koog.agents.core.dsl.extension.onTextMessage
@@ -411,9 +408,9 @@ For the graph created in the previous example, you can run:
     fun main() {
         val myStrategy = strategy<String, String>("my-strategy") {
             val nodeCallLLM by nodeLLMRequest()
-            val executeToolCall by nodeExecuteToolsAndGetResults()
+            val executeToolCall by nodeExecuteTools()
             val sendToolResult by nodeLLMSendToolResults()
-            edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
+            edge(nodeStart forwardTo nodeCallLLM)
             edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
             edge(nodeCallLLM forwardTo executeToolCall onToolCalls { true })
             edge(executeToolCall forwardTo sendToolResult)
@@ -481,7 +478,7 @@ For long-running conversations, the history can grow large and consume a lot of 
 
 ### Parallel tool execution
 
-For workflows that require executing multiple tools in parallel, you can use the `nodeExecuteToolsAndGetResults` node with `parallel = true`:
+For workflows that require executing multiple tools in parallel, you can use the `nodeExecuteTools` node with `parallel = true`:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -490,7 +487,7 @@ import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.ToolCalls
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 
 val strategy = strategy<String, String>("strategy_name") {
@@ -500,7 +497,7 @@ val strategy = strategy<String, String>("strategy_name") {
 }
 -->
 ```kotlin
-val executeMultipleTools by nodeExecuteToolsAndGetResults(parallel = true)
+val executeMultipleTools by nodeExecuteTools(parallel = true)
 val processMultipleResults by nodeLLMSendToolResults()
 
 edge(someNode forwardTo executeMultipleTools)
@@ -624,8 +621,7 @@ import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.ReceivedToolResults
-import ai.koog.agents.core.dsl.extension.asUserMessage
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
@@ -637,12 +633,12 @@ import ai.koog.agents.core.tools.ToolRegistry
 fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy<String, String> {
     return strategy(name) {
         val nodeSendInput by nodeLLMRequest()
-        val nodeExecuteTool by nodeExecuteToolsAndGetResults()
+        val nodeExecuteTool by nodeExecuteTools()
         val nodeSendToolResult by nodeLLMSendToolResults()
         val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResults>()
 
         // Define the flow of the agent
-        edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+        edge(nodeStart forwardTo nodeSendInput)
 
         // If the LLM responds with a message, finish
         edge(

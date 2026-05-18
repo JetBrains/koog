@@ -58,8 +58,7 @@ Depending on which step you decide to perform compression, the following scenari
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.subgraph
-    import ai.koog.agents.core.dsl.extension.asUserMessage
-    import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTools
     import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
     import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
@@ -73,13 +72,13 @@ Depending on which step you decide to perform compression, the following scenari
     
     val strategy = strategy<String, String>("execute-with-history-compression") {
         val callLLM by nodeLLMRequest()
-        val executeTool by nodeExecuteToolsAndGetResults()
+        val executeTool by nodeExecuteTools()
         val sendToolResult by nodeLLMSendToolResults()
     
         // Compress the LLM history and keep the current ReceivedToolResults for the next node
         val compressHistory by nodeLLMCompressHistory<ReceivedToolResults>()
     
-        edge(nodeStart forwardTo callLLM asUserMessage { it })
+        edge(nodeStart forwardTo callLLM)
         edge(callLLM forwardTo nodeFinish onTextMessage { true })
         edge(callLLM forwardTo executeTool onToolCalls { true })
     
@@ -116,19 +115,18 @@ Depending on which step you decide to perform compression, the following scenari
 
     var callLLM = AIAgentNode.llmRequest(null);
     var executeTool = AIAgentNode.executeTools(null);
-    var sendToolResult = AIAgentNode.llmRequest("sendToolResult");
+    var sendToolResult = AIAgentNode.llmSendToolResults(null);
 
-    // Compress the LLM history; the carried Message.User flows into the next node.
+    // Compress the LLM history; the carried ReceivedToolResults flows into the next node.
     var compressHistory = AIAgentNode
         .llmCompressHistory("compressHistory")
-        .withInput(Message.User.class)
+        .withInput(ReceivedToolResults.class)
         .build();
 
     // Edge from start to callLLM
     graph.edge(AIAgentEdge.builder()
         .from(graph.nodeStart)
         .to(callLLM)
-        .asUserMessage(s -> s)
         .build());
 
     // Edge from callLLM to finish on text response
@@ -142,7 +140,7 @@ Depending on which step you decide to perform compression, the following scenari
     graph.edge(AIAgentEdge.builder()
         .from(callLLM)
         .to(executeTool)
-        .onToolCalls(call -> true)
+        .onToolCalls()
         .build());
 
     // Compress history after executing any tool if the history is too long
@@ -173,7 +171,7 @@ Depending on which step you decide to perform compression, the following scenari
     graph.edge(AIAgentEdge.builder()
         .from(sendToolResult)
         .to(executeTool)
-        .onToolCalls(call -> true)
+        .onToolCalls()
         .build());
 
     // Edge from sendToolResult to finish on text response

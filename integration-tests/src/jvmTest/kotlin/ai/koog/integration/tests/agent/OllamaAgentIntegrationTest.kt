@@ -8,8 +8,7 @@ import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.asUserMessage
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.onTextMessage
@@ -105,11 +104,11 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
             }
 
             val callLLM by nodeLLMRequest()
-            val callTool by nodeExecuteToolsAndGetResults()
+            val callTool by nodeExecuteTools()
             val sendToolResult by nodeLLMSendToolResults()
 
             edge(nodeStart forwardTo definePrompt transformed {})
-            edge(definePrompt forwardTo callLLM transformed { agentInput<String>() } asUserMessage { it })
+            edge(definePrompt forwardTo callLLM transformed { agentInput<String>() })
             edge(callLLM forwardTo callTool onToolCalls { true })
             edge(callTool forwardTo sendToolResult)
             edge(sendToolResult forwardTo callTool onToolCalls { true })
@@ -144,11 +143,11 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
             }
 
             val callLLM by nodeLLMRequest()
-            val callTool by nodeExecuteToolsAndGetResults()
+            val callTool by nodeExecuteTools()
             val sendToolResult by nodeLLMSendToolResults()
 
             edge(nodeStart forwardTo definePrompt transformed {})
-            edge(definePrompt forwardTo callLLM transformed { agentInput<String>() } asUserMessage { it })
+            edge(definePrompt forwardTo callLLM transformed { agentInput<String>() })
             edge(callLLM forwardTo callTool onToolCalls { true })
             edge(callTool forwardTo sendToolResult)
             edge(sendToolResult forwardTo callTool onToolCalls { true })

@@ -7,9 +7,9 @@ import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
 import ai.koog.agents.core.dsl.extension.ToolCalls
-import ai.koog.agents.core.dsl.extension.asUserMessage
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
@@ -108,7 +108,7 @@ class EventHandlerTest {
         val strategy = strategy<String, String>(strategyName) {
             val llmCallNode by nodeLLMRequest("test LLM call")
 
-            edge(nodeStart forwardTo llmCallNode asUserMessage { testLLMResponse })
+            edge(nodeStart forwardTo llmCallNode transformed { testLLMResponse })
             edge(llmCallNode forwardTo nodeFinish transformed { agentResult })
         }
 
@@ -144,8 +144,6 @@ class EventHandlerTest {
             .append(", temperature: ").append(temperature)
             .toString()
 
-        val expectedUserMessage =
-            "User(parts=[Text(text=$testLLMResponse, cacheControl=null)], metaInfo=RequestMetaInfo(timestamp=$ts, metadata=null), id=null)"
         val expectedAssistantMessage =
             "Assistant(parts=[Text(text=Default test response, cacheControl=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
 
@@ -154,10 +152,10 @@ class EventHandlerTest {
             "OnStrategyStarting (run id: $runId, strategy: $strategyName)",
             "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $agentInput)",
             "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
-            "OnNodeExecutionStarting (run id: $runId, node: test LLM call, input: $expectedUserMessage)",
+            "OnNodeExecutionStarting (run id: $runId, node: test LLM call, input: $testLLMResponse)",
             "OnLLMCallStarting (run id: $runId, prompt: $expectedPromptString, tools: [])",
             "OnLLMCallCompleted (run id: $runId, prompt: $expectedPromptString, model: ${model.eventString}, tools: [], responses: [${expectedMessage(Message.Role.Assistant, "Default test response").trim('{', '}')}])",
-            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: $expectedUserMessage, output: $expectedAssistantMessage)",
+            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: $testLLMResponse, output: $expectedAssistantMessage)",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
@@ -187,10 +185,10 @@ class EventHandlerTest {
 
         val strategy = strategy(strategyName) {
             val nodeSendInput by nodeLLMRequest("test-llm-call")
-            val nodeExecuteTool by nodeExecuteToolsAndGetResults("test-tool-call")
+            val nodeExecuteTool by nodeExecuteTools("test-tool-call")
             val nodeSendToolResult by nodeLLMSendToolResults("test-node-llm-send-tool-result")
 
-            edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+            edge(nodeStart forwardTo nodeSendInput)
             edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
             edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
@@ -270,8 +268,6 @@ class EventHandlerTest {
             .append(", temperature: ").append(temperature)
             .toString()
 
-        val userPromptMessageObj =
-            "User(parts=[Text(text=$userPrompt, cacheControl=null)], metaInfo=RequestMetaInfo(timestamp=$ts, metadata=null), id=null)"
         val toolCallAssistantObj =
             "Assistant(parts=[Call(id=null, tool=$dummyToolName, args=$dummyToolArgsEncoded)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
         val toolCallsInput = "ToolCalls(toolCalls=[Call(id=null, tool=$dummyToolName, args=$dummyToolArgsEncoded)])"
@@ -289,10 +285,10 @@ class EventHandlerTest {
             "OnStrategyStarting (run id: $runId, strategy: $strategyName)",
             "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $userPrompt)",
             "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $userPrompt, output: $userPrompt)",
-            "OnNodeExecutionStarting (run id: $runId, node: test-llm-call, input: $userPromptMessageObj)",
+            "OnNodeExecutionStarting (run id: $runId, node: test-llm-call, input: $userPrompt)",
             "OnLLMCallStarting (run id: $runId, prompt: $expectedPromptFirstCall, tools: [$dummyToolName])",
             "OnLLMCallCompleted (run id: $runId, prompt: $expectedPromptFirstCall, model: ${model.eventString}, tools: [$dummyToolName], responses: [$toolCallResponseEntry])",
-            "OnNodeExecutionCompleted (run id: $runId, node: test-llm-call, input: $userPromptMessageObj, output: $toolCallAssistantObj)",
+            "OnNodeExecutionCompleted (run id: $runId, node: test-llm-call, input: $userPrompt, output: $toolCallAssistantObj)",
             "OnNodeExecutionStarting (run id: $runId, node: test-tool-call, input: $toolCallsInput)",
             "OnToolCallStarting (run id: $runId, tool: $dummyToolName, args: $dummyToolArgsEncoded)",
             "OnToolCallCompleted (run id: $runId, tool: $dummyToolName, args: $dummyToolArgsEncoded, result: $dummyToolResultEncoded)",
@@ -333,8 +329,8 @@ class EventHandlerTest {
             val llmCallNode by nodeLLMRequest("test LLM call")
             val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
-            edge(nodeStart forwardTo llmCallNode asUserMessage { testLLMResponse })
-            edge(llmCallNode forwardTo llmCallWithToolsNode asUserMessage { llmCallWithToolsResponse })
+            edge(nodeStart forwardTo llmCallNode transformed { testLLMResponse })
+            edge(llmCallNode forwardTo llmCallWithToolsNode transformed { llmCallWithToolsResponse })
             edge(llmCallWithToolsNode forwardTo nodeFinish transformed { agentResult })
         }
 
@@ -384,9 +380,6 @@ class EventHandlerTest {
             .append(", temperature: ").append(temperature)
             .toString()
 
-        val expectedUserMessage = { text: String ->
-            "User(parts=[Text(text=$text, cacheControl=null)], metaInfo=RequestMetaInfo(timestamp=$ts, metadata=null), id=null)"
-        }
         val expectedAssistantMessage =
             "Assistant(parts=[Text(text=$defaultResponse, cacheControl=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
 
@@ -398,14 +391,14 @@ class EventHandlerTest {
             "OnStrategyStarting (run id: $runId, strategy: $strategyName)",
             "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $agentInput)",
             "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
-            "OnNodeExecutionStarting (run id: $runId, node: test LLM call, input: ${expectedUserMessage(testLLMResponse)})",
+            "OnNodeExecutionStarting (run id: $runId, node: test LLM call, input: $testLLMResponse)",
             "OnLLMCallStarting (run id: $runId, prompt: $expectedPromptFirstCall, tools: [$expectedTools])",
             "OnLLMCallCompleted (run id: $runId, prompt: $expectedPromptFirstCall, model: ${model.eventString}, tools: [$expectedTools], responses: [$responseEntry])",
-            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: ${expectedUserMessage(testLLMResponse)}, output: $expectedAssistantMessage)",
-            "OnNodeExecutionStarting (run id: $runId, node: test LLM call with tools, input: ${expectedUserMessage(llmCallWithToolsResponse)})",
+            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: $testLLMResponse, output: $expectedAssistantMessage)",
+            "OnNodeExecutionStarting (run id: $runId, node: test LLM call with tools, input: $llmCallWithToolsResponse)",
             "OnLLMCallStarting (run id: $runId, prompt: $expectedPromptSecondCall, tools: [$expectedTools])",
             "OnLLMCallCompleted (run id: $runId, prompt: $expectedPromptSecondCall, model: ${model.eventString}, tools: [$expectedTools], responses: [$responseEntry])",
-            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call with tools, input: ${expectedUserMessage(llmCallWithToolsResponse)}, output: $expectedAssistantMessage)",
+            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call with tools, input: $llmCallWithToolsResponse, output: $expectedAssistantMessage)",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
@@ -528,7 +521,7 @@ class EventHandlerTest {
             val llmCallNode by nodeLLMRequest("test LLM call")
             val llmCallWithToolsNode by nodeException("test LLM call with tools")
 
-            edge(nodeStart forwardTo llmCallNode asUserMessage { "Test LLM call prompt" })
+            edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
             edge(llmCallNode forwardTo llmCallWithToolsNode transformed { "Test LLM call with tools prompt" })
             edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
         }
@@ -561,7 +554,7 @@ class EventHandlerTest {
         val strategy = strategy<String, String>(strategyName) {
             val streamAndCollect by nodeLLMRequestStreaming("stream-and-collect")
 
-            edge(nodeStart forwardTo streamAndCollect asUserMessage { it })
+            edge(nodeStart forwardTo streamAndCollect)
             edge(
                 streamAndCollect forwardTo nodeFinish transformed { messages ->
                     messages.collectText()
@@ -637,7 +630,7 @@ class EventHandlerTest {
         val strategy = strategy<String, String>(strategyName) {
             val streamAndCollect by nodeLLMRequestStreaming("stream-and-collect")
 
-            edge(nodeStart forwardTo streamAndCollect asUserMessage { it })
+            edge(nodeStart forwardTo streamAndCollect)
             edge(
                 streamAndCollect forwardTo nodeFinish transformed { messages ->
                     messages.collectText()
@@ -864,9 +857,7 @@ class EventHandlerTest {
                 }
                 onNodeExecutionCompleted { ctx ->
                     if (ctx.node.name == "nodeExecuteTool") {
-                        val toolResult = (ctx.output as Message.User).parts
-                            .filterIsInstance<MessagePart.Tool.Result>()
-                            .single()
+                        val toolResult = (ctx.output as ReceivedToolResults).toolResults.single()
                         events += "finished: nodeExecuteTool(tool=${toolResult.tool}, output=${toolResult.output})"
                     }
                 }

@@ -3,7 +3,6 @@ package ai.koog.agents.features.eventHandler.feature
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -103,6 +102,6 @@ private suspend fun mockStreaming(
 private fun streamTextStrategy(strategyName: String) =
     strategy<String, String>(strategyName) {
         val llmNode by nodeLLMRequestStreaming("streaming-llm-node")
-        edge(nodeStart forwardTo llmNode asUserMessage { it })
+        edge(nodeStart forwardTo llmNode)
         edge(llmNode forwardTo nodeFinish transformed { it.collectText() })
     }

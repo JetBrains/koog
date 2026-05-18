@@ -4,8 +4,7 @@ import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
@@ -82,7 +81,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val strategy = strategy("single-llm-call-strategy") {
                 val llmRequest by nodeLLMRequest("llm-call")
 
-                edge(nodeStart forwardTo llmRequest asUserMessage { it })
+                edge(nodeStart forwardTo llmRequest)
                 edge(llmRequest forwardTo nodeFinish onTextMessage { true })
             }
 
@@ -182,10 +181,10 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
         TestSpanProcessor().let { testProcessor ->
             val strategy = strategy("llm-tool-llm-strategy") {
                 val llmRequest by nodeLLMRequest("LLM Request")
-                val executeTool by nodeExecuteToolsAndGetResults("Execute Tool")
+                val executeTool by nodeExecuteTools("Execute Tool")
                 val sendToolResult by nodeLLMSendToolResults("Send Tool Result")
 
-                edge(nodeStart forwardTo llmRequest asUserMessage { it })
+                edge(nodeStart forwardTo llmRequest)
                 edge(llmRequest forwardTo executeTool onToolCalls { true })
                 edge(executeTool forwardTo sendToolResult)
                 edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
@@ -314,12 +313,12 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
         TestSpanProcessor().let { testProcessor ->
             val strategy = strategy("multiple-tool-calls-strategy") {
                 val llmRequest by nodeLLMRequest("Initial LLM Request")
-                val executeTool1 by nodeExecuteToolsAndGetResults("Execute Tool 1")
+                val executeTool1 by nodeExecuteTools("Execute Tool 1")
                 val sendToolResult1 by nodeLLMSendToolResults("Send Tool Result 1")
-                val executeTool2 by nodeExecuteToolsAndGetResults("Execute Tool 2")
+                val executeTool2 by nodeExecuteTools("Execute Tool 2")
                 val sendToolResult2 by nodeLLMSendToolResults("Send Tool Result 2")
 
-                edge(nodeStart forwardTo llmRequest asUserMessage { it })
+                edge(nodeStart forwardTo llmRequest)
                 edge(llmRequest forwardTo executeTool1 onToolCalls { true })
                 edge(executeTool1 forwardTo sendToolResult1)
                 edge(sendToolResult1 forwardTo executeTool2 onToolCalls { true })
@@ -478,7 +477,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val strategy = strategy("test-strategy") {
                 val nodeSendInput by nodeLLMRequest("test-llm-call")
-                edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+                edge(nodeStart forwardTo nodeSendInput)
                 edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
             }
 
@@ -562,7 +561,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                     name = "llm-structured",
                 )
 
-                edge(nodeStart forwardTo llmStructured asUserMessage { it })
+                edge(nodeStart forwardTo llmStructured)
                 edge(
                     llmStructured forwardTo nodeFinish transformed { result ->
                         result.getOrThrow().message.parts.filterIsInstance<MessagePart.Text>()
@@ -676,10 +675,10 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
         TestSpanProcessor().let { testProcessor ->
             val strategy = strategy("llm-tool-llm-strategy") {
                 val llmRequest by nodeLLMRequest("LLM Request")
-                val executeTool by nodeExecuteToolsAndGetResults("Execute Tool")
+                val executeTool by nodeExecuteTools("Execute Tool")
                 val sendToolResult by nodeLLMSendToolResults("Send Tool Result")
 
-                edge(nodeStart forwardTo llmRequest asUserMessage { it })
+                edge(nodeStart forwardTo llmRequest)
                 edge(llmRequest forwardTo executeTool onToolCalls { true })
                 edge(executeTool forwardTo sendToolResult)
                 edge(sendToolResult forwardTo nodeFinish onTextMessage { true })

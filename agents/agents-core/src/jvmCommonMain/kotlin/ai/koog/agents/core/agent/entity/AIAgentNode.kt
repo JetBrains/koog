@@ -9,7 +9,6 @@ import ai.koog.agents.core.dsl.extension.ModeratedMessage
 import ai.koog.agents.core.dsl.extension.ReceivedToolResults
 import ai.koog.agents.core.dsl.extension.ToolCalls
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMModerateMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestForceOneTool
@@ -86,7 +85,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
         @JvmStatic
         public fun llmRequest(
             name: String? = null,
-        ): AIAgentNodeBase<Message.User, Message.Assistant> {
+        ): AIAgentNodeBase<String, Message.Assistant> {
             val node by nodeLLMRequest(name)
             return node
         }
@@ -102,7 +101,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
         @JvmStatic
         public fun llmRequestOnlyCallingTools(
             name: String? = null,
-        ): AIAgentNodeBase<Message.User, Message.Assistant> {
+        ): AIAgentNodeBase<String, Message.Assistant> {
             val node by nodeLLMRequestOnlyCallingTools(name)
             return node
         }
@@ -118,7 +117,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
         @JvmStatic
         public fun llmRequestWithoutTools(
             name: String? = null,
-        ): AIAgentNodeBase<Message.User, Message.Assistant> {
+        ): AIAgentNodeBase<String, Message.Assistant> {
             val node by nodeLLMRequestWithoutTools(name)
             return node
         }
@@ -136,7 +135,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
         public fun llmRequestForceOneTool(
             name: String? = null,
             tool: ToolDescriptor,
-        ): AIAgentNodeBase<Message.User, Message.Assistant> {
+        ): AIAgentNodeBase<String, Message.Assistant> {
             val node by nodeLLMRequestForceOneTool(name, tool)
             return node
         }
@@ -154,7 +153,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
         public fun llmRequestForceOneTool(
             name: String? = null,
             tool: Tool<*, *>,
-        ): AIAgentNodeBase<Message.User, Message.Assistant> {
+        ): AIAgentNodeBase<String, Message.Assistant> {
             val node by nodeLLMRequestForceOneTool(name, tool.descriptor)
             return node
         }
@@ -196,9 +195,9 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
             outputClass: Class<T>,
             structureDefinition: StructureDefinition? = null,
             name: String? = null,
-        ): AIAgentNodeBase<Message.User, Publisher<T>> =
+        ): AIAgentNodeBase<String, Publisher<T>> =
             builder(name)
-                .withInput(Message.User::class.java)
+                .withInput(String::class.java)
                 .withOutput<Publisher<T>>(typeToken(Publisher::class, listOf(TypeToken.of(outputClass))))
                 .executeOnLLMDispatcher { input ->
                     requestStreamingImpl(input, structureDefinition) { streamFrameFlow ->
@@ -218,7 +217,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
         public fun llmRequestStreaming(
             name: String? = null,
             structureDefinition: StructureDefinition?,
-        ): AIAgentNodeBase<Message.User, Flow<StreamFrame>> {
+        ): AIAgentNodeBase<String, Flow<StreamFrame>> {
             val node by nodeLLMRequestStreaming(name, structureDefinition)
             return node
         }
@@ -237,7 +236,7 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
             name: String? = null,
             config: StructuredRequestConfig<T>,
             fixingParser: StructureFixingParser?,
-        ): AIAgentNodeBase<Message.User, Result<StructuredResponse<T>>> {
+        ): AIAgentNodeBase<String, Result<StructuredResponse<T>>> {
             val node by nodeLLMRequestStructured(name, config, fixingParser)
             return node
         }
@@ -252,23 +251,8 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
         @JvmStatic
         public fun executeTools(
             name: String? = null,
-        ): AIAgentNodeBase<ToolCalls, Message.User> {
-            val node by nodeExecuteTools(name)
-            return node
-        }
-
-        /**
-         * A node that executes all tool calls in the assistant message and appends results as a user message.
-         *
-         * @param name Optional node name, defaults to delegate's property name.
-         */
-        @JavaAPI
-        @JvmOverloads
-        @JvmStatic
-        public fun executeToolsAndGetResults(
-            name: String? = null,
         ): AIAgentNodeBase<ToolCalls, ReceivedToolResults> {
-            val node by nodeExecuteToolsAndGetResults(name)
+            val node by nodeExecuteTools(name)
             return node
         }
 

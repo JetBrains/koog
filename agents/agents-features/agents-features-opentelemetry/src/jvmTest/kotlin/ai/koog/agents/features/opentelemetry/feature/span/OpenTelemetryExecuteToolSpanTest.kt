@@ -1,8 +1,7 @@
 package ai.koog.agents.features.opentelemetry.feature.span
 
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.onTextMessage
@@ -119,10 +118,10 @@ class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
 
         val strategy = strategy("test-tool-calls-strategy") {
             val nodeCallLLM by nodeLLMRequest("test-llm-call")
-            val nodeExecuteTool by nodeExecuteToolsAndGetResults("test-multiple-tool-calls")
+            val nodeExecuteTool by nodeExecuteTools("test-multiple-tool-calls")
             val nodeSendToolResult by nodeLLMSendToolResults("test-node-llm-send-multiple-tool-results")
 
-            edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
+            edge(nodeStart forwardTo nodeCallLLM)
             edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
             edge(
                 nodeCallLLM forwardTo nodeFinish

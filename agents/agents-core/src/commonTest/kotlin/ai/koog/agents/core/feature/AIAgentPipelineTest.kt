@@ -14,13 +14,11 @@ import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
 import ai.koog.agents.core.dsl.extension.onToolCalls
-import ai.koog.agents.core.dsl.extension.onToolResults
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.config.FeatureConfig
@@ -530,8 +528,8 @@ class AIAgentPipelineTest {
             val llmCallWithoutTools by nodeLLMRequestWithoutTools(nodeLLMCallWithoutToolsName)
             val llmCall by nodeLLMRequest(nodeLLMCall)
 
-            edge(nodeStart forwardTo llmCallWithoutTools asUserMessage { testLLMResponse })
-            edge(llmCallWithoutTools forwardTo llmCall asUserMessage { llmCallWithToolsResponse })
+            edge(nodeStart forwardTo llmCallWithoutTools transformed { testLLMResponse })
+            edge(llmCallWithoutTools forwardTo llmCall transformed { llmCallWithToolsResponse })
             edge(llmCall forwardTo nodeFinish transformed { agentOutput })
         }
 
@@ -605,11 +603,11 @@ class AIAgentPipelineTest {
             val nodeSendInput by nodeLLMRequest()
             val toolCallNode by nodeExecuteTools(nodeToolCallName)
 
-            edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+            edge(nodeStart forwardTo nodeSendInput)
             edge(nodeSendInput forwardTo toolCallNode onToolCalls { true })
             edge(
-                toolCallNode forwardTo nodeFinish onToolResults { true } transformed { toolResults ->
-                    toolResults.toolCalls.joinToString("\n") { it.output }
+                toolCallNode forwardTo nodeFinish transformed { toolResults ->
+                    toolResults.toolResults.joinToString("\n") { it.output }
                 }
             )
         }
@@ -845,8 +843,8 @@ class AIAgentPipelineTest {
             val llmCallWithoutTools by nodeLLMRequestWithoutTools(nodeLLMCallWithoutToolsName)
             val llmCall by nodeLLMRequest(nodeLLMCallName)
 
-            edge(nodeStart forwardTo llmCallWithoutTools asUserMessage { testLLMResponse })
-            edge(llmCallWithoutTools forwardTo llmCall asUserMessage { llmCallWithToolsResponse })
+            edge(nodeStart forwardTo llmCallWithoutTools transformed { testLLMResponse })
+            edge(llmCallWithoutTools forwardTo llmCall transformed { llmCallWithToolsResponse })
             edge(llmCall forwardTo nodeFinish transformed { agentOutput })
         }
 
@@ -906,11 +904,11 @@ class AIAgentPipelineTest {
             val nodeSendInput by nodeLLMRequest()
             val toolCallNode by nodeExecuteTools(nodeToolCallName)
 
-            edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+            edge(nodeStart forwardTo nodeSendInput)
             edge(nodeSendInput forwardTo toolCallNode onToolCalls { true })
             edge(
-                toolCallNode forwardTo nodeFinish onToolResults { true } transformed { toolResults ->
-                    toolResults.toolCalls.joinToString("\n") { it.output }
+                toolCallNode forwardTo nodeFinish transformed { toolResults ->
+                    toolResults.toolResults.joinToString("\n") { it.output }
                 }
             )
         }

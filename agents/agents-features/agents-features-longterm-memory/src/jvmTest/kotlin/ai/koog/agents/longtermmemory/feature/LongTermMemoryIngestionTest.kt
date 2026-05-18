@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -48,7 +47,7 @@ class LongTermMemoryIngestionTest {
     private val nonStreamingStrategy =
         strategy<String, String>("ingestion-test", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
             val llmNode by nodeLLMRequestWithoutTools(name = "llm-node")
-            edge(nodeStart forwardTo llmNode asUserMessage { it })
+            edge(nodeStart forwardTo llmNode)
             edge(
                 llmNode forwardTo nodeFinish transformed {
                     it.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
@@ -68,8 +67,8 @@ class LongTermMemoryIngestionTest {
         strategy<String, String>("ingestion-two-call-test", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
             val firstLlmNode by nodeLLMRequestWithoutTools(name = "llm-node-1")
             val secondLlmNode by nodeLLMRequestWithoutTools(name = "llm-node-2")
-            edge(nodeStart forwardTo firstLlmNode asUserMessage { it })
-            edge(firstLlmNode forwardTo secondLlmNode asUserMessage { "Follow-up question" })
+            edge(nodeStart forwardTo firstLlmNode)
+            edge(firstLlmNode forwardTo secondLlmNode transformed { "Follow-up question" })
             edge(
                 secondLlmNode forwardTo nodeFinish transformed {
                     it.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
@@ -80,7 +79,7 @@ class LongTermMemoryIngestionTest {
     private val streamingStrategy =
         strategy<String, String>("ingestion-streaming-test", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
             val llmNode by nodeLLMRequestStreaming(name = "llm-node")
-            edge(nodeStart forwardTo llmNode asUserMessage { it })
+            edge(nodeStart forwardTo llmNode)
             edge(
                 llmNode forwardTo nodeFinish transformed { flow ->
                     flow.toList().filterIsInstance<StreamFrame.TextDelta>().joinToString("") { it.text }

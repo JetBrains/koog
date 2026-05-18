@@ -1,12 +1,14 @@
 package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.prompt.Prompt
@@ -45,17 +47,41 @@ public fun singleRunStrategyWithHistoryCompression(
     config: HistoryCompressionConfig,
     parallelTools: Boolean = false,
 ): AIAgentGraphStrategy<String, String> = strategy<String, String>("single_run_with_history_compression") {
-    val nodeLLMRequest by nodeLLMRequest()
+    val nodeCallLLM by nodeLLMRequest()
     val nodeExecuteTool by nodeExecuteTools(parallel = parallelTools)
-    val compressHistory by nodeLLMCompressHistory<Message.User>(
+    val nodeSendToolResult by nodeLLMSendToolResults()
+    val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResults>(
         strategy = config.compressionStrategy,
         retrievalModel = config.retrievalModel
     )
+    val nodeSendCompressedHistory by node<ReceivedToolResults, Message.Assistant> {
+        llm.writeSession {
+            requestLLM()
+        }
+    }
 
-    edge(nodeStart forwardTo nodeLLMRequest asUserMessage { it })
-    edge(nodeExecuteTool forwardTo compressHistory onCondition { llm.readSession { config.isHistoryTooBig(prompt) } })
-    edge(nodeExecuteTool forwardTo nodeLLMRequest onCondition { llm.readSession { !config.isHistoryTooBig(prompt) } })
-    edge(compressHistory forwardTo nodeLLMRequest)
-    edge(nodeLLMRequest forwardTo nodeExecuteTool onToolCalls { true })
-    edge(nodeLLMRequest forwardTo nodeFinish onTextMessage { true })
+    edge(nodeStart forwardTo nodeCallLLM)
+    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
+    edge(
+        nodeCallLLM forwardTo nodeFinish
+            onTextMessage { true }
+    )
+
+    edge(nodeExecuteTool forwardTo nodeCompressHistory onCondition { llm.readSession { config.isHistoryTooBig(prompt) } })
+    edge(nodeExecuteTool forwardTo nodeSendToolResult onCondition { llm.readSession { !config.isHistoryTooBig(prompt) } })
+    edge(nodeCompressHistory forwardTo nodeSendCompressedHistory)
+
+    edge(
+        nodeSendToolResult forwardTo nodeFinish
+            onTextMessage { true }
+    )
+
+    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
+
+    edge(
+        nodeSendCompressedHistory forwardTo nodeFinish
+            onTextMessage { true }
+    )
+
+    edge(nodeSendCompressedHistory forwardTo nodeExecuteTool onToolCalls { true })
 }

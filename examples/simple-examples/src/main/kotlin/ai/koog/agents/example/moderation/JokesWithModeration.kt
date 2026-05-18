@@ -2,7 +2,6 @@ package ai.koog.agents.example.moderation
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMModerateMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.example.ApiKeyService
@@ -34,7 +33,7 @@ fun main() = runBlocking {
         edge(
             moderateInput forwardTo callLLM
                 onCondition { !it.moderationResult.isHarmful }
-                asUserMessage { it.message.textContent() }
+                transformed { it.message.textContent() }
         )
 
         edge(
@@ -55,7 +54,7 @@ fun main() = runBlocking {
         edge(
             moderateJoke forwardTo callLLM
                 onCondition { it.moderationResult.isHarmful }
-                asUserMessage { moderatedMessage ->
+                transformed { moderatedMessage ->
                 markdown {
                     h1("You must re-generate the joke to make it not harmful")
 

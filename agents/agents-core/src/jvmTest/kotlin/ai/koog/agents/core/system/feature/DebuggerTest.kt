@@ -5,8 +5,7 @@ import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.START_NODE
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.onTextMessage
@@ -144,10 +143,10 @@ class DebuggerTest {
         val serverJob = launch {
             val strategy = strategy<String, String>(strategyName) {
                 val nodeSendInput by nodeLLMRequest(nodeSendLLMCallName)
-                val nodeExecuteTool by nodeExecuteToolsAndGetResults(nodeExecuteToolName)
+                val nodeExecuteTool by nodeExecuteTools(nodeExecuteToolName)
                 val nodeSendToolResult by nodeLLMSendToolResults(nodeSendToolResultName)
 
-                edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+                edge(nodeStart forwardTo nodeSendInput)
                 edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
                 edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
                 edge(nodeExecuteTool forwardTo nodeSendToolResult)

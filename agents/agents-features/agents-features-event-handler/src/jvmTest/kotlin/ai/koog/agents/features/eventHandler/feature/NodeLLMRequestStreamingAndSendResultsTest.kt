@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -62,7 +61,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
         val strategy = strategy<String, String>("streaming-collect-strategy") {
             val streamAndCollectNode by nodeLLMRequestStreaming("stream-and-collect")
 
-            edge(nodeStart forwardTo streamAndCollectNode asUserMessage { it })
+            edge(nodeStart forwardTo streamAndCollectNode)
             edge(streamAndCollectNode forwardTo nodeFinish transformed { it.collectText() })
         }
 
@@ -100,7 +99,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
         val strategy = strategy<String, String>("streaming-response-strategy") {
             val streamNode by nodeLLMRequestStreaming("stream-collect")
 
-            edge(nodeStart forwardTo streamNode asUserMessage { it })
+            edge(nodeStart forwardTo streamNode)
             edge(streamNode forwardTo nodeFinish transformed { it.collectText() })
         }
 
@@ -134,7 +133,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
         val strategy = strategy<String, String>("empty-streaming-strategy") {
             val streamNode by nodeLLMRequestStreaming("stream-empty")
 
-            edge(nodeStart forwardTo streamNode asUserMessage { it })
+            edge(nodeStart forwardTo streamNode)
             edge(streamNode forwardTo nodeFinish transformed { it.collectText() })
         }
 
@@ -172,8 +171,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
 
             edge(
                 nodeStart forwardTo streamNode
-                    transformed { inputData }
-                    asUserMessage { it.description }
+                    transformed { inputData.description }
             )
             edge(streamNode forwardTo nodeFinish transformed { it.collectText() })
         }

@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
 import ai.koog.agents.core.dsl.extension.ToolCalls
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
@@ -220,9 +221,7 @@ class PersistenceRunsTwiceTest {
                 }
                 onNodeExecutionCompleted { ctx ->
                     if (ctx.node.name == "nodeExecuteTool") {
-                        val toolResult = (ctx.output as Message.User).parts
-                            .filterIsInstance<MessagePart.Tool.Result>()
-                            .single()
+                        val toolResult = (ctx.output as ReceivedToolResults).toolResults.single()
                         events += "finished: nodeExecuteTool(tool=${toolResult.tool}, output=${toolResult.output})"
                     }
                 }

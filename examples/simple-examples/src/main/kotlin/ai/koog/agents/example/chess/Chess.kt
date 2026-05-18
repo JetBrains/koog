@@ -2,7 +2,6 @@ package ai.koog.agents.example.chess
 
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onToolCalls
@@ -28,7 +27,7 @@ suspend fun main() {
         val nodeSendToolResult by nodeLLMSendToolResults("nodeSendToolResult")
         val nodeTrimHistory by nodeTrimHistory<ReceivedToolResults>()
 
-        edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
+        edge(nodeStart forwardTo nodeCallLLM)
         edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
         edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
         edge(nodeExecuteTool forwardTo nodeTrimHistory)

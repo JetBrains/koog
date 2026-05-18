@@ -4,8 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.onTextMessage
@@ -90,7 +89,7 @@ class MessageTokenizerTest {
 
         val testStrategy = strategy("test") {
             val callLLM by nodeLLMRequest()
-            val callTool by nodeExecuteToolsAndGetResults()
+            val callTool by nodeExecuteTools()
             val sendToolResul by nodeLLMSendToolResults()
 
             val checkTokens by node<String, String> {
@@ -101,7 +100,7 @@ class MessageTokenizerTest {
                 "Total tokens: $totalTokens"
             }
 
-            edge(nodeStart forwardTo callLLM asUserMessage { it })
+            edge(nodeStart forwardTo callLLM)
             edge(callLLM forwardTo callTool onToolCalls { true })
             edge(callLLM forwardTo checkTokens onTextMessage { true })
             edge(callTool forwardTo sendToolResul)

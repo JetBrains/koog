@@ -6,15 +6,13 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.nodeSetStructuredOutput
 import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
-import ai.koog.agents.core.dsl.extension.onToolResults
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
@@ -31,30 +29,42 @@ import kotlin.jvm.JvmOverloads
  * Allows the agent to interact with the user in a chat-like manner.
  */
 public fun chatAgentStrategy(): AIAgentGraphStrategy<String, String> = strategy("chat") {
-    val nodeLLMRequest by nodeLLMRequest("sendInput")
-    val nodeExecuteTools by nodeExecuteTools("nodeExecuteTool")
+    val nodeCallLLM by nodeLLMRequest("sendInput")
+    val nodeExecuteTool by nodeExecuteTools("nodeExecuteTool")
+    val nodeSendToolResult by nodeLLMSendToolResults("nodeSendToolResult")
 
-    val giveFeedbackToCallTools by node<String, String> { input ->
+    val giveFeedbackToCallTools by node<String, Message.Assistant> { input ->
         llm.writeSession {
-            "Don't chat with plain text! Call one of the available tools, instead: ${
-                tools.joinToString(", ") {
-                    it.name
-                }
-            }"
+            appendPrompt {
+                user(
+                    "Don't chat with plain text! Call one of the available tools, instead: ${
+                        tools.joinToString(", ") {
+                            it.name
+                        }
+                    }"
+                )
+            }
+
+            requestLLM()
         }
     }
 
-    edge(nodeStart forwardTo nodeLLMRequest asUserMessage { it })
+    edge(nodeStart forwardTo nodeCallLLM)
 
-    edge(nodeLLMRequest forwardTo nodeExecuteTools onToolCalls { true })
-    edge(nodeLLMRequest forwardTo giveFeedbackToCallTools onTextMessage { true })
+    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
+    edge(nodeCallLLM forwardTo giveFeedbackToCallTools onTextMessage { true })
+
+    edge(giveFeedbackToCallTools forwardTo giveFeedbackToCallTools onTextMessage { true })
+    edge(giveFeedbackToCallTools forwardTo nodeExecuteTool onToolCalls { true })
+
+    edge(nodeExecuteTool forwardTo nodeSendToolResult)
+
+    edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
     edge(
-        nodeExecuteTools forwardTo nodeFinish
-            onToolResults { it.tool == "__exit__" }
-            transformed { "Chat finished" }
+        nodeSendToolResult forwardTo nodeFinish onToolCalls { tc -> tc.tool == "__exit__" } transformed
+            { "Chat finished" }
     )
-    edge(nodeExecuteTools forwardTo nodeLLMRequest)
-    edge(giveFeedbackToCallTools forwardTo nodeLLMRequest asUserMessage { it })
+    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
 }
 
 /**
@@ -120,19 +130,32 @@ public fun reActStrategy(
         storage.set(reasoningStepKey, 0)
         it
     }
-    val nodeRequestLLMWithTools by node<Unit, Message.Assistant> {
+    val nodeCallLLM by node<Unit, Message.Assistant> {
         llm.writeSession {
             requestLLM()
         }
     }
-
     val nodeExecuteTools by nodeExecuteTools()
 
-    val nodeRequestLLMReason by node<Message.User, Unit> { result ->
+    val nodeCallLLMReasonInput by node<String, Unit> { stageInput ->
+        llm.writeSession {
+            appendPrompt {
+                user(stageInput)
+                user(reasoningPrompt)
+            }
+
+            requestLLMWithoutTools()
+        }
+    }
+    val nodeCallLLMReason by node<ReceivedToolResults, Unit> { results ->
         val reasoningStep = storage.getValue(reasoningStepKey)
         llm.writeSession {
             appendPrompt {
-                message(result)
+                user {
+                    results.toolResults.forEach {
+                        toolResult(it.toMessagePart())
+                    }
+                }
             }
 
             if (reasoningStep % reasoningInterval == 0) {
@@ -146,11 +169,12 @@ public fun reActStrategy(
     }
 
     edge(nodeStart forwardTo nodeSetup)
-    edge(nodeSetup forwardTo nodeRequestLLMReason asUserMessage { "$it\n$reasoningPrompt" })
-    edge(nodeRequestLLMReason forwardTo nodeRequestLLMWithTools)
-    edge(nodeRequestLLMWithTools forwardTo nodeExecuteTools onToolCalls { true })
-    edge(nodeRequestLLMWithTools forwardTo nodeFinish onTextMessage { true })
-    edge(nodeExecuteTools forwardTo nodeRequestLLMReason)
+    edge(nodeSetup forwardTo nodeCallLLMReasonInput)
+    edge(nodeCallLLMReasonInput forwardTo nodeCallLLM)
+    edge(nodeCallLLM forwardTo nodeExecuteTools onToolCalls { true })
+    edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
+    edge(nodeExecuteTools forwardTo nodeCallLLMReason)
+    edge(nodeCallLLMReason forwardTo nodeCallLLM)
 }
 
 /**
@@ -195,7 +219,7 @@ public inline fun <reified Input, reified Output> structuredOutputWithToolsStrat
     val setStructuredOutput by nodeSetStructuredOutput<Input, Output>(config = config)
     val transformInput by node<Input, String> { transform(it) }
     val callLLM by nodeLLMRequest()
-    val executeTools by nodeExecuteToolsAndGetResults(parallel = parallelTools)
+    val executeTools by nodeExecuteTools(parallel = parallelTools)
     val sendToolResult by nodeLLMSendToolResults()
     val transformToStructuredOutput by node<Message.Assistant, Output> { response ->
         llm.writeSession {
@@ -205,7 +229,7 @@ public inline fun <reified Input, reified Output> structuredOutputWithToolsStrat
 
     // Set the structured output, transform the input to a String, then call the LLM as a user message
     nodeStart then setStructuredOutput then transformInput
-    edge(transformInput forwardTo callLLM asUserMessage { it })
+    edge(transformInput forwardTo callLLM)
 
     // If the LLM responded with tool calls, execute them and feed the results back
     edge(callLLM forwardTo executeTools onToolCalls { true })

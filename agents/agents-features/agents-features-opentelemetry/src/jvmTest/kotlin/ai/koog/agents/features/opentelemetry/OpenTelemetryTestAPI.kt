@@ -8,8 +8,7 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.onTextMessage
@@ -100,7 +99,7 @@ internal object OpenTelemetryTestAPI {
         internal val singleLLMCallGraphStrategy = strategy(Parameter.DEFAULT_STRATEGY_NAME) {
             val nodeSendInput by nodeLLMRequest("test-llm-call")
 
-            edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+            edge(nodeStart forwardTo nodeSendInput)
             edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
         }
         internal val singleLLMCallFunctionalStrategy =
@@ -116,10 +115,10 @@ internal object OpenTelemetryTestAPI {
 
         internal val singleToolCallGraphStrategy = strategy(Parameter.DEFAULT_STRATEGY_NAME) {
             val nodeCallLLM by nodeLLMRequest("test-llm-call")
-            val nodeExecuteTool by nodeExecuteToolsAndGetResults("test-tool-call")
+            val nodeExecuteTool by nodeExecuteTools("test-tool-call")
             val nodeSendToolResult by nodeLLMSendToolResults("test-node-llm-send-tool-result")
 
-            edge(nodeStart forwardTo nodeCallLLM asUserMessage { it })
+            edge(nodeStart forwardTo nodeCallLLM)
             edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
             edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
             edge(nodeExecuteTool forwardTo nodeSendToolResult)

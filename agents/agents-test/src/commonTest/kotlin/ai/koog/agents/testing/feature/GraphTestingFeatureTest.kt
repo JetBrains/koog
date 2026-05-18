@@ -6,7 +6,7 @@ import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.nodeExecuteSingleTool
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithUserText
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.ToolRegistry
@@ -33,7 +33,7 @@ class GraphTestingFeatureTest {
                 name = "first",
                 tools = listOf(DummyTool, CreateTool, SolveTool)
             ) {
-                val callLLM by nodeLLMRequestWithUserText(name = "callLLM")
+                val callLLM by nodeLLMRequest(name = "callLLM")
                 val executeTool by nodeExecuteSingleTool(name = "executeTool")
                 val giveFeedback by node<Any?, Any?>("giveFeedback") { input ->
                     llm.writeSession {

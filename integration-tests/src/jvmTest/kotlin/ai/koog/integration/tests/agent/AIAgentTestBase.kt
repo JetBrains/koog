@@ -6,8 +6,7 @@ import ai.koog.agents.core.agent.context.agentInput
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.asUserMessage
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
@@ -299,11 +298,11 @@ open class AIAgentTestBase {
                 }
 
                 val callLLM by nodeLLMRequest()
-                val callTool by nodeExecuteToolsAndGetResults()
+                val callTool by nodeExecuteTools()
                 val sendToolResult by nodeLLMSendToolResults()
 
                 edge(nodeStart forwardTo definePromptAnthropic transformed {})
-                edge(definePromptAnthropic forwardTo callLLM transformed { agentInput<String>() } asUserMessage { it })
+                edge(definePromptAnthropic forwardTo callLLM transformed { agentInput<String>() })
                 edge(callLLM forwardTo callTool onToolCalls { true })
                 edge(callLLM forwardTo nodeFinish onTextMessage { true } transformed {})
                 edge(callTool forwardTo sendToolResult)
@@ -331,11 +330,11 @@ open class AIAgentTestBase {
                 }
 
                 val callLLM by nodeLLMRequest()
-                val callTool by nodeExecuteToolsAndGetResults()
+                val callTool by nodeExecuteTools()
                 val sendToolResult by nodeLLMSendToolResults()
 
                 edge(nodeStart forwardTo definePromptOpenAI)
-                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput<String>() } asUserMessage { it })
+                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput<String>() })
                 edge(callLLM forwardTo callTool onToolCalls { true })
                 edge(callLLM forwardTo nodeFinish onTextMessage { true })
                 edge(callTool forwardTo sendToolResult)

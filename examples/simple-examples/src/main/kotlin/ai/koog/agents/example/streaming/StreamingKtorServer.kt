@@ -7,7 +7,6 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.dsl.prompt
@@ -148,6 +147,6 @@ private fun createStrategy(
 
     val requestLLMStream by nodeLLMRequestStreaming()
 
-    edge(nodeStart forwardTo requestLLMStream asUserMessage { it })
+    edge(nodeStart forwardTo requestLLMStream)
     requestLLMStream then processStream then nodeFinish
 }

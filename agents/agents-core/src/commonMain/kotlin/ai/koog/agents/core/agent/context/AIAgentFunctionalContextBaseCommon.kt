@@ -247,69 +247,6 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
         }
     }
 
-    // ================
-    // LLM Request User nodes
-    // ================
-
-    //region LLMRequest
-
-    /**
-     * Sends a [Message.User] to the LLM and returns the response.
-     * Corresponds to [nodeLLMRequest].
-     */
-    @JvmSynthetic
-    public suspend fun requestLLM(message: Message.User): Message.Assistant {
-        return llm.writeSession {
-            appendPrompt { message(message) }
-            requestLLM()
-        }
-    }
-
-    /**
-     * Sends a [Message.User] to the LLM, restricting it to only calling tools.
-     * Corresponds to [nodeLLMRequestOnlyCallingTools].
-     */
-    @JvmSynthetic
-    public suspend fun requestLLMOnlyCallingTools(message: Message.User): Message.Assistant {
-        return llm.writeSession {
-            appendPrompt { message(message) }
-            requestLLMOnlyCallingTools()
-        }
-    }
-
-    /**
-     * Sends a [Message.User] to the LLM without allowing tool calls.
-     * Corresponds to [nodeLLMRequestWithoutTools].
-     */
-    @JvmSynthetic
-    public suspend fun requestLLMWithoutTools(message: Message.User): Message.Assistant {
-        return llm.writeSession {
-            appendPrompt { message(message) }
-            requestLLMWithoutTools()
-        }
-    }
-
-    /**
-     * Sends a [Message.User] to the LLM and forces it to use a specific tool.
-     * Corresponds to [nodeLLMRequestForceOneTool].
-     */
-    @JvmSynthetic
-    public suspend fun requestLLMForceOneTool(message: Message.User, tool: ToolDescriptor): Message.Assistant {
-        return llm.writeSession {
-            appendPrompt { message(message) }
-            requestLLMForceOneTool(tool)
-        }
-    }
-
-    /**
-     * Sends a [Message.User] to the LLM and forces it to use a specific tool.
-     * Corresponds to [nodeLLMRequestForceOneTool].
-     */
-    @JvmSynthetic
-    public suspend fun requestLLMForceOneTool(message: Message.User, tool: Tool<*, *>): Message.Assistant {
-        return requestLLMForceOneTool(message, tool.descriptor)
-    }
-
     /**
      * Sends a string message to the LLM and returns multiple response choices.
      * Corresponds to [nodeLLMRequestMultipleChoicesWithUserText].
@@ -319,61 +256,6 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
         return llm.writeSession {
             appendPrompt { user(message) }
             requestLLMMultipleChoices()
-        }
-    }
-
-    /**
-     * Sends a [Message.User] to the LLM and returns multiple response choices.
-     * Corresponds to [nodeLLMRequestMultipleChoices].
-     */
-    @JvmSynthetic
-    public suspend fun requestLLMMultipleChoices(message: Message.User): LLMChoice {
-        return llm.writeSession {
-            appendPrompt { message(message) }
-            requestLLMMultipleChoices()
-        }
-    }
-
-    // Region Streaming
-
-    /**
-     * Sends a [Message.User] to the LLM and streams the response.
-     * Corresponds to [nodeLLMRequestStreaming].
-     */
-    @JvmSynthetic
-    public suspend fun requestLLMStreaming(
-        message: Message.User,
-        structureDefinition: StructureDefinition? = null
-    ): Flow<StreamFrame> {
-        return llm.writeSession {
-            appendPrompt { message(message) }
-            requestLLMStreaming(structureDefinition)
-        }
-    }
-
-    // Region Structured
-
-    /**
-     * Sends a [Message.User] to the LLM and returns a structured response.
-     * Corresponds to [nodeLLMRequestStructured].
-     */
-    @JvmSynthetic
-    public suspend inline fun <reified T> requestLLMStructured(
-        message: Message.User,
-        examples: List<T> = emptyList(),
-        fixingParser: StructureFixingParser? = null
-    ): Result<StructuredResponse<T>> = requestLLMStructured(message, serializer<T>(), examples, fixingParser)
-
-    @PublishedApi
-    internal suspend fun <T> requestLLMStructured(
-        message: Message.User,
-        serializer: KSerializer<T>,
-        examples: List<T> = emptyList(),
-        fixingParser: StructureFixingParser? = null
-    ): Result<StructuredResponse<T>> {
-        return llm.writeSession {
-            appendPrompt { message(message) }
-            requestLLMStructured(serializer, examples, fixingParser)
         }
     }
 
@@ -389,22 +271,6 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
     ): Result<StructuredResponse<T>> {
         return llm.writeSession {
             appendPrompt { user(message) }
-            requestLLMStructured(config, fixingParser)
-        }
-    }
-
-    /**
-     * Sends a [Message.User] to the LLM and returns a structured response using a [StructuredRequestConfig].
-     * Corresponds to [nodeLLMRequestStructured].
-     */
-    @JvmSynthetic
-    public suspend fun <T> requestLLMStructured(
-        message: Message.User,
-        config: StructuredRequestConfig<T>,
-        fixingParser: StructureFixingParser? = null
-    ): Result<StructuredResponse<T>> {
-        return llm.writeSession {
-            appendPrompt { message(message) }
             requestLLMStructured(config, fixingParser)
         }
     }
@@ -651,28 +517,6 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
     // ================
     // Conditions
     // ================
-
-    /**
-     * Creates a [Message.User] with the provided text.
-     * @param text Text of the user message.
-     */
-    @JvmSynthetic
-    public suspend fun asUserMessage(text: String): Message.User {
-        return llm.writeSession {
-            userMessage(text)
-        }
-    }
-
-    /**
-     * Creates a [Message.User] with the provided tool results.
-     * @param results List of the tool results of the user message.
-     */
-    @JvmSynthetic
-    public suspend fun asUserMessage(results: List<ReceivedToolResult>): Message.User {
-        return llm.writeSession {
-            userMessage(results.map { it.toMessagePart() })
-        }
-    }
 
     /**
      * Executes the provided action if the given response is of type [Message.Assistant].

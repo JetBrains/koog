@@ -2,7 +2,6 @@ package ai.koog.agents.core.system.feature
 
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.feature.AIAgentFeatureTestAPI.testClock
 import ai.koog.agents.core.feature.debugger.Debugger
@@ -115,7 +114,7 @@ class DebuggerStreamingTest {
             val strategy = strategy<String, String>(strategyName) {
                 val streamAndCollect by nodeLLMRequestStreaming(nodeLLMRequestStreamingName)
 
-                edge(nodeStart forwardTo streamAndCollect asUserMessage { it })
+                edge(nodeStart forwardTo streamAndCollect)
                 edge(streamAndCollect forwardTo nodeFinish transformed { it.collectText() })
             }
 
@@ -331,7 +330,7 @@ class DebuggerStreamingTest {
             val strategy = strategy<String, String>(strategyName) {
                 val streamAndCollect by nodeLLMRequestStreaming(nodeLLMRequestStreamingName)
 
-                edge(nodeStart forwardTo streamAndCollect asUserMessage { it })
+                edge(nodeStart forwardTo streamAndCollect)
                 edge(streamAndCollect forwardTo nodeFinish transformed { it.collectText() })
             }
 

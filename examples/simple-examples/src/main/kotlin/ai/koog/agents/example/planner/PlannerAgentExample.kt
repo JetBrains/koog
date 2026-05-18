@@ -8,7 +8,6 @@ import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
@@ -192,7 +191,7 @@ suspend fun planWork(
         }
 
         val callTool by nodeExecuteTools()
-        val askLLM by nodeLLMRequestWithoutToolsWithUserText()
+        val askLLM by nodeLLMRequestWithoutTools()
         val resumeAfterTool by nodeLLMRequestWithoutTools("resumeAfterTool")
 
         val buildPlanTree by node<Unit, Unit> {
@@ -201,7 +200,7 @@ suspend fun planWork(
             result.complete(tree)
         }
 
-        edge(nodeStart forwardTo setup asUserMessage { it })
+        edge(nodeStart forwardTo setup)
         edge(setup forwardTo tryFindingSequentialSubtasks transformed { initialTaskDescription })
 
         edge(tryFindingParallelSubtasks forwardTo callTool onToolCalls { true })

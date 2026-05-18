@@ -95,7 +95,6 @@ public class Calculator {
                     // start → callLLM (wrap the agent's String input as a user message)
                     graph.edge(
                         AIAgentEdge.builder().from(graph.nodeStart).to(nodeCallLLM)
-                            .asUserMessage()
                             .build()
                     );
 

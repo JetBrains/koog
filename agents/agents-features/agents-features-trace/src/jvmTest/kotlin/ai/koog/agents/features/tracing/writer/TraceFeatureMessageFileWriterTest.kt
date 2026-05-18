@@ -3,8 +3,7 @@ package ai.koog.agents.features.tracing.writer
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.ReceivedToolResults
 import ai.koog.agents.core.dsl.extension.ToolCalls
-import ai.koog.agents.core.dsl.extension.asUserMessage
-import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.onTextMessage
@@ -118,10 +117,10 @@ class TraceFeatureMessageFileWriterTest {
 
             val strategy = strategy(strategyName) {
                 val nodeSendInput by nodeLLMRequest("test-llm-call")
-                val nodeExecuteTool by nodeExecuteToolsAndGetResults("test-tool-call")
+                val nodeExecuteTool by nodeExecuteTools("test-tool-call")
                 val nodeSendToolResult by nodeLLMSendToolResults("test-node-llm-send-tool-result")
 
-                edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+                edge(nodeStart forwardTo nodeSendInput)
                 edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
                 edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
                 edge(nodeExecuteTool forwardTo nodeSendToolResult)
@@ -196,10 +195,9 @@ class TraceFeatureMessageFileWriterTest {
             )
 
             // Pre-encoded JSON shapes that match the new node input/output types:
-            // - test-llm-call input/output: Message.User / Message.Assistant
+            // - test-llm-call input/output: String / Message.Assistant
             // - test-tool-call input: ToolCalls; output: ReceivedToolResults
             // - test-node-llm-send-tool-result input: ReceivedToolResults; output: Message.Assistant
-            val userMessageEncoded = serializer.encodeToJSONElement(userPromptMessage, typeToken<Message.User>())
             val toolCallMessageEncoded = serializer.encodeToJSONElement(toolCallAssistant, typeToken<Message.Assistant>())
             val toolCallsEncoded = serializer.encodeToJSONElement(ToolCalls(listOf(toolCallPart)), typeToken<ToolCalls>())
             val toolResultsEncoded = serializer.encodeToJSONElement(toolResultsValue, typeToken<ReceivedToolResults>())
@@ -221,10 +219,10 @@ class TraceFeatureMessageFileWriterTest {
                 "${GraphStrategyStartingEvent::class.simpleName} (run id: $runId, strategy: $strategyName)",
                 "${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: __start__, input: \"$userPrompt\")",
                 "${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: __start__, input: \"$userPrompt\", output: \"$userPrompt\")",
-                "${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-llm-call, input: $userMessageEncoded)",
+                "${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-llm-call, input: \"$userPrompt\")",
                 "${LLMCallStartingEvent::class.simpleName} (run id: $runId, prompt: $expectedPromptFirstCall, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [$dummyToolName])",
                 "${LLMCallCompletedEvent::class.simpleName} (run id: $runId, prompt: $expectedPromptFirstCall, model: ${testModel.toModelInfo().modelIdentifierName}, response: ${toolCallAssistant.traceString}])",
-                "${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-llm-call, input: $userMessageEncoded, output: $toolCallMessageEncoded)",
+                "${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-llm-call, input: \"$userPrompt\", output: $toolCallMessageEncoded)",
                 "${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-tool-call, input: $toolCallsEncoded)",
                 "${ToolCallStartingEvent::class.simpleName} (run id: $runId, tool: $dummyToolName, tool args: $dummyToolArgsEncoded)",
                 "${ToolCallCompletedEvent::class.simpleName} (run id: $runId, tool: $dummyToolName, tool args: $dummyToolArgsEncoded, description: $dummyToolDescription, result: $dummyToolResultEncoded)",
@@ -331,8 +329,8 @@ class TraceFeatureMessageFileWriterTest {
                 val llmCallNode by nodeLLMRequest("test LLM call")
                 val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
-                edge(nodeStart forwardTo llmCallNode asUserMessage { "Test LLM call prompt" })
-                edge(llmCallNode forwardTo llmCallWithToolsNode asUserMessage { "Test LLM call with tools prompt" })
+                edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
+                edge(llmCallNode forwardTo llmCallWithToolsNode transformed { "Test LLM call with tools prompt" })
                 edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
             }
 
@@ -362,8 +360,8 @@ class TraceFeatureMessageFileWriterTest {
                 val llmCallNode by nodeLLMRequest("test LLM call")
                 val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
-                edge(nodeStart forwardTo llmCallNode asUserMessage { "Test LLM call prompt" })
-                edge(llmCallNode forwardTo llmCallWithToolsNode asUserMessage { "Test LLM call with tools prompt" })
+                edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
+                edge(llmCallNode forwardTo llmCallWithToolsNode transformed { "Test LLM call with tools prompt" })
                 edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
             }
 
@@ -429,10 +427,10 @@ class TraceFeatureMessageFileWriterTest {
 
             val strategy = strategy(strategyName) {
                 val nodeSendInput by nodeLLMRequest("test-llm-call")
-                val nodeExecuteTool by nodeExecuteToolsAndGetResults("test-tool-call")
+                val nodeExecuteTool by nodeExecuteTools("test-tool-call")
                 val nodeSendToolResult by nodeLLMSendToolResults("test-node-llm-send-tool-result")
 
-                edge(nodeStart forwardTo nodeSendInput asUserMessage { it })
+                edge(nodeStart forwardTo nodeSendInput)
                 edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
                 edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
                 edge(nodeExecuteTool forwardTo nodeSendToolResult)
