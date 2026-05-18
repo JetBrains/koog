@@ -479,7 +479,7 @@ Here is an example of error handling in Kotlin and Java:
 === "Java"
 
     <!--- INCLUDE
-    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.Prompt;
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.clients.retry.RetryConfig;

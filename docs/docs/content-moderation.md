@@ -120,7 +120,7 @@ You can use the `moderate` method directly on an LLMClient instance:
 === "Java"
 
     <!--- INCLUDE
-    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.Prompt;
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.dsl.ModerationResult;
@@ -200,7 +200,7 @@ Here is an example of using content moderation with the Llama Guard 3 model thro
 === "Java"
 
     <!--- INCLUDE
-    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.Prompt;
     import ai.koog.prompt.executor.ollama.client.OllamaClient;
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.dsl.ModerationResult;
@@ -284,7 +284,7 @@ You can also use the `moderate` method on a PromptExecutor, which will use the a
 === "Java"
 
     <!--- INCLUDE
-    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.Prompt;
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
