@@ -14,6 +14,7 @@ import ai.koog.agents.core.feature.model.events.AgentExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.AgentStartingEvent
 import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
 import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMCallFailedEvent
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
 import ai.koog.agents.core.feature.model.events.LLMStreamingCompletedEvent
 import ai.koog.agents.core.feature.model.events.LLMStreamingFailedEvent
@@ -343,6 +344,20 @@ public class Tracing {
                     model = eventContext.model.toModelInfo(),
                     response = eventContext.response,
                     moderationResponse = eventContext.moderationResponse,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                processMessage(config, event)
+            }
+
+            pipeline.interceptLLMCallFailed(this) intercept@{ eventContext ->
+                val event = LLMCallFailedEvent(
+                    eventId = eventContext.eventId,
+                    executionInfo = eventContext.executionInfo,
+                    runId = eventContext.runId,
+                    prompt = eventContext.prompt,
+                    model = eventContext.model.toModelInfo(),
+                    tools = eventContext.tools.map { it.name },
+                    error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)

@@ -8,9 +8,12 @@ import ai.koog.agents.core.dsl.extension.ToolCalls
 import ai.koog.agents.core.dsl.extension.asUserMessage
 import ai.koog.agents.core.dsl.extension.nodeAppendPrompt
 import ai.koog.agents.core.dsl.extension.nodeExecuteToolsAndGetResults
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
 import ai.koog.agents.core.feature.model.AIAgentError
+import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMCallFailedEvent
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
 import ai.koog.agents.core.feature.model.events.LLMStreamingCompletedEvent
 import ai.koog.agents.core.feature.model.events.LLMStreamingFailedEvent
@@ -609,6 +612,136 @@ class TraceFeatureMessageTestWriterTest {
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     )
+                )
+
+                assertEquals(expectedEvents.size, actualEvents.size)
+                assertContentEquals(expectedEvents, actualEvents)
+            }
+        }
+    }
+
+    @Test
+    fun `test llm call events failure`() = runBlocking {
+        val agentId = "test-agent-id"
+        val userPrompt = "Call the dummy tool with argument: test"
+        val systemPrompt = "Test system prompt"
+        val assistantPrompt = "Test assistant prompt"
+        val promptId = "Test prompt id"
+        val strategyName = "tracing-call-failure"
+        val nodeCallFailedName = "test-node-call-failed"
+        val model = OpenAIModels.Chat.GPT4o
+
+        val strategy = strategy<String, String>(strategyName) {
+            val call by nodeLLMRequest(nodeCallFailedName)
+
+            edge(nodeStart forwardTo call asUserMessage { it })
+            edge(
+                call forwardTo nodeFinish transformed { input ->
+                    input.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
+                }
+            )
+        }
+
+        val toolRegistry = ToolRegistry { tool(DummyTool()) }
+
+        val expectedErrorMessage = "Test LLM call error"
+        var expectedStackTrace = ""
+        var expectedCause: String? = null
+        var expectedType: String? = null
+
+        val testCallExecutor = object : PromptExecutor() {
+            override suspend fun execute(
+                prompt: Prompt,
+                model: LLModel,
+                tools: List<ToolDescriptor>
+            ): Message.Assistant {
+                val testException = IllegalStateException(expectedErrorMessage)
+                expectedStackTrace = testException.stackTraceToString()
+                expectedCause = testException.cause?.toString()
+                expectedType = testException::class.qualifiedName
+                throw testException
+            }
+
+            override fun executeStreaming(
+                prompt: Prompt,
+                model: LLModel,
+                tools: List<ToolDescriptor>
+            ): Flow<StreamFrame> = flow { }
+
+            override suspend fun moderate(
+                prompt: Prompt,
+                model: LLModel
+            ): ai.koog.prompt.dsl.ModerationResult {
+                throw UnsupportedOperationException("Not used in test")
+            }
+
+            override fun close() {}
+        }
+
+        TestFeatureMessageWriter().use { writer ->
+
+            createAgent(
+                agentId = agentId,
+                systemPrompt = systemPrompt,
+                userPrompt = userPrompt,
+                assistantPrompt = assistantPrompt,
+                promptId = promptId,
+                model = model,
+                strategy = strategy,
+                promptExecutor = testCallExecutor,
+                toolRegistry = toolRegistry,
+            ) {
+                install(Tracing) {
+                    addMessageProcessor(writer)
+                }
+            }.use { agent ->
+                val throwable = assertFails {
+                    agent.run("", null)
+                }
+
+                assertEquals(expectedErrorMessage, throwable.message)
+
+                val expectedPrompt = Prompt(
+                    messages = listOf(
+                        systemMessage(systemPrompt),
+                        userMessage(userPrompt),
+                        assistantMessage(assistantPrompt),
+                        userMessage(""),
+                    ),
+                    id = promptId
+                )
+
+                val actualEvents = writer.messages.filterIsInstance<LLMCallStartingEvent>() +
+                    writer.messages.filterIsInstance<LLMCallFailedEvent>() +
+                    writer.messages.filterIsInstance<LLMCallCompletedEvent>()
+
+                val actualCallStartingEvent = writer.messages.singleEvent<LLMCallStartingEvent>()
+
+                val expectedEvents = listOf(
+                    LLMCallStartingEvent(
+                        eventId = actualCallStartingEvent.eventId,
+                        executionInfo = agentExecutionInfo(agentId, strategyName, nodeCallFailedName),
+                        runId = writer.runId,
+                        prompt = expectedPrompt,
+                        model = model.toModelInfo(),
+                        tools = toolRegistry.tools.map { it.name },
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    LLMCallFailedEvent(
+                        eventId = actualCallStartingEvent.eventId,
+                        executionInfo = agentExecutionInfo(agentId, strategyName, nodeCallFailedName),
+                        runId = writer.runId,
+                        prompt = expectedPrompt,
+                        model = model.toModelInfo(),
+                        tools = toolRegistry.tools.map { it.name },
+                        error = AIAgentError(
+                            message = expectedErrorMessage,
+                            stackTrace = expectedStackTrace,
+                            cause = expectedCause,
+                            type = expectedType
+                        ),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
                 )
 
                 assertEquals(expectedEvents.size, actualEvents.size)
