@@ -145,9 +145,13 @@ public class GenericAgentEnvironment(
 
         logger.trace { "Completed execution of the tool '$toolName' with result: $toolResult" }
 
-        val (content, result) = try {
-            tool.encodeResultToStringUnsafe(toolResult, serializer) to
-                tool.encodeResult(toolResult, serializer)
+        val (content, result, parts) = try {
+            val content = tool.encodeResultToStringUnsafe(toolResult, serializer)
+            val result = tool.encodeResult(toolResult, serializer)
+
+            @Suppress("UNCHECKED_CAST")
+            val parts = (tool as? MultimodalTool<Any?, Any?>)?.encodeResultToParts(toolResult, serializer)
+            Triple(content, result, parts)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -172,7 +176,8 @@ public class GenericAgentEnvironment(
             output = content,
             resultKind = ToolResultKind.Success,
             result = result,
-            resultObject = toolResult
+            resultObject = toolResult,
+            parts = parts,
         )
     }
 

@@ -537,7 +537,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                         add(
                             AnthropicContent.ToolResult(
                                 toolUseId = part.id ?: "",
-                                content = part.output,
+                                content = part.toAnthropicToolResultContent(model),
                                 isError = part.isError,
                                 // TODO: check if anthropic supports cache control in tool result
                             )
@@ -612,6 +612,43 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
 
         return AnthropicMessage.User(content = listOfContent)
     }
+
+    private fun MessagePart.Tool.Result.toAnthropicToolResultContent(model: LLModel): List<AnthropicContent> =
+        parts.map { part ->
+            when (part) {
+                is MessagePart.Text -> AnthropicContent.Text(part.text)
+
+                is MessagePart.Attachment -> {
+                    when (val source = part.source) {
+                        is AttachmentSource.Image -> {
+                            val imageSource: ImageSource = when (val content = source.content) {
+                                is AttachmentContent.URL -> ImageSource.Url(content.url)
+                                is AttachmentContent.Binary -> ImageSource.Base64(content.asBase64(), source.mimeType)
+                                else -> throw LLMClientException(
+                                    clientName,
+                                    "Unsupported image attachment content in tool result: ${content::class}"
+                                )
+                            }
+                            AnthropicContent.Image(imageSource)
+                        }
+
+                        is AttachmentSource.File -> {
+                            val documentSource: DocumentSource = when (val content = source.content) {
+                                is AttachmentContent.URL -> DocumentSource.Url(content.url)
+                                is AttachmentContent.Binary -> DocumentSource.Base64(content.asBase64(), source.mimeType)
+                                is AttachmentContent.PlainText -> DocumentSource.PlainText(content.text, source.mimeType)
+                            }
+                            AnthropicContent.Document(documentSource)
+                        }
+
+                        else -> throw LLMClientException(
+                            clientName,
+                            "Unsupported attachment type in tool result: ${source::class}"
+                        )
+                    }
+                }
+            }
+        }
 
     private fun processAnthropicResponse(response: AnthropicResponse): Message.Assistant {
         // Extract token count from the response

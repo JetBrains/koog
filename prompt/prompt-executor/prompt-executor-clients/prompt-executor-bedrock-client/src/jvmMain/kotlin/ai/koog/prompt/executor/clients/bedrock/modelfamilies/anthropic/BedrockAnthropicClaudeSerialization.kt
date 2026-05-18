@@ -14,6 +14,7 @@ import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInv
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicResponse
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -49,7 +50,12 @@ internal object BedrockAnthropicClaudeSerialization {
                     is MessagePart.Attachment -> throw IllegalArgumentException("No attachments are supported in user messages")
                     is MessagePart.Tool.Result -> BedrockAnthropicInvokeModelContent.ToolResult(
                         toolUseId = part.id!!,
-                        content = part.output,
+                        content = part.parts.map { p ->
+                            require(p is MessagePart.Text) {
+                                "Bedrock InvokeModel (legacy) path only supports text content in tool results, got: ${p::class}"
+                            }
+                            BedrockAnthropicInvokeModelContent.Text(p.text)
+                        },
                         isError = part.isError
                     )
                 }
