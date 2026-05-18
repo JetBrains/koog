@@ -69,7 +69,7 @@ public class SearchStrategyBuilder {
      * Select the [SimilaritySearchStrategy] implementation.
      * Returns its [SimilaritySearchStrategy.Builder] for further configuration.
      */
-    public fun similarity(): SimilaritySearchStrategy.Builder = SimilaritySearchStrategy.Builder()
+    public fun similarity(): SimilaritySearchStrategyBuilder = SimilaritySearchStrategyBuilder()
 }
 
 /**
@@ -90,34 +90,49 @@ public class SimilaritySearchStrategy(
     override fun create(query: String): SimilaritySearchRequest =
         SimilaritySearchRequest(query, topK, 0, similarityThreshold, filterExpression)
 
-    /**
-     * Builder for [SimilaritySearchStrategy].
-     *
-     * @see SimilaritySearchStrategy
-     */
-    public class Builder {
-        /** Maximum number of results to return. */
-        public var topK: Int = 10
 
-        /** Minimum similarity score (0.0 to 1.0). */
-        public var similarityThreshold: Double = 0.0
-
-        /** Optional metadata filter expression for pre-filtering. */
-        public var filterExpression: String? = null
-
-        /** Fluent setter for [topK]. */
-        public fun withTopK(topK: Int): Builder = apply { this.topK = topK }
-
-        /** Fluent setter for [similarityThreshold]. */
-        public fun withSimilarityThreshold(similarityThreshold: Double): Builder =
-            apply { this.similarityThreshold = similarityThreshold }
-
-        /** Fluent setter for [filterExpression]. */
-        public fun withFilterExpression(filterExpression: String?): Builder =
-            apply { this.filterExpression = filterExpression }
-
-        /** Builds a [SimilaritySearchStrategy] from the current settings. */
-        public fun build(): SimilaritySearchStrategy =
-            SimilaritySearchStrategy(topK, similarityThreshold, filterExpression)
+    @Suppress("MissingKDocForPublicAPI")
+    public companion object {
+        /**
+         * Creates and returns a new instance of [SimilaritySearchStrategyBuilder].
+         *
+         * This builder allows customization of settings for constructing a
+         * [SimilaritySearchStrategy], such as the number of results to return,
+         * the similarity threshold, and an optional filter expression.
+         *
+         * @return a new [SimilaritySearchStrategyBuilder] instance for configuring and building a [SimilaritySearchStrategy].
+         */
+        public fun builder(): SimilaritySearchStrategyBuilder = SimilaritySearchStrategyBuilder()
     }
+}
+
+/**
+ * Builder for [SimilaritySearchStrategy].
+ *
+ * @see SimilaritySearchStrategy
+ */
+public class SimilaritySearchStrategyBuilder {
+    /** Maximum number of results to return. */
+    public var topK: Int = 10
+
+    /** Minimum similarity score (0.0 to 1.0). */
+    public var similarityThreshold: Double = 0.0
+
+    /** Optional metadata filter expression for pre-filtering. */
+    public var filterExpression: String? = null
+
+    /** Fluent setter for [topK]. */
+    public fun withTopK(topK: Int): SimilaritySearchStrategyBuilder = apply { this.topK = topK }
+
+    /** Fluent setter for [similarityThreshold]. */
+    public fun withSimilarityThreshold(similarityThreshold: Double): SimilaritySearchStrategyBuilder =
+        apply { this.similarityThreshold = similarityThreshold }
+
+    /** Fluent setter for [filterExpression]. */
+    public fun withFilterExpression(filterExpression: String?): SimilaritySearchStrategyBuilder =
+        apply { this.filterExpression = filterExpression }
+
+    /** Builds a [SimilaritySearchStrategy] from the current settings. */
+    public fun build(): SimilaritySearchStrategy =
+        SimilaritySearchStrategy(topK, similarityThreshold, filterExpression)
 }
