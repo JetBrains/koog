@@ -27,7 +27,7 @@ import ai.koog.integration.tests.utils.tools.AnswerVerificationTool
 import ai.koog.integration.tests.utils.tools.FileOperationsTools
 import ai.koog.integration.tests.utils.tools.GenericParameterTool
 import ai.koog.integration.tests.utils.tools.GeographyQueryTool
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMCapability

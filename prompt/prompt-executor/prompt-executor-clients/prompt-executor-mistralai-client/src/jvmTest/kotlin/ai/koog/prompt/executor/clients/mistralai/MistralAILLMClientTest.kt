@@ -1,7 +1,7 @@
 package ai.koog.prompt.executor.clients.mistralai
 
 import ai.koog.http.client.ktor.KtorKoogHttpClient
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.params.LLMParams
@@ -16,7 +16,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

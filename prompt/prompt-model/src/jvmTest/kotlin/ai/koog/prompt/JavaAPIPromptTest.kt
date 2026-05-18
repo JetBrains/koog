@@ -1,6 +1,5 @@
 package ai.koog.prompt
 
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.MessagePart
 import ai.koog.utils.time.KoogClock
 import org.junit.jupiter.api.Test

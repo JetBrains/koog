@@ -2,7 +2,7 @@ package ai.koog.agents.features.longtermmemory.aws.augmentation
 
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreMemoryRecord
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo

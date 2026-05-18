@@ -7,7 +7,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.acp.AcpAgent
 import ai.koog.agents.features.acp.toKoogMessage
 import ai.koog.agents.testing.tools.RandomNumberTool
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel

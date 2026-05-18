@@ -1,7 +1,7 @@
 package ai.koog.prompt.executor.clients.openrouter
 
 import ai.koog.http.client.ktor.KtorKoogHttpClient
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.message.MessagePart
 import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient

@@ -14,7 +14,7 @@ import ai.koog.integration.tests.utils.TestUtils.assertExceptionMessageContains
 import ai.koog.integration.tests.utils.TestUtils.isValidJson
 import ai.koog.integration.tests.utils.TestUtils.singlePropertyObjectSchema
 import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient

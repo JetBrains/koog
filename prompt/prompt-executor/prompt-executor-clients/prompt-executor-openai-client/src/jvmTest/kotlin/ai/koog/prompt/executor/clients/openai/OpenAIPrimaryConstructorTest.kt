@@ -1,7 +1,7 @@
 package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.models.Item
 import ai.koog.prompt.executor.clients.openai.models.OpenAIInputStatus

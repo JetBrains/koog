@@ -1,6 +1,6 @@
 package ai.koog.agents.ext.llm.choice
 
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 

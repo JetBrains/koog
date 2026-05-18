@@ -1,6 +1,6 @@
 package ai.koog.agents.longtermmemory.retrieval.augmentation
 
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.search.SearchResult
 import kotlin.jvm.JvmStatic

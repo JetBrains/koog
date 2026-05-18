@@ -9,7 +9,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolRegistryBuilder
 import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.ktor.KoogAgentsConfig.TimeoutConfiguration.Companion.DEFAULT_TIMEOUT
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.PromptDSL
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
