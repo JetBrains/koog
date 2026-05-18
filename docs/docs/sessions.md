@@ -802,7 +802,7 @@ Example:
     ```java
     // Java uses dedicated tool-execution nodes in graph strategies.
     var executeTool = AIAgentNode.executeTools("executeTool");
-    var sendToolResult = AIAgentNode.llmRequest("sendToolResult");
+    var sendToolResult = AIAgentNode.llmSendToolResults("sendToolResult");
     ```
     <!--- KNIT exampleSessionsJava11.java -->
 

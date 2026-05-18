@@ -101,6 +101,7 @@ Depending on which step you decide to perform compression, the following scenari
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.prompt.message.Message;
+    import ai.koog.agents.core.dsl.extension.ReceivedToolResults;
     class exampleHistoryCompressionJava01 {
         public static void main(String[] args) {
     -->
