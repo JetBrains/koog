@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.serialization.TypeToken
+import kotlin.time.Duration
 
 /**
  * Represents the context for handling node-specific events within the framework.
@@ -46,6 +47,7 @@ public data class NodeExecutionStartingContext(
  * @property inputType [TypeToken] representing the type of the [input].
  * @property output The output data produced by the node execution.
  * @property outputType [TypeToken] representing the type of the [output].
+ * @property duration Elapsed time of the node's body execution.
  */
 public data class NodeExecutionCompletedContext(
     override val eventId: String,
@@ -56,6 +58,7 @@ public data class NodeExecutionCompletedContext(
     public val inputType: TypeToken,
     public val output: Any?,
     public val outputType: TypeToken,
+    public val duration: Duration,
 ) : NodeExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.NodeExecutionCompleted
 }
@@ -66,6 +69,7 @@ public data class NodeExecutionCompletedContext(
  * @property input The node input data;
  * @property inputType [TypeToken] representing the type of the [input].
  * @property error The exception or error that occurred during node execution.
+ * @property duration Elapsed time of the node's body execution up to the failure
  */
 public data class NodeExecutionFailedContext(
     override val eventId: String,
@@ -74,7 +78,8 @@ public data class NodeExecutionFailedContext(
     override val node: AIAgentNodeBase<*, *>,
     public val input: Any?,
     public val inputType: TypeToken,
-    public val error: Throwable
+    public val error: Throwable,
+    public val duration: Duration,
 ) : NodeExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.NodeExecutionFailed
 }

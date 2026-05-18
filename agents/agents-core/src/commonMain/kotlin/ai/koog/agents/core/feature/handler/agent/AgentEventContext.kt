@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
+import kotlin.time.Duration
 
 /**
  * Provides the context for handling events specific to AI agents.
@@ -43,6 +44,9 @@ public data class AgentStartingContext(
  * @property context The context associated with the agent's execution;
  * @property runId The identifier of the session in which the agent was executed;
  * @property result The optional result of the agent's execution, if available.
+ * @property duration Elapsed time for agent execution.
+ *           Excludes the run time of `onAgentStarting`/`onAgentCompleted` feature handlers themselves, so the value
+ *           reflects only the agent's own work, not the framework's reporting overhead.
  */
 public data class AgentCompletedContext(
     override val eventId: String,
@@ -51,6 +55,7 @@ public data class AgentCompletedContext(
     public val context: AIAgentContext,
     public val runId: String,
     public val result: Any?,
+    public val duration: Duration,
 ) : AgentEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentCompleted
 }
@@ -61,6 +66,9 @@ public data class AgentCompletedContext(
  * @property context The context associated with the agent's execution.
  * @property runId The identifier for the session during which the error occurred.
  * @property error The exception or error thrown during the execution.
+ * @property duration Elapsed time from immediately after `onAgentStarting` returned until the failure was observed,
+ * or `null` if the failure originated before measurement could start (for example, when an `onAgentStarting`
+ * feature handler threw). A `null` value explicitly signals "execution never began".
  */
 public data class AgentExecutionFailedContext(
     override val eventId: String,
@@ -69,17 +77,23 @@ public data class AgentExecutionFailedContext(
     public val context: AIAgentContext,
     public val runId: String,
     public val error: Throwable,
+    public val duration: Duration?,
 ) : AgentEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentExecutionFailed
 }
 
 /**
  * Represents the context passed to the handler that is executed before an agent is closed.
+ *
+ * @property duration Elapsed time of the entire agent session, measured from when feature preparation began
+ * until just before this event fires. Includes `onAgentStarting`/`onAgentCompleted` handler time, strategy
+ * execution, and feature cleanup — i.e., the full session lifetime as seen by the framework.
  */
 public data class AgentClosingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     override val agent: AIAgent<*, *>,
+    public val duration: Duration,
 ) : AgentEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentClosing
 }

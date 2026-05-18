@@ -11,6 +11,7 @@ import ai.koog.agents.core.feature.handler.planner.PlanCreationStartingContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionStartingContext
 import ai.koog.serialization.TypeToken
+import kotlin.time.Duration
 
 /**
  * Platform-agnostic API for planner agent pipelines, extending the base pipeline API
@@ -62,6 +63,7 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
         planType: TypeToken?,
         stepIndex: Int,
         updatedPlan: Any,
+        duration: Duration,
     )
 
     /**
@@ -106,6 +108,7 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
         plan: Any,
         planType: TypeToken?,
         stepIndex: Int,
+        duration: Duration,
     )
 
     /**
@@ -151,6 +154,7 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
         planType: TypeToken?,
         stepIndex: Int,
         isCompleted: Boolean,
+        duration: Duration,
     )
 
     //endregion Trigger Planner Handlers

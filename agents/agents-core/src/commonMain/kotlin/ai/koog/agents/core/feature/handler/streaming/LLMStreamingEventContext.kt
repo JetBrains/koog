@@ -8,6 +8,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.streaming.StreamFrame
+import kotlin.time.Duration
 
 /**
  * Represents the context for handling streaming-specific events within the framework.
@@ -75,6 +76,8 @@ public data class LLMStreamingFrameReceivedContext(
  * This context is provided when an error occurs during streaming.
  *
  * @property error The exception or error that occurred during streaming.
+ * @property duration Elapsed time for LLM streaming operation.
+ *           A `null` value explicitly indicates that streaming was not finished.
  */
 public data class LLMStreamingFailedContext(
     override val eventId: String,
@@ -84,6 +87,7 @@ public data class LLMStreamingFailedContext(
     override val prompt: Prompt,
     override val model: LLModel,
     public val error: Throwable,
+    public val duration: Duration?,
 ) : LLMStreamingEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingFailed
 }
@@ -93,6 +97,9 @@ public data class LLMStreamingFailedContext(
  * This context is provided when streaming is complete.
  *
  * @property tools The list of tool descriptors that were available for the streaming call.
+ * @property duration Elapsed time for LLM streaming operation.
+ *           Excludes the run time of the starting and completed feature handlers.
+ *           A `null` if the flow terminated before the start mark was captured.
  */
 public data class LLMStreamingCompletedContext(
     override val eventId: String,
@@ -102,6 +109,7 @@ public data class LLMStreamingCompletedContext(
     override val prompt: Prompt,
     override val model: LLModel,
     public val tools: List<ToolDescriptor>,
+    public val duration: Duration?,
 ) : LLMStreamingEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingCompleted
 }

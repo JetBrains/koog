@@ -13,6 +13,7 @@ import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedCo
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
 import ai.koog.serialization.TypeToken
+import kotlin.time.Duration
 
 /**
  * Public API surface for graph-specific pipeline operations (nodes and subgraphs).
@@ -44,6 +45,7 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
         inputType: TypeToken,
         output: Any?,
         outputType: TypeToken,
+        duration: Duration,
     )
 
     @InternalAgentsApi
@@ -55,6 +57,7 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
         input: Any?,
         inputType: TypeToken,
         error: Throwable,
+        duration: Duration,
     )
 
     //endregion Trigger Node Handlers
@@ -81,6 +84,7 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
         inputType: TypeToken,
         output: Any?,
         outputType: TypeToken,
+        duration: Duration,
     )
 
     @InternalAgentsApi
@@ -92,6 +96,7 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
         input: Any?,
         inputType: TypeToken,
         error: Throwable,
+        duration: Duration,
     )
 
     //endregion Trigger Subgraph Handlers

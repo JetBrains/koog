@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.serialization.TypeToken
+import kotlin.time.Duration
 
 /**
  * Defines the context specifically for handling strategy-related events within the AI agent framework.
@@ -52,6 +53,7 @@ public class StrategyStartingContext(
  *
  * @property result Strategy result.
  * @property resultType [TypeToken] representing the type of the [result]
+ * @property duration Elapsed time of the `strategy.execute` call.
  */
 public class StrategyCompletedContext(
     override val eventId: String,
@@ -60,6 +62,7 @@ public class StrategyCompletedContext(
     override val strategy: AIAgentStrategy<*, *, *>,
     public val result: Any?,
     public val resultType: TypeToken,
+    public val duration: Duration,
 ) : StrategyEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.StrategyCompleted
 

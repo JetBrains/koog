@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.serialization.TypeToken
+import kotlin.time.Duration
 
 /**
  * Defines the context specifically for handling planner-related events within the AI agent framework.
@@ -63,6 +64,7 @@ public class PlanCreationStartingContext(
  * Represents the context for a buildPlan operation completed event.
  *
  * @property updatedPlan The newly built plan.
+ * @property duration Elapsed time of the `buildPlan` call.
  */
 public class PlanCreationCompletedContext(
     override val eventId: String,
@@ -74,6 +76,7 @@ public class PlanCreationCompletedContext(
     override val planType: TypeToken?,
     override val stepIndex: Int,
     public val updatedPlan: Any,
+    public val duration: Duration,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.BuildPlanCompleted
 }
@@ -96,6 +99,8 @@ public class StepExecutionStartingContext(
 
 /**
  * Represents the context for an executeStep operation completed event.
+ *
+ * @property duration Elapsed time of the `executeStep` call.
  */
 public class StepExecutionCompletedContext(
     override val eventId: String,
@@ -106,6 +111,7 @@ public class StepExecutionCompletedContext(
     override val plan: Any,
     override val planType: TypeToken?,
     override val stepIndex: Int,
+    public val duration: Duration,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ExecuteStepCompleted
 }
@@ -130,6 +136,7 @@ public class PlanCompletionEvaluationStartingContext(
  * Represents the context for an isPlanCompleted check completed event.
  *
  * @property isCompleted The result of the completion check.
+ * @property duration Elapsed time of the `isPlanCompleted` call.
  */
 public class PlanCompletionEvaluationCompletedContext(
     override val eventId: String,
@@ -141,6 +148,7 @@ public class PlanCompletionEvaluationCompletedContext(
     override val planType: TypeToken?,
     override val stepIndex: Int,
     public val isCompleted: Boolean,
+    public val duration: Duration,
 ) : PlannerEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.IsPlanCompletedCompleted
 }

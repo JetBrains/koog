@@ -52,6 +52,7 @@ import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
+import kotlin.time.Duration
 
 /**
  * Default implementation of [AIAgentPipelineAPI]
@@ -189,10 +190,11 @@ public class AIAgentPipelineImpl(
         context: AIAgentContext,
         runId: String,
         result: Any?,
+        duration: Duration,
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.AgentCompleted,
-            context = AgentCompletedContext(eventId, executionInfo, agent, context, runId, result)
+            context = AgentCompletedContext(eventId, executionInfo, agent, context, runId, result, duration)
         )
     }
 
@@ -204,10 +206,11 @@ public class AIAgentPipelineImpl(
         context: AIAgentContext,
         runId: String,
         error: Throwable,
+        duration: Duration?,
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.AgentExecutionFailed,
-            context = AgentExecutionFailedContext(eventId, executionInfo, agent, context, runId, error)
+            context = AgentExecutionFailedContext(eventId, executionInfo, agent, context, runId, error, duration)
         )
     }
 
@@ -216,10 +219,11 @@ public class AIAgentPipelineImpl(
         eventId: String,
         executionInfo: AgentExecutionInfo,
         agent: AIAgent<*, *>,
+        duration: Duration,
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.AgentClosing,
-            context = AgentClosingContext(eventId, executionInfo, agent)
+            context = AgentClosingContext(eventId, executionInfo, agent, duration)
         )
     }
 
@@ -261,11 +265,12 @@ public class AIAgentPipelineImpl(
         context: AIAgentContext,
         strategy: AIAgentStrategy<*, *, *>,
         result: Any?,
-        resultType: TypeToken
+        resultType: TypeToken,
+        duration: Duration,
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.StrategyCompleted,
-            context = StrategyCompletedContext(eventId, executionInfo, context, strategy, result, resultType)
+            context = StrategyCompletedContext(eventId, executionInfo, context, strategy, result, resultType, duration)
         )
     }
 
@@ -300,10 +305,11 @@ public class AIAgentPipelineImpl(
         tools: List<ToolDescriptor>,
         response: Message.Assistant?,
         moderationResponse: ModerationResult?,
+        duration: Duration,
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.LLMCallCompleted,
-            context = LLMCallCompletedContext(eventId, executionInfo, context, runId, prompt, model, tools, response, moderationResponse)
+            context = LLMCallCompletedContext(eventId, executionInfo, context, runId, prompt, model, tools, response, moderationResponse, duration)
         )
     }
 
@@ -315,11 +321,12 @@ public class AIAgentPipelineImpl(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        error: Throwable
+        error: Throwable,
+        duration: Duration,
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.LLMCallFailed,
-            context = LLMCallFailedContext(eventId, executionInfo, context, runId, prompt, model, tools, error)
+            context = LLMCallFailedContext(eventId, executionInfo, context, runId, prompt, model, tools, error, duration)
         )
     }
 
@@ -356,10 +363,11 @@ public class AIAgentPipelineImpl(
         toolArgs: JSONObject,
         message: String,
         error: Throwable,
+        duration: Duration,
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.ToolValidationFailed,
-            context = ToolValidationFailedContext(eventId, executionInfo, context, runId, toolCallId, toolName, toolDescription, toolArgs, message, error)
+            context = ToolValidationFailedContext(eventId, executionInfo, context, runId, toolCallId, toolName, toolDescription, toolArgs, message, error, duration)
         )
     }
 
@@ -375,10 +383,11 @@ public class AIAgentPipelineImpl(
         toolArgs: JSONObject,
         message: String,
         error: Throwable?,
+        duration: Duration,
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.ToolCallFailed,
-            context = ToolCallFailedContext(eventId, executionInfo, context, runId, toolCallId, toolName, toolDescription, toolArgs, message, error)
+            context = ToolCallFailedContext(eventId, executionInfo, context, runId, toolCallId, toolName, toolDescription, toolArgs, message, error, duration)
         )
     }
 
@@ -393,10 +402,11 @@ public class AIAgentPipelineImpl(
         toolDescription: String?,
         toolArgs: JSONObject,
         toolResult: JSONElement?,
+        duration: Duration,
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.ToolCallCompleted,
-            context = ToolCallCompletedContext(eventId, executionInfo, context, runId, toolCallId, toolName, toolDescription, toolArgs, toolResult)
+            context = ToolCallCompletedContext(eventId, executionInfo, context, runId, toolCallId, toolName, toolDescription, toolArgs, toolResult, duration)
         )
     }
 
@@ -476,10 +486,11 @@ public class AIAgentPipelineImpl(
         prompt: Prompt,
         model: LLModel,
         error: Throwable,
+        duration: Duration?,
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.LLMStreamingFailed,
-            context = LLMStreamingFailedContext(eventId, executionInfo, context, runId, prompt, model, error)
+            context = LLMStreamingFailedContext(eventId, executionInfo, context, runId, prompt, model, error, duration)
         )
     }
 
@@ -492,10 +503,11 @@ public class AIAgentPipelineImpl(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
+        duration: Duration?,
     ) {
         invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.LLMStreamingCompleted,
-            context = LLMStreamingCompletedContext(eventId, executionInfo, context, runId, prompt, model, tools)
+            context = LLMStreamingCompletedContext(eventId, executionInfo, context, runId, prompt, model, tools, duration)
         )
     }
 
@@ -668,7 +680,6 @@ public class AIAgentPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
     public override fun provideToolCallMetadata(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallStartingContext) -> Map<String, Any?>
@@ -1170,7 +1181,7 @@ public class AIAgentPipelineImpl(
      * Determines whether the given event context is accepted based on the feature configuration's event filter.
      *
      * @param eventContext The context of the agent lifecycle event to be evaluated.
-     * @return `true` if the event context is accepted by the event filter; otherwise, `false`.
+     * @return `true` if the event filter accepts the event context; otherwise, `false`.
      */
     private fun FeatureConfig.isAccepted(eventContext: AgentLifecycleEventContext): Boolean {
         return this.eventFilter.invoke(eventContext)

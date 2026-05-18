@@ -9,6 +9,7 @@ import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedEx
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlin.time.TimeSource
 
 /**
  * An abstract base planner component, which can be used to implement different types of AI agent planner execution flows.
@@ -157,8 +158,9 @@ public abstract class AIAgentPlanner<Input, Output, State : Any, Plan : Any>(
             if (executionPoint == null) {
                 context.with(partName = "buildPlan-${stepIndex + 1}") { executionInfo, eventId ->
                     context.pipeline.onPlanCreationStarting(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex + 1)
+                    val buildPlanStartMark = TimeSource.Monotonic.markNow()
                     val newPlan = buildPlan(context, state, plan)
-                    context.pipeline.onPlanCreationCompleted(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex + 1, newPlan)
+                    context.pipeline.onPlanCreationCompleted(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex + 1, newPlan, buildPlanStartMark.elapsedNow())
                     plan = newPlan
                 }
             }
@@ -173,8 +175,9 @@ public abstract class AIAgentPlanner<Input, Output, State : Any, Plan : Any>(
                 // Execute step
                 context.with(partName = "executeStep-${stepIndex + 1}") { stepExecutionInfo, stepEventId ->
                     context.pipeline.onStepExecutionStarting(stepEventId, stepExecutionInfo, context, state, stateType, plan!!, planType, stepIndex + 1)
+                    val stepStartMark = TimeSource.Monotonic.markNow()
                     state = executeStep(context, state, plan)
-                    context.pipeline.onStepExecutionCompleted(stepEventId, stepExecutionInfo, context, state, stateType, plan, planType, stepIndex + 1)
+                    context.pipeline.onStepExecutionCompleted(stepEventId, stepExecutionInfo, context, state, stateType, plan, planType, stepIndex + 1, stepStartMark.elapsedNow())
                 }
             }
 
@@ -187,8 +190,9 @@ public abstract class AIAgentPlanner<Input, Output, State : Any, Plan : Any>(
             // Check if plan is completed
             val isCompleted = context.with(partName = "isPlanCompleted-${stepIndex + 1}") { executionInfo, eventId ->
                 context.pipeline.onPlanCompletionEvaluationStarting(eventId, executionInfo, context, state, stateType, plan!!, planType, stepIndex + 1)
+                val evalStartMark = TimeSource.Monotonic.markNow()
                 val completed = isPlanCompleted(context, state, plan)
-                context.pipeline.onPlanCompletionEvaluationCompleted(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex + 1, completed)
+                context.pipeline.onPlanCompletionEvaluationCompleted(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex + 1, completed, evalStartMark.elapsedNow())
                 completed
             }
 

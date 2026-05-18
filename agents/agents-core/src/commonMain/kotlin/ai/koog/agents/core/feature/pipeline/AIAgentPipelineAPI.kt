@@ -40,6 +40,7 @@ import ai.koog.serialization.JSONObject
 import ai.koog.serialization.TypeToken
 import ai.koog.utils.time.KoogClock
 import kotlin.reflect.KClass
+import kotlin.time.Duration
 
 /**
  * Platform-agnostic API for agent pipelines. Implemented by both the expect/actual AIAgentPipeline
@@ -82,6 +83,7 @@ public interface AIAgentPipelineAPI {
         context: AIAgentContext,
         runId: String,
         result: Any?,
+        duration: Duration,
     )
 
     @InternalAgentsApi
@@ -92,6 +94,7 @@ public interface AIAgentPipelineAPI {
         context: AIAgentContext,
         runId: String,
         error: Throwable,
+        duration: Duration?,
     )
 
     @InternalAgentsApi
@@ -99,6 +102,7 @@ public interface AIAgentPipelineAPI {
         eventId: String,
         executionInfo: AgentExecutionInfo,
         agent: AIAgent<*, *>,
+        duration: Duration,
     )
 
     @InternalAgentsApi
@@ -128,7 +132,8 @@ public interface AIAgentPipelineAPI {
         context: AIAgentContext,
         strategy: AIAgentStrategy<*, *, *>,
         result: Any?,
-        resultType: TypeToken
+        resultType: TypeToken,
+        duration: Duration,
     )
 
     //endregion Trigger Strategy Handlers
@@ -157,6 +162,7 @@ public interface AIAgentPipelineAPI {
         tools: List<ToolDescriptor>,
         response: Message.Assistant?,
         moderationResponse: ModerationResult? = null,
+        duration: Duration,
     )
 
     public suspend fun onLLMCallFailed(
@@ -168,6 +174,7 @@ public interface AIAgentPipelineAPI {
         model: LLModel,
         tools: List<ToolDescriptor>,
         error: Throwable,
+        duration: Duration,
     )
 
     //endregion Trigger LLM Handlers
@@ -198,6 +205,7 @@ public interface AIAgentPipelineAPI {
         toolArgs: JSONObject,
         message: String,
         error: Throwable,
+        duration: Duration,
     )
 
     @InternalAgentsApi
@@ -212,6 +220,7 @@ public interface AIAgentPipelineAPI {
         toolArgs: JSONObject,
         message: String,
         error: Throwable?,
+        duration: Duration,
     )
 
     @InternalAgentsApi
@@ -225,6 +234,7 @@ public interface AIAgentPipelineAPI {
         toolDescription: String?,
         toolArgs: JSONObject,
         toolResult: JSONElement?,
+        duration: Duration,
     )
 
     /**
@@ -282,6 +292,7 @@ public interface AIAgentPipelineAPI {
         prompt: Prompt,
         model: LLModel,
         error: Throwable,
+        duration: Duration?
     )
 
     @InternalAgentsApi
@@ -293,6 +304,7 @@ public interface AIAgentPipelineAPI {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
+        duration: Duration?
     )
 
     //endregion Trigger Streaming Handlers
@@ -382,7 +394,7 @@ public interface AIAgentPipelineAPI {
      * without expanding the tool's argument schema. Return an empty map to contribute nothing.
      *
      * Merge precedence (documented in [ai.koog.agents.core.environment.ContextualAgentEnvironment]):
-     * caller-supplied metadata wins over feature contributions on key collision.
+     * caller-supplied metadata wins over feature contributions to key collision.
      */
     public fun provideToolCallMetadata(
         feature: AIAgentFeature<*, *>,

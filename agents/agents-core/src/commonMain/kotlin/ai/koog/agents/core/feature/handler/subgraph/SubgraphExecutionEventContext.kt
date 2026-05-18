@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.serialization.TypeToken
+import kotlin.time.Duration
 
 /**
  * Represents the context for handling subgraph-specific events for graph strategies within the framework.
@@ -46,6 +47,8 @@ public data class SubgraphExecutionStartingContext(
  * @property inputType The type of the input data for the subgraph execution.
  * @property output The output data from the subgraph execution.
  * @property outputType The type of the output data for the subgraph execution.
+ * @property duration Elapsed time of the subgraph's body execution.
+ *           Excludes the run time of `onSubgraphExecutionStarting`/`onSubgraphExecutionCompleted` feature handlers.
  */
 public data class SubgraphExecutionCompletedContext(
     override val eventId: String,
@@ -54,8 +57,9 @@ public data class SubgraphExecutionCompletedContext(
     override val subgraph: AIAgentSubgraphBase<*, *>,
     public val input: Any?,
     public val inputType: TypeToken,
-    val output: Any?,
-    val outputType: TypeToken,
+    public val output: Any?,
+    public val outputType: TypeToken,
+    public val duration: Duration,
 ) : SubgraphExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.SubgraphExecutionCompleted
 }
@@ -66,6 +70,8 @@ public data class SubgraphExecutionCompletedContext(
  * @property input The input data for the subgraph execution.
  * @property inputType The type of the input data for the subgraph execution.
  * @property error The exception that caused the subgraph execution to fail.
+ * @property duration Elapsed time of the subgraph's body execution up to the failure.
+ *           Excludes the run time of `onSubgraphExecutionStarting`/`onSubgraphExecutionFailed` feature handlers.
  */
 public data class SubgraphExecutionFailedContext(
     override val eventId: String,
@@ -74,7 +80,8 @@ public data class SubgraphExecutionFailedContext(
     override val subgraph: AIAgentSubgraphBase<*, *>,
     public val input: Any?,
     public val inputType: TypeToken,
-    public val error: Throwable
+    public val error: Throwable,
+    public val duration: Duration,
 ) : SubgraphExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.SubgraphExecutionFailed
 }

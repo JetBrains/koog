@@ -9,6 +9,7 @@ import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import kotlin.time.Duration
 
 /**
  * Represents the context for handling LLM-specific events within the framework.
@@ -59,6 +60,7 @@ public data class LLMCallStartingContext(
  * Represents the context for handling an after LLM call failed.
  *
  * @property error The error that occurred during the LLM call.
+ * @property duration Elapsed time of the underlying `PromptExecutor.execute` call up to the failure.
  */
 public data class LLMCallFailedContext(
     override val eventId: String,
@@ -68,7 +70,8 @@ public data class LLMCallFailedContext(
     override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-    public val error: Throwable
+    public val error: Throwable,
+    public val duration: Duration,
 ) : LLMCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallFailed
 }
@@ -78,6 +81,7 @@ public data class LLMCallFailedContext(
  *
  * @property response The response message received from the language model.
  * @property moderationResponse The moderation response, if any, received from the language model.
+ * @property duration Elapsed time of the underlying `PromptExecutor.execute` call.
  */
 public data class LLMCallCompletedContext(
     override val eventId: String,
@@ -89,6 +93,7 @@ public data class LLMCallCompletedContext(
     override val tools: List<ToolDescriptor>,
     public val response: Message.Assistant?,
     public val moderationResponse: ModerationResult?,
+    public val duration: Duration,
 ) : LLMCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallCompleted
 }

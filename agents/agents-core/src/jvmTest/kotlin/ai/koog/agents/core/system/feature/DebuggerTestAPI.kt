@@ -25,6 +25,7 @@ import ai.koog.agents.core.system.mock.ClientEventsCollector
 import ai.koog.agents.core.system.mock.MockLLMProvider
 import ai.koog.agents.core.system.mock.TestAgentFactory.createGraphAgent
 import ai.koog.agents.testing.agent.agentExecutionInfo
+import ai.koog.agents.testing.feature.message.findEvents
 import ai.koog.agents.testing.feature.message.singleEvent
 import ai.koog.agents.testing.feature.message.singleNodeEvent
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
@@ -133,6 +134,11 @@ internal object DebuggerTestAPI {
                 val actualAgentStartingEvent = actualFilteredEvents.singleEvent<AgentStartingEvent>()
                 val actualStrategyStartingEvent = actualFilteredEvents.singleEvent<GraphStrategyStartingEvent>()
                 val actualNodeStartEvent = actualFilteredEvents.singleNodeEvent(START_NODE_PREFIX)
+                val actualStrategyCompletedEvent = actualFilteredEvents.singleEvent<StrategyCompletedEvent>()
+                val actualAgentCompletedEvent = actualFilteredEvents.singleEvent<AgentCompletedEvent>()
+                val actualNodeCompletedByName = actualFilteredEvents
+                    .findEvents<NodeExecutionCompletedEvent>()
+                    .associateBy { it.nodeName }
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 expectedFilteredEvents.addAll(
@@ -178,7 +184,8 @@ internal object DebuggerTestAPI {
                             serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             output = @OptIn(InternalAgentsApi::class)
                             serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualNodeCompletedByName.getValue(START_NODE_PREFIX).duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionStartingEvent(
                             eventId = actualNodeStartEvent.eventId,
@@ -198,7 +205,8 @@ internal object DebuggerTestAPI {
                             serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             output = @OptIn(InternalAgentsApi::class)
                             serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualNodeCompletedByName.getValue(FINISH_NODE_PREFIX).duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         StrategyCompletedEvent(
                             eventId = actualStrategyStartingEvent.eventId,
@@ -206,7 +214,8 @@ internal object DebuggerTestAPI {
                             runId = clientEventsCollector.runId,
                             strategyName = strategyName,
                             result = userPrompt,
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualStrategyCompletedEvent.duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         AgentCompletedEvent(
                             eventId = actualAgentStartingEvent.eventId,
@@ -214,13 +223,15 @@ internal object DebuggerTestAPI {
                             agentId = agentId,
                             runId = clientEventsCollector.runId,
                             result = userPrompt,
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualAgentCompletedEvent.duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         AgentClosingEvent(
                             eventId = actualAgentClosingEvent.eventId,
                             executionInfo = agentExecutionInfo(agentId),
                             agentId = agentId,
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualAgentClosingEvent.duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                     )
                 )

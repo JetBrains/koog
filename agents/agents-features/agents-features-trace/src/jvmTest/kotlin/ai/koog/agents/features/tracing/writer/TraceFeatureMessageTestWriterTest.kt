@@ -12,6 +12,9 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
 import ai.koog.agents.core.feature.model.AIAgentError
+import ai.koog.agents.core.feature.model.events.AgentClosingEvent
+import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
+import ai.koog.agents.core.feature.model.events.AgentExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.LLMCallFailedEvent
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
@@ -19,12 +22,16 @@ import ai.koog.agents.core.feature.model.events.LLMStreamingCompletedEvent
 import ai.koog.agents.core.feature.model.events.LLMStreamingFailedEvent
 import ai.koog.agents.core.feature.model.events.LLMStreamingFrameReceivedEvent
 import ai.koog.agents.core.feature.model.events.LLMStreamingStartingEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
 import ai.koog.agents.core.feature.model.events.SubgraphExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.SubgraphExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.SubgraphExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolCallFailedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -358,7 +365,8 @@ class TraceFeatureMessageTestWriterTest {
                         cause = expectedCause,
                         type = expectedType
                     ),
-                    timestamp = testClock.now().toEpochMilliseconds()
+                    duration = actualEvents.single().duration,
+                    timestamp = testClock.now().toEpochMilliseconds(),
                 )
             )
 
@@ -430,6 +438,7 @@ class TraceFeatureMessageTestWriterTest {
                 )
 
                 val actualStreamingStartingEvent = writer.messages.singleEvent<LLMStreamingStartingEvent>()
+                val actualStreamingCompletedEvent = writer.messages.singleEvent<LLMStreamingCompletedEvent>()
 
                 val expectedEvents = listOf(
                     LLMStreamingStartingEvent(
@@ -475,7 +484,8 @@ class TraceFeatureMessageTestWriterTest {
                         prompt = expectedPrompt,
                         model = model.toModelInfo(),
                         tools = toolRegistry.tools.map { it.name },
-                        timestamp = testClock.now().toEpochMilliseconds()
+                        duration = actualStreamingCompletedEvent.duration,
+                        timestamp = testClock.now().toEpochMilliseconds(),
                     )
                 )
 
@@ -578,6 +588,8 @@ class TraceFeatureMessageTestWriterTest {
                     writer.messages.filterIsInstance<LLMStreamingCompletedEvent>()
 
                 val actualStreamingStartingEvent = writer.messages.singleEvent<LLMStreamingStartingEvent>()
+                val actualStreamingFailedEvent = writer.messages.singleEvent<LLMStreamingFailedEvent>()
+                val actualStreamingCompletedEvent = writer.messages.singleEvent<LLMStreamingCompletedEvent>()
 
                 val expectedEvents = listOf(
                     LLMStreamingStartingEvent(
@@ -601,7 +613,8 @@ class TraceFeatureMessageTestWriterTest {
                             cause = expectedCause,
                             type = expectedType
                         ),
-                        timestamp = testClock.now().toEpochMilliseconds()
+                        duration = actualStreamingFailedEvent.duration,
+                        timestamp = testClock.now().toEpochMilliseconds(),
                     ),
                     LLMStreamingCompletedEvent(
                         eventId = actualStreamingStartingEvent.eventId,
@@ -610,7 +623,8 @@ class TraceFeatureMessageTestWriterTest {
                         prompt = expectedPrompt,
                         model = model.toModelInfo(),
                         tools = toolRegistry.tools.map { it.name },
-                        timestamp = testClock.now().toEpochMilliseconds()
+                        duration = actualStreamingCompletedEvent.duration,
+                        timestamp = testClock.now().toEpochMilliseconds(),
                     )
                 )
 
@@ -716,6 +730,7 @@ class TraceFeatureMessageTestWriterTest {
                     writer.messages.filterIsInstance<LLMCallCompletedEvent>()
 
                 val actualCallStartingEvent = writer.messages.singleEvent<LLMCallStartingEvent>()
+                val actualCallFailedEvent = writer.messages.singleEvent<LLMCallFailedEvent>()
 
                 val expectedEvents = listOf(
                     LLMCallStartingEvent(
@@ -740,7 +755,8 @@ class TraceFeatureMessageTestWriterTest {
                             cause = expectedCause,
                             type = expectedType
                         ),
-                        timestamp = testClock.now().toEpochMilliseconds()
+                        duration = actualCallFailedEvent.duration,
+                        timestamp = testClock.now().toEpochMilliseconds(),
                     ),
                 )
 
@@ -784,6 +800,7 @@ class TraceFeatureMessageTestWriterTest {
             }
 
             val actualSubgraphStartingEvent = writer.messages.singleEvent<SubgraphExecutionStartingEvent>()
+            val actualSubgraphCompletedEvent = writer.messages.singleEvent<SubgraphExecutionCompletedEvent>()
 
             val runIdFromEvents = (actualEvents.first() as SubgraphExecutionStartingEvent).runId
 
@@ -806,7 +823,8 @@ class TraceFeatureMessageTestWriterTest {
                     subgraphName = subgraphName,
                     input = expectedInput,
                     output = expectedOutput,
-                    timestamp = testClock.now().toEpochMilliseconds()
+                    duration = actualSubgraphCompletedEvent.duration,
+                    timestamp = testClock.now().toEpochMilliseconds(),
                 ),
             )
 
@@ -869,6 +887,7 @@ class TraceFeatureMessageTestWriterTest {
             }
 
             val actualSubgraphStartingEvent = writer.messages.singleEvent<SubgraphExecutionStartingEvent>()
+            val actualSubgraphFailedEvent = writer.messages.singleEvent<SubgraphExecutionFailedEvent>()
 
             val runIdFromEvents = (actualEvents.first() as SubgraphExecutionStartingEvent).runId
 
@@ -899,7 +918,8 @@ class TraceFeatureMessageTestWriterTest {
                         cause = expectedCause,
                         type = expectedType
                     ),
-                    timestamp = testClock.now().toEpochMilliseconds()
+                    duration = actualSubgraphFailedEvent.duration,
+                    timestamp = testClock.now().toEpochMilliseconds(),
                 )
             )
 
@@ -908,3 +928,4 @@ class TraceFeatureMessageTestWriterTest {
         }
     }
 }
+
