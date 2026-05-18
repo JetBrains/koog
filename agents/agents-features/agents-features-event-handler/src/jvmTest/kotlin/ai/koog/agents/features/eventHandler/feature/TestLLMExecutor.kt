@@ -18,7 +18,7 @@ class TestLLMExecutor(val clock: Clock) : PromptExecutor() {
         return listOf(handlePrompt(prompt))
     }
 
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -38,7 +38,7 @@ class TestLLMExecutor(val clock: Clock) : PromptExecutor() {
         return Message.Assistant("Default test response", metaInfo = ResponseMetaInfo.create(clock))
     }
 
-    override suspend fun moderate(
+    override suspend fun onModerate(
         prompt: Prompt,
         model: LLModel
     ): ModerationResult {

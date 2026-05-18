@@ -63,10 +63,10 @@ class LLMBasedToolJsonFixTest {
         ): List<Message.Response> =
             listOf(responses[index++]).also { prompts.add(prompt) }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
+        override fun onStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
             error("Not supported")
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = error("Not supported")
+        override suspend fun onModerate(prompt: Prompt, model: LLModel): ModerationResult = error("Not supported")
 
         override fun close() {}
     }

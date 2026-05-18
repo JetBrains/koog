@@ -46,7 +46,7 @@ And a number of optional parameters that can be used to customize its storage an
 
 The `AgentExecutor` interface is where you implement your agent's core business logic. 
 It acts as the bridge between the A2A protocol and your specific AI agent capabilities.
-To start the execution of your agent, you must implement the `execute` method where define your agent's logic.
+To start the execution of your agent, you must implement the `onExecute` method where define your agent's logic.
 To cancel the agent, you must implement the `cancel` method.
 
 ```kotlin

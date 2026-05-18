@@ -496,7 +496,7 @@ class TraceFeatureMessageTestWriterTest {
                 tools: List<ToolDescriptor>
             ): List<Message.Response> = emptyList()
 
-            override fun executeStreaming(
+            override fun onStreaming(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
@@ -508,7 +508,7 @@ class TraceFeatureMessageTestWriterTest {
                 throw testException
             }
 
-            override suspend fun moderate(
+            override suspend fun onModerate(
                 prompt: Prompt,
                 model: LLModel
             ): ai.koog.prompt.dsl.ModerationResult {

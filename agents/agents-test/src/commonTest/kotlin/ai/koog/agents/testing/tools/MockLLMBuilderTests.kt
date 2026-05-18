@@ -45,14 +45,14 @@ class MockLLMBuilderTests {
             user("Say hello to me")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
+        val response = mockExecutor.onExecute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Hello, world!", response.content)
 
         val prompt2 = prompt("test2") {
             user("Something unrelated")
         }
 
-        val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
+        val response2 = mockExecutor.onExecute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Default response", response2.content)
     }
 
@@ -67,14 +67,14 @@ class MockLLMBuilderTests {
             user("exact match query")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
+        val response = mockExecutor.onExecute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Exact match response", response.content)
 
         val prompt2 = prompt("test-exact-partial") {
             user("This contains exact match query somewhere")
         }
 
-        val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
+        val response2 = mockExecutor.onExecute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Default response", response2.content)
     }
 
@@ -89,7 +89,7 @@ class MockLLMBuilderTests {
             user("This contains partial match somewhere")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
+        val response = mockExecutor.onExecute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Partial match response", response.content)
     }
 
@@ -104,14 +104,14 @@ class MockLLMBuilderTests {
             user("This is a long message that should match the condition")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
+        val response = mockExecutor.onExecute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Conditional response", response.content)
 
         val prompt2 = prompt("test-conditional-short") {
             user("Short message")
         }
 
-        val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
+        val response2 = mockExecutor.onExecute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Default response", response2.content)
     }
 
@@ -125,7 +125,7 @@ class MockLLMBuilderTests {
             mockLLMStream(expectedStream) onRequestEquals "hello"
         }
 
-        val actualStream = mockExecutor.executeStreaming(prompt, OllamaModels.Meta.LLAMA_3_2)
+        val actualStream = mockExecutor.onStreaming(prompt, OllamaModels.Meta.LLAMA_3_2)
         assertContentEquals(expectedStream.toList(), actualStream.toList())
     }
 
@@ -140,7 +140,7 @@ class MockLLMBuilderTests {
             user("Please use tool to do something")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
+        val response = mockExecutor.onExecute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertTrue(response is Message.Tool.Call)
         val toolCall = response as Message.Tool.Call
         assertEquals("test_tool", toolCall.tool)
@@ -162,7 +162,7 @@ class MockLLMBuilderTests {
             user("Please use multiple tools to do something")
         }
 
-        val responses = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2, listOf())
+        val responses = mockExecutor.onExecute(prompt, OllamaModels.Meta.LLAMA_3_2, listOf())
 
         val responseToolCalls = responses.filterIsInstance<Message.Tool.Call>()
         assertEquals(2, responseToolCalls.size)
@@ -186,7 +186,7 @@ class MockLLMBuilderTests {
             user("I need a mixed response with tools")
         }
 
-        val responses = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2, listOf())
+        val responses = mockExecutor.onExecute(prompt, OllamaModels.Meta.LLAMA_3_2, listOf())
         assertEquals(2, responses.size)
         assertTrue(responses.any { it is Message.Assistant })
         assertTrue(responses.any { it is Message.Tool.Call })
@@ -209,7 +209,7 @@ class MockLLMBuilderTests {
             user("Please use tool to do something")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
+        val response = mockExecutor.onExecute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertTrue(response is Message.Tool.Call)
 
         val toolCall = response as Message.Tool.Call
@@ -237,7 +237,7 @@ class MockLLMBuilderTests {
             user("Please use tool with specific input")
         }
 
-        val specificResponse = mockExecutor.execute(specificPrompt, OllamaModels.Meta.LLAMA_3_2).single()
+        val specificResponse = mockExecutor.onExecute(specificPrompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertTrue(specificResponse is Message.Tool.Call)
 
         val specificToolCall = specificResponse as Message.Tool.Call
@@ -253,7 +253,7 @@ class MockLLMBuilderTests {
             user("Please use tool with other input")
         }
 
-        val otherResponse = mockExecutor.execute(otherPrompt, OllamaModels.Meta.LLAMA_3_2).single()
+        val otherResponse = mockExecutor.onExecute(otherPrompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertTrue(otherResponse is Message.Tool.Call)
 
         val otherToolCall = otherResponse as Message.Tool.Call
@@ -282,7 +282,7 @@ class MockLLMBuilderTests {
             user("Please use tool to do something")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
+        val response = mockExecutor.onExecute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertTrue(response is Message.Tool.Call)
 
         val toolCall = response

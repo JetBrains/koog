@@ -37,7 +37,7 @@ public class CachedPromptExecutor(
         return getOrPut(prompt, tools, model)
     }
 
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -50,17 +50,17 @@ public class CachedPromptExecutor(
         return cache.get(prompt, emptyList(), clock)
             ?.first() as Message.Assistant?
             ?: nested
-                .execute(prompt, model, emptyList()).first()
+                .onExecute(prompt, model, emptyList()).first()
                 .let { it as Message.Assistant }
                 .also { cache.put(prompt, emptyList(), listOf(it)) }
     }
 
     private suspend fun getOrPut(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel): List<Message.Response> {
         return cache.get(prompt, tools, clock)
-            ?: nested.execute(prompt, model, tools).also { cache.put(prompt, tools, it) }
+            ?: nested.onExecute(prompt, model, tools).also { cache.put(prompt, tools, it) }
     }
 
-    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = nested.moderate(prompt, model)
+    override suspend fun onModerate(prompt: Prompt, model: LLModel): ModerationResult = nested.onModerate(prompt, model)
 
     override suspend fun models(): List<LLModel> = nested.models()
 

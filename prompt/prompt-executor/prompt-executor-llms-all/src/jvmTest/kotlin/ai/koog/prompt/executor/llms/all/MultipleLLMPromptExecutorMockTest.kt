@@ -156,7 +156,7 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
+        val responseChunks = executor.onStreaming(prompt, OpenAIModels.Chat.GPT4o)
             .filterTextOnly()
             .toList()
 
@@ -175,7 +175,7 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, AnthropicModels.Opus_4_6)
+        val responseChunks = executor.onStreaming(prompt, AnthropicModels.Opus_4_6)
             .filterTextOnly()
             .toList()
 
@@ -194,7 +194,7 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, GoogleModels.Gemini2_0Flash)
+        val responseChunks = executor.onStreaming(prompt, GoogleModels.Gemini2_0Flash)
             .filterTextOnly()
             .toList()
 

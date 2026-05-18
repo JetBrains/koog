@@ -1242,7 +1242,7 @@ private suspend fun PromptExecutor.executeStreamAndCollect(
     reasoningCompleteFrames: MutableList<StreamFrame.ReasoningComplete> = mutableListOf(),
     endFrame: MutableList<StreamFrame.End> = mutableListOf(),
 ) {
-    this.executeStreaming(prompt, model, tools).collect { frame ->
+    this.onStreaming(prompt, model, tools).collect { frame ->
         when (frame) {
             is StreamFrame.DeltaFrame -> {
                 when (val delta: StreamFrame.DeltaFrame = frame) {

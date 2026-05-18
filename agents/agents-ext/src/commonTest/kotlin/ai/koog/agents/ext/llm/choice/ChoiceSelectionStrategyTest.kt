@@ -65,14 +65,14 @@ class ChoiceSelectionStrategyTest {
                 )
             }
 
-            override fun executeStreaming(
+            override fun onStreaming(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
             ): Flow<StreamFrame> =
                 streamFrameFlowOf("Default streaming response")
 
-            override suspend fun executeMultipleChoices(
+            override suspend fun onMultipleChoices(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
@@ -84,7 +84,7 @@ class ChoiceSelectionStrategyTest {
                 return listOf(choice1, choice2)
             }
 
-            override suspend fun moderate(
+            override suspend fun onModerate(
                 prompt: Prompt,
                 model: LLModel
             ): ModerationResult {

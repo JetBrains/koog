@@ -10,7 +10,7 @@ To learn more about what graph nodes are, their usage, and existing default node
 
 Before diving into implementation details, it is important to understand the architecture of nodes in the Koog framework. Nodes are the fundamental building blocks of agent workflows, where each node represents a specific operation or transformation in the workflow. You connect nodes using edges, which define the flow of execution between nodes.
 
-Each node has an `execute` method that takes an input and produces an output, which is then passed to the next node in the workflow.
+Each node has an `onExecute` method that takes an input and produces an output, which is then passed to the next node in the workflow.
 
 ## Implementing a custom node
 

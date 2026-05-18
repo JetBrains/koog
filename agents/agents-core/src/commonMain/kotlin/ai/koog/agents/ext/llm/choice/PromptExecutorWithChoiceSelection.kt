@@ -35,22 +35,22 @@ public class PromptExecutorWithChoiceSelection(
         return choiceSelectionStrategy.choose(prompt, choices)
     }
 
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> = executor.executeStreaming(prompt, model, tools)
+    ): Flow<StreamFrame> = executor.onStreaming(prompt, model, tools)
 
-    override suspend fun moderate(
+    override suspend fun onModerate(
         prompt: Prompt,
         model: LLModel
-    ): ModerationResult = executor.moderate(prompt, model)
+    ): ModerationResult = executor.onModerate(prompt, model)
 
     override fun close(): Unit = executor.close()
 
     override suspend fun models(): List<LLModel> = executor.models()
 
-    override suspend fun executeMultipleChoices(
+    override suspend fun onMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

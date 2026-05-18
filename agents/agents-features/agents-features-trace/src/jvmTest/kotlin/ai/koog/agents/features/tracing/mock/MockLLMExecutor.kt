@@ -24,7 +24,7 @@ class MockLLMExecutor : PromptExecutor() {
         return listOf(handlePrompt(prompt))
     }
 
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -45,7 +45,7 @@ class MockLLMExecutor : PromptExecutor() {
         return Message.Assistant(content = "Default test response", ResponseMetaInfo.create(clock))
     }
 
-    override suspend fun moderate(
+    override suspend fun onModerate(
         prompt: Prompt,
         model: LLModel
     ): ModerationResult {

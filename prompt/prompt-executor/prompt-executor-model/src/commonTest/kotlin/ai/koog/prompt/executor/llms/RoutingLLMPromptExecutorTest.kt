@@ -36,7 +36,7 @@ class RoutingLLMPromptExecutorTest {
         val executor = RoutingLLMPromptExecutor(SimpleTestRouter(client))
 
         // When
-        val response = executor.execute(prompt, OpenAIModels.Chat.GPT4o)
+        val response = executor.onExecute(prompt, OpenAIModels.Chat.GPT4o)
 
         // Then
         assertEquals(client.executeResponse.single().content, response.single().content)
@@ -56,7 +56,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When
-        val response = executor.execute(prompt, AnthropicModels.Sonnet_4)
+        val response = executor.onExecute(prompt, AnthropicModels.Sonnet_4)
 
         // Then
         assertEquals(openAIClient.executeResponse.single().content, response.single().content)
@@ -74,7 +74,7 @@ class RoutingLLMPromptExecutorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            executor.execute(prompt, AnthropicModels.Sonnet_4)
+            executor.onExecute(prompt, AnthropicModels.Sonnet_4)
         }
     }
 
@@ -85,7 +85,7 @@ class RoutingLLMPromptExecutorTest {
         val executor = RoutingLLMPromptExecutor(SimpleTestRouter(client))
 
         // When
-        val response = executor.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
+        val response = executor.onStreaming(prompt, OpenAIModels.Chat.GPT4o)
             .filterTextOnly()
             .toList()
 
@@ -107,7 +107,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When
-        val response = executor.executeStreaming(prompt, AnthropicModels.Sonnet_4)
+        val response = executor.onStreaming(prompt, AnthropicModels.Sonnet_4)
             .filterTextOnly()
             .toList()
 
@@ -127,7 +127,7 @@ class RoutingLLMPromptExecutorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            executor.executeStreaming(prompt, AnthropicModels.Sonnet_4).collect()
+            executor.onStreaming(prompt, AnthropicModels.Sonnet_4).collect()
         }
     }
 
@@ -138,7 +138,7 @@ class RoutingLLMPromptExecutorTest {
         val executor = RoutingLLMPromptExecutor(SimpleTestRouter(client))
 
         // When
-        val choices = executor.executeMultipleChoices(prompt, OpenAIModels.Chat.GPT4o, emptyList())
+        val choices = executor.onMultipleChoices(prompt, OpenAIModels.Chat.GPT4o, emptyList())
 
         // Then
         assertEquals(client.executeMultipleChoicesResponse, choices)
@@ -158,7 +158,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When
-        val choices = executor.executeMultipleChoices(prompt, AnthropicModels.Sonnet_4, emptyList())
+        val choices = executor.onMultipleChoices(prompt, AnthropicModels.Sonnet_4, emptyList())
 
         // Then
         assertEquals(openAIClient.executeMultipleChoicesResponse, choices)
@@ -176,7 +176,7 @@ class RoutingLLMPromptExecutorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            executor.executeMultipleChoices(prompt, AnthropicModels.Sonnet_4, emptyList())
+            executor.onMultipleChoices(prompt, AnthropicModels.Sonnet_4, emptyList())
         }
     }
 
@@ -187,7 +187,7 @@ class RoutingLLMPromptExecutorTest {
         val executor = RoutingLLMPromptExecutor(SimpleTestRouter(client))
 
         // When
-        val result = executor.moderate(prompt, OpenAIModels.Chat.GPT4o)
+        val result = executor.onModerate(prompt, OpenAIModels.Chat.GPT4o)
 
         // Then
         assertEquals(client.moderateResponse, result)
@@ -207,7 +207,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When
-        val result = executor.moderate(prompt, AnthropicModels.Sonnet_4)
+        val result = executor.onModerate(prompt, AnthropicModels.Sonnet_4)
 
         // Then
         assertEquals(openAIClient.moderateResponse, result)
@@ -225,7 +225,7 @@ class RoutingLLMPromptExecutorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            executor.moderate(prompt, AnthropicModels.Sonnet_4)
+            executor.onModerate(prompt, AnthropicModels.Sonnet_4)
         }
     }
 
@@ -237,7 +237,7 @@ class RoutingLLMPromptExecutorTest {
 
         // When, Then
         val exception = assertFailsWith<IllegalStateException> {
-            executor.execute(prompt, OpenAIModels.Chat.GPT4o)
+            executor.onExecute(prompt, OpenAIModels.Chat.GPT4o)
         }
         assertEquals(client.executeFailure, exception)
     }
@@ -249,7 +249,7 @@ class RoutingLLMPromptExecutorTest {
         val executor = RoutingLLMPromptExecutor(SimpleTestRouter(client))
 
         // When
-        val resultFlow = executor.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
+        val resultFlow = executor.onStreaming(prompt, OpenAIModels.Chat.GPT4o)
 
         // Then
         val exception = assertFailsWith<IllegalStateException> { resultFlow.collect() }
@@ -264,7 +264,7 @@ class RoutingLLMPromptExecutorTest {
 
         // When, Then
         val exception = assertFailsWith<IllegalStateException> {
-            executor.executeMultipleChoices(prompt, OpenAIModels.Chat.GPT4o, emptyList())
+            executor.onMultipleChoices(prompt, OpenAIModels.Chat.GPT4o, emptyList())
         }
         assertEquals(client.executeMultipleChoicesFailure, exception)
     }
@@ -277,7 +277,7 @@ class RoutingLLMPromptExecutorTest {
 
         // When, Then
         val exception = assertFailsWith<IllegalStateException> {
-            executor.moderate(prompt, OpenAIModels.Chat.GPT4o)
+            executor.onModerate(prompt, OpenAIModels.Chat.GPT4o)
         }
         assertEquals(client.moderateFailure, exception)
     }

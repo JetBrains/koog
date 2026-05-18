@@ -150,7 +150,7 @@
 - **OpenRouter streaming**: Fixed missing `reasoning` and `reasoningDetails` fields in `OpenRouterStreamDelta` causing deserialization errors (#1504)
 - **Dashscope streaming**: Fixed tool call argument merging for streaming responses in `DashscopeLLMClient` ([KG-658](https://youtrack.jetbrains.com/issue/KG-658), #1590)
 - **`agents-ext` dependency leak**: Moved `agents-ext` from `commonMain api` to `jvmTest implementation` in `agents-test` to prevent transitive compile-time dependency leakage (#1506)
-- **Streaming exception handling**: `executeStreaming` now properly propagates exceptions from LLM clients and requires `StreamFrame.End` to signal stream completion ([KG-550](https://youtrack.jetbrains.com/issue/KG-550), #1580)
+- **Streaming exception handling**: `onStreaming` now properly propagates exceptions from LLM clients and requires `StreamFrame.End` to signal stream completion ([KG-550](https://youtrack.jetbrains.com/issue/KG-550), #1580)
 - **Debugger feature**: Extended to support functional agents in addition to graph-based agents by dispatching appropriate strategy starting events ([KG-741](https://youtrack.jetbrains.com/issue/KG-741), #1637)
 
 ## Breaking Changes
@@ -335,7 +335,7 @@
 ## Breaking Changes
 
 - **Persistence**: Remove requirement for unique graph node names in Persistence feature, migrate to node path usage (#1288)
-- **Tool API**: Update Tool API to fix name and descriptor discrepancy - moved configurable tool properties to constructors, removed `doExecute` in favor of `execute` ([KG-508](https://youtrack.jetbrains.com/issue/KG-508), #1226)
+- **Tool API**: Update Tool API to fix name and descriptor discrepancy - moved configurable tool properties to constructors, removed `doExecute` in favor of `onExecute` ([KG-508](https://youtrack.jetbrains.com/issue/KG-508), #1226)
 - **OpenAI Models**: GPT-5-Codex and GPT-5.1 reasoning models moved from Chat section to Reasoning section ([KG-562](https://youtrack.jetbrains.com/issue/KG-562), #1146)
 - **Structured Output**: Rename structured output classes - `StructuredOutput` → `StructuredRequest`, `StructuredData` → `Structure`, `JsonStructuredData` → `JsonStructure` (#1107)
 - **Module Organization**: Move `LLMChoice` from `prompt-llm` to `prompt-executor-model` module (#1109)
@@ -615,7 +615,7 @@ Fixed iOS target publication
 
 - Remove Google Gemini 1.5 Flash/Pro variants from the catalog ([KG-216](https://youtrack.jetbrains.com/issue/KG-216),
   #574).
-- Drop `execute` extensions for `PromptExecutor` in favor of the unified API (#591).
+- Drop `onExecute` extensions for `PromptExecutor` in favor of the unified API (#591).
 - File system API cleanup: removed deprecated FSProvider interfaces and methods; `PathFilter` renamed to
   `TraversalFilter` with suspendable operations; `fromAbsoluteString` renamed to `fromAbsolutePathString`.
 

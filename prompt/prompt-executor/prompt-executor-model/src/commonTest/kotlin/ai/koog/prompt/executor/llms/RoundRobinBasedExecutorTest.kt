@@ -26,7 +26,7 @@ class RoundRobinBasedExecutorTest {
         val executor = RoutingLLMPromptExecutor(RoundRobinRouter(client))
 
         // When
-        val response = executor.execute(
+        val response = executor.onExecute(
             prompt = prompt,
             model = OpenAIModels.Chat.GPT4o
         )
@@ -45,7 +45,7 @@ class RoundRobinBasedExecutorTest {
 
         // When
         val responses = (1..6).map {
-            executor.execute(prompt, OpenAIModels.Chat.GPT4o)
+            executor.onExecute(prompt, OpenAIModels.Chat.GPT4o)
         }
 
         // Then
@@ -73,10 +73,10 @@ class RoundRobinBasedExecutorTest {
 
         // When
         val openAIResponses = (1..3).map {
-            executor.execute(prompt, OpenAIModels.Chat.GPT4o)
+            executor.onExecute(prompt, OpenAIModels.Chat.GPT4o)
         }
         val anthropicResponses = (1..5).map {
-            executor.execute(prompt, AnthropicModels.Sonnet_4)
+            executor.onExecute(prompt, AnthropicModels.Sonnet_4)
         }
 
         // Then
@@ -99,7 +99,7 @@ class RoundRobinBasedExecutorTest {
 
         // When
         val streamingResponses = (1..2).map {
-            executor.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
+            executor.onStreaming(prompt, OpenAIModels.Chat.GPT4o)
                 .filterTextOnly()
                 .toList()
         }
@@ -117,7 +117,7 @@ class RoundRobinBasedExecutorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            executor.execute(prompt, AnthropicModels.Sonnet_4)
+            executor.onExecute(prompt, AnthropicModels.Sonnet_4)
         }
     }
 
@@ -129,7 +129,7 @@ class RoundRobinBasedExecutorTest {
 
         // When, Then
         assertFailsWith<IllegalArgumentException> {
-            executor.executeStreaming(prompt, AnthropicModels.Sonnet_4).collect()
+            executor.onStreaming(prompt, AnthropicModels.Sonnet_4).collect()
         }
     }
 
@@ -142,14 +142,14 @@ class RoundRobinBasedExecutorTest {
         val executor = RoutingLLMPromptExecutor(openAIClient, anthropicClient, fallback = fallback)
 
         // When
-        val fallbackExecuteResponse = executor.execute(prompt, GoogleModels.Gemini2_0Flash)
-        val fallbackExecuteStreamingResponse = executor.executeStreaming(prompt, GoogleModels.Gemini2_0Flash)
-        val fallbackExecuteMultipleChoicesResponse = executor.executeMultipleChoices(
+        val fallbackExecuteResponse = executor.onExecute(prompt, GoogleModels.Gemini2_0Flash)
+        val fallbackExecuteStreamingResponse = executor.onStreaming(prompt, GoogleModels.Gemini2_0Flash)
+        val fallbackExecuteMultipleChoicesResponse = executor.onMultipleChoices(
             prompt,
             GoogleModels.Gemini2_0Flash,
             emptyList()
         )
-        val fallbackModerateResponse = executor.moderate(prompt, GoogleModels.Gemini2_0Flash)
+        val fallbackModerateResponse = executor.onModerate(prompt, GoogleModels.Gemini2_0Flash)
 
         // Then
         assertEquals(anthropicClient.executeResponse, fallbackExecuteResponse)

@@ -67,7 +67,7 @@ class CachedPromptExecutorTest {
             return testResponse
         }
 
-        override fun executeStreaming(
+        override fun onStreaming(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
@@ -76,7 +76,7 @@ class CachedPromptExecutorTest {
             return streamFrameFlowOf("Streaming response from executor")
         }
 
-        override suspend fun moderate(
+        override suspend fun onModerate(
             prompt: Prompt,
             model: LLModel
         ): ModerationResult {

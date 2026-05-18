@@ -56,7 +56,7 @@ public class ContextualPromptExecutor(
         }
 
         try {
-            val responses = executor.execute(effectivePrompt, model, tools)
+            val responses = executor.onExecute(effectivePrompt, model, tools)
             logger.trace { "Finished LLM call (event id: $eventId) with responses: [${responses.joinToString { "${it.role}: ${it.content}" }}]" }
 
             context.pipeline.onLLMCallCompleted(eventId, context.executionInfo, context.runId, effectivePrompt, model, tools, responses, moderationResponse = null, context)
@@ -81,7 +81,7 @@ public class ContextualPromptExecutor(
      * @param tools The list of available tool descriptors for the streaming call
      * @return A Flow of StreamFrame objects representing the streaming response
      */
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -107,7 +107,7 @@ public class ContextualPromptExecutor(
                 prompt
             }
 
-            executor.executeStreaming(effectivePrompt, model, tools).collect { frame ->
+            executor.onStreaming(effectivePrompt, model, tools).collect { frame ->
                 emit(frame)
             }
         }
@@ -130,7 +130,7 @@ public class ContextualPromptExecutor(
     }
 
     // TODO: Add Pipeline interceptors for this method. Without them features cannot modify prompts before calls to LLMs.
-    override suspend fun executeMultipleChoices(
+    override suspend fun onMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -155,7 +155,7 @@ public class ContextualPromptExecutor(
         return responses
     }
 
-    override suspend fun moderate(
+    override suspend fun onModerate(
         prompt: Prompt,
         model: LLModel
     ): ModerationResult {
@@ -176,7 +176,7 @@ public class ContextualPromptExecutor(
         }
 
         try {
-            val result = executor.moderate(effectivePrompt, model)
+            val result = executor.onModerate(effectivePrompt, model)
             logger.trace { "Finished moderation LLM request (event id: $eventId) with response: $result" }
 
             context.pipeline.onLLMCallCompleted(eventId, context.executionInfo, context.runId, effectivePrompt, model, tools = emptyList(), responses = emptyList(), moderationResponse = result, context)

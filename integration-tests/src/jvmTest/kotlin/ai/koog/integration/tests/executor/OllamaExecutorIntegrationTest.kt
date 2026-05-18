@@ -179,7 +179,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             )
         }
 
-        val result = executor.moderate(prompt = prompt, model = moderationModel)
+        val result = executor.onModerate(prompt = prompt, model = moderationModel)
 
         result.isHarmful.shouldBeTrue()
         assert(
@@ -220,14 +220,14 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         }
 
         withClue("Question only should not be detected as harmful!") {
-            executor.moderate(prompt = questionOnly, model = moderationModel).isHarmful.shouldNotBeTrue()
+            executor.onModerate(prompt = questionOnly, model = moderationModel).isHarmful.shouldNotBeTrue()
         }
 
         withClue("Answer alone should be detected as harmful!") {
-            executor.moderate(prompt = answerOnly, model = moderationModel).isHarmful.shouldBeTrue()
+            executor.onModerate(prompt = answerOnly, model = moderationModel).isHarmful.shouldBeTrue()
         }
 
-        val multiMessageReply = executor.moderate(
+        val multiMessageReply = executor.onModerate(
             prompt = promptWithMultipleMessages,
             model = moderationModel,
         )
@@ -363,7 +363,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         val reasoningCompleteFrames = mutableListOf<StreamFrame.ReasoningComplete>()
         val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
 
-        executor.executeStreaming(prompt, thinkingModel, listOf()).collect { frame ->
+        executor.onStreaming(prompt, thinkingModel, listOf()).collect { frame ->
             when (frame) {
                 is StreamFrame.ReasoningDelta -> reasoningDeltaFrames.add(frame)
                 is StreamFrame.ReasoningComplete -> reasoningCompleteFrames.add(frame)

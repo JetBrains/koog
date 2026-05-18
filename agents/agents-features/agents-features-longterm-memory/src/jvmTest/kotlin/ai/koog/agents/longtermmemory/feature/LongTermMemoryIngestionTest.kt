@@ -73,14 +73,14 @@ class LongTermMemoryIngestionTest {
             return listOf(Message.Assistant("non-streaming", ResponseMetaInfo.Empty))
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
+        override fun onStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
             flow {
                 for (frame in frames) emit(StreamFrame.TextDelta(frame))
                 emit(StreamFrame.TextComplete(frames.joinToString("")))
                 emit(StreamFrame.End("stop"))
             }
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel) =
+        override suspend fun onModerate(prompt: Prompt, model: LLModel) =
             throw UnsupportedOperationException("Not needed")
 
         override fun close() {}
@@ -407,14 +407,14 @@ class LongTermMemoryIngestionTest {
                 return listOf(Message.Assistant("Response that should not be stored yet", ResponseMetaInfo.Empty))
             }
 
-            override fun executeStreaming(
+            override fun onStreaming(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
             ): Flow<StreamFrame> =
                 throw UnsupportedOperationException("Not needed")
 
-            override suspend fun moderate(prompt: Prompt, model: LLModel) =
+            override suspend fun onModerate(prompt: Prompt, model: LLModel) =
                 throw UnsupportedOperationException("Not needed")
 
             override fun close() {}

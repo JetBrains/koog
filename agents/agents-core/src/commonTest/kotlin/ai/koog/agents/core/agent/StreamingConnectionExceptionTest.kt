@@ -1,6 +1,5 @@
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
@@ -38,7 +37,7 @@ import kotlin.test.assertTrue
 class StreamingConnectionExceptionTest {
 
     /**
-     * A [PromptExecutor] that overrides [executeStreaming] with custom behavior
+     * A [PromptExecutor] that overrides [onStreaming] with custom behavior
      * for simulating streaming failures (connection drops, incomplete streams, etc.).
      */
     private class StreamOverrideExecutor(
@@ -50,16 +49,16 @@ class StreamingConnectionExceptionTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> = delegate.execute(prompt, model, tools)
+        ): List<Message.Response> = delegate.onExecute(prompt, model, tools)
 
-        override fun executeStreaming(
+        override fun onStreaming(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
         ): Flow<StreamFrame> = streamingBehavior()
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
-            delegate.moderate(prompt, model)
+        override suspend fun onModerate(prompt: Prompt, model: LLModel): ModerationResult =
+            delegate.onModerate(prompt, model)
 
         override fun close() = delegate.close()
     }

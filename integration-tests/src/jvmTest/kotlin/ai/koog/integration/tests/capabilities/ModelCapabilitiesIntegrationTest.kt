@@ -230,7 +230,7 @@ class ModelCapabilitiesIntegrationTest {
                         user("This is a harmless request about the weather.")
                     }
                     withRetry {
-                        executor.moderate(prompt, model) shouldNotBeNull {
+                        executor.onModerate(prompt, model) shouldNotBeNull {
                             this.isHarmful.shouldBeFalse()
                         }
                     }
@@ -249,7 +249,7 @@ class ModelCapabilitiesIntegrationTest {
                         user("Provide multiple distinct options for a team name.")
                     }
                     withRetry {
-                        with(executor.executeMultipleChoices(prompt, model, emptyList())) {
+                        with(executor.onMultipleChoices(prompt, model, emptyList())) {
                             size shouldBe 2
                             forEach { choice ->
                                 choice
@@ -489,7 +489,7 @@ class ModelCapabilitiesIntegrationTest {
                     withRetry {
                         assertExceptionMessageContains(
                             assertFailsWith<Exception> {
-                                executor.moderate(prompt, model)
+                                executor.onModerate(prompt, model)
                             },
                             "$EXPECTED_ERROR moderation",
                             "Moderation is not supported by"
@@ -508,7 +508,7 @@ class ModelCapabilitiesIntegrationTest {
                     withRetry {
                         assertExceptionMessageContains(
                             assertFailsWith<Throwable> {
-                                executor.executeMultipleChoices(prompt, model, emptyList())
+                                executor.onMultipleChoices(prompt, model, emptyList())
                             },
                             "$EXPECTED_ERROR multiple choices",
                             "$EXPECTED_ERROR ${LLMCapability.MultipleChoices.id}",

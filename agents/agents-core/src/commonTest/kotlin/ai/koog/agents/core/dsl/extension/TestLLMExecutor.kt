@@ -40,7 +40,7 @@ class TestLLMExecutor : PromptExecutor() {
         return listOf(handlePrompt(prompt))
     }
 
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -48,7 +48,7 @@ class TestLLMExecutor : PromptExecutor() {
         handlePrompt(prompt).toStreamFrames().forEach { emit(it) }
     }
 
-    override suspend fun moderate(
+    override suspend fun onModerate(
         prompt: Prompt,
         model: LLModel
     ): ModerationResult {

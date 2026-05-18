@@ -29,7 +29,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model).single()
+        val response = executor.onExecute(prompt = prompt, model = model).single()
 
         assertEquals("OpenAI response", response.content)
     }
@@ -48,7 +48,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model).single()
+        val response = executor.onExecute(prompt = prompt, model = model).single()
 
         assertEquals("Anthropic response", response.content)
     }
@@ -67,7 +67,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model).single()
+        val response = executor.onExecute(prompt = prompt, model = model).single()
 
         assertEquals("Google response", response.content)
     }
@@ -86,7 +86,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model)
+        val responseChunks = executor.onStreaming(prompt, model)
             .filterTextOnly()
             .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
@@ -111,7 +111,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model)
+        val responseChunks = executor.onStreaming(prompt, model)
             .filterTextOnly()
             .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
@@ -136,7 +136,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model)
+        val responseChunks = executor.onStreaming(prompt, model)
             .filterTextOnly()
             .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
@@ -158,7 +158,7 @@ class MultiLLMPromptExecutorTest {
         }
 
         assertFailsWith<IllegalArgumentException>("Should throw IllegalArgumentException for unsupported provider") {
-            executor.execute(prompt = prompt, model = model)
+            executor.onExecute(prompt = prompt, model = model)
         }
     }
 
@@ -172,7 +172,7 @@ class MultiLLMPromptExecutorTest {
         }
 
         assertFailsWith<IllegalArgumentException>("Should throw IllegalArgumentException for unsupported provider") {
-            executor.executeStreaming(prompt, model).collect()
+            executor.onStreaming(prompt, model).collect()
         }
     }
 }

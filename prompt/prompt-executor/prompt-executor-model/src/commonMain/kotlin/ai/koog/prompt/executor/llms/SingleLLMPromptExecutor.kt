@@ -43,7 +43,7 @@ public open class SingleLLMPromptExecutor(
         return response
     }
 
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -52,7 +52,7 @@ public open class SingleLLMPromptExecutor(
         return llmClient.executeStreaming(prompt, model, tools)
     }
 
-    override suspend fun executeMultipleChoices(
+    override suspend fun onMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -64,7 +64,7 @@ public open class SingleLLMPromptExecutor(
         return choices
     }
 
-    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = llmClient.moderate(prompt, model)
+    override suspend fun onModerate(prompt: Prompt, model: LLModel): ModerationResult = llmClient.moderate(prompt, model)
 
     override suspend fun models(): List<LLModel> = llmClient.models()
 

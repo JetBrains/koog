@@ -53,7 +53,7 @@ object CalculatorChatExecutor : PromptExecutor() {
         return listOf(result)
     }
 
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -68,7 +68,7 @@ object CalculatorChatExecutor : PromptExecutor() {
             }
         }
 
-    override suspend fun moderate(
+    override suspend fun onModerate(
         prompt: Prompt,
         model: LLModel
     ): ModerationResult {

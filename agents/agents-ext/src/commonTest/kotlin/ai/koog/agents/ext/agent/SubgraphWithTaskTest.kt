@@ -747,10 +747,10 @@ class SubgraphWithTaskTest {
             )
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
+        override fun onStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
             emptyFlow()
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
+        override suspend fun onModerate(prompt: Prompt, model: LLModel): ModerationResult =
             ModerationResult(isHarmful = false, categories = emptyMap())
 
         override fun close() {}

@@ -96,7 +96,7 @@ class AIAgentMemoryTest {
         every { response.content } returns "Test fact"
 
         coEvery {
-            promptExecutor.execute(any(), any())
+            promptExecutor.onExecute(any(), any())
         } returns listOf(response)
 
         coEvery {
@@ -177,7 +177,7 @@ class AIAgentMemoryTest {
         every { response.content } returns "OK"
 
         coEvery {
-            promptExecutor.execute(any(), any())
+            promptExecutor.onExecute(any(), any())
         } returns listOf(response)
 
         val llm = AIAgentLLMContext(
@@ -288,7 +288,7 @@ class AIAgentMemoryTest {
         val response = mockk<Message.Response>()
         every { response.content } returns "Test fact"
         coEvery {
-            promptExecutor.execute(any(), any())
+            promptExecutor.onExecute(any(), any())
         } returns listOf(response)
 
         // Mock memory feature to capture saved facts
@@ -544,7 +544,7 @@ class AIAgentMemoryTest {
         every { response.content } returns "OK"
 
         coEvery {
-            promptExecutor.execute(any(), any())
+            promptExecutor.onExecute(any(), any())
         } returns listOf(response)
 
         val llm = AIAgentLLMContext(

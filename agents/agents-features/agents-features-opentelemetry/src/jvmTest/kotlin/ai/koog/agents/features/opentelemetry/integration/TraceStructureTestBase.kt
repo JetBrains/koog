@@ -788,7 +788,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                         val moderationPrompt = prompt("single-message-moderation") {
                             message(Message.User(input, RequestMetaInfo.create(Clock.System)))
                         }
-                        llm.promptExecutor.moderate(moderationPrompt, OpenAIModels.Moderation.Omni)
+                        llm.promptExecutor.onModerate(moderationPrompt, OpenAIModels.Moderation.Omni)
                     }
                     input
                 }

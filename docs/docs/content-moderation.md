@@ -75,11 +75,11 @@ Ollama supports moderation through the following model:
 ## Using moderation with LLM clients
 
 Koog provides two main approaches to content moderation, direct moderation on an `LLMClient` instance, or using the
-`moderate` method on a `PromptExecutor`.
+`onModerate` method on a `PromptExecutor`.
 
 ### Direct Moderation with LLMClient
 
-You can use the `moderate` method directly on an LLMClient instance:
+You can use the `onModerate` method directly on an LLMClient instance:
 
 === "Kotlin"
 
@@ -151,7 +151,7 @@ You can use the `moderate` method directly on an LLMClient instance:
     ```
     <!--- KNIT example-content-moderation-java-01.java -->
 
-The `moderate` method takes the following arguments:
+The `onModerate` method takes the following arguments:
 
 | Name     | Data type | Required | Default | Description                      |
 |----------|-----------|----------|---------|----------------------------------|
@@ -232,7 +232,7 @@ Here is an example of using content moderation with the Llama Guard 3 model thro
 
 ### Moderation with PromptExecutor
 
-You can also use the `moderate` method on a PromptExecutor, which will use the appropriate LLMClient based on the model's provider:
+You can also use the `onModerate` method on a PromptExecutor, which will use the appropriate LLMClient based on the model's provider:
 
 === "Kotlin"
 
@@ -321,7 +321,7 @@ You can also use the `moderate` method on a PromptExecutor, which will use the a
     ```
     <!--- KNIT example-content-moderation-java-03.java -->
 
-The `moderate` method takes the following arguments:
+The `onModerate` method takes the following arguments:
 
 | Name     | Data type | Required | Default | Description                      |
 |----------|-----------|----------|---------|----------------------------------|

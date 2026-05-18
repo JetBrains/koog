@@ -75,7 +75,7 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList(),
-    ): Publisher<StreamFrame> = executeStreaming(prompt, model, tools).asPublisher()
+    ): Publisher<StreamFrame> = onStreaming(prompt, model, tools).asPublisher()
 
     /**
      * Moderates the content of a given message with attachments using a specified LLM.
@@ -97,7 +97,7 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         model: LLModel,
         executorService: ExecutorService? = null
     ): ModerationResult = runOnIOBoundDispatcher(executorService) {
-        moderate(prompt, model)
+        onModerate(prompt, model)
     }
 
     /**

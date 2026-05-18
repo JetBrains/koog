@@ -64,7 +64,7 @@ class SingleLLMPromptExecutorTest {
         val executor = SingleLLMPromptExecutor(client)
         val prompt = Prompt.build("p2") { user("Hello!") }
 
-        val collected = executor.executeStreaming(prompt, mockModel).toList()
+        val collected = executor.onStreaming(prompt, mockModel).toList()
 
         assertEquals(chunks, collected, "Response chunks should match, got: $collected")
         assertEquals(prompt, client.lastStreamingPrompt, "Prompt should match, got: ${client.lastStreamingPrompt}")
@@ -83,7 +83,7 @@ class SingleLLMPromptExecutorTest {
         val executor = SingleLLMPromptExecutor(client)
         val prompt = Prompt.build("p3") { user("Hello!") }
 
-        val result = executor.executeMultipleChoices(prompt, mockModel, tools)
+        val result = executor.onMultipleChoices(prompt, mockModel, tools)
 
         assertEquals(choices, result, "Response should match, got: $result")
         assertEquals(prompt, client.lastChoicesPrompt, "Prompt should match, got: ${client.lastChoicesPrompt}")
@@ -103,7 +103,7 @@ class SingleLLMPromptExecutorTest {
         val executor = SingleLLMPromptExecutor(client)
         val prompt = Prompt.build("p4") { user("Hello Huhrensohn") }
 
-        val result = executor.moderate(prompt, mockModel)
+        val result = executor.onModerate(prompt, mockModel)
 
         assertSame(mod, result)
         assertSame(prompt, client.lastModerationPrompt)

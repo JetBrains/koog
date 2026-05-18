@@ -143,7 +143,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      * @param model The LLM model to use for execution.
      * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
      **/
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -164,7 +164,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      * @return A list of `LLMChoice` objects containing the choices generated based on the prompt.
      * @throws IllegalArgumentException If no client is found for the model's provider and no fallback is configured.
      */
-    override suspend fun executeMultipleChoices(
+    override suspend fun onMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -187,7 +187,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      * @return A `ModerationResult` representing the result of the moderation process.
      * @throws IllegalArgumentException If no client is found for the model's provider.
      */
-    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+    override suspend fun onModerate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.debug { "Moderating multi-modal content with model: ${model.id}" }
 
         val (client, effectiveModel) = chooseClientAndModel(model)

@@ -82,14 +82,14 @@ class LongTermMemoryRetrievalTest {
             return listOf(Message.Assistant(onPrompt(allContent), ResponseMetaInfo.Empty))
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
+        override fun onStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
             flow {
                 val allContent = prompt.messages.joinToString("\n") { it.content }
                 emit(StreamFrame.TextDelta(onPrompt(allContent)))
                 emit(StreamFrame.End("stop"))
             }
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel) =
+        override suspend fun onModerate(prompt: Prompt, model: LLModel) =
             throw UnsupportedOperationException("Not needed")
 
         override fun close() {}

@@ -605,7 +605,7 @@ class EventHandlerTest {
                 tools: List<ToolDescriptor>
             ): List<Message.Response> = emptyList()
 
-            override fun executeStreaming(
+            override fun onStreaming(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
                 tools: List<ToolDescriptor>
@@ -613,7 +613,7 @@ class EventHandlerTest {
                 throw IllegalStateException(testStreamingErrorMessage)
             }
 
-            override suspend fun moderate(
+            override suspend fun onModerate(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel
             ): ai.koog.prompt.dsl.ModerationResult {

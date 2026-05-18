@@ -280,7 +280,7 @@ The `Move` tool demonstrates the Koog framework's tool integration pattern:
 2. **Serializable Arguments**: Uses Kotlin serialization to define the tool's input parameters
 3. **Rich Documentation**: The `ToolDescriptor` provides the LLM with detailed information about the tool's purpose and parameters
 4. **Constructor Parameters**: Passes `argsSerializer` and `descriptor` to the constructor
-5. **Execution Logic**: The `execute` method handles the actual move execution and provides formatted feedback
+5. **Execution Logic**: The `onExecute` method handles the actual move execution and provides formatted feedback
 
 Key design aspects:
 - **Context Injection**: The tool receives the `ChessGame` instance, allowing it to modify game state

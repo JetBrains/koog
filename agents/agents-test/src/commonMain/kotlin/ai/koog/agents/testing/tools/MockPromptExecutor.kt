@@ -92,14 +92,14 @@ public class MockPromptExecutor internal constructor(
     /**
      * Executes a prompt and returns a flow of string responses.
      *
-     * This implementation simply wraps the result of [execute] in a flow.
+     * This implementation simply wraps the result of [onExecute] in a flow.
      *
      * @param prompt The prompt to execute
      * @param model The LLM model to use (ignored in mock implementation)
      * @param tools The list of tools available for the execution
      * @return A flow containing a single string response
      */
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -111,7 +111,7 @@ public class MockPromptExecutor internal constructor(
         }
 
         return matchedStream ?: flow {
-            execute(prompt = prompt, model = model).toStreamFrames().forEach { emit(it) }
+            onExecute(prompt = prompt, model = model).toStreamFrames().forEach { emit(it) }
         }
     }
 
@@ -125,7 +125,7 @@ public class MockPromptExecutor internal constructor(
      * @param model The LLM model used for processing (ignored in this implementation).
      * @return The result of the moderation, based on matches or default rules.
      */
-    override suspend fun moderate(
+    override suspend fun onModerate(
         prompt: Prompt,
         model: LLModel
     ): ModerationResult {

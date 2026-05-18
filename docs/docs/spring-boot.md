@@ -144,7 +144,7 @@ application.
 
 Below is a usage example of an auto-configured executor in Spring MVC RestController. It requires the following:
 - spring-boot-starter-web dependency
-- for Kotlin kotlinx-coroutines-core and kotlinx-coroutines-reactor dependencies should be added (Java version calls blocking `execute` method)
+- for Kotlin kotlinx-coroutines-core and kotlinx-coroutines-reactor dependencies should be added (Java version calls blocking `onExecute` method)
 - Anthropic is enabled via property (ai.koog.anthropic.enabled=true)
 
 === "Kotlin"
