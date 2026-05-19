@@ -70,7 +70,7 @@ public data class LLMCallFailedContext(
     override val tools: List<ToolDescriptor>,
     public val error: Throwable
 ) : LLMCallEventContext {
-    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallStarting
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallFailed
 }
 
 /**
