@@ -108,8 +108,6 @@ public class DummyAIAgentContext(
             _executionInfo = value
         }
 
-    override suspend fun getHistory(): List<Message> = emptyList()
-
     /**
      * Creates a new instance of `AIAgentContextBase` with the specified parameters,
      * copying the properties from the current instance with the provided updates.
