@@ -67,8 +67,7 @@ public data class LLMCallCompletedEvent(
     val response: Message.Assistant?,
     val moderationResponse: ModerationResult? = null,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-}
+) : DefinedFeatureEvent()
 
 /**
  * Represents an event that occurs when a call to a large language model (LLM) fails. This event captures
