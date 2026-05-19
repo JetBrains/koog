@@ -232,7 +232,6 @@ class PostgresPersistenceAgentRunTest {
         output shouldBeEqual "History: You are a test agent.\n" +
             "Node 1 output\n" +
             "Node 2 output\n" +
-            "Node 1 output\n" +
             "Node 2 output"
 
         // Post-run: latest should still be cp3 since we did not persist new checkpoints
@@ -276,7 +275,6 @@ class PostgresPersistenceAgentRunTest {
         output shouldBe "History: You are a test agent.\n" +
             "Node 1 output\n" +
             "Node 2 output\n" +
-            "Node 1 output\n" +
             "Node 2 output"
 
         latest?.checkpointId shouldBe "cp-1"
