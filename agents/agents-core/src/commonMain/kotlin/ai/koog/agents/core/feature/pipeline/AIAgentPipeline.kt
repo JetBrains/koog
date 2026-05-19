@@ -40,6 +40,7 @@ import ai.koog.serialization.JSONObject
 import ai.koog.serialization.TypeToken
 import ai.koog.utils.time.KoogClock
 import kotlin.reflect.KClass
+import kotlin.time.Duration
 
 /**
  * Pipeline for AI agent features that provides interception points for various agent lifecycle events.
@@ -150,6 +151,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         context: AIAgentContext,
         runId: String,
         result: Any?,
+        duration: Duration,
     )
 
     /**
@@ -170,6 +172,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         context: AIAgentContext,
         runId: String,
         error: Throwable,
+        duration: Duration?,
     )
 
     /**
@@ -184,6 +187,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         eventId: String,
         executionInfo: AgentExecutionInfo,
         agent: AIAgent<*, *>,
+        duration: Duration,
     )
 
     /**
@@ -244,6 +248,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         strategy: AIAgentStrategy<*, *, *>,
         result: Any?,
         resultType: TypeToken,
+        duration: Duration,
     )
 
     //endregion Trigger Strategy Handlers
@@ -296,6 +301,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         tools: List<ToolDescriptor>,
         response: Message.Assistant?,
         moderationResponse: ModerationResult?,
+        duration: Duration,
     )
 
     /**
@@ -318,7 +324,8 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        error: Throwable
+        error: Throwable,
+        duration: Duration,
     )
 
     //endregion Trigger LLM Call Handlers
@@ -375,6 +382,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         toolArgs: JSONObject,
         message: String,
         error: Throwable,
+        duration: Duration,
     )
 
     /**
@@ -403,6 +411,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         toolArgs: JSONObject,
         message: String,
         error: Throwable?,
+        duration: Duration,
     )
 
     /**
@@ -429,6 +438,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         toolDescription: String?,
         toolArgs: JSONObject,
         toolResult: JSONElement?,
+        duration: Duration,
     )
 
     /**
@@ -537,6 +547,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         prompt: Prompt,
         model: LLModel,
         error: Throwable,
+        duration: Duration?
     )
 
     /**
@@ -562,6 +573,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
+        duration: Duration?
     )
 
     //endregion Trigger LLM Streaming

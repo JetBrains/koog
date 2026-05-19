@@ -199,7 +199,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
                     result = eventContext.result?.toString(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -211,7 +212,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
                     error = eventContext.error.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -221,7 +223,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     eventId = eventContext.eventId,
                     executionInfo = eventContext.executionInfo,
                     agentId = eventContext.agent.id,
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -260,7 +263,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     runId = eventContext.context.runId,
                     strategyName = eventContext.strategy.name,
                     result = eventContext.result?.toString(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -291,7 +295,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     model = eventContext.model.toModelInfo(),
                     response = eventContext.response,
                     moderationResponse = eventContext.moderationResponse,
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -334,7 +339,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
                     error = eventContext.error.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -347,7 +353,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
                     tools = eventContext.tools.map { it.name },
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -380,7 +387,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     toolDescription = eventContext.toolDescription,
                     message = eventContext.message,
                     error = eventContext.error.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -395,7 +403,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     toolArgs = eventContext.toolArgs,
                     toolDescription = eventContext.toolDescription,
                     error = eventContext.error?.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -410,7 +419,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     toolArgs = eventContext.toolArgs,
                     toolDescription = eventContext.toolDescription,
                     result = eventContext.toolResult,
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -459,7 +469,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                         eventContext.outputType,
                         pipeline.config.serializer
                     ),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -476,7 +487,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                         pipeline.config.serializer
                     ),
                     error = eventContext.error.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -517,7 +529,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                         eventContext.outputType,
                         pipeline.config.serializer
                     ),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }
@@ -534,7 +547,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                         pipeline.config.serializer
                     ),
                     error = eventContext.error.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    duration = eventContext.duration,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
                 )
                 writer.onMessage(event)
             }

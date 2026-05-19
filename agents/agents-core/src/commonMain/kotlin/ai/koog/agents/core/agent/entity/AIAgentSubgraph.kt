@@ -1,5 +1,3 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContext
@@ -27,7 +25,7 @@ import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
-import kotlin.uuid.ExperimentalUuidApi
+import kotlin.time.TimeSource
 
 /**
  * Base class for [AIAgentSubgraph].
@@ -158,14 +156,14 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
      *   pipeline events, unless this subgraph is the strategy-level subgraph (which is reported separately).
      * - Runs nodes starting from [start] (or from an enforced [ExecutionPoint], if present) and follows
      *   edges until [finish] is reached or execution is interrupted.
-     * - Restores the original LLM context afterwards, preserving the updated message history.
+     * - Restores the original LLM context afterward, preserving the updated message history.
      *
-     * @param context The graph execution context which includes all necessary resources and metadata for execution.
+     * @param context The graph execution context that includes all necessary resources and metadata for execution.
      * @param input The input data to be processed by the subgraph.
      * @return The output produced by [finish], or `null` if execution was interrupted
      * (for example, due to a requested jump to another node or a checkpoint rollback).
      */
-    @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class, ExperimentalUuidApi::class)
+    @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class)
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? =
         context.with { executionInfo, eventId ->
             val newTools = selectTools(context)
@@ -195,6 +193,8 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                 )
             }
 
+            val subgraphStartMark = TimeSource.Monotonic.markNow()
+
             // Execute the subgraph with an inner context and get the result and updated prompt.
             val result = try {
                 executeWithInnerContext(context, input)
@@ -207,10 +207,11 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                         eventId,
                         executionInfo,
                         context,
-                        this@AIAgentSubgraphBase,
+                        subgraph = this@AIAgentSubgraphBase,
                         input,
                         inputType,
-                        e
+                        error = e,
+                        duration = subgraphStartMark.elapsedNow(),
                     )
                 }
                 throw e
@@ -236,11 +237,12 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                     eventId,
                     executionInfo,
                     context,
-                    this@AIAgentSubgraphBase,
+                    subgraph = this@AIAgentSubgraphBase,
                     input,
                     inputType,
-                    result,
-                    outputType
+                    output = result,
+                    outputType,
+                    duration = subgraphStartMark.elapsedNow(),
                 )
             }
 
@@ -289,19 +291,16 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                 return null
             }
 
-            // find the suitable edge to move to the next node, get the transformed output
+            // find the suitable edge to move to the next node, get the transformed output.
+            // If no edge resolves: when at the finish node, exit the loop, otherwise the agent is stuck and we throw.
             val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput)
-
-            // In we are in the finish node, we need to exit, otherwise we stuck in the node
-            if (resolvedEdge == null) {
-                if (currentNode == finish) {
+                ?: if (currentNode == finish) {
                     currentInput = nodeOutput
                     break
                 } else {
                     logger.error { formatLog(context, "Agent stuck in node ${currentNode.name}") }
                     throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
                 }
-            }
 
             currentNode = resolvedEdge.edge.toNode
             currentInput = resolvedEdge.output
@@ -322,7 +321,7 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
     }
 
     /**
-     * Executes the specified action only when running subgraph logic, and not when the current
+     * Executes the specified action only when running subgraph logic and not when the current
      * subgraph is the strategy-level subgraph.
      *
      * A strategy is a special case of subgraph execution. Strategy execution wraps the subgraph [execute] method
@@ -331,7 +330,6 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
      *
      * The method is used for reporting subgraph-only agent events in the [ai.koog.agents.core.feature.pipeline.AIAgentPipeline].
      */
-    @OptIn(InternalAgentsApi::class)
     private inline fun runIfNotStrategy(
         context: AIAgentGraphContextBase,
         action: AIAgentGraphContextBase.() -> Unit
@@ -357,7 +355,6 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
      * executed with an execution scope keyed by the subgraph [id], while for strategy subgraphs the existing
      * execution info from the context is reused.
      */
-    @OptIn(InternalAgentsApi::class)
     private inline fun <T> AIAgentContext.with(
         block: (executionInfo: AgentExecutionInfo, eventId: String) -> T
     ): T {
@@ -393,7 +390,8 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
  * @param llmParams Optional [LLMParams] override for the prompt for the subgraph execution.
  * @param responseProcessor Optional [ResponseProcessor] override for the subgraph execution.
  */
-public expect class AIAgentSubgraph<TInput, TOutput> constructor(
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+public expect class AIAgentSubgraph<TInput, TOutput>(
     name: String,
     start: StartNode<TInput>,
     finish: FinishNode<TOutput>,

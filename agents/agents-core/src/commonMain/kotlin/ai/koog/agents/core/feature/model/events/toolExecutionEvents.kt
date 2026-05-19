@@ -6,6 +6,7 @@ import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.utils.time.KoogClock
+import kotlin.time.Duration
 import kotlinx.serialization.Serializable
 
 /**
@@ -77,6 +78,8 @@ public data class ToolCallStartingEvent(
  * @property toolDescription A description of the tool that encountered the validation error;
  * @property error A message describing the validation error encountered;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
+ * @property duration Elapsed time from when the tool call entered the environment until the validation failure
+ * was observed. See `ToolValidationFailedContext.duration` for full semantics.
  */
 @Serializable
 public data class ToolValidationFailedEvent(
@@ -89,6 +92,7 @@ public data class ToolValidationFailedEvent(
     val toolDescription: String?,
     val message: String?,
     val error: AIAgentError,
+    val duration: Duration,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
@@ -97,7 +101,7 @@ public data class ToolValidationFailedEvent(
      */
     @Deprecated(
         message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("ToolValidationFailedEvent(executionInfo, runId, toolCallId, toolName, toolArgs, message, error, timestamp)")
+        replaceWith = ReplaceWith("ToolValidationFailedEvent(executionInfo, runId, toolCallId, toolName, toolArgs, message, error, duration, timestamp)")
     )
     public constructor(
         runId: String,
@@ -105,6 +109,7 @@ public data class ToolValidationFailedEvent(
         toolName: String,
         toolArgs: JSONObject,
         error: String,
+        duration: Duration,
         timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = ToolValidationFailedEvent::class.simpleName.toString(),
@@ -123,7 +128,9 @@ public data class ToolValidationFailedEvent(
             stackTrace = "",
             cause = null,
             type = null
-        )
+        ),
+        duration = duration,
+        timestamp = timestamp,
     )
 }
 
@@ -143,6 +150,8 @@ public data class ToolValidationFailedEvent(
  * @property toolDescription A description of the tool that failed;
  * @property error The error encountered during the tool's execution;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
+ * @property duration Elapsed time from when the tool call entered the environment until the failure.
+ * See `ToolCallFailedContext.duration` for full semantics.
  */
 @Serializable
 public data class ToolCallFailedEvent(
@@ -154,6 +163,7 @@ public data class ToolCallFailedEvent(
     val toolArgs: JSONObject,
     val toolDescription: String?,
     val error: AIAgentError?,
+    val duration: Duration,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
@@ -162,7 +172,7 @@ public data class ToolCallFailedEvent(
      */
     @Deprecated(
         message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("ToolCallFailedEvent(executionInfo, runId, toolCallId, toolName, toolArgs, error, timestamp)")
+        replaceWith = ReplaceWith("ToolCallFailedEvent(executionInfo, runId, toolCallId, toolName, toolArgs, error, duration, timestamp)")
     )
     public constructor(
         runId: String,
@@ -170,6 +180,7 @@ public data class ToolCallFailedEvent(
         toolName: String,
         toolArgs: JSONObject,
         error: AIAgentError,
+        duration: Duration,
         timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = ToolCallFailedEvent::class.simpleName.toString(),
@@ -183,7 +194,8 @@ public data class ToolCallFailedEvent(
         toolArgs = toolArgs,
         toolDescription = null,
         error = error,
-        timestamp = timestamp
+        duration = duration,
+        timestamp = timestamp,
     )
 }
 
@@ -203,6 +215,8 @@ public data class ToolCallFailedEvent(
  * @property toolDescription A description of the tool that was executed;
  * @property result The result of the tool execution, which may be null if no result was produced or an error occurred;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
+ * @property duration Elapsed time from when the tool call entered the environment until the tool returned its result.
+ * See `ToolCallCompletedContext.duration` for full semantics.
  */
 @Serializable
 public data class ToolCallCompletedEvent(
@@ -214,6 +228,7 @@ public data class ToolCallCompletedEvent(
     val toolArgs: JSONObject,
     val toolDescription: String?,
     val result: JSONElement?,
+    val duration: Duration,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
@@ -222,7 +237,7 @@ public data class ToolCallCompletedEvent(
      */
     @Deprecated(
         message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("ToolCallCompletedEvent(executionInfo, runId, toolCallId, toolName, toolArgs, result, timestamp)")
+        replaceWith = ReplaceWith("ToolCallCompletedEvent(executionInfo, runId, toolCallId, toolName, toolArgs, result, duration, timestamp)")
     )
     public constructor(
         runId: String,
@@ -230,6 +245,7 @@ public data class ToolCallCompletedEvent(
         toolName: String,
         toolArgs: JSONObject,
         result: String?,
+        duration: Duration,
         timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = ToolCallCompletedEvent::class.simpleName.toString(),
@@ -243,7 +259,8 @@ public data class ToolCallCompletedEvent(
         toolArgs = toolArgs,
         toolDescription = null,
         result = JSONPrimitive(result),
-        timestamp = timestamp
+        duration = duration,
+        timestamp = timestamp,
     )
 }
 

@@ -144,7 +144,8 @@ public class Tracing {
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
                     result = eventContext.result?.toString(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -156,7 +157,8 @@ public class Tracing {
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
                     error = eventContext.error.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -166,7 +168,8 @@ public class Tracing {
                     eventId = eventContext.eventId,
                     executionInfo = eventContext.executionInfo,
                     agentId = eventContext.agent.id,
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -197,7 +200,8 @@ public class Tracing {
                     runId = eventContext.context.runId,
                     strategyName = eventContext.strategy.name,
                     result = eventContext.result?.toString(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -238,7 +242,8 @@ public class Tracing {
                         eventContext.outputType,
                         pipeline.config.serializer
                     ),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -255,7 +260,8 @@ public class Tracing {
                         pipeline.config.serializer
                     ),
                     error = eventContext.error.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -296,7 +302,8 @@ public class Tracing {
                         eventContext.outputType,
                         pipeline.config.serializer
                     ),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -313,7 +320,8 @@ public class Tracing {
                         pipeline.config.serializer
                     ),
                     error = eventContext.error.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -344,7 +352,8 @@ public class Tracing {
                     model = eventContext.model.toModelInfo(),
                     response = eventContext.response,
                     moderationResponse = eventContext.moderationResponse,
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -358,7 +367,8 @@ public class Tracing {
                     model = eventContext.model.toModelInfo(),
                     tools = eventContext.tools.map { it.name },
                     error = eventContext.error.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -388,7 +398,8 @@ public class Tracing {
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
                     tools = eventContext.tools.map { it.name },
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -414,7 +425,8 @@ public class Tracing {
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
                     error = eventContext.error.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -447,7 +459,8 @@ public class Tracing {
                     toolDescription = eventContext.toolDescription,
                     message = eventContext.message,
                     error = eventContext.error.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -462,7 +475,8 @@ public class Tracing {
                     toolArgs = eventContext.toolArgs,
                     toolDescription = eventContext.toolDescription,
                     error = eventContext.error?.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }
@@ -477,7 +491,8 @@ public class Tracing {
                     toolArgs = eventContext.toolArgs,
                     toolDescription = eventContext.toolDescription,
                     result = eventContext.toolResult,
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                    timestamp = pipeline.clock.now().toEpochMilliseconds(),
+                    duration = eventContext.duration,
                 )
                 processMessage(config, event)
             }

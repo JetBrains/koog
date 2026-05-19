@@ -11,6 +11,8 @@ import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.utils.runCatchingCancellable
 import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KLogger
+import kotlin.time.TimeSource
+import kotlin.time.measureTime
 
 /**
  * Internal implementation of [AIAgentRunSession] that manages the execution lifecycle of an AI agent.
@@ -63,6 +65,8 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
             is AdditionalInputs.Storage -> context.storage.putAll(sessionInputs.storage)
         }
 
+        var runStartMark: TimeSource.Monotonic.ValueTimeMark? = null
+
         val runResult = try {
             withPreparedPipeline(context, agent.id, sessionPipeline) {
                 try {
@@ -77,6 +81,8 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
                         id,
                     )
 
+                    runStartMark = TimeSource.Monotonic.markNow()
+
                     val result = context.with(partName = strategy.name) { executionInfo, eventId ->
                         runCatchingCancellable {
                             @OptIn(InternalAgentsApi::class)
@@ -85,14 +91,17 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
                             @OptIn(InternalAgentsApi::class)
                             context.pipeline.onStrategyStarting(eventId, executionInfo, context, strategy)
 
-                            val result = strategy.execute(context = context, input = input)
+                            var result: Output?
+                            val strategyDuration = measureTime {
+                                result = strategy.execute(context = context, input = input)
+                            }
 
                             logger.trace { "Finished executing strategy (name: ${strategy.name}) with result: $result" }
 
                             // FIXME!
                             //  resultType will break serialization, need to add outputType to the AIAgentStrategy!
                             @OptIn(InternalAgentsApi::class)
-                            context.pipeline.onStrategyCompleted(eventId, executionInfo, context, strategy, result, typeToken<Any?>())
+                            context.pipeline.onStrategyCompleted(eventId, executionInfo, context, strategy, result, typeToken<Any?>(), strategyDuration)
 
                             result
                         }.onFailure {
@@ -103,14 +112,34 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
                     logger.debug { formatLog(id, id, "Finished agent execution") }
 
                     @OptIn(InternalAgentsApi::class)
-                    sessionPipeline.onAgentCompleted(id, context.executionInfo, agent, context, id, result)
+                    sessionPipeline.onAgentCompleted(
+                        eventId = id,
+                        executionInfo = context.executionInfo,
+                        agent,
+                        context,
+                        runId = id,
+                        result, duration = runStartMark.elapsedNow()
+                    )
+
                     result
                 } catch (e: Exception) {
                     state = AIAgentState.Failed(e)
                     logger.error(e) { "Execution exception reported by server!" }
 
                     @OptIn(InternalAgentsApi::class)
-                    sessionPipeline.onAgentExecutionFailed(id, context.executionInfo, agent, context, id, e)
+                    // runStartMark is null if the failure happened before strategy execution began
+                    // (e.g., onAgentStarting handler threw). We forward null to signal "execution never began" —
+                    // see AgentExecutionFailedContext.duration KDoc.
+                    sessionPipeline.onAgentExecutionFailed(
+                        eventId = id,
+                        executionInfo = context.executionInfo,
+                        agent,
+                        context,
+                        runId = id,
+                        error = e,
+                        duration = runStartMark?.elapsedNow()
+                    )
+
                     throw e
                 }
             }
@@ -148,6 +177,8 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
             "withPreparedPipeline() should be called from a top level agent context."
         }
 
+        val agentStartMark = TimeSource.Monotonic.markNow()
+
         return try {
             pipeline.prepareFeatures()
             block.invoke()
@@ -155,7 +186,8 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
             pipeline.onAgentClosing(
                 eventId = eventId,
                 executionInfo = context.executionInfo.parent ?: context.executionInfo,
-                agent = agent
+                agent = agent,
+                duration = agentStartMark.elapsedNow(),
             )
             pipeline.closeAllFeaturesMessageProcessors()
         }

@@ -7,6 +7,7 @@ import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.message.Message
 import ai.koog.utils.time.KoogClock
+import kotlin.time.Duration
 import kotlinx.serialization.Serializable
 
 /**
@@ -91,6 +92,8 @@ public data class LLMCallStartingEvent(
  * @property moderationResponse The moderation response, if any, returned by the LLM.
  *                              This is typically used to capture and track content moderation results.
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
+ * @property duration Elapsed time of the underlying `PromptExecutor.execute(...)` call.
+ * See `LLMCallCompletedContext.duration` for full semantics.
  */
 @Serializable
 public data class LLMCallCompletedEvent(
@@ -101,16 +104,17 @@ public data class LLMCallCompletedEvent(
     val model: ModelInfo,
     val response: Message.Assistant?,
     val moderationResponse: ModerationResult? = null,
+    val duration: Duration,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
      * @deprecated Use constructor with executionInfo parameter and model parameter of type [ModelInfo]:
-     *             LLMCallCompletedEvent(executionInfo, runId, prompt, model, responses, moderationResponse, timestamp)
+     *             LLMCallCompletedEvent(executionInfo, runId, prompt, model, responses, moderationResponse, duration, timestamp)
      */
     @Deprecated(
-        message = "Please use constructor with executionInfo parameter and model parameter of type [ModelInfo]: LLMCallCompletedEvent(executionInfo, runId, prompt, model, responses, moderationResponse, timestamp)",
-        replaceWith = ReplaceWith("LLMCallCompletedEvent(executionInfo, runId, prompt, model, responses, moderationResponse, timestamp)")
+        message = "Please use constructor with executionInfo parameter and model parameter of type [ModelInfo]: LLMCallCompletedEvent(executionInfo, runId, prompt, model, responses, moderationResponse, duration, timestamp)",
+        replaceWith = ReplaceWith("LLMCallCompletedEvent(executionInfo, runId, prompt, model, responses, moderationResponse, duration, timestamp)")
     )
     public constructor(
         runId: String,
@@ -118,6 +122,7 @@ public data class LLMCallCompletedEvent(
         model: String,
         response: Message.Assistant? = null,
         moderationResponse: ModerationResult? = null,
+        duration: Duration,
         eventId: String = LLMCallCompletedEvent::class.simpleName.toString(),
         timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
@@ -131,7 +136,8 @@ public data class LLMCallCompletedEvent(
         model = ModelInfo.fromString(model),
         response = response,
         moderationResponse = moderationResponse,
-        timestamp = timestamp
+        duration = duration,
+        timestamp = timestamp,
     )
 
     /**
@@ -154,6 +160,8 @@ public data class LLMCallCompletedEvent(
  * @property tools A list of tools (if any) involved in the execution that led to the failure.
  * @property error The error information providing details about why the call failed.
  * @property timestamp The time at which the event was recorded, represented as milliseconds since epoch.
+ * @property duration Elapsed time of the underlying `PromptExecutor.execute(...)` call up to the failure.
+ * See `LLMCallFailedContext.duration` for full semantics.
  */
 @Serializable
 public data class LLMCallFailedEvent(
@@ -164,6 +172,7 @@ public data class LLMCallFailedEvent(
     val model: ModelInfo,
     val tools: List<String>,
     val error: AIAgentError,
+    val duration: Duration,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 

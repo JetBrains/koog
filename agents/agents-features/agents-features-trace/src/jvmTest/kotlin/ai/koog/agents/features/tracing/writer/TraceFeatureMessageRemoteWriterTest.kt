@@ -325,7 +325,15 @@ class TraceFeatureMessageRemoteWriterTest {
                 val actualLLMCallEvent = actualLLMCallStartingEvents[0]
                 val actualLLMSendToolResultEvent = actualLLMCallStartingEvents[1]
 
+                val actualLLMCallCompletedEvents = actualClientEvents.findEvents<LLMCallCompletedEvent>()
+                val actualNodeCompletedByName = actualClientEvents
+                    .findEvents<NodeExecutionCompletedEvent>()
+                    .associateBy { it.nodeName }
+
                 val actualToolCallStartingEvent = actualClientEvents.singleEvent<ToolCallStartingEvent>()
+                val actualToolCallCompletedEvent = actualClientEvents.singleEvent<ToolCallCompletedEvent>()
+                val actualStrategyCompletedEvent = actualClientEvents.singleEvent<StrategyCompletedEvent>()
+                val actualAgentCompletedEvent = actualClientEvents.singleEvent<AgentCompletedEvent>()
 
                 val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"), serializer)
                 val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result, serializer)
@@ -405,7 +413,8 @@ class TraceFeatureMessageRemoteWriterTest {
                             nodeName = START_NODE_PREFIX,
                             input = serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             output = serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualNodeCompletedByName.getValue(START_NODE_PREFIX).duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionStartingEvent(
                             eventId = actualNodeLLMCallEvent.eventId,
@@ -431,7 +440,8 @@ class TraceFeatureMessageRemoteWriterTest {
                             prompt = expectedLLMCallPrompt,
                             model = testModel.toModelInfo(),
                             response = toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualLLMCallCompletedEvents[0].duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionCompletedEvent(
                             eventId = actualNodeLLMCallEvent.eventId,
@@ -446,7 +456,8 @@ class TraceFeatureMessageRemoteWriterTest {
                                 ),
                                 typeToken<Message>()
                             ),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualNodeCompletedByName.getValue(nodeSendLLMCallName).duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionStartingEvent(
                             eventId = actualNodeToolCallEvent.eventId,
@@ -480,7 +491,8 @@ class TraceFeatureMessageRemoteWriterTest {
                             toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                             toolDescription = dummyTool.descriptor.description,
                             result = dummyTool.encodeResult(dummyTool.result, serializer),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualToolCallCompletedEvent.duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionCompletedEvent(
                             eventId = actualNodeToolCallEvent.eventId,
@@ -494,9 +506,10 @@ class TraceFeatureMessageRemoteWriterTest {
                                 ),
                                 typeToken<MessagePart.Tool.Call>()
                             ),
-                            timestamp = testClock.now().toEpochMilliseconds(),
                             // Tool result is wrapped into an object with id, tool, content, and result fields
-                            output = dummyReceivedToolResultEncoded
+                            output = dummyReceivedToolResultEncoded,
+                            duration = actualNodeCompletedByName.getValue(nodeExecuteToolName).duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionStartingEvent(
                             eventId = actualNodeSendToolResultEvent.eventId,
@@ -522,7 +535,8 @@ class TraceFeatureMessageRemoteWriterTest {
                             prompt = expectedLLMCallWithToolsPrompt,
                             model = testModel.toModelInfo(),
                             response = assistantMessage(mockResponse),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualLLMCallCompletedEvents[1].duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionCompletedEvent(
                             eventId = actualNodeSendToolResultEvent.eventId,
@@ -531,7 +545,8 @@ class TraceFeatureMessageRemoteWriterTest {
                             nodeName = nodeSendToolResultName,
                             input = dummyReceivedToolResultEncoded,
                             output = serializer.encodeToJSONElement(assistantMessage(mockResponse), typeToken<Message>()),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualNodeCompletedByName.getValue(nodeSendToolResultName).duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionStartingEvent(
                             eventId = actualNodeFinishEvent.eventId,
@@ -548,7 +563,8 @@ class TraceFeatureMessageRemoteWriterTest {
                             nodeName = FINISH_NODE_PREFIX,
                             input = serializer.encodeToJSONElement(mockResponse, typeToken<String>()),
                             output = serializer.encodeToJSONElement(mockResponse, typeToken<String>()),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualNodeCompletedByName.getValue(FINISH_NODE_PREFIX).duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         StrategyCompletedEvent(
                             eventId = actualStrategyStartingEvent.eventId,
@@ -556,7 +572,8 @@ class TraceFeatureMessageRemoteWriterTest {
                             runId = runId,
                             strategyName = strategyName,
                             result = mockResponse,
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualStrategyCompletedEvent.duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         AgentCompletedEvent(
                             eventId = actualAgentStartingEvent.eventId,
@@ -564,13 +581,15 @@ class TraceFeatureMessageRemoteWriterTest {
                             agentId = agentId,
                             runId = runId,
                             result = mockResponse,
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualAgentCompletedEvent.duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         AgentClosingEvent(
                             eventId = actualAgentClosingEvent.eventId,
                             executionInfo = agentExecutionInfo(agentId),
                             agentId = agentId,
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualAgentClosingEvent.duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         )
                     )
                 )
@@ -843,6 +862,7 @@ class TraceFeatureMessageRemoteWriterTest {
                 val actualLLMCallStartingEvents = actualClientEvents.findEvents<LLMCallStartingEvent>()
                 val actualLLMCallEvent = actualLLMCallStartingEvents[0]
                 val actualLLMSendToolResultEvent = actualLLMCallStartingEvents[1]
+                val actualLLMCallCompletedEvents = actualClientEvents.findEvents<LLMCallCompletedEvent>()
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 expectedClientEvents.addAll(
@@ -863,7 +883,8 @@ class TraceFeatureMessageRemoteWriterTest {
                             prompt = expectedLLMCallPrompt,
                             model = testModel.toModelInfo(),
                             response = toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualLLMCallCompletedEvents[0].duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         LLMCallStartingEvent(
                             eventId = actualLLMSendToolResultEvent.eventId,
@@ -881,7 +902,8 @@ class TraceFeatureMessageRemoteWriterTest {
                             prompt = expectedLLMCallWithToolsPrompt,
                             model = testModel.toModelInfo(),
                             response = assistantMessage(mockResponse),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualLLMCallCompletedEvents[1].duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                     )
                 )

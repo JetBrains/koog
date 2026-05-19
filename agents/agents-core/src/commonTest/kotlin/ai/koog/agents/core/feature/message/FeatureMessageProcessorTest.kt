@@ -18,11 +18,19 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 class FeatureMessageProcessorTest {
 
     private val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
+
+    /**
+     * Synthetic non-zero duration used purely as a fixture value for round-trip tests; chosen so it cannot
+     * be confused with an "unmeasured" sentinel.
+     */
+    private val testEventDuration: Duration = 1.seconds
 
     //region onMessage
 
@@ -200,7 +208,8 @@ class FeatureMessageProcessorTest {
                 nodeName = testNodeName,
                 input = JSONPrimitive(testInput),
                 output = JSONPrimitive(testOutput),
-                timestamp = testClock.now().toEpochMilliseconds()
+                duration = testEventDuration,
+                timestamp = testClock.now().toEpochMilliseconds(),
             )
 
             processor.onMessage(nodeExecutionCompletedEvent)
@@ -213,7 +222,8 @@ class FeatureMessageProcessorTest {
                     nodeName = testNodeName,
                     input = JSONPrimitive(testInput),
                     output = JSONPrimitive(testOutput),
-                    timestamp = testClock.now().toEpochMilliseconds()
+                    duration = testEventDuration,
+                    timestamp = testClock.now().toEpochMilliseconds(),
                 )
             )
 
@@ -245,7 +255,8 @@ class FeatureMessageProcessorTest {
                 nodeName = testNodeName,
                 input = null,
                 error = testError,
-                timestamp = testClock.now().toEpochMilliseconds()
+                duration = testEventDuration,
+                timestamp = testClock.now().toEpochMilliseconds(),
             )
 
             processor.onMessage(nodeExecutionFailedEvent)
@@ -258,7 +269,8 @@ class FeatureMessageProcessorTest {
                     nodeName = testNodeName,
                     input = null,
                     error = testError,
-                    timestamp = testClock.now().toEpochMilliseconds()
+                    duration = testEventDuration,
+                    timestamp = testClock.now().toEpochMilliseconds(),
                 )
             )
 
@@ -324,7 +336,8 @@ class FeatureMessageProcessorTest {
                 nodeName = testNodeName,
                 input = testInput,
                 output = testOutput,
-                timestamp = testClock.now().toEpochMilliseconds()
+                duration = testEventDuration,
+                timestamp = testClock.now().toEpochMilliseconds(),
             )
 
             processor.onMessage(nodeExecutionCompletedEvent)
@@ -337,7 +350,8 @@ class FeatureMessageProcessorTest {
                     nodeName = testNodeName,
                     input = testInput,
                     output = testOutput,
-                    timestamp = testClock.now().toEpochMilliseconds()
+                    duration = testEventDuration,
+                    timestamp = testClock.now().toEpochMilliseconds(),
                 )
             )
 
@@ -371,7 +385,8 @@ class FeatureMessageProcessorTest {
                 nodeName = testNodeName,
                 input = testInput,
                 error = testError,
-                timestamp = testClock.now().toEpochMilliseconds()
+                duration = testEventDuration,
+                timestamp = testClock.now().toEpochMilliseconds(),
             )
 
             processor.onMessage(nodeExecutionFailedEvent)
@@ -384,7 +399,8 @@ class FeatureMessageProcessorTest {
                     nodeName = testNodeName,
                     input = testInput,
                     error = testError,
-                    timestamp = testClock.now().toEpochMilliseconds()
+                    duration = testEventDuration,
+                    timestamp = testClock.now().toEpochMilliseconds(),
                 )
             )
 

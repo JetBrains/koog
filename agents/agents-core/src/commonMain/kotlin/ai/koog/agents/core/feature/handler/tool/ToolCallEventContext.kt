@@ -6,6 +6,7 @@ import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
+import kotlin.time.Duration
 
 /**
  * Represents the context for handling tool call events.
@@ -66,6 +67,8 @@ public data class ToolCallStartingContext(
  * @property executionInfo The execution information containing parentId and current execution path;
  * @property message A message describing the validation error.
  * @property error The exception describing the validation issue.
+ * @property duration Elapsed time from when the tool call entered the environment until the validation
+ *           failure was observed. Includes argument parsing time because validation can fail at the parse step.
  */
 public data class ToolValidationFailedContext(
     override val eventId: String,
@@ -78,6 +81,7 @@ public data class ToolValidationFailedContext(
     override val toolArgs: JSONObject,
     public val message: String,
     public val error: Throwable,
+    public val duration: Duration,
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolValidationFailed
 }
@@ -88,6 +92,8 @@ public data class ToolValidationFailedContext(
  * @property executionInfo The execution information containing parentId and current execution path;
  * @property message A message describing the failure that occurred.
  * @property error The exception describing the tool call failure, or `null` if no exception is available.
+ * @property duration Elapsed time from when the tool call entered the environment until the tool reported failure.
+ *           Includes argument parsing and dispatch overhead alongside the tool's own execution time.
  */
 public data class ToolCallFailedContext(
     override val eventId: String,
@@ -100,6 +106,7 @@ public data class ToolCallFailedContext(
     override val toolArgs: JSONObject,
     public val message: String,
     public val error: Throwable?,
+    public val duration: Duration,
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallFailed
 }
@@ -109,6 +116,8 @@ public data class ToolCallFailedContext(
  *
  * @property executionInfo The execution information containing parentId and current execution path;
  * @property toolResult An optional result produced by the tool after execution can be null if not applicable.
+ * @property duration Elapsed time from when the tool call entered the environment until the tool returned its result.
+ *           Includes argument parsing and dispatch overhead alongside the tool's own execution time.
  */
 public data class ToolCallCompletedContext(
     override val eventId: String,
@@ -120,6 +129,7 @@ public data class ToolCallCompletedContext(
     override val toolDescription: String?,
     override val toolArgs: JSONObject,
     public val toolResult: JSONElement?,
+    public val duration: Duration,
 ) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallCompleted
 }

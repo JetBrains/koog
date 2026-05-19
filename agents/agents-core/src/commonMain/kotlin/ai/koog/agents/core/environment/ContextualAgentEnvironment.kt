@@ -10,6 +10,8 @@ import ai.koog.serialization.JSONObject
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration
+import kotlin.time.TimeSource
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -55,6 +57,7 @@ public class ContextualAgentEnvironment(
         @OptIn(ExperimentalUuidApi::class)
         val eventId = Uuid.random().toString()
         val toolDescription = context.llm.toolRegistry.getToolOrNull(toolCall.tool)?.descriptor?.description
+        val toolCallStartMark = TimeSource.Monotonic.markNow()
 
         val toolArgs = try {
             toolCall.argsJson.toKoogJSONObject()
@@ -77,6 +80,7 @@ public class ContextualAgentEnvironment(
                 toolArgs = toolArgs,
                 message = message,
                 error = e,
+                duration = toolCallStartMark.elapsedNow(),
             )
             return ReceivedToolResult(
                 id = toolCall.id,
@@ -127,7 +131,7 @@ public class ContextualAgentEnvironment(
             ToolCallMetadata.of(AgentContextAwareTool.AgentContextKey to context)
 
         val toolResult = environment.executeTool(toolCall, mergedMetadata)
-        processToolResult(eventId, context.executionInfo, toolResult)
+        processToolResult(eventId, context.executionInfo, toolResult, duration = toolCallStartMark.elapsedNow())
 
         logger.trace {
             "Tool call completed (" +
@@ -153,7 +157,8 @@ public class ContextualAgentEnvironment(
     private suspend fun processToolResult(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        toolResult: ReceivedToolResult
+        toolResult: ReceivedToolResult,
+        duration: Duration,
     ) {
         when (val toolResultKind = toolResult.resultKind) {
             is ToolResultKind.Success -> {
@@ -167,6 +172,7 @@ public class ContextualAgentEnvironment(
                     toolDescription = toolResult.toolDescription,
                     toolArgs = toolResult.toolArgs,
                     toolResult = toolResult.result,
+                    duration = duration,
                 )
             }
 
@@ -182,6 +188,7 @@ public class ContextualAgentEnvironment(
                     toolArgs = toolResult.toolArgs,
                     message = toolResult.output,
                     error = toolResultKind.error,
+                    duration = duration,
                 )
             }
 
@@ -197,6 +204,7 @@ public class ContextualAgentEnvironment(
                     toolArgs = toolResult.toolArgs,
                     message = toolResult.output,
                     error = toolResultKind.error,
+                    duration = duration,
                 )
             }
         }

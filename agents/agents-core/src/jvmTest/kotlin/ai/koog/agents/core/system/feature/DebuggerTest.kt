@@ -233,7 +233,15 @@ class DebuggerTest {
                 val actualLLMCallEvent = actualLLMCallStartingEvents[0]
                 val actualLLMSendToolResultEvent = actualLLMCallStartingEvents[1]
 
+                val actualLLMCallCompletedEvents = actualEvents.findEvents<LLMCallCompletedEvent>()
+                val actualNodeCompletedByName = actualEvents
+                    .findEvents<NodeExecutionCompletedEvent>()
+                    .associateBy { it.nodeName }
+
                 val actualToolCallStartingEvent = actualEvents.singleEvent<ToolCallStartingEvent>()
+                val actualToolCallCompletedEvent = actualEvents.singleEvent<ToolCallCompletedEvent>()
+                val actualStrategyCompletedEvent = actualEvents.singleEvent<StrategyCompletedEvent>()
+                val actualAgentCompletedEvent = actualEvents.singleEvent<AgentCompletedEvent>()
 
                 actualFilteredEvents.addAll(clientEventsCollector.collectedEvents)
 
@@ -300,7 +308,8 @@ class DebuggerTest {
                             serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
                             output = @OptIn(InternalAgentsApi::class)
                             serializer.encodeToJSONElement(userPrompt, typeToken<String>()),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualNodeCompletedByName.getValue(START_NODE_PREFIX).duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionStartingEvent(
                             eventId = actualNodeLLMCallEvent.eventId,
@@ -330,7 +339,8 @@ class DebuggerTest {
                                 dummyTool.name,
                                 content = """{"dummy":"$requestedDummyToolArgs"}"""
                             ),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualLLMCallCompletedEvents[0].duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionCompletedEvent(
                             eventId = actualNodeLLMCallEvent.eventId,
@@ -347,7 +357,8 @@ class DebuggerTest {
                                 ),
                                 typeToken<Message>()
                             ),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualNodeCompletedByName.getValue(nodeSendLLMCallName).duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionStartingEvent(
                             eventId = actualNodeToolCallEvent.eventId,
@@ -382,7 +393,8 @@ class DebuggerTest {
                             toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                             toolDescription = dummyTool.descriptor.description,
                             result = dummyTool.encodeResult(dummyTool.result, serializer),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualToolCallCompletedEvent.duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionCompletedEvent(
                             eventId = actualNodeToolCallEvent.eventId,
@@ -409,7 +421,8 @@ class DebuggerTest {
                                 ),
                                 typeToken<ReceivedToolResult>()
                             ),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualNodeCompletedByName.getValue(nodeExecuteToolName).duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionStartingEvent(
                             eventId = actualNodeSendToolResultEvent.eventId,
@@ -446,7 +459,8 @@ class DebuggerTest {
                             prompt = expectedLLMCallWithToolsPrompt,
                             model = mockLLModel.toModelInfo(),
                             response = assistantMessage(mockResponse),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualLLMCallCompletedEvents[1].duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionCompletedEvent(
                             eventId = actualNodeSendToolResultEvent.eventId,
@@ -470,7 +484,8 @@ class DebuggerTest {
                                 assistantMessage(mockResponse),
                                 typeToken<Message>()
                             ),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualNodeCompletedByName.getValue(nodeSendToolResultName).duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         NodeExecutionStartingEvent(
                             eventId = actualNodeFinishEvent.eventId,
@@ -490,7 +505,8 @@ class DebuggerTest {
                             serializer.encodeToJSONElement(mockResponse, typeToken<String>()),
                             output = @OptIn(InternalAgentsApi::class)
                             serializer.encodeToJSONElement(mockResponse, typeToken<String>()),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualNodeCompletedByName.getValue(FINISH_NODE_PREFIX).duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         StrategyCompletedEvent(
                             eventId = actualStrategyStartingEvent.eventId,
@@ -498,7 +514,8 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             strategyName = strategyName,
                             result = mockResponse,
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualStrategyCompletedEvent.duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         AgentCompletedEvent(
                             eventId = actualAgentStartingEvent.eventId,
@@ -506,13 +523,15 @@ class DebuggerTest {
                             agentId = agentId,
                             runId = clientEventsCollector.runId,
                             result = mockResponse,
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualAgentCompletedEvent.duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         AgentClosingEvent(
                             eventId = actualAgentClosingEvent.eventId,
                             executionInfo = agentExecutionInfo(agentId),
                             agentId = agentId,
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualAgentClosingEvent.duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                     )
                 )

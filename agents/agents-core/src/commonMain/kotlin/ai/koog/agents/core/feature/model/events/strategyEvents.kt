@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.utils.time.KoogClock
+import kotlin.time.Duration
 import kotlinx.serialization.Serializable
 
 /**
@@ -123,6 +124,8 @@ public data class StrategyStartingEvent(
  * @property strategyName The name of the strategy that was executed;
  * @property result The result of the strategy execution, providing details such as success, failure, or other status descriptions;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
+ * @property duration Elapsed time of the `strategy.execute(...)` call. See `StrategyCompletedContext.duration`
+ * for full semantics.
  */
 @Serializable
 public data class StrategyCompletedEvent(
@@ -131,6 +134,7 @@ public data class StrategyCompletedEvent(
     val runId: String,
     val strategyName: String,
     val result: String?,
+    val duration: Duration,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
@@ -139,12 +143,13 @@ public data class StrategyCompletedEvent(
      */
     @Deprecated(
         message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("StrategyCompletedEvent(executionInfo, runId, strategyName, result, timestamp)")
+        replaceWith = ReplaceWith("StrategyCompletedEvent(executionInfo, runId, strategyName, result, duration, timestamp)")
     )
     public constructor(
         runId: String,
         strategyName: String,
         result: String?,
+        duration: Duration,
         timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = StrategyCompletedEvent::class.simpleName.toString(),
@@ -155,7 +160,8 @@ public data class StrategyCompletedEvent(
         runId = runId,
         strategyName = strategyName,
         result = result,
-        timestamp = timestamp
+        duration = duration,
+        timestamp = timestamp,
     )
 }
 

@@ -42,11 +42,21 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.utils.time.KoogClock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 internal object AIAgentFeatureTestAPI {
 
     internal val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
+
+    /**
+     * Synthetic, non-zero duration used as a placeholder for test fixtures. Tests in this object construct
+     * events as inputs for serialization / round-trip checks where the actual measurement is irrelevant; the
+     * value is chosen to be clearly non-default and non-empty so it cannot be confused with an "unmeasured"
+     * sentinel.
+     */
+    internal val testEventDuration: Duration = 1.seconds
 
     internal val mockLLModel = LLModel(
         provider = MockLLMProvider(),
@@ -74,14 +84,16 @@ internal object AIAgentFeatureTestAPI {
         agentId = "test-agent-id",
         runId = "test-run-id",
         result = "test-result",
-        timestamp = testClock.now().toEpochMilliseconds()
+        duration = testEventDuration,
+        timestamp = testClock.now().toEpochMilliseconds(),
     )
 
     internal val agentClosingEvent = AgentClosingEvent(
         eventId = "test-event-id",
         executionInfo = agentExecutionInfo("test-agent-id"),
         agentId = "test-agent-id",
-        timestamp = testClock.now().toEpochMilliseconds()
+        duration = testEventDuration,
+        timestamp = testClock.now().toEpochMilliseconds(),
     )
 
     internal val agentExecutionFailedEvent = AgentExecutionFailedEvent(
@@ -95,7 +107,8 @@ internal object AIAgentFeatureTestAPI {
             cause = "test-error-cause",
             type = "test-error-type"
         ),
-        timestamp = testClock.now().toEpochMilliseconds()
+        duration = testEventDuration,
+        timestamp = testClock.now().toEpochMilliseconds(),
     )
 
     internal val graphNode1 = StrategyEventGraphNode("test-node-1-id", "test-node-1-name")
@@ -132,7 +145,8 @@ internal object AIAgentFeatureTestAPI {
             runId = "test-run-id",
             strategyName = strategyName,
             result = "test-result",
-            timestamp = testClock.now().toEpochMilliseconds()
+            duration = testEventDuration,
+            timestamp = testClock.now().toEpochMilliseconds(),
         )
     }
 
@@ -157,7 +171,8 @@ internal object AIAgentFeatureTestAPI {
             nodeName = nodeName,
             input = JSONPrimitive("test-input"),
             output = JSONPrimitive("test-output"),
-            timestamp = testClock.now().toEpochMilliseconds()
+            duration = testEventDuration,
+            timestamp = testClock.now().toEpochMilliseconds(),
         )
     }
 
@@ -175,7 +190,8 @@ internal object AIAgentFeatureTestAPI {
                 cause = "test-error-cause",
                 type = "test-error-type"
             ),
-            timestamp = testClock.now().toEpochMilliseconds()
+            duration = testEventDuration,
+            timestamp = testClock.now().toEpochMilliseconds(),
         )
     }
 
@@ -200,7 +216,8 @@ internal object AIAgentFeatureTestAPI {
             subgraphName = subgraphName,
             input = JSONPrimitive("test-input"),
             output = JSONPrimitive("test-output"),
-            timestamp = testClock.now().toEpochMilliseconds()
+            duration = testEventDuration,
+            timestamp = testClock.now().toEpochMilliseconds(),
         )
     }
 
@@ -218,7 +235,8 @@ internal object AIAgentFeatureTestAPI {
                 cause = "test-error-cause",
                 type = "test-error-type"
             ),
-            timestamp = testClock.now().toEpochMilliseconds()
+            duration = testEventDuration,
+            timestamp = testClock.now().toEpochMilliseconds(),
         )
     }
 
@@ -247,7 +265,8 @@ internal object AIAgentFeatureTestAPI {
             cause = "test-error-cause",
             type = "test-error-type"
         ),
-        timestamp = testClock.now().toEpochMilliseconds()
+        duration = testEventDuration,
+        timestamp = testClock.now().toEpochMilliseconds(),
     )
 
     internal val toolCallFailedEvent = ToolCallFailedEvent(
@@ -264,7 +283,8 @@ internal object AIAgentFeatureTestAPI {
             cause = "test-error-cause",
             type = "test-error-type"
         ),
-        timestamp = testClock.now().toEpochMilliseconds()
+        duration = testEventDuration,
+        timestamp = testClock.now().toEpochMilliseconds(),
     )
 
     internal val toolCallCompletedEvent = ToolCallCompletedEvent(
@@ -276,7 +296,8 @@ internal object AIAgentFeatureTestAPI {
         toolArgs = JSONObject(mapOf("test-argument-key" to JSONPrimitive("test-argument-value"))),
         toolDescription = "test-tool-description",
         result = JSONPrimitive("test-result"),
-        timestamp = testClock.now().toEpochMilliseconds()
+        duration = testEventDuration,
+        timestamp = testClock.now().toEpochMilliseconds(),
     )
 
     internal val llmCallStartingEvent = LLMCallStartingEvent(
@@ -317,7 +338,8 @@ internal object AIAgentFeatureTestAPI {
             content = "test-assistant-message",
             metaInfo = ResponseMetaInfo(timestamp = testClock.now())
         ),
-        timestamp = testClock.now().toEpochMilliseconds()
+        duration = testEventDuration,
+        timestamp = testClock.now().toEpochMilliseconds(),
     )
 
     internal val llmStreamingStartingEvent = LLMStreamingStartingEvent(
@@ -379,6 +401,7 @@ internal object AIAgentFeatureTestAPI {
             cause = "test-error-cause",
             type = "test-error-type"
         ),
+        duration = testEventDuration,
         timestamp = testClock.now().toEpochMilliseconds(),
     )
 
@@ -398,7 +421,8 @@ internal object AIAgentFeatureTestAPI {
         ),
         model = mockLLModel.toModelInfo(),
         tools = listOf("test-tool"),
-        timestamp = testClock.now().toEpochMilliseconds()
+        duration = testEventDuration,
+        timestamp = testClock.now().toEpochMilliseconds(),
     )
 
     internal val knownDefinedEvents = listOf(

@@ -161,6 +161,7 @@ class DebuggerSubgraphTest {
                             subgraphName = subgraphName,
                             input = encodedUserInput,
                             output = encodedSubgraphOutput,
+                            duration = actualClientEvents.singleEvent<SubgraphExecutionCompletedEvent>().duration,
                             timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                     )
@@ -308,7 +309,8 @@ class DebuggerSubgraphTest {
                                 cause = actualFailedEvent.error.cause,
                                 type = actualFailedEvent.error.type,
                             ),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualFailedEvent.duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                     )
                 )

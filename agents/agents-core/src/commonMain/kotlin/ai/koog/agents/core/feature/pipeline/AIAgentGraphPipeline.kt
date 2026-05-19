@@ -16,6 +16,7 @@ import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedConte
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
 import ai.koog.serialization.TypeToken
 import ai.koog.utils.time.KoogClock
+import kotlin.time.Duration
 
 /**
  * Represents a pipeline for AI agent graph execution, extending the functionality of `AIAgentPipeline`.
@@ -92,6 +93,7 @@ public expect open class AIAgentGraphPipeline(
         inputType: TypeToken,
         output: Any?,
         outputType: TypeToken,
+        duration: Duration,
     )
 
     /**
@@ -115,6 +117,7 @@ public expect open class AIAgentGraphPipeline(
         input: Any?,
         inputType: TypeToken,
         error: Throwable,
+        duration: Duration,
     )
 
     //endregion Trigger Node Handlers
@@ -165,6 +168,7 @@ public expect open class AIAgentGraphPipeline(
         inputType: TypeToken,
         output: Any?,
         outputType: TypeToken,
+        duration: Duration,
     )
 
     /**
@@ -188,6 +192,7 @@ public expect open class AIAgentGraphPipeline(
         input: Any?,
         inputType: TypeToken,
         error: Throwable,
+        duration: Duration,
     )
 
     //endregion Trigger Subgraph Handlers

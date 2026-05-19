@@ -15,6 +15,7 @@ import ai.koog.agents.core.feature.handler.planner.StepExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionStartingContext
 import ai.koog.serialization.TypeToken
 import ai.koog.utils.time.KoogClock
+import kotlin.time.Duration
 
 /**
  * Represents a specific implementation of an AI agent pipeline that uses a planner approach.
@@ -86,6 +87,7 @@ public expect open class AIAgentPlannerPipeline(
         planType: TypeToken?,
         stepIndex: Int,
         updatedPlan: Any,
+        duration: Duration,
     )
 
     /**
@@ -130,6 +132,7 @@ public expect open class AIAgentPlannerPipeline(
         plan: Any,
         planType: TypeToken?,
         stepIndex: Int,
+        duration: Duration,
     )
 
     /**
@@ -176,6 +179,7 @@ public expect open class AIAgentPlannerPipeline(
         planType: TypeToken?,
         stepIndex: Int,
         isCompleted: Boolean,
+        duration: Duration,
     )
 
     //endregion Trigger Planner Handlers

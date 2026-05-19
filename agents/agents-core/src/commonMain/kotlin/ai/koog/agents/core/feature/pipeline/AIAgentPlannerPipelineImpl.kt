@@ -14,6 +14,7 @@ import ai.koog.agents.core.feature.handler.planner.StepExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionStartingContext
 import ai.koog.serialization.TypeToken
 import ai.koog.utils.time.KoogClock
+import kotlin.time.Duration
 
 /**
  * Default implementation of [AIAgentPlannerPipelineAPI] that delegates base pipeline operations
@@ -55,10 +56,11 @@ public class AIAgentPlannerPipelineImpl(
         planType: TypeToken?,
         stepIndex: Int,
         updatedPlan: Any,
+        duration: Duration,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.BuildPlanCompleted,
-            context = PlanCreationCompletedContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex, updatedPlan)
+            context = PlanCreationCompletedContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex, updatedPlan, duration)
         )
     }
 
@@ -89,10 +91,11 @@ public class AIAgentPlannerPipelineImpl(
         plan: Any,
         planType: TypeToken?,
         stepIndex: Int,
+        duration: Duration,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.ExecuteStepCompleted,
-            context = StepExecutionCompletedContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex)
+            context = StepExecutionCompletedContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex, duration)
         )
     }
 
@@ -124,10 +127,11 @@ public class AIAgentPlannerPipelineImpl(
         planType: TypeToken?,
         stepIndex: Int,
         isCompleted: Boolean,
+        duration: Duration,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.IsPlanCompletedCompleted,
-            context = PlanCompletionEvaluationCompletedContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex, isCompleted)
+            context = PlanCompletionEvaluationCompletedContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex, isCompleted, duration)
         )
     }
 

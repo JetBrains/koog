@@ -6,6 +6,7 @@ import ai.koog.agents.utils.ModelInfo
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.time.KoogClock
+import kotlin.time.Duration
 import kotlinx.serialization.Serializable
 
 /**
@@ -124,6 +125,9 @@ public data class LLMStreamingFrameReceivedEvent(
  * @property error An instance of [AIAgentError], containing information about the error encountered, including its
  *                 message, stack trace, and cause, if available;
  * @property timestamp A timestamp indicating when the event occurred, represented in milliseconds since the Unix epoch.
+ * @property duration Elapsed time from immediately after `onLLMStreamingStarting` returned until the failure was
+ * observed, or `null` if the failure originated before measurement could start (the "streaming never began"
+ * case). See `LLMStreamingFailedContext.duration` for full semantics.
  */
 @Serializable
 public data class LLMStreamingFailedEvent(
@@ -133,6 +137,7 @@ public data class LLMStreamingFailedEvent(
     val prompt: Prompt,
     val model: ModelInfo,
     val error: AIAgentError,
+    val duration: Duration?,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
@@ -140,12 +145,13 @@ public data class LLMStreamingFailedEvent(
      * @deprecated Use constructor with executionInfo parameter
      */
     @Deprecated(
-        message = "Please use constructor with executionInfo parameter: LLMStreamingFailedEvent(executionInfo, runId, prompt, model, error, timestamp)",
-        replaceWith = ReplaceWith("LLMStreamingFailedEvent(executionInfo, runId, prompt, model, error, timestamp)")
+        message = "Please use constructor with executionInfo parameter: LLMStreamingFailedEvent(executionInfo, runId, prompt, model, error, duration, timestamp)",
+        replaceWith = ReplaceWith("LLMStreamingFailedEvent(executionInfo, runId, prompt, model, error, duration, timestamp)")
     )
     public constructor(
         runId: String,
         error: AIAgentError,
+        duration: Duration?,
         timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = LLMStreamingFailedEvent::class.simpleName.toString(),
@@ -157,7 +163,8 @@ public data class LLMStreamingFailedEvent(
         prompt = Prompt(emptyList(), ""),
         model = ModelInfo("", ""),
         error = error,
-        timestamp = timestamp
+        duration = duration,
+        timestamp = timestamp,
     )
 }
 
@@ -171,6 +178,9 @@ public data class LLMStreamingFailedEvent(
  * @property model The description of the LLM model used during the call. Use the format: 'llm_provider:model_id';
  * @property tools A list of tools used or invoked during the LLM call;
  * @property timestamp The timestamp indicating when the event occurred, represented in milliseconds since the epoch, defaulting to the current system time.
+ * @property duration Elapsed time from immediately after `onLLMStreamingStarting` returned until the flow
+ * completed, or `null` if the flow terminated before the start mark was captured (cold flow cancelled before
+ * its body began). See `LLMStreamingCompletedContext.duration` for full semantics.
  */
 @Serializable
 public data class LLMStreamingCompletedEvent(
@@ -180,22 +190,24 @@ public data class LLMStreamingCompletedEvent(
     val prompt: Prompt,
     val model: ModelInfo,
     val tools: List<String>,
+    val duration: Duration?,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
     /**
      * @deprecated Use constructor with executionInfo parameter and model parameter of type [ModelInfo]:
-     *             LLMStreamingCompletedEvent(executionInfo, runId, prompt, model, tools, timestamp)
+     *             LLMStreamingCompletedEvent(executionInfo, runId, prompt, model, tools, duration, timestamp)
      */
     @Deprecated(
-        message = "Please use constructor with executionInfo parameter and model parameter of type [ModelInfo]: LLMStreamingCompletedEvent(executionInfo, runId, prompt, model, tools, timestamp)",
-        replaceWith = ReplaceWith("LLMStreamingCompletedEvent(executionInfo, runId, prompt, model, tools, timestamp)")
+        message = "Please use constructor with executionInfo parameter and model parameter of type [ModelInfo]: LLMStreamingCompletedEvent(executionInfo, runId, prompt, model, tools, duration, timestamp)",
+        replaceWith = ReplaceWith("LLMStreamingCompletedEvent(executionInfo, runId, prompt, model, tools, duration, timestamp)")
     )
     public constructor(
         runId: String,
         prompt: Prompt,
         model: String,
         tools: List<String>,
+        duration: Duration?,
         timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
     ) : this(
         eventId = LLMStreamingCompletedEvent::class.simpleName.toString(),
@@ -207,6 +219,7 @@ public data class LLMStreamingCompletedEvent(
         prompt = prompt,
         model = ModelInfo.fromString(model),
         tools = tools,
-        timestamp = timestamp
+        duration = duration,
+        timestamp = timestamp,
     )
 }

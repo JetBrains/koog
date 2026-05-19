@@ -176,6 +176,7 @@ class DebuggerStreamingTest {
 
                 // Expected events
                 val actualStreamingStartingEvent = actualClientEvents.singleEvent<LLMStreamingStartingEvent>()
+                val actualStreamingCompletedEvent = actualClientEvents.singleEvent<LLMStreamingCompletedEvent>()
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 expectedFilteredEvents.addAll(
@@ -223,6 +224,7 @@ class DebuggerStreamingTest {
                             prompt = expectedLLMCallPrompt,
                             model = mockLLModel.toModelInfo(),
                             tools = listOf(dummyTool.name),
+                            duration = actualStreamingCompletedEvent.duration,
                             timestamp = testClock.now().toEpochMilliseconds(),
                         )
                     )
@@ -396,6 +398,7 @@ class DebuggerStreamingTest {
 
                 // Expected events
                 val actualStreamingStartingEvent = actualClientEvents.singleEvent<LLMStreamingStartingEvent>()
+                val actualStreamingCompletedEvent = actualClientEvents.singleEvent<LLMStreamingCompletedEvent>()
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 expectedFilteredEvents.addAll(
@@ -421,7 +424,8 @@ class DebuggerStreamingTest {
                                 cause = expectedCause,
                                 type = expectedType,
                             ),
-                            timestamp = testClock.now().toEpochMilliseconds()
+                            duration = actualClientEvents.singleEvent<LLMStreamingFailedEvent>().duration,
+                            timestamp = testClock.now().toEpochMilliseconds(),
                         ),
                         LLMStreamingCompletedEvent(
                             eventId = actualStreamingStartingEvent.eventId,
@@ -430,6 +434,7 @@ class DebuggerStreamingTest {
                             prompt = expectedLLMCallPrompt,
                             model = testModel.toModelInfo(),
                             tools = listOf(dummyTool.name),
+                            duration = actualStreamingCompletedEvent.duration,
                             timestamp = testClock.now().toEpochMilliseconds(),
                         )
                     )

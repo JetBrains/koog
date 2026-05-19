@@ -41,35 +41,38 @@ Represents the start of an agent run. Includes the following fields:
 
 Represents the end of an agent run. Includes the following fields:
 
-| Name            | Data type           | Required | Default | Description                                                                     |
-|-----------------|---------------------|----------|---------|---------------------------------------------------------------------------------|
-| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                         |
-| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event. |
-| `agentId`       | String              | Yes      |         | The unique identifier of the AI agent.                                          |
-| `runId`         | String              | Yes      |         | The unique identifier of the AI agent run.                                      |
-| `result`        | String              | Yes      |         | The result of the agent run. Can be `null` if there is no result.               |
+| Name            | Data type           | Required | Default         | Description                                                                                                                                                              |
+|-----------------|---------------------|----------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`       | String              | Yes      |                 | A unique identifier for the event or a group of events.                                                                                                                  |
+| `executionInfo` | AgentExecutionInfo  | Yes      |                 | Provides contextual information about the execution associated with this event.                                                                                          |
+| `agentId`       | String              | Yes      |                 | The unique identifier of the AI agent.                                                                                                                                   |
+| `runId`         | String              | Yes      |                 | The unique identifier of the AI agent run.                                                                                                                               |
+| `result`        | String              | Yes      |                 | The result of the agent run. Can be `null` if there is no result.                                                                                                        |
+| `duration`      | Duration            | No       | `Duration.ZERO` | Elapsed time from immediately after `onAgentStarting` returned until just before this event fires. Excludes the run time of `onAgentStarting`/`onAgentCompleted` handlers. |
 
 #### AgentExecutionFailedEvent
 
 Represents the occurrence of an error during an agent run. Includes the following fields:
 
-| Name            | Data type           | Required | Default | Description                                                                                                     |
-|-----------------|---------------------|----------|---------|-----------------------------------------------------------------------------------------------------------------|
-| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                                                         |
-| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event.                                 |
-| `agentId`       | String              | Yes      |         | The unique identifier of the AI agent.                                                                          |
-| `runId`         | String              | Yes      |         | The unique identifier of the AI agent run.                                                                      |
-| `error`         | AIAgentError        | Yes      |         | The specific error that occurred during the agent run. For more information, see [AIAgentError](#aiagenterror). |
+| Name            | Data type           | Required | Default | Description                                                                                                                                                                                                                       |
+|-----------------|---------------------|----------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                                                                                                                                                                           |
+| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event.                                                                                                                                                   |
+| `agentId`       | String              | Yes      |         | The unique identifier of the AI agent.                                                                                                                                                                                            |
+| `runId`         | String              | Yes      |         | The unique identifier of the AI agent run.                                                                                                                                                                                        |
+| `error`         | AIAgentError        | Yes      |         | The specific error that occurred during the agent run. For more information, see [AIAgentError](#aiagenterror).                                                                                                                   |
+| `duration`      | Duration?           | No       | null    | Elapsed time from immediately after `onAgentStarting` returned until the failure was observed; `null` when the failure originated before measurement could start (e.g., an `onAgentStarting` handler threw — "execution never began"). |
 
 #### AgentClosingEvent
 
 Represents the closure or termination of an agent. Includes the following fields:
 
-| Name            | Data type           | Required | Default | Description                                                                |
-|-----------------|---------------------|----------|---------|----------------------------------------------------------------------------|
-| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                    |
-| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event. |
-| `agentId`       | String              | Yes      |         | The unique identifier of the AI agent.                                     |
+| Name            | Data type           | Required | Default         | Description                                                                                                                       |
+|-----------------|---------------------|----------|-----------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`       | String              | Yes      |                 | A unique identifier for the event or a group of events.                                                                           |
+| `executionInfo` | AgentExecutionInfo  | Yes      |                 | Provides contextual information about the execution associated with this event.                                                   |
+| `agentId`       | String              | Yes      |                 | The unique identifier of the AI agent.                                                                                            |
+| `duration`      | Duration            | No       | `Duration.ZERO` | Elapsed time of the entire agent session, measured from feature preparation through closing. Includes all handler and cleanup time. |
 
 <a id="aiagenterror"></a>
 The `AIAgentError` class provides more details about an error that occurred during an agent run. Includes the following fields:
@@ -117,13 +120,14 @@ Represents the start of a functional strategy run. Includes the following fields
 
 Represents the end of a strategy run. Includes the following fields:
 
-| Name            | Data type           | Required | Default | Description                                                                |
-|-----------------|---------------------|----------|---------|----------------------------------------------------------------------------|
-| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                    |
-| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event. |
-| `runId`         | String              | Yes      |         | The unique identifier of the strategy run.                                 |
-| `strategyName`  | String              | Yes      |         | The name of the strategy.                                                  |
-| `result`        | String              | Yes      |         | The result of the run. Can be `null` if there is no result.                |
+| Name            | Data type           | Required | Default         | Description                                                                                                                              |
+|-----------------|---------------------|----------|-----------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`       | String              | Yes      |                 | A unique identifier for the event or a group of events.                                                                                  |
+| `executionInfo` | AgentExecutionInfo  | Yes      |                 | Provides contextual information about the execution associated with this event.                                                          |
+| `runId`         | String              | Yes      |                 | The unique identifier of the strategy run.                                                                                               |
+| `strategyName`  | String              | Yes      |                 | The name of the strategy.                                                                                                                |
+| `result`        | String              | Yes      |                 | The result of the run. Can be `null` if there is no result.                                                                              |
+| `duration`      | Duration            | No       | `Duration.ZERO` | Elapsed time of the `strategy.execute(...)` call. Excludes the run time of `onStrategyStarting`/`onStrategyCompleted` feature handlers.    |
 
 ### Node events
 
@@ -143,27 +147,29 @@ Represents the start of a node run. Includes the following fields:
 
 Represents the end of a node run. Includes the following fields:
 
-| Name            | Data type           | Required | Default | Description                                                                |
-|-----------------|---------------------|----------|---------|----------------------------------------------------------------------------|
-| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                    |
-| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event. |
-| `runId`         | String              | Yes      |         | The unique identifier of the strategy run.                                 |
-| `nodeName`      | String              | Yes      |         | The name of the node whose run ended.                                      |
-| `input`         | JsonElement         | No       | null    | The input value for the node.                                              |
-| `output`        | JsonElement         | No       | null    | The output value produced by the node.                                     |
+| Name            | Data type           | Required | Default         | Description                                                                                                                                       |
+|-----------------|---------------------|----------|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`       | String              | Yes      |                 | A unique identifier for the event or a group of events.                                                                                           |
+| `executionInfo` | AgentExecutionInfo  | Yes      |                 | Provides contextual information about the execution associated with this event.                                                                   |
+| `runId`         | String              | Yes      |                 | The unique identifier of the strategy run.                                                                                                        |
+| `nodeName`      | String              | Yes      |                 | The name of the node whose run ended.                                                                                                             |
+| `input`         | JsonElement         | No       | null            | The input value for the node.                                                                                                                     |
+| `output`        | JsonElement         | No       | null            | The output value produced by the node.                                                                                                            |
+| `duration`      | Duration            | No       | `Duration.ZERO` | Elapsed time of the node's body execution. Excludes the run time of `onNodeExecutionStarting`/`onNodeExecutionCompleted` feature handlers. |
 
 #### NodeExecutionFailedEvent
 
 Represents an error that occurred during a node run. Includes the following fields:
 
-| Name            | Data type           | Required | Default | Description                                                                                                     |
-|-----------------|---------------------|----------|---------|-----------------------------------------------------------------------------------------------------------------|
-| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                                                         |
-| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event.                                 |
-| `runId`         | String              | Yes      |         | The unique identifier of the strategy run.                                                                      |
-| `nodeName`      | String              | Yes      |         | The name of the node where the error occurred.                                                                  |
-| `input`         | JsonElement         | No       | null    | The input data provided to the node.                                                                            |
-| `error`         | AIAgentError        | Yes      |         | The specific error that occurred during the node run. For more information, see [AIAgentError](#aiagenterror). |
+| Name            | Data type           | Required | Default         | Description                                                                                                                                |
+|-----------------|---------------------|----------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`       | String              | Yes      |                 | A unique identifier for the event or a group of events.                                                                                    |
+| `executionInfo` | AgentExecutionInfo  | Yes      |                 | Provides contextual information about the execution associated with this event.                                                            |
+| `runId`         | String              | Yes      |                 | The unique identifier of the strategy run.                                                                                                 |
+| `nodeName`      | String              | Yes      |                 | The name of the node where the error occurred.                                                                                             |
+| `input`         | JsonElement         | No       | null            | The input data provided to the node.                                                                                                       |
+| `error`         | AIAgentError        | Yes      |                 | The specific error that occurred during the node run. For more information, see [AIAgentError](#aiagenterror).                            |
+| `duration`      | Duration            | No       | `Duration.ZERO` | Elapsed time of the node's body execution up to the failure. Excludes the run time of `onNodeExecutionStarting`/`onNodeExecutionFailed` handlers. |
 
 ### Subgraph events
 
@@ -183,27 +189,29 @@ Represents the start of a subgraph run. Includes the following fields:
 
 Represents the end of a subgraph run. Includes the following fields:
 
-| Name            | Data type           | Required | Default | Description                                                                |
-|-----------------|---------------------|----------|---------|----------------------------------------------------------------------------|
-| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                    |
-| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event. |
-| `runId`         | String              | Yes      |         | The unique identifier of the strategy run.                                 |
-| `subgraphName`  | String              | Yes      |         | The name of the subgraph whose run ended.                                  |
-| `input`         | JsonElement         | No       | null    | The input value for the subgraph.                                          |
-| `output`        | JsonElement         | No       | null    | The output value produced by the subgraph.                                 |
+| Name            | Data type           | Required | Default         | Description                                                                                                                                  |
+|-----------------|---------------------|----------|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`       | String              | Yes      |                 | A unique identifier for the event or a group of events.                                                                                      |
+| `executionInfo` | AgentExecutionInfo  | Yes      |                 | Provides contextual information about the execution associated with this event.                                                              |
+| `runId`         | String              | Yes      |                 | The unique identifier of the strategy run.                                                                                                   |
+| `subgraphName`  | String              | Yes      |                 | The name of the subgraph whose run ended.                                                                                                    |
+| `input`         | JsonElement         | No       | null            | The input value for the subgraph.                                                                                                            |
+| `output`        | JsonElement         | No       | null            | The output value produced by the subgraph.                                                                                                   |
+| `duration`      | Duration            | No       | `Duration.ZERO` | Elapsed time of the subgraph's body execution. Excludes the run time of `onSubgraphExecutionStarting`/`onSubgraphExecutionCompleted` handlers. |
 
 #### SubgraphExecutionFailedEvent
 
 Represents an error that occurred during a subgraph run. Includes the following fields:
 
-| Name            | Data type           | Required | Default | Description                                                                                                     |
-|-----------------|---------------------|----------|---------|-----------------------------------------------------------------------------------------------------------------|
-| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                                                         |
-| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event.                                 |
-| `runId`         | String              | Yes      |         | The unique identifier of the strategy run.                                                                      |
-| `subgraphName`  | String              | Yes      |         | The name of the subgraph where the error occurred.                                                              |
-| `input`         | JsonElement         | No       | null    | The input data provided to the subgraph.                                                                        |
-| `error`         | AIAgentError        | Yes      |         | The specific error that occurred during the subgraph run. For more information, see [AIAgentError](#aiagenterror). |
+| Name            | Data type           | Required | Default         | Description                                                                                                                              |
+|-----------------|---------------------|----------|-----------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`       | String              | Yes      |                 | A unique identifier for the event or a group of events.                                                                                  |
+| `executionInfo` | AgentExecutionInfo  | Yes      |                 | Provides contextual information about the execution associated with this event.                                                          |
+| `runId`         | String              | Yes      |                 | The unique identifier of the strategy run.                                                                                               |
+| `subgraphName`  | String              | Yes      |                 | The name of the subgraph where the error occurred.                                                                                       |
+| `input`         | JsonElement         | No       | null            | The input data provided to the subgraph.                                                                                                 |
+| `error`         | AIAgentError        | Yes      |                 | The specific error that occurred during the subgraph run. For more information, see [AIAgentError](#aiagenterror).                       |
+| `duration`      | Duration            | No       | `Duration.ZERO` | Elapsed time of the subgraph's body execution up to the failure. Excludes the run time of `onSubgraphExecutionStarting`/`onSubgraphExecutionFailed` handlers. |
 
 ### LLM call events
 
@@ -245,29 +253,31 @@ The `ModelInfo` class represents information about a language model, including i
 
 Represents the end of an LLM call. Includes the following fields:
 
-| Name                 | Data type              | Required | Default | Description                                                                     |
-|----------------------|------------------------|----------|---------|---------------------------------------------------------------------------------|
-| `eventId`            | String                 | Yes      |         | A unique identifier for the event or a group of events.                         |
-| `executionInfo`      | AgentExecutionInfo     | Yes      |         | Provides contextual information about the execution associated with this event. |
-| `runId`              | String                 | Yes      |         | The unique identifier of the LLM run.                                           |
-| `prompt`             | Prompt                 | Yes      |         | The prompt used in the call.                                                    |
-| `model`              | ModelInfo              | Yes      |         | The model information. See [ModelInfo](#modelinfo).                             |
-| `responses`          | List<Message.Response> | Yes      |         | One or more responses returned by the model.                                    |
-| `moderationResponse` | ModerationResult       | No       | null    | The moderation response, if any.                                                |
+| Name                 | Data type              | Required | Default         | Description                                                                                                                  |
+|----------------------|------------------------|----------|-----------------|------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`            | String                 | Yes      |                 | A unique identifier for the event or a group of events.                                                                      |
+| `executionInfo`      | AgentExecutionInfo     | Yes      |                 | Provides contextual information about the execution associated with this event.                                              |
+| `runId`              | String                 | Yes      |                 | The unique identifier of the LLM run.                                                                                        |
+| `prompt`             | Prompt                 | Yes      |                 | The prompt used in the call.                                                                                                 |
+| `model`              | ModelInfo              | Yes      |                 | The model information. See [ModelInfo](#modelinfo).                                                                          |
+| `responses`          | List<Message.Response> | Yes      |                 | One or more responses returned by the model.                                                                                 |
+| `moderationResponse` | ModerationResult       | No       | null            | The moderation response, if any.                                                                                             |
+| `duration`           | Duration               | No       | `Duration.ZERO` | Elapsed time of the underlying `PromptExecutor.execute(...)` call. Excludes `onLLMCallStarting`/`onLLMCallCompleted` handlers. |
 
 #### LLMCallFailedEvent
 
 Represents the occurrence of an error during an LLM call. Includes the following fields:
 
-| Name            | Data type           | Required | Default | Description                                                                                             |
-|-----------------|---------------------|----------|---------|---------------------------------------------------------------------------------------------------------|
-| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                                                 |
-| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event.                         |
-| `runId`         | String              | Yes      |         | The unique identifier of the LLM run.                                                                   |
-| `prompt`        | Prompt              | Yes      |         | The prompt that was sent to the model.                                                                  |
-| `model`         | ModelInfo           | Yes      |         | The model information. See [ModelInfo](#modelinfo).                                                     |
-| `tools`         | List<String>        | Yes      |         | The list of tools that the model could call.                                                            |
-| `error`         | AIAgentError        | Yes      |         | The specific error that occurred during the call. For more information, see [AIAgentError](#aiagenterror). |
+| Name            | Data type           | Required | Default         | Description                                                                                                                                  |
+|-----------------|---------------------|----------|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`       | String              | Yes      |                 | A unique identifier for the event or a group of events.                                                                                      |
+| `executionInfo` | AgentExecutionInfo  | Yes      |                 | Provides contextual information about the execution associated with this event.                                                              |
+| `runId`         | String              | Yes      |                 | The unique identifier of the LLM run.                                                                                                        |
+| `prompt`        | Prompt              | Yes      |                 | The prompt that was sent to the model.                                                                                                       |
+| `model`         | ModelInfo           | Yes      |                 | The model information. See [ModelInfo](#modelinfo).                                                                                          |
+| `tools`         | List<String>        | Yes      |                 | The list of tools that the model could call.                                                                                                 |
+| `error`         | AIAgentError        | Yes      |                 | The specific error that occurred during the call. For more information, see [AIAgentError](#aiagenterror).                                   |
+| `duration`      | Duration            | No       | `Duration.ZERO` | Elapsed time of the underlying `PromptExecutor.execute(...)` call up to the failure. Excludes `onLLMCallStarting`/`onLLMCallFailed` handlers.  |
 
 ### LLM streaming events
 
@@ -301,27 +311,29 @@ Represents a streaming frame received from the LLM. Includes the following field
 
 Represents the occurrence of an error during an LLM streaming call. Includes the following fields:
 
-| Name            | Data type           | Required | Default | Description                                                                                                 |
-|-----------------|---------------------|----------|---------|-------------------------------------------------------------------------------------------------------------|
-| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                                                     |
-| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event.                             |
-| `runId`         | String              | Yes      |         | The unique identifier of the LLM run.                                                                       |
-| `prompt`        | Prompt              | Yes      |         | The prompt that is sent to the model.                                                                       |
-| `model`         | ModelInfo           | Yes      |         | The model information. See [ModelInfo](#modelinfo).                                                         |
-| `error`         | AIAgentError        | Yes      |         | The specific error that occurred during streaming. For more information, see [AIAgentError](#aiagenterror). |
+| Name            | Data type           | Required | Default | Description                                                                                                                                                            |
+|-----------------|---------------------|----------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                                                                                                                |
+| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event.                                                                                        |
+| `runId`         | String              | Yes      |         | The unique identifier of the LLM run.                                                                                                                                  |
+| `prompt`        | Prompt              | Yes      |         | The prompt that is sent to the model.                                                                                                                                  |
+| `model`         | ModelInfo           | Yes      |         | The model information. See [ModelInfo](#modelinfo).                                                                                                                    |
+| `error`         | AIAgentError        | Yes      |         | The specific error that occurred during streaming. For more information, see [AIAgentError](#aiagenterror).                                                            |
+| `duration`      | Duration?           | No       | null    | Elapsed time from immediately after `onLLMStreamingStarting` returned until the failure; `null` when the failure originated before measurement started ("streaming never began"). |
 
 #### LLMStreamingCompletedEvent
 
 Represents the end of an LLM streaming call. Includes the following fields:
 
-| Name            | Data type           | Required | Default | Description                                                                     |
-|-----------------|---------------------|----------|---------|---------------------------------------------------------------------------------|
-| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                         |
-| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event. |
-| `runId`         | String              | Yes      |         | The unique identifier of the LLM run.                                           |
-| `prompt`        | Prompt              | Yes      |         | The prompt that is sent to the model.                                           |
-| `model`         | ModelInfo           | Yes      |         | The model information. See [ModelInfo](#modelinfo).                             |
-| `tools`         | List<String>        | Yes      |         | The list of tools that the model can call.                                      |
+| Name            | Data type           | Required | Default | Description                                                                                                                                                  |
+|-----------------|---------------------|----------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                                                                                                      |
+| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event.                                                                              |
+| `runId`         | String              | Yes      |         | The unique identifier of the LLM run.                                                                                                                        |
+| `prompt`        | Prompt              | Yes      |         | The prompt that is sent to the model.                                                                                                                        |
+| `model`         | ModelInfo           | Yes      |         | The model information. See [ModelInfo](#modelinfo).                                                                                                          |
+| `tools`         | List<String>        | Yes      |         | The list of tools that the model can call.                                                                                                                   |
+| `duration`      | Duration?           | No       | null    | Elapsed time from immediately after `onLLMStreamingStarting` returned until the flow completed; `null` if the flow terminated before its body began (cold flow cancelled).         |
 
 ### Tool execution events
 
@@ -342,47 +354,50 @@ Represents the event of a model calling a tool. Includes the following fields:
 
 Represents the occurrence of a validation error during a tool call. Includes the following fields:
 
-| Name              | Data type           | Required | Default | Description                                                                |
-|-------------------|---------------------|----------|---------|----------------------------------------------------------------------------|
-| `eventId`         | String              | Yes      |         | A unique identifier for the event or a group of events.                    |
-| `executionInfo`   | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event. |
-| `runId`           | String              | Yes      |         | The unique identifier of the strategy/agent run.                           |
-| `toolCallId`      | String              | No       | null    | The identifier of the tool call, if available.                             |
-| `toolName`        | String              | Yes      |         | The name of the tool for which validation failed.                          |
-| `toolArgs`        | JsonObject          | Yes      |         | The arguments that are provided to the tool.                               |
-| `toolDescription` | String              | No       | null    | A description of the tool that encountered the validation error.           |
-| `message`         | String              | No       | null    | A message describing the validation error.                                 |
-| `error`           | AIAgentError        | Yes      |         | The specific error that occurred. For more information, see [AIAgentError](#aiagenterror). |
+| Name              | Data type           | Required | Default         | Description                                                                                                       |
+|-------------------|---------------------|----------|-----------------|-------------------------------------------------------------------------------------------------------------------|
+| `eventId`         | String              | Yes      |                 | A unique identifier for the event or a group of events.                                                           |
+| `executionInfo`   | AgentExecutionInfo  | Yes      |                 | Provides contextual information about the execution associated with this event.                                   |
+| `runId`           | String              | Yes      |                 | The unique identifier of the strategy/agent run.                                                                  |
+| `toolCallId`      | String              | No       | null            | The identifier of the tool call, if available.                                                                    |
+| `toolName`        | String              | Yes      |                 | The name of the tool for which validation failed.                                                                 |
+| `toolArgs`        | JsonObject          | Yes      |                 | The arguments that are provided to the tool.                                                                      |
+| `toolDescription` | String              | No       | null            | A description of the tool that encountered the validation error.                                                  |
+| `message`         | String              | No       | null            | A message describing the validation error.                                                                        |
+| `error`           | AIAgentError        | Yes      |                 | The specific error that occurred. For more information, see [AIAgentError](#aiagenterror).                        |
+| `duration`        | Duration            | No       | `Duration.ZERO` | Elapsed time from when the tool call entered the environment until the validation failure was observed.           |
 
 #### ToolCallFailedEvent
 
 Represents a failure to execute a tool. Includes the following fields:
 
-| Name              | Data type           | Required | Default | Description                                                                                                             |
-|-------------------|---------------------|----------|---------|-------------------------------------------------------------------------------------------------------------------------|
-| `eventId`         | String              | Yes      |         | A unique identifier for the event or a group of events.                                                                 |
-| `executionInfo`   | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event.                                         |
-| `runId`           | String              | Yes      |         | The unique identifier of the strategy/agent run.                                                                        |
-| `toolCallId`      | String              | No       | null    | The identifier of the tool call, if available.                                                                          |
-| `toolName`        | String              | Yes      |         | The name of the tool.                                                                                                   |
-| `toolArgs`        | JsonObject          | Yes      |         | The arguments that are provided to the tool.                                                                            |
-| `toolDescription` | String              | No       | null    | A description of the tool that failed.                                                                                  |
-| `error`           | AIAgentError        | Yes      |         | The specific error that occurred when trying to call a tool. For more information, see [AIAgentError](#aiagenterror).   |
+| Name              | Data type           | Required | Default         | Description                                                                                                                          |
+|-------------------|---------------------|----------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| `eventId`         | String              | Yes      |                 | A unique identifier for the event or a group of events.                                                                              |
+| `executionInfo`   | AgentExecutionInfo  | Yes      |                 | Provides contextual information about the execution associated with this event.                                                      |
+| `runId`           | String              | Yes      |                 | The unique identifier of the strategy/agent run.                                                                                     |
+| `toolCallId`      | String              | No       | null            | The identifier of the tool call, if available.                                                                                       |
+| `toolName`        | String              | Yes      |                 | The name of the tool.                                                                                                                |
+| `toolArgs`        | JsonObject          | Yes      |                 | The arguments that are provided to the tool.                                                                                         |
+| `toolDescription` | String              | No       | null            | A description of the tool that failed.                                                                                               |
+| `error`           | AIAgentError        | Yes      |                 | The specific error that occurred when trying to call a tool. For more information, see [AIAgentError](#aiagenterror).                |
+| `duration`        | Duration            | No       | `Duration.ZERO` | Elapsed time from when the tool call entered the environment until the failure. Includes parse, dispatch, and tool execution time.   |
 
 #### ToolCallCompletedEvent
 
 Represents a successful tool call with the return of a result. Includes the following fields:
 
-| Name              | Data type           | Required | Default | Description                                                                |
-|-------------------|---------------------|----------|---------|----------------------------------------------------------------------------|
-| `eventId`         | String              | Yes      |         | A unique identifier for the event or a group of events.                    |
-| `executionInfo`   | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event. |
-| `runId`           | String              | Yes      |         | The unique identifier of the run.                                          |
-| `toolCallId`      | String              | No       | null    | The identifier of the tool call.                                           |
-| `toolName`        | String              | Yes      |         | The name of the tool.                                                      |
-| `toolArgs`        | JsonObject          | Yes      |         | The arguments provided to the tool.                                        |
-| `toolDescription` | String              | No       | null    | A description of the tool that was executed.                               |
-| `result`          | JsonElement         | No       | null    | The result of the tool call.                                               |
+| Name              | Data type           | Required | Default         | Description                                                                                                       |
+|-------------------|---------------------|----------|-----------------|-------------------------------------------------------------------------------------------------------------------|
+| `eventId`         | String              | Yes      |                 | A unique identifier for the event or a group of events.                                                           |
+| `executionInfo`   | AgentExecutionInfo  | Yes      |                 | Provides contextual information about the execution associated with this event.                                   |
+| `runId`           | String              | Yes      |                 | The unique identifier of the run.                                                                                 |
+| `toolCallId`      | String              | No       | null            | The identifier of the tool call.                                                                                  |
+| `toolName`        | String              | Yes      |                 | The name of the tool.                                                                                             |
+| `toolArgs`        | JsonObject          | Yes      |                 | The arguments provided to the tool.                                                                               |
+| `toolDescription` | String              | No       | null            | A description of the tool that was executed.                                                                      |
+| `result`          | JsonElement         | No       | null            | The result of the tool call.                                                                                      |
+| `duration`        | Duration            | No       | `Duration.ZERO` | Elapsed time from when the tool call entered the environment until the tool returned its result.                  |
 
 ## FAQ and troubleshooting
 

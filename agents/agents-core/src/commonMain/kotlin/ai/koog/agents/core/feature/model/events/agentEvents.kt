@@ -3,6 +3,7 @@ package ai.koog.agents.core.feature.model.events
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.utils.time.KoogClock
+import kotlin.time.Duration
 import kotlinx.serialization.Serializable
 
 /**
@@ -61,6 +62,8 @@ public data class AgentStartingEvent(
  * @property runId The unique identifier of the AI agen run;
  * @property result The result of the strategy execution, or null if unavailable;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
+ * @property duration Elapsed time from immediately after `onAgentStarting` returned until just before this event fires.
+ * See `AgentCompletedContext.duration` for full semantics.
  */
 @Serializable
 public data class AgentCompletedEvent(
@@ -69,6 +72,7 @@ public data class AgentCompletedEvent(
     val agentId: String,
     val runId: String,
     val result: String?,
+    val duration: Duration,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
@@ -78,12 +82,13 @@ public data class AgentCompletedEvent(
      */
     @Deprecated(
         message = "Please use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("AgentCompletedEvent(executionInfo, agentId, runId, result)")
+        replaceWith = ReplaceWith("AgentCompletedEvent(executionInfo, agentId, runId, result, duration)")
     )
     public constructor(
         agentId: String,
         runId: String,
-        result: String?
+        result: String?,
+        duration: Duration,
     ) : this(
         eventId = AgentCompletedEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
@@ -92,7 +97,8 @@ public data class AgentCompletedEvent(
         ),
         agentId = agentId,
         runId = runId,
-        result = result
+        result = result,
+        duration = duration,
     )
 }
 
@@ -109,6 +115,9 @@ public data class AgentCompletedEvent(
  * @property error The [AIAgentError] instance encapsulating details about the encountered error,
  *                 such as its message, stack trace, and cause;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
+ * @property duration Elapsed time from immediately after `onAgentStarting` returned until the failure was observed,
+ * or `null` if the failure originated before measurement could start (for example, when an `onAgentStarting`
+ * handler threw). See `AgentExecutionFailedContext.duration` for full semantics.
  */
 @Serializable
 public data class AgentExecutionFailedEvent(
@@ -117,6 +126,7 @@ public data class AgentExecutionFailedEvent(
     val agentId: String,
     val runId: String,
     val error: AIAgentError?,
+    val duration: Duration?,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
@@ -126,12 +136,13 @@ public data class AgentExecutionFailedEvent(
      */
     @Deprecated(
         message = "Please use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("AgentExecutionFailedEvent(executionInfo, agentId, runId, error)")
+        replaceWith = ReplaceWith("AgentExecutionFailedEvent(executionInfo, agentId, runId, error, duration)")
     )
     public constructor(
         agentId: String,
         runId: String,
-        error: AIAgentError
+        error: AIAgentError,
+        duration: Duration?,
     ) : this(
         eventId = AgentExecutionFailedEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
@@ -140,7 +151,8 @@ public data class AgentExecutionFailedEvent(
         ),
         agentId = agentId,
         runId = runId,
-        error = error
+        error = error,
+        duration = duration,
     )
 }
 
@@ -152,12 +164,15 @@ public data class AgentExecutionFailedEvent(
  * @property executionInfo Provides contextual information about the execution associated with this event.
  * @property agentId The unique identifier of the AI agent;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
+ * @property duration Elapsed time of the entire agent session, from feature preparation through closing.
+ * See `AgentClosingContext.duration` for full semantics.
  */
 @Serializable
 public data class AgentClosingEvent(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val agentId: String,
+    val duration: Duration,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
 
@@ -167,17 +182,19 @@ public data class AgentClosingEvent(
      */
     @Deprecated(
         message = "Please use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("AgentClosingEvent(executionInfo, agentId)")
+        replaceWith = ReplaceWith("AgentClosingEvent(executionInfo, agentId, duration)")
     )
     public constructor(
-        agentId: String
+        agentId: String,
+        duration: Duration,
     ) : this(
         eventId = AgentClosingEvent::class.simpleName.toString(),
         executionInfo = AgentExecutionInfo(
             parent = null,
             partName = AgentClosingEvent::class.simpleName.toString(),
         ),
-        agentId = agentId
+        agentId = agentId,
+        duration = duration,
     )
 }
 

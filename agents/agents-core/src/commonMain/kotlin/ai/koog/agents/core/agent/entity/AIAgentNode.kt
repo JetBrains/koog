@@ -11,7 +11,7 @@ import ai.koog.serialization.TypeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlin.reflect.KType
-import kotlin.uuid.ExperimentalUuidApi
+import kotlin.time.TimeSource
 
 /**
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
@@ -20,7 +20,6 @@ import kotlin.uuid.ExperimentalUuidApi
  * @param TInput The type of input data this node processes.
  * @param TOutput The type of output data this node produces.
  */
-@OptIn(ExperimentalUuidApi::class)
 public abstract class AIAgentNodeBase<in TInput, TOutput> internal constructor() {
     /**
      * The name of the AI agent node.
@@ -181,7 +180,6 @@ public open class SimpleAIAgentNodeImpl<TInput, TOutput> internal constructor(
     }
 
     @InternalAgentsApi
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput =
         context.with(id) { executionInfo, eventId ->
             logger.debug { "Start executing node (name: $name)" }
@@ -189,11 +187,12 @@ public open class SimpleAIAgentNodeImpl<TInput, TOutput> internal constructor(
                 eventId,
                 executionInfo,
                 context,
-                this@SimpleAIAgentNodeImpl,
+                node = this@SimpleAIAgentNodeImpl,
                 input,
                 inputType
             )
 
+            val nodeStartMark = TimeSource.Monotonic.markNow()
             val output =
                 try {
                     val executeResult = context.execute(input)
@@ -207,10 +206,11 @@ public open class SimpleAIAgentNodeImpl<TInput, TOutput> internal constructor(
                         eventId,
                         executionInfo,
                         context,
-                        this@SimpleAIAgentNodeImpl,
+                        node = this@SimpleAIAgentNodeImpl,
                         input,
                         inputType,
-                        e
+                        error = e,
+                        duration = nodeStartMark.elapsedNow(),
                     )
                     throw e
                 }
@@ -219,11 +219,12 @@ public open class SimpleAIAgentNodeImpl<TInput, TOutput> internal constructor(
                 eventId,
                 executionInfo,
                 context,
-                this@SimpleAIAgentNodeImpl,
+                node = this@SimpleAIAgentNodeImpl,
                 input,
                 inputType,
                 output,
-                outputType
+                outputType,
+                duration = nodeStartMark.elapsedNow(),
             )
             output
         }
