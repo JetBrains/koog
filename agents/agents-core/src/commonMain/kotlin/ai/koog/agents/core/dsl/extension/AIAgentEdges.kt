@@ -2,6 +2,7 @@ package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate
 import ai.koog.agents.core.dsl.builder.EdgeTransformationDslMarker
+import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.message.Message
@@ -180,4 +181,40 @@ public inline infix fun <IncomingOutput, OutgoingInput, reified TResult> AIAgent
     onIsInstance(SafeTool.Result.Failure::class).transformed { it as SafeTool.Result.Failure<TResult> }
         .onCondition {
             condition(it.message)
+        }
+
+/**
+ * Creates an edge that transforms an intermediate output into a [Message.User] using the provided transform.
+ *
+ * @param transform A function that converts the intermediate output to a String for the user message.
+ */
+@EdgeTransformationDslMarker
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.asUserMessage(
+    transform: suspend (IntermediateOutput) -> String
+): AIAgentEdgeBuilderIntermediate<IncomingOutput, Message.User, OutgoingInput> {
+    return transformed { llm.writeSession { userMessage(transform(it)) } }
+}
+
+/**
+ * Applies a transformation to the intermediate output of the edge builder and filters the received tool results
+ * based on the provided condition. This function is used to handle tool results as a part of the AI agent's edge flow
+ * within the DSL.
+ *
+ * @param filter A suspending lambda function that determines whether a given [ReceivedToolResult] should be included
+ *               in the transformation process. The function takes a [ReceivedToolResult] as input and returns a Boolean
+ *               indicating whether the result satisfies the filter condition.
+ * @return A new instance of [AIAgentEdgeBuilderIntermediate] with the intermediate output type set to
+ *         [ReceivedToolResults], representing a collection of filtered tool results.
+ */
+@EdgeTransformationDslMarker
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.asToolResultMessage(
+    filter: suspend (ReceivedToolResult) -> Boolean
+): AIAgentEdgeBuilderIntermediate<IncomingOutput, Message.User, OutgoingInput> =
+    onIsInstance(ReceivedToolResults::class)
+        .transformed { results ->
+            llm.writeSession {
+                userMessage(
+                    results.toolResults.filter { filter(it) }.map { it.toMessagePart() }
+                )
+            }
         }

@@ -713,3 +713,195 @@ public suspend fun <T, TInput> AIAgentGraphContextBase.setStructuredOutputImpl(
     prompt = config.updatePrompt(model, prompt)
     message
 }
+
+// ================
+// LLM Request Message nodes
+// ================
+
+//region LLMRequest
+
+/**
+ * A node that appends a [Message.User] to the prompt and requests a response from the LLM.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
+@AIAgentBuilderDslMarker
+public fun nodeLLMSendMessage(
+    name: String? = null,
+): AIAgentNodeDelegate<Message.User, Message.Assistant> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+            requestLLM()
+        }
+    }
+
+/**
+ * A node that appends a [Message.User] to the prompt and requests a response from the LLM,
+ * forcing it to call one of the available tools (no plain-text replies allowed).
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
+@AIAgentBuilderDslMarker
+public fun nodeLLMSendMessageOnlyCallingTools(
+    name: String? = null,
+): AIAgentNodeDelegate<Message.User, Message.Assistant> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+            requestLLMOnlyCallingTools()
+        }
+    }
+
+/**
+ * A node that appends a [Message.User] to the prompt and requests a response from the LLM,
+ * without exposing any tools (pure text response only).
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
+@AIAgentBuilderDslMarker
+public fun nodeLLMSendMessageWithoutTools(
+    name: String? = null,
+): AIAgentNodeDelegate<Message.User, Message.Assistant> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+            requestLLMWithoutTools()
+        }
+    }
+
+/**
+ * A node that appends a [Message.User] to the prompt and requests a response from the LLM,
+ * forcing it to call exactly the specified tool.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param tool The descriptor of the tool the LLM must call.
+ */
+@AIAgentBuilderDslMarker
+public fun nodeLLMSendMessageForceOneTool(
+    name: String? = null,
+    tool: ToolDescriptor
+): AIAgentNodeDelegate<Message.User, Message.Assistant> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+            requestLLMForceOneTool(tool)
+        }
+    }
+
+/**
+ * A node that appends a [Message.User] to the prompt and requests multiple completion choices
+ * from the LLM, returning them as an [LLMChoice].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ */
+@AIAgentBuilderDslMarker
+public fun nodeLLMSendMessageMultipleChoices(
+    name: String? = null,
+): AIAgentNodeDelegate<Message.User, LLMChoice> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+            requestLLMMultipleChoices()
+        }
+    }
+
+// Region Streaming
+
+/**
+ * A node that appends a [Message.User] to the prompt and requests a streaming response from the LLM,
+ * applying [transformStreamData] to convert the raw [StreamFrame] flow into a flow of [T].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param structureDefinition An optional structure definition to guide the streaming response format.
+ * @param transformStreamData A suspend function that transforms the [StreamFrame] flow into a [Flow] of [T].
+ */
+@AIAgentBuilderDslMarker
+public fun <T> nodeLLMSendMessageStreaming(
+    name: String? = null,
+    structureDefinition: StructureDefinition? = null,
+    transformStreamData: suspend (Flow<StreamFrame>) -> Flow<T>
+): AIAgentNodeDelegate<Message.User, Flow<T>> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+            requestStreaming(structureDefinition, transformStreamData)
+        }
+    }
+
+/**
+ * A node that appends a [Message.User] to the prompt and requests a streaming response from the LLM,
+ * returning raw [StreamFrame] elements.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param structureDefinition An optional structure definition to guide the streaming response format.
+ */
+@AIAgentBuilderDslMarker
+public fun nodeLLMSendMessageStreaming(
+    name: String? = null,
+    structureDefinition: StructureDefinition? = null,
+): AIAgentNodeDelegate<Message.User, Flow<StreamFrame>> = nodeLLMSendMessageStreaming(name, structureDefinition) { it }
+
+// Region Structured
+
+/**
+ * A node that appends a [Message.User] to the prompt and requests a structured response from the LLM
+ * using the provided [config].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param config Configuration describing the expected structured output format.
+ * @param fixingParser An optional parser used to attempt recovery if the LLM returns malformed structured output.
+ */
+@AIAgentBuilderDslMarker
+public fun <T> nodeLLMSendMessageStructured(
+    name: String? = null,
+    config: StructuredRequestConfig<T>,
+    fixingParser: StructureFixingParser? = null
+): AIAgentNodeDelegate<Message.User, Result<StructuredResponse<T>>> =
+    node(name) { message ->
+        llm.writeSession {
+            appendPrompt {
+                message(message)
+            }
+
+            requestLLMStructured(config, fixingParser)
+        }
+    }
+
+/**
+ * A node that appends a [Message.User] to the prompt and requests a structured response from the LLM,
+ * inferring the output schema from the reified type [T].
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param examples Optional list of example values of type [T] to guide the LLM's output.
+ * @param fixingParser An optional parser used to attempt recovery if the LLM returns malformed structured output.
+ */
+@AIAgentBuilderDslMarker
+public inline fun <reified T> nodeLLMSendMessageStructured(
+    name: String? = null,
+    examples: List<T> = emptyList(),
+    fixingParser: StructureFixingParser? = null
+): AIAgentNodeDelegate<Message.User, Result<StructuredResponse<T>>> = node(name) { message ->
+    llm.writeSession {
+        appendPrompt {
+            message(message)
+        }
+
+        requestLLMStructured<T>(
+            examples = examples,
+            fixingParser = fixingParser
+        )
+    }
+}
