@@ -20,7 +20,7 @@ public actual class ActionBuilder<State> : ActionBuilderCommon<State, ActionBuil
      */
     @JavaAPI
     @JvmName("execute")
-    public fun javaApiExecuteSynchronously(execute: ExecuteSync<State>): ActionBuilder<State> =
+    public fun executeBlocking(execute: ExecuteSync<State>): ActionBuilder<State> =
         execute { context, state ->
             withContextReentrant(context.config.strategyDispatcher) {
                 execute.execute(context, state)

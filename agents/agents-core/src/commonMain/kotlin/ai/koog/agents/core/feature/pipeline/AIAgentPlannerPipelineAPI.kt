@@ -11,6 +11,7 @@ import ai.koog.agents.core.feature.handler.planner.PlanCreationStartingContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionStartingContext
 import ai.koog.serialization.TypeToken
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Platform-agnostic API for planner agent pipelines, extending the base pipeline API
@@ -163,6 +164,7 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
      * @param feature The feature associated with this handler;
      * @param handle A suspend function that processes the start of a plan creation.
      */
+    @JvmSynthetic
     public fun interceptPlanCreationStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (PlanCreationStartingContext) -> Unit
@@ -174,6 +176,7 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
      * @param feature The feature associated with this handler;
      * @param handle A suspend function that processes the completion of a plan creation.
      */
+    @JvmSynthetic
     public fun interceptPlanCreationCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (PlanCreationCompletedContext) -> Unit
@@ -192,6 +195,7 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
      * }
      * ```
      */
+    @JvmSynthetic
     public fun interceptStepExecutionStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (StepExecutionStartingContext) -> Unit
@@ -210,6 +214,7 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
      * }
      * ```
      */
+    @JvmSynthetic
     public fun interceptStepExecutionCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (StepExecutionCompletedContext) -> Unit
@@ -221,6 +226,7 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
      * @param feature The feature associated with this handler;
      * @param handle A suspend function that processes the start of a plan completion evaluation.
      */
+    @JvmSynthetic
     public fun interceptPlanCompletionEvaluationStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (PlanCompletionEvaluationStartingContext) -> Unit
@@ -239,6 +245,7 @@ public interface AIAgentPlannerPipelineAPI : AIAgentPipelineAPI {
      * }
      * ```
      */
+    @JvmSynthetic
     public fun interceptPlanCompletionEvaluationCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (PlanCompletionEvaluationCompletedContext) -> Unit
