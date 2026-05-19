@@ -2,14 +2,22 @@ package ai.koog.agents.longtermmemory.retrieval.augmentation
 
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.message.MessagePart
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.search.SearchResult
 
 /**
- * A [PromptAugmenter] that inserts retrieved context as a user message before the last user message.
+ * A [PromptAugmenter] that injects retrieved context into the last [Message.User] of the prompt.
  *
- * If the prompt contains no user messages, the original prompt is returned unchanged.
+ * The retrieved context is rendered through [template] and added as an additional
+ * [MessagePart.Text] **appended** to the existing parts of the last user message. The original
+ * user message is replaced with a copy that:
+ * - preserves its [Message.metaInfo] and [Message.id],
+ * - preserves all existing parts (text, attachments, tool results, etc.),
+ * - gains one extra [MessagePart.Text] at the end carrying the formatted context.
+ *
+ * If the prompt contains no [Message.User], or the formatted context is blank, or the relevant
+ * context list is empty, the original prompt is returned unchanged.
  *
  * @param template The template for user context insertion. Use [PromptAugmenter.RELEVANT_CONTEXT_PLACEHOLDER] placeholder.
  * @param contextPrefix The prefix to add before relevant context.
@@ -30,11 +38,11 @@ public class UserPromptAugmenter(
          */
         public val DEFAULT_USER_PROMPT_TEMPLATE: String =
             """
-            |Here is some relevant context:
+            |Here is some relevant context to help answer the question above:
             |
             |${PromptAugmenter.RELEVANT_CONTEXT_PLACEHOLDER}
             |
-            |Based on the above context, please answer the following question:
+            |Please answer the question above based on this context.
             """.trimMargin().trim()
     }
 
@@ -80,13 +88,13 @@ public class UserPromptAugmenter(
 
         return originalPrompt.withMessages { messages ->
             val lastUserIndex = messages.indexOfLast { it is Message.User }
-            if (lastUserIndex >= 0) {
-                messages.toMutableList().apply {
-                    add(lastUserIndex, Message.User(formattedContext, RequestMetaInfo.Empty))
-                }
-            } else {
-                messages
-            }
+            if (lastUserIndex < 0) return@withMessages messages
+
+            val original = messages[lastUserIndex] as Message.User
+            val updated = original.copy(
+                parts = original.parts + MessagePart.Text(formattedContext)
+            )
+            messages.toMutableList().also { it[lastUserIndex] = updated }
         }
     }
 }

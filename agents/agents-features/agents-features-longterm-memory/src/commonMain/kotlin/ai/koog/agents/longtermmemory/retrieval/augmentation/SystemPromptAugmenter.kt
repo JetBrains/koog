@@ -2,15 +2,22 @@ package ai.koog.agents.longtermmemory.retrieval.augmentation
 
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.message.MessagePart
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.search.SearchResult
 
 /**
- * A [PromptAugmenter] that inserts retrieved context as a system message at the beginning of the prompt.
+ * A [PromptAugmenter] that injects retrieved context into the first [Message.System] of the prompt.
  *
- * The new context system message is prepended before all existing messages.
- * If there is no system message in the prompt, the prompt is returned unchanged.
+ * The retrieved context is rendered through [template] and added as an additional
+ * [MessagePart.Text] **appended** to the existing parts of the first system message, separated
+ * by [PromptAugmenter.SECTION_SEPARATOR]. The original system message is replaced with a copy that:
+ * - preserves its [Message.metaInfo] and [Message.id],
+ * - preserves all existing parts (text, attachments, etc.),
+ * - gains two extra [MessagePart.Text] entries at the end: a separator and the formatted context.
+ *
+ * If the prompt contains no [Message.System], or the formatted context is blank, or the relevant
+ * context list is empty, the original prompt is returned unchanged.
  *
  * @param template The template for the system message. Use [PromptAugmenter.RELEVANT_CONTEXT_PLACEHOLDER] placeholder.
  * @param contextPrefix The prefix to add before relevant context.
@@ -80,8 +87,16 @@ public class SystemPromptAugmenter(
         if (contextMessage.isBlank()) return originalPrompt
 
         return originalPrompt.withMessages { messages ->
-            val systemMessage = Message.System(contextMessage, RequestMetaInfo.Empty)
-            listOf<Message>(systemMessage) + messages
+            val systemIndex = messages.indexOfFirst { it is Message.System }
+            if (systemIndex < 0) return@withMessages messages
+
+            val original = messages[systemIndex] as Message.System
+            val updated = original.copy(
+                parts = original.parts +
+                    MessagePart.Text(PromptAugmenter.SECTION_SEPARATOR) +
+                    MessagePart.Text(contextMessage)
+            )
+            messages.toMutableList().also { it[systemIndex] = updated }
         }
     }
 }
