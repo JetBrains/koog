@@ -87,7 +87,7 @@ Use retrieval without ingestion when you have a pre-populated knowledge base:
 | Augmenter | Behavior |
 |---|---|
 | `SystemPromptAugmenter()` | Inserts context as a system message at the start of the prompt (no-op if there is no system message) |
-| `UserPromptAugmenter()` | Inserts context as a separate user message before the last user message |
+| `UserPromptAugmenter()` | Appends the retrieved context as an extra text part at the end of the last user message (no-op if there is no user message) |
 | `PromptAugmenter { prompt, context -> ... }` | Custom augmentation via lambda |
 
 ### Search Query Providers
