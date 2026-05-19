@@ -10,6 +10,7 @@ import ai.koog.agents.core.agent.entity.AIAgentNodeBase;
 import ai.koog.agents.core.agent.entity.GraphStrategyBuilder;
 import ai.koog.agents.core.agent.entity.TypedGraphStrategyBuilder;
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults;
 import ai.koog.agents.core.dsl.extension.ToolCalls;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.example.ApiKeyService;
@@ -75,18 +76,18 @@ public class Calculator {
                         builder.withInput(String.class).withOutput(String.class);
 
                     // --- Node definitions ---
-                    AIAgentNodeBase<Message.User, Message.Assistant> nodeCallLLM =
+                    AIAgentNodeBase<String, Message.Assistant> nodeCallLLM =
                         AIAgentNode.llmRequest("callLLM");
 
-                    AIAgentNodeBase<ToolCalls, Message.User> nodeExecuteTools =
+                    AIAgentNodeBase<ToolCalls, ReceivedToolResults> nodeExecuteTools =
                         AIAgentNode.executeTools("executeTools");
 
-                    AIAgentNodeBase<Message.User, Message.Assistant> nodeSendResults =
-                        AIAgentNode.llmRequest("sendToolResults");
+                    AIAgentNodeBase<ReceivedToolResults, Message.Assistant> nodeSendResults =
+                        AIAgentNode.llmSendToolResults("sendToolResults");
 
-                    AIAgentNodeBase<Message.User, Message.User> nodeCompress =
+                    AIAgentNodeBase<ReceivedToolResults, ReceivedToolResults> nodeCompress =
                         AIAgentNode.llmCompressHistory("compressHistory")
-                            .withInput(Message.User.class)
+                            .withInput(ReceivedToolResults.class)
                             .compressionStrategy(HistoryCompressionStrategy.WholeHistory)
                             .build();
 
