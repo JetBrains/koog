@@ -578,6 +578,28 @@ public fun nodeLLMSendToolResultsMultipleChoices(
     }
 
 /**
+ * A node that appends tool results to the prompt and requests a streaming response from the LLM,
+ * returning raw [StreamFrame] elements.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param structureDefinition An optional structure definition to guide the streaming response format.
+ */
+public fun nodeLLMSendToolResultsStreaming(
+    name: String? = null,
+    structureDefinition: StructureDefinition? = null,
+): AIAgentNodeDelegate<ReceivedToolResults, Flow<StreamFrame>> =
+    node(name) { toolResults ->
+        llm.writeSession {
+            appendPrompt {
+                user {
+                    toolResults.toolResults.forEach { toolResult -> toolResult(toolResult.toMessagePart()) }
+                }
+            }
+            requestStreaming(structureDefinition, { it })
+        }
+    }
+
+/**
  * A node that executes a single [MessagePart.Tool.Call] and returns the [ReceivedToolResult]
  * without writing anything into the LLM session.
  *

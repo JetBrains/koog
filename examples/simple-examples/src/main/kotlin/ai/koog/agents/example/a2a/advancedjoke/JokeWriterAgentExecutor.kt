@@ -313,13 +313,13 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
     edge(
         setupTaskContext forwardTo classifyNewRequest
             onCondition { task -> task == null }
-            transformed { llm.writeSession { userMessage(agentInput<A2AMessage>().content()) } }
+            transformed { agentInput<A2AMessage>().content() }
     )
     // If task exists, continue processing the joke request
     edge(
         setupTaskContext forwardTo classifyJokeRequest
             onCondition { task -> task != null }
-            transformed { llm.writeSession { userMessage(agentInput<A2AMessage>().content()) } }
+            transformed { agentInput<A2AMessage>().content() }
     )
 
     // New request classification: If not a joke request, decline politely
@@ -340,7 +340,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
     // After creating task, classify the joke details
     edge(
         createTask forwardTo classifyJokeRequest
-            transformed { llm.writeSession { userMessage(agentInput<A2AMessage>().content()) } }
+            transformed { agentInput<A2AMessage>().content()  }
     )
 
     // Joke classification: Ask for clarification if needed

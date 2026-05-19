@@ -69,7 +69,7 @@ suspend fun main() {
                 callLLM forwardTo callLLM onTextMessage { true }
                     transformed { "Please call `${AskUser.name}` tool instead of chatting" }
             )
-            edge(callAskUserTool forwardTo requestClassification)
+            edge(callAskUserTool forwardTo requestClassification transformed { it.toolResults.first().output })
         }
 
         val transferMoney by subgraphWithTask<ClassifiedBankRequest, String>(

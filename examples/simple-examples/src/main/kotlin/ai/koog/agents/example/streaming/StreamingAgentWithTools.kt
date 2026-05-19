@@ -2,10 +2,10 @@ package ai.koog.agents.example.streaming
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResultsStreaming
 import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
@@ -22,7 +22,6 @@ import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toMessageResponse
 import kotlinx.coroutines.flow.toList
@@ -83,13 +82,16 @@ private fun openAiAgent(
 ) = AIAgent.builder()
     .graphStrategy { streamingWithToolsStrategy() }
     .promptExecutor(executor)
-    .prompt(prompt("agent", OpenAIResponsesParams(
-        temperature = 1.0,
-        reasoning = ReasoningConfig(effort = ReasoningEffort.MEDIUM, summary = ReasoningSummary.AUTO)
-    ))
-    {
-        system("You're responsible for running a Switch and perform operations on it by request")
-    })
+    .prompt(
+        prompt(
+            "agent", OpenAIResponsesParams(
+                temperature = 1.0,
+                reasoning = ReasoningConfig(effort = ReasoningEffort.MEDIUM, summary = ReasoningSummary.AUTO)
+            )
+        )
+        {
+            system("You're responsible for running a Switch and perform operations on it by request")
+        })
     .llmModel(OpenAIModels.Chat.GPT5_1)
     .toolRegistry(toolRegistry)
     .install(installFeatures)
@@ -115,16 +117,20 @@ fun streamingWithToolsStrategy() = strategy("streaming_loop") {
     // onLLMStreamingFrameReceived / onLLMStreamingFailed / onLLMStreamingCompleted event handlers
     // fire frame-by-frame), then collapses the stream into a Message.Assistant for downstream
     // tool-call / text-part dispatch.
-    val nodeCallLLM by node<Message.User, Message.Assistant>("callLLMStreaming") { user ->
-        llm.writeSession {
-            appendPrompt { message(user) }
-            requestLLMStreaming().toList().toMessageResponse()
-        }
+    val nodeCallLLM by nodeLLMRequestStreaming().transform {
+        it.toList().toMessageResponse()
     }
-    val executeMultipleTools by nodeExecuteTools(parallel = true)
+
+    val nodeSendToolResults by nodeLLMSendToolResultsStreaming().transform {
+        it.toList().toMessageResponse()
+    }
+
+    val executeTools by nodeExecuteTools(parallel = true)
 
     edge(nodeStart forwardTo nodeCallLLM)
-    edge(nodeCallLLM forwardTo executeMultipleTools onToolCalls { true })
-    edge(executeMultipleTools forwardTo nodeCallLLM)
+    edge(nodeCallLLM forwardTo executeTools onToolCalls { true })
+    edge(executeTools forwardTo nodeSendToolResults)
+    edge(nodeSendToolResults forwardTo executeTools onToolCalls { true })
+    edge(nodeSendToolResults forwardTo nodeFinish onTextMessage { true })
     edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
 }
