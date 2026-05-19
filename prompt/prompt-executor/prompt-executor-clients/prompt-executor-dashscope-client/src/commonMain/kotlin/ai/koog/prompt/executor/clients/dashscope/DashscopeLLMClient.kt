@@ -1,8 +1,8 @@
 package ai.koog.prompt.executor.clients.dashscope
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionRequest
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionRequestSerializer

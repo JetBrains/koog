@@ -7,7 +7,7 @@ import ai.koog.integration.tests.utils.PromptUtils
 import ai.koog.integration.tests.utils.RetryUtils
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.getLLMClientForProvider
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.InternalLLMClientApi
 import ai.koog.prompt.executor.clients.anthropic.AnthropicCacheControl
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels

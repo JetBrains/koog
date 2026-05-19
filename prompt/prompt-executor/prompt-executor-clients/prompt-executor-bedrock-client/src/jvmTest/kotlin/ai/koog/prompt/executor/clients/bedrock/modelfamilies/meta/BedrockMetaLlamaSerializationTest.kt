@@ -1,6 +1,6 @@
 package ai.koog.prompt.executor.clients.bedrock.modelfamilies.meta
 
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider

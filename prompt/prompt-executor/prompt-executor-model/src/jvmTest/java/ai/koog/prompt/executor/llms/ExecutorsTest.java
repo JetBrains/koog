@@ -1,6 +1,6 @@
 package ai.koog.prompt.executor.llms;
 
-import ai.koog.prompt.dsl.Prompt;
+import ai.koog.prompt.Prompt;
 import ai.koog.prompt.executor.clients.LLMClient;
 import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
@@ -19,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.mock;

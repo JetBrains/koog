@@ -6,7 +6,7 @@ import ai.koog.agents.core.agent.context.RollbackStrategy;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.ext.tool.SayToUser;
 import ai.koog.agents.testing.tools.MockExecutorBuilder;
-import ai.koog.prompt.dsl.Prompt;
+import ai.koog.prompt.Prompt;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
 import ai.koog.prompt.message.RequestMetaInfo;

@@ -2,7 +2,7 @@ package ai.koog.integration.tests.client;
 
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.TestCredentials;
-import ai.koog.prompt.dsl.Prompt;
+import ai.koog.prompt.Prompt;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
@@ -14,7 +14,6 @@ import ai.koog.prompt.message.MessagePart;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import static ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactory.anthropicClient;

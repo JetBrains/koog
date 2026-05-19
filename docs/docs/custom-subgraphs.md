@@ -695,7 +695,7 @@ The code sample includes three defined subgraphs, `researchSubgraph`, `planSubgr
     import ai.koog.agents.core.tools.annotations.LLMDescription;
     import ai.koog.agents.core.tools.annotations.Tool;
     import ai.koog.agents.core.tools.reflect.ToolSet;
-    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.Prompt;
     import ai.koog.prompt.message.Message;
     import ai.koog.prompt.message.MessagePart;
     import java.util.Collections;

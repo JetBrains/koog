@@ -1,10 +1,10 @@
 package ai.koog.prompt.executor.cached
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.cache.model.put
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel

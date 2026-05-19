@@ -1,6 +1,5 @@
 package ai.koog.prompt
 
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo

@@ -13,7 +13,7 @@ import ai.koog.integration.tests.utils.TestCredentials.readAwsBedrockGuardrailVe
 import ai.koog.integration.tests.utils.TestCredentials.readAwsSecretAccessKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readAwsSessionTokenFromEnv
 import ai.koog.integration.tests.utils.tools.CalculatorTool
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.bedrock.BedrockAPIMethod
 import ai.koog.prompt.executor.clients.bedrock.BedrockCacheControl

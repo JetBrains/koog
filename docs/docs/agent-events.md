@@ -255,6 +255,20 @@ Represents the end of an LLM call. Includes the following fields:
 | `responses`          | List<Message.Response> | Yes      |         | One or more responses returned by the model.                                    |
 | `moderationResponse` | ModerationResult       | No       | null    | The moderation response, if any.                                                |
 
+#### LLMCallFailedEvent
+
+Represents the occurrence of an error during an LLM call. Includes the following fields:
+
+| Name            | Data type           | Required | Default | Description                                                                                             |
+|-----------------|---------------------|----------|---------|---------------------------------------------------------------------------------------------------------|
+| `eventId`       | String              | Yes      |         | A unique identifier for the event or a group of events.                                                 |
+| `executionInfo` | AgentExecutionInfo  | Yes      |         | Provides contextual information about the execution associated with this event.                         |
+| `runId`         | String              | Yes      |         | The unique identifier of the LLM run.                                                                   |
+| `prompt`        | Prompt              | Yes      |         | The prompt that was sent to the model.                                                                  |
+| `model`         | ModelInfo           | Yes      |         | The model information. See [ModelInfo](#modelinfo).                                                     |
+| `tools`         | List<String>        | Yes      |         | The list of tools that the model could call.                                                            |
+| `error`         | AIAgentError        | Yes      |         | The specific error that occurred during the call. For more information, see [AIAgentError](#aiagenterror). |
+
 ### LLM streaming events
 
 #### LLMStreamingStartingEvent

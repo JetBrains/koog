@@ -1,6 +1,7 @@
 package ai.koog.prompt.dsl
 
 import ai.koog.agents.annotations.JavaAPI
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.message.CacheControl
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart

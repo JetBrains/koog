@@ -2,7 +2,6 @@ package ai.koog.agents.example.acp
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.asUserMessage
@@ -13,7 +12,7 @@ import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.acp.AcpAgent
 import ai.koog.agents.features.acp.toKoogMessage
 import ai.koog.agents.features.acp.withAcpAgent
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor

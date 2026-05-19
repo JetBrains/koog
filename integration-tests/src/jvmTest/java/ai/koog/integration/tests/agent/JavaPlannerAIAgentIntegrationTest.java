@@ -11,7 +11,7 @@ import ai.koog.agents.planner.goap.GoapAgentState;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.integration.tests.utils.annotations.Retry;
-import ai.koog.prompt.dsl.Prompt;
+import ai.koog.prompt.Prompt;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
 import ai.koog.prompt.message.MessagePart;

@@ -1,8 +1,8 @@
 package ai.koog.prompt.cache.files
 
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.cache.model.get
 import ai.koog.prompt.cache.model.put
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo

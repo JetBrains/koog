@@ -1,7 +1,7 @@
 package ai.koog.prompt.executor.clients.bedrock.converse
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.bedrock.BedrockCacheControl
 import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization

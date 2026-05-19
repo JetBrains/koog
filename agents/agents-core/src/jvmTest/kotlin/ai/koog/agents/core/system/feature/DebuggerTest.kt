@@ -53,7 +53,7 @@ import ai.koog.agents.testing.feature.message.singleNodeEvent
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo

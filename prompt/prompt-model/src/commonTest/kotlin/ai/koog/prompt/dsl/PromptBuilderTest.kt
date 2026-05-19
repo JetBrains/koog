@@ -1,5 +1,6 @@
 package ai.koog.prompt.dsl
 
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.AttachmentSource

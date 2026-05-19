@@ -1,6 +1,6 @@
 package ai.koog.agents.features.tracing
 
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 

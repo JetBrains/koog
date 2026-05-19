@@ -34,8 +34,8 @@ import ai.koog.integration.tests.utils.tools.SimplePriceCalculatorTool
 import ai.koog.integration.tests.utils.tools.calculatorPrompt
 import ai.koog.integration.tests.utils.tools.calculatorPromptNotRequiredOptionalParams
 import ai.koog.integration.tests.utils.tools.calculatorToolDescriptorOptionalParams
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationCategory
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException

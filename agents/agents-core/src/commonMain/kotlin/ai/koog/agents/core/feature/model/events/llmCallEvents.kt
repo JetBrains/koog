@@ -1,9 +1,10 @@
 package ai.koog.agents.core.feature.model.events
 
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.utils.ModelInfo
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
@@ -139,6 +140,32 @@ public data class LLMCallCompletedEvent(
     @Deprecated("Use model.eventString instead", ReplaceWith("model.eventString"))
     public val modelString: String get() = model.eventString
 }
+
+/**
+ * Represents an event that occurs when a call to a large language model (LLM) fails. This event captures
+ * relevant details about the failed call, such as the prompt, model information, tools used, and the
+ * associated error.
+ *
+ * @property eventId A unique identifier for the event.
+ * @property executionInfo Execution context information, including the part name and any parent executions.
+ * @property runId A unique identifier for the specific run of the LLM call that failed.
+ * @property prompt The prompt data associated with the LLM call.
+ * @property model Information about the model used for the LLM call.
+ * @property tools A list of tools (if any) involved in the execution that led to the failure.
+ * @property error The error information providing details about why the call failed.
+ * @property timestamp The time at which the event was recorded, represented as milliseconds since epoch.
+ */
+@Serializable
+public data class LLMCallFailedEvent(
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
+    val runId: String,
+    val prompt: Prompt,
+    val model: ModelInfo,
+    val tools: List<String>,
+    val error: AIAgentError,
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
+) : DefinedFeatureEvent()
 
 //region Deprecated
 

@@ -586,7 +586,7 @@ You can also completely rewrite the prompt by assigning a new `Prompt` object to
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.entity.AIAgentNode;
-    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.Prompt;
     class exampleSessionsJava08 {
         public static void main(String[] args) {
             var node = AIAgentNode.builder("node_name")

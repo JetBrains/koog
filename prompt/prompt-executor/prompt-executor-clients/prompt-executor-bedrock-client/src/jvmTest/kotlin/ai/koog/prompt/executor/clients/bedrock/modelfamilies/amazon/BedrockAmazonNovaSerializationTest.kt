@@ -3,7 +3,7 @@ package ai.koog.prompt.executor.clients.bedrock.modelfamilies.amazon
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.amazon.NovaInferenceConfig.Companion.MAX_TOKENS_DEFAULT
 import ai.koog.prompt.llm.LLMCapability

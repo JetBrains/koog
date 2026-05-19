@@ -5,7 +5,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.utils.buildPromptAsXml
 import ai.koog.agents.core.utils.escapeXml
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message

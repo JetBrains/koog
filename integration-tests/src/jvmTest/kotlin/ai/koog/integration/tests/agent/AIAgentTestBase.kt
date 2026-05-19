@@ -28,8 +28,8 @@ import ai.koog.integration.tests.utils.tools.files.DeleteFile
 import ai.koog.integration.tests.utils.tools.files.ListFiles
 import ai.koog.integration.tests.utils.tools.files.MockFileSystem
 import ai.koog.integration.tests.utils.tools.files.ReadFile
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient

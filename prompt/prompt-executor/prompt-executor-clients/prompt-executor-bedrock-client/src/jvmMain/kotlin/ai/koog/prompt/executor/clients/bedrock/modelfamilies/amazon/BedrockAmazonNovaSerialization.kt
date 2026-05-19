@@ -1,7 +1,7 @@
 package ai.koog.prompt.executor.clients.bedrock.modelfamilies.amazon
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel

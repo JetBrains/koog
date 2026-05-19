@@ -3,7 +3,7 @@ package ai.koog.agents.example.codeagent.step05
 import ai.koog.agents.core.dsl.extension.FactRetrievalHistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.Concept
 import ai.koog.agents.core.dsl.extension.FactType
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.message.MessagePart
 
 /**

@@ -18,8 +18,8 @@ import ai.koog.agents.snapshot.feature.PlannerCheckpointProperties
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel

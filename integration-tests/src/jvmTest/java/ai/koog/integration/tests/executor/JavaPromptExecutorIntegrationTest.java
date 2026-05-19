@@ -9,7 +9,7 @@ import ai.koog.integration.tests.utils.structuredOutput.WeatherReportKt;
 import ai.koog.integration.tests.utils.tools.*;
 import ai.koog.prompt.message.MessagePart;
 import ai.koog.prompt.params.LLMParams;
-import ai.koog.prompt.dsl.Prompt;
+import ai.koog.prompt.Prompt;
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort;
 import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude;
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig;

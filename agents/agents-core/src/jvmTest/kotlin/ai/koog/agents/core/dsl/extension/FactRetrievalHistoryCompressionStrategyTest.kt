@@ -5,7 +5,7 @@ import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.MockEnvironment
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel

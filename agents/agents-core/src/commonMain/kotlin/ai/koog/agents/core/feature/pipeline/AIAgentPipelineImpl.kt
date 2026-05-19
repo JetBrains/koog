@@ -40,8 +40,8 @@ import ai.koog.agents.core.system.getEnvironmentVariableOrNull
 import ai.koog.agents.core.system.getVMOptionOrNull
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame

@@ -10,7 +10,7 @@ import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.NumberTools;
-import ai.koog.prompt.dsl.Prompt;
+import ai.koog.prompt.Prompt;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;

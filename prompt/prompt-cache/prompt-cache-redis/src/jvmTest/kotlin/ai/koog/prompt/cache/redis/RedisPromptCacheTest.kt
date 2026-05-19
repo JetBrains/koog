@@ -3,9 +3,9 @@
 package ai.koog.prompt.cache.redis
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.cache.model.get
 import ai.koog.prompt.cache.model.put
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo

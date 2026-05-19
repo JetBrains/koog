@@ -6,7 +6,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.prompt.dsl.Prompt.Companion.builder
+import ai.koog.prompt.Prompt.Companion.builder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.params.LLMParams
