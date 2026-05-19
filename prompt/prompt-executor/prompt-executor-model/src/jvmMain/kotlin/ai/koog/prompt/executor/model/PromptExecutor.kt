@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Flow.Publisher
 
 @Suppress("MissingKDocForPublicAPI")
-public actual abstract class PromptExecutor actual constructor() : PromptExecutorAPI {
+public actual abstract class PromptExecutor actual constructor() : PromptExecutorAPI() {
     /**
      * Executes a given prompt using the specified LLM and tools, returning a list of responses from the model.
      *
@@ -75,7 +75,7 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList(),
-    ): Publisher<StreamFrame> = onStreaming(prompt, model, tools).asPublisher()
+    ): Publisher<StreamFrame> = streaming(prompt, model, tools).asPublisher()
 
     /**
      * Moderates the content of a given message with attachments using a specified LLM.
@@ -97,7 +97,7 @@ public actual abstract class PromptExecutor actual constructor() : PromptExecuto
         model: LLModel,
         executorService: ExecutorService? = null
     ): ModerationResult = runOnIOBoundDispatcher(executorService) {
-        onModerate(prompt, model)
+        moderate(prompt, model)
     }
 
     /**

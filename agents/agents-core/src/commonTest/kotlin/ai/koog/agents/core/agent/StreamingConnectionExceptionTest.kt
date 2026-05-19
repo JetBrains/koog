@@ -45,7 +45,7 @@ class StreamingConnectionExceptionTest {
         private val streamingBehavior: () -> Flow<StreamFrame>
     ) : PromptExecutor() {
 
-        override suspend fun execute(
+        override suspend fun onExecute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>

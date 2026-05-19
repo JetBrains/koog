@@ -249,7 +249,7 @@ class ModelCapabilitiesIntegrationTest {
                         user("Provide multiple distinct options for a team name.")
                     }
                     withRetry {
-                        with(executor.onMultipleChoices(prompt, model, emptyList())) {
+                        with(executor.executeMultipleChoices(prompt, model, emptyList())) {
                             size shouldBe 2
                             forEach { choice ->
                                 choice
@@ -508,7 +508,7 @@ class ModelCapabilitiesIntegrationTest {
                     withRetry {
                         assertExceptionMessageContains(
                             assertFailsWith<Throwable> {
-                                executor.onMultipleChoices(prompt, model, emptyList())
+                                executor.executeMultipleChoices(prompt, model, emptyList())
                             },
                             "$EXPECTED_ERROR multiple choices",
                             "$EXPECTED_ERROR ${LLMCapability.MultipleChoices.id}",

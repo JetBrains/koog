@@ -58,7 +58,7 @@ class CachedPromptExecutorTest {
         var executeCalled = false
         var executeStreamingCalled = false
 
-        override suspend fun execute(
+        override suspend fun onExecute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>

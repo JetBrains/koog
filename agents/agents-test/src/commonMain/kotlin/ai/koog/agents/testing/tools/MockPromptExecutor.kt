@@ -83,7 +83,7 @@ public class MockPromptExecutor internal constructor(
      * @param tools The list of tools available for the execution
      * @return A list containing a single response
      */
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun onExecute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt with tools: ${tools.map { it.name }}" }
 
         return handlePrompt(prompt)
@@ -111,7 +111,7 @@ public class MockPromptExecutor internal constructor(
         }
 
         return matchedStream ?: flow {
-            onExecute(prompt = prompt, model = model).toStreamFrames().forEach { emit(it) }
+            onExecute(prompt = prompt, model = model, tools = tools).toStreamFrames().forEach { emit(it) }
         }
     }
 

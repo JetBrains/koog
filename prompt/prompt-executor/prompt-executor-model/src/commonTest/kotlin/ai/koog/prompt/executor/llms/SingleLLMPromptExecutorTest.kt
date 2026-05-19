@@ -83,7 +83,7 @@ class SingleLLMPromptExecutorTest {
         val executor = SingleLLMPromptExecutor(client)
         val prompt = Prompt.build("p3") { user("Hello!") }
 
-        val result = executor.onMultipleChoices(prompt, mockModel, tools)
+        val result = executor.executeMultipleChoices(prompt, mockModel, tools)
 
         assertEquals(choices, result, "Response should match, got: $result")
         assertEquals(prompt, client.lastChoicesPrompt, "Prompt should match, got: ${client.lastChoicesPrompt}")

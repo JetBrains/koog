@@ -73,7 +73,7 @@ class LongTermMemoryRetrievalTest {
      * [onPrompt] receives the joined content of all prompt messages and returns the response text.
      */
     private fun promptCapturingExecutor(onPrompt: (String) -> String): PromptExecutor = object : PromptExecutor() {
-        override suspend fun execute(
+        override suspend fun onExecute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>

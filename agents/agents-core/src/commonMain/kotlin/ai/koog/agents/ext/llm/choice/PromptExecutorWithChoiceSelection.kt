@@ -29,7 +29,7 @@ public class PromptExecutorWithChoiceSelection(
     private val executor: PromptExecutor,
     private val choiceSelectionStrategy: ChoiceSelectionStrategy,
 ) : PromptExecutor() {
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun onExecute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val choices = executor.executeMultipleChoices(prompt, model, tools)
 
         return choiceSelectionStrategy.choose(prompt, choices)
@@ -39,18 +39,18 @@ public class PromptExecutorWithChoiceSelection(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> = executor.onStreaming(prompt, model, tools)
+    ): Flow<StreamFrame> = executor.streaming(prompt, model, tools)
 
     override suspend fun onModerate(
         prompt: Prompt,
         model: LLModel
-    ): ModerationResult = executor.onModerate(prompt, model)
+    ): ModerationResult = executor.moderate(prompt, model)
 
     override fun close(): Unit = executor.close()
 
     override suspend fun models(): List<LLModel> = executor.models()
 
-    override suspend fun onMultipleChoices(
+    override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

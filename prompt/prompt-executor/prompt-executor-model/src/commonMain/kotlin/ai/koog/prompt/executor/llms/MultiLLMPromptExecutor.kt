@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.LLMOperation
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -129,8 +130,6 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
      *
      * Returns `null` if `fallback` or its `fallbackProvider` is not specified.
      */
-    private val fallbackClient: LLMClient? by lazy { fallback?.fallbackProvider?.let(llmClients::get) }
-
     init {
         if (fallback != null) {
             check(fallback.fallbackProvider in llmClients.keys) {
@@ -148,25 +147,16 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
      * @return A list of `Message.Response` objects containing the responses generated based on the prompt.
      * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
      */
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override fun resolveModel(model: LLModel, tools: List<ToolDescriptor>, operation: LLMOperation): LLModel = when {
+        model.provider in llmClients -> model
+        fallback != null -> fallback.fallbackModel
+        else -> throw IllegalArgumentException("No client found for provider: ${model.provider}")
+    }
+
+    override suspend fun onExecute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-
-        val provider = model.provider
-
-        val response = when {
-            provider in llmClients -> llmClients[provider]!!.execute(prompt, model, tools)
-
-            fallback != null -> fallbackClient!!.execute(
-                prompt,
-                fallback.fallbackModel,
-                tools
-            )
-
-            else -> throw IllegalArgumentException("No client found for provider: $provider")
-        }
-
+        val response = llmClients[model.provider]!!.execute(prompt, model, tools)
         logger.debug { "Response: $response" }
-
         return response
     }
 
@@ -200,29 +190,15 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
      * @return A list of `LLMChoice` objects containing the choices generated based on the prompt.
      * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
      */
-    override suspend fun onMultipleChoices(
+    override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<LLMChoice> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-
-        val provider = model.provider
-
-        val choices = when {
-            provider in llmClients -> llmClients[provider]!!.executeMultipleChoices(prompt, model, tools)
-
-            fallback != null -> fallbackClient!!.executeMultipleChoices(
-                prompt,
-                fallback.fallbackModel,
-                tools
-            )
-
-            else -> throw IllegalArgumentException("No client found for provider: $provider")
-        }
-
+        val effectiveModel = resolveModel(model, tools, LLMOperation.Execute)
+        val choices = llmClients[effectiveModel.provider]!!.executeMultipleChoices(prompt, effectiveModel, tools)
         logger.debug { "Choices: $choices" }
-
         return choices
     }
 

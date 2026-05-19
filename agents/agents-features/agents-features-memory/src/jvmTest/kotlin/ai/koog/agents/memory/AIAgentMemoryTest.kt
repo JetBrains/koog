@@ -369,7 +369,7 @@ class AIAgentMemoryTest {
 
         val capturedModels = mutableListOf<LLModel>()
         coEvery {
-            promptExecutor.execute(any(), capture(capturedModels))
+            promptExecutor.onExecute(any(), capture(capturedModels))
         } returns listOf(response)
 
         coEvery {
@@ -429,7 +429,7 @@ class AIAgentMemoryTest {
         }
 
         coVerify(exactly = 1) {
-            promptExecutor.execute(any(), customModel)
+            promptExecutor.onExecute(any(), customModel)
         }
     }
 
@@ -457,7 +457,7 @@ class AIAgentMemoryTest {
 
         val capturedModels = mutableListOf<LLModel>()
         coEvery {
-            promptExecutor.execute(any(), capture(capturedModels))
+            promptExecutor.onExecute(any(), capture(capturedModels))
         } returns listOf(response)
 
         coEvery {

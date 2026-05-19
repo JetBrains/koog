@@ -20,7 +20,7 @@ class MockLLMExecutor : PromptExecutor() {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun onExecute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         return listOf(handlePrompt(prompt))
     }
 

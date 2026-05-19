@@ -29,7 +29,7 @@ public class CachedPromptExecutor(
     private val clock: Clock = Clock.System
 ) : PromptExecutor() {
 
-    override suspend fun execute(
+    override suspend fun onExecute(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

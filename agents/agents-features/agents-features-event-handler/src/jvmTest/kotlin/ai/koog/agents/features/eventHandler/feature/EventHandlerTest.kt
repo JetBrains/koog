@@ -599,7 +599,7 @@ class EventHandlerTest {
         val testStreamingErrorMessage = "Test streaming error"
 
         val testStreamingExecutor = object : PromptExecutor() {
-            override suspend fun execute(
+            override suspend fun onExecute(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
                 tools: List<ToolDescriptor>

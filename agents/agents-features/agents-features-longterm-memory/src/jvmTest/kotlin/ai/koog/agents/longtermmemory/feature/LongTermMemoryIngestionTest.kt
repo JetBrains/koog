@@ -65,7 +65,7 @@ class LongTermMemoryIngestionTest {
         }
 
     private fun streamingExecutor(vararg frames: String): PromptExecutor = object : PromptExecutor() {
-        override suspend fun execute(
+        override suspend fun onExecute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
@@ -398,7 +398,7 @@ class LongTermMemoryIngestionTest {
         var storageSizeDuringLLMCall = -1
 
         val executor = object : PromptExecutor() {
-            override suspend fun execute(
+            override suspend fun onExecute(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>

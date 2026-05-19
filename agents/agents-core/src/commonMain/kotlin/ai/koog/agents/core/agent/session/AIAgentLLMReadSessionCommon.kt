@@ -74,7 +74,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
      */
     public fun executeStreaming(prompt: Prompt, tools: List<ToolDescriptor>): Flow<StreamFrame> {
         val preparedPrompt = preparePrompt(prompt, tools)
-        return executor.onStreaming(preparedPrompt, model, tools)
+        return executor.streaming(preparedPrompt, model, tools)
     }
 
     /**
@@ -211,7 +211,7 @@ public abstract class AIAgentLLMReadSessionCommon internal constructor(
     public suspend fun requestModeration(moderatingModel: LLModel? = null): ModerationResult {
         validateSession()
         val preparedPrompt = preparePrompt(prompt, emptyList())
-        return executor.onModerate(preparedPrompt, moderatingModel ?: model)
+        return executor.moderate(preparedPrompt, moderatingModel ?: model)
     }
 
     /**

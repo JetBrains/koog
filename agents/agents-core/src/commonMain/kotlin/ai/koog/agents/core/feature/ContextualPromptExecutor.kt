@@ -5,6 +5,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.LLMOperation
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -38,7 +39,10 @@ public class ContextualPromptExecutor(
         private val logger = KotlinLogging.logger { }
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override fun resolveModel(model: LLModel, tools: List<ToolDescriptor>, operation: LLMOperation): LLModel =
+        executor.resolveModel(model, tools, operation)
+
+    override suspend fun onExecute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         @OptIn(ExperimentalUuidApi::class)
         val eventId = Uuid.random().toString()
 
@@ -130,7 +134,7 @@ public class ContextualPromptExecutor(
     }
 
     // TODO: Add Pipeline interceptors for this method. Without them features cannot modify prompts before calls to LLMs.
-    override suspend fun onMultipleChoices(
+    override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

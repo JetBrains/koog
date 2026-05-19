@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.LLMOperation
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -116,6 +117,9 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
         else -> null
     }
 
+    override fun resolveModel(model: LLModel, tools: List<ToolDescriptor>, operation: LLMOperation): LLModel =
+        chooseClientAndModel(model).second
+
     /**
      * Executes a given prompt using the specified tools and model, and returns a list of response messages.
      *
@@ -125,7 +129,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      * @return A list of `Message.Response` objects containing the responses generated based on the prompt.
      * @throws IllegalArgumentException If no client is found for the model's provider and no fallback is configured.
      */
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun onExecute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
         val (effectiveClient, effectiveModel) = chooseClientAndModel(model)
@@ -164,7 +168,7 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      * @return A list of `LLMChoice` objects containing the choices generated based on the prompt.
      * @throws IllegalArgumentException If no client is found for the model's provider and no fallback is configured.
      */
-    override suspend fun onMultipleChoices(
+    override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

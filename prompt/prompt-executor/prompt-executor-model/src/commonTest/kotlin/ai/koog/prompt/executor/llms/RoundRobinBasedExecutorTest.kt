@@ -144,7 +144,7 @@ class RoundRobinBasedExecutorTest {
         // When
         val fallbackExecuteResponse = executor.onExecute(prompt, GoogleModels.Gemini2_0Flash)
         val fallbackExecuteStreamingResponse = executor.onStreaming(prompt, GoogleModels.Gemini2_0Flash)
-        val fallbackExecuteMultipleChoicesResponse = executor.onMultipleChoices(
+        val fallbackExecuteMultipleChoicesResponse = executor.executeMultipleChoices(
             prompt,
             GoogleModels.Gemini2_0Flash,
             emptyList()

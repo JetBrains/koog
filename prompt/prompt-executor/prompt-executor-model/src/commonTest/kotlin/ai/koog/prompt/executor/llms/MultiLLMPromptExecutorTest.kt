@@ -158,7 +158,7 @@ class MultiLLMPromptExecutorTest {
         }
 
         assertFailsWith<IllegalArgumentException>("Should throw IllegalArgumentException for unsupported provider") {
-            executor.onExecute(prompt = prompt, model = model)
+            executor.execute(prompt = prompt, model = model)
         }
     }
 

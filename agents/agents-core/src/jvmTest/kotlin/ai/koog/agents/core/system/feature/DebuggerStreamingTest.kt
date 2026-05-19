@@ -291,7 +291,7 @@ class DebuggerStreamingTest {
         var expectedType: String? = null
 
         val testStreamingExecutor = object : PromptExecutor() {
-            override suspend fun execute(
+            override suspend fun onExecute(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>

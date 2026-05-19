@@ -154,7 +154,7 @@ class LLMAsJudgeNodeTest {
         """.trimIndent()
 
         coVerify {
-            mockPromptExecutor.execute(
+            mockPromptExecutor.onExecute(
                 prompt = match {
                     (it.messages.size == 2) &&
                         (it.messages.first().role == Message.Role.System && it.messages.first().content == CRITIC_TASK) &&

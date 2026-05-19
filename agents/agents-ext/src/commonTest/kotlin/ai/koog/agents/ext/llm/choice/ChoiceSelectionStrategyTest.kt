@@ -52,7 +52,7 @@ class ChoiceSelectionStrategyTest {
     fun `PromptExecutorWithChoiceSelection should delegate to strategy`() = runTest {
         // Arrange
         val mockExecutor = object : PromptExecutor() {
-            override suspend fun execute(
+            override suspend fun onExecute(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
@@ -72,7 +72,7 @@ class ChoiceSelectionStrategyTest {
             ): Flow<StreamFrame> =
                 streamFrameFlowOf("Default streaming response")
 
-            override suspend fun onMultipleChoices(
+            override suspend fun executeMultipleChoices(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>

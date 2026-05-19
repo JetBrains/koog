@@ -56,7 +56,7 @@ class LLMBasedToolJsonFixTest {
         private var index = 0
         val prompts = mutableListOf<Prompt>()
 
-        override suspend fun execute(
+        override suspend fun onExecute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
