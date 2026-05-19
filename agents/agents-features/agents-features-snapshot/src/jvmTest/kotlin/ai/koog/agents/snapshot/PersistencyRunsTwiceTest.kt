@@ -32,6 +32,7 @@ import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class PersistenceRunsTwiceTest {
     private val serializer = KotlinxSerializer()
@@ -222,6 +223,8 @@ class PersistenceRunsTwiceTest {
                 onNodeExecutionCompleted { ctx ->
                     if (ctx.node.name == "nodeExecuteTool") {
                         val toolResult = (ctx.output as ReceivedToolResults).toolResults.single()
+                        // resultObject is set in the live result but must NOT survive persistence
+                        assertNotNull(toolResult.resultObject)
                         events += "finished: nodeExecuteTool(tool=${toolResult.tool}, output=${toolResult.output})"
                     }
                 }
@@ -264,16 +267,16 @@ class PersistenceRunsTwiceTest {
         assertEquals("nodeExecuteTool", lastCheckpoint.nodePath.substringAfterLast("/"))
         assertNotNull(lastCheckpoint.lastOutput, lastCheckpoint.nodePath.substringAfterLast("/"))
 
-        val lastOutputValue = KotlinxSerializer().decodeFromJSONElement<Message.User>(
+        val lastOutputValue = KotlinxSerializer().decodeFromJSONElement<ReceivedToolResults>(
             lastCheckpoint.lastOutput,
-            typeToken<Message.User>()
+            typeToken<ReceivedToolResults>()
         )
-        val persistedToolResult = lastOutputValue.parts
-            .filterIsInstance<MessagePart.Tool.Result>()
-            .single()
+        val persistedToolResult = lastOutputValue.toolResults.single()
 
         assertEquals("guesser", persistedToolResult.tool)
         assertEquals("encoded_result(\"Hidden Value\")", persistedToolResult.output)
+        // resultObject is @Transient — it is NOT persisted via the Persistence feature
+        assertNull(persistedToolResult.resultObject)
 
         val expectedEventsFirstRun = listOf(
             "onLLMCallStarting(Tell me the secret!)",
