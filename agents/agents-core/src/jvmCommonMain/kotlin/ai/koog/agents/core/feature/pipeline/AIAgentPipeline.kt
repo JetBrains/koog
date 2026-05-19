@@ -51,7 +51,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptEnvironmentCreated")
-    public fun javaApiInterceptEnvironmentCreated(
+    public fun interceptEnvironmentCreatedBlocking(
         feature: AIAgentFeature<*, *>,
         transform: TransformInterceptor<AgentEnvironmentTransformingContext, AIAgentEnvironment>
     ) {
@@ -73,7 +73,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptAgentStarting")
-    public fun javaApiInterceptAgentStarting(
+    public fun interceptAgentStartingBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<AgentStartingContext>
     ) {
@@ -98,7 +98,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptAgentCompleted")
-    public fun javaApiInterceptAgentCompleted(
+    public fun interceptAgentCompletedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<AgentCompletedContext>
     ) {
@@ -123,7 +123,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptAgentExecutionFailed")
-    public fun javaApiInterceptAgentExecutionFailed(
+    public fun interceptAgentExecutionFailedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<AgentExecutionFailedContext>
     ) {
@@ -148,7 +148,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptAgentClosing")
-    public fun javaApiInterceptAgentClosing(
+    public fun interceptAgentClosingBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<AgentClosingContext>
     ) {
@@ -173,7 +173,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptStrategyStarting")
-    public fun javaApiInterceptStrategyStarting(
+    public fun interceptStrategyStartingBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<StrategyStartingContext>
     ) {
@@ -198,7 +198,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptStrategyCompleted")
-    public fun javaApiInterceptStrategyCompleted(
+    public fun interceptStrategyCompletedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<StrategyCompletedContext>
     ) {
@@ -223,7 +223,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptLLMCallStarting")
-    public fun javaApiInterceptLLMCallStarting(
+    public fun interceptLLMCallStartingBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMCallStartingContext>
     ) {
@@ -248,7 +248,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptLLMCallCompleted")
-    public fun javaApiInterceptLLMCallCompleted(
+    public fun interceptLLMCallCompletedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMCallCompletedContext>
     ) {
@@ -274,7 +274,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptLLMCallFailed")
-    public fun javaApiInterceptLLMCallFailed(
+    public fun interceptLLMCallFailedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMCallFailedContext>
     ) {
@@ -299,7 +299,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptLLMStreamingStarting")
-    public fun javaApiInterceptLLMStreamingStarting(
+    public fun interceptLLMStreamingStartingBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMStreamingStartingContext>
     ) {
@@ -324,7 +324,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptLLMStreamingFrameReceived")
-    public fun javaApiInterceptLLMStreamingFrameReceived(
+    public fun interceptLLMStreamingFrameReceivedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMStreamingFrameReceivedContext>
     ) {
@@ -349,7 +349,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptLLMStreamingFailed")
-    public fun javaApiInterceptLLMStreamingFailed(
+    public fun interceptLLMStreamingFailedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMStreamingFailedContext>
     ) {
@@ -374,7 +374,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptLLMStreamingCompleted")
-    public fun javaApiInterceptLLMStreamingCompleted(
+    public fun interceptLLMStreamingCompletedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<LLMStreamingCompletedContext>
     ) {
@@ -399,7 +399,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptToolCallStarting")
-    public fun javaApiInterceptToolCallStarting(
+    public fun interceptToolCallStartingBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<ToolCallStartingContext>
     ) {
@@ -424,7 +424,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptToolValidationFailed")
-    public fun javaApiInterceptToolValidationFailed(
+    public fun interceptToolValidationFailedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<ToolValidationFailedContext>
     ) {
@@ -449,7 +449,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptToolCallFailed")
-    public fun javaApiInterceptToolCallFailed(
+    public fun interceptToolCallFailedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<ToolCallFailedContext>
     ) {
@@ -474,7 +474,7 @@ public actual abstract class AIAgentPipeline actual constructor(
      */
     @JavaAPI
     @JvmName("interceptToolCallCompleted")
-    public fun javaApiInterceptToolCallCompleted(
+    public fun interceptToolCallCompletedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<ToolCallCompletedContext>
     ) {

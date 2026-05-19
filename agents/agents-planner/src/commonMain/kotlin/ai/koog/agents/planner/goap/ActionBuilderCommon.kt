@@ -1,5 +1,7 @@
 package ai.koog.agents.planner.goap
 
+import kotlin.jvm.JvmSynthetic
+
 /**
  * Action builder configuration common to all platforms.
  */
@@ -41,6 +43,7 @@ public abstract class ActionBuilderCommon<State, Self : ActionBuilderCommon<Stat
     /**
      * Sets the execute function for the action.
      */
+    @JvmSynthetic
     public fun execute(execute: Execute<State>): Self = self().apply { this.execute = execute }
 
     /**

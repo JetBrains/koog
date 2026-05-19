@@ -39,6 +39,7 @@ import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.TypeToken
 import ai.koog.utils.time.KoogClock
+import kotlin.jvm.JvmSynthetic
 import kotlin.reflect.KClass
 
 /**
@@ -299,73 +300,88 @@ public interface AIAgentPipelineAPI {
 
     //region Interceptors
 
+    @JvmSynthetic
     public fun interceptEnvironmentCreated(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: AgentEnvironmentTransformingContext, environment: AIAgentEnvironment) -> AIAgentEnvironment
     )
 
+    @JvmSynthetic
     public fun interceptAgentStarting(feature: AIAgentFeature<*, *>, handle: suspend (AgentStartingContext) -> Unit)
 
+    @JvmSynthetic
     public fun interceptAgentCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: AgentCompletedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptAgentExecutionFailed(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: AgentExecutionFailedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptAgentClosing(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: AgentClosingContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptStrategyStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (StrategyStartingContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptStrategyCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (StrategyCompletedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptLLMCallStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallStartingContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptLLMCallCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallCompletedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptLLMCallFailed(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMCallFailedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptLLMStreamingStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMStreamingStartingContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptLLMStreamingFrameReceived(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMStreamingFrameReceivedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptLLMStreamingFailed(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMStreamingFailedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptLLMStreamingCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: LLMStreamingCompletedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptToolCallStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallStartingContext) -> Unit
@@ -384,21 +400,25 @@ public interface AIAgentPipelineAPI {
      * Merge precedence (documented in [ai.koog.agents.core.environment.ContextualAgentEnvironment]):
      * caller-supplied metadata wins over feature contributions on key collision.
      */
+    @JvmSynthetic
     public fun provideToolCallMetadata(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallStartingContext) -> Map<String, Any?>
     )
 
+    @JvmSynthetic
     public fun interceptToolValidationFailed(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolValidationFailedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptToolCallFailed(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallFailedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptToolCallCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (eventContext: ToolCallCompletedContext) -> Unit

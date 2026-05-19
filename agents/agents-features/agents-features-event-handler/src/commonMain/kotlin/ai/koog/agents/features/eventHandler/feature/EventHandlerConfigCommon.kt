@@ -23,6 +23,7 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
+import kotlin.jvm.JvmSynthetic
 
 /**
  * API for the [EventHandlerConfig]
@@ -109,6 +110,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when an agent is started.
      */
+    @JvmSynthetic
     public fun onAgentStarting(handler: suspend (eventContext: AgentStartingContext) -> Unit) {
         val originalHandler = this._onAgentStarting
         this._onAgentStarting = { eventContext ->
@@ -120,6 +122,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when an agent finishes execution.
      */
+    @JvmSynthetic
     public fun onAgentCompleted(handler: suspend (eventContext: AgentCompletedContext) -> Unit) {
         val originalHandler = this._onAgentCompleted
         this._onAgentCompleted = { eventContext ->
@@ -131,6 +134,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when an error occurs during agent execution.
      */
+    @JvmSynthetic
     public fun onAgentExecutionFailed(handler: suspend (eventContext: AgentExecutionFailedContext) -> Unit) {
         val originalHandler = this._onAgentExecutionFailed
         this._onAgentExecutionFailed = { eventContext ->
@@ -143,6 +147,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
      * Appends a handler called before an agent is closed. This allows for additional behavior
      * to be executed prior to the agent being closed.
      */
+    @JvmSynthetic
     public fun onAgentClosing(handler: suspend (eventContext: AgentClosingContext) -> Unit) {
         val originalHandler = this._onAgentClosing
         this._onAgentClosing = { eventContext ->
@@ -158,6 +163,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when a strategy starts execution.
      */
+    @JvmSynthetic
     public fun onStrategyStarting(handler: suspend (eventContext: StrategyStartingContext) -> Unit) {
         val originalHandler = this._onStrategyStarting
         this._onStrategyStarting = { eventContext ->
@@ -169,6 +175,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when a strategy finishes execution.
      */
+    @JvmSynthetic
     public fun onStrategyCompleted(handler: suspend (eventContext: StrategyCompletedContext) -> Unit) {
         val originalHandler = this._onStrategyCompleted
         this._onStrategyCompleted = { eventContext ->
@@ -184,6 +191,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called before a node in the agent's execution graph is processed.
      */
+    @JvmSynthetic
     public fun onNodeExecutionStarting(handler: suspend (eventContext: NodeExecutionStartingContext) -> Unit) {
         val originalHandler = this._onNodeExecutionStarting
         this._onNodeExecutionStarting = { eventContext ->
@@ -195,6 +203,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called after a node in the agent's execution graph has been processed.
      */
+    @JvmSynthetic
     public fun onNodeExecutionCompleted(handler: suspend (eventContext: NodeExecutionCompletedContext) -> Unit) {
         val originalHandler = this._onNodeExecutionCompleted
         this._onNodeExecutionCompleted = { eventContext ->
@@ -206,6 +215,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when an error occurs during the execution of a node.
      */
+    @JvmSynthetic
     public fun onNodeExecutionFailed(handler: suspend (eventContext: NodeExecutionFailedContext) -> Unit) {
         val originalHandler = this._onNodeExecutionFailed
         this._onNodeExecutionFailed = { eventContext ->
@@ -221,6 +231,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called before a subgraph in the agent's execution graph is processed.
      */
+    @JvmSynthetic
     public fun onSubgraphExecutionStarting(handler: suspend (eventContext: SubgraphExecutionStartingContext) -> Unit) {
         val originalHandler = this._onSubgraphExecutionStarting
         this._onSubgraphExecutionStarting = { eventContext ->
@@ -232,6 +243,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called after a subgraph in the agent's execution graph has been processed.
      */
+    @JvmSynthetic
     public fun onSubgraphExecutionCompleted(handler: suspend (eventContext: SubgraphExecutionCompletedContext) -> Unit) {
         val originalHandler = this._onSubgraphExecutionCompleted
         this._onSubgraphExecutionCompleted = { eventContext ->
@@ -243,6 +255,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when an error occurs during the execution of a subgraph.
      */
+    @JvmSynthetic
     public fun onSubgraphExecutionFailed(handler: suspend (eventContext: SubgraphExecutionFailedContext) -> Unit) {
         val originalHandler = this._onSubgraphExecutionFailed
         this._onSubgraphExecutionFailed = { eventContext ->
@@ -258,6 +271,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called before a call is made to the language model.
      */
+    @JvmSynthetic
     public fun onLLMCallStarting(handler: suspend (eventContext: LLMCallStartingContext) -> Unit) {
         val originalHandler = this._onLLMCallStarting
         this._onLLMCallStarting = { eventContext ->
@@ -269,6 +283,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called after a response is received from the language model.
      */
+    @JvmSynthetic
     public fun onLLMCallCompleted(handler: suspend (eventContext: LLMCallCompletedContext) -> Unit) {
         val originalHandler = this._onLLMCallCompleted
         this._onLLMCallCompleted = { eventContext ->
@@ -284,6 +299,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when a tool is about to be called.
      */
+    @JvmSynthetic
     public fun onToolCallStarting(handler: suspend (eventContext: ToolCallStartingContext) -> Unit) {
         val originalHandler = this._onToolCallStarting
         this._onToolCallStarting = { eventContext ->
@@ -295,6 +311,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when a validation error occurs during a tool call.
      */
+    @JvmSynthetic
     public fun onToolValidationFailed(handler: suspend (eventContext: ToolValidationFailedContext) -> Unit) {
         val originalHandler = this._onToolValidationFailed
         this._onToolValidationFailed = { eventContext ->
@@ -306,6 +323,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when a tool call fails with an exception.
      */
+    @JvmSynthetic
     public fun onToolCallFailed(handler: suspend (eventContext: ToolCallFailedContext) -> Unit) {
         val originalHandler = this._onToolCallFailed
         this._onToolCallFailed = { eventContext ->
@@ -317,6 +335,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when a tool call completes successfully.
      */
+    @JvmSynthetic
     public fun onToolCallCompleted(handler: suspend (eventContext: ToolCallCompletedContext) -> Unit) {
         val originalHandler = this._onToolCallCompleted
         this._onToolCallCompleted = { eventContext ->
@@ -346,6 +365,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
      * }
      * ```
      */
+    @JvmSynthetic
     public fun onLLMStreamingStarting(handler: suspend (eventContext: LLMStreamingStartingContext) -> Unit) {
         val originalHandler = this._onLLMStreamingStarting
         this._onLLMStreamingStarting = { eventContext ->
@@ -373,6 +393,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
      * }
      * ```
      */
+    @JvmSynthetic
     public fun onLLMStreamingFrameReceived(handler: suspend (eventContext: LLMStreamingFrameReceivedContext) -> Unit) {
         val originalHandler = this._onLLMStreamingFrameReceived
         this._onLLMStreamingFrameReceived = { eventContext ->
@@ -397,6 +418,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
      * }
      * ```
      */
+    @JvmSynthetic
     public fun onLLMStreamingFailed(handler: suspend (eventContext: LLMStreamingFailedContext) -> Unit) {
         val originalHandler = this._onLLMStreamingFailed
         this._onLLMStreamingFailed = { eventContext ->
@@ -422,6 +444,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
      * }
      * ```
      */
+    @JvmSynthetic
     public fun onLLMStreamingCompleted(handler: suspend (eventContext: LLMStreamingCompletedContext) -> Unit) {
         val originalHandler = this._onLLMStreamingCompleted
         this._onLLMStreamingCompleted = { eventContext ->

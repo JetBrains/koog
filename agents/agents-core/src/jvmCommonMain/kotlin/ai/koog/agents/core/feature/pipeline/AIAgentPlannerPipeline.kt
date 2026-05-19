@@ -53,7 +53,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      */
     @JavaAPI
     @JvmName("interceptPlanCreationStarting")
-    public fun javaApiInterceptPlanCreationStarting(
+    public fun interceptPlanCreationStartingBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<PlanCreationStartingContext>
     ) {
@@ -72,7 +72,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      */
     @JavaAPI
     @JvmName("interceptPlanCreationCompleted")
-    public fun javaApiInterceptPlanCreationCompleted(
+    public fun interceptPlanCreationCompletedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<PlanCreationCompletedContext>
     ) {
@@ -97,7 +97,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      */
     @JavaAPI
     @JvmName("interceptStepExecutionStarting")
-    public fun javaApiInterceptStepExecutionStarting(
+    public fun interceptStepExecutionStartingBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<StepExecutionStartingContext>
     ) {
@@ -122,7 +122,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      */
     @JavaAPI
     @JvmName("interceptStepExecutionCompleted")
-    public fun javaApiInterceptStepExecutionCompleted(
+    public fun interceptStepExecutionCompletedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<StepExecutionCompletedContext>
     ) {
@@ -141,7 +141,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      */
     @JavaAPI
     @JvmName("interceptPlanCompletionEvaluationStarting")
-    public fun javaApiInterceptPlanCompletionEvaluationStarting(
+    public fun interceptPlanCompletionEvaluationStartingBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<PlanCompletionEvaluationStartingContext>
     ) {
@@ -166,7 +166,7 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      */
     @JavaAPI
     @JvmName("interceptPlanCompletionEvaluationCompleted")
-    public fun javaApiInterceptPlanCompletionEvaluationCompleted(
+    public fun interceptPlanCompletionEvaluationCompletedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<PlanCompletionEvaluationCompletedContext>
     ) {
