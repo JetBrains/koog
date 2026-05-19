@@ -14,6 +14,8 @@ import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmName
 
 /**
  * Represents a condition for a tool call and its corresponding result.
@@ -824,6 +826,39 @@ public class MockExecutorDSLBuilder(
         action: suspend () -> String
     ): Unit =
         alwaysDoes { action() }
+
+    /**
+     * A data class representing the tool result that is just text (String).
+     *
+     * @property text The output text generated from the text processing operation.
+     */
+    @Serializable
+    public data class TextToolResult(val text: String)
+
+    /**
+     * Convenience extension function for configuring a text tool to always execute the specified action
+     * and return its string result.
+     *
+     * @param action A function that produces the string result
+     * @return The result of the alwaysDoes call
+     */
+    @JvmName("alwaysTellsText")
+    public infix fun <Args> MockToolReceiver<Args, TextToolResult>.alwaysTells(
+        action: suspend () -> String
+    ): Unit =
+        alwaysDoes { TextToolResult(action()) }
+
+    /**
+     * Convenience extension function for configuring a text tool to execute the specified action
+     * and return its string result when it receives matching arguments.
+     *
+     * @param action A function that produces the string result
+     * @return The result of the does call
+     */
+    public infix fun <Args> MockToolReceiver<Args, TextToolResult>.doesStr(
+        action: suspend () -> String
+    ): MockToolReceiver.MockToolResponseBuilder<Args, TextToolResult> =
+        does { TextToolResult(action()) }
 
     /**
      * Builds and returns a PromptExecutor configured with the mock responses and tool actions.
