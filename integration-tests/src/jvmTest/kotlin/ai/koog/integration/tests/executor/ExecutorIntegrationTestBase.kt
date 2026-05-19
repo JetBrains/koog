@@ -255,6 +255,7 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
             val endFrames = mutableListOf<StreamFrame.End>()
             val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+            val textCompleteFrames = mutableListOf<StreamFrame.TextComplete>()
             val toolDeltaFrames = mutableListOf<StreamFrame.ToolCallDelta>()
             val toolCompleteFrames = mutableListOf<StreamFrame.ToolCallComplete>()
 
@@ -262,6 +263,7 @@ abstract class ExecutorIntegrationTestBase {
                 prompt = prompt,
                 model = model,
                 textDeltaFrames = textDeltaFrames,
+                textCompleteFrames = textCompleteFrames,
                 toolDeltaFrames = toolDeltaFrames,
                 toolCompleteFrames = toolCompleteFrames,
                 endFrame = endFrames,
@@ -269,6 +271,11 @@ abstract class ExecutorIntegrationTestBase {
 
             toolDeltaFrames.shouldBeEmpty()
             toolCompleteFrames.shouldBeEmpty()
+            textCompleteFrames.forEach { complete ->
+                withClue("Streaming should not emit empty text-complete frames for ${model.id}") {
+                    complete.text.shouldNotBeBlank()
+                }
+            }
             when (model.provider) {
                 is OllamaLLMProvider -> endFrames.size shouldBe 0
 
