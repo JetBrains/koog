@@ -13,7 +13,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.annotations.Retry
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.test.utils.DockerAvailableCondition
 import kotlinx.coroutines.test.runTest
