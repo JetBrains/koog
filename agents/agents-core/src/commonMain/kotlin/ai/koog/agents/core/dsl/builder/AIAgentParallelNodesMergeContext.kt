@@ -46,8 +46,6 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override val strategyName: String get() = underlyingContextBase.strategyName
     override val pipeline: AIAgentGraphPipeline get() = underlyingContextBase.pipeline
 
-    override suspend fun getHistory(): List<Message> = underlyingContextBase.getHistory()
-
     /**
      * Creates a copy of the current AIAgentContextBase object with the specified parameters.
      */

@@ -214,12 +214,6 @@ public class AIAgentGraphContext(
         }
     }
 
-    override suspend fun getHistory(): List<Message> {
-        return llm.readSession {
-            prompt.messages
-        }
-    }
-
     /**
      * Creates a new instance of [AIAgentContext] with an updated list of tools, replacing the current tools
      * in the LLM context with the provided list.

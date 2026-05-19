@@ -112,11 +112,6 @@ public interface AIAgentContext {
      * Represents the observability data associated with the AI Agent context.
      */
     public var executionInfo: AgentExecutionInfo
-
-    /**
-     * Retrieves the history of messages exchanged during the agent's execution.
-     */
-    public suspend fun getHistory(): List<Message>
 }
 
 /**

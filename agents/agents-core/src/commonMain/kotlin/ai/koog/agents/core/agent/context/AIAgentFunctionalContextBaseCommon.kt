@@ -65,10 +65,6 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
     override val parentContext: AIAgentContext? = null
 ) : AIAgentContext {
 
-    override suspend fun getHistory(): List<Message> {
-        return llm.readSession { prompt.messages }
-    }
-
     // ================
     // LLM Request string nodes
     // ================
