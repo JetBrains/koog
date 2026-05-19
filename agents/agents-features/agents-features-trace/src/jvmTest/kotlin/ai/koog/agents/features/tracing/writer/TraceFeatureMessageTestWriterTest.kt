@@ -7,6 +7,7 @@ import ai.koog.agents.core.dsl.builder.subgraph
 import ai.koog.agents.core.dsl.extension.ToolCalls
 import ai.koog.agents.core.dsl.extension.nodeAppendPrompt
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
 import ai.koog.agents.core.feature.model.AIAgentError
@@ -632,7 +633,7 @@ class TraceFeatureMessageTestWriterTest {
         val strategy = strategy<String, String>(strategyName) {
             val call by nodeLLMRequest(nodeCallFailedName)
 
-            edge(nodeStart forwardTo call asUserMessage { it })
+            edge(nodeStart forwardTo call)
             edge(
                 call forwardTo nodeFinish transformed { input ->
                     input.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
