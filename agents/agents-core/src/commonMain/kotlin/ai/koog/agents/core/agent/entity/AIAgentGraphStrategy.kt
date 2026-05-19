@@ -111,6 +111,8 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
         // Set current graph node:
         if (data.lastOutput != JSONNull) {
             setExecutionPointAfterNode(nodePath, data.lastOutput, agentContext)
+        } else {
+            logger.warn { "Unexpected state in checkpoint: output was not saved" }
         }
 
         // Restore LLM session
