@@ -80,23 +80,6 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdge
 }
 
 /**
- * Creates an edge that filters assistant messages containing tool calls, based on a custom condition.
- *
- * @param block A function that evaluates whether to accept the assistant message
- */
-@EdgeTransformationDslMarker
-public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolResults(
-    block: suspend (MessagePart.Tool.Result) -> Boolean
-): AIAgentEdgeBuilderIntermediate<IncomingOutput, ToolResults, OutgoingInput> {
-    return onMessageParts(MessagePart.Tool.Result::class)
-        .onCondition { toolResults ->
-            toolResults.any { block(it) }
-        }.transformed { toolResults ->
-            ToolResults(toolResults.filter { block(it) })
-        }
-}
-
-/**
  * Creates an edge that filters tool call messages for a specific tool and arguments condition.
  *
  * @param tool The tool to match against

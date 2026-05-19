@@ -7,7 +7,9 @@ import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilder
 import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
 import ai.koog.agents.core.dsl.extension.ToolCalls
+import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.utils.Option
 import ai.koog.agents.core.utils.Some
 import ai.koog.prompt.message.Message
@@ -367,6 +369,41 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
         clazz: Class<CompatibleOutput>
     ): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> =
         onCondition { clazz.isInstance(it) }.transformed { it as CompatibleOutput }
+
+    /**
+     * Creates an edge that transforms an intermediate output into a [Message.User] using the provided transform.
+     *
+     * @param transformation A function that converts the intermediate output to a String for the user message.
+     */
+    @JvmOverloads
+    public fun asUserMessage(
+        transformation: SimpleTransformation<IntermediateOutput, String> = { it.toString() }
+    ): FullAgentEdgeBuilder<IncomingOutput, Message.User, OutgoingInput> =
+        transformed<Message.User> { output, ctx ->
+            ctx.llm.writeSession { session ->
+                session.userMessage(transformation.invoke(output))
+            }
+        }
+
+    /**
+     * Creates an edge that transforms an intermediate output into a [Message.User] using the provided transform.
+     *
+     * @param condition A predicate that filters which [ReceivedToolResult] entries are included in the message.
+     */
+    @JvmOverloads
+    public fun asToolResultMessage(
+        condition: SimpleCondition<ReceivedToolResult> = { true }
+    ): FullAgentEdgeBuilder<IncomingOutput, Message.User, OutgoingInput> =
+        onCondition { ReceivedToolResults::class.java.isInstance(it) }
+            .transformed<Message.User> { output, ctx ->
+                ctx.llm.writeSession { session ->
+                    session.userMessage(
+                        (output as ReceivedToolResults).toolResults
+                            .filter { condition.invoke(it) }
+                            .map { it.toMessagePart() }
+                    )
+                }
+            }
 }
 
 /**

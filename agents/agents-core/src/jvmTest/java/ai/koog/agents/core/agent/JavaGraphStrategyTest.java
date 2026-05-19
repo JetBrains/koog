@@ -12,9 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JavaGraphStrategyTest {
     private static final JacksonSerializer serializer = new JacksonSerializer();
@@ -146,6 +144,52 @@ public class JavaGraphStrategyTest {
             .build();
 
         assertNotNull(agent);
+    }
+
+    @Test
+    public void testSendMessageNode() {
+        AIAgent<String, String> agent = (AIAgent<String, String>) AIAgent.builder()
+            .promptExecutor(MockPromptExecutor.builder(serializer).mockLLMAnswer("llm-response").asDefaultResponse().build())
+            .llmModel(OpenAIModels.Chat.GPT4o)
+            .graphStrategy("llm", b -> {
+                var graph = b
+                    .withInput(String.class)
+                    .withOutput(String.class);
+
+                var llmNode = AIAgentNode.llmSendMessage("llm");
+                var executeTools = AIAgentNode.executeTools("my_tool");
+
+                graph.edge(AIAgentEdge.builder()
+                    .from(graph.nodeStart)
+                    .to(llmNode)
+                    .asUserMessage()
+                    .build()
+                );
+                graph.edge(AIAgentEdge.builder()
+                    .from(llmNode)
+                    .to(executeTools)
+                    .onToolCalls()
+                    .build()
+                );
+                graph.edge(AIAgentEdge.builder()
+                    .from(llmNode)
+                    .to(graph.nodeFinish)
+                    .onTextMessage()
+                    .build()
+                );
+                graph.edge(AIAgentEdge.builder()
+                    .from(executeTools)
+                    .to(llmNode)
+                    .asToolResultMessage()
+                    .build()
+                );
+
+                return graph.build();
+            })
+            .build();
+
+        String result = agent.run("hello", null);
+        assertEquals("llm-response", result);
     }
 
 }

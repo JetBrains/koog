@@ -16,6 +16,13 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequestOnlyCallingTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
+import ai.koog.agents.core.dsl.extension.nodeLLMSendMessage
+import ai.koog.agents.core.dsl.extension.nodeLLMSendMessageForceOneTool
+import ai.koog.agents.core.dsl.extension.nodeLLMSendMessageMultipleChoices
+import ai.koog.agents.core.dsl.extension.nodeLLMSendMessageOnlyCallingTools
+import ai.koog.agents.core.dsl.extension.nodeLLMSendMessageStreaming
+import ai.koog.agents.core.dsl.extension.nodeLLMSendMessageStructured
+import ai.koog.agents.core.dsl.extension.nodeLLMSendMessageWithoutTools
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.requestStreamingImpl
 import ai.koog.agents.core.tools.Tool
@@ -299,5 +306,172 @@ public actual open class AIAgentNode<TInput, TOutput> internal actual constructo
         @JvmStatic
         public fun llmCompressHistory(name: String? = null): CompressHistoryNodeBuilder =
             CompressHistoryNodeBuilder(name ?: "compress-history-${Random.nextInt()}")
+
+        /**
+         * Creates and returns a node for the AI agent strategy graph that is responsible for sending a message.
+         *
+         * @param name An optional name for the node. If null, a default name is assigned.
+         * @return An instance of [AIAgentNodeBase] that represents the message-sending operation. The node processes
+         * input of type [Message.User] and produces output of type [Message.Assistant].
+         */
+        @JavaAPI
+        @JvmOverloads
+        @JvmStatic
+        public fun llmSendMessage(name: String? = null): AIAgentNodeBase<Message.User, Message.Assistant> {
+            val node by nodeLLMSendMessage(name)
+            return node
+        }
+
+        /**
+         * A node that appends a [Message.User] to the prompt and requests a response from the LLM,
+         * forcing it to call one of the available tools (no plain-text replies allowed).
+         *
+         * @param name Optional node name, defaults to delegate's property name.
+         */
+        @JavaAPI
+        @JvmOverloads
+        @JvmStatic
+        public fun llmSendMessageOnlyCallingTools(
+            name: String? = null,
+        ): AIAgentNodeBase<Message.User, Message.Assistant> {
+            val node by nodeLLMSendMessageOnlyCallingTools(name)
+            return node
+        }
+
+        /**
+         * A node that appends a [Message.User] to the prompt and requests a response from the LLM,
+         * without exposing any tools (pure text response only).
+         *
+         * @param name Optional node name, defaults to delegate's property name.
+         */
+        @JavaAPI
+        @JvmOverloads
+        @JvmStatic
+        public fun llmSendMessageWithoutTools(
+            name: String? = null,
+        ): AIAgentNodeBase<Message.User, Message.Assistant> {
+            val node by nodeLLMSendMessageWithoutTools(name)
+            return node
+        }
+
+        /**
+         * A node that appends a [Message.User] to the prompt and requests a response from the LLM,
+         * forcing it to call exactly the specified tool.
+         *
+         * @param name Optional node name, defaults to delegate's property name.
+         * @param tool The [ToolDescriptor] of the tool the LLM must call.
+         */
+        @JavaAPI
+        @JvmOverloads
+        @JvmStatic
+        public fun llmSendMessageForceOneTool(
+            name: String? = null,
+            tool: ToolDescriptor,
+        ): AIAgentNodeBase<Message.User, Message.Assistant> {
+            val node by nodeLLMSendMessageForceOneTool(name, tool)
+            return node
+        }
+
+        /**
+         * A node that appends a [Message.User] to the prompt and requests a response from the LLM,
+         * forcing it to call exactly the specified tool.
+         *
+         * @param name Optional node name, defaults to delegate's property name.
+         * @param tool The [Tool] the LLM must call.
+         */
+        @JavaAPI
+        @JvmOverloads
+        @JvmStatic
+        public fun llmSendMessageForceOneTool(
+            name: String? = null,
+            tool: Tool<*, *>,
+        ): AIAgentNodeBase<Message.User, Message.Assistant> {
+            val node by nodeLLMSendMessageForceOneTool(name, tool.descriptor)
+            return node
+        }
+
+        /**
+         * A node that appends a [Message.User] to the prompt and requests multiple completion choices
+         * from the LLM, returning them as an [LLMChoice].
+         *
+         * @param name Optional node name, defaults to delegate's property name.
+         */
+        @JavaAPI
+        @JvmOverloads
+        @JvmStatic
+        public fun llmSendMessageMultipleChoices(
+            name: String? = null,
+        ): AIAgentNodeBase<Message.User, LLMChoice> {
+            val node by nodeLLMSendMessageMultipleChoices(name)
+            return node
+        }
+
+        /**
+         * A node that appends a [Message.User] to the prompt and requests a streaming response from the LLM.
+         * This overload transforms the stream via a [Publisher] for Java interoperability.
+         *
+         * @param transformStreamData A function that processes the incoming stream of [StreamFrame] objects and transforms them into a publisher.
+         * @param outputClass The class type of the transformed output data.
+         * @param structureDefinition An optional definition of structured data.
+         * @param name An optional name for the node being created.
+         * @return An instance of [AIAgentNodeBase] with a [Message.User] input and a [Publisher] output.
+         */
+        @JavaAPI
+        @JvmOverloads
+        @JvmStatic
+        public fun <T : Any> llmSendMessageStreaming(
+            transformStreamData: (Publisher<StreamFrame>) -> Publisher<T>,
+            outputClass: Class<T>,
+            structureDefinition: StructureDefinition? = null,
+            name: String? = null,
+        ): AIAgentNodeBase<Message.User, Publisher<T>> =
+            builder(name)
+                .withInput(Message.User::class.java)
+                .withOutput<Publisher<T>>(typeToken(Publisher::class, listOf(TypeToken.of(outputClass))))
+                .executeOnLLMDispatcher { message ->
+                    llm.writeSession {
+                        appendPrompt { message(message) }
+                        requestStreaming(structureDefinition) { streamFrameFlow ->
+                            transformStreamData(streamFrameFlow.asPublisher()).asFlow()
+                        }
+                    }.asPublisher()
+                }
+
+        /**
+         * A node that appends a [Message.User] to the prompt and requests a streaming response from the LLM,
+         * returning raw [StreamFrame] elements.
+         *
+         * @param name Optional node name, defaults to delegate's property name.
+         * @param structureDefinition Optional structure definition to customize the streaming response.
+         */
+        @JavaAPI
+        @JvmOverloads
+        @JvmStatic
+        public fun llmSendMessageStreaming(
+            name: String? = null,
+            structureDefinition: StructureDefinition?,
+        ): AIAgentNodeBase<Message.User, Flow<StreamFrame>> {
+            val node by nodeLLMSendMessageStreaming(name, structureDefinition)
+            return node
+        }
+
+        /**
+         * A node that appends a [Message.User] to the prompt and requests a structured response from the LLM.
+         *
+         * @param name Optional node name, defaults to delegate's property name.
+         * @param config The [StructuredRequestConfig] defining the expected output type.
+         * @param fixingParser Optional [StructureFixingParser] for correcting malformed responses.
+         */
+        @JavaAPI
+        @JvmOverloads
+        @JvmStatic
+        public fun <T> llmSendMessageStructured(
+            name: String? = null,
+            config: StructuredRequestConfig<T>,
+            fixingParser: StructureFixingParser?,
+        ): AIAgentNodeBase<Message.User, Result<StructuredResponse<T>>> {
+            val node by nodeLLMSendMessageStructured(name, config, fixingParser)
+            return node
+        }
     }
 }
