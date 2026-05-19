@@ -10,12 +10,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
-
 kotlin {
     jvmToolchain(17)
 
