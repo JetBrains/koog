@@ -677,12 +677,20 @@ public class CliAIAgent<Input, Output> internal constructor(
 
 /**
  * Generates a node that runs the [AIAgent].
+ *
+ * @param name Optional name of the node.
+ * @param generateSessionId Lambda defining the sessionId based on the sessionId of the outer agent.
+ * Provide sessionId = { null } to generate a random sessionId on every execution of this node.
+ * Defaults to sessionId identical to the sessionId of the outer agent.
  */
-public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asNode(name: String? = null): AIAgentNodeDelegate<Input, Output> {
+public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asNode(
+    name: String? = null,
+    noinline generateSessionId: (String) -> String? = { it }
+): AIAgentNodeDelegate<Input, Output> {
     return AIAgentNodeDelegate(
         name = name,
         inputType = typeToken<Input>(),
         outputType = typeToken<Output>(),
-        execute = { input -> run(input) }
+        execute = { input -> run(input, generateSessionId(runId)) }
     )
 }
