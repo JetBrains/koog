@@ -23,6 +23,7 @@ import ai.koog.agents.ext.agent.FinishTool
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.ext.agent.executeFinishTool
 import ai.koog.prompt.dsl.ModerationResult
+import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
@@ -64,6 +65,17 @@ public open class AIAgentFunctionalContextBaseCommon<Pipeline : AIAgentPipeline>
     internal val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf(),
     override val parentContext: AIAgentContext? = null
 ) : AIAgentContext {
+
+    /**
+     * Appends messages to the current LLM prompt without making an LLM request.
+     * Corresponds to [nodeAppendPrompt].
+     *
+     * @param body Lambda to modify the prompt using [PromptBuilder].
+     */
+    @JvmSynthetic
+    public suspend fun appendPrompt(body: PromptBuilder.() -> Unit) {
+        llm.writeSession { appendPrompt { body() } }
+    }
 
     // ================
     // LLM Request string nodes
