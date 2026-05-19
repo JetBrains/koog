@@ -168,6 +168,7 @@ class CliAIAgentIntegrationTest : AIAgentTestBase() {
     }
 
     @Test
+    @Retry
     fun integration_testCliAgentInGraphs() = runTest(timeout = timeout) {
         val claudeApiKey = readTestAnthropicKeyFromEnv()
         val codexApiKey = readTestOpenAIKeyFromEnv()
