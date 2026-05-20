@@ -929,7 +929,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             edge(finalNode forwardTo nodeFinish)
         }
 
-        @Suppress("DEPRECATION")
         val checkpoint = AgentCheckpointData(
             checkpointId = "last-input-checkpoint",
             createdAt = KoogClock.System.now(),
@@ -939,7 +938,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             ),
             version = 0,
             graphProperties = GraphCheckpointProperties(
-                nodePath = path(sessionId, strategyName, node2Name),
+                nodePath = path(sessionId, strategyName, node1Name),
                 lastOutput = JSONPrimitive("Node 1 output"),
             ),
         )

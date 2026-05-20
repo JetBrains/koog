@@ -604,7 +604,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             null,
             0L,
             new GraphCheckpointProperties(
-                sessionId + "/" + strategyName + "/Node2",
+                sessionId + "/" + strategyName + "/Node1",
                 JSONElementKt.JSONPrimitive("Node 1 output")
             ),
             null
