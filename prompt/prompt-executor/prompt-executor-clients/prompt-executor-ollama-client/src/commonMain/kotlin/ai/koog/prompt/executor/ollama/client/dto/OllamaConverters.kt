@@ -45,45 +45,24 @@ internal fun Prompt.toOllamaChatMessages(model: LLModel): List<OllamaChatMessage
                 }
 
                 is Message.Assistant -> {
-                    message.parts.forEach { part ->
-                        when (part) {
-                            is MessagePart.Text -> {
-                                add(
-                                    OllamaChatMessageDTO(
-                                        role = "assistant",
-                                        content = part.text
+                    add(
+                        OllamaChatMessageDTO(
+                            role = "assistant",
+                            content = message.textContent(),
+                            thinking = message.parts.filterIsInstance<MessagePart.Reasoning>()
+                                .flatMap { it.content }.takeIf { it.isNotEmpty() }?.joinToString { "\n" },
+                            toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>().map { part ->
+                                OllamaToolCallDTO(
+                                    function = OllamaToolCallDTO.Call(
+                                        name = part.tool,
+                                        arguments = part.argsJson
                                     )
+                                    // Note: Ollama doesn't support tool call IDs in requests,
+                                    // so we don't include the message.id here
                                 )
                             }
-
-                            is MessagePart.Attachment -> {
-                                throw NotImplementedError("Attachments in assistant messages are not supported by Ollama")
-                            }
-
-                            is MessagePart.Tool.Call -> {
-                                add(
-                                    OllamaChatMessageDTO(
-                                        role = "assistant",
-                                        content = "",
-                                        toolCalls = listOf(
-                                            OllamaToolCallDTO(
-                                                function = OllamaToolCallDTO.Call(
-                                                    name = part.tool,
-                                                    arguments = part.argsJson
-                                                )
-                                                // Note: Ollama doesn't support tool call IDs in requests,
-                                                // so we don't include the message.id here
-                                            )
-                                        )
-                                    )
-                                )
-                            }
-
-                            is MessagePart.Reasoning -> {
-                                throw NotImplementedError("Reasoning is not supported by Ollama")
-                            }
-                        }
-                    }
+                        )
+                    )
                 }
             }
         }
