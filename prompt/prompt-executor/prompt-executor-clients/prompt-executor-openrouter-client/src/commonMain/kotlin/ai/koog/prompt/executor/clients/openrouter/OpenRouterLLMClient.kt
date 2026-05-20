@@ -21,6 +21,7 @@ import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletio
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionStreamResponse
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterEmbeddingRequest
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterEmbeddingResponse
+import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterModel
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterModelsResponse
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -215,7 +216,7 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
      * Fetches the list of available models from the OpenRouter service.
      * https://openrouter.ai/docs/api/api-reference/models/get-models
      *
-     * @return A list of model IDs available from OpenRouter.
+     * @return A list of model definitions available from OpenRouter, enriched with API metadata when present.
      */
     override suspend fun models(): List<LLModel> {
         logger.debug { "Fetching available models from OpenRouter" }
@@ -225,7 +226,70 @@ public class OpenRouterLLMClient @JvmOverloads constructor(
         )
 
         val modelsById = OpenRouterModels.modelsById()
-        return models.data.map { modelsById[it.id] ?: LLModel(provider = llmProvider(), id = it.id) }
+        return models.data.map { it.toLLModel(modelsById[it.id]) }
+    }
+
+    /**
+     * Converts an OpenRouter model response into [LLModel].
+     *
+     * Runtime metadata returned by OpenRouter takes precedence because it reflects the selected endpoint/provider.
+     * Static model definitions are used only as a fallback when the API omits optional metadata.
+     *
+     * @param fallback Static model definition with the same ID, if one is known locally.
+     * @return A model definition enriched with capabilities, context length, and output token limit.
+     */
+    private fun OpenRouterModel.toLLModel(fallback: LLModel?): LLModel = LLModel(
+        provider = llmProvider(),
+        id = id,
+        capabilities = capabilitiesFromResponse(fallback?.capabilities),
+        contextLength = contextLength ?: topProvider.contextLength ?: fallback?.contextLength,
+        maxOutputTokens = topProvider.maxCompletionTokens
+            ?: perRequestLimits?.completionTokens
+            ?: fallback?.maxOutputTokens,
+    )
+
+    /**
+     * Infers Koog capabilities from OpenRouter model metadata.
+     *
+     * OpenRouter exposes supported inputs and provider parameters instead of Koog capability names.
+     * This method maps those response fields to [LLMCapability] values and falls back to the local model definition
+     * when the response does not include enough metadata to infer capabilities.
+     *
+     * @param fallback Capabilities from the static model definition, if available.
+     * @return Inferred capabilities, fallback capabilities, or `null` when neither source provides them.
+     */
+    private fun OpenRouterModel.capabilitiesFromResponse(fallback: List<LLMCapability>?): List<LLMCapability>? {
+        val inputModalities = architecture.inputModalities?.map { it.lowercase() }?.toSet()
+        val outputModalities = architecture.outputModalities?.map { it.lowercase() }?.toSet()
+        val supportedParameters = supportedParameters?.map { it.lowercase() }?.toSet()
+
+        if (inputModalities == null && outputModalities == null && supportedParameters == null) {
+            return fallback
+        }
+
+        val capabilities = buildList {
+            if (outputModalities == null || "text" in outputModalities) add(LLMCapability.Completion)
+            if (outputModalities?.any { it == "embedding" || it == "embeddings" } == true) add(LLMCapability.Embed)
+
+            if ("image" in inputModalities.orEmpty()) add(LLMCapability.Vision.Image)
+            if ("video" in inputModalities.orEmpty()) add(LLMCapability.Vision.Video)
+            if ("audio" in inputModalities.orEmpty()) add(LLMCapability.Audio)
+            if ("file" in inputModalities.orEmpty()) add(LLMCapability.Document)
+
+            if ("temperature" in supportedParameters.orEmpty()) add(LLMCapability.Temperature)
+            if ("tools" in supportedParameters.orEmpty()) add(LLMCapability.Tools)
+            if ("tool_choice" in supportedParameters.orEmpty()) add(LLMCapability.ToolChoice)
+            if ("response_format" in supportedParameters.orEmpty()) add(LLMCapability.Schema.JSON.Basic)
+            if ("structured_outputs" in supportedParameters.orEmpty()) add(LLMCapability.Schema.JSON.Standard)
+            if ("reasoning" in supportedParameters.orEmpty() || "include_reasoning" in supportedParameters.orEmpty()) {
+                add(LLMCapability.Thinking)
+            }
+            if ("prediction" in supportedParameters.orEmpty()) add(LLMCapability.Speculation)
+            if ("n" in supportedParameters.orEmpty()) add(LLMCapability.MultipleChoices)
+            if (pricing.inputCacheRead != null || pricing.inputCacheWrite != null) add(LLMCapability.PromptCaching)
+        }.distinct()
+
+        return capabilities.ifEmpty { fallback.orEmpty() }.takeIf { it.isNotEmpty() }
     }
 
     /**
