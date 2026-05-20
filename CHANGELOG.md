@@ -1,3 +1,52 @@
+# 1.0.0-preview3
+> Published 20 May 2026
+
+A follow-up to `1.0.0-preview2` focused on final fixes in Persistence API.  
+
+## Bug Fixes
+
+- **`Persistence.runFromCheckpoint` now skips tools that are no longer registered** instead of throwing while restoring the state of the agent (#2044).
+
+
+# 1.0.0-preview2
+> Published 19 May 2026
+
+A follow-up to `1.0.0-preview` focused on finishing the 1.0 API cleanup. All previously deprecated APIs are now gone, the graph DSL's node names are settled, and a few late-breaking event/augmenter bugs from the preview window are fixed.
+
+## Bug Fixes
+
+- **`LLMCallFailedContext.eventType` reported `LLMCallStarting`**: The failed-call event context advertised the wrong lifecycle type, so listeners filtering by `eventType` saw failures as starts. Now correctly emits `LLMCallFailed` (#2037, KG-845).
+- **`LLMCallFailedEvent` missing from remote event serialization**: The event wasn't registered in the polymorphic feature-message module, so it never made it across the trace transport. Added registration plus trace-format branches for the previously missing `LLMStreaming` and `SubgraphExecution` events (#2024, KG-844).
+- **`PromptAugmenter` implementations after the `Message` / `MessagePart` refactor**: `SystemPromptAugmenter`, `UserPromptAugmenter`, and `AgentcorePromptAugmenter` now append a new `MessagePart` to an existing `Message` instead of constructing a fresh message, and share a common `SECTION_SEPARATOR` constant for consistent layout (#2039).
+
+## Breaking Changes
+
+- **All `@Deprecated` APIs removed (#2001).** The 1.0 line carries no deprecated surface. Notable removals:
+    - **Event handlers**: `Deprecated*EventHandlerContext` classes (agent, LLM, node, tool, strategy) and the old `StrategyEventContext`. Use the current `AIAgentPipelineAPI` / `AIAgentGraphPipelineAPI` / `AIAgentPlannerPipelineAPI` event contexts.
+    - **Pipeline**: the old `AIAgentPipeline` / `AIAgentPipelineImpl` are gone; surviving APIs live on `AIAgentPipelineAPI` / `AIAgentGraphPipeline` / `AIAgentPlannerPipeline`.
+    - **Agent / strategy / DSL**: deprecated members on `AIAgentService`, `AIAgentTool`, `GraphAIAgent`, `AIAgentContext`, `AIAgentGraphContext`, `AIAgentGraphStrategy`, `AIAgentNode`, `AIAgentNodeDelegate`, `AIAgentParallelNodesMergeContext`, `AIAgentSubgraphBuilder`, and the deprecated `AIAgentConfig` constructors.
+    - **Tools**: deprecated entry points on `Tool`, `SimpleTool`, `ToolArgs`, `ToolResult`, plus `ReceivedToolResult` legacy fields.
+    - **Persistence**: typo-spelling fix — `PersistencyStorageProvider` / `FilePersistencyStorageProvider` / `JVMFilePersistencyStorageProvider` renamed to `Persistence*` (update imports). Deprecated `Persistence` feature shims, `PersistenceFeatureConfig` members, and the H2/SQL `Checkpoint*BackwardCompatibilityTest` paths are removed. `AgentCheckpointData` legacy fields are gone.
+    - **Executors**: deprecated members on `DefaultMultiLLMPromptExecutor`, `SingleLLMPromptExecutor`, and the JVM `SimplePromptExecutors` shims.
+    - **MCP**: deprecated overloads on `McpServer` and `McpToolRegistryProvider`.
+    - **Models**: `AnthropicModels.Haiku_3` and `BedrockModels.AnthropicClaude3Haiku`, plus deprecated Google and DeepSeek model entries.
+    - **Spring autoconfig**: deprecated members on the Anthropic / DeepSeek / Google / Mistral / Ollama / OpenAI / OpenRouter auto-configurations.
+    - **RAG / utilities**: deprecated members on `SearchStorage`, `EmbeddingStorage`, `ModelInfo`, `DummyAIAgentContext`.
+
+- **Graph DSL node names settled (#2035).** The `*WithUserText` suffix introduced in `1.0.0-preview` is gone — `String`-input nodes recover their original names, and the `Message.User`-input variants move to a `*SendMessage*` prefix:
+    - `nodeLLMRequestWithUserText` → `nodeLLMRequest` (takes `String`); the `Message.User` overload from preview is now `nodeLLMSendMessage`.
+    - Same pattern for the other variants: `nodeLLMRequestOnlyCallingTools`, `nodeLLMRequestWithoutTools`, `nodeLLMRequestForceOneTool`, `nodeLLMRequestMultipleChoices`, `nodeLLMRequestStreaming`, `nodeLLMRequestStructured` — the `String`-input forms keep these names; `Message.User`-input forms are renamed to `nodeLLMSendMessage*`.
+    - `nodeExecuteTools` now returns `ReceivedToolResults` (previously named `nodeExecuteToolsAndGetResults`). The old `nodeExecuteTools` that wrote results back into the LLM session and returned `Message.User` is removed — connect the new `nodeExecuteTools` directly to `nodeLLMSendMessage` / `nodeLLMSendToolResults*` instead.
+    - New `nodeLLMModerateText(name, moderatingModel, includeCurrentPrompt)` accepts plain `String` input alongside the existing `nodeLLMModerateMessage(Message.User)`.
+
+- **`Prompt` class moved out of the `dsl` package (#2022).** `ai.koog.prompt.dsl.Prompt` is now `ai.koog.prompt.Prompt`. The `prompt { ... }` DSL builder stays in `ai.koog.prompt.dsl` — only the type import changes.
+
+- **Dependency ABI cleanup (#2007).**
+    - `oshai.kotlin.logging` is no longer in the `:prompt-executor-clients` public API (`api` → `implementation`). Consumers that imported `KLogger` transitively must add their own `implementation(libs.oshai.kotlin.logging)`.
+    - `oshai-logging` upgraded `7.0.7` → `8.0.01` — 8.x has API refactors; update your `KLogger` usage if affected.
+    - `ktor.server.sse` is no longer transitively exposed by `:agents-features-tokenizer` / `:agents-features-trace`. Depend on it directly if you used it through these modules.
+    - Internal: `ktor3` `3.2.2` → `3.3.3`, `kotlinx-io` `0.7.0` → `0.9.0`. `android.useAndroidX=true` is now enabled (required by `okhttp-android` transitive from ktor 3.3.3).
+
 # 1.0.0-preview
 > Published 15 May 2026
 
