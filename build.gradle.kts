@@ -169,6 +169,14 @@ tasks.register("reportProjectVersionToTeamCity") {
     }
 }
 
+exec {
+    commandLine(
+        "sh",
+        "-c",
+        layout.projectDirectory.file("./install_android_sdk.sh").asFile.readText()
+    )
+}
+
 tasks {
     val packSonatypeCentralBundle by registering(Zip::class) {
         group = "publishing"
