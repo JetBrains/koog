@@ -35,7 +35,12 @@ kotlin {
     configureXCFrameworkIfRequested(project)
 
     // Android
-    androidTarget()
+    androidTarget {
+        // Without this, no Android variants are published to Maven, so androidMain
+        // sources would be missing from the published artifacts
+        // and only commonMain (e.g. Stub) would be accessible to Android consumers.
+        publishLibraryVariants("release")
+    }
 
     // jvm & js
     jvm {
@@ -136,6 +141,13 @@ android {
     compileSdk = 36
     namespace = "${project.group.toString().replace('-', '.')}.${project.name.replace('-', '.')}"
 
+    // Without an explicit minSdk, AGP falls back to its default (`1`), which propagates
+    // into the published AAR's merged manifest and forces every consumer to override it.
+    // It also breaks transitive deps that require a higher minSdk (e.g. LiteRT requires 24+).
+    defaultConfig {
+        minSdk = 35
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -149,8 +161,15 @@ val javadocJar by tasks.registering(Jar::class) {
 }
 
 publishing {
-    publications.withType(MavenPublication::class).all {
-        if (name.contains("jvm", ignoreCase = true)) {
+    // Attach the javadoc jar to JVM, Android, and the root multiplatform publications.
+    // Maven Central requires a `-javadoc.jar` next to every published artifact, including
+    // the Android one produced via `publishLibraryVariants("release")`.
+    publications.withType(MavenPublication::class).configureEach {
+        if (
+            name.contains("jvm", ignoreCase = true) ||
+            name.contains("android", ignoreCase = true) ||
+            name == "kotlinMultiplatform"
+        ) {
             artifact(javadocJar)
         }
     }
@@ -160,6 +179,12 @@ val isUnderTeamCity = System.getenv("TEAMCITY_VERSION") != null
 signing {
     if (isUnderTeamCity) {
         signatories = GpgSignSignatoryProvider()
-        sign(publishing.publications)
+        // Sign publications lazily as they are created. KMP and AGP add publications
+        // (in particular the `*-android` one for `publishLibraryVariants("release")`)
+        // after this block evaluates, so an eager `sign(publishing.publications)` call
+        // could miss them and silently produce unsigned artifacts on CI.
+        publishing.publications.withType(MavenPublication::class).configureEach {
+            sign(this)
+        }
     }
 }
