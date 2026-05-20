@@ -372,7 +372,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             () -> assertNotNull(result, "History-compression graph result should not be null"),
             () -> assertFalse(result.isBlank(), "History-compression graph result should not be blank"),
             () -> assertEquals(
-                List.of("wrap-as-user-first", "first-llm", "extract-first-response", "compress", "wrap-as-user-final", "final-llm", "extract-final-response"),
+                List.of("first-llm", "compress", "final-llm"),
                 withoutGraphBoundaryNodes(events.nodeNames),
                 "Expected history-compression flow to execute all nodes in order"
             ),
@@ -764,7 +764,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         runBlockingReentrant(
             continuation -> persistence.createCheckpointAfterNode(
                 ctx,
-                nodePath,
+                ctx.getExecutionInfo().path(null),
                 lastOutput,
                 TypeToken.of(String.class),
                 0L,

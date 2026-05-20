@@ -4,15 +4,18 @@ import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNames
 
 /**
  * Address type enum.
  */
 @Serializable
 enum class AddressType {
-    HOME,
-    WORK,
-    OTHER
+    @JsonNames("HOME", "home") HOME,
+
+    @JsonNames("WORK", "work") WORK,
+
+    @JsonNames("OTHER", "other") OTHER
 }
 
 /**
