@@ -279,7 +279,9 @@ class RunFromCheckpointTest {
             storage = storageJson,
             llmModel = expectedModel,
             llmParams = expectedParams,
-            tools = expectedTools,
+            tools = expectedTools +
+                // Append some new tool that won't exist in the ToolRegistry
+                listOf("finalize_tool_task"),
             agentIterations = expectedIterations,
             version = 0,
             graphProperties = GraphCheckpointProperties(

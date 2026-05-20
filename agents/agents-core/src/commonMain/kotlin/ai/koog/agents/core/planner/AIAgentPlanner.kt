@@ -123,12 +123,7 @@ public abstract class AIAgentPlanner<Input, Output, State : Any, Plan : Any>(
 
                 contextData.tools?.let { toolNames ->
                     // Restore tools
-                    tools = toolNames.map { toolName ->
-                        tools.find { it.name == toolName }
-                            ?: throw NoSuchElementException(
-                                "Tool $toolName not found when restoring from checkpoint. Make sure it's registered in ToolRegistry"
-                            )
-                    }
+                    tools = tools.filter { it.name in toolNames }
                 }
             }
 
