@@ -3,6 +3,7 @@ package ai.koog.spring.prompt.executor.clients.anthropic
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
@@ -78,7 +79,7 @@ public class AnthropicLLMAutoConfiguration(
      */
     @Bean
     @ConditionalOnBean(AnthropicLLMClient::class)
-    public fun anthropicExecutor(client: AnthropicLLMClient): MultiLLMPromptExecutor {
+    public fun anthropicExecutor(client: AnthropicLLMClient): PromptExecutor {
         logger.info("Creating MultiLLMPromptExecutor (anthropicExecutor) for AnthropicLLMClient")
         return MultiLLMPromptExecutor(LLMProvider.Anthropic to client.toRetryingClient(properties.retry))
     }

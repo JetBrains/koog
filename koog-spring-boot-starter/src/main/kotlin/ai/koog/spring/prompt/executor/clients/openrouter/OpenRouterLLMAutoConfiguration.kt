@@ -3,6 +3,7 @@ package ai.koog.spring.prompt.executor.clients.openrouter
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
@@ -73,7 +74,7 @@ public class OpenRouterLLMAutoConfiguration(
      * */
     @Bean
     @ConditionalOnBean(OpenRouterLLMClient::class)
-    public fun openRouterExecutor(client: OpenRouterLLMClient): MultiLLMPromptExecutor {
+    public fun openRouterExecutor(client: OpenRouterLLMClient): PromptExecutor {
         logger.info("Creating MultiLLMPromptExecutor (openRouterExecutor) for OpenRouterLLMClient")
         return MultiLLMPromptExecutor(LLMProvider.OpenRouter to client.toRetryingClient(properties.retry))
     }

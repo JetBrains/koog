@@ -1,6 +1,7 @@
 package ai.koog.spring.prompt.executor.clients.ollama
 
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
@@ -71,7 +72,7 @@ public class OllamaLLMAutoConfiguration(
      */
     @Bean
     @ConditionalOnBean(OllamaClient::class)
-    public fun ollamaExecutor(client: OllamaClient): MultiLLMPromptExecutor {
+    public fun ollamaExecutor(client: OllamaClient): PromptExecutor {
         logger.info("Creating MultiLLMPromptExecutor (ollamaExecutor) for OllamaClient")
         return MultiLLMPromptExecutor(LLMProvider.Ollama to client.toRetryingClient(properties.retry))
     }
