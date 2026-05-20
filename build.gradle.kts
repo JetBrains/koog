@@ -167,10 +167,9 @@ tasks.register("reportProjectVersionToTeamCity") {
     doLast {
         println("##teamcity[buildNumber '${project.version}']")
     }
-    dependsOn("installAndroidSdk")
 }
 
-tasks.register<Exec>("installAndroidSdk") {
+exec {
     commandLine(
         "sh",
         "-c",
