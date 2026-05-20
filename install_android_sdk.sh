@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "${ANDROID_HOME:=$HOME/Library/Android/sdk}"
-export ANDROID_HOME
-export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+if [ -z "${ANDROID_HOME:-}" ]; then
+  export ANDROID_HOME="$HOME/Library/Android/sdk"
+else
+  export ANDROID_HOME
+fi
+
+if [ -z "${ANDROID_SDK_ROOT:-}" ]; then
+  export ANDROID_SDK_ROOT="$ANDROID_HOME"
+else
+  export ANDROID_SDK_ROOT
+fi
 
 SDK_ROOT="$ANDROID_HOME"
 CMDLINE_TOOLS_DIR="$SDK_ROOT/cmdline-tools"
