@@ -188,3 +188,10 @@ signing {
         }
     }
 }
+
+// In KMP+Android projects, Android publication tasks implicitly consume .asc files produced by
+// signing tasks for other publications (e.g. signJvmPublication). Declare an explicit dependency
+// so Gradle's work validation does not flag it as an implicit dependency problem.
+tasks.withType<AbstractPublishToMaven>().configureEach {
+    dependsOn(tasks.withType<Sign>())
+}
