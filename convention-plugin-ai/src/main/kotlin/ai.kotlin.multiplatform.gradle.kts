@@ -143,9 +143,9 @@ android {
 
     // Without an explicit minSdk, AGP falls back to its default (`1`), which propagates
     // into the published AAR's merged manifest and forces every consumer to override it.
-    // It also breaks transitive deps that require a higher minSdk (e.g. LiteRT requires 24+).
+    // It also breaks transitive deps that require a higher minSdk.
     defaultConfig {
-        minSdk = 35
+        minSdk = 23
     }
 
     compileOptions {
