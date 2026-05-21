@@ -224,6 +224,63 @@ class StreamFrameFlowBuilderTest {
         )
     }
 
+    /**
+     * Regression test for #2002.
+     *
+     * Some OpenAI-compatible providers include the tool call `id` in every streaming chunk
+     * instead of only the first one. Such repeated ids must be treated as a continuation of
+     * the same tool call, not as the start of a new one.
+     */
+    @Test
+    fun testEmitToolCallDeltaWithRepeatedIdAppendsToExisting() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitToolCallDelta(id = "call_1", name = "readFile", args = "", index = 0)
+            emitToolCallDelta(id = "call_1", name = null, args = "{\"path\":", index = 0)
+            emitToolCallDelta(id = "call_1", name = null, args = " \"/Users\"}", index = 0)
+            emitEnd()
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ToolCallDelta("call_1", "readFile", "", 0),
+                StreamFrame.ToolCallDelta("call_1", null, "{\"path\":", 0),
+                StreamFrame.ToolCallDelta("call_1", null, " \"/Users\"}", 0),
+                StreamFrame.ToolCallComplete("call_1", "readFile", "{\"path\": \"/Users\"}", 0),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
+    /**
+     * Companion to [testEmitToolCallDeltaWithRepeatedIdAppendsToExisting] for #2002:
+     * even when every chunk repeats an `id`, a change to a different `id` must still
+     * start a separate tool call.
+     */
+    @Test
+    fun testEmitToolCallDeltaWithRepeatedIdSeparatesDistinctToolCalls() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitToolCallDelta(id = "call_1", name = "search", args = "{\"q\":", index = 0)
+            emitToolCallDelta(id = "call_1", name = null, args = " 1}", index = 0)
+            emitToolCallDelta(id = "call_2", name = "calculator", args = "{\"a\":", index = 1)
+            emitToolCallDelta(id = "call_2", name = null, args = " 2}", index = 1)
+            emitEnd()
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ToolCallDelta("call_1", "search", "{\"q\":", 0),
+                StreamFrame.ToolCallDelta("call_1", null, " 1}", 0),
+                StreamFrame.ToolCallComplete("call_1", "search", "{\"q\": 1}", 0),
+                StreamFrame.ToolCallDelta("call_2", "calculator", "{\"a\":", 1),
+                StreamFrame.ToolCallDelta("call_2", null, " 2}", 1),
+                StreamFrame.ToolCallComplete("call_2", "calculator", "{\"a\": 2}", 1),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
     @Test
     fun testEmitToolCallDeltaWithoutPreviousCallThrowsError() = runTest {
         assertFailsWith<StreamFrameFlowBuilderError.NoPartialToolCallToComplete> {
