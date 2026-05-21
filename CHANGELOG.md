@@ -1,51 +1,83 @@
-# 1.0.0-preview3
-> Published 20 May 2026
+# 1.0.0
+> Published 21 May 2026
 
-A follow-up to `1.0.0-preview2` focused on final fixes in Persistence API.  
+This is the **first stable release of Koog**. The 1.0 line establishes a long-term-supported surface across the framework: modules are split into stable and beta streams so production code can pin to APIs that won't break without a deprecation cycle, every previously deprecated API has been removed, and the graph DSL's node names are finalized. Alongside that, 1.0 lands a redesigned Java interop layer, decouples HTTP transport from Ktor, brings OpenTelemetry to Kotlin Multiplatform, and adds Anthropic prompt caching.
+
+## Major Features
+
+**Stable / Beta module split**
+- Modules now ship under two streams — **stable** and **beta** — so production code can pin to APIs that won't break without a deprecation cycle (#2011, #2000).
+- All previously `@Deprecated` APIs have been removed across event handlers, pipeline, agent/strategy/DSL, tools, persistence, executors, MCP, models, Spring autoconfig, and RAG utilities. The 1.0 line carries no deprecated surface (#2001).
+
+**Java interop, redesigned**
+- **Uniform blocking API**: All Java-facing entry points follow one pattern — `xxxBlocking` in Kotlin, plain `xxx` from Java. Explicit `ExecutorService` / `Executor` parameters are gone; the agent's configured dispatcher is used instead (#2005).
+- **Deadlock-free reentrant calls**: Kotlin → Java → Kotlin call chains on a single-threaded executor no longer deadlock — the reentrant dispatch is detected and skipped (#1945, KG-750).
+
+**Graph DSL, finalized**
+- The `String`-input nodes (`nodeLLMRequest`, `nodeLLMRequestOnlyCallingTools`, `nodeLLMRequestWithoutTools`, `nodeLLMRequestForceOneTool`, `nodeLLMRequestMultipleChoices`, `nodeLLMRequestStreaming`, `nodeLLMRequestStructured`) keep their original names; the `Message.User`-input variants now use a `nodeLLMSendMessage*` prefix.
+- `nodeExecuteTools` returns `ReceivedToolResults` directly — connect it to `nodeLLMSendMessage` / `nodeLLMSendToolResults*` instead of relying on the old auto-writeback behavior.
+- New `nodeLLMModerateText(name, moderatingModel, includeCurrentPrompt)` accepts plain `String` input alongside the existing `nodeLLMModerateMessage(Message.User)` (#2035).
+
+**Memory and persistence**
+- **`AIAgentStorage` in checkpoints**: Custom key-value data is now saved and restored alongside agent checkpoints; a new `runFromCheckpoint` API restores execution without requiring the Persistence feature (#1998, #1828).
+- **Persistence for planner agents**: Planner-based agents now support checkpoint/restore (#1786, KG-673).
+- **Amazon Bedrock AgentCore as `LongTermMemory`**: Managed vector-memory backend on Bedrock (#1855, KG-603).
+- **`LongTermMemory` reliability**: Storage errors no longer silently swallowed — new `FailurePolicy` plus a fix for double-ingestion during active sessions. Feature promoted from experimental (#1963).
+
+**HTTP transport, decoupled from Ktor**
+- **Pluggable HTTP factory**: LLM clients now take a `KoogHttpClient.Factory` instead of a Ktor `HttpClient`. A Ktor-backed default is auto-discovered on JVM/Android; users can plug in Java's HTTP client, OkHttp, or Spring's `RestClient` without touching Koog internals (#2006, #1948, KG-821, KG-818).
+- **Ollama on `KoogHttpClient`**: Ollama now routes streaming, headers, and endpoint config through the same abstraction as every other provider (#1993, KG-833).
+
+**OpenTelemetry on every target**
+- **Multiplatform OpenTelemetry**: Langfuse, Weave, and DataDog now run on every Koog target via a Ktor-based OTLP/JSON exporter, not just JVM (#1942, KG-785). Please note: the WasmJS target is not included for now (please see KG-846 for more details).
+- **Built-in metrics**: Agents emit standard `gen_ai.client.token.usage`, `gen_ai.client.operation.duration`, and a custom `gen_ai.client.tool.count` metric — plug straight into existing Prometheus/Grafana stacks (#1381, KG-136).
+
+**Anthropic prompt caching**
+- **Automatic and explicit cache control**: End-to-end caching support — automatic on requests, explicit breakpoints on messages, cache tokens in usage metrics. Cuts cost and latency for agents that re-send long system prompts (#1812, KG-707).
+
+**New providers**
+- **LiteRT LLM client**: New client for running Google's LiteRT models locally (#1980).
+- **Oracle Database `ChatHistoryProvider`** for Oracle-standardized deployments (#1851, KG-772).
+
+## Improvements
+
+- **New models**: Anthropic Opus 4.7 (#1861), OpenAI GPT-5.5 and GPT-5.5 Pro (#1913), DeepSeek V4 Flash and Pro (#1914), additional Bedrock models — Kimi K 2.5, MiniMax 2.5, Gemma 3, GPT OSS (#1902), and Ollama gpt-oss / qwen3.5 (#1292).
+- **`ToolCallMetadata` side channel**: Tools can now receive per-call context (trace IDs, correlation IDs, feature flags, the live `AIAgentContext`) without polluting their LLM-visible argument schema. Features can contribute metadata via `AIAgentPipeline.provideToolCallMetadata`, with caller-supplied values winning on key collision (#1886, #1777).
+- **Planners moved to a dedicated module**: `GOAPPlanner` and `SimpleLLMPlanner` now live in a separate `agents:agents-planners` module, and a simpler `AIAgentPlannerStrategy.create(name, planner)` factory replaces the old builder. Agents that don't use planning no longer pay the dependency cost (#1997).
+- **MCP SDK upgrade with Streamable HTTP**: MCP kotlin-sdk upgraded from 0.8.1 to 0.11.1; Streamable HTTP is now the primary transport for both MCP client and server (#1870, KG-792, KG-756, KG-755, KG-49).
+- **`RetrieveFactsFromHistory` extracted from AgentMemory**: This `HistoryCompressionStrategy` now lives outside the AgentMemory feature so it can be used independently. The old `AgentMemory` feature is removed in favor of the more capable `LongTermMemory` (#1927).
+- **OpenTelemetry GenAI semantic conventions update**: Aligned with the latest spec — content is carried via `gen_ai.input.messages` / `gen_ai.output.messages` attributes instead of deprecated per-message events; moderation results moved to a Koog custom attribute `koog.moderation.result` (#1967, KG-826).
+- **`KoogClock` migration**: Internal time APIs now use a `KoogClock` abstraction instead of `kotlin.time.Clock`, enabling virtual-time testing and consistent clock behavior across platforms (#1925).
+- **Minimum Java version raised to 17**: Aligns the runtime requirement with documentation and modern toolchain expectations (#1931).
+- **Factory functions replace `invoke` constructors**: `AIAgent`, `AIAgentService`, `ToolRegistry`, `RollbackToolRegistry`, and `AIAgentPlannerStrategy` now use top-level factory functions. Usage syntax (`A(...)`) is unchanged for normal callers (#1882).
+- **Agent pipeline cleanup**: Pipeline event contexts now expose the `AIAgent` instance directly instead of separate `agentId` / `config` fields; parameter order is harmonized across pipeline interfaces (#1991, KG-807).
 
 ## Bug Fixes
 
-- **`Persistence.runFromCheckpoint` now skips tools that are no longer registered** instead of throwing while restoring the state of the agent (#2044).
+Highlights below — see the `1.0.0-preview` entry for the full per-PR list.
 
-
-# 1.0.0-preview2
-> Published 19 May 2026
-
-A follow-up to `1.0.0-preview` focused on finishing the 1.0 API cleanup. All previously deprecated APIs are now gone, the graph DSL's node names are settled, and a few late-breaking event/augmenter bugs from the preview window are fixed.
-
-## Bug Fixes
-
-- **`LLMCallFailedContext.eventType` reported `LLMCallStarting`**: The failed-call event context advertised the wrong lifecycle type, so listeners filtering by `eventType` saw failures as starts. Now correctly emits `LLMCallFailed` (#2037, KG-845).
-- **`LLMCallFailedEvent` missing from remote event serialization**: The event wasn't registered in the polymorphic feature-message module, so it never made it across the trace transport. Added registration plus trace-format branches for the previously missing `LLMStreaming` and `SubgraphExecution` events (#2024, KG-844).
-- **`PromptAugmenter` implementations after the `Message` / `MessagePart` refactor**: `SystemPromptAugmenter`, `UserPromptAugmenter`, and `AgentcorePromptAugmenter` now append a new `MessagePart` to an existing `Message` instead of constructing a fresh message, and share a common `SECTION_SEPARATOR` constant for consistent layout (#2039).
+- **Streaming hardening across providers** (#1844, #1775, #1887, #1237, #1888, KG-811, #1884, #1878, #2012, #1978, #1868, #1865, #1866, #1369, KG-626): Ollama (`Flow invariant is violated` from cross-dispatcher emission, `text/plain` JSON responses, tool-call-before-text ordering), OpenAI (`additional_properties` leak under `JsonNamingStrategy.SnakeCase`, decode failures wrapped in `LLMClientException`, keepalive frames honored), Google (reasoning vs. plain text in streaming), and OpenRouter (tool calls during streaming) all now behave consistently end-to-end.
+- **Error propagation through the pipeline** (#1918, KG-815, #1548, KG-704, #2037, KG-845, #2024, KG-844): Pipeline failure hooks now receive the original `Throwable` instead of a stringified `AIAgentError` — fixes a latent `error.type` mislabel in OpenTelemetry spans, and reflective tool failures surface the real exception message instead of `"Unknown error"`. `LLMCallFailedContext.eventType` now reports `LLMCallFailed` (was `LLMCallStarting`); `LLMCallFailedEvent` / `LLMStreaming` / `SubgraphExecution` are registered for remote event serialization.
+- **OpenTelemetry stability** (#1435, KG-675, #1969, KG-808, #1547, KG-703, #1856, #1850): Failed LLM requests no longer crash the feature — failures are signaled via span ERROR status and `error.type`. `SpanAdapter.onBeforeSpanFinished` now runs on fully populated spans, so Langfuse and Weave adapters see the same data the SDK exports. Langfuse trace-level attributes (`langfuse.environment`, etc.) are set on every span, not just `invoke_agent`. The hardcoded JVM shutdown hook is gone — opt in via `setShutdownOnAgentClose` (default `false`).
+- **Persistence & subgraph correctness** (#2044, #1971, #2039): `Persistence.runFromCheckpoint` skips tools that are no longer registered instead of throwing. `subgraphWithTask` / `subtask` no longer drop tool results when the finish tool is called alongside other tools. `PromptAugmenter` implementations (`SystemPromptAugmenter`, `UserPromptAugmenter`, `AgentcorePromptAugmenter`) append a new `MessagePart` to the existing `Message` after the `Message` / `MessagePart` refactor.
+- **Tool / concurrency / security** (#1883, #1881, #1871, #1965): `@Tool(customName = ...)` is honored in `ToolSet.asTools()`. `withPrompt` uses a write lock (was read lock — could race with concurrent prompt mutations). Anthropic API key is masked in Spring Boot autoconfiguration logs (security fix).
 
 ## Breaking Changes
 
-- **All `@Deprecated` APIs removed (#2001).** The 1.0 line carries no deprecated surface. Notable removals:
-    - **Event handlers**: `Deprecated*EventHandlerContext` classes (agent, LLM, node, tool, strategy) and the old `StrategyEventContext`. Use the current `AIAgentPipelineAPI` / `AIAgentGraphPipelineAPI` / `AIAgentPlannerPipelineAPI` event contexts.
-    - **Pipeline**: the old `AIAgentPipeline` / `AIAgentPipelineImpl` are gone; surviving APIs live on `AIAgentPipelineAPI` / `AIAgentGraphPipeline` / `AIAgentPlannerPipeline`.
-    - **Agent / strategy / DSL**: deprecated members on `AIAgentService`, `AIAgentTool`, `GraphAIAgent`, `AIAgentContext`, `AIAgentGraphContext`, `AIAgentGraphStrategy`, `AIAgentNode`, `AIAgentNodeDelegate`, `AIAgentParallelNodesMergeContext`, `AIAgentSubgraphBuilder`, and the deprecated `AIAgentConfig` constructors.
-    - **Tools**: deprecated entry points on `Tool`, `SimpleTool`, `ToolArgs`, `ToolResult`, plus `ReceivedToolResult` legacy fields.
-    - **Persistence**: typo-spelling fix — `PersistencyStorageProvider` / `FilePersistencyStorageProvider` / `JVMFilePersistencyStorageProvider` renamed to `Persistence*` (update imports). Deprecated `Persistence` feature shims, `PersistenceFeatureConfig` members, and the H2/SQL `Checkpoint*BackwardCompatibilityTest` paths are removed. `AgentCheckpointData` legacy fields are gone.
-    - **Executors**: deprecated members on `DefaultMultiLLMPromptExecutor`, `SingleLLMPromptExecutor`, and the JVM `SimplePromptExecutors` shims.
-    - **MCP**: deprecated overloads on `McpServer` and `McpToolRegistryProvider`.
-    - **Models**: `AnthropicModels.Haiku_3` and `BedrockModels.AnthropicClaude3Haiku`, plus deprecated Google and DeepSeek model entries.
-    - **Spring autoconfig**: deprecated members on the Anthropic / DeepSeek / Google / Mistral / Ollama / OpenAI / OpenRouter auto-configurations.
-    - **RAG / utilities**: deprecated members on `SearchStorage`, `EmbeddingStorage`, `ModelInfo`, `DummyAIAgentContext`.
+The 1.0 release is the stable baseline. Highlights below — for the full per-API list (constructor signatures, parameter renames, removed members), see the `1.0.0-preview` entry.
 
-- **Graph DSL node names settled (#2035).** The `*WithUserText` suffix introduced in `1.0.0-preview` is gone — `String`-input nodes recover their original names, and the `Message.User`-input variants move to a `*SendMessage*` prefix:
-    - `nodeLLMRequestWithUserText` → `nodeLLMRequest` (takes `String`); the `Message.User` overload from preview is now `nodeLLMSendMessage`.
-    - Same pattern for the other variants: `nodeLLMRequestOnlyCallingTools`, `nodeLLMRequestWithoutTools`, `nodeLLMRequestForceOneTool`, `nodeLLMRequestMultipleChoices`, `nodeLLMRequestStreaming`, `nodeLLMRequestStructured` — the `String`-input forms keep these names; `Message.User`-input forms are renamed to `nodeLLMSendMessage*`.
-    - `nodeExecuteTools` now returns `ReceivedToolResults` (previously named `nodeExecuteToolsAndGetResults`). The old `nodeExecuteTools` that wrote results back into the LLM session and returned `Message.User` is removed — connect the new `nodeExecuteTools` directly to `nodeLLMSendMessage` / `nodeLLMSendToolResults*` instead.
-    - New `nodeLLMModerateText(name, moderatingModel, includeCurrentPrompt)` accepts plain `String` input alongside the existing `nodeLLMModerateMessage(Message.User)`.
-
-- **`Prompt` class moved out of the `dsl` package (#2022).** `ai.koog.prompt.dsl.Prompt` is now `ai.koog.prompt.Prompt`. The `prompt { ... }` DSL builder stays in `ai.koog.prompt.dsl` — only the type import changes.
-
-- **Dependency ABI cleanup (#2007).**
-    - `oshai.kotlin.logging` is no longer in the `:prompt-executor-clients` public API (`api` → `implementation`). Consumers that imported `KLogger` transitively must add their own `implementation(libs.oshai.kotlin.logging)`.
-    - `oshai-logging` upgraded `7.0.7` → `8.0.01` — 8.x has API refactors; update your `KLogger` usage if affected.
-    - `ktor.server.sse` is no longer transitively exposed by `:agents-features-tokenizer` / `:agents-features-trace`. Depend on it directly if you used it through these modules.
-    - Internal: `ktor3` `3.2.2` → `3.3.3`, `kotlinx-io` `0.7.0` → `0.9.0`. `android.useAndroidX=true` is now enabled (required by `okhttp-android` transitive from ktor 3.3.3).
+- **All `@Deprecated` APIs removed** (#2001): no deprecated members survive into 1.0. Includes a typo-spelling fix `Persistency*` → `Persistence*` across the storage providers (update imports). Old `AIAgentPipeline` / `AIAgentPipelineImpl` are gone — use `AIAgentPipelineAPI` / `AIAgentGraphPipeline` / `AIAgentPlannerPipeline`. Retired models: `AnthropicModels.Haiku_3`, `BedrockModels.AnthropicClaude3Haiku`, and deprecated Google / DeepSeek entries. Companion `invoke` constructors for `AIAgent`, `AIAgentService`, `ToolRegistry`, `RollbackToolRegistry`, `AIAgentPlannerStrategy` are also gone (#1882) — normal `A(...)` syntax is unchanged.
+- **Graph DSL node renames** (#2035): `String`-input nodes are `nodeLLMRequest*` / `nodeLLMModerate*`; `Message.User`-input variants are `nodeLLMSendMessage*` / `nodeLLMSendToolResults*`. `nodeExecuteTools` now returns `ReceivedToolResults` directly (previously `nodeExecuteToolsAndGetResults`); the old auto-writeback `nodeExecuteTools` is removed.
+- **Java blocking API redesign** (#2005): uniform `xxxBlocking` in Kotlin, plain `xxx` from Java via `@JvmName`, so most Java source code requires no changes. `ExecutorService` / `Executor` parameters are removed from blocking wrappers — the agent's own dispatcher is used instead (also drops `SubtaskBuilder.withExecutorService()` and the `executorService` property). Renames cover `AIAgent.javaNonSuspendRun` → `runBlocking`, `FeatureMessageProcessor.javaNonSuspend*` → `*Blocking`, `AIAgentService` / `PromptExecutor` / `LLMClient` Java overloads → `*Blocking`, `NonSuspendAIAgentStrategy` → `AIAgentStrategyBlocking`, `NonSuspendAIAgentFunctionalStrategy` → `AIAgentFunctionalStrategyBlocking`.
+- **HTTP transport decoupled from Ktor** (#2006): LLM client constructors and `PromptExecutor.builder().{openAI, anthropic, google, deepseek, mistral, ollama, openRouter, dashscope}(...)` no longer accept a Ktor `HttpClient` — pass a `KoogHttpClient.Factory` instead, or omit for the auto-discovered default. `prompt-executor-llms-all` no longer leaks Ktor types transitively (depend on `http-client-ktor` directly if you used `KtorKoogHttpClient`). Java synthetic class `SimplePromptExecutorsKt` is renamed to `SimplePromptExecutors`. `KoogHttpClient` implementations must implement the new `lines()` method for non-SSE line streaming and accept per-request `headers` parameters (#1993, KG-833); `OllamaClient.baseUrl` property removed — endpoint configuration is delegated to the supplied `KoogHttpClient`.
+- **OpenTelemetry Multiplatform migration** (#1942, KG-785, #1967, KG-826): `addSpanExporter`, `addMetricExporter`, `addMetricFilter` are now JVM-only extensions on `OpenTelemetryConfigJvm` (JVM users must update imports). `addResourceAttributes` signature changes from `io.opentelemetry.api.common.Attributes` to `Map<String, Any>`. The `SpanEndStatus` wrapper is removed — use `StatusData` directly. The `ai.koog.agents.features.opentelemetry.event` package and all event APIs on `GenAIAgentSpan` (`events`, `addEvent`, `addEvents`, `removeEvent`) are removed; the `gen_ai.system` attribute and `moderation.result` span event are no longer emitted.
+- **Planners moved to a new module** (#1997): GOAP and LLM-based planner usage requires an explicit `agents:agents-planners` dependency. `AIAgentPlanner` and `JavaAIAgentPlanner` gain two abstract methods (`initializeState`, `provideOutput`); `AIAgentPlannerStrategy.builder()` / `.goap()` are removed in favor of `AIAgentPlannerStrategy(name, planner)` / `.create(name, planner)`.
+- **Memory & persistence API changes**: `AgentMemory` feature removed — use `LongTermMemory` instead; `RetrieveFactsFromHistory` moved out of `agents-features-memory` (#1927). `LongTermMemory` renames: `QueryExtractor` → `SearchQueryProvider`, `ExtractionStrategy` → `DocumentExtractor`, `IngestionTiming` removed (#1963). `AIAgentStorage`: `AIAgentStorageKey` equality is now name-based; no-arg constructor replaced by `AIAgentStorage(serializer)`; `toMap()` removed (use `toSerializedMap()` / `putAll(other)`); `runFromCheckpoint`'s `agentInput` renamed to `input` (#1998). `AgentCheckpointData` fields `nodePath`, `lastInput`, `lastOutput` removed — they now live inside `properties: JSONObject` (#1786).
+- **`Prompt` class moved out of `dsl`** (#2022): `ai.koog.prompt.dsl.Prompt` → `ai.koog.prompt.Prompt`. The `prompt { ... }` DSL builder stays in `ai.koog.prompt.dsl` — only the type import changes.
+- **`KoogClock` replaces `kotlin.time.Clock`** (#1925) in all APIs that previously took a `Clock` parameter.
+- **Anthropic prompt caching**: deprecated `user` message builders removed to make room for the `cacheControl` variant (#1812).
+- **Minimum Java version: 17** (#1931).
+- **Dependency ABI cleanup** (#2007): `oshai.kotlin.logging` no longer in `:prompt-executor-clients` public API (consumers must add their own `implementation(libs.oshai.kotlin.logging)`); `oshai-logging` upgraded `7.0.7` → `8.0.01`; `ktor.server.sse` no longer transitively exposed by `:agents-features-tokenizer` / `:agents-features-trace`; `android.useAndroidX=true` is now required.
 
 # 1.0.0-preview
 > Published 15 May 2026
