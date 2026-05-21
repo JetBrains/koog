@@ -4,8 +4,9 @@ pluginManagement {
     includeBuild("convention-plugin-ai")
     repositories {
         maven("https://artifacts-caching-proxy.aws.intellij.net/plugins.gradle.org/m2")
-        maven("https://cache-redirector.jetbrains.com/plugins.gradle.org/m2")
-        maven("https://cache-redirector.jetbrains.com/maven-central")
+//        maven("https://artifacts-caching-proxy.aws.intellij.net/maven-central")
+//        maven("https://cache-redirector.jetbrains.com/plugins.gradle.org/m2")
+//        maven("https://cache-redirector.jetbrains.com/maven-central")
         maven(url = "https://packages.jetbrains.team/maven/p/jcs/maven")
         google()
         // gradlePluginPortal()
