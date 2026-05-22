@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
@@ -30,20 +29,8 @@ public class AIAgentCliContext(
     override val strategyName: String,
     override val pipeline: AIAgentFunctionalPipeline,
     override var executionInfo: AgentExecutionInfo,
-    private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf(),
     override val parentContext: AIAgentContext? = null
 ) : AIAgentContext {
-
-    override fun store(key: AIAgentStorageKey<*>, value: Any) {
-        storeMap[key] = value
-    }
-
-    override fun <T> get(key: AIAgentStorageKey<*>): T? =
-        @Suppress("UNCHECKED_CAST")
-        storeMap[key] as? T
-
-    override fun remove(key: AIAgentStorageKey<*>): Boolean =
-        storeMap.remove(key) != null
 
     /**
      * Copies the current [AIAgentCliContext] with the specified parameters.
@@ -73,7 +60,6 @@ public class AIAgentCliContext(
         strategyName = strategyName,
         pipeline = pipeline,
         executionInfo = executionInfo,
-        storeMap = storeMap,
         parentContext = parentRootContext
     )
 }
