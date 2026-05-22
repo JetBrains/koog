@@ -36,7 +36,7 @@ Add the [Koog package](https://central.sonatype.com/artifact/ai.koog/koog-agents
     <dependency>
         <groupId>ai.koog</groupId>
         <artifactId>koog-agents-jvm</artifactId>
-        <version>0.7.1</version>
+        <version>1.0.0</version>
     </dependency>
     ```
 # --8<-- [end:dependencies]
