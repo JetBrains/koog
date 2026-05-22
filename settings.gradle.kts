@@ -114,3 +114,5 @@ include(":test-utils")
 include(":utils")
 
 include(":agents:agents-planner")
+
+include("agents:agents-cli")
