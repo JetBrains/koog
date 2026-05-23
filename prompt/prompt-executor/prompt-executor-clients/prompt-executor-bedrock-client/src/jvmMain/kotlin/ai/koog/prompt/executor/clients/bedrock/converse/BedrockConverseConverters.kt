@@ -632,20 +632,22 @@ internal object BedrockConverseConverters {
                     is AttachmentSource.Audio ->
                         throw IllegalArgumentException("Bedrock Converse API doesn't support audio content in tool results.")
                     is AttachmentSource.File ->
-                        ToolResultContentBlock.Document((part as MessagePart.ContentPart).let {
-                            DocumentBlock {
-                                this.format = DocumentFormat.fromValue(source.format)
-                                this.name = source.fileName?.substringBefore('.')
-                                this.source = when (val content = source.content) {
-                                    is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
-                                        DocumentSource.Bytes(content.asBytes())
-                                    is AttachmentContent.URL ->
-                                        DocumentSource.S3Location(content.toS3Location())
-                                    is AttachmentContent.PlainText ->
-                                        DocumentSource.Bytes(content.text.encodeToByteArray())
+                        ToolResultContentBlock.Document(
+                            (part as MessagePart.ContentPart).let {
+                                DocumentBlock {
+                                    this.format = DocumentFormat.fromValue(source.format)
+                                    this.name = source.fileName?.substringBefore('.')
+                                    this.source = when (val content = source.content) {
+                                        is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
+                                            DocumentSource.Bytes(content.asBytes())
+                                        is AttachmentContent.URL ->
+                                            DocumentSource.S3Location(content.toS3Location())
+                                        is AttachmentContent.PlainText ->
+                                            DocumentSource.Bytes(content.text.encodeToByteArray())
+                                    }
                                 }
                             }
-                        })
+                        )
                     is AttachmentSource.Image -> {
                         require(model.supports(LLMCapability.Vision.Image)) { "${model.id} doesn't support images" }
                         ToolResultContentBlock.Image(ImageBlock {
