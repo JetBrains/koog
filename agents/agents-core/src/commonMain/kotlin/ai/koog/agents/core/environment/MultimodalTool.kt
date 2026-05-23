@@ -1,6 +1,5 @@
 package ai.koog.agents.core.environment
 
-import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONSerializer
 

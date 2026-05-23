@@ -650,31 +650,35 @@ internal object BedrockConverseConverters {
                         )
                     is AttachmentSource.Image -> {
                         require(model.supports(LLMCapability.Vision.Image)) { "${model.id} doesn't support images" }
-                        ToolResultContentBlock.Image(ImageBlock {
-                            this.format = ImageFormat.fromValue(source.format)
-                            this.source = when (val content = source.content) {
-                                is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
-                                    ImageSource.Bytes(content.asBytes())
-                                is AttachmentContent.URL ->
-                                    ImageSource.S3Location(content.toS3Location())
-                                is AttachmentContent.PlainText ->
-                                    throw IllegalArgumentException("Image can't have plain text content")
+                        ToolResultContentBlock.Image(
+                            ImageBlock {
+                                this.format = ImageFormat.fromValue(source.format)
+                                this.source = when (val content = source.content) {
+                                    is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
+                                        ImageSource.Bytes(content.asBytes())
+                                    is AttachmentContent.URL ->
+                                        ImageSource.S3Location(content.toS3Location())
+                                    is AttachmentContent.PlainText ->
+                                        throw IllegalArgumentException("Image can't have plain text content")
+                                }
                             }
-                        })
+                        )
                     }
                     is AttachmentSource.Video -> {
                         require(model.supports(LLMCapability.Vision.Video)) { "${model.id} doesn't support videos" }
-                        ToolResultContentBlock.Video(VideoBlock {
-                            this.format = VideoFormat.fromValue(source.format)
-                            this.source = when (val content = source.content) {
-                                is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
-                                    VideoSource.Bytes(content.asBytes())
-                                is AttachmentContent.URL ->
-                                    VideoSource.S3Location(content.toS3Location())
-                                is AttachmentContent.PlainText ->
-                                    throw IllegalArgumentException("Video can't have plain text content")
+                        ToolResultContentBlock.Video(
+                            VideoBlock {
+                                this.format = VideoFormat.fromValue(source.format)
+                                this.source = when (val content = source.content) {
+                                    is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
+                                        VideoSource.Bytes(content.asBytes())
+                                    is AttachmentContent.URL ->
+                                        VideoSource.S3Location(content.toS3Location())
+                                    is AttachmentContent.PlainText ->
+                                        throw IllegalArgumentException("Video can't have plain text content")
+                                }
                             }
-                        })
+                        )
                     }
                 }
             }

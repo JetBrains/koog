@@ -804,25 +804,31 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                                                 }
                                                             }
                                                             if (imageUrl != null) {
-                                                                add(buildJsonObject {
-                                                                    put("type", "input_image")
-                                                                    put("image_url", imageUrl)
-                                                                    put("detail", "auto")
-                                                                })
+                                                                add(
+                                                                    buildJsonObject {
+                                                                        put("type", "input_image")
+                                                                        put("image_url", imageUrl)
+                                                                        put("detail", "auto")
+                                                                    }
+                                                                )
                                                             }
                                                         }
                                                         is AttachmentSource.File -> {
                                                             when (val c = source.content) {
-                                                                is AttachmentContent.Binary -> add(buildJsonObject {
-                                                                    put("type", "input_file")
-                                                                    put("file_data", "data:${source.mimeType};base64,${c.asBase64()}")
-                                                                    source.fileName?.let { put("filename", it) }
-                                                                })
-                                                                is AttachmentContent.URL -> add(buildJsonObject {
-                                                                    put("type", "input_file")
-                                                                    put("file_url", c.url)
-                                                                    source.fileName?.let { put("filename", it) }
-                                                                })
+                                                                is AttachmentContent.Binary -> add(
+                                                                    buildJsonObject {
+                                                                        put("type", "input_file")
+                                                                        put("file_data", "data:${source.mimeType};base64,${c.asBase64()}")
+                                                                        source.fileName?.let { put("filename", it) }
+                                                                    }
+                                                                )
+                                                                is AttachmentContent.URL -> add(
+                                                                    buildJsonObject {
+                                                                        put("type", "input_file")
+                                                                        put("file_url", c.url)
+                                                                        source.fileName?.let { put("filename", it) }
+                                                                    }
+                                                                )
                                                                 else -> logger.warn { "Unsupported file content type in tool result for OpenAI: ${c::class}, skipping" }
                                                             }
                                                         }
