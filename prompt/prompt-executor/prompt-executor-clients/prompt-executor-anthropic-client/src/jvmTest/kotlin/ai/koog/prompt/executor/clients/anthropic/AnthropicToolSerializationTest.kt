@@ -6,7 +6,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
@@ -286,21 +286,27 @@ class AnthropicToolSerializationTest {
     fun testToolResultWithBase64ImageSerializesToAnthropicImageBlock() {
         val client = AnthropicLLMClient(apiKey = "test-key")
         val model = AnthropicModels.Sonnet_4
-        val metaInfo = RequestMetaInfo.create(Clock.System)
+        val metaInfo = RequestMetaInfo.create(KoogClock.System)
         val base64Data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
 
         val requestJson = client.createAnthropicRequest(
             prompt = Prompt(
                 messages = listOf(
-                    Message.Tool.Result(
-                        id = "tool-call-3",
-                        tool = "screenshot_tool",
+                    Message.User(
                         parts = listOf(
-                            ContentPart.Text("Here is the screenshot:"),
-                            ContentPart.Image(
-                                content = AttachmentContent.Binary.Base64(base64Data),
-                                format = "png",
-                                mimeType = "image/png"
+                            MessagePart.Tool.Result(
+                                id = "tool-call-3",
+                                tool = "screenshot_tool",
+                                parts = listOf(
+                                    MessagePart.Text("Here is the screenshot:"),
+                                    MessagePart.Attachment(
+                                        source = AttachmentSource.Image(
+                                            content = AttachmentContent.Binary.Base64(base64Data),
+                                            format = "png",
+                                            mimeType = "image/png"
+                                        )
+                                    )
+                                )
                             )
                         ),
                         metaInfo = metaInfo
@@ -342,18 +348,24 @@ class AnthropicToolSerializationTest {
     fun testToolResultWithUrlImageSerializesToAnthropicImageBlock() {
         val client = AnthropicLLMClient(apiKey = "test-key")
         val model = AnthropicModels.Sonnet_4
-        val metaInfo = RequestMetaInfo.create(Clock.System)
+        val metaInfo = RequestMetaInfo.create(KoogClock.System)
 
         val requestJson = client.createAnthropicRequest(
             prompt = Prompt(
                 messages = listOf(
-                    Message.Tool.Result(
-                        id = "tool-call-4",
-                        tool = "fetch_image_tool",
+                    Message.User(
                         parts = listOf(
-                            ContentPart.Image(
-                                content = AttachmentContent.URL("https://example.com/image.png"),
-                                format = "png"
+                            MessagePart.Tool.Result(
+                                id = "tool-call-4",
+                                tool = "fetch_image_tool",
+                                parts = listOf(
+                                    MessagePart.Attachment(
+                                        source = AttachmentSource.Image(
+                                            content = AttachmentContent.URL("https://example.com/image.png"),
+                                            format = "png"
+                                        )
+                                    )
+                                )
                             )
                         ),
                         metaInfo = metaInfo

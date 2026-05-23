@@ -396,6 +396,10 @@ public sealed interface MessagePart {
             /** Convenience constructor for a single text output. */
             public constructor(id: String? = null, tool: String, output: String, isError: Boolean = false) :
                 this(id, tool, listOf(Text(output)), isError)
+
+            /** Returns the concatenated text content of all text parts. */
+            public val output: String
+                get() = parts.filterIsInstance<Text>().joinToString("") { it.text }
         }
     }
 }
