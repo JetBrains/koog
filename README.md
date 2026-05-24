@@ -140,3 +140,103 @@ use [Koog official YouTrack project](https://youtrack.jetbrains.com/issues/KG)
 for filing feature requests and bug reports.
 
 
+
+## FAQ
+
+### What is Koog?
+
+**Koog** is a **Kotlin-based framework** for building and running AI agents entirely in idiomatic Kotlin and Java. It lets you create agents that interact with tools, handle complex workflows, and communicate with users.
+
+### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| Multiplatform | JVM, JS, WasmJS, Android, iOS |
+| Reliability | Built-in retries and state persistence |
+| History Compression | Optimize token usage in long conversations |
+| Enterprise Integrations | Spring Boot, Ktor |
+| Observability | OpenTelemetry, W&B Weave, Langfuse |
+| LLM Switching | Change LLM without losing history |
+| MCP Integration | Model Context Protocol tools |
+| ACP Integration | Agent Client Protocol |
+| Knowledge Retrieval | RAG with vector embeddings |
+| Streaming API | Real-time response processing |
+| Graph Workflows | Complex agent behaviors |
+
+### Available LLM Providers
+
+| Provider | Description |
+|----------|-------------|
+| Google | Gemini models |
+| OpenAI | GPT-4, GPT-3.5 |
+| Anthropic | Claude models |
+| DeepSeek | DeepSeek models |
+| OpenRouter | Multi-provider routing |
+| Ollama | Local models |
+| Bedrock | AWS Bedrock |
+
+### How do I get started?
+
+```kotlin
+fun main() = runBlocking {
+    val apiKey = System.getenv("OPENAI_API_KEY")
+    
+    val agent = AIAgent(
+        promptExecutor = simpleOpenAIExecutor(apiKey),
+        systemPrompt = "You are a helpful assistant.",
+        llmModel = OpenAIModels.Chat.GPT4o
+    )
+    
+    val result = agent.run("Hello! How can you help me?")
+    println(result)
+}
+```
+
+### What platforms are supported?
+
+Koog uses **Kotlin Multiplatform** to support:
+
+| Platform | Target |
+|----------|--------|
+| JVM | Java/Kotlin backend |
+| JS | Web applications |
+| WasmJS | WebAssembly |
+| Android | Mobile apps |
+| iOS | Apple devices |
+
+### How do I add tools?
+
+Define custom tools to access external systems:
+
+```kotlin
+val myTool = Tool(
+    name = "weather",
+    description = "Get weather info"
+) { params -> 
+    // Tool implementation
+}
+```
+
+### What observability is available?
+
+| Provider | Description |
+|----------|-------------|
+| W&B Weave | Weights & Biases tracing |
+| Langfuse | LLM observability platform |
+| OpenTelemetry | Standard observability |
+
+### How does history compression work?
+
+Koog uses **intelligent history compression** to optimize token usage while maintaining context in long-running conversations, reducing costs for extended agent sessions.
+
+### What is the license?
+
+Koog uses the **Apache-2.0 License**.
+
+### Help Resources
+
+- **Documentation**: [docs.koog.ai](https://docs.koog.ai/)
+- **API Reference**: [api.koog.ai](https://api.koog.ai/)
+- **Slack Channel**: [docs.koog.ai/koog-slack-channel](https://docs.koog.ai/koog-slack-channel/)
+- **Issue Tracker**: [youtrack.jetbrains.com/issues/KG](https://youtrack.jetbrains.com/issues/KG)
+
