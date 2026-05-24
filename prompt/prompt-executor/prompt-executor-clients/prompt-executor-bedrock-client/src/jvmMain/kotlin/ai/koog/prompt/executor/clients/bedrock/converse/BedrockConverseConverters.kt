@@ -48,6 +48,7 @@ import aws.sdk.kotlin.services.bedrockruntime.model.OutputFormatType
 import aws.sdk.kotlin.services.bedrockruntime.model.PerformanceConfiguration
 import aws.sdk.kotlin.services.bedrockruntime.model.PromptVariableValues
 import aws.sdk.kotlin.services.bedrockruntime.model.ReasoningContentBlock
+import aws.sdk.kotlin.services.bedrockruntime.model.ReasoningContentBlockDelta
 import aws.sdk.kotlin.services.bedrockruntime.model.ReasoningTextBlock
 import aws.sdk.kotlin.services.bedrockruntime.model.S3Location
 import aws.sdk.kotlin.services.bedrockruntime.model.SpecificToolChoice
@@ -478,8 +479,30 @@ internal object BedrockConverseConverters {
                         )
                     }
 
-                    is ContentBlockDelta.Citation, is ContentBlockDelta.ReasoningContent -> {
+                    is ContentBlockDelta.Citation -> {
                         logger.warn { "Unsupported Converse content block delta type: ${delta::class.simpleName}" }
+                    }
+
+                    is ContentBlockDelta.ReasoningContent -> when (val reasoningDelta = delta.value) {
+                        is ReasoningContentBlockDelta.Text -> {
+                            emitReasoningDelta(
+                                text = reasoningDelta.value,
+                                index = chunk.value.contentBlockIndex
+                            )
+                        }
+
+                        is ReasoningContentBlockDelta.RedactedContent,
+                        is ReasoningContentBlockDelta.Signature -> {
+                            logger.debug {
+                                "Skipping Converse reasoning content block delta type: ${reasoningDelta::class.simpleName}"
+                            }
+                        }
+
+                        ReasoningContentBlockDelta.SdkUnknown -> {
+                            logger.warn {
+                                "Unknown Converse reasoning content block delta type: ${reasoningDelta::class.simpleName}"
+                            }
+                        }
                     }
 
                     is ContentBlockDelta.Image, is ContentBlockDelta.ToolResult -> {
