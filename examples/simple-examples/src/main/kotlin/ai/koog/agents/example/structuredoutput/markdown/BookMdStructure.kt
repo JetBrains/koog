@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import ai.koog.serialization.typeToken
 
 /**
  * Data class representing a book with name, author, and description.
@@ -20,7 +21,7 @@ data class Book(
 )
 
 class BookTool() : SimpleTool<Book>(
-    argsSerializer = Book.serializer(),
+    argsType = typeToken<Book>(),
     name = "book",
     description = "A tool to parse book information from markdown"
 ) {

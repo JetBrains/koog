@@ -4,7 +4,7 @@ import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatMessageDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -38,8 +38,8 @@ class OllamaContentTypeTest {
             model = OllamaModels.Meta.LLAMA_3_2
         )
 
-        assertEquals(1, responses.size)
-        val assistant = assertIs<Message.Assistant>(responses.first())
-        assertEquals(responseContent, assistant.content)
+        assertEquals(1, responses.parts.size)
+        val textPart = assertIs<MessagePart.Text>(responses.parts.single())
+        assertEquals(responseContent, textPart.text)
     }
 }

@@ -47,6 +47,8 @@ dependencies {
     implementation(project(":agents:agents-features:agents-features-acp"))
     implementation(project(":agents:agents-test"))
     implementation(project(":koog-agents"))
+    implementation(project(":agents:agents-ext"))
+    implementation(project(":koog-agents-additions"))
     implementation(project(":serialization:serialization-jackson"))
     api(libs.opentelemetry.exporter.logging)
     api(libs.opentelemetry.exporter.otlp)

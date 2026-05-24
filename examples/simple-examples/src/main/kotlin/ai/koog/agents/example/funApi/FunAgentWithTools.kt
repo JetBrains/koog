@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.message.MessagePart
 import kotlinx.coroutines.runBlocking
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -21,21 +22,21 @@ fun main(): Unit = runBlocking {
         systemPrompt = "You're responsible for running a Switch device and perform operations on it by request.",
         promptExecutor = promptExec,
         strategy = functionalStrategy {
-            var responses = requestLLMMultiple(it)
+            var response = requestLLM(it)
 
-            while (responses.containsToolCalls()) {
-                val tools = extractToolCalls(responses)
+            while (getToolCalls(response).isNotEmpty()) {
+                val tools = getToolCalls(response)
 
                 if (latestTokenUsage() > 100500) {
                     compressHistory()
                 }
 
-                val results = executeMultipleTools(tools)
-                responses = sendMultipleToolResults(results)
+                val results = executeTools(tools, parallelTools = true)
+                response = sendToolResults(results)
             }
 
             // Result:
-            responses.single().asAssistantMessage().content
+            response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { part -> part.text }
         },
         llmModel = OllamaModels.Meta.LLAMA_3_2,
         toolRegistry = toolRegistry

@@ -15,21 +15,12 @@ import ai.koog.utils.concurrency.withContextReentrant
 public actual class ActionBuilder<State> : ActionBuilderCommon<State, ActionBuilder<State>>() {
     actual override fun self(): ActionBuilder<State> = this
 
-    @JavaAPI
-    @Deprecated("Use execute(ExecuteSync) instead.", ReplaceWith("execute(execute)"))
-    public fun executeSync(execute: ExecuteSync<State>): ActionBuilder<State> =
-        execute { context, state ->
-            withContextReentrant(context.config.strategyDispatcher) {
-                execute.execute(context, state)
-            }
-        }
-
     /**
      * Synchronous GOAP action execution.
      */
     @JavaAPI
     @JvmName("execute")
-    public fun javaApiExecuteSynchronously(execute: ExecuteSync<State>): ActionBuilder<State> =
+    public fun executeBlocking(execute: ExecuteSync<State>): ActionBuilder<State> =
         execute { context, state ->
             withContextReentrant(context.config.strategyDispatcher) {
                 execute.execute(context, state)

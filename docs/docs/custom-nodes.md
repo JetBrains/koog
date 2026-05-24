@@ -506,6 +506,7 @@ use pre-built factory methods like `AIAgentNode.llmRequest()` that handle prompt
     <!--- INCLUDE
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
+    import ai.koog.prompt.message.MessagePart
     val strategy = strategy<String, String>("strategy_name") {
     -->
     <!--- SUFFIX
@@ -519,7 +520,7 @@ use pre-built factory methods like `AIAgentNode.llmRequest()` that handle prompt
             }
 
             val response = requestLLMWithoutTools()
-            response.content
+            response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
         }
     }
     ```
@@ -530,6 +531,8 @@ use pre-built factory methods like `AIAgentNode.llmRequest()` that handle prompt
     <!--- INCLUDE
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.prompt.message.Message;
+    import ai.koog.prompt.message.MessagePart;
+    import java.util.stream.Collectors;
     class exampleCustomNodesJava10 {
         public static void main(String[] args) {
     -->
@@ -542,13 +545,16 @@ use pre-built factory methods like `AIAgentNode.llmRequest()` that handle prompt
     // AIAgentNode.llmRequest() creates a node that sends the input string as a user
     // message to the LLM and returns the response. The prompt text is provided as
     // the node's input when it is executed in the graph.
-    var summarizeTextNode = AIAgentNode.llmRequest(true, "node_name");
+    var summarizeTextNode = AIAgentNode.llmRequest("node_name");
 
     // To extract the text content from the LLM response, chain a separate node:
     var extractContent = AIAgentNode.builder("extract-content")
-        .withInput(Message.Response.class)
+        .withInput(Message.Assistant.class)
         .withOutput(String.class)
-        .withAction((response, ctx) -> response.getContent())
+        .withAction((response, ctx) -> response.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Text)
+            .map(p -> ((MessagePart.Text) p).getText())
+            .collect(Collectors.joining()))
         .build();
     ```
     <!--- KNIT exampleCustomNodesJava10.java -->
@@ -566,9 +572,7 @@ typically use subgraphs that delegate tool orchestration to the LLM.
     <!--- INCLUDE
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
-    import ai.koog.prompt.message.Message
-    import ai.koog.prompt.message.ResponseMetaInfo
-    import ai.koog.utils.time.KoogClock
+    import ai.koog.prompt.message.MessagePart
     import kotlinx.serialization.Serializable
     import kotlinx.serialization.json.Json
     import java.util.*
@@ -582,15 +586,14 @@ typically use subgraphs that delegate tool orchestration to the LLM.
     -->
     ```kotlin
     val nodeExecuteCustomTool by node<String, String>("node_name") { input ->
-        val toolCall = Message.Tool.Call(
+        val toolCall = MessagePart.Tool.Call(
             id = UUID.randomUUID().toString(),
             tool = toolName,
-            metaInfo = ResponseMetaInfo.create(KoogClock.System),
-            content = Json.encodeToString(ToolArgs(arg1 = input, arg2 = 42)) // Use the input as tool arguments
+            args = Json.encodeToString(ToolArgs(arg1 = input, arg2 = 42)) // Use the input as tool arguments
         )
 
         val result = environment.executeTool(toolCall)
-        result.content
+        result.output
     }
     ```
     <!--- KNIT example-custom-nodes-11.kt -->
@@ -619,4 +622,4 @@ typically use subgraphs that delegate tool orchestration to the LLM.
     <!--- KNIT exampleCustomNodesJava11.java -->
 
 !!! note
-    The Kotlin example demonstrates low-level tool execution by manually constructing a `Message.Tool.Call` and calling `environment.executeTool()`. The Java API encourages a higher-level approach using subgraphs with `withTask()`, where the LLM orchestrates tool calls automatically. To restrict which tools are available, chain `.limitedTools(List.of(myTool))` before `.withInput()`.
+    The Kotlin example demonstrates low-level tool execution by manually constructing a `MessagePart.Tool.Call` and calling `environment.executeTool()`. The Java API encourages a higher-level approach using subgraphs with `withTask()`, where the LLM orchestrates tool calls automatically. To restrict which tools are available, chain `.limitedTools(List.of(myTool))` before `.withInput()`.

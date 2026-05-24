@@ -2,8 +2,8 @@ package ai.koog.prompt.executor.clients.litert
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.utils.time.KoogClock
 import com.google.ai.edge.litertlm.Content
@@ -22,89 +22,93 @@ import kotlinx.serialization.json.put
 import com.google.ai.edge.litertlm.Message as LitertMessage
 
 /**
- * Converts a LiteRT [LitertMessage] to a list of koog [Message.Response] objects.
+ * Converts a LiteRT [LitertMessage] to a koog [Message.Assistant].
  *
- * Text content parts are mapped to [Message.Assistant] messages and tool calls
- * are each mapped to a separate [Message.Tool.Call]. Non-text content parts are
- * not supported and will throw [UnsupportedOperationException].
+ * Text content parts are mapped to [MessagePart.Text] parts and tool calls
+ * are each mapped to a [MessagePart.Tool.Call] part within the same assistant
+ * message. Non-text content parts are not supported and will throw
+ * [UnsupportedOperationException].
  *
  * LiteRT [ToolCall] does not expose a stable call id. Koog uses tool-call ids to
- * correlate [Message.Tool.Result] with [Message.Tool.Call]. Therefore this client
- * currently supports only a single tool call per LiteRT response. Multiple tool
- * calls must either be rejected or handled by synthesizing stable ids and batching
- * tool responses back to LiteRT in order. Until proper support exists, this
- * function fails fast with [UnsupportedOperationException] when more than one
- * tool call is present.
+ * correlate [MessagePart.Tool.Result] with [MessagePart.Tool.Call]. Therefore this
+ * client currently supports only a single tool call per LiteRT response. Multiple
+ * tool calls must either be rejected or handled by synthesizing stable ids and
+ * batching tool responses back to LiteRT in order. Until proper support exists,
+ * this function fails fast with [UnsupportedOperationException] when more than
+ * one tool call is present.
  *
  * @param clock Clock used to populate [ResponseMetaInfo] timestamps.
- * @return List containing assistant and/or tool-call messages derived from the response.
+ * @return An assistant message with text and/or tool-call parts derived from the response.
  */
-internal fun LitertMessage.toKoogMessages(clock: KoogClock): List<Message.Response> {
+internal fun LitertMessage.toKoogMessage(clock: KoogClock): Message.Assistant {
     if (toolCalls.size > 1) {
         throw UnsupportedOperationException(
             "LiteRT client does not currently support multiple tool calls in one response because LiteRT ToolCall has no id for result correlation"
         )
     }
-    return buildList {
-        if (contents.contents.isNotEmpty()) {
-            val parts = contents.contents.map {
-                when (it) {
-                    is Content.Text -> ContentPart.Text(it.text)
-                    else -> throw UnsupportedOperationException("Only text message responses are supported")
-                }
+    val parts = buildList<MessagePart.ResponsePart> {
+        contents.contents.forEach {
+            when (it) {
+                is Content.Text -> add(MessagePart.Text(it.text))
+                else -> throw UnsupportedOperationException("Only text message responses are supported")
             }
+        }
+        toolCalls.forEach { toolCall ->
             add(
-                Message.Assistant(
-                    parts = parts,
-                    metaInfo = ResponseMetaInfo.create(clock),
+                MessagePart.Tool.Call(
+                    id = null,
+                    tool = toolCall.name,
+                    args = JsonObject(toolCall.arguments.toJson()).toString(),
                 )
             )
         }
-
-        if (toolCalls.isNotEmpty()) {
-            toolCalls.forEach { toolCall ->
-                add(
-                    Message.Tool.Call(
-                        id = null,
-                        tool = toolCall.name,
-                        content = JsonObject(toolCall.arguments.toJson()).toString(),
-                        metaInfo = ResponseMetaInfo.create(clock),
-                    )
-                )
-            }
-        }
     }
+    return Message.Assistant(
+        parts = parts,
+        metaInfo = ResponseMetaInfo.create(clock),
+    )
 }
 
 /**
  * Converts a koog [Message] to a LiteRT [LitertMessage].
  *
- * Dispatch is by message subtype so tool-call round trips are preserved:
+ * Dispatch is by message subtype, then by parts so tool-call round trips are preserved:
  * - [Message.System] → `LitertMessage.system`
- * - [Message.User] → `LitertMessage.user`
- * - [Message.Assistant] → `LitertMessage.model`
- * - [Message.Tool.Call] → `LitertMessage.model` carrying the call in `toolCalls`
- * - [Message.Tool.Result] → `LitertMessage.tool` with a [Content.ToolResponse]
+ * - [Message.User] with a [MessagePart.Tool.Result] part → `LitertMessage.tool` with a [Content.ToolResponse]
+ * - [Message.User] otherwise → `LitertMessage.user`
+ * - [Message.Assistant] with [MessagePart.Tool.Call] parts → `LitertMessage.model` carrying the calls in `toolCalls`
+ * - [Message.Assistant] otherwise → `LitertMessage.model`
  *
- * [Message.Reasoning] is not yet supported and throws [UnsupportedOperationException].
+ * [MessagePart.Reasoning] parts are not yet supported and throw [UnsupportedOperationException].
  */
 internal fun Message.toLitertMessage(): LitertMessage {
     return when (this) {
-        is Message.System -> LitertMessage.system(content)
-        is Message.User -> LitertMessage.user(content)
-        is Message.Assistant -> LitertMessage.model(content)
-        is Message.Tool.Call -> {
-            val args = parseToolArguments(content)
-            LitertMessage.model(
-                contents = Contents.of(emptyList()),
-                toolCalls = listOf(ToolCall(name = tool, arguments = args)),
-            )
+        is Message.System -> LitertMessage.system(parts.joinToString("\n") { it.text })
+        is Message.User -> {
+            val toolResult = parts.filterIsInstance<MessagePart.Tool.Result>().firstOrNull()
+            if (toolResult != null) {
+                val parsedResponse: Any? = parseToolResponse(toolResult.output)
+                LitertMessage.tool(Contents.of(Content.ToolResponse(name = toolResult.tool, response = parsedResponse)))
+            } else {
+                val text = parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
+                LitertMessage.user(text)
+            }
         }
-        is Message.Tool.Result -> {
-            val parsedResponse: Any? = parseToolResponse(content)
-            LitertMessage.tool(Contents.of(Content.ToolResponse(name = tool, response = parsedResponse)))
+        is Message.Assistant -> {
+            if (parts.any { it is MessagePart.Reasoning }) {
+                throw UnsupportedOperationException("Reasoning is not yet supported")
+            }
+            val toolCalls = parts.filterIsInstance<MessagePart.Tool.Call>()
+            if (toolCalls.isNotEmpty()) {
+                LitertMessage.model(
+                    contents = Contents.of(emptyList()),
+                    toolCalls = toolCalls.map { ToolCall(name = it.tool, arguments = parseToolArguments(it.args)) },
+                )
+            } else {
+                val text = parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
+                LitertMessage.model(text)
+            }
         }
-        is Message.Reasoning -> throw UnsupportedOperationException("Reasoning is not yet supported")
     }
 }
 

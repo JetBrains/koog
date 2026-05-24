@@ -3,6 +3,7 @@ package ai.koog.integration.tests.utils
 import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldNotBeEmpty
@@ -35,10 +36,9 @@ object TestUtils {
         substrings.any { needle -> msg.contains(needle, ignoreCase = true) }.shouldBeTrue()
     }
 
-    fun assertResponseContainsToolCall(response: List<Message>, toolName: String) {
+    fun assertResponseContainsToolCall(response: Message.Assistant, toolName: String) {
         with(response) {
-            shouldNotBeEmpty()
-            shouldForAny { (it is Message.Tool.Call) && it.tool == toolName }
+            parts.shouldForAny { (it is MessagePart.Tool.Call) && it.tool == toolName }
         }
     }
 
@@ -49,27 +49,22 @@ object TestUtils {
         false
     }
 
-    fun assertResponseContainsReasoning(response: List<Message>, checkMetaInfo: Boolean = true) {
+    fun assertResponseContainsReasoning(response: Message.Assistant, checkMetaInfo: Boolean = true) {
         with(response) {
-            shouldNotBeEmpty()
-            shouldForAny { it is Message.Reasoning }
-            with(first { it is Message.Reasoning } as Message.Reasoning) {
-                content.shouldNotBeEmpty()
-                if (checkMetaInfo) {
-                    metaInfo.shouldNotBeNull {
-                        inputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
-                        outputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
-                        totalTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
-                    }
+            parts.shouldForAny { it is MessagePart.Reasoning }
+            if (checkMetaInfo) {
+                metaInfo.shouldNotBeNull {
+                    inputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                    outputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                    totalTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
                 }
             }
         }
     }
 
-    fun assertResponseContainsReasoningWithEncryption(response: List<Message>) {
+    fun assertResponseContainsReasoningWithEncryption(response: Message.Assistant) {
         with(response) {
-            shouldNotBeEmpty()
-            response.filterIsInstance<Message.Reasoning>().firstOrNull().shouldNotBeNull {
+            parts.filterIsInstance<MessagePart.Reasoning>().firstOrNull().shouldNotBeNull {
                 content.shouldNotBeEmpty()
                 encrypted
                     .shouldNotBeNull()

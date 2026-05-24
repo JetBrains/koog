@@ -1,6 +1,7 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 import org.gradle.api.tasks.testing.Test
 
+val isBeta by extra(true)
 
 plugins {
     id("ai.kotlin.multiplatform")

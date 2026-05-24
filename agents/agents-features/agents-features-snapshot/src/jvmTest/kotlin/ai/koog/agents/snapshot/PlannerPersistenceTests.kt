@@ -18,8 +18,8 @@ import ai.koog.agents.snapshot.feature.PlannerCheckpointProperties
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
@@ -38,6 +38,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
+import kotlin.collections.emptyList
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -175,7 +176,9 @@ class PlannerPersistenceTests {
                 executionPoint = executionPoint,
                 state = JSONPrimitive(state),
                 plan = JSONPrimitive(plan)
-            )
+            ),
+            graphProperties = null,
+            properties = null,
         )
 
         testStorage.saveCheckpoint(runId, checkpoint)
@@ -268,10 +271,10 @@ class PlannerPersistenceTests {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
-            ): List<Message.Response> = when (++llmCallCount) {
-                1 -> listOf(Message.Assistant(planJson, ResponseMetaInfo.Empty)) // buildPlan's requestLLMStructured
+            ): Message.Assistant = when (++llmCallCount) {
+                1 -> Message.Assistant(planJson, ResponseMetaInfo.Empty) // buildPlan's requestLLMStructured
                 2 -> throw RuntimeException("fail step when executed the first time")
-                else -> listOf(Message.Assistant("step done", ResponseMetaInfo.Empty)) // executeStep on resume
+                else -> Message.Assistant("step done", ResponseMetaInfo.Empty) // executeStep on resume
             }
 
             override fun executeStreaming(

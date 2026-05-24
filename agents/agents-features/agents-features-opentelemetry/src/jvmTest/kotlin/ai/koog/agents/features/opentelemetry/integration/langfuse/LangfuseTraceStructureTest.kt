@@ -6,6 +6,7 @@ import ai.koog.agents.features.opentelemetry.integration.TraceStructureTestBase
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 
@@ -91,11 +92,9 @@ class LangfuseTraceStructureTest :
                 Message.System(systemPrompt, RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())),
                 Message.User(userPrompt, RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())),
                 OpenTelemetryTestAPI.toolCallMessage(toolCallId, TestGetWeatherTool.name, "{\"location\":\"Paris\"}"),
-                Message.Tool.Result(
-                    toolCallId,
-                    TestGetWeatherTool.name,
-                    toolResponse,
-                    RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())
+                Message.User(
+                    parts = listOf(MessagePart.Tool.Result(id = toolCallId, tool = TestGetWeatherTool.name, output = toolResponse)),
+                    metaInfo = RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())
                 )
             )
         )
@@ -137,9 +136,9 @@ class LangfuseTraceStructureTest :
             "gen_ai.prompt.0.content" to systemPrompt,
             "gen_ai.prompt.1.role" to Message.Role.User.name.lowercase(),
             "gen_ai.prompt.1.content" to userPrompt,
-            "gen_ai.prompt.2.role" to Message.Role.Tool.name.lowercase(),
+            "gen_ai.prompt.2.role" to "assistant",
             "gen_ai.prompt.2.content" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"},\"id\":\"get-weather-tool-call-id\",\"type\":\"function\"}]",
-            "gen_ai.prompt.3.role" to Message.Role.Tool.name.lowercase(),
+            "gen_ai.prompt.3.role" to "tool",
             "gen_ai.prompt.3.content" to toolResponse,
             "gen_ai.completion.0.role" to Message.Role.Assistant.name.lowercase(),
             "gen_ai.completion.0.content" to finalResponse,
@@ -215,11 +214,9 @@ class LangfuseTraceStructureTest :
                 Message.System(systemPrompt, RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())),
                 Message.User(userPrompt, RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())),
                 OpenTelemetryTestAPI.toolCallMessage(toolCallId, TestGetWeatherTool.name, "{\"location\":\"Paris\"}"),
-                Message.Tool.Result(
-                    toolCallId,
-                    TestGetWeatherTool.name,
-                    toolResponse,
-                    RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())
+                Message.User(
+                    parts = listOf(MessagePart.Tool.Result(id = toolCallId, tool = TestGetWeatherTool.name, output = toolResponse)),
+                    metaInfo = RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())
                 )
             )
         )
@@ -261,9 +258,9 @@ class LangfuseTraceStructureTest :
             "gen_ai.prompt.0.content" to systemPrompt,
             "gen_ai.prompt.1.role" to Message.Role.User.name.lowercase(),
             "gen_ai.prompt.1.content" to userPrompt,
-            "gen_ai.prompt.2.role" to Message.Role.Tool.name.lowercase(),
+            "gen_ai.prompt.2.role" to "assistant",
             "gen_ai.prompt.2.content" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"},\"id\":\"get-weather-tool-call-id\",\"type\":\"function\"}]",
-            "gen_ai.prompt.3.role" to Message.Role.Tool.name.lowercase(),
+            "gen_ai.prompt.3.role" to "tool",
             "gen_ai.prompt.3.content" to toolResponse,
 
             "gen_ai.completion.0.role" to Message.Role.Assistant.name.lowercase(),

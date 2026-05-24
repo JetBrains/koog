@@ -53,41 +53,48 @@ val excluded = setOf(
     ":agents:agents-features:agents-features-longterm-memory-aws", // Optional AWS LongTermMemory provider
 
     project.path, // the current project should not depend on itself
+    ":koog-agents-additions"
 )
 
+val betaModules = setOf(
+    ":agents:agents-cli",
+    ":agents:agents-features:agents-features-longterm-memory",
+    ":agents:agents-mcp",
+    ":agents:agents-planner",
+    ":prompt:prompt-cache:prompt-cache-redis",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-client",
+    ":prompt:prompt-executor:prompt-executor-llms-all",
+    ":rag:rag-vector"
+)
+
+// Non-beta modules ONLY:
 val included = setOf(
     ":agents:agents-core",
     ":agents:agents-features:agents-features-event-handler",
-    ":agents:agents-features:agents-features-longterm-memory",
     ":agents:agents-features:agents-features-memory",
     ":agents:agents-features:agents-features-opentelemetry",
     ":agents:agents-features:agents-features-trace",
     ":agents:agents-features:agents-features-tokenizer",
     ":agents:agents-features:agents-features-snapshot",
-    ":agents:agents-mcp",
     ":agents:agents-mcp-metadata",
-    ":agents:agents-planner",
     ":agents:agents-tools",
     ":agents:agents-utils",
     ":embeddings:embeddings-base",
     ":embeddings:embeddings-llm",
     ":prompt:prompt-cache:prompt-cache-files",
     ":prompt:prompt-cache:prompt-cache-model",
-    ":prompt:prompt-cache:prompt-cache-redis",
     ":prompt:prompt-executor:prompt-executor-cached",
     ":prompt:prompt-executor:prompt-executor-clients",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-client",
-    ":prompt:prompt-executor:prompt-executor-llms-all",
     ":prompt:prompt-executor:prompt-executor-model",
     ":prompt:prompt-llm",
     ":prompt:prompt-markdown",
@@ -96,11 +103,10 @@ val included = setOf(
     ":prompt:prompt-structure",
     ":prompt:prompt-tokenizer",
     ":prompt:prompt-xml",
-    ":rag:rag-base",
-    ":rag:rag-vector",
     ":http-client:http-client-core",
     ":http-client:http-client-ktor",
     ":serialization:serialization-core",
+    ":rag:rag-base",
     ":utils",
 )
 
@@ -115,6 +121,7 @@ val wasmJsExcluded = setOf(
 kotlin {
     val projects = rootProject.subprojects
         .filterNot { it.path in excluded }
+        .filterNot { it.path in betaModules }
         .filter { it.buildFile.exists() }
     val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
 

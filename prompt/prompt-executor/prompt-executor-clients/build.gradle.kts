@@ -1,6 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
-
 plugins {
     id("ai.kotlin.multiplatform")
 }
@@ -13,7 +12,7 @@ kotlin {
                 api(project(":agents:agents-tools"))
                 api(libs.kotlinx.coroutines.core)
                 api(project(":prompt:prompt-structure"))
-                api(libs.oshai.kotlin.logging)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
         androidMain {

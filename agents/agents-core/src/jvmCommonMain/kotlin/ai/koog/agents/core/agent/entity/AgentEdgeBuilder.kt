@@ -7,8 +7,13 @@ import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilder
 import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+import ai.koog.agents.core.dsl.extension.ToolCalls
+import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.utils.Option
 import ai.koog.agents.core.utils.Some
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.concurrency.withContextReentrant
 
@@ -265,6 +270,81 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
     )
 
     /**
+     * Filters the intermediate output to only [Message] instances that contain parts of type [T],
+     * and transforms the output to a list of those parts.
+     *
+     * @param clazz The class of [MessagePart] subtype to filter by.
+     */
+    @Suppress("UNCHECKED_CAST")
+    public fun <T : MessagePart> onMessageParts(
+        clazz: Class<T>
+    ): FullAgentEdgeBuilder<IncomingOutput, List<T>, OutgoingInput> =
+        onCondition { it is Message && (it as Message).parts.any { part -> clazz.isInstance(part) } }
+            .transformed<List<T>> { (it as Message).parts.filter { part -> clazz.isInstance(part) }.map { part -> clazz.cast(part) } }
+
+    /**
+     * Transforms the intermediate output of the edge by applying the given action.
+     * This is an alias for [transformed] providing naming consistency with the node builder API.
+     *
+     * @param action A contextual transformation function that takes an intermediate output
+     *               and an AI agent graph context as input, and produces a compatible output.
+     * @return A builder instance configured to handle the transformed outputs.
+     */
+    @JavaAPI
+    public fun <NewOutput : OutgoingInput> withAction(
+        action: ContextualTransformation<IntermediateOutput, NewOutput>
+    ): CompatibleFullAgentEdgeBuilder<IncomingOutput, NewOutput, OutgoingInput> = transformed(action)
+
+    /**
+     * Transforms the intermediate output of the edge by applying the given action.
+     * This is an alias for [transformed] providing naming consistency with the node builder API.
+     *
+     * @param action A simple transformation function that takes an intermediate output
+     *               and produces a compatible output.
+     * @return A builder instance configured to handle the transformed outputs.
+     */
+    @JavaAPI
+    public fun <NewOutput : OutgoingInput> withAction(
+        action: SimpleTransformation<IntermediateOutput, NewOutput>
+    ): CompatibleFullAgentEdgeBuilder<IncomingOutput, NewOutput, OutgoingInput> = transformed(action)
+
+    /**
+     * Creates an edge that extracts text content from message parts.
+     */
+    public fun onTextMessage(): FullAgentEdgeBuilder<IncomingOutput, String, OutgoingInput> =
+        onMessageParts(MessagePart.Text::class.java)
+            .transformed<String> { textParts ->
+                textParts.joinToString("\n") { it.text }
+            }
+
+    /**
+     * Creates an edge that filters assistant messages containing tool calls matching the provided condition.
+     * The default condition `onToolCalls { true }` accepts any message with at least one tool call.
+     *
+     * @param condition A predicate that determines whether a tool call should be accepted.
+     */
+    @JvmOverloads
+    public fun onToolCalls(
+        condition: SimpleCondition<MessagePart.Tool.Call> = { true }
+    ): FullAgentEdgeBuilder<IncomingOutput, ToolCalls, OutgoingInput> =
+        onMessageParts(MessagePart.Tool.Call::class.java)
+            .onCondition { toolCalls -> toolCalls.any { condition.invoke(it) } }
+            .transformed<ToolCalls> { toolCalls -> ToolCalls(toolCalls.filter { condition.invoke(it) }) }
+
+    /**
+     * Builds the edge between the source and destination nodes.
+     *
+     * This requires that [IntermediateOutput] is compatible with [OutgoingInput] at runtime.
+     * Prefer using [CompatibleFullAgentEdgeBuilder.build] when static type compatibility is known.
+     */
+    @Suppress("UNCHECKED_CAST")
+    public open fun build(): AIAgentEdge<IncomingOutput, OutgoingInput> {
+        val castComposition = forwardOutputComposition as suspend (AIAgentGraphContextBase, IncomingOutput) -> Option<OutgoingInput>
+        val intermediate = AIAgentEdgeBuilderIntermediate(fromNode, toNode, castComposition)
+        return AIAgentEdgeBuilder(intermediate).build()
+    }
+
+    /**
      * Filters the outputs of the current processing edge based on their type, forwarding only those
      * that are instances of the specified class.
      *
@@ -289,6 +369,41 @@ public open class FullAgentEdgeBuilder<IncomingOutput, IntermediateOutput, Outgo
         clazz: Class<CompatibleOutput>
     ): CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutput, OutgoingInput> =
         onCondition { clazz.isInstance(it) }.transformed { it as CompatibleOutput }
+
+    /**
+     * Creates an edge that transforms an intermediate output into a [Message.User] using the provided transform.
+     *
+     * @param transformation A function that converts the intermediate output to a String for the user message.
+     */
+    @JvmOverloads
+    public fun asUserMessage(
+        transformation: SimpleTransformation<IntermediateOutput, String> = { it.toString() }
+    ): FullAgentEdgeBuilder<IncomingOutput, Message.User, OutgoingInput> =
+        transformed<Message.User> { output, ctx ->
+            ctx.llm.writeSession { session ->
+                session.userMessage(transformation.invoke(output))
+            }
+        }
+
+    /**
+     * Creates an edge that transforms an intermediate output into a [Message.User] using the provided transform.
+     *
+     * @param condition A predicate that filters which [ReceivedToolResult] entries are included in the message.
+     */
+    @JvmOverloads
+    public fun asToolResultMessage(
+        condition: SimpleCondition<ReceivedToolResult> = { true }
+    ): FullAgentEdgeBuilder<IncomingOutput, Message.User, OutgoingInput> =
+        onCondition { ReceivedToolResults::class.java.isInstance(it) }
+            .transformed<Message.User> { output, ctx ->
+                ctx.llm.writeSession { session ->
+                    session.userMessage(
+                        (output as ReceivedToolResults).toolResults
+                            .filter { condition.invoke(it) }
+                            .map { it.toMessagePart() }
+                    )
+                }
+            }
 }
 
 /**
@@ -328,7 +443,7 @@ public open class CompatibleFullAgentEdgeBuilder<IncomingOutput, CompatibleOutpu
      * @return An instance of [AIAgentEdge] that represents the constructed edge between the source node and the destination node,
      * enabling the controlled transmission of data from the source to the destination.
      */
-    public fun build(): AIAgentEdge<IncomingOutput, OutgoingInput> {
+    public override fun build(): AIAgentEdge<IncomingOutput, OutgoingInput> {
         val intermediate = AIAgentEdgeBuilderIntermediate(fromNode, toNode, forwardOutputComposition)
         return AIAgentEdgeBuilder(intermediate).build()
     }

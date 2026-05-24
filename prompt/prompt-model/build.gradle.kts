@@ -15,12 +15,7 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.io.core)
-            }
-        }
-
-        jvmMain {
-            dependencies {
-                implementation(project(":agents:agents-utils"))
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 
@@ -40,9 +35,5 @@ kotlin {
 
     explicitApi()
 }
-
-// dependencies {
-//    testImplementation(project(":prompt:prompt-markdown"))
-// }
 
 publishToMaven()

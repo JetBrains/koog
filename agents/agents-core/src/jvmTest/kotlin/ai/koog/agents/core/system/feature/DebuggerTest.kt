@@ -5,11 +5,11 @@ import ai.koog.agents.core.agent.entity.AIAgentSubgraphBase.Companion.START_NODE
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.feature.AIAgentFeatureTestAPI.testClock
@@ -52,7 +52,7 @@ import ai.koog.agents.testing.feature.message.singleNodeEvent
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -141,17 +141,17 @@ class DebuggerTest {
 
         // Server
         val serverJob = launch {
-            val strategy = strategy(strategyName) {
+            val strategy = strategy<String, String>(strategyName) {
                 val nodeSendInput by nodeLLMRequest(nodeSendLLMCallName)
-                val nodeExecuteTool by nodeExecuteTool(nodeExecuteToolName)
-                val nodeSendToolResult by nodeLLMSendToolResult(nodeSendToolResultName)
+                val nodeExecuteTool by nodeExecuteTools(nodeExecuteToolName)
+                val nodeSendToolResult by nodeLLMSendToolResults(nodeSendToolResultName)
 
                 edge(nodeStart forwardTo nodeSendInput)
-                edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
-                edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+                edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
+                edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
                 edge(nodeExecuteTool forwardTo nodeSendToolResult)
-                edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-                edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+                edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
+                edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
             }
 
             val mockExecutor = getMockExecutor(serializer, clock = testClock) {
@@ -326,11 +326,9 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallPrompt,
                             model = mockLLModel.toModelInfo(),
-                            responses = listOf(
-                                toolCallMessage(
-                                    dummyTool.name,
-                                    content = """{"dummy":"$requestedDummyToolArgs"}"""
-                                )
+                            response = toolCallMessage(
+                                dummyTool.name,
+                                content = """{"dummy":"$requestedDummyToolArgs"}"""
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -362,7 +360,7 @@ class DebuggerTest {
                                     dummyTool.name,
                                     content = """{"dummy":"$requestedDummyToolArgs"}"""
                                 ),
-                                typeToken<Message.Tool.Call>()
+                                typeToken<Message.Assistant>()
                             ),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
@@ -397,7 +395,7 @@ class DebuggerTest {
                                     toolName = dummyTool.name,
                                     content = """{"dummy":"$requestedDummyToolArgs"}"""
                                 ),
-                                typeToken<Message.Tool.Call>()
+                                typeToken<Message.Assistant>()
                             ),
                             output = serializer.encodeToJSONElement(
                                 ReceivedToolResult(
@@ -405,7 +403,7 @@ class DebuggerTest {
                                     tool = dummyTool.name,
                                     toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                     toolDescription = dummyTool.descriptor.description,
-                                    content = dummyTool.result,
+                                    output = dummyTool.result,
                                     resultKind = ToolResultKind.Success,
                                     result = dummyTool.encodeResult(dummyTool.result, serializer)
                                 ),
@@ -424,7 +422,7 @@ class DebuggerTest {
                                     tool = dummyTool.name,
                                     toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                     toolDescription = dummyTool.descriptor.description,
-                                    content = dummyTool.result,
+                                    output = dummyTool.result,
                                     resultKind = ToolResultKind.Success,
                                     result = dummyTool.encodeResult(dummyTool.result, serializer)
                                 ),
@@ -447,7 +445,7 @@ class DebuggerTest {
                             runId = clientEventsCollector.runId,
                             prompt = expectedLLMCallWithToolsPrompt,
                             model = mockLLModel.toModelInfo(),
-                            responses = listOf(assistantMessage(mockResponse)),
+                            response = assistantMessage(mockResponse),
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
@@ -461,7 +459,7 @@ class DebuggerTest {
                                     tool = dummyTool.name,
                                     toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"), serializer),
                                     toolDescription = dummyTool.descriptor.description,
-                                    content = dummyTool.result,
+                                    output = dummyTool.result,
                                     resultKind = ToolResultKind.Success,
                                     result = dummyTool.encodeResult(dummyTool.result, serializer)
                                 ),

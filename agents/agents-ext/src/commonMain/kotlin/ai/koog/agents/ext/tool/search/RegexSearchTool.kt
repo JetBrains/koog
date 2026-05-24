@@ -11,6 +11,7 @@ import ai.koog.rag.base.files.model.FileSystemEntry
 import ai.koog.rag.base.files.model.buildFileSize
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.toPosition
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.drop
@@ -31,8 +32,8 @@ import kotlinx.serialization.Serializable
 public class RegexSearchTool<Path>(
     private val fs: FileSystemProvider.ReadOnly<Path>,
 ) : Tool<RegexSearchTool.Args, RegexSearchTool.Result>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Result.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Result>(),
     name = "__search_contents_by_regex__",
     description = text {
         +"Executes a regular expression search on folder or file contents within the specified path."

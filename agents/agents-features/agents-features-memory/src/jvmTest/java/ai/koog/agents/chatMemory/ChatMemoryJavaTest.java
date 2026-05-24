@@ -11,6 +11,7 @@ import ai.koog.agents.testing.tools.MockExecutorDSLBuilder;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
 import kotlin.coroutines.EmptyCoroutineContext;
 import kotlinx.coroutines.BuildersKt;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +29,16 @@ import static org.junit.jupiter.api.Assertions.*;
  * filterMessages, and custom ChatMemoryPreProcessor implementations from Java.
  */
 class ChatMemoryJavaTest {
+
+    /**
+     * Extracts the joined text content of all {@link MessagePart.Text} parts of a message.
+     */
+    private static String textContent(Message m) {
+        return m.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Text)
+            .map(p -> ((MessagePart.Text) p).getText())
+            .collect(Collectors.joining("\n"));
+    }
 
     /**
      * Helper to call a suspend function from Java using runBlocking.
@@ -115,7 +126,7 @@ class ChatMemoryJavaTest {
         List<Message> saved = loadHistory(historyProvider, "session-1");
         assertEquals(4, saved.size(), "Window should keep exactly 4 messages");
 
-        List<String> contents = saved.stream().map(Message::getContent).collect(Collectors.toList());
+        List<String> contents = saved.stream().map(ChatMemoryJavaTest::textContent).collect(Collectors.toList());
         assertTrue(contents.stream().noneMatch(c -> c.contains("Q1")), "Q1 should be outside the window");
         assertTrue(contents.stream().anyMatch(c -> c.contains("Q2")), "Q2 should be within the window");
         assertTrue(contents.stream().anyMatch(c -> c.contains("Q3")), "Q3 should be within the window");
@@ -160,7 +171,7 @@ class ChatMemoryJavaTest {
             @Override
             public List<Message> preprocess(@NotNull List<? extends Message> messages) {
                 return messages.stream()
-                        .filter(m -> !m.getContent().contains("Reply 1"))
+                        .filter(m -> !textContent(m).contains("Reply 1"))
                         .collect(Collectors.toList());
             }
         };
@@ -172,7 +183,7 @@ class ChatMemoryJavaTest {
         agent.run("Q2", "session-1");
 
         List<Message> saved = loadHistory(historyProvider, "session-1");
-        List<String> contents = saved.stream().map(Message::getContent).collect(Collectors.toList());
+        List<String> contents = saved.stream().map(ChatMemoryJavaTest::textContent).collect(Collectors.toList());
         assertTrue(contents.stream().noneMatch(c -> c.contains("Reply 1")),
                 "Reply 1 should have been filtered out by the custom preprocessor");
         assertTrue(contents.stream().anyMatch(c -> c.contains("Q2")),
@@ -226,11 +237,11 @@ class ChatMemoryJavaTest {
         assertEquals(2, saved.size(), "Exactly 2 messages after filter-then-window");
         assertTrue(saved.stream().allMatch(m -> m instanceof Message.User),
                 "All should be User messages");
-        assertTrue(saved.stream().noneMatch(m -> m.getContent().contains("Q1")),
+        assertTrue(saved.stream().noneMatch(m -> textContent(m).contains("Q1")),
                 "Q1 should be outside the window");
-        assertTrue(saved.stream().anyMatch(m -> m.getContent().contains("Q2")),
+        assertTrue(saved.stream().anyMatch(m -> textContent(m).contains("Q2")),
                 "Q2 should be in the window");
-        assertTrue(saved.stream().anyMatch(m -> m.getContent().contains("Q3")),
+        assertTrue(saved.stream().anyMatch(m -> textContent(m).contains("Q3")),
                 "Q3 should be in the window");
     }
 
@@ -283,14 +294,14 @@ class ChatMemoryJavaTest {
         List<Message> savedA = loadHistory(historyProvider, "session-A");
         List<Message> savedB = loadHistory(historyProvider, "session-B");
 
-        assertTrue(savedA.stream().anyMatch(m -> m.getContent().contains("France")),
+        assertTrue(savedA.stream().anyMatch(m -> textContent(m).contains("France")),
                 "Session A should contain France");
-        assertTrue(savedA.stream().noneMatch(m -> m.getContent().contains("Japan")),
+        assertTrue(savedA.stream().noneMatch(m -> textContent(m).contains("Japan")),
                 "Session A should not contain Japan");
 
-        assertTrue(savedB.stream().anyMatch(m -> m.getContent().contains("Japan")),
+        assertTrue(savedB.stream().anyMatch(m -> textContent(m).contains("Japan")),
                 "Session B should contain Japan");
-        assertTrue(savedB.stream().noneMatch(m -> m.getContent().contains("France")),
+        assertTrue(savedB.stream().noneMatch(m -> textContent(m).contains("France")),
                 "Session B should not contain France");
     }
 

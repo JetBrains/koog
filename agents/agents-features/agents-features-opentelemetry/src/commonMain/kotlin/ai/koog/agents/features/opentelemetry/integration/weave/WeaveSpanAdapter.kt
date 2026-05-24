@@ -9,6 +9,7 @@ import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.SpanType
 import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -70,37 +71,50 @@ internal class WeaveSpanAdapter(
 
     private fun applyPromptAttributes(span: GenAIAgentSpan, index: Int, message: Message) {
         when (message) {
-            is Message.System,
-            is Message.User,
-            is Message.Assistant,
-            is Message.Reasoning -> {
+            is Message.System -> {
                 span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
-                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(message.content)))
+                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(message.parts.joinToString("\n") { it.text })))
             }
 
-            is Message.Tool.Call -> {
-                // Weave forces the role to `assistant` for tool-call entries in the prompt history,
-                // and fans out the tool call into per-field indexed attributes.
-                span.addAttribute(
-                    CustomAttribute(
-                        "gen_ai.prompt.$index.role",
-                        Message.Role.Assistant.name.lowercase()
-                    )
-                )
-                addToolCallAttributes(span, "gen_ai.prompt.$index.tool_calls", listOf(message))
-                span.addAttribute(
-                    CustomAttribute(
-                        "gen_ai.prompt.$index.finish_reason",
-                        GenAIAttributes.Response.FinishReasonType.ToolCalls.id
-                    )
-                )
+            is Message.User -> {
+                val toolResults = message.parts.filterIsInstance<MessagePart.Tool.Result>()
+                val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+
+                if (toolResults.isNotEmpty()) {
+                    // Weave expects role="tool" for tool result entries in the prompt history.
+                    val toolResult = toolResults.first()
+                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", "tool"))
+                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(toolResult.output)))
+                    toolResult.id?.let { id ->
+                        span.addAttribute(CustomAttribute("gen_ai.prompt.$index.tool_call_id", id))
+                    }
+                } else {
+                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
+                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(textParts.joinToString("\n") { it.text })))
+                }
             }
 
-            is Message.Tool.Result -> {
-                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
-                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(message.content)))
-                message.id?.let { id ->
-                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.tool_call_id", id))
+            is Message.Assistant -> {
+                val toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
+                val reasoningParts = message.parts.filterIsInstance<MessagePart.Reasoning>()
+                val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+
+                when {
+                    toolCalls.isNotEmpty() -> {
+                        // Weave forces the role to `assistant` for tool-call entries in the prompt history,
+                        // and fans out the tool call into per-field indexed attributes.
+                        span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", Message.Role.Assistant.name.lowercase()))
+                        addToolCallAttributes(span, "gen_ai.prompt.$index.tool_calls", toolCalls)
+                        span.addAttribute(CustomAttribute("gen_ai.prompt.$index.finish_reason", GenAIAttributes.Response.FinishReasonType.ToolCalls.id))
+                    }
+                    reasoningParts.isNotEmpty() -> {
+                        span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
+                        span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(reasoningParts.joinToString("\n") { it.content.joinToString("\n") })))
+                    }
+                    else -> {
+                        span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
+                        span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(textParts.joinToString("\n") { it.text })))
+                    }
                 }
             }
         }
@@ -109,41 +123,33 @@ internal class WeaveSpanAdapter(
     private fun applyCompletionAttributes(span: GenAIAgentSpan, index: Int, message: Message) {
         when (message) {
             is Message.Assistant -> {
-                span.addAttribute(CustomAttribute("gen_ai.completion.$index.role", message.role.name.lowercase()))
-                span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(message.content)))
-                message.finishReason?.let { reason ->
-                    span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", reason))
+                val toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
+                val reasoningParts = message.parts.filterIsInstance<MessagePart.Reasoning>()
+                val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+
+                when {
+                    toolCalls.isNotEmpty() -> {
+                        // Weave expects `assistant` role for tool-call completions.
+                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.role", Message.Role.Assistant.name.lowercase()))
+                        addToolCallAttributes(span = span, keyPrefix = "gen_ai.completion.$index.tool_calls", toolCalls = toolCalls)
+                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", GenAIAttributes.Response.FinishReasonType.ToolCalls.id))
+                    }
+                    reasoningParts.isNotEmpty() -> {
+                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.role", message.role.name.lowercase()))
+                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(reasoningParts.joinToString("\n") { it.content.joinToString("\n") })))
+                    }
+                    else -> {
+                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.role", message.role.name.lowercase()))
+                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(textParts.joinToString("\n") { it.text })))
+                        message.finishReason?.let { reason ->
+                            span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", reason))
+                        }
+                    }
                 }
             }
 
-            is Message.Reasoning -> {
-                span.addAttribute(CustomAttribute("gen_ai.completion.$index.role", message.role.name.lowercase()))
-                span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(message.content)))
-            }
-
-            is Message.Tool.Call -> {
-                // Weave expects `assistant` role for tool-call completions.
-                span.addAttribute(
-                    CustomAttribute(
-                        "gen_ai.completion.$index.role",
-                        Message.Role.Assistant.name.lowercase()
-                    )
-                )
-                addToolCallAttributes(
-                    span = span,
-                    keyPrefix = "gen_ai.completion.$index.tool_calls",
-                    toolCalls = listOf(message)
-                )
-                span.addAttribute(
-                    CustomAttribute(
-                        "gen_ai.completion.$index.finish_reason",
-                        GenAIAttributes.Response.FinishReasonType.ToolCalls.id
-                    )
-                )
-            }
-
             else -> {
-                // Output messages should only be assistant/reasoning/tool-call responses.
+                // Output messages should only be assistant responses.
             }
         }
     }
@@ -161,14 +167,14 @@ internal class WeaveSpanAdapter(
     private fun addToolCallAttributes(
         span: GenAIAgentSpan,
         keyPrefix: String,
-        toolCalls: List<Message.Tool.Call>,
+        toolCalls: List<MessagePart.Tool.Call>,
     ) {
         toolCalls.forEachIndexed { toolIndex, tool ->
             // Match the legacy event-based output shape: `function` is a JSON string of {name,arguments}.
             val functionJson = JsonObject(
                 mapOf(
                     "name" to JsonPrimitive(tool.tool),
-                    "arguments" to JsonPrimitive(tool.content),
+                    "arguments" to JsonPrimitive(tool.args),
                 )
             ).toString()
             span.addAttribute(CustomAttribute("$keyPrefix.$toolIndex.function", HiddenString(functionJson)))

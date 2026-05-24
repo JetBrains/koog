@@ -4,11 +4,11 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.onTextMessage
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.banking.tools.MoneyTransferTools
@@ -51,7 +51,7 @@ suspend fun main() {
             )
 
             val callLLM by nodeLLMRequest()
-            val callAskUserTool by nodeExecuteTool()
+            val callAskUserTool by nodeExecuteTools()
 
             edge(nodeStart forwardTo requestClassification)
             edge(
@@ -64,12 +64,12 @@ suspend fun main() {
                     onCondition { it.isFailure }
                     transformed { "Failed to understand the user's intent" }
             )
-            edge(callLLM forwardTo callAskUserTool onToolCall { true })
+            edge(callLLM forwardTo callAskUserTool onToolCalls { true })
             edge(
-                callLLM forwardTo callLLM onAssistantMessage { true }
+                callLLM forwardTo callLLM onTextMessage { true }
                     transformed { "Please call `${AskUser.name}` tool instead of chatting" }
             )
-            edge(callAskUserTool forwardTo requestClassification transformed { it.result.toString() })
+            edge(callAskUserTool forwardTo requestClassification transformed { it.toolResults.first().output })
         }
 
         val transferMoney by subgraphWithTask<ClassifiedBankRequest, String>(

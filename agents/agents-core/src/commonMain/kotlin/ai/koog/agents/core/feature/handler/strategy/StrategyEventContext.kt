@@ -34,17 +34,6 @@ public class StrategyStartingContext(
     override val strategy: AIAgentStrategy<*, *, *>,
 ) : StrategyEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.StrategyStarting
-
-    /**
-     * The unique identifier for this run.
-     * @deprecated Use runId property from a [context] instance instead.
-     */
-    @Deprecated(
-        message = "Scheduled for removal. Please get runId from a context instance instead",
-        replaceWith = ReplaceWith("context.runId")
-    )
-    public val runId: String
-        get() = this.context.runId
 }
 
 /**
@@ -62,26 +51,4 @@ public class StrategyCompletedContext(
     public val resultType: TypeToken,
 ) : StrategyEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.StrategyCompleted
-
-    /**
-     * The unique identifier for this run.
-     * @deprecated Use runId property from a [context] instance instead.
-     */
-    @Deprecated(
-        message = "Scheduled for removal. Please get runId from a [context] instance instead",
-        replaceWith = ReplaceWith("context.runId")
-    )
-    public val runId: String
-        get() = this.context.runId
-
-    /**
-     * The identifier for this agent.
-     * @deprecated Use agentId property from a [context] instance instead.
-     */
-    @Deprecated(
-        message = "Scheduled for removal. Please get agentId from a [context] instance instead",
-        replaceWith = ReplaceWith("context.agentId")
-    )
-    public val agentId: String
-        get() = this.context.agentId
 }

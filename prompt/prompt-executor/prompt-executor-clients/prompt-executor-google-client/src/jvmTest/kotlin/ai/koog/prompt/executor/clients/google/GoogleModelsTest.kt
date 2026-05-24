@@ -5,7 +5,6 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.list
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.message.Message
 import io.kotest.matchers.collections.shouldContain
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -78,18 +77,16 @@ class GoogleModelsTest {
             httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockEngine)) // Ktor client would always respond with the json from above
         )
 
-        val responses = googleClient.execute(
+        val response = googleClient.execute(
             prompt = prompt("test") { user("What is the capital of France?") },
             model = GoogleModels.Gemini2_5Flash
         )
 
-        assertEquals(1, responses.size)
-        // When no parts returned -- content should be interpreted as empty
-        assertEquals("", responses.single().content)
+        // When no parts returned -- parts should be empty
+        assertEquals(0, response.parts.size)
         // Also let's check some other fields parsing
-        assertEquals(Message.Role.Assistant, responses.single().role)
-        assertEquals(36, responses.single().metaInfo.inputTokensCount)
-        assertEquals(146, responses.single().metaInfo.totalTokensCount)
+        assertEquals(36, response.metaInfo.inputTokensCount)
+        assertEquals(146, response.metaInfo.totalTokensCount)
     }
 
     @Test

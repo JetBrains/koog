@@ -10,10 +10,8 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":rag:rag-base"))
                 api(project(":serialization:serialization-core"))
-                implementation(project(":prompt:prompt-markdown"))
-                implementation(project(":prompt:prompt-xml"))
+                api(project(":prompt:prompt-model"))
 
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)

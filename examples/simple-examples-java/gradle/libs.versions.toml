@@ -1,6 +1,7 @@
 [versions]
 # Published to maven local automatically during initialization and before each compilation
 koog = "99-SNAPSHOT"
+koogBeta = "99-beta-SNAPSHOT"
 jackson = "2.21.1"
 logback = "1.5.13"
 opentelemetry = "1.61.0"
@@ -8,6 +9,8 @@ opentelemetry = "1.61.0"
 [libraries]
 # Koog
 koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
+koog-agents-additions = { module = "ai.koog:koog-agents-additions", version.ref = "koogBeta" }
+koog-agents-ext = { module = "ai.koog:agents-ext", version.ref = "koogBeta" }
 koog-serialization-jackson = { module = "ai.koog:serialization-jackson", version.ref = "koog" }
 koog-agents-features-sql = { module = "ai.koog:agents-features-sql", version.ref = "koog" }
 koog-agents-features-chat-memory-jdbc = { module = "ai.koog:agents-features-chat-memory-sql", version.ref = "koog" }

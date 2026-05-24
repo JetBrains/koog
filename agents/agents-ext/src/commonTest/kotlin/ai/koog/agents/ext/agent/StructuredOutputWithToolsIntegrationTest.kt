@@ -13,7 +13,7 @@ import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.utils.time.KoogClock
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -41,7 +41,7 @@ class StructuredOutputWithToolsIntegrationTest {
     )
 
     object GetTemperatureTool : SimpleTool<GetTemperatureTool.Args>(
-        argsSerializer = Args.serializer(),
+        argsType = typeToken<Args>(),
         name = "get_temperature",
         description = "Get current temperature for a city"
     ) {
@@ -58,7 +58,7 @@ class StructuredOutputWithToolsIntegrationTest {
     }
 
     object GetWeatherConditionsTool : SimpleTool<GetWeatherConditionsTool.Args>(
-        argsSerializer = Args.serializer(),
+        argsType = typeToken<Args>(),
         name = "get_weather_conditions",
         description = "Get current weather conditions for a city"
     ) {
@@ -75,7 +75,7 @@ class StructuredOutputWithToolsIntegrationTest {
     }
 
     object GetWindSpeedTool : SimpleTool<GetWindSpeedTool.Args>(
-        argsSerializer = Args.serializer(),
+        argsType = typeToken<Args>(),
         name = "get_wind_speed",
         description = "Get current wind speed for a city"
     ) {
@@ -92,7 +92,7 @@ class StructuredOutputWithToolsIntegrationTest {
     }
 
     object GetHumidityTool : SimpleTool<GetHumidityTool.Args>(
-        argsSerializer = Args.serializer(),
+        argsType = typeToken<Args>(),
         name = "get_humidity",
         description = "Get current humidity for a city"
     ) {
@@ -200,9 +200,6 @@ class StructuredOutputWithToolsIntegrationTest {
             "Get all weather metrics simultaneously for ${request.city}, ${request.country}"
         }
 
-        val toolCallTimestamps = mutableMapOf<String, Long>()
-        val currentTime = KoogClock.System.now().toEpochMilliseconds()
-
         val mockExecutor = getMockExecutor(serializer) {
             // Return structured output
             mockLLMAnswer(
@@ -240,13 +237,7 @@ class StructuredOutputWithToolsIntegrationTest {
                 tool(GetWindSpeedTool)
                 tool(GetHumidityTool)
             }
-        ) {
-            install(EventHandler) {
-                onToolCallStarting { eventContext ->
-                    toolCallTimestamps[eventContext.toolName] = currentTime
-                }
-            }
-        }
+        )
 
         val request = WeatherRequest(city = "London", country = "UK")
         val result = agent.run(request, null)

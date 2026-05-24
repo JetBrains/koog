@@ -3,14 +3,12 @@ package ai.koog.agents.core.agent.context
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.lock.RWLock
-import ai.koog.prompt.message.Message
 import ai.koog.serialization.TypeToken
 
 /**
@@ -212,39 +210,6 @@ public class AIAgentGraphContext(
                 environment?.let { this.environment = it }
                 executionInfo?.let { this.executionInfo = it }
             }
-        }
-    }
-
-    /**
-     * Plain in-memory map backing [store], [get] and [remove].
-     *
-     * Concurrency caveat: this is a plain [mutableMapOf], it is **not** thread-safe. Unlike [storage] (which is
-     * an [AIAgentStorage] that provides its own synchronization), concurrent access to [store], [get] or
-     * [remove] from different coroutines/threads on the same [AIAgentGraphContext] is not synchronized and may
-     * lead to data races. Callers must externally serialize access, or use the concurrent-safe [storage]
-     * property for shared data.
-     */
-    private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
-
-    @Suppress("DEPRECATION")
-    override fun store(key: AIAgentStorageKey<*>, value: Any) {
-        storeMap[key] = value
-    }
-
-    @Suppress("DEPRECATION")
-    override fun <T> get(key: AIAgentStorageKey<*>): T? {
-        @Suppress("UNCHECKED_CAST")
-        return storeMap[key] as T?
-    }
-
-    @Suppress("DEPRECATION")
-    override fun remove(key: AIAgentStorageKey<*>): Boolean {
-        return storeMap.remove(key) != null
-    }
-
-    override suspend fun getHistory(): List<Message> {
-        return llm.readSession {
-            prompt.messages
         }
     }
 

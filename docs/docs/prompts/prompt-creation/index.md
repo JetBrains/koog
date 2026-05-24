@@ -250,21 +250,18 @@ To create the tool message, call the `tool()` function in Kotlin or the `toolCal
     val prompt = prompt("calculator_example") {
         system("You are a helpful assistant with access to tools.")
         user("What is 5 + 3?")
-        tool {
-            // Tool call
-            call(
-                id = "calculator_tool_id",
-                tool = "calculator",
-                content = """{"operation": "add", "a": 5, "b": 3}"""
-            )
-
-            // Tool result
-            result(
-                id = "calculator_tool_id",
-                tool = "calculator",
-                content = "8"
-            )
-        }
+        // Tool call
+        toolCall(
+            id = "calculator_tool_id",
+            tool = "calculator",
+            args = """{"operation": "add", "a": 5, "b": 3}"""
+        )
+        // Tool result
+        toolResult(
+            id = "calculator_tool_id",
+            tool = "calculator",
+            output = "8"
+        )
 
         // LLM response based on tool result
         assistant("The result of 5 + 3 is 8.")

@@ -1,7 +1,7 @@
 package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.http.client.ktor.KtorKoogHttpClient
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine

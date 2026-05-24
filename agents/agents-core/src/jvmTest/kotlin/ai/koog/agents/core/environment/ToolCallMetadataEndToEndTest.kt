@@ -15,8 +15,7 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
@@ -82,12 +81,11 @@ class ToolCallMetadataEndToEndTest : AgentTestBase() {
         override fun createInitialConfig(agentConfig: AIAgentConfig): TestFeatureConfig = TestFeatureConfig()
     }
 
-    private fun newToolCall(toolName: String = "metadata_aware", value: String = "hello"): Message.Tool.Call =
-        Message.Tool.Call(
+    private fun newToolCall(toolName: String = "metadata_aware", value: String = "hello"): MessagePart.Tool.Call =
+        MessagePart.Tool.Call(
             id = "call-1",
             tool = toolName,
-            content = """{"value":"$value"}""",
-            metaInfo = ResponseMetaInfo.Empty,
+            args = """{"value":"$value"}""",
         )
 
     private fun environmentWith(tool: ToolBase<*, *>): GenericAgentEnvironment =

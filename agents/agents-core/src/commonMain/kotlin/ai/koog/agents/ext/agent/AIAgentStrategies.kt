@@ -2,26 +2,20 @@
 
 package ai.koog.agents.ext.agent
 
-import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
-import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.nodeSetStructuredOutput
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onMultipleAssistantMessages
-import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
-import ai.koog.agents.core.dsl.extension.onToolCall
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.environment.result
+import ai.koog.agents.core.dsl.extension.onTextMessage
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.structure.StructuredRequestConfig
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
@@ -36,16 +30,18 @@ import kotlin.jvm.JvmOverloads
  */
 public fun chatAgentStrategy(): AIAgentGraphStrategy<String, String> = strategy("chat") {
     val nodeCallLLM by nodeLLMRequest("sendInput")
-    val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
-    val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
+    val nodeExecuteTool by nodeExecuteTools("nodeExecuteTool")
+    val nodeSendToolResult by nodeLLMSendToolResults("nodeSendToolResult")
 
-    val giveFeedbackToCallTools by node<String, Message.Response> { input ->
+    val giveFeedbackToCallTools by node<String, Message.Assistant> { input ->
         llm.writeSession {
             appendPrompt {
                 user(
-                    "Don't chat with plain text! Call one of the available tools, instead: ${tools.joinToString(", ") {
-                        it.name
-                    }}"
+                    "Don't chat with plain text! Call one of the available tools, instead: ${
+                        tools.joinToString(", ") {
+                            it.name
+                        }
+                    }"
                 )
             }
 
@@ -55,20 +51,20 @@ public fun chatAgentStrategy(): AIAgentGraphStrategy<String, String> = strategy(
 
     edge(nodeStart forwardTo nodeCallLLM)
 
-    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
-    edge(nodeCallLLM forwardTo giveFeedbackToCallTools onAssistantMessage { true })
+    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
+    edge(nodeCallLLM forwardTo giveFeedbackToCallTools onTextMessage { true })
 
-    edge(giveFeedbackToCallTools forwardTo giveFeedbackToCallTools onAssistantMessage { true })
-    edge(giveFeedbackToCallTools forwardTo nodeExecuteTool onToolCall { true })
+    edge(giveFeedbackToCallTools forwardTo giveFeedbackToCallTools onTextMessage { true })
+    edge(giveFeedbackToCallTools forwardTo nodeExecuteTool onToolCalls { true })
 
     edge(nodeExecuteTool forwardTo nodeSendToolResult)
 
-    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
+    edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
     edge(
-        nodeSendToolResult forwardTo nodeFinish onToolCall { tc -> tc.tool == "__exit__" } transformed
+        nodeSendToolResult forwardTo nodeFinish onToolCalls { tc -> tc.tool == "__exit__" } transformed
             { "Chat finished" }
     )
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
 }
 
 /**
@@ -134,12 +130,12 @@ public fun reActStrategy(
         storage.set(reasoningStepKey, 0)
         it
     }
-    val nodeCallLLM by node<Unit, Message.Response> {
+    val nodeCallLLM by node<Unit, Message.Assistant> {
         llm.writeSession {
             requestLLM()
         }
     }
-    val nodeExecuteTool by nodeExecuteTool()
+    val nodeExecuteTools by nodeExecuteTools()
 
     val nodeCallLLMReasonInput by node<String, Unit> { stageInput ->
         llm.writeSession {
@@ -151,12 +147,14 @@ public fun reActStrategy(
             requestLLMWithoutTools()
         }
     }
-    val nodeCallLLMReason by node<ReceivedToolResult, Unit> { result ->
+    val nodeCallLLMReason by node<ReceivedToolResults, Unit> { results ->
         val reasoningStep = storage.getValue(reasoningStepKey)
         llm.writeSession {
             appendPrompt {
-                tool {
-                    result(result)
+                user {
+                    results.toolResults.forEach {
+                        toolResult(it.toMessagePart())
+                    }
                 }
             }
 
@@ -173,9 +171,9 @@ public fun reActStrategy(
     edge(nodeStart forwardTo nodeSetup)
     edge(nodeSetup forwardTo nodeCallLLMReasonInput)
     edge(nodeCallLLMReasonInput forwardTo nodeCallLLM)
-    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
-    edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeExecuteTool forwardTo nodeCallLLMReason)
+    edge(nodeCallLLM forwardTo nodeExecuteTools onToolCalls { true })
+    edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
+    edge(nodeExecuteTools forwardTo nodeCallLLMReason)
     edge(nodeCallLLMReason forwardTo nodeCallLLM)
 }
 
@@ -192,7 +190,7 @@ public fun reActStrategy(
 public inline fun <reified Output> structuredOutputWithToolsStrategy(
     config: StructuredRequestConfig<Output>,
     fixingParser: StructureFixingParser? = null,
-    parallelTools: Boolean = false
+    parallelTools: Boolean = false,
 ): AIAgentGraphStrategy<String, Output> = structuredOutputWithToolsStrategy(
     config,
     fixingParser,
@@ -216,41 +214,39 @@ public inline fun <reified Input, reified Output> structuredOutputWithToolsStrat
     config: StructuredRequestConfig<Output>,
     fixingParser: StructureFixingParser? = null,
     parallelTools: Boolean = false,
-    noinline transform: suspend AIAgentGraphContextBase.(input: Input) -> String
+    noinline transform: suspend (input: Input) -> String,
 ): AIAgentGraphStrategy<Input, Output> = strategy<Input, Output>("structured_output_with_tools_strategy") {
     val setStructuredOutput by nodeSetStructuredOutput<Input, Output>(config = config)
     val transformInput by node<Input, String> { transform(it) }
-    val callLLM by nodeLLMRequestMultiple()
-    val executeTools by nodeExecuteMultipleTools(parallelTools = parallelTools)
-    val sendToolResult by nodeLLMSendMultipleToolResults()
+    val callLLM by nodeLLMRequest()
+    val executeTools by nodeExecuteTools(parallel = parallelTools)
+    val sendToolResult by nodeLLMSendToolResults()
     val transformToStructuredOutput by node<Message.Assistant, Output> { response ->
         llm.writeSession {
             parseResponseToStructuredResponse(response, config, fixingParser).data
         }
     }
 
-    // Set the structured output, get the input and then call the llm
-    nodeStart then setStructuredOutput then transformInput then callLLM
+    // Set the structured output, transform the input to a String, then call the LLM as a user message
+    nodeStart then setStructuredOutput then transformInput
+    edge(transformInput forwardTo callLLM)
 
-    // On tools
-    edge(callLLM forwardTo executeTools onMultipleToolCalls { true })
+    // If the LLM responded with tool calls, execute them and feed the results back
+    edge(callLLM forwardTo executeTools onToolCalls { true })
     edge(executeTools forwardTo sendToolResult)
 
-    // On assistant messages
+    // If the LLM responded with a plain text answer, parse it into the structured output
     edge(
         callLLM forwardTo transformToStructuredOutput
-            onMultipleAssistantMessages { true }
-            transformed { it.single() }
+            onCondition { msg -> msg.parts.none { it is MessagePart.Tool.Call } }
     )
 
-    // Post tool result
-    edge(sendToolResult forwardTo executeTools onMultipleToolCalls { true })
+    // After sending tool results, the LLM may continue calling tools or produce the final text answer
+    edge(sendToolResult forwardTo executeTools onToolCalls { true })
     edge(
         sendToolResult forwardTo transformToStructuredOutput
-            onMultipleAssistantMessages { true }
-            transformed { it.first() }
+            onCondition { msg -> msg.parts.none { it is MessagePart.Tool.Call } }
     )
 
-    // Finish
     transformToStructuredOutput then nodeFinish
 }

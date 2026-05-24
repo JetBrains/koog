@@ -30,8 +30,8 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
@@ -282,7 +282,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param prompt The prompt that was sent to the language model;
      * @param model The language model instance that processed the request;
      * @param tools The list of tool descriptors that were available for the LLM call;
-     * @param responses The response messages received from the language model;
+     * @param response The response messages received from the language model;
      * @param moderationResponse The moderation response, if any, received from the language model.
      */
     @InternalAgentsApi
@@ -294,7 +294,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
-        responses: List<Message.Response>,
+        response: Message.Assistant?,
         moderationResponse: ModerationResult?,
     )
 
@@ -921,213 +921,6 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
     )
 
     //endregion Interceptors
-
-    //region Deprecated Interceptors
-
-    /**
-     * Intercepts on before an agent started to modify or enhance the agent.
-     */
-    @Deprecated(
-        message = "Please use interceptAgentStarting instead. This method is deprecated and will be removed in the next release.",
-        replaceWith = ReplaceWith(
-            expression = "interceptAgentStarting(feature, handle)",
-            imports = arrayOf("ai.koog.agents.core.feature.handler.agent.AgentStartingContext")
-        )
-    )
-    public override fun interceptBeforeAgentStarted(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (AgentStartingContext) -> Unit
-    )
-
-    /**
-     * Intercepts the completion of an agent's operation and assigns a custom handler to process the result.
-     */
-    @Deprecated(
-        message = "Please use interceptAgentCompleted instead. This method is deprecated and will be removed in the next release.",
-        replaceWith = ReplaceWith(
-            expression = "interceptAgentCompleted(feature, handle)",
-            imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.agent.AgentCompletedContext"
-            )
-        )
-    )
-    public override fun interceptAgentFinished(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: AgentCompletedContext) -> Unit
-    )
-
-    /**
-     * Intercepts and handles errors occurring during the execution of an AI agent's strategy.
-     */
-    @Deprecated(
-        message = "Please use interceptAgentExecutionFailed instead. This method is deprecated and will be removed in the next release.",
-        replaceWith = ReplaceWith(
-            expression = "interceptAgentExecutionFailed(feature, handle)",
-            imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext"
-            )
-        )
-    )
-    public override fun interceptAgentRunError(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (AgentExecutionFailedContext) -> Unit
-    )
-
-    /**
-     * Intercepts and sets a handler to be invoked before an agent is closed.
-     */
-    @Deprecated(
-        message = "Please use interceptAgentClosing instead. This method is deprecated and will be removed in the next release.",
-        replaceWith = ReplaceWith(
-            expression = "interceptAgentClosing(feature, handle)",
-            imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.agent.AgentClosingContext"
-            )
-        )
-    )
-    public override fun interceptAgentBeforeClose(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (AgentClosingContext) -> Unit
-    )
-
-    /**
-     * Intercepts the strategy starting event to perform actions when an agent strategy begins execution.
-     */
-    @Deprecated(
-        message = "Please use interceptStrategyStarting instead. This method is deprecated and will be removed in the next release.",
-        replaceWith = ReplaceWith(
-            expression = "interceptStrategyStarting(feature, handle)",
-            imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext"
-            )
-        )
-    )
-    public override fun interceptStrategyStart(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (StrategyStartingContext) -> Unit
-    )
-
-    /**
-     * Sets up an interceptor to handle the completion of a strategy for the given feature.
-     */
-    @Deprecated(
-        message = "Please use interceptStrategyCompleted instead. This method is deprecated and will be removed in the next release.",
-        replaceWith = ReplaceWith(
-            expression = "interceptStrategyCompleted(feature, handle)",
-            imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext"
-            )
-        )
-    )
-    public override fun interceptStrategyFinished(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (StrategyCompletedContext) -> Unit
-    )
-
-    /**
-     * Intercepts LLM calls before they are made (deprecated name).
-     */
-    @Deprecated(
-        message = "Please use interceptLLMCallStarting instead. This method is deprecated and will be removed in the next release.",
-        replaceWith = ReplaceWith(
-            expression = "interceptLLMCallStarting(feature, handle)",
-            imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext"
-            )
-        )
-    )
-    public override fun interceptBeforeLLMCall(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: LLMCallStartingContext) -> Unit
-    )
-
-    /**
-     * Intercepts LLM calls after they are made to process or log the response.
-     */
-    @Deprecated(
-        message = "Please use interceptLLMCallCompleted instead. This method is deprecated and will be removed in the next release.",
-        replaceWith = ReplaceWith(
-            expression = "interceptLLMCallCompleted(feature, handle)",
-            imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext"
-            )
-        )
-    )
-    public override fun interceptAfterLLMCall(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: LLMCallCompletedContext) -> Unit
-    )
-
-    /**
-     * Intercepts and handles tool calls for the specified feature and its implementation.
-     * Updates the tool call handler for the given feature key with a custom handler.
-     */
-    @Deprecated(
-        message = "Please use interceptToolCallStarting instead. This method is deprecated and will be removed in the next release.",
-        replaceWith = ReplaceWith(
-            expression = "interceptToolCallStarting(feature, handle)",
-            imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext"
-            )
-        )
-    )
-    public override fun interceptToolCall(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: ToolCallStartingContext) -> Unit
-    )
-
-    /**
-     * Intercepts the result of a tool call with a custom handler for a specific feature.
-     */
-    @Deprecated(
-        message = "Please use interceptToolCallCompleted instead. This method is deprecated and will be removed in the next release.",
-        replaceWith = ReplaceWith(
-            expression = "interceptToolCallCompleted(feature, handle)",
-            imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext"
-            )
-        )
-    )
-    public override fun interceptToolCallResult(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: ToolCallCompletedContext) -> Unit
-    )
-
-    /**
-     * Sets up an interception mechanism to handle tool call failures for a specific feature.
-     */
-    @Deprecated(
-        message = "Please use interceptToolCallFailed instead. This method is deprecated and will be removed in the next release.",
-        replaceWith = ReplaceWith(
-            expression = "interceptToolCallFailed(feature, handle)",
-            imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext"
-            )
-        )
-    )
-    public override fun interceptToolCallFailure(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: ToolCallFailedContext) -> Unit
-    )
-
-    /**
-     * Intercepts validation errors encountered during the execution of tools associated with the specified feature.
-     */
-    @Deprecated(
-        message = "Please use interceptToolValidationFailed instead. This method is deprecated and will be removed in the next release.",
-        replaceWith = ReplaceWith(
-            expression = "interceptToolValidationFailed(feature, handle)",
-            imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext"
-            )
-        )
-    )
-    public override fun interceptToolValidationError(
-        feature: AIAgentFeature<*, *>,
-        handle: suspend (eventContext: ToolValidationFailedContext) -> Unit
-    )
-
-    //endregion Deprecated Interceptors
 
     //region public and Internal Methods
 

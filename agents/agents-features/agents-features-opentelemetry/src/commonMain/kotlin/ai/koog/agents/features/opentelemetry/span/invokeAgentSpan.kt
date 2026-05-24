@@ -4,8 +4,6 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.extension.addCommonErrorAttributes
-import ai.koog.agents.features.opentelemetry.extension.sumInputTokens
-import ai.koog.agents.features.opentelemetry.extension.sumOutputTokens
 import ai.koog.agents.features.opentelemetry.extension.systemMessages
 import ai.koog.agents.features.opentelemetry.extension.toStatusData
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
@@ -197,10 +195,18 @@ internal fun endInvokeAgentSpan(
     span.addAttribute(GenAIAttributes.Response.Model(model))
 
     // gen_ai.usage.input_tokens
-    span.addAttribute(GenAIAttributes.Usage.InputTokens(messages.sumInputTokens()))
+    span.addAttribute(
+        GenAIAttributes.Usage.InputTokens(
+            messages.filterIsInstance<Message.Assistant>().sumOf { message -> message.metaInfo.inputTokensCount ?: 0 }
+        )
+    )
 
     // gen_ai.usage.output_tokens
-    span.addAttribute(GenAIAttributes.Usage.OutputTokens(messages.sumOutputTokens()))
+    span.addAttribute(
+        GenAIAttributes.Usage.OutputTokens(
+            messages.filterIsInstance<Message.Assistant>().sumOf { message -> message.metaInfo.outputTokensCount ?: 0 }
+        )
+    )
 
     // gen_ai.output.messages
     if (messages.isNotEmpty()) {

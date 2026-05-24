@@ -479,7 +479,7 @@ Here is an example of error handling in Kotlin and Java:
 === "Java"
 
     <!--- INCLUDE
-    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.Prompt;
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.clients.retry.RetryConfig;
@@ -509,13 +509,13 @@ Here is an example of error handling in Kotlin and Java:
             .build();
     MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(resilientClient);
 
-    Consumer<List<Message.Response>> processResponse = (resp) -> { /* implementation */ };
+    Consumer<Message.Assistant> processResponse = (resp) -> { /* implementation */ };
     Runnable scheduleRetryLater = () -> { /* implementation */ };
     Runnable notifyAdministrator = () -> { /* implementation */ };
     Runnable useDefaultResponse = () -> { /* implementation */ };
 
     try {
-        List<Message.Response> response = promptExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
+        Message.Assistant response = promptExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
         processResponse.accept(response);
     } catch (Exception e) {
         logger.error("LLM operation failed", e);

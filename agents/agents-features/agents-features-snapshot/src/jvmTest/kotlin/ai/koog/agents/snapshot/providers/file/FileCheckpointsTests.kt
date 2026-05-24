@@ -132,13 +132,16 @@ class FileCheckpointsTests {
             createdAt = time,
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
-                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
+                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time)),
+                Message.User("Node 2 output", metaInfo = RequestMetaInfo(time))
             ),
             version = 0L,
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(agentId, "straight-forward", "Node2"),
-                lastInput = JSONPrimitive("Test input")
-            )
+                lastOutput = JSONPrimitive("Node 2 output")
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         provider.saveCheckpoint(sessionId, testCheckpoint)
@@ -183,7 +186,9 @@ class FileCheckpointsTests {
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(agentId, "straight-forward", "Node2"),
                 lastOutput = JSONPrimitive("Test output")
-            )
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         provider.saveCheckpoint(sessionId, testCheckpoint)
@@ -220,13 +225,16 @@ class FileCheckpointsTests {
             createdAt = time - 10.seconds,
             messageHistory = listOf(
                 Message.User("Earlier message", metaInfo = RequestMetaInfo(time)),
-                Message.Assistant("Earlier response", metaInfo = ResponseMetaInfo(time))
+                Message.Assistant("Earlier response", metaInfo = ResponseMetaInfo(time)),
+                Message.User("Node 1 output", metaInfo = RequestMetaInfo(time))
             ),
             version = 0L,
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(agentId, "straight-forward", "Node1"),
-                lastInput = JSONPrimitive("Test input")
-            )
+                lastOutput = JSONPrimitive("Node 1 output")
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         val testCheckpoint = AgentCheckpointData(
@@ -234,13 +242,16 @@ class FileCheckpointsTests {
             createdAt = time,
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
-                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
+                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time)),
+                Message.User("Node 2 output", metaInfo = RequestMetaInfo(time))
             ),
             version = testCheckpoint2.version.plus(1),
             graphProperties = GraphCheckpointProperties(
                 nodePath = path(agentId, "straight-forward", "Node2"),
-                lastInput = JSONPrimitive("Test input")
-            )
+                lastOutput = JSONPrimitive("Node 2 output")
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         provider.saveCheckpoint(sessionId, testCheckpoint)

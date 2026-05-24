@@ -1,6 +1,6 @@
 package ai.koog.prompt.executor.clients.bedrock.converse
 
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import kotlin.test.Test

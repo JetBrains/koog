@@ -1,6 +1,6 @@
 package ai.koog.prompt.executor.ollama.client
 
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.tokenizer.PromptTokenizer
 import io.github.oshai.kotlinlogging.KotlinLogging

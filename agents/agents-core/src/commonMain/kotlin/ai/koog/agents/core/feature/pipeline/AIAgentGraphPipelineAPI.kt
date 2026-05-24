@@ -13,6 +13,7 @@ import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedCo
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
 import ai.koog.serialization.TypeToken
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Public API surface for graph-specific pipeline operations (nodes and subgraphs).
@@ -98,31 +99,37 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
 
     //region Interceptors
 
+    @JvmSynthetic
     public fun interceptNodeExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionStartingContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptNodeExecutionCompleted(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionCompletedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptNodeExecutionFailed(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionFailedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptSubgraphExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionStartingContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptSubgraphExecutionCompleted(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionCompletedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptSubgraphExecutionFailed(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionFailedContext) -> Unit

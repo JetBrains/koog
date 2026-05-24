@@ -5,8 +5,8 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 
@@ -70,13 +70,13 @@ public data class LLMCallFailedContext(
     override val tools: List<ToolDescriptor>,
     public val error: Throwable
 ) : LLMCallEventContext {
-    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallStarting
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallFailed
 }
 
 /**
  * Represents the context for handling an after LLM call event.
  *
- * @property responses The response messages received from the language model.
+ * @property response The response message received from the language model.
  * @property moderationResponse The moderation response, if any, received from the language model.
  */
 public data class LLMCallCompletedContext(
@@ -87,7 +87,7 @@ public data class LLMCallCompletedContext(
     override val prompt: Prompt,
     override val model: LLModel,
     override val tools: List<ToolDescriptor>,
-    public val responses: List<Message.Response>,
+    public val response: Message.Assistant?,
     public val moderationResponse: ModerationResult?,
 ) : LLMCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMCallCompleted

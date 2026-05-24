@@ -1,20 +1,18 @@
 package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
-import ai.koog.agents.core.agent.context.RollbackStrategy;
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase;
-import ai.koog.agents.core.agent.entity.AIAgentEdge;
-import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
-import ai.koog.agents.core.agent.entity.AIAgentNode;
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph;
-import ai.koog.agents.core.agent.entity.CompressHistoryNodeBuilder;
-import ai.koog.agents.core.tools.Tool;
+import ai.koog.agents.core.agent.context.RollbackStrategy;
+import ai.koog.agents.core.agent.entity.*;
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy;
+import ai.koog.agents.core.tools.Tool;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.core.tools.annotations.LLMDescription;
 import ai.koog.agents.core.tools.reflect.ToolSet;
+import ai.koog.agents.ext.agent.CriticResult;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
 import ai.koog.agents.snapshot.feature.AgentCheckpointData;
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties;
 import ai.koog.agents.snapshot.feature.Persistence;
 import ai.koog.agents.snapshot.feature.PersistenceKt;
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider;
@@ -23,18 +21,17 @@ import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.Models;
 import ai.koog.integration.tests.utils.annotations.Retry;
-import ai.koog.agents.ext.agent.CriticResult;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.llm.LLMCapability;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
 import ai.koog.prompt.message.RequestMetaInfo;
 import ai.koog.prompt.message.ResponseMetaInfo;
+import ai.koog.serialization.JSONElementKt;
 import ai.koog.serialization.JSONPrimitive;
 import ai.koog.serialization.TypeToken;
-import ai.koog.serialization.JSONElementKt;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -67,25 +64,18 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             .withInput(String.class)
             .withOutput(String.class);
 
-        var preprocess = AIAgentNode.builder("preprocess")
-            .withInput(String.class)
-            .withOutput(String.class)
-            .withAction((input, ctx) -> "Reply with the single word hello to: " + input)
-            .build();
+        var llm = AIAgentNode.llmRequest("llm");
 
-        var llm = AIAgentNode.llmRequest(true, "llm");
-        var extractContent = AIAgentNode.builder("extract-content")
-            .withInput(Message.Response.class)
-            .withOutput(String.class)
-            .withAction((response, ctx) -> assistantContent(response, ""))
-            .build();
-
-        strategy.edge(strategy.nodeStart, preprocess);
-        strategy.edge(preprocess, llm);
-        strategy.edge(llm, extractContent);
         strategy.edge(AIAgentEdge.builder()
-            .from(extractContent)
+            .from(strategy.nodeStart)
+            .to(llm)
+            .withAction((input, ctx) -> "Reply with the single word hello to: " + input)
+            .build());
+
+        strategy.edge(AIAgentEdge.builder()
+            .from(llm)
             .to(strategy.nodeFinish)
+            .onTextMessage()
             .build());
 
         AIAgent<String, String> agent = AIAgent.builder()
@@ -106,12 +96,12 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             () -> assertFalse(result.isBlank(), "Graph result should not be blank"),
             () -> assertTrue(containsIgnoreCase(result, "hello"), "Graph result should contain the expected hello reply, but was: " + result),
             () -> assertEquals(
-                List.of("preprocess", "llm", "extract-content"),
+                List.of("llm"),
                 withoutGraphBoundaryNodes(events.nodeNames),
                 "Expected node execution order for typed-node graph"
             ),
             () -> assertEquals(
-                List.of("preprocess", "llm", "extract-content"),
+                List.of("llm"),
                 withoutGraphBoundaryNodes(events.completedNodeNames),
                 "Expected node completion order for typed-node graph"
             )
@@ -343,32 +333,26 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             .withInput(String.class)
             .withOutput(String.class);
 
-        var firstLlm = AIAgentNode.llmRequest(true, "first-llm");
-        var extractFirstResponse = AIAgentNode.builder("extract-first-response")
-            .withInput(Message.Response.class)
-            .withOutput(String.class)
-            .withAction((response, ctx) -> assistantContent(response, "No response"))
-            .build();
+        var firstLlm = AIAgentNode.llmRequest("first-llm");
         var compress = new CompressHistoryNodeBuilder("compress")
             .withInput(String.class)
             .compressionStrategy(HistoryCompressionStrategy.WholeHistory)
             .preserveMemory(true)
             .build();
-        var finalLlm = AIAgentNode.llmRequest(true, "final-llm");
-        var extractFinalResponse = AIAgentNode.builder("extract-final-response")
-            .withInput(Message.Response.class)
-            .withOutput(String.class)
-            .withAction((response, ctx) -> assistantContent(response, ""))
-            .build();
+        var finalLlm = AIAgentNode.llmRequest("final-llm");
 
         strategy.edge(strategy.nodeStart, firstLlm);
-        strategy.edge(firstLlm, extractFirstResponse);
-        strategy.edge(extractFirstResponse, compress);
-        strategy.edge(compress, finalLlm);
-        strategy.edge(finalLlm, extractFinalResponse);
         strategy.edge(AIAgentEdge.builder()
-            .from(extractFinalResponse)
+            .from(firstLlm)
+            .to(compress)
+            .onTextMessage()
+            .build());
+
+        strategy.edge(compress, finalLlm);
+        strategy.edge(AIAgentEdge.builder()
+            .from(finalLlm)
             .to(strategy.nodeFinish)
+            .onTextMessage()
             .build());
 
         AIAgent<String, String> agent = AIAgent.builder()
@@ -388,7 +372,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
             () -> assertNotNull(result, "History-compression graph result should not be null"),
             () -> assertFalse(result.isBlank(), "History-compression graph result should not be blank"),
             () -> assertEquals(
-                List.of("first-llm", "extract-first-response", "compress", "final-llm", "extract-final-response"),
+                List.of("first-llm", "compress", "final-llm"),
                 withoutGraphBoundaryNodes(events.nodeNames),
                 "Expected history-compression flow to execute all nodes in order"
             ),
@@ -422,7 +406,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
         assertAll(
             () -> assertEquals(1, checkpoints.size(), "Expected exactly one checkpoint to be created"),
-            () -> assertTrue(checkpoints.get(0).getNodePath().endsWith("/checkpoint-node"), "Checkpoint should be stored for checkpoint-node, but was: " + checkpoints.get(0).getNodePath()),
+            () -> assertTrue(checkpoints.get(0).getGraphProperties().getNodePath().endsWith("/checkpoint-node"), "Checkpoint should be stored for checkpoint-node, but was: " + checkpoints.get(0).getGraphProperties().getNodePath()),
             () -> assertEquals(1, checkpointNodeRunsAfterFirstRun, "Checkpoint node should run exactly once on the initial execution"),
             () -> assertEquals(1, finalNodeRunsAfterFirstRun, "Final node should run exactly once on the initial execution"),
             () -> assertEquals("final-node:checkpoint-node:first run", firstResult, "Initial run should produce the expected final-node output"),
@@ -459,12 +443,12 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
 
         assertAll(
             () -> assertEquals(1, checkpoints.size(), "Expected exactly one file checkpoint to be created"),
-            () -> assertTrue(checkpoints.get(0).getNodePath().endsWith("/checkpoint-node"), "Checkpoint should be stored for checkpoint-node, but was: " + checkpoints.get(0).getNodePath()),
+            () -> assertTrue(checkpoints.get(0).getGraphProperties().getNodePath().endsWith("/checkpoint-node"), "Checkpoint should be stored for checkpoint-node, but was: " + checkpoints.get(0).getGraphProperties().getNodePath()),
             () -> assertEquals(1, checkpointNodeRunsAfterFirstRun, "Checkpoint node should run exactly once on the initial execution"),
             () -> assertEquals(1, finalNodeRunsAfterFirstRun, "Final node should run exactly once on the initial execution"),
             () -> assertEquals("final-node:checkpoint-node:first run", firstResult, "Initial run should produce the expected final-node output"),
             () -> assertNotNull(latestCheckpoint, "Latest checkpoint should be available after file-based persistence"),
-            () -> assertTrue(latestCheckpoint.getNodePath().endsWith("/checkpoint-node"), "Latest file checkpoint should point to checkpoint-node, but was: " + latestCheckpoint.getNodePath()),
+            () -> assertTrue(latestCheckpoint.getGraphProperties().getNodePath().endsWith("/checkpoint-node"), "Latest file checkpoint should point to checkpoint-node, but was: " + latestCheckpoint.getGraphProperties().getNodePath()),
             () -> assertTrue(hasAnyFiles(tempDir), "File persistence should materialize checkpoint files in the temp directory"),
             () -> assertEquals("final-node:checkpoint-node:first run", secondResult, "Restored run should reuse the stored checkpoint output"),
             () -> assertEquals(1, checkpointNodeRuns.get(), "Checkpoint node should not rerun after file restore"),
@@ -563,7 +547,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
                 "Execution order should show rollback to the checkpoint and replay from the downstream node"
             ),
             () -> assertEquals(1, checkpoints.size(), "Rollback should not delete the existing checkpoint"),
-            () -> assertTrue(checkpoints.get(0).getNodePath().endsWith("/checkpoint-node"), "Rollback should preserve the checkpoint at checkpoint-node, but was: " + checkpoints.get(0).getNodePath())
+            () -> assertTrue(checkpoints.get(0).getGraphProperties().getNodePath().endsWith("/checkpoint-node"), "Rollback should preserve the checkpoint at checkpoint-node, but was: " + checkpoints.get(0).getGraphProperties().getNodePath())
         );
     }
 
@@ -613,14 +597,16 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         AgentCheckpointData checkpoint = new AgentCheckpointData(
             "java-last-input-checkpoint",
             now,
-            sessionId + "/" + strategyName + "/Node2",
-            JSONElementKt.JSONPrimitive("Node 1 output"),
-            null,
             List.of(
                 new Message.User("Restored user message", new RequestMetaInfo(now, null)),
                 new Message.Assistant("Restored assistant message", new ResponseMetaInfo(now, null, null, null))
             ),
+            null,
             0L,
+            new GraphCheckpointProperties(
+                sessionId + "/" + strategyName + "/Node1",
+                JSONElementKt.JSONPrimitive("Node 1 output")
+            ),
             null
         );
 
@@ -667,11 +653,13 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         AgentCheckpointData checkpoint = new AgentCheckpointData(
             "java-invalid-checkpoint",
             now,
-            sessionId + "/" + strategyName + "/MissingNode",
-            null,
-            JSONPrimitive.of("missing"),
             List.of(),
+            null,
             0L,
+            new GraphCheckpointProperties(
+                sessionId + "/" + strategyName + "/MissingNode",
+                JSONPrimitive.of("missing")
+            ),
             null
         );
 
@@ -776,7 +764,7 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         runBlockingReentrant(
             continuation -> persistence.createCheckpointAfterNode(
                 ctx,
-                nodePath,
+                ctx.getExecutionInfo().path(null),
                 lastOutput,
                 TypeToken.of(String.class),
                 0L,
@@ -815,13 +803,6 @@ public class JavaAIAgentGraphStrategyTest extends KoogJavaTestBase {
         return nodeNames.stream()
             .filter(nodeName -> !"__start__".equals(nodeName) && !"__finish__".equals(nodeName))
             .toList();
-    }
-
-    private static String assistantContent(Message.Response response, String fallback) {
-        if (response instanceof Message.Assistant) {
-            return (response).getContent();
-        }
-        return fallback;
     }
 
     private static boolean containsIgnoreCase(String text, String expected) {

@@ -1,5 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
+val isBeta by extra(true)
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -14,6 +15,7 @@ kotlin {
                 api(project(":agents:agents-tools"))
                 api(project(":agents:agents-utils"))
                 api(project(":prompt:prompt-processor"))
+                api(project(":rag:rag-base"))
 
                 api(libs.kotlinx.serialization.json)
             }
@@ -24,7 +26,9 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(project(":agents:agents-test"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
                 implementation(project(":test-utils"))
+                implementation(project(":agents:agents-features:agents-features-event-handler"))
             }
         }
 

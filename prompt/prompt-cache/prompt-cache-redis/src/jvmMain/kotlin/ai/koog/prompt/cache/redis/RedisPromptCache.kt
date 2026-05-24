@@ -106,13 +106,13 @@ public class RedisPromptCache(
     }
 
     @Serializable
-    private data class CachedElement(val response: List<Message.Response>, val request: PromptCache.Request)
+    private data class CachedElement(val response: Message.Assistant, val request: PromptCache.Request)
 
-    override suspend fun get(request: PromptCache.Request): List<Message.Response>? {
+    override suspend fun get(request: PromptCache.Request): Message.Assistant? {
         return getOrNull(request)
     }
 
-    override suspend fun put(request: PromptCache.Request, response: List<Message.Response>) {
+    override suspend fun put(request: PromptCache.Request, response: Message.Assistant) {
         try {
             val key = prefix + request.asCacheKey
             val value = prettyJson.encodeToString(CachedElement(response, request))
@@ -126,7 +126,7 @@ public class RedisPromptCache(
         }
     }
 
-    private suspend fun getOrNull(request: PromptCache.Request): List<Message.Response>? {
+    private suspend fun getOrNull(request: PromptCache.Request): Message.Assistant? {
         try {
             val key = prefix + request.asCacheKey
             val value = commands.get(key) ?: run {

@@ -11,8 +11,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolCallMetadata
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import kotlinx.coroutines.test.runTest
@@ -28,13 +27,13 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
         var lastMetadata: ToolCallMetadata? = null
             private set
 
-        override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+        override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult {
             lastMetadata = ToolCallMetadata.EMPTY
             return buildSuccessResult(toolCall)
         }
 
         override suspend fun executeTool(
-            toolCall: Message.Tool.Call,
+            toolCall: MessagePart.Tool.Call,
             metadata: ToolCallMetadata,
         ): ReceivedToolResult {
             lastMetadata = metadata
@@ -45,12 +44,12 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
             throw exception
         }
 
-        private fun buildSuccessResult(toolCall: Message.Tool.Call): ReceivedToolResult = ReceivedToolResult(
+        private fun buildSuccessResult(toolCall: MessagePart.Tool.Call): ReceivedToolResult = ReceivedToolResult(
             id = toolCall.id,
             tool = toolCall.tool,
-            toolArgs = toolCall.contentJson.toKoogJSONObject(),
+            toolArgs = toolCall.argsJson.toKoogJSONObject(),
             toolDescription = null,
-            content = "ok",
+            output = "ok",
             resultKind = ToolResultKind.Success,
             result = JSONPrimitive("ok"),
         )
@@ -64,11 +63,10 @@ class ContextualAgentEnvironmentMetadataTest : AgentTestBase() {
         ): TestFeatureConfig = TestFeatureConfig()
     }
 
-    private fun newToolCall(): Message.Tool.Call = Message.Tool.Call(
+    private fun newToolCall(): MessagePart.Tool.Call = MessagePart.Tool.Call(
         id = "tool-call-id",
         tool = "any-tool",
-        content = """{"x":1}""",
-        metaInfo = ResponseMetaInfo.Empty,
+        args = """{"x":1}""",
     )
 
     @Test

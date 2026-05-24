@@ -4,7 +4,7 @@ import ai.koog.agents.core.CalculatorChatExecutor.testClock
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
@@ -35,13 +35,13 @@ class SafeToolMetadataTest {
         var lastMetadata: ToolCallMetadata? = null
             private set
 
-        override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+        override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult {
             lastMetadata = ToolCallMetadata.EMPTY
             return buildResult(toolCall)
         }
 
         override suspend fun executeTool(
-            toolCall: Message.Tool.Call,
+            toolCall: MessagePart.Tool.Call,
             metadata: ToolCallMetadata,
         ): ReceivedToolResult {
             lastMetadata = metadata
@@ -52,12 +52,12 @@ class SafeToolMetadataTest {
             throw exception
         }
 
-        private fun buildResult(toolCall: Message.Tool.Call): ReceivedToolResult = ReceivedToolResult(
+        private fun buildResult(toolCall: MessagePart.Tool.Call): ReceivedToolResult = ReceivedToolResult(
             id = toolCall.id,
             tool = toolCall.tool,
-            toolArgs = toolCall.contentJson.toKoogJSONObject(),
+            toolArgs = toolCall.argsJson.toKoogJSONObject(),
             toolDescription = null,
-            content = "Ok",
+            output = "Ok",
             resultKind = ToolResultKind.Success,
             result = JSONPrimitive("Ok"),
         )
@@ -108,14 +108,14 @@ class SafeToolMetadataTest {
             var legacyInvocations: Int = 0
                 private set
 
-            override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+            override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult {
                 legacyInvocations++
                 return ReceivedToolResult(
                     id = toolCall.id,
                     tool = toolCall.tool,
-                    toolArgs = toolCall.contentJson.toKoogJSONObject(),
+                    toolArgs = toolCall.argsJson.toKoogJSONObject(),
                     toolDescription = null,
-                    content = "legacy-ok",
+                    output = "legacy-ok",
                     resultKind = ToolResultKind.Success,
                     result = JSONPrimitive("legacy-ok"),
                 )

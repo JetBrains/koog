@@ -13,7 +13,7 @@ docs/docs-code-snippets/*.java
 **/.env*
 .venv
 .DS_Store
-/.claude/
+/.claude/*
 !/.claude/skills/
 /.junie/memory
 

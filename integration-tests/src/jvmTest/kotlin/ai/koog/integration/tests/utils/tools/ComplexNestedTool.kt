@@ -2,16 +2,20 @@ package ai.koog.integration.tests.utils.tools
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNames
 
 /**
  * Address type enum.
  */
 @Serializable
 enum class AddressType {
-    HOME,
-    WORK,
-    OTHER
+    @JsonNames("HOME", "home") HOME,
+
+    @JsonNames("WORK", "work") WORK,
+
+    @JsonNames("OTHER", "other") OTHER
 }
 
 /**
@@ -59,7 +63,7 @@ data class ComplexNestedToolArgs(
  * the error in the Anthropic API before the fix.
  */
 object ComplexNestedTool : SimpleTool<ComplexNestedToolArgs>(
-    argsSerializer = ComplexNestedToolArgs.serializer(),
+    argsType = typeToken<ComplexNestedToolArgs>(),
     name = "complex_nested_tool",
     description = "A tool that processes user profiles with complex nested structures."
 ) {

@@ -1,5 +1,6 @@
 package ai.koog.agents.features.sql.providers
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -53,7 +54,7 @@ class H2PersistenceStorageProviderTest {
 
         latest1 shouldNotBe null
         latest1?.checkpointId shouldBe "cp-1"
-        latest1?.nodePath shouldBe "test-node"
+        latest1?.graphProperties?.nodePath shouldBe "test-node"
         latest1?.messageHistory?.size shouldBe 3
         latest1?.isTombstone() shouldBe false
 
@@ -98,14 +99,16 @@ class H2PersistenceStorageProviderTest {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = KoogClock.System.now(),
-            nodePath = "test-node",
-            lastOutput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test assistant", RequestMetaInfo.create(KoogClock.System)),
                 Message.User("Hello", RequestMetaInfo.create(KoogClock.System)),
                 Message.Assistant("Hi there!", ResponseMetaInfo.create(KoogClock.System))
             ),
-            version = version
+            version = version,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = "test-node",
+                lastOutput = JSONPrimitive("Test input"),
+            ),
         )
     }
 }

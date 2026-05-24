@@ -15,7 +15,7 @@ import ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
-import ai.koog.agents.features.opentelemetry.extension.lastResponse
+import ai.koog.agents.features.opentelemetry.extension.lastAssistant
 import ai.koog.agents.features.opentelemetry.extension.toFinishReason
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.metric.MetricCollector
@@ -134,7 +134,8 @@ public class OpenTelemetry {
                     spanType = SpanType.NODE
                 ) ?: return@intercept
 
-                val nodeOutput = nodeDataToString(eventContext.output, eventContext.outputType, pipeline.config.serializer)
+                val nodeOutput =
+                    nodeDataToString(eventContext.output, eventContext.outputType, pipeline.config.serializer)
 
                 endNodeExecuteSpan(
                     span = nodeExecuteSpan,
@@ -184,7 +185,8 @@ public class OpenTelemetry {
                     executionInfo = patchedExecutionInfo,
                 ) ?: return@intercept
 
-                val subgraphInput = nodeDataToString(eventContext.input, eventContext.inputType, pipeline.config.serializer)
+                val subgraphInput =
+                    nodeDataToString(eventContext.input, eventContext.inputType, pipeline.config.serializer)
 
                 val subgraphExecuteSpan = startSubgraphExecuteSpan(
                     tracer = tracer,
@@ -214,7 +216,8 @@ public class OpenTelemetry {
                     spanType = SpanType.SUBGRAPH
                 ) ?: return@intercept
 
-                val subgraphOutput = nodeDataToString(eventContext.output, eventContext.outputType, pipeline.config.serializer)
+                val subgraphOutput =
+                    nodeDataToString(eventContext.output, eventContext.outputType, pipeline.config.serializer)
 
                 endSubgraphExecuteSpan(
                     span = subgraphExecuteSpan,
@@ -353,7 +356,7 @@ public class OpenTelemetry {
                     spanType = SpanType.INVOKE_AGENT
                 ) ?: return@intercept
 
-                eventContext.context.llm.prompt.messages.lastResponse()?.let { response ->
+                eventContext.context.llm.prompt.messages.lastAssistant()?.let { response ->
                     invokeAgentSpan.addAttribute(
                         GenAIAttributes.Response.FinishReasons(reasons = listOf(response.toFinishReason()))
                     )
@@ -570,16 +573,20 @@ public class OpenTelemetry {
                 }
 
                 // Finish Reasons Attribute
-                eventContext.responses.lastOrNull()?.let { response ->
-                    inferenceSpan.addAttribute(
-                        GenAIAttributes.Response.FinishReasons(reasons = listOf(response.toFinishReason()))
-                    )
+                eventContext.response?.let { message ->
+                    val finishReasonsAttribute =
+                        if (message.parts.any { it is ai.koog.prompt.message.MessagePart.Tool.Call }) {
+                            GenAIAttributes.Response.FinishReasons(reasons = listOf(GenAIAttributes.Response.FinishReasonType.ToolCalls))
+                        } else {
+                            GenAIAttributes.Response.FinishReasons(reasons = listOf(GenAIAttributes.Response.FinishReasonType.Stop))
+                        }
+                    inferenceSpan.addAttribute(finishReasonsAttribute)
                 }
 
                 // Stop InferenceSpan
                 endInferenceSpan(
                     span = inferenceSpan,
-                    messages = eventContext.responses,
+                    message = eventContext.response,
                     model = eventContext.model,
                     verbose = config.isVerbose,
                     spanAdapter = spanAdapter,
@@ -589,27 +596,28 @@ public class OpenTelemetry {
                     path = patchedExecutionInfo
                 )
 
-                eventContext.responses.lastOrNull()?.metaInfo?.inputTokensCount?.toLong()?.let { inputTokens ->
-                    metricCollector.recordHistogramMetricEvent(
-                        metricEvent = createLLMInputTokensMetricEvent(
-                            id = eventContext.eventId,
-                            model = eventContext.model,
-                            inputTokens = inputTokens,
-                        )
-                    )
-                }
-
-                eventContext.responses.lastOrNull()?.metaInfo?.outputTokensCount?.toLong()?.let { outputTokens ->
-                    metricCollector.recordHistogramMetricEvent(
-                        metricEvent = createLLMOutputTokensMetricEvent(
-                            id = eventContext.eventId,
-                            model = eventContext.model,
-                            outputTokens = outputTokens,
-                        )
-                    )
-                }
-
                 // Metrics
+                eventContext.response?.metaInfo?.let {
+                    it.inputTokensCount?.toLong()?.let { inputTokens ->
+                        metricCollector.recordHistogramMetricEvent(
+                            metricEvent = createLLMInputTokensMetricEvent(
+                                id = eventContext.eventId,
+                                model = eventContext.model,
+                                inputTokens = inputTokens,
+                            )
+                        )
+                    }
+                    it.outputTokensCount?.toLong()?.let { outputTokens ->
+                        metricCollector.recordHistogramMetricEvent(
+                            metricEvent = createLLMOutputTokensMetricEvent(
+                                id = eventContext.eventId,
+                                model = eventContext.model,
+                                outputTokens = outputTokens,
+                            )
+                        )
+                    }
+                }
+
                 metricCollector.getMetricEvent(eventContext.eventId)?.let { storedMetricEvent ->
                     metricCollector.recordHistogramMetricEvent(
                         metricEvent = createLLMCallDurationHistogramMetricEvent(
@@ -637,7 +645,7 @@ public class OpenTelemetry {
 
                 endInferenceSpan(
                     span = inferenceSpan,
-                    messages = emptyList(),
+                    message = null,
                     model = eventContext.model,
                     error = eventContext.error,
                     verbose = config.isVerbose,

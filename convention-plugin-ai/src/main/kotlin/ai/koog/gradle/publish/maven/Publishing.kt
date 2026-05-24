@@ -13,63 +13,59 @@ object Publishing {
             it.graziePublic(project)
             it.artifactsMaven(project)
         }) {
-            it.publications(
-                Action {
-                    val publications = this
+            // Use configureEach so that publications added lazily by AGP (e.g. the Android
+            // release variant) also get POM metadata. An eager forEach would miss them because
+            // AGP registers its publications after this block runs.
+            it.publications.withType(MavenPublication::class.java).configureEach {
+                pom(
+                    Action {
+                        val pom = this
 
-                    publications.forEach {
-                        val p = it as MavenPublication
-                        p.pom(
+                        pom.name.set(this@publishToMaven.name)
+                        pom.description.set("Koog is a framework for quickly creating AI agents in Kotlin with minimal effort.")
+                        pom.url.set("https://github.com/JetBrains/koog")
+
+                        pom.licenses(
                             Action {
-                                val pom = this
+                                val licenses = this
 
-                                pom.name.set(this@publishToMaven.name)
-                                pom.description.set("Koog is a framework for quickly creating AI agents in Kotlin with minimal effort.")
-                                pom.url.set("https://github.com/JetBrains/koog")
-
-                                pom.licenses(
+                                licenses.license(
                                     Action {
-                                        val licenses = this
+                                        val license = this
 
-                                        licenses.license(
-                                            Action {
-                                                val license = this
-
-                                                license.name.set("The Apache License, Version 2.0")
-                                                license.url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-                                            }
-                                        )
-                                    }
-                                )
-
-                                pom.developers(
-                                    Action {
-                                        val developers = this
-
-                                        developers.developer(
-                                            Action {
-                                                val developer = this
-
-                                                developer.id.set("JetBrains")
-                                                developer.name.set("JetBrains Team")
-                                                developer.organization.set("JetBrains")
-                                                developer.organizationUrl.set("https://www.jetbrains.com")
-                                            }
-                                        )
-                                    }
-                                )
-
-                                pom.scm(
-                                    Action {
-                                        val scm = this
-                                        scm.url.set("https://github.com/JetBrains/koog.git")
+                                        license.name.set("The Apache License, Version 2.0")
+                                        license.url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
                                     }
                                 )
                             }
                         )
+
+                        pom.developers(
+                            Action {
+                                val developers = this
+
+                                developers.developer(
+                                    Action {
+                                        val developer = this
+
+                                        developer.id.set("JetBrains")
+                                        developer.name.set("JetBrains Team")
+                                        developer.organization.set("JetBrains")
+                                        developer.organizationUrl.set("https://www.jetbrains.com")
+                                    }
+                                )
+                            }
+                        )
+
+                        pom.scm(
+                            Action {
+                                val scm = this
+                                scm.url.set("https://github.com/JetBrains/koog.git")
+                            }
+                        )
                     }
-                }
-            )
+                )
+            }
         }
     }
 

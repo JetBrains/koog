@@ -10,8 +10,9 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIServiceVersion
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.prompt.llm.LLMProvider
 import kotlin.jvm.JvmMultifileClass
 import kotlin.jvm.JvmName
 
@@ -21,8 +22,8 @@ import kotlin.jvm.JvmName
  *
  * @see simpleOpenAIExecutor
  */
-public fun simpleOpenAIExecutor(apiToken: String): SingleLLMPromptExecutor =
-    SingleLLMPromptExecutor(OpenAILLMClient(apiToken))
+public fun simpleOpenAIExecutor(apiToken: String): MultiLLMPromptExecutor =
+    MultiLLMPromptExecutor(LLMProvider.OpenAI to OpenAILLMClient(apiToken))
 
 /**
  * Convenience overload that constructs the underlying client via its JVM no-factory entry point
@@ -35,8 +36,8 @@ public fun simpleAzureOpenAIExecutor(
     deploymentName: String,
     version: AzureOpenAIServiceVersion,
     apiToken: String,
-): SingleLLMPromptExecutor = SingleLLMPromptExecutor(
-    OpenAILLMClient(
+): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+    LLMProvider.OpenAI to OpenAILLMClient(
         apiKey = apiToken,
         settings = AzureOpenAIClientSettings(resourceName, deploymentName, version),
     )
@@ -52,8 +53,8 @@ public fun simpleAzureOpenAIExecutor(
     baseUrl: String,
     version: AzureOpenAIServiceVersion,
     apiToken: String,
-): SingleLLMPromptExecutor = SingleLLMPromptExecutor(
-    OpenAILLMClient(
+): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+    LLMProvider.OpenAI to OpenAILLMClient(
         apiKey = apiToken,
         settings = AzureOpenAIClientSettings(baseUrl, version),
     )
@@ -65,8 +66,8 @@ public fun simpleAzureOpenAIExecutor(
  *
  * @see simpleAnthropicExecutor
  */
-public fun simpleAnthropicExecutor(apiKey: String): SingleLLMPromptExecutor =
-    SingleLLMPromptExecutor(AnthropicLLMClient(apiKey))
+public fun simpleAnthropicExecutor(apiKey: String): MultiLLMPromptExecutor =
+    MultiLLMPromptExecutor(LLMProvider.Anthropic to AnthropicLLMClient(apiKey))
 
 /**
  * Convenience overload that constructs the underlying client via its JVM no-factory entry point
@@ -74,8 +75,8 @@ public fun simpleAnthropicExecutor(apiKey: String): SingleLLMPromptExecutor =
  *
  * @see simpleOpenRouterExecutor
  */
-public fun simpleOpenRouterExecutor(apiKey: String): SingleLLMPromptExecutor =
-    SingleLLMPromptExecutor(OpenRouterLLMClient(apiKey))
+public fun simpleOpenRouterExecutor(apiKey: String): MultiLLMPromptExecutor =
+    MultiLLMPromptExecutor(LLMProvider.OpenRouter to OpenRouterLLMClient(apiKey))
 
 /**
  * Convenience overload that constructs the underlying client via its JVM no-factory entry point
@@ -83,8 +84,8 @@ public fun simpleOpenRouterExecutor(apiKey: String): SingleLLMPromptExecutor =
  *
  * @see simpleGoogleAIExecutor
  */
-public fun simpleGoogleAIExecutor(apiKey: String): SingleLLMPromptExecutor =
-    SingleLLMPromptExecutor(GoogleLLMClient(apiKey))
+public fun simpleGoogleAIExecutor(apiKey: String): MultiLLMPromptExecutor =
+    MultiLLMPromptExecutor(LLMProvider.Google to GoogleLLMClient(apiKey))
 
 /**
  * Convenience overload that constructs the underlying client via its JVM no-factory entry point
@@ -94,7 +95,7 @@ public fun simpleGoogleAIExecutor(apiKey: String): SingleLLMPromptExecutor =
  */
 public fun simpleOllamaAIExecutor(
     baseUrl: String = "http://localhost:11434",
-): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OllamaClient(baseUrl = baseUrl))
+): MultiLLMPromptExecutor = MultiLLMPromptExecutor(LLMProvider.Ollama to OllamaClient(baseUrl = baseUrl))
 
 /**
  * Convenience overload that constructs the underlying client via its JVM no-factory entry point
@@ -102,5 +103,5 @@ public fun simpleOllamaAIExecutor(
  *
  * @see simpleMistralAIExecutor
  */
-public fun simpleMistralAIExecutor(apiKey: String): SingleLLMPromptExecutor =
-    SingleLLMPromptExecutor(MistralAILLMClient(apiKey))
+public fun simpleMistralAIExecutor(apiKey: String): MultiLLMPromptExecutor =
+    MultiLLMPromptExecutor(LLMProvider.MistralAI to MistralAILLMClient(apiKey))

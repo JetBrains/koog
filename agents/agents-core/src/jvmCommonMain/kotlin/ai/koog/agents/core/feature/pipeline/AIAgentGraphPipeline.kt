@@ -52,7 +52,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
      */
     @JavaAPI
     @JvmName("interceptNodeExecutionStarting")
-    public fun javaApiInterceptNodeExecutionStarting(
+    public fun interceptNodeExecutionStartingBlocking(
         feature: AIAgentGraphFeature<*, *>,
         handle: Interceptor<NodeExecutionStartingContext>
     ) {
@@ -80,7 +80,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
      */
     @JavaAPI
     @JvmName("interceptNodeExecutionCompleted")
-    public fun javaApiInterceptNodeExecutionCompleted(
+    public fun interceptNodeExecutionCompletedBlocking(
         feature: AIAgentGraphFeature<*, *>,
         handle: Interceptor<NodeExecutionCompletedContext>
     ) {
@@ -108,7 +108,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
      */
     @JavaAPI
     @JvmName("interceptNodeExecutionFailed")
-    public fun javaApiInterceptNodeExecutionFailed(
+    public fun interceptNodeExecutionFailedBlocking(
         feature: AIAgentGraphFeature<*, *>,
         handle: Interceptor<NodeExecutionFailedContext>
     ) {
@@ -136,7 +136,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
      */
     @JavaAPI
     @JvmName("interceptSubgraphExecutionStarting")
-    public fun javaApiInterceptSubgraphExecutionStarting(
+    public fun interceptSubgraphExecutionStartingBlocking(
         feature: AIAgentGraphFeature<*, *>,
         handle: Interceptor<SubgraphExecutionStartingContext>
     ) {
@@ -164,7 +164,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
      */
     @JavaAPI
     @JvmName("interceptSubgraphExecutionCompleted")
-    public fun javaApiInterceptSubgraphExecutionCompleted(
+    public fun interceptSubgraphExecutionCompletedBlocking(
         feature: AIAgentGraphFeature<*, *>,
         handle: Interceptor<SubgraphExecutionCompletedContext>
     ) {
@@ -192,7 +192,7 @@ public actual open class AIAgentGraphPipeline @JvmOverloads actual constructor(
      */
     @JavaAPI
     @JvmName("interceptSubgraphExecutionFailed")
-    public fun javaApiInterceptSubgraphExecutionFailed(
+    public fun interceptSubgraphExecutionFailedBlocking(
         feature: AIAgentGraphFeature<*, *>,
         handle: Interceptor<SubgraphExecutionFailedContext>
     ) {

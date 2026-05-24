@@ -14,7 +14,23 @@ import kotlin.jvm.JvmField
  * @property display The human-readable name of the LLM provider.
  */
 @Serializable
-public abstract class LLMProvider(public val id: String, public val display: String) {
+public open class LLMProvider(public val id: String, public val display: String) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is LLMProvider) return false
+
+        if (id != other.id) return false
+        if (display != other.display) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + display.hashCode()
+        return result
+    }
+
     /**
      * Companion object for the `LLMProvider` class, providing predefined instances of large language model providers.
      *

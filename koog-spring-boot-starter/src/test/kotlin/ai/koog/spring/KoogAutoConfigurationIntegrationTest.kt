@@ -8,7 +8,6 @@ import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.params.ParameterizedTest
@@ -62,14 +61,12 @@ class KoogAutoConfigurationIntegrationTest {
         verifyBeanIsRegistered<LLMClient>(clazz)
     }
 
-    @ParameterizedTest
-    @ValueSource(
-        classes = [
-            MultiLLMPromptExecutor::class,
-        ]
-    )
-    fun `Should register beans(classes)`(clazz: Class<*>) {
-        verifyBeanIsRegistered<Any>(clazz)
+    @org.junit.jupiter.api.Test
+    fun `Should register central multiLLMPromptExecutor bean`() {
+        val beanNames = applicationContext.getBeanNamesForType(MultiLLMPromptExecutor::class.java)
+        assertTrue(beanNames.contains("multiLLMPromptExecutor")) {
+            "Bean named `multiLLMPromptExecutor` should have been registered. Found: ${beanNames.toList()}"
+        }
     }
 
     @ParameterizedTest
@@ -86,11 +83,11 @@ class KoogAutoConfigurationIntegrationTest {
     )
     fun `Should register SingleLLMExecutors`(beanName: String) {
         val llmExecutorBeanNames = applicationContext.getBeanNamesForType(
-            SingleLLMPromptExecutor::class.java
+            MultiLLMPromptExecutor::class.java
         )
         assertTrue(llmExecutorBeanNames.contains(beanName)) {
             logger.info(
-                "Registered ${SingleLLMPromptExecutor::class.simpleName} beans:${
+                "Registered ${MultiLLMPromptExecutor::class.simpleName} beans:${
                     llmExecutorBeanNames
                         .joinToString(separator = "\n\t", prefix = "\n\t")
                 }"

@@ -147,7 +147,7 @@ The example below defines a simple tool and passes it to the OpenAI client. The 
     import ai.koog.agents.core.tools.ToolDescriptor
     import ai.koog.agents.core.tools.ToolParameterDescriptor
     import ai.koog.agents.core.tools.ToolParameterType
-    import ai.koog.prompt.dsl.Prompt
+    import ai.koog.prompt.Prompt
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
     import kotlinx.serialization.json.JsonPrimitive

@@ -4,8 +4,8 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.longtermmemory.ingestion.extraction.DocumentExtractor
@@ -13,12 +13,13 @@ import ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocument
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.rag.base.storage.search.KeywordSearchRequest
@@ -45,9 +46,13 @@ class LongTermMemoryIngestionTest {
 
     private val nonStreamingStrategy =
         strategy<String, String>("ingestion-test", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
-            val llmNode by nodeLLMRequest(name = "llm-node", allowToolCalls = false)
+            val llmNode by nodeLLMRequestWithoutTools(name = "llm-node")
             edge(nodeStart forwardTo llmNode)
-            edge(llmNode forwardTo nodeFinish transformed { it.content })
+            edge(
+                llmNode forwardTo nodeFinish transformed {
+                    it.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                }
+            )
         }
 
     /**
@@ -60,11 +65,15 @@ class LongTermMemoryIngestionTest {
      */
     private val twoCallNonStreamingStrategy =
         strategy<String, String>("ingestion-two-call-test", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
-            val firstLlmNode by nodeLLMRequest(name = "llm-node-1", allowToolCalls = false)
-            val secondLlmNode by nodeLLMRequest(name = "llm-node-2", allowToolCalls = false)
+            val firstLlmNode by nodeLLMRequestWithoutTools(name = "llm-node-1")
+            val secondLlmNode by nodeLLMRequestWithoutTools(name = "llm-node-2")
             edge(nodeStart forwardTo firstLlmNode)
             edge(firstLlmNode forwardTo secondLlmNode transformed { "Follow-up question" })
-            edge(secondLlmNode forwardTo nodeFinish transformed { it.content })
+            edge(
+                secondLlmNode forwardTo nodeFinish transformed {
+                    it.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                }
+            )
         }
 
     private val streamingStrategy =
@@ -83,8 +92,8 @@ class LongTermMemoryIngestionTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            return listOf(Message.Assistant("non-streaming", ResponseMetaInfo.Empty))
+        ): Message.Assistant {
+            return Message.Assistant("non-streaming", ResponseMetaInfo.Empty)
         }
 
         override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
@@ -311,9 +320,9 @@ class LongTermMemoryIngestionTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
-            ): List<Message.Response> {
+            ): Message.Assistant {
                 storageSizeDuringLLMCall = storage.size()
-                return listOf(Message.Assistant("Response that should not be stored yet", ResponseMetaInfo.Empty))
+                return Message.Assistant("Response that should not be stored yet", ResponseMetaInfo.Empty)
             }
 
             override fun executeStreaming(
@@ -376,7 +385,10 @@ class LongTermMemoryIngestionTest {
                     this.storage = storage
                     documentExtractor = DocumentExtractor { messages ->
                         messages.filter { it.role == Message.Role.Assistant }
-                            .flatMap { it.content.split(". ") }
+                            .flatMap {
+                                it.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                                    .split(". ")
+                            }
                             .map { it.trim().removeSuffix(".") }
                             .filter { it.isNotBlank() }
                             .map { MemoryRecord(content = it) }

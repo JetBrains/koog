@@ -1,6 +1,5 @@
 package ai.koog.agents.example.subgraphwithtask
 
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -50,7 +49,8 @@ fun customWizardStrategy(
     }
 
     val verify by subgraphWithVerification(
-        verifyTools
+        tools = verifyTools,
+        parallelTools = false
     ) { input: String ->
         """
                 You have to check and verify that the created project in the current directory is not broken by calling appropriate tools.

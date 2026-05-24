@@ -17,9 +17,11 @@ import ai.koog.agents.snapshot.straightForwardGraphNoCheckpoint
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
@@ -54,13 +56,15 @@ class RunFromCheckpointTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-1",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node2"),
-            lastOutput = JSONPrimitive("Node 2 output"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node2"),
+                lastOutput = JSONPrimitive("Node 2 output"),
+            ),
         )
 
         val agent = AIAgent(
@@ -94,13 +98,15 @@ class RunFromCheckpointTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-1",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node1"),
-            lastOutput = JSONPrimitive("Node 1 output"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node1"),
+                lastOutput = JSONPrimitive("Node 1 output"),
+            ),
         )
 
         val agent = AIAgent(
@@ -134,12 +140,14 @@ class RunFromCheckpointTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-1",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node1"),
-            lastOutput = JSONPrimitive("Node 1 output"),
             messageHistory = listOf(
                 Message.User("Restored message", metaInfo = RequestMetaInfo(time)),
             ),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node1"),
+                lastOutput = JSONPrimitive("Node 1 output"),
+            ),
         )
 
         val agent = AIAgent(
@@ -176,14 +184,16 @@ class RunFromCheckpointTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-no-persistence",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node1"),
-            lastOutput = JSONPrimitive("Node 1 output"),
             messageHistory = listOf(
                 Message.System("You are a test agent.", metaInfo = RequestMetaInfo(time)),
                 Message.User("Hello", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Hi there", metaInfo = ResponseMetaInfo(time)),
             ),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node1"),
+                lastOutput = JSONPrimitive("Node 1 output"),
+            ),
         )
 
         // Agent created without any Persistence feature
@@ -211,46 +221,6 @@ class RunFromCheckpointTest {
     }
 
     @Test
-    fun testRunFromCheckpointUsesLastInputWithoutSkippingCompletedNode() = runTest {
-        val sessionId = "test-session-last-input"
-        val time = Clock.System.now()
-
-        @Suppress("DEPRECATION")
-        val checkpoint = AgentCheckpointData(
-            checkpointId = "checkpoint-last-input",
-            createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node2"),
-            lastInput = JSONPrimitive("Node 1 output"),
-            messageHistory = listOf(
-                Message.User("User message", metaInfo = RequestMetaInfo(time)),
-                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
-            ),
-            version = 0
-        )
-
-        val agent = AIAgent(
-            promptExecutor = getMockExecutor(serializer) { },
-            strategy = straightForwardGraphNoCheckpoint(),
-            agentConfig = agentConfig,
-            toolRegistry = toolRegistry,
-        )
-
-        val output = Persistence.runFromCheckpoint(
-            agent = agent,
-            input = "ignored",
-            checkpoint = checkpoint,
-            sessionId = sessionId,
-        )
-
-        assertEquals(
-            "History: User message\n" +
-                "Assistant message\n" +
-                "Node 2 output",
-            output
-        )
-    }
-
-    @Test
     fun testRunFromCheckpointFailsForUnknownNodePath() = runTest {
         val sessionId = "test-session-invalid-path"
         val time = Clock.System.now()
@@ -258,10 +228,12 @@ class RunFromCheckpointTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-invalid-path",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "MissingNode"),
-            lastOutput = JSONPrimitive("missing"),
             messageHistory = emptyList(),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "MissingNode"),
+                lastOutput = JSONPrimitive("missing")
+            )
         )
 
         val agent = AIAgent(
@@ -284,8 +256,8 @@ class RunFromCheckpointTest {
     }
 
     @Test
-    fun testRunFromCheckpointRestoresStorage() = runTest {
-        val sessionId = "test-session-storage"
+    fun testRunFromCheckpointRestoresContextData() = runTest {
+        val sessionId = "test-session-context"
         val time = Clock.System.now()
         val greetingKey = createStorageKey<String>("greeting")
         val greetingText = "hello from checkpoint"
@@ -295,24 +267,48 @@ class RunFromCheckpointTest {
             .apply { set(greetingKey, greetingText) }
             .let { JSONObject(it.toSerializedMap()) }
 
+        val expectedModel = OllamaModels.Meta.LLAMA_3_2.copy(id = "checkpoint-model")
+        val expectedParams = LLMParams(temperature = 0.42)
+        val expectedTools = listOf(SayToUser.name)
+        val expectedIterations = 5
+
         val checkpoint = AgentCheckpointData(
-            checkpointId = "checkpoint-storage",
+            checkpointId = "checkpoint-context",
             createdAt = time,
             messageHistory = emptyList(),
             storage = storageJson,
+            llmModel = expectedModel,
+            llmParams = expectedParams,
+            tools = expectedTools +
+                // Append some new tool that won't exist in the ToolRegistry
+                listOf("finalize_tool_task"),
+            agentIterations = expectedIterations,
             version = 0,
             graphProperties = GraphCheckpointProperties(
-                nodePath = path(sessionId, "storage-reading", "Node1"),
+                nodePath = path(sessionId, "context-reading", "Node1"),
                 lastOutput = JSONPrimitive("Node 1 output"),
             )
         )
 
+        var capturedModel: LLModel? = null
+        var capturedParams: LLMParams? = null
+        var capturedTools: List<String>? = null
+        var capturedIterations: Int? = null
+
         val agent = AIAgent(
             promptExecutor = getMockExecutor(serializer) { },
-            strategy = strategy("storage-reading") {
+            strategy = strategy("context-reading") {
                 val node1 by node<String, String>("Node1") { it }
 
-                val readNode by node<String, String>("readStorage") {
+                val readNode by node<String, String>("readContext") {
+                    llm.readSession {
+                        capturedModel = model
+                        capturedParams = prompt.params
+                        capturedTools = tools.map { it.name }
+                    }
+                    capturedIterations = stateManager.withStateLock {
+                        it.iterations - 1 // to account for the previous node
+                    }
                     "greeting=${storage.get(greetingKey)}"
                 }
 
@@ -330,6 +326,10 @@ class RunFromCheckpointTest {
         )
 
         assertEquals("greeting=$greetingText", output)
+        assertEquals(expectedModel, capturedModel)
+        assertEquals(expectedParams, capturedParams)
+        assertEquals(expectedTools, capturedTools)
+        assertEquals(expectedIterations, capturedIterations)
     }
 
     @Test
@@ -341,10 +341,12 @@ class RunFromCheckpointTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = "checkpoint-cleanup",
             createdAt = time,
-            nodePath = path(sessionId, "straight-forward", "Node1"),
-            lastOutput = JSONPrimitive("Node 1 output"),
             messageHistory = emptyList(),
-            version = 0
+            version = 0,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = path(sessionId, "straight-forward", "Node1"),
+                lastOutput = JSONPrimitive("Node 1 output")
+            )
         )
 
         val agent = AIAgent(

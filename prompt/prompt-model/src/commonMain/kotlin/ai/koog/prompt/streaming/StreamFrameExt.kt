@@ -2,148 +2,124 @@
 
 package ai.koog.prompt.streaming
 
-import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import kotlin.jvm.JvmName
 
-/**
- * Converts a list of [Message.Response] to a list of [StreamFrame].
- * Final [StreamFrame.End] is also emitted.
- */
-public fun List<Message.Response>.toStreamFrames(): List<StreamFrame> =
-    flatMapIndexed { index, response -> response.toStreamFrames(index) }.plus(StreamFrame.End(null, ResponseMetaInfo.Empty))
+private val logger = KotlinLogging.logger {}
 
 /**
- * Converts a [Message.Response] to a list of [StreamFrame].
+ * Converts a [Message.Assistant] to a list of [StreamFrame].
  * First it emits the delta frames for each content part for each message, then complete frame with the full message content.
  */
-public fun Message.Response.toStreamFrames(index: Int? = null): List<StreamFrame> {
-    val response = this
+public fun Message.Assistant.toStreamFrames(): List<StreamFrame> {
     return buildList {
-        when (response) {
-            is Message.Assistant -> {
-                parts.filterIsInstance<ContentPart.Text>().forEach { add(StreamFrame.TextDelta(it.text, index)) }
-                add(StreamFrame.TextComplete(content, index))
-            }
+        parts.forEachIndexed { index, part ->
+            when (part) {
+                is MessagePart.Reasoning -> {
+                    part.content.forEach {
+                        add(
+                            StreamFrame.ReasoningDelta(
+                                id = part.id,
+                                text = it,
+                                summary = null,
+                                index = index
+                            )
+                        )
+                    }
 
-            is Message.Reasoning -> {
-                parts.forEach { add(StreamFrame.ReasoningDelta(id = id, text = it.text, summary = null, index = index)) }
-                summary?.forEach { add(StreamFrame.ReasoningDelta(id = id, text = null, summary = it.text, index = index)) }
-                add(
-                    StreamFrame.ReasoningComplete(
-                        id = id,
-                        parts.map { it.text },
-                        summary?.map { it.text },
-                        encrypted,
-                        index
+                    part.summary?.forEach {
+                        add(
+                            StreamFrame.ReasoningDelta(
+                                id = part.id,
+                                text = null,
+                                summary = it,
+                                index = index
+                            )
+                        )
+                    }
+
+                    add(
+                        StreamFrame.ReasoningComplete(
+                            id = part.id,
+                            content = part.content,
+                            summary = part.summary,
+                            encrypted = part.encrypted,
+                            index = index
+                        )
                     )
-                )
-            }
+                }
 
-            is Message.Tool.Call -> {
-                add(StreamFrame.ToolCallDelta(id, tool, content, index))
-                add(StreamFrame.ToolCallComplete(id, tool, content, index))
+                is MessagePart.Text -> {
+                    add(StreamFrame.TextDelta(part.text, index))
+                    add(StreamFrame.TextComplete(part.text, index))
+                }
+
+                is MessagePart.Tool.Call -> {
+                    add(StreamFrame.ToolCallDelta(part.id, part.tool, part.args, index))
+                    add(StreamFrame.ToolCallComplete(part.id, part.tool, part.args, index))
+                }
+
+                is MessagePart.Attachment -> {
+                    logger.warn { "Attachment is not supported for streaming yet" }
+                }
             }
         }
+
+        add(
+            StreamFrame.End(
+                finishReason = finishReason,
+                metaInfo = metaInfo
+            )
+        )
     }
 }
 
 /**
- * Converts frames into [Message.Response] objects.
+ * Converts frames into [Message.Assistant] objects.
  *
- * Collects all complete frames into one [Message.Response] objects.
+ * Collects all complete frames into one [Message.Assistant] objects.
  *
- * @return A list of [Message.Response] objects.
+ * @return A list of [Message.Assistant] objects.
  */
-public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
-    val textDeltasByIndex = linkedMapOf<Int?, StringBuilder>()
-    val textMessagesCompleteFrames = mutableListOf<StreamFrame.TextComplete>()
-    val reasoningCompleteFrames = mutableListOf<StreamFrame.ReasoningComplete>()
-    val toolCallCompleteFrames = mutableListOf<StreamFrame.ToolCallComplete>()
+public fun Iterable<StreamFrame>.toMessageResponse(): Message.Assistant {
     var end: StreamFrame.End? = null
 
-    forEach { frame ->
+    val parts: List<MessagePart.ResponsePart> = mapNotNull { frame ->
         when (frame) {
-            is StreamFrame.TextDelta -> textDeltasByIndex.getOrPut(frame.index) { StringBuilder() }.append(frame.text)
-            is StreamFrame.TextComplete -> textMessagesCompleteFrames.add(frame)
-            is StreamFrame.ReasoningComplete -> reasoningCompleteFrames.add(frame)
-            is StreamFrame.ToolCallComplete -> toolCallCompleteFrames.add(frame)
-            is StreamFrame.End -> end = frame
-            else -> {}
+            is StreamFrame.ReasoningComplete -> MessagePart.Reasoning(
+                id = frame.id,
+                content = frame.content,
+                summary = frame.summary,
+                encrypted = frame.encrypted,
+            )
+
+            is StreamFrame.TextComplete ->
+                MessagePart.Text(frame.text)
+
+            is StreamFrame.ToolCallComplete ->
+                MessagePart.Tool.Call(
+                    id = frame.id,
+                    tool = frame.name,
+                    args = Json.parseToJsonElement(frame.content).jsonObject,
+                )
+
+            is StreamFrame.End -> {
+                end = frame
+                null
+            }
+
+            else -> null
         }
     }
 
-    val completeTextIndexes = textMessagesCompleteFrames.mapTo(mutableSetOf()) { it.index }
-    val synthesizedTextMessages = textDeltasByIndex
-        .filterKeys { it !in completeTextIndexes }
-        .values
-        .map(StringBuilder::toString)
-        .filter(String::isNotEmpty)
-
-    return buildList {
-        reasoningCompleteFrames.forEach {
-            add(
-                Message.Reasoning(
-                    id = it.id,
-                    parts = it.text.map { textPart -> ContentPart.Text(textPart) },
-                    summary = it.summary?.map { summaryPart -> ContentPart.Text(summaryPart) },
-                    encrypted = it.encrypted,
-                    metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
-                )
-            )
-        }
-        synthesizedTextMessages.forEach {
-            add(
-                Message.Assistant(
-                    content = it,
-                    finishReason = end?.finishReason,
-                    metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
-                )
-            )
-        }
-        textMessagesCompleteFrames.filterNot { it.text.isEmpty() }.forEach {
-            add(
-                Message.Assistant(
-                    content = it.text,
-                    finishReason = end?.finishReason,
-                    metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
-                )
-            )
-        }
-        toolCallCompleteFrames.forEach {
-            add(
-                Message.Tool.Call(
-                    id = it.id,
-                    tool = it.name,
-                    content = it.content,
-                    metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
-                )
-            )
-        }
-    }
+    return Message.Assistant(
+        parts = parts,
+        finishReason = end?.finishReason,
+        metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
+    )
 }
-
-/**
- * Extracts only tool calls from frames.
- *
- * @return A list of [Message.Tool.Call] objects.
- */
-public fun Iterable<StreamFrame>.toToolCallMessages(): List<Message.Tool.Call> =
-    toMessageResponses().filterIsInstance<Message.Tool.Call>()
-
-/**
- * Extracts the assistant response from frames, if any.
- *
- * @return A [Message.Assistant] object, or `null` if not found.
- */
-public fun Iterable<StreamFrame>.toAssistantMessageOrNull(): Message.Assistant? =
-    toMessageResponses().filterIsInstance<Message.Assistant>().singleOrNull()
-
-/**
- * Extracts the reasoning response from frames, if any.
- *
- * @return A [Message.Reasoning] object, or `null` if not found.
- */
-public fun Iterable<StreamFrame>.toReasoningMessageOrNull(): Message.Reasoning? =
-    toMessageResponses().filterIsInstance<Message.Reasoning>().singleOrNull()

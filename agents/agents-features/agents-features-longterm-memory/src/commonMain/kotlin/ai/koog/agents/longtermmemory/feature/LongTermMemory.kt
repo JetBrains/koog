@@ -23,7 +23,7 @@ import ai.koog.agents.longtermmemory.retrieval.search.LastUserMessageQueryProvid
 import ai.koog.agents.longtermmemory.retrieval.search.SearchQueryProvider
 import ai.koog.agents.longtermmemory.retrieval.search.SearchStrategy
 import ai.koog.agents.longtermmemory.retrieval.search.SimilaritySearchStrategy
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.SearchStorage

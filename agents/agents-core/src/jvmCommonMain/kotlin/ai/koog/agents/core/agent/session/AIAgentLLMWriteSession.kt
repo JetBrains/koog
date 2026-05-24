@@ -12,8 +12,8 @@ import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.runBlockingOnStrategyDispatcher
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
@@ -46,7 +46,17 @@ public actual class AIAgentLLMWriteSession actual constructor(
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
     clock: KoogClock
-) : AIAgentLLMWriteSessionCommon(environment, executor, tools, toolRegistry, prompt, model, responseProcessor, config, clock) {
+) : AIAgentLLMWriteSessionCommon(
+    environment,
+    executor,
+    tools,
+    toolRegistry,
+    prompt,
+    model,
+    responseProcessor,
+    config,
+    clock
+) {
 
     /**
      * Appends a prompt using the provided prompt update action.
@@ -64,38 +74,30 @@ public actual class AIAgentLLMWriteSession actual constructor(
     }
 
     @JavaAPI
-    @JvmName("requestLLMMultipleWithoutTools")
-    public fun requestLLMMultipleWithoutToolsBlocking(): List<Message.Response> =
-        config.runBlockingOnStrategyDispatcher {
-            requestLLMMultipleWithoutTools()
-        }
+    @JvmName("requestLLM")
+    public fun requestLLMBlocking(): Message.Assistant = config.runBlockingOnStrategyDispatcher {
+        this@AIAgentLLMWriteSession.requestLLM()
+    }
 
     @JavaAPI
     @JvmName("requestLLMWithoutTools")
-    public fun requestLLMWithoutToolsBlocking(): Message.Response =
+    public fun requestLLMWithoutToolsBlocking(): Message.Assistant =
         config.runBlockingOnStrategyDispatcher {
             requestLLMWithoutTools()
         }
 
     @JavaAPI
     @JvmName("requestLLMOnlyCallingTools")
-    public fun requestLLMOnlyCallingToolsBlocking(): Message.Response =
+    public fun requestLLMOnlyCallingToolsBlocking(): Message.Assistant =
         config.runBlockingOnStrategyDispatcher {
             requestLLMOnlyCallingTools()
-        }
-
-    @JavaAPI
-    @JvmName("requestLLMMultipleOnlyCallingTools")
-    public fun requestLLMMultipleOnlyCallingToolsBlocking(): List<Message.Response> =
-        config.runBlockingOnStrategyDispatcher {
-            requestLLMMultipleOnlyCallingTools()
         }
 
     @JavaAPI
     @JvmName("requestLLMForceOneTool")
     public fun requestLLMForceOneToolBlocking(
         tool: ToolDescriptor
-    ): Message.Response = config.runBlockingOnStrategyDispatcher {
+    ): Message.Assistant = config.runBlockingOnStrategyDispatcher {
         requestLLMForceOneTool(tool)
     }
 
@@ -103,14 +105,8 @@ public actual class AIAgentLLMWriteSession actual constructor(
     @JvmName("requestLLMForceOneTool")
     public fun requestLLMForceOneToolBlocking(
         tool: ToolBase<*, *>
-    ): Message.Response = config.runBlockingOnStrategyDispatcher {
+    ): Message.Assistant = config.runBlockingOnStrategyDispatcher {
         requestLLMForceOneTool(tool)
-    }
-
-    @JavaAPI
-    @JvmName("requestLLM")
-    public fun requestLLMBlocking(): Message.Response = config.runBlockingOnStrategyDispatcher {
-        requestLLM()
     }
 
     @JavaAPI
@@ -136,13 +132,6 @@ public actual class AIAgentLLMWriteSession actual constructor(
     ): ModerationResult = config.runBlockingOnStrategyDispatcher {
         requestModeration(moderatingModel)
     }
-
-    @JavaAPI
-    @JvmName("requestLLMMultiple")
-    public fun requestLLMMultipleBlocking(): List<Message.Response> =
-        config.runBlockingOnStrategyDispatcher {
-            requestLLMMultiple()
-        }
 
     @JavaAPI
     @JvmOverloads
@@ -178,7 +167,7 @@ public actual class AIAgentLLMWriteSession actual constructor(
 
     @JavaAPI
     @JvmName("requestLLMMultipleChoices")
-    public fun requestLLMMultipleChoicesBlocking(): List<LLMChoice> =
+    public fun requestLLMMultipleChoicesBlocking(): LLMChoice =
         config.runBlockingOnStrategyDispatcher {
             requestLLMMultipleChoices()
         }

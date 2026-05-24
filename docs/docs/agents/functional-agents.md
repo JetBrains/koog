@@ -34,6 +34,7 @@ In Kotlin, the most convenient way is to use the `functionalStrategy {...}` DSL 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.core.agent.functionalStrategy
+    import ai.koog.prompt.message.MessagePart
     import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
     import ai.koog.prompt.executor.ollama.client.OllamaModels
     import kotlinx.coroutines.runBlocking
@@ -41,7 +42,7 @@ In Kotlin, the most convenient way is to use the `functionalStrategy {...}` DSL 
     ```kotlin
     val strategy = functionalStrategy<String, String> { input ->
         val response = requestLLM(input)
-        response.asAssistantMessage().content
+        response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
     }
 
     val mathAgent = AIAgent(
@@ -98,15 +99,20 @@ You can extend the previous strategy to make multiple sequential LLM calls:
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.functionalStrategy
+    import ai.koog.prompt.message.Message
+    import ai.koog.prompt.message.MessagePart
     -->
     ```kotlin
+    fun Message.Assistant.text(): String =
+        parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
+
     val strategy = functionalStrategy<String, String> { input ->
         // The first LLM call produces an initial draft based on the user input
-        val draft = requestLLM("Draft: $input").asAssistantMessage().content
+        val draft = requestLLM("Draft: $input").text()
         // The second LLM call improves the initial draft
-        val improved = requestLLM("Improve and clarify.").asAssistantMessage().content
+        val improved = requestLLM("Improve and clarify.").text()
         // The final LLM call formats the improved text and returns the result
-        requestLLM("Format the result as bold.").asAssistantMessage().content
+        requestLLM("Format the result as bold.").text()
     }
     ```
     <!--- KNIT example-functional-agent-02.kt -->
@@ -181,6 +187,7 @@ Here is what you need to do:
     import ai.koog.agents.core.tools.annotations.LLMDescription
     import ai.koog.agents.core.tools.annotations.Tool
     import ai.koog.agents.core.tools.reflect.ToolSet
+    import ai.koog.prompt.message.MessagePart
     import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
     import ai.koog.prompt.executor.ollama.client.OllamaModels
     import kotlinx.coroutines.runBlocking
@@ -203,20 +210,20 @@ Here is what you need to do:
 
     val strategy = functionalStrategy<String, String> { input ->
         // Send the user input to the LLM
-        var responses = requestLLMMultiple(input)
+        var response = requestLLM(input)
 
         // Only loop while the LLM requests tools
-        while (responses.containsToolCalls()) {
-            // Extract tool calls from the response
-            val pendingCalls = extractToolCalls(responses)
+        var toolCalls = response.parts.filterIsInstance<MessagePart.Tool.Call>()
+        while (toolCalls.isNotEmpty()) {
             // Execute the tools and return the results
-            val results = executeMultipleTools(pendingCalls)
+            val results = executeTools(toolCalls)
             // Send the tool results back to the LLM. The LLM may call more tools or return a final output
-            responses = sendMultipleToolResults(results)
+            response = sendToolResults(results)
+            toolCalls = response.parts.filterIsInstance<MessagePart.Tool.Call>()
         }
 
         // When no tool calls remain, extract and return the assistant message content from the response
-        responses.single().asAssistantMessage().content
+        response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
     }
 
     val mathAgentWithTools = AIAgent(
@@ -270,7 +277,7 @@ Here is what you need to do:
                 // Only loop while the LLM requests tools
                 while (context.containsToolCalls(responses)) {
                     // Extract tool calls from the response
-                    List<Message.Tool.Call> pendingCalls = context.extractToolCalls(responses);
+                    List<MessagePart.Tool.Call> pendingCalls = context.extractToolCalls(responses);
                     // Execute the tools and return the results
                     List<ReceivedToolResult> results = context.executeMultipleTools(pendingCalls, false);
                     // Send the tool results back to the LLM

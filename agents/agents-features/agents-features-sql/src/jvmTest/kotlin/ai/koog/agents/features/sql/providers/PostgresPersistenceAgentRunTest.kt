@@ -7,6 +7,7 @@ import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.agents.snapshot.feature.tombstoneCheckpoint
@@ -16,6 +17,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
@@ -110,7 +112,7 @@ class PostgresPersistenceAgentRunTest {
         name: String? = null,
     ): AIAgentNodeDelegate<String, String> = node(name) {
         return@node llm.readSession {
-            val history = this.prompt.messages.joinToString("\n") { it.content }
+            val history = this.prompt.messages.joinToString("\n") { msg -> msg.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text } }
             return@readSession "History: $history"
         }
     }
@@ -230,7 +232,6 @@ class PostgresPersistenceAgentRunTest {
         output shouldBeEqual "History: You are a test agent.\n" +
             "Node 1 output\n" +
             "Node 2 output\n" +
-            "Node 1 output\n" +
             "Node 2 output"
 
         // Post-run: latest should still be cp3 since we did not persist new checkpoints
@@ -274,7 +275,6 @@ class PostgresPersistenceAgentRunTest {
         output shouldBe "History: You are a test agent.\n" +
             "Node 1 output\n" +
             "Node 2 output\n" +
-            "Node 1 output\n" +
             "Node 2 output"
 
         latest?.checkpointId shouldBe "cp-1"
@@ -289,14 +289,16 @@ class PostgresPersistenceAgentRunTest {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = time,
-            nodePath = nodePath,
-            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test agent.", RequestMetaInfo(time)),
                 Message.User("Node 1 output", RequestMetaInfo(time)),
                 Message.Assistant("Node 2 output", ResponseMetaInfo(time))
             ),
-            version = version
+            version = version,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = nodePath,
+                lastOutput = JSONPrimitive("Test input"),
+            ),
         )
     }
 }

@@ -1,8 +1,8 @@
 package ai.koog.prompt.executor.clients.dashscope
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionRequest
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionRequestSerializer
@@ -120,10 +120,10 @@ public class DashscopeLLMClient @JvmOverloads constructor(
         return json.encodeToString(DashscopeChatCompletionRequestSerializer, request)
     }
 
-    override fun processProviderChatResponse(response: DashscopeChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: DashscopeChatCompletionResponse): LLMChoice {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
         return response.choices.map {
-            it.message.toMessageResponses(
+            it.message.toMessageResponse(
                 it.finishReason,
                 createMetaInfo(response.usage),
             )

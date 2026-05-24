@@ -177,7 +177,7 @@ public class JsonStructure<TStruct>(
          * structured output is used. Default is [JsonStructure.defaultDefinitionPrompt]
          */
         public fun <TStruct> create(
-            id: String,
+            id: String? = null,
             serializer: KSerializer<TStruct>,
             json: Json = defaultJson,
             schemaGenerator: JsonSchemaGenerator = StandardJsonSchemaGenerator.Default,
@@ -189,6 +189,8 @@ public class JsonStructure<TStruct>(
                 structuredData: JsonStructure<TStruct>
             ) -> TextContentBuilderBase<*> = ::defaultDefinitionPrompt
         ): JsonStructure<TStruct> {
+            val id = id ?: serializer.descriptor.serialName.substringAfterLast(".")
+
             return JsonStructure(
                 id = id,
                 schema = schemaGenerator.generate(json, id, serializer, descriptionOverrides, excludedProperties),

@@ -10,7 +10,6 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
-import ai.koog.prompt.message.Message
 import kotlin.reflect.KClass
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -112,47 +111,6 @@ public interface AIAgentContext {
      * Represents the observability data associated with the AI Agent context.
      */
     public var executionInfo: AgentExecutionInfo
-
-    /**
-     * Stores a feature in the agent's storage using the specified key.
-     *
-     * @param key A uniquely identifying key of type `AIAgentStorageKey` used to store the feature.
-     * @param value The feature to be stored, which can be of any type.
-     */
-    @Deprecated("Use context.storage.set() instead", level = DeprecationLevel.WARNING)
-    public fun store(key: AIAgentStorageKey<*>, value: Any)
-
-    /**
-     * Retrieves data from the agent's storage using the specified key.
-     *
-     * @param key A uniquely identifying key of type `AIAgentStorageKey` used to fetch the corresponding data.
-     * @return The data associated with the provided key, or null if no matching data is found.
-     */
-    @Deprecated("Use context.storage.get() instead", level = DeprecationLevel.WARNING)
-    public fun <T> get(key: AIAgentStorageKey<*>): T?
-
-    /**
-     * Removes a feature or data associated with the specified key from the agent's storage.
-     *
-     * @param key A uniquely identifying key of type `AIAgentStorageKey` used to locate the data to be removed.
-     * @return `true` if the data was successfully removed, or `false` if no data was associated with the provided key.
-     */
-    @Deprecated("Use context.storage.remove() instead", level = DeprecationLevel.WARNING)
-    public fun remove(key: AIAgentStorageKey<*>): Boolean
-
-    /**
-     * Retrieves the history of messages exchanged during the agent's execution.
-     */
-    public suspend fun getHistory(): List<Message>
-
-    /**
-     * Checks if the list of `Message.Response` contains any instances
-     * of `Message.Tool.Call`.
-     *
-     * @receiver A list of `Message.Response` objects to evaluate.
-     * @return `true` if there is at least one `Message.Tool.Call` in the list, otherwise `false`.
-     */
-    public fun List<Message.Response>.containsToolCalls(): Boolean = this.any { it is Message.Tool.Call }
 }
 
 /**

@@ -2,6 +2,7 @@ package ai.koog.integration.tests.utils.tools
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,7 +14,7 @@ data class GetTransactionsArgs(
 )
 
 object GetTransactionsTool : SimpleTool<GetTransactionsArgs>(
-    argsSerializer = GetTransactionsArgs.serializer(),
+    argsType = typeToken<GetTransactionsArgs>(),
     name = "get_transactions",
     description = "Get all transactions between two dates"
 ) {

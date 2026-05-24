@@ -1,11 +1,11 @@
 package ai.koog.agents.features.opentelemetry.feature.span
 
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
-import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
-import ai.koog.agents.core.dsl.extension.onMultipleAssistantMessages
-import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.MockToolCallResponse
@@ -117,23 +117,21 @@ class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
         val userPrompt = "What is the weather in Paris and London?"
 
         val strategy = strategy("test-tool-calls-strategy") {
-            val nodeCallLLM by nodeLLMRequestMultiple("test-llm-call")
-            val nodeExecuteTool by nodeExecuteMultipleTools("test-multiple-tool-calls", parallelTools = true)
-            val nodeSendToolResult by nodeLLMSendMultipleToolResults("test-node-llm-send-multiple-tool-results")
+            val nodeCallLLM by nodeLLMRequest("test-llm-call")
+            val nodeExecuteTool by nodeExecuteTools("test-multiple-tool-calls")
+            val nodeSendToolResult by nodeLLMSendToolResults("test-node-llm-send-multiple-tool-results")
 
             edge(nodeStart forwardTo nodeCallLLM)
-            edge(nodeCallLLM forwardTo nodeExecuteTool onMultipleToolCalls { true })
+            edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
             edge(
                 nodeCallLLM forwardTo nodeFinish
-                    onMultipleAssistantMessages { true }
-                    transformed { it.joinToString("\n") { message -> message.content } }
+                    onTextMessage { true }
             )
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
-            edge(nodeSendToolResult forwardTo nodeExecuteTool onMultipleToolCalls { true })
+            edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
             edge(
                 nodeSendToolResult forwardTo nodeFinish
-                    onMultipleAssistantMessages { true }
-                    transformed { it.joinToString("\n") { message -> message.content } }
+                    onTextMessage { true }
             )
         }
 

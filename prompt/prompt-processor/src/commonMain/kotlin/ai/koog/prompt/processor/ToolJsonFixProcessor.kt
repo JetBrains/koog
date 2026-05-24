@@ -2,8 +2,7 @@ package ai.koog.prompt.processor
 
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.message.MessagePart
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encoding.Decoder
@@ -131,15 +130,13 @@ public abstract class ToolJsonFixProcessor(
      */
     protected fun extractToolCall(
         messageContent: String,
-        metaInfo: ResponseMetaInfo,
-    ): Message.Tool.Call? {
+    ): MessagePart.Tool.Call? {
         runCatching {
             val decodedToolCall = toolCallJsonConfig.json.decodeFromString(toolCallDeserializer, messageContent)
-            return Message.Tool.Call(
-                decodedToolCall.id,
-                decodedToolCall.tool,
-                decodedToolCall.arguments.toString(),
-                metaInfo
+            return MessagePart.Tool.Call(
+                id = decodedToolCall.id,
+                tool = decodedToolCall.tool,
+                args = decodedToolCall.arguments,
             )
         }
 
@@ -164,13 +161,13 @@ public abstract class ToolJsonFixProcessor(
                 }
                 put(key, value)
             }
-        }.toString()
+        }
 
         val idKeyPattern = getKeyPattern(toolCallJsonConfig.idJsonKeys)
         val idRegex = """$idKeyPattern\s*:\s*"([a-zA-Z0-9_]+)"""".toRegex()
         val id = idRegex.find(messageContent)?.groupValues?.get(3)
 
-        return Message.Tool.Call(id, toolName, fixedArgs, metaInfo)
+        return MessagePart.Tool.Call(id = id, tool = toolName, args = fixedArgs)
     }
 
     /**

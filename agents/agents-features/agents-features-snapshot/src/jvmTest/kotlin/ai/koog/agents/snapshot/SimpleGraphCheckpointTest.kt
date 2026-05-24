@@ -12,6 +12,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -65,12 +66,13 @@ class SimpleGraphCheckpointTest {
         // Run the agent
         val result = agent.run("Start the test", null)
 
-        // Verify that the result contains the expected output from the teleported node
+        // Verify that the result contains the expected output from the teleported node.
+        // With lastOutput semantics, teleport jumps to AFTER Node1 (i.e. into teleportNode),
+        // which sees teleportState.teleported=true and emits "Already teleported, passing by".
         assertEquals(
             "Start the test\n" +
                 "Node 1 output\n" +
                 "Teleported\n" +
-                "Node 1 output\n" +
                 "Already teleported, passing by\n" +
                 "Node 2 output",
             result
@@ -183,8 +185,8 @@ class SimpleGraphCheckpointTest {
         val nodePath = checkpoint.graphProperties?.nodePath
         assertEquals(expectedPath, nodePath, "Checkpoint has incorrect node ID")
         assertEquals(3, checkpoint.messageHistory.size)
-        assertEquals(input, checkpoint.messageHistory[0].content)
-        assertEquals("Node 1 output", checkpoint.messageHistory[1].content)
-        assertEquals("Node 2 output", checkpoint.messageHistory[2].content)
+        assertEquals(input, (checkpoint.messageHistory[0].parts[0] as MessagePart.Text).text)
+        assertEquals("Node 1 output", (checkpoint.messageHistory[1].parts[0] as MessagePart.Text).text)
+        assertEquals("Node 2 output", (checkpoint.messageHistory[2].parts[0] as MessagePart.Text).text)
     }
 }

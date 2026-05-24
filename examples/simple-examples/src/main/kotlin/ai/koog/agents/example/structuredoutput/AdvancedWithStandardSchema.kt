@@ -89,7 +89,8 @@ suspend fun main() {
             ),
         )
 
-        nodeStart then prepareRequest then getStructuredForecast
+        nodeStart then prepareRequest
+        edge(prepareRequest forwardTo getStructuredForecast)
         edge(getStructuredForecast forwardTo nodeFinish transformed { it.getOrThrow().data })
     }
 

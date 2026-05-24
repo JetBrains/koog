@@ -1,8 +1,8 @@
 package ai.koog.prompt.executor.clients.retry
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -61,7 +61,7 @@ public class RetryingLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<Message.Response> = withRetry("execute") {
+    ): Message.Assistant = withRetry("execute") {
         delegate.execute(prompt, model, tools)
     }
 
@@ -107,7 +107,7 @@ public class RetryingLLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> = withRetry("executeMultipleChoices") {
+    ): LLMChoice = withRetry("executeMultipleChoices") {
         delegate.executeMultipleChoices(prompt, model, tools)
     }
 

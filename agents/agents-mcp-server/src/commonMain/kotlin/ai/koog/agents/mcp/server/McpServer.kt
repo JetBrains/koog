@@ -92,39 +92,6 @@ public suspend fun startMcpServer(
     installMcpTransport(server, transport)
 }
 
-/**
- * Starts a new MCP server with the passed [tools] that listens to and writes
- * to the specified [port] on the passed [host] using SSE transport.
- */
-@Deprecated(
-    "SSE transport is deprecated. Use startMcpServer() which defaults to Streamable HTTP.",
-    ReplaceWith("startMcpServer(factory, tools, port, host)"),
-    level = DeprecationLevel.WARNING,
-)
-public suspend fun startSseMcpServer(
-    factory: ApplicationEngineFactory<*, *>,
-    port: Int = 3000,
-    host: String = "localhost",
-    tools: ToolRegistry,
-): Server = doStartMcpServer(factory, port, host, tools) { server -> mcp { server } }.first
-
-/**
- * Starts a new MCP server with the passed [tools] that listens to and writes
- * to the allocated port on the passed [host] using SSE transport.
- * A port can be obtained from the returned list of [EngineConnectorConfig].
- */
-@Deprecated(
-    "SSE transport is deprecated. Use startMcpServer() which defaults to Streamable HTTP.",
-    ReplaceWith("startMcpServer(factory, tools, host)"),
-    level = DeprecationLevel.WARNING,
-)
-public suspend fun startSseMcpServer(
-    factory: ApplicationEngineFactory<*, *>,
-    host: String = "localhost",
-    tools: ToolRegistry,
-): Pair<Server, List<EngineConnectorConfig>> =
-    doStartMcpServer(factory, 0, host, tools) { server -> mcp { server } }
-
 private fun Application.installMcpTransport(server: Server, transport: McpServerTransportType) {
     when (transport) {
         McpServerTransportType.StreamableHttp -> mcpStreamableHttp { server }

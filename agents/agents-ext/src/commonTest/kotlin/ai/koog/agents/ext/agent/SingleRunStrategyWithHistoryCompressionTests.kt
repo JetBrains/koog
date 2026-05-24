@@ -1,7 +1,6 @@
 package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolRegistry
@@ -9,6 +8,7 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -16,7 +16,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 object CreateTool : SimpleTool<CreateTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "create",
     description = "Create something"
 ) {
@@ -105,7 +105,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategyWithHistoryCompression(config, ToolCalls.SEQUENTIAL),
+            strategy = singleRunStrategyWithHistoryCompression(config),
             toolRegistry = ToolRegistry { tool(CreateTool) }
         )
 
@@ -134,7 +134,7 @@ class SingleRunStrategyWithHistoryCompressionTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategyWithHistoryCompression(config, ToolCalls.PARALLEL),
+            strategy = singleRunStrategyWithHistoryCompression(config, true),
             toolRegistry = ToolRegistry { tool(CreateTool) }
         )
 

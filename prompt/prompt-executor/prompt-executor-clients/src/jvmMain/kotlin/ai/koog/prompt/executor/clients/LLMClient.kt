@@ -5,9 +5,9 @@ package ai.koog.prompt.executor.clients
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.annotations.InternalPromptAPI
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -40,7 +40,7 @@ public actual abstract class LLMClient actual constructor() : LLMClientAPI, LLME
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
-    ): List<Message.Response> = runBlockingReentrant {
+    ): Message.Assistant = runBlockingReentrant {
         execute(prompt, model, tools)
     }
 
@@ -60,7 +60,7 @@ public actual abstract class LLMClient actual constructor() : LLMClientAPI, LLME
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
-    ): List<LLMChoice> = runBlockingReentrant {
+    ): LLMChoice = runBlockingReentrant {
         executeMultipleChoices(prompt, model, tools)
     }
 

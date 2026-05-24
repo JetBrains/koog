@@ -1,7 +1,6 @@
 package ai.koog.integration.tests.agent
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.agent.singleRunStrategy
@@ -15,6 +14,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
@@ -100,7 +100,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
                 val agent = builder(model)
                     .systemPrompt("You are a helpful assistant with access to a calculator tool.")
                     .toolRegistry(toolRegistry)
-                    .graphStrategy(singleRunStrategy(ToolCalls.SEQUENTIAL))
+                    .graphStrategy(singleRunStrategy(parallelTools = false))
                     .temperature(0.7)
                     .maxIterations(10)
                     .install(EventHandler.Feature, eventHandlerConfig)
@@ -133,7 +133,7 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
                 val agent = builder(model)
                     .systemPrompt("You are a helpful assistant with access to a calculator tool.")
                     .toolRegistry(toolRegistry)
-                    .graphStrategy(singleRunStrategy(ToolCalls.SEQUENTIAL))
+                    .graphStrategy(singleRunStrategy(parallelTools = false))
                     .temperature(0.7)
                     .maxIterations(10)
                     .install(EventHandler.Feature, eventHandlerConfig)
@@ -159,11 +159,12 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         RetryUtils.withRetry {
             runWithTracking { eventHandlerConfig, state ->
                 val strategy = functionalStrategy<String, String>("echo-strategy") { input ->
-                    val response = requestLLM(
+                    val response = this.requestLLM(
                         "User says: $input. Respond with: 'Acknowledged: ' and repeat their message."
                     )
                     when (response) {
-                        is Message.Assistant -> response.content
+                        is Message.Assistant -> response.parts.filterIsInstance<MessagePart.Text>()
+                            .joinToString(separator = "\n") { it.text }
                         else -> "No response"
                     }
                 }
@@ -196,8 +197,9 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         Models.assumeAvailable(model.provider)
 
         val strategy = functionalStrategy<String, String>("summarize") { input ->
-            when (val response = requestLLM("Summarize in one sentence: $input")) {
-                is Message.Assistant -> response.content
+            when (val response = this.requestLLM("Summarize in one sentence: $input")) {
+                is Message.Assistant -> response.parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }
                 else -> "Unable to summarize"
             }
         }
@@ -235,17 +237,19 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         Models.assumeAvailable(model.provider)
 
         val strategy = functionalStrategy<String, String>("multi-step") { input ->
-            val ideas = when (val ideasResponse = requestLLM("Give me 2 brief ideas about: $input")) {
-                is Message.Assistant -> ideasResponse.content
+            val ideas = when (val ideasResponse = this.requestLLM("Give me 2 brief ideas about: $input")) {
+                is Message.Assistant -> ideasResponse.parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }
                 else -> "No ideas"
             }
 
             val refinedIdea = when (
-                val response = requestLLM(
+                val response = this.requestLLM(
                     "Pick the best idea from: $ideas. Explain in one sentence why."
                 )
             ) {
-                is Message.Assistant -> response.content
+                is Message.Assistant -> response.parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }
                 else -> "No refinement"
             }
 
@@ -352,8 +356,11 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         Models.assumeAvailable(model.provider)
 
         val strategy = functionalStrategy<String, String>("error-handling") { input ->
-            when (val response = requestLLM("Process: $input")) {
-                is Message.Assistant -> "Success: ${response.content}"
+            when (val response = this.requestLLM("Process: $input")) {
+                is Message.Assistant ->
+                    "Success: ${
+                        response.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                    }"
                 else -> "Fallback: Unexpected response type"
             }
         }
@@ -441,8 +448,9 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
         RetryUtils.withRetry {
             runWithTracking { eventHandlerConfig, _ ->
                 val strategyWithErrorHandling = functionalStrategy<String, String>("error-handling") { input ->
-                    when (val response = requestLLM(input)) {
-                        is Message.Assistant -> response.content
+                    when (val response = this.requestLLM(input)) {
+                        is Message.Assistant -> response.parts.filterIsInstance<MessagePart.Text>()
+                            .joinToString(separator = "\n") { it.text }
                         else -> "Unexpected response type: ${response::class.simpleName}"
                     }
                 }
@@ -497,8 +505,12 @@ class AIAgentBuilderIntegrationTest : AIAgentTestBase() {
             runWithTracking { eventHandlerConfig, state ->
                 val strategyWithContext = functionalStrategy<String, String>("context-aware") { input ->
                     val agentId = agentId
-                    when (val response = requestLLM("Agent $agentId processing: $input")) {
-                        is Message.Assistant -> "Processed by $agentId: ${response.content}"
+                    when (val response = this.requestLLM("Agent $agentId processing: $input")) {
+                        is Message.Assistant ->
+                            "Processed by $agentId: ${
+                                response.parts.filterIsInstance<MessagePart.Text>()
+                                    .joinToString(separator = "\n") { it.text }
+                            }"
                         else -> "Unexpected response"
                     }
                 }

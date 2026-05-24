@@ -1,7 +1,6 @@
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.agent.OutputOption
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolBase
@@ -58,7 +57,7 @@ public class SubtaskBuilder(
  * @param llmModel Optional language model to be used for the subtask.
  * @param llmParams Optional parameters for the language model configuration.
  * @param responseProcessor Optional processor for post-processing LLM responses.
- * @param runMode Specifies the mode in which tools should be called (e.g., sequentially).
+ * @param parallelTools Specifies the mode in which tools should be called (e.g., sequentially).
  * @param assistantResponseRepeatMax Optional maximum number of response repetitions allowed for the assistant.
  */
 public class SubtaskBuilderWithOutput<Output : Any>(
@@ -69,7 +68,7 @@ public class SubtaskBuilderWithOutput<Output : Any>(
     public var llmModel: LLModel? = null,
     public var llmParams: LLMParams? = null,
     public var responseProcessor: ResponseProcessor? = null,
-    public var runMode: ToolCalls = ToolCalls.SEQUENTIAL,
+    public var parallelTools: Boolean = false,
     public var assistantResponseRepeatMax: Int? = null,
 ) {
 
@@ -148,13 +147,10 @@ public class SubtaskBuilderWithOutput<Output : Any>(
     /**
      * Sets the execution mode for the AI agent's task execution.
      *
-     * @param runMode Specifies the mode in which tool calls are executed. The available modes are:
-     * - `SEQUENTIAL`: Executes multiple tool calls sequentially.
-     * - `PARALLEL`: Executes tool calls in parallel.
-     * - `SINGLE_RUN_SEQUENTIAL`: Allows only a single tool call to be executed.
+     * @param parallelTools Specifies the mode in which tool calls are executed. The available modes are:
      */
-    public fun runMode(runMode: ToolCalls): SubtaskBuilderWithOutput<Output> =
-        apply { this.runMode = runMode }
+    public fun parallelTools(parallelTools: Boolean): SubtaskBuilderWithOutput<Output> =
+        apply { this.parallelTools = parallelTools }
 
     /**
      * Sets the maximum number of times the assistant's response can be repeated.
@@ -181,7 +177,7 @@ public class SubtaskBuilderWithOutput<Output : Any>(
                     tools = tools,
                     llmModel = llmModel,
                     llmParams = llmParams,
-                    runMode = runMode,
+                    parallelTools = parallelTools,
                     assistantResponseRepeatMax = assistantResponseRepeatMax,
                     responseProcessor = responseProcessor
                 )
@@ -193,7 +189,7 @@ public class SubtaskBuilderWithOutput<Output : Any>(
                 tools = tools,
                 llmModel = llmModel,
                 llmParams = llmParams,
-                runMode = runMode,
+                parallelTools = parallelTools,
                 assistantResponseRepeatMax = assistantResponseRepeatMax,
                 responseProcessor = responseProcessor
             )
@@ -203,7 +199,7 @@ public class SubtaskBuilderWithOutput<Output : Any>(
                 tools = tools,
                 llmModel = llmModel,
                 llmParams = llmParams,
-                runMode = runMode,
+                parallelTools = parallelTools,
                 assistantResponseRepeatMax = assistantResponseRepeatMax,
                 responseProcessor = responseProcessor
             ) as Output // Output === CriticResult<String> in this case

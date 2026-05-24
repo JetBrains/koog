@@ -2,8 +2,8 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.serializer
 
 /**
  * A simple implementation of the `Tool` class that returns the input string argument as the result.
@@ -12,8 +12,8 @@ import kotlinx.serialization.serializer
  * @param name An optional name for the tool. If not provided, it defaults to "blank-tool".
  */
 public class TestBlankTool(name: String? = null) : Tool<TestBlankTool.Args, String>(
-    argsSerializer = serializer<Args>(),
-    resultSerializer = serializer<String>(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<String>(),
     name = name ?: "blank-tool",
     description = "test-finish-tool"
 ) {

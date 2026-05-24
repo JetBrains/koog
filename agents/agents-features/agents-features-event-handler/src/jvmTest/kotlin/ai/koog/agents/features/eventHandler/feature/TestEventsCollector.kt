@@ -55,7 +55,7 @@ class TestEventsCollector {
             someSuspendFunction()
             updateRunId(eventContext.context.runId)
             _collectedEvents.add(
-                "OnStrategyStarting (run id: ${eventContext.runId}, strategy: ${eventContext.strategy.name})"
+                "OnStrategyStarting (run id: ${eventContext.context.runId}, strategy: ${eventContext.strategy.name})"
             )
         }
 
@@ -135,7 +135,7 @@ class TestEventsCollector {
                     eventContext.tools.joinToString {
                         it.name
                     }
-                }], responses: [${eventContext.responses.joinToString { response -> response.traceString }}])"
+                }], responses: [${eventContext.response?.traceString}])"
             )
         }
 

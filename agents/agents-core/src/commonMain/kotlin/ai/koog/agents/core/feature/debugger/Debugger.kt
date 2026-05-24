@@ -289,7 +289,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
-                    responses = eventContext.responses,
+                    response = eventContext.response,
                     moderationResponse = eventContext.moderationResponse,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )

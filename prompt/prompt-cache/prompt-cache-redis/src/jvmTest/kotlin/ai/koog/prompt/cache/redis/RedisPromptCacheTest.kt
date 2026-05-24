@@ -3,9 +3,9 @@
 package ai.koog.prompt.cache.redis
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.cache.model.get
 import ai.koog.prompt.cache.model.put
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -46,9 +46,9 @@ class RedisPromptCacheTest {
 
         private val testPrompt = Prompt(listOf(Message.User("Hello, world!", RequestMetaInfo.Empty)), "test-prompt-id")
         private val testTools = emptyList<ToolDescriptor>()
-        private val testResponse = listOf(Message.Assistant("Hello, user!", ResponseMetaInfo.Empty))
+        private val testResponse = Message.Assistant("Hello, user!", ResponseMetaInfo.Empty)
 
-        private val testClock = KoogClock { testResponse.first().metaInfo.timestamp }
+        private val testClock = KoogClock { testResponse.metaInfo.timestamp }
     }
 
     @BeforeTest

@@ -1,8 +1,8 @@
 package ai.koog.agents.ext.llm.choice
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -30,7 +30,7 @@ public class PromptExecutorWithChoiceSelection(
     private val executor: PromptExecutor,
     private val choiceSelectionStrategy: ChoiceSelectionStrategy,
 ) : PromptExecutor() {
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         val choices = executor.executeMultipleChoices(prompt, model, tools)
 
         return choiceSelectionStrategy.choose(prompt, choices)
@@ -56,5 +56,5 @@ public class PromptExecutorWithChoiceSelection(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> = executor.executeMultipleChoices(prompt, model, tools)
+    ): LLMChoice = executor.executeMultipleChoices(prompt, model, tools)
 }

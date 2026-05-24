@@ -10,7 +10,9 @@ import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.planner.PlannerAgentExecutionPoint
 import ai.koog.agents.snapshot.providers.PersistenceUtils
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONNull
 import ai.koog.serialization.JSONObject
@@ -25,6 +27,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonTransformingSerializer
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlin.jvm.JvmOverloads
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -49,7 +52,11 @@ public data class AgentCheckpointData internal constructor(
     val checkpointId: String,
     val createdAt: Instant,
     val messageHistory: List<Message>,
+    val llmParams: LLMParams? = null,
+    val llmModel: LLModel? = null,
+    val tools: List<String>? = null,
     val storage: JSONObject? = null,
+    val agentIterations: Int = 0,
     val version: Long,
     val graphProperties: GraphCheckpointProperties?,
     val plannerProperties: PlannerCheckpointProperties?,
@@ -59,46 +66,28 @@ public data class AgentCheckpointData internal constructor(
     /**
      * Creates an instance of `AgentCheckpointData` with graph properties.
      */
-    @Deprecated("Use the constructor with `GraphCheckpointProperties` instead")
-    public constructor(
-        checkpointId: String,
-        createdAt: Instant,
-        nodePath: String,
-        lastInput: JSONElement? = null,
-        lastOutput: JSONElement? = null,
-        messageHistory: List<Message>,
-        version: Long,
-        properties: JSONObject? = null
-    ) : this(
-        checkpointId = checkpointId,
-        createdAt = createdAt,
-        messageHistory = messageHistory,
-        storage = null,
-        version = version,
-        graphProperties = GraphCheckpointProperties(nodePath, lastInput ?: JSONNull, lastOutput ?: JSONNull),
-        properties = JSONObject(
-            buildMap {
-                properties?.entries?.let { putAll(it) }
-            }
-        )
-    )
-
-    /**
-     * Creates an instance of `AgentCheckpointData` with graph properties.
-     */
+    @JvmOverloads
     public constructor(
         checkpointId: String,
         createdAt: Instant,
         messageHistory: List<Message>,
-        storage: JSONObject? = null,
+        llmParams: LLMParams? = null,
         version: Long,
         graphProperties: GraphCheckpointProperties,
         properties: JSONObject? = null,
+        llmModel: LLModel? = null,
+        tools: List<String>? = null,
+        storage: JSONObject? = null,
+        agentIterations: Int = 0,
     ) : this(
         checkpointId = checkpointId,
         createdAt = createdAt,
         messageHistory = messageHistory,
+        llmParams = llmParams,
+        llmModel = llmModel,
+        tools = tools,
         storage = storage,
+        agentIterations = agentIterations,
         version = version,
         graphProperties = graphProperties,
         plannerProperties = null,
@@ -108,45 +97,33 @@ public data class AgentCheckpointData internal constructor(
     /**
      * Creates an instance of `AgentCheckpointData` with planner properties.
      */
+    @JvmOverloads
     public constructor(
         checkpointId: String,
         createdAt: Instant,
         messageHistory: List<Message>,
-        storage: JSONObject? = null,
+        llmParams: LLMParams? = null,
         version: Long,
         plannerProperties: PlannerCheckpointProperties,
         properties: JSONObject? = null,
+        llmModel: LLModel? = null,
+        tools: List<String>? = null,
+        storage: JSONObject? = null,
+        agentIterations: Int = 0,
     ) : this(
         checkpointId = checkpointId,
         createdAt = createdAt,
         messageHistory = messageHistory,
+        llmParams = llmParams,
+        llmModel = llmModel,
+        tools = tools,
         storage = storage,
+        agentIterations = agentIterations,
         version = version,
         graphProperties = null,
         plannerProperties = plannerProperties,
         properties = properties
     )
-
-    /**
-     * The identifier of the node where the checkpoint was created.
-     */
-    @Deprecated("nodePath is deprecated, use properties[\"nodePath\"] instead")
-    public val nodePath: String
-        get() = graphProperties?.nodePath ?: error("nodePath is not set")
-
-    /**
-     * Serialized input received for node with [nodePath]
-     */
-    @Deprecated("lstInput is deprecated, use properties[\"lastInput\"] instead")
-    public val lastInput: JSONElement
-        get() = graphProperties?.lastInput ?: error("lastInput is not set")
-
-    /**
-     * Serialized output received from node with [nodePath]
-     */
-    @Deprecated("lstOutput is deprecated, use properties[\"lastOutput\"] instead")
-    public val lastOutput: JSONElement
-        get() = graphProperties?.lastOutput ?: error("lastOutput is not set")
 }
 
 /**
@@ -172,12 +149,10 @@ public object AgentCheckpointDataSerializer : JsonTransformingSerializer<AgentCh
 
     private fun migrateFromOldFormat(element: JsonObject): JsonObject {
         val nodePath = element["nodePath"] ?: return element
-        val lastInput = element["lastInput"] ?: JsonNull
         val lastOutput = element["lastOutput"] ?: JsonNull
 
         val graphProperties = buildJsonObject {
             put("nodePath", nodePath)
-            put("lastInput", lastInput)
             put("lastOutput", lastOutput)
         }
 
@@ -220,17 +195,14 @@ public fun tombstoneCheckpoint(
 }
 
 /**
- * Specialized data for graph-based agents, including execution path and input/output states.
+ * Specialized data for graph-based agents, including execution path and output state.
  *
  * @property nodePath The identifier of the node where the checkpoint was created.
- * @property lastInput Deprecated. Serialized input received for the node with [nodePath].
  * @property lastOutput Serialized output received from the node with [nodePath].
  */
 @Serializable
 public data class GraphCheckpointProperties(
     public val nodePath: String,
-    @Deprecated("Use lastOutput instead, lastOutput will be removed in future versions")
-    public val lastInput: JSONElement = JSONNull,
     public val lastOutput: JSONElement = JSONNull
 )
 
@@ -259,21 +231,31 @@ public fun AgentCheckpointData.toAgentContextData(
     return when {
         graphProperties != null -> GraphAgentContextData(
             messageHistory = messageHistory,
+            llmParams = llmParams,
+            llmModel = llmModel,
+            tools = tools,
             storage = storage ?: JSONObject(emptyMap()),
+            agentIterations = agentIterations,
             nodePath = graphProperties.nodePath,
-            lastInput = graphProperties.lastInput,
             lastOutput = graphProperties.lastOutput,
             rollbackStrategy = rollbackStrategy,
             additionalRollbackActions = additionalRollbackActions
         )
+
         plannerProperties != null -> PlannerAgentContextData(
             messageHistory = messageHistory,
             state = plannerProperties.state,
             plan = plannerProperties.plan,
+            storage = storage ?: JSONObject(emptyMap()),
+            agentIterations = agentIterations,
+            llmParams = llmParams,
+            llmModel = llmModel,
+            tools = tools,
             executionPoint = plannerProperties.executionPoint,
             rollbackStrategy = rollbackStrategy,
             additionalRollbackActions = additionalRollbackActions
         )
+
         else -> null
     }
 }

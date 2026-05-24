@@ -49,19 +49,17 @@ class OpenTelemetryResponseMetadataTest {
 
         val span = createInferenceSpan("metadata-forwarded")
 
-        val responseMessages = listOf(
-            Message.Assistant(
-                "test response",
-                ResponseMetaInfo(
-                    timestamp = clock.now(),
-                    inputTokensCount = 10,
-                    outputTokensCount = 20,
-                    metadata = metadata,
-                )
+        val responseMessage = Message.Assistant(
+            "test response",
+            ResponseMetaInfo(
+                timestamp = clock.now(),
+                inputTokensCount = 10,
+                outputTokensCount = 20,
+                metadata = metadata,
             )
         )
 
-        endInferenceSpan(span = span, messages = responseMessages, model = model, verbose = true)
+        endInferenceSpan(span = span, message = responseMessage, model = model, verbose = true)
 
         val metadataAttribute = span.attributes.find { it.key == "gen_ai.response.metadata" }
         assertNotNull(metadataAttribute, "gen_ai.response.metadata attribute should be present")
@@ -72,52 +70,18 @@ class OpenTelemetryResponseMetadataTest {
     fun `test response metadata attribute is omitted when ResponseMetaInfo has no metadata`() {
         val span = createInferenceSpan("no-metadata")
 
-        val responseMessages = listOf(
-            Message.Assistant(
-                "test response",
-                ResponseMetaInfo(
-                    timestamp = clock.now(),
-                    inputTokensCount = 10,
-                    outputTokensCount = 20,
-                )
+        val responseMessage = Message.Assistant(
+            "test response",
+            ResponseMetaInfo(
+                timestamp = clock.now(),
+                inputTokensCount = 10,
+                outputTokensCount = 20,
             )
         )
 
-        endInferenceSpan(span = span, messages = responseMessages, model = model, verbose = true)
+        endInferenceSpan(span = span, message = responseMessage, model = model, verbose = true)
 
         val metadataAttribute = span.attributes.find { it.key == "gen_ai.response.metadata" }
         assertNull(metadataAttribute, "gen_ai.response.metadata attribute should not be present when metadata is null")
-    }
-
-    @Test
-    fun `test response metadata from multiple response messages is merged into single attribute`() {
-        val metadata1 = JsonObject(mapOf("request_id" to JsonPrimitive("req-123")))
-        val metadata2 = JsonObject(mapOf("served_by" to JsonPrimitive("node-7")))
-
-        val span = createInferenceSpan("merged-metadata")
-
-        val responseMessages = listOf(
-            Message.Assistant(
-                "response 1",
-                ResponseMetaInfo(timestamp = clock.now(), metadata = metadata1)
-            ),
-            Message.Assistant(
-                "response 2",
-                ResponseMetaInfo(timestamp = clock.now(), metadata = metadata2)
-            ),
-        )
-
-        endInferenceSpan(span = span, messages = responseMessages, model = model, verbose = true)
-
-        val metadataAttribute = span.attributes.find { it.key == "gen_ai.response.metadata" }
-        assertNotNull(metadataAttribute, "gen_ai.response.metadata attribute should be present")
-
-        val expectedMerged = JsonObject(
-            mapOf(
-                "request_id" to JsonPrimitive("req-123"),
-                "served_by" to JsonPrimitive("node-7"),
-            )
-        )
-        assertEquals(expectedMerged.toString(), metadataAttribute.value)
     }
 }

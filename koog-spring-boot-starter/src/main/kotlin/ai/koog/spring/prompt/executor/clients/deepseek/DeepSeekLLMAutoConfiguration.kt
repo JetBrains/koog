@@ -2,7 +2,9 @@ package ai.koog.spring.prompt.executor.clients.deepseek
 
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.slf4j.LoggerFactory
@@ -85,8 +87,8 @@ public class DeepSeekLLMAutoConfiguration(
      */
     @Bean
     @ConditionalOnBean(DeepSeekLLMClient::class)
-    public fun deepSeekExecutor(client: DeepSeekLLMClient): SingleLLMPromptExecutor {
-        logger.info("Creating SingleLLMPromptExecutor (deepSeekExecutor) for DeepSeekLLMClient")
-        return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
+    public fun deepSeekExecutor(client: DeepSeekLLMClient): PromptExecutor {
+        logger.info("Creating MultiLLMPromptExecutor (deepSeekExecutor) for DeepSeekLLMClient")
+        return MultiLLMPromptExecutor(LLMProvider.DeepSeek to client.toRetryingClient(properties.retry))
     }
 }

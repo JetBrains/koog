@@ -1,6 +1,5 @@
 package ai.koog.integration.tests.utils
 
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.ext.agent.subgraphWithTask
@@ -24,7 +23,7 @@ object SubgraphStrategies {
     ): AIAgentGraphStrategy<String, String> = strategy("calculator-subgraph-strategy") {
         val calculationSubgraph by subgraphWithTask<String, String>(
             llmModel = model,
-            runMode = ToolCalls.SEQUENTIAL,
+            parallelTools = false,
         ) { input ->
             "You are a calculator assistant. Use the available tools to solve the following calculation: $input. " +
                 "You MUST use tools to perform calculations. DO NOT calculate in your head."

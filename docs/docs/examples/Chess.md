@@ -586,7 +586,7 @@ val strategy = strategy<String, String>("chess_strategy") {
 
 val askChoiceStrategy = AskUserChoiceSelectionStrategy(promptShowToUser = { prompt ->
     val lastMessage = prompt.messages.last()
-    if (lastMessage is Message.Tool.Call) {
+    if (lastMessage is MessagePart.Tool.Call) {
         lastMessage.content
     } else {
         ""

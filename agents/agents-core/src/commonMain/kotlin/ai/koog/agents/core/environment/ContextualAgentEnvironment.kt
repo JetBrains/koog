@@ -5,7 +5,7 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.agent.tools.AgentContextAwareTool
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolCallMetadata
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -45,11 +45,11 @@ public class ContextualAgentEnvironment(
         private val logger = KotlinLogging.logger { }
     }
 
-    override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult =
+    override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult =
         executeTool(toolCall, ToolCallMetadata.EMPTY)
 
     override suspend fun executeTool(
-        toolCall: Message.Tool.Call,
+        toolCall: MessagePart.Tool.Call,
         metadata: ToolCallMetadata,
     ): ReceivedToolResult {
         @OptIn(ExperimentalUuidApi::class)
@@ -57,7 +57,7 @@ public class ContextualAgentEnvironment(
         val toolDescription = context.llm.toolRegistry.getToolOrNull(toolCall.tool)?.descriptor?.description
 
         val toolArgs = try {
-            toolCall.contentJson.toKoogJSONObject()
+            toolCall.argsJson.toKoogJSONObject()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -83,7 +83,7 @@ public class ContextualAgentEnvironment(
                 tool = tool,
                 toolArgs = toolArgs,
                 toolDescription = null,
-                content = message,
+                output = message,
                 resultKind = ToolResultKind.ValidationError(e),
                 result = null
             )
@@ -180,7 +180,7 @@ public class ContextualAgentEnvironment(
                     toolName = toolResult.tool,
                     toolDescription = toolResult.toolDescription,
                     toolArgs = toolResult.toolArgs,
-                    message = toolResult.content,
+                    message = toolResult.output,
                     error = toolResultKind.error,
                 )
             }
@@ -195,7 +195,7 @@ public class ContextualAgentEnvironment(
                     toolName = toolResult.tool,
                     toolDescription = toolResult.toolDescription,
                     toolArgs = toolResult.toolArgs,
-                    message = toolResult.content,
+                    message = toolResult.output,
                     error = toolResultKind.error,
                 )
             }

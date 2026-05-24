@@ -1,7 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
-group = rootProject.group
-version = rootProject.version
+val isBeta by extra(true)
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -23,6 +22,7 @@ kotlin {
                 implementation(project(":agents:agents-test"))
                 implementation(project(":test-utils"))
                 implementation(libs.kotest.assertions.json)
+                implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
             }
         }
 

@@ -2,11 +2,11 @@ package ai.koog.agents.snapshot
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+import ai.koog.agents.core.dsl.extension.ToolCalls
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.handleEvents
@@ -18,16 +18,14 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
-import ai.koog.serialization.kotlinx.toKotlinxJsonElement
 import ai.koog.serialization.typeToken
 import io.kotest.matchers.collections.shouldContainExactly
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 import org.awaitility.kotlin.await
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -53,8 +51,6 @@ class PersistenceRunsTwiceTest {
         )
 
         val agent = GraphAIAgent(
-            inputType = typeToken<String>(),
-            outputType = typeToken<String>(),
             promptExecutor = getMockExecutor(serializer) {
                 // No LLM calls needed for this test; nodes write directly to the prompt/history
             },
@@ -207,7 +203,7 @@ class PersistenceRunsTwiceTest {
             toolRegistry = ToolRegistry {
                 tool(GuesserTool)
             },
-            strategy = singleRunStrategy(runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL),
+            strategy = singleRunStrategy(parallelTools = false),
             llmModel = AnthropicModels.Sonnet_4_5
         ) {
             install(Persistence) {
@@ -224,21 +220,32 @@ class PersistenceRunsTwiceTest {
                 }
                 onNodeExecutionCompleted { ctx ->
                     if (ctx.node.name == "nodeExecuteTool") {
-                        val output = (ctx.output as ReceivedToolResult)
-                        events += "finished: nodeExecuteTool(receivedObject=${output.resultObject}, type=${output.resultObject!!::class.simpleName})"
+                        val toolResult = (ctx.output as ReceivedToolResults).toolResults.single()
+                        // resultObject is set in the live result but must NOT survive persistence
+                        assertNotNull(toolResult.resultObject)
+                        events += "finished: nodeExecuteTool(tool=${toolResult.tool}, output=${toolResult.output})"
                     }
                 }
                 onNodeExecutionStarting { ctx ->
                     val input = ctx.input
-                    if (input is Message.Tool.Call) {
-                        events += "started: nodeExecuteTool(tool=${input.tool}, content=${input.content})"
+                    if (input is ToolCalls) {
+                        val toolCall = input.toolCalls.single()
+                        events += "started: nodeExecuteTool(tool=${toolCall.tool}, content=${toolCall.args})"
                     }
                 }
                 onToolCallCompleted { ctx ->
                     events += "onToolCallCompleted(guesser, toolResult=${ctx.toolResult})"
                 }
                 onLLMCallStarting { ctx ->
-                    val event = "onLLMCallStarting(${ctx.prompt.messages.last().content})"
+                    val lastText = (ctx.prompt.messages.last() as? Message.User)?.parts
+                        ?.joinToString(separator = "\n") { part ->
+                            when (part) {
+                                is MessagePart.Text -> part.text
+                                is MessagePart.Tool.Result -> part.output
+                                else -> ""
+                            }
+                        } ?: ""
+                    val event = "onLLMCallStarting($lastText)"
 
                     if (event == "onLLMCallStarting(encoded_result(\"Hidden Value\"))" && numberOfRun == 1) {
                         throw IllegalStateException("Interrupted")
@@ -255,31 +262,27 @@ class PersistenceRunsTwiceTest {
 
         val lastCheckpoint = checkpointStorage.getCheckpoints("session-01").last()
 
-        assertEquals("nodeExecuteTool", lastCheckpoint.nodePath.substringAfterLast("/"))
-        assertNotNull(lastCheckpoint.lastOutput, lastCheckpoint.nodePath.substringAfterLast("/"))
+        val lastGraphProps = lastCheckpoint.graphProperties!!
+        assertEquals("nodeExecuteTool", lastGraphProps.nodePath.substringAfterLast("/"))
+        assertNotNull(lastGraphProps.lastOutput, lastGraphProps.nodePath.substringAfterLast("/"))
 
-        val lastOutputValue = KotlinxSerializer().decodeFromJSONElement<ReceivedToolResult>(
-            lastCheckpoint.lastOutput,
-            typeToken<ReceivedToolResult>()
+        val lastOutputValue = KotlinxSerializer().decodeFromJSONElement<ReceivedToolResults>(
+            lastGraphProps.lastOutput,
+            typeToken<ReceivedToolResults>()
         )
+        val persistedToolResult = lastOutputValue.toolResults.single()
 
-        assertNull(lastOutputValue.resultObject)
-        assertEquals(
-            buildJsonObject {
-                put("x", JsonPrimitive(100500))
-                put("y", JsonPrimitive("Hidden Value"))
-            },
-            lastOutputValue.result?.toKotlinxJsonElement()
-        )
-        assertEquals("guesser", lastOutputValue.tool)
-        assertEquals("encoded_result(\"Hidden Value\")", lastOutputValue.content)
+        assertEquals("guesser", persistedToolResult.tool)
+        assertEquals("encoded_result(\"Hidden Value\")", persistedToolResult.output)
+        // resultObject is @Transient — it is NOT persisted via the Persistence feature
+        assertNull(persistedToolResult.resultObject)
 
         val expectedEventsFirstRun = listOf(
             "onLLMCallStarting(Tell me the secret!)",
             "started: nodeExecuteTool(tool=guesser, content={\"question\":\"What is the secret value?\"})",
             "onToolCallStarting(guesser, args={\"question\":\"What is the secret value?\"})",
             "onToolCallCompleted(guesser, toolResult={\"x\":100500, \"y\":\"Hidden Value\"})",
-            "finished: nodeExecuteTool(receivedObject=CustomOutput(x=100500, y=Hidden Value), type=CustomOutput)"
+            "finished: nodeExecuteTool(tool=guesser, output=encoded_result(\"Hidden Value\"))"
         )
 
         assertEquals(expectedEventsFirstRun.size, events.size)

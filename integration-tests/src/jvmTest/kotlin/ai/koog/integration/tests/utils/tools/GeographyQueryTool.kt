@@ -2,10 +2,11 @@ package ai.koog.integration.tests.utils.tools
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 object GeographyQueryTool : SimpleTool<GeographyQueryTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "geography_query_tool",
     description = "A tool for retrieving geographical information such as capitals of countries"
 ) {

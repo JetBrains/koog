@@ -2,10 +2,11 @@ package ai.koog.agents.core.agent.config
 
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.message.Message
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import kotlin.test.assertIs
 
 class AIAgentConfigTest {
     private companion object {
@@ -59,12 +60,13 @@ class AIAgentConfigTest {
             id = testId,
             maxAgentIterations = MAX_ITERATIONS,
         )
-        val systemMessage = config.prompt.messages.firstOrNull()
-
         assertEquals(testModel, config.model)
         assertEquals(MAX_ITERATIONS, config.maxAgentIterations)
         assertEquals(testId, config.prompt.id)
-        assertEquals(testPromptContent, systemMessage?.content)
+
+        val systemMessage = assertIs<Message.System>(config.prompt.messages.firstOrNull())
+        val textPart = systemMessage.parts.single()
+        assertEquals(testPromptContent, textPart.text)
     }
 
     @Test
@@ -77,18 +79,18 @@ class AIAgentConfigTest {
         assertEquals(3, config.maxAgentIterations)
 
         assertEquals("koog-agents", config.prompt.id)
-        val systemMessage = config.prompt.messages.firstOrNull()
-        assertNotNull(systemMessage)
-        assertEquals(TEST_PROMPT_CONTENT, systemMessage.content)
+
+        val systemMessage = assertIs<Message.System>(config.prompt.messages.firstOrNull())
+        val textPart = systemMessage.parts.single()
+        assertEquals(TEST_PROMPT_CONTENT, textPart.text)
     }
 
     @Test
     fun testEmptyPrompt() {
         val config = AIAgentConfig.withSystemPrompt("")
-        val systemMessage = config.prompt.messages.firstOrNull()
-
-        assertNotNull(systemMessage)
-        assertEquals("", systemMessage.content)
+        val systemMessage = assertIs<Message.System>(config.prompt.messages.firstOrNull())
+        val textPart = systemMessage.parts.single()
+        assertEquals("", textPart.text)
     }
 
     @Test

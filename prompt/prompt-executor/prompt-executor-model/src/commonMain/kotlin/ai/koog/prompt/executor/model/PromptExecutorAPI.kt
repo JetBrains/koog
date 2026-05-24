@@ -1,8 +1,8 @@
 package ai.koog.prompt.executor.model
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -29,7 +29,7 @@ public interface PromptExecutorAPI : AutoCloseable {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
-    ): List<Message.Response>
+    ): Message.Assistant
 
     /**
      * Executes a given prompt using the specified LLM and returns a stream of output as a flow of `StreamFrame` objects.
@@ -60,7 +60,7 @@ public interface PromptExecutorAPI : AutoCloseable {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> =
+    ): LLMChoice =
         listOf(execute(prompt, model, tools))
 
     /**

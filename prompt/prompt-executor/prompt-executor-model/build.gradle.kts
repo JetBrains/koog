@@ -24,14 +24,9 @@ kotlin {
             dependencies {
                 api(libs.kotlinx.coroutines.jdk9)
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client"))
 
                 implementation(libs.ktor.client.cio)
             }
@@ -54,6 +49,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":test-utils"))
+                implementation(project(":http-client:http-client-java"))
                 implementation(libs.mockito.junit.jupiter)
                 implementation(libs.assertj.core)
             }
