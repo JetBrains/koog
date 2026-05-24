@@ -43,7 +43,7 @@ class StreamFrameFlowBuilderTest {
             listOf(
                 StreamFrame.ReasoningDelta(text = "Thinking...", index = 0),
                 StreamFrame.ReasoningDelta(text = " step 2", index = 0),
-                StreamFrame.ReasoningComplete(id = null, text = listOf("Thinking... step 2"), index = 0),
+                StreamFrame.ReasoningComplete(id = null, content = listOf("Thinking... step 2"), index = 0),
                 StreamFrame.End(null, ResponseMetaInfo.Empty)
             ),
             frames
@@ -64,7 +64,7 @@ class StreamFrameFlowBuilderTest {
                 StreamFrame.ReasoningDelta(summary = " part 2", index = 0),
                 StreamFrame.ReasoningComplete(
                     id = null,
-                    text = emptyList(),
+                    content = emptyList(),
                     summary = listOf("Summary part 1 part 2"),
                     index = 0
                 ),
@@ -92,7 +92,7 @@ class StreamFrameFlowBuilderTest {
                 StreamFrame.ReasoningDelta(summary = " part 2", index = 0),
                 StreamFrame.ReasoningComplete(
                     id = null,
-                    text = listOf("Thinking... step 2"),
+                    content = listOf("Thinking... step 2"),
                     summary = listOf("Summary part 1 part 2"),
                     index = 0
                 ),
@@ -120,7 +120,7 @@ class StreamFrameFlowBuilderTest {
                 StreamFrame.ReasoningDelta(id = "rs_123", summary = " part 2", index = 0),
                 StreamFrame.ReasoningComplete(
                     id = "rs_123",
-                    text = listOf("Thinking... step 2"),
+                    content = listOf("Thinking... step 2"),
                     summary = listOf("Summary part 1 part 2"),
                     index = 0
                 ),
@@ -284,12 +284,12 @@ class StreamFrameFlowBuilderTest {
             StreamFrame.ReasoningDelta(id = "rs_12", summary = "Summary part 1", index = 0),
             StreamFrame.ReasoningComplete(
                 id = "rs_12",
-                text = emptyList(),
+                content = emptyList(),
                 summary = listOf("Summary part 1"),
                 index = 0
             ),
             StreamFrame.ReasoningDelta(id = "rs_123", summary = " part 2", index = 1),
-            StreamFrame.ReasoningComplete(id = "rs_123", text = emptyList(), summary = listOf(" part 2"), index = 1),
+            StreamFrame.ReasoningComplete(id = "rs_123", content = emptyList(), summary = listOf(" part 2"), index = 1),
             StreamFrame.End(null, ResponseMetaInfo.Empty)
         )
 

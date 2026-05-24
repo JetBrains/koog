@@ -38,11 +38,11 @@ public class InMemoryPromptCache(private val maxEntries: Int?) : PromptCache {
     private val cache = mutableMapOf<String, CacheEntry>()
 
     private data class CacheEntry(
-        val response: List<Message.Response>,
+        val response: Message.Assistant,
         var accessed: Instant = KoogClock.System.now()
     )
 
-    override suspend fun get(request: PromptCache.Request): List<Message.Response>? {
+    override suspend fun get(request: PromptCache.Request): Message.Assistant? {
         val entry = cache[request.asCacheKey] ?: return null
 
         // Update last accessed time
@@ -51,7 +51,7 @@ public class InMemoryPromptCache(private val maxEntries: Int?) : PromptCache {
         return entry.response
     }
 
-    override suspend fun put(request: PromptCache.Request, response: List<Message.Response>) {
+    override suspend fun put(request: PromptCache.Request, response: Message.Assistant) {
         val key = request.asCacheKey
 
         // Enforce size limit if specified

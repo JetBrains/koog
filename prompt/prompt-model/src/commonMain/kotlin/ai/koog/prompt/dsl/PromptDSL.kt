@@ -1,5 +1,6 @@
 package ai.koog.prompt.dsl
 
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.params.LLMParams
 import ai.koog.utils.time.KoogClock
 

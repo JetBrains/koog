@@ -36,6 +36,7 @@ jobs:
             a2a
             agents
             embeddings
+            http-client
             integration-tests
             koog-agents
             koog-ktor

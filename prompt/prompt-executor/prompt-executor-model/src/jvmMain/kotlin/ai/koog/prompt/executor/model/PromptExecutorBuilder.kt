@@ -4,23 +4,15 @@ package ai.koog.prompt.executor.model
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.tools.serialization.ToolDescriptorSchemaGenerator
+import ai.koog.http.client.HttpClientFactoryResolver
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
-import ai.koog.prompt.executor.clients.dashscope.DashscopeClientSettings
-import ai.koog.prompt.executor.clients.dashscope.DashscopeLLMClient
-import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
-import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
-import ai.koog.prompt.executor.clients.google.GoogleClientSettings
-import ai.koog.prompt.executor.clients.google.GoogleLLMClient
-import ai.koog.prompt.executor.clients.mistralai.MistralAIClientSettings
-import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
-import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
-import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.ExperimentalRoutingApi
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor
@@ -30,7 +22,6 @@ import ai.koog.prompt.executor.ollama.tools.json.OllamaToolDescriptorSchemaGener
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.utils.time.KoogClock
-import io.ktor.client.HttpClient
 
 /**
  * Builder for constructing a [PromptExecutor] that automatically selects the appropriate executor
@@ -83,139 +74,42 @@ public class PromptExecutorBuilder {
     }
 
     /**
-     * Adds an OpenAI client.
-     *
-     * Multiple OpenAI clients are allowed — adding more than one will result in
-     * a [RoutingLLMPromptExecutor] being created at [build] time.
-     *
-     * @param apiKey The API key for authenticating with the OpenAI API.
-     * @param settings Configuration settings for the OpenAI client. Defaults to [OpenAIClientSettings].
-     * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
-     * @param toolsConverter Tool descriptor schema generator for OpenAI. Defaults to [OpenAICompatibleToolDescriptorSchemaGenerator].
-     * @return This builder instance for chaining.
+     * Adds an OpenAI client. [httpClientFactory] defaults to
+     * [HttpClientFactoryResolver.resolve].
      */
     @JvmOverloads
     public fun openAI(
         apiKey: String,
         settings: OpenAIClientSettings = OpenAIClientSettings(),
-        baseClient: HttpClient = HttpClient(),
+        httpClientFactory: KoogHttpClient.Factory = HttpClientFactoryResolver.resolve(),
         clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
     ): PromptExecutorBuilder = apply {
-        addClient(OpenAILLMClient(apiKey, settings, baseClient, clock, toolsConverter))
+        addClient(OpenAILLMClient(apiKey, settings, httpClientFactory, clock, toolsConverter))
     }
 
     /**
-     * Adds an Anthropic client.
-     *
-     * Multiple Anthropic clients are allowed — adding more than one will result in
-     * a [RoutingLLMPromptExecutor] being created at [build] time.
-     *
-     * @param apiKey The API key for authenticating with the Anthropic API.
-     * @param settings Configuration settings for the Anthropic client. Defaults to [AnthropicClientSettings].
-     * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
-     * @return This builder instance for chaining.
+     * Adds an Anthropic client. [httpClientFactory] defaults to
+     * [HttpClientFactoryResolver.resolve].
      */
     @JvmOverloads
     public fun anthropic(
         apiKey: String,
         settings: AnthropicClientSettings = AnthropicClientSettings(),
-        baseClient: HttpClient = HttpClient(),
+        httpClientFactory: KoogHttpClient.Factory = HttpClientFactoryResolver.resolve(),
         clock: KoogClock = KoogClock.System,
     ): PromptExecutorBuilder = apply {
-        addClient(AnthropicLLMClient(apiKey, settings, baseClient, clock))
+        addClient(AnthropicLLMClient(apiKey, settings, httpClientFactory, clock))
     }
 
     /**
-     * Adds a Google AI client.
-     *
-     * Multiple Google clients are allowed — adding more than one will result in
-     * a [RoutingLLMPromptExecutor] being created at [build] time.
-     *
-     * @param apiKey The API key for authenticating with the Google AI API.
-     * @param settings Configuration settings for the Google client. Defaults to [GoogleClientSettings].
-     * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
-     * @return This builder instance for chaining.
-     */
-    @JvmOverloads
-    public fun google(
-        apiKey: String,
-        settings: GoogleClientSettings = GoogleClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: KoogClock = KoogClock.System,
-    ): PromptExecutorBuilder = apply {
-        addClient(GoogleLLMClient(apiKey, settings, baseClient, clock))
-    }
-
-    /**
-     * Adds a DeepSeek client.
-     *
-     * Multiple DeepSeek clients are allowed — adding more than one will result in
-     * a [RoutingLLMPromptExecutor] being created at [build] time.
-     *
-     * @param apiKey The API key for authenticating with the DeepSeek API.
-     * @param settings Configuration settings for the DeepSeek client. Defaults to [DeepSeekClientSettings].
-     * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
-     * @param toolsConverter Tool descriptor schema generator. Defaults to [OpenAICompatibleToolDescriptorSchemaGenerator].
-     * @return This builder instance for chaining.
-     */
-    @JvmOverloads
-    public fun deepseek(
-        apiKey: String,
-        settings: DeepSeekClientSettings = DeepSeekClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(DeepSeekLLMClient(apiKey, settings, baseClient, clock, toolsConverter))
-    }
-
-    /**
-     * Adds a Mistral AI client.
-     *
-     * Multiple Mistral clients are allowed — adding more than one will result in
-     * a [RoutingLLMPromptExecutor] being created at [build] time.
-     *
-     * @param apiKey The API key for authenticating with the Mistral AI API.
-     * @param settings Configuration settings for the Mistral AI client. Defaults to [MistralAIClientSettings].
-     * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
-     * @param toolsConverter Tool descriptor schema generator. Defaults to [OpenAICompatibleToolDescriptorSchemaGenerator].
-     * @return This builder instance for chaining.
-     */
-    @JvmOverloads
-    public fun mistral(
-        apiKey: String,
-        settings: MistralAIClientSettings = MistralAIClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(MistralAILLMClient(apiKey, settings, baseClient, clock, toolsConverter))
-    }
-
-    /**
-     * Adds an Ollama client.
-     *
-     * Multiple Ollama clients are allowed — adding more than one will result in
-     * a [RoutingLLMPromptExecutor] being created at [build] time.
-     *
-     * @param baseUrl The base URL of the Ollama server. Defaults to `http://localhost:11434`.
-     * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param timeoutConfig Connection timeout configuration. Defaults to [ConnectionTimeoutConfig].
-     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
-     * @param contextWindowStrategy Strategy for managing the context window. Defaults to [ContextWindowStrategy.None].
-     * @param toolDescriptorConverter Tool descriptor schema generator. Defaults to [OllamaToolDescriptorSchemaGenerator].
-     * @return This builder instance for chaining.
+     * Adds an Ollama client. [httpClientFactory] defaults to
+     * [HttpClientFactoryResolver.resolve].
      */
     @JvmOverloads
     public fun ollama(
         baseUrl: String = "http://localhost:11434",
-        baseClient: HttpClient = HttpClient(),
+        httpClientFactory: KoogHttpClient.Factory = HttpClientFactoryResolver.resolve(),
         timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
         clock: KoogClock = KoogClock.System,
         contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
@@ -223,62 +117,14 @@ public class PromptExecutorBuilder {
     ): PromptExecutorBuilder = apply {
         addClient(
             OllamaClient(
-                baseUrl,
-                baseClient,
-                timeoutConfig,
-                clock,
-                contextWindowStrategy,
-                toolDescriptorConverter
+                httpClientFactory = httpClientFactory,
+                baseUrl = baseUrl,
+                timeoutConfig = timeoutConfig,
+                clock = clock,
+                contextWindowStrategy = contextWindowStrategy,
+                toolDescriptorConverter = toolDescriptorConverter,
             )
         )
-    }
-
-    /**
-     * Adds an OpenRouter client.
-     *
-     * Multiple OpenRouter clients are allowed — adding more than one will result in
-     * a [RoutingLLMPromptExecutor] being created at [build] time.
-     *
-     * @param apiKey The API key for authenticating with the OpenRouter API.
-     * @param settings Configuration settings for the OpenRouter client. Defaults to [OpenRouterClientSettings].
-     * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
-     * @param toolsConverter Tool descriptor schema generator. Defaults to [OpenAICompatibleToolDescriptorSchemaGenerator].
-     * @return This builder instance for chaining.
-     */
-    @JvmOverloads
-    public fun openRouter(
-        apiKey: String,
-        settings: OpenRouterClientSettings = OpenRouterClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(OpenRouterLLMClient(apiKey, settings, baseClient, clock, toolsConverter))
-    }
-
-    /**
-     * Adds a Dashscope client.
-     *
-     * Multiple Dashscope clients are allowed — adding more than one will result in
-     * a [RoutingLLMPromptExecutor] being created at [build] time.
-     *
-     * @param apiKey The API key for authenticating with the Dashscope API.
-     * @param settings Configuration settings for the Dashscope client. Defaults to [DashscopeClientSettings].
-     * @param baseClient The HTTP client used for API requests. Defaults to a new [HttpClient].
-     * @param clock The clock used for time-related operations. Defaults to [KoogClock.System].
-     * @param toolsConverter Tool descriptor schema generator. Defaults to [OpenAICompatibleToolDescriptorSchemaGenerator].
-     * @return This builder instance for chaining.
-     */
-    @JvmOverloads
-    public fun dashscope(
-        apiKey: String,
-        settings: DashscopeClientSettings = DashscopeClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
-    ): PromptExecutorBuilder = apply {
-        addClient(DashscopeLLMClient(apiKey, settings, baseClient, clock, toolsConverter))
     }
 
     /**

@@ -3,9 +3,8 @@ package ai.koog.agents.example.goap
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext
 import ai.koog.agents.example.ApiKeyService
-import ai.koog.agents.planner.AIAgentPlannerStrategy
-import ai.koog.agents.planner.PlannerAIAgent
-import ai.koog.agents.planner.goap.goap
+import ai.koog.agents.core.planner.PlannerAIAgent
+import ai.koog.agents.planner.goap
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -122,7 +121,7 @@ suspend fun AIAgentPlannerContext.evaluateWordings(
     }
 }
 
-fun grouperPlanner() = AIAgentPlannerStrategy.goap("strategy", ::State) {
+fun grouperPlanner() = goap("strategy", ::State) {
     goal(
         name = "Needed number of good proposals reached"
     ) { state ->

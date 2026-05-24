@@ -3,11 +3,8 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.agents.core.utils.BuilderChainAction
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy
 import ai.koog.agents.core.utils.ConfigureAction
-import ai.koog.agents.planner.AIAgentPlannerStrategy
-import ai.koog.agents.planner.AIAgentPlannerStrategyBuilder
-import ai.koog.agents.planner.TypedAgentPlannerStrategyBuilder
 
 /**
  * Common chained implementation for [AIAgentBuilder] actual classes.
@@ -65,7 +62,7 @@ public abstract class AIAgentBuilderCommon<Self : AIAgentBuilderCommon<Self>> in
      * @return An instance of [PlannerAgentBuilder] configured with the specified planning strategy.
      */
     public fun <Input, Output> plannerStrategy(
-        strategy: AIAgentPlannerStrategy<Input, Output, *>
+        strategy: AIAgentPlannerStrategy<Input, Output>
     ): PlannerAgentBuilder<Input, Output> = PlannerAgentBuilder(
         strategy = strategy,
         id = this.id,
@@ -73,20 +70,6 @@ public abstract class AIAgentBuilderCommon<Self : AIAgentBuilderCommon<Self>> in
         config = this.config,
         clock = this.clock,
         toolRegistry = this.toolRegistry
-    )
-
-    /**
-     * Defines a planner strategy for the planner using a specified builder chain action.
-     *
-     * @param buildStrategy A function that builds the planner strategy by chaining actions using
-     * an instance of [AIAgentPlannerStrategyBuilder] and optionally [TypedAgentPlannerStrategyBuilder].
-     * @return A [PlannerAgentBuilder] instance configured with the specified input and output types.
-     */
-    public fun <Input : Any, Output : Any> plannerStrategy(
-        name: String,
-        buildStrategy: BuilderChainAction<AIAgentPlannerStrategyBuilder, TypedAgentPlannerStrategyBuilder<Input, Output>>
-    ): PlannerAgentBuilder<Input, Output> = plannerStrategy(
-        buildStrategy.configure(AIAgentPlannerStrategyBuilder(name)).build()
     )
 
     /**

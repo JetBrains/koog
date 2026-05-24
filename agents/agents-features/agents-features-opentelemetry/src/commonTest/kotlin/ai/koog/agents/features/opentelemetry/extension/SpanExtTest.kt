@@ -22,7 +22,7 @@ class SpanExtTest {
         span.setSpanStatus(endStatus = StatusData.Error("test description"))
         val status = span.status
         assertTrue(status is StatusData.Error)
-        assertEquals("test description", (status as StatusData.Error).description)
+        assertEquals("test description", status.description)
     }
 
     @Test

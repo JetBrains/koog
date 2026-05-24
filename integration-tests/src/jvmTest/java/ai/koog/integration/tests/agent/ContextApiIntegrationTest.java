@@ -2,8 +2,8 @@ package ai.koog.integration.tests.agent;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.agent.config.AIAgentConfig;
-import ai.koog.agents.core.agent.ToolCalls;
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
+import ai.koog.agents.core.environment.ReceivedToolResult;
 import ai.koog.agents.core.tools.Tool;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
@@ -14,20 +14,38 @@ import ai.koog.integration.tests.utils.Models;
 import ai.koog.integration.tests.utils.StructuredResults;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
 import ai.koog.serialization.kotlinx.KotlinxSerializer;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ContextApiIntegrationTest extends KoogJavaTestBase {
+
+    private static String textContent(Message m) {
+        return m.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Text)
+            .map(p -> ((MessagePart.Text) p).getText())
+            .collect(Collectors.joining("\n"));
+    }
+
+    private static Optional<MessagePart.Tool.Call> firstToolCall(Message.Assistant response) {
+        return response.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Tool.Call)
+            .map(p -> (MessagePart.Tool.Call) p)
+            .findFirst();
+    }
+
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_RequestLLMStructuredSimple(LLModel model) {
@@ -102,12 +120,8 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
                         return null;
                     });
 
-                    Message.Response response2 = session.requestLLM();
-
-                    if (response2 instanceof Message.Assistant) {
-                        return response2.getContent();
-                    }
-                    return "Unexpected response type";
+                    Message.Assistant response2 = session.requestLLM();
+                    return textContent(response2);
                 })
             )
             .build();
@@ -129,17 +143,13 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
             .llmModel(model)
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                Message.Response response = context.requestLLM("What is 5+5?", true);
+                Message.Assistant response = context.requestLLM("What is 5+5?");
 
                 return context.llm().readSession(session -> {
                     List<Message> messages = session.getPrompt().getMessages();
                     int historySize = messages.size();
 
-                    if (response instanceof Message.Assistant) {
-                        return "History size: " + historySize + ", Answer: " +
-                            response.getContent();
-                    }
-                    return "Unexpected response type";
+                    return "History size: " + historySize + ", Answer: " + textContent(response);
                 });
             })
             .build();
@@ -175,7 +185,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
                     .withOutput(String.class)
                     .withTools(tools)
                     .useLLM(model)
-                    .runMode(ToolCalls.SEQUENTIAL)
+                    .parallelTools(false)
                     .run();
 
                 return "Subtask completed: " + subtaskResult;
@@ -212,7 +222,7 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
                     .withOutput(String.class)
                     .withTools(tools)
                     .useLLM(model)
-                    .runMode(ToolCalls.PARALLEL)
+                    .parallelTools(true)
                     .run();
 
                 return "Parallel subtask result: " + subtaskResult;
@@ -248,7 +258,8 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
                     .withOutput(String.class)
                     .withTools(tools)
                     .useLLM(model)
-                    .runMode(ToolCalls.SINGLE_RUN_SEQUENTIAL)
+                    .parallelTools(false)
+                    .assistantResponseRepeatMax(1)
                     .run();
 
                 return "Single-run result: " + subtaskResult;
@@ -275,22 +286,19 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
             .systemPrompt("You are a calculator. You MUST use add and multiply tools. DO NOT answer without calling tools.")
             .toolRegistry(ToolRegistry.builder().tools(calculator).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                Message.Response response = context.requestLLM(
-                    "Calculate 5+3 and 4*6. You can use multiple tools in parallel.",
-                    true
+                Message.Assistant response = context.requestLLM(
+                    "Calculate 5+3 and 4*6. You can use multiple tools in parallel."
                 );
 
-                if (response instanceof Message.Tool.Call) {
-                    List<Message.Tool.Call> calls = new ArrayList<>();
-                    calls.add((Message.Tool.Call) response);
+                List<MessagePart.Tool.Call> calls = response.getParts().stream()
+                    .filter(p -> p instanceof MessagePart.Tool.Call)
+                    .map(p -> (MessagePart.Tool.Call) p)
+                    .collect(Collectors.toCollection(ArrayList::new));
 
-                    if (!calls.isEmpty()) {
-                        var results = context.executeMultipleTools(calls, true);
-                        var responses = context.sendMultipleToolResults(results);
-                        if (!responses.isEmpty() && responses.get(0) instanceof Message.Assistant) {
-                            return responses.get(0).getContent();
-                        }
-                    }
+                if (!calls.isEmpty()) {
+                    List<ReceivedToolResult> results = context.executeTools(calls, true);
+                    Message.Assistant finalResponse = context.sendToolResults(results);
+                    return textContent(finalResponse);
                 }
 
                 return "Parallel execution completed";
@@ -315,19 +323,15 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
             .systemPrompt("You coordinate tool execution.")
             .toolRegistry(ToolRegistry.builder().tools(calculator).build())
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                Message.Response response = context.requestLLM(
-                    "Use the add tool to calculate 10 + 5",
-                    true
+                Message.Assistant response = context.requestLLM(
+                    "Use the add tool to calculate 10 + 5"
                 );
 
-                if (response instanceof Message.Tool.Call) {
-                    Message.Tool.Call toolCall = (Message.Tool.Call) response;
-                    var toolResult = context.executeTool(toolCall);
-                    var finalResponse = context.sendToolResult(toolResult);
-
-                    if (finalResponse instanceof Message.Assistant) {
-                        return finalResponse.getContent();
-                    }
+                Optional<MessagePart.Tool.Call> maybeToolCall = firstToolCall(response);
+                if (maybeToolCall.isPresent()) {
+                    ReceivedToolResult toolResult = context.executeTool(maybeToolCall.get());
+                    Message.Assistant finalResponse = context.sendToolResult(toolResult);
+                    return textContent(finalResponse);
                 }
 
                 return "Tool execution completed";
@@ -349,10 +353,12 @@ public class ContextApiIntegrationTest extends KoogJavaTestBase {
             .llmModel(model)
             .systemPrompt("You are a helpful assistant.")
             .functionalStrategy((AIAgentFunctionalContext context, String input) -> {
-                context.requestLLM("First question: What is 2+2?", true);
-                context.requestLLM("Second question: What is 3*3?", true);
+                context.requestLLM("First question: What is 2+2?");
+                context.requestLLM("Second question: What is 3*3?");
 
-                var history = context.getHistory();
+                List<Message> history = context
+                    .getLlm()
+                    .readSession(it -> it.getPrompt().getMessages());
                 int historySize = history.size();
 
                 return "History contains " + historySize + " messages";

@@ -1,8 +1,6 @@
 package ai.koog.prompt.executor.clients.deepseek
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
-import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekChat
-import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekReasoner
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekV4Flash
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekV4Pro
 import ai.koog.prompt.llm.LLMCapability
@@ -21,8 +19,6 @@ import kotlin.jvm.JvmField
  * |--------------------|--------|----------------------|-------------|-------------|
  * | [DeepSeekV4Flash]  | Fast   | $0.14 / $0.28 per 1M | Text, Tools | Text, Tools |
  * | [DeepSeekV4Pro]    | Medium | $1.74 / $3.48 per 1M | Text, Tools | Text, Tools |
- * | [DeepSeekChat]     | Fast   | Deprecated alias     | Text, Tools | Text, Tools |
- * | [DeepSeekReasoner] | Medium | Deprecated alias     | Text, Tools | Text, Tools |
  *
  * @see <a href="https://platform.deepseek.com/api-docs/pricing">DeepSeek Pricing Documentation</a>
  */
@@ -77,70 +73,11 @@ public object DeepSeekModels : LLModelDefinitions {
     )
 
     /**
-     * DeepSeek Chat model optimized for general conversation and quick responses.
-     * DeepSeek will deprecate this model name on 2026-07-24.
-     * It currently maps to the non-thinking mode of [DeepSeekV4Flash].
-     *
-     * @see <a href="https://api-docs.deepseek.com/">DeepSeek API Docs</a>
-     */
-    @Deprecated(
-        message = "Use DeepSeekV4Flash instead.",
-        replaceWith = ReplaceWith("DeepSeekV4Flash")
-    )
-    @JvmField
-    public val DeepSeekChat: LLModel = LLModel(
-        provider = LLMProvider.DeepSeek,
-        id = "deepseek-chat",
-        capabilities = listOf(
-            LLMCapability.Completion,
-            LLMCapability.Temperature,
-            LLMCapability.Tools,
-            LLMCapability.ToolChoice,
-            LLMCapability.Schema.JSON.Basic,
-            LLMCapability.Schema.JSON.Standard,
-            LLMCapability.MultipleChoices,
-        ),
-        contextLength = 64_000,
-        maxOutputTokens = 8_000
-    )
-
-    /**
-     * DeepSeek Reasoner model specialized for complex reasoning and analytical tasks.
-     * DeepSeek will deprecate this model name on 2026-07-24.
-     * It currently maps to the thinking mode of [DeepSeekV4Flash].
-     *
-     * @see <a href="https://api-docs.deepseek.com/">DeepSeek API Docs</a>
-     */
-    @Deprecated(
-        message = "Use DeepSeekV4Flash instead.",
-        replaceWith = ReplaceWith("DeepSeekV4Flash")
-    )
-    @JvmField
-    public val DeepSeekReasoner: LLModel = LLModel(
-        provider = LLMProvider.DeepSeek,
-        id = "deepseek-reasoner",
-        capabilities = listOf(
-            LLMCapability.Completion,
-            LLMCapability.Temperature,
-            LLMCapability.Tools,
-            LLMCapability.ToolChoice,
-            LLMCapability.Schema.JSON.Basic,
-            LLMCapability.Schema.JSON.Standard,
-            LLMCapability.MultipleChoices,
-            LLMCapability.Thinking,
-        ),
-        contextLength = 64_000,
-        maxOutputTokens = 64_000
-    )
-
-    /**
      * List of the supported models by the DeepSeek provider.
      */
     private val supportedModels: List<LLModel> = listOf(
         DeepSeekV4Flash,
         DeepSeekV4Pro,
-        DeepSeekChat,
-        DeepSeekReasoner
     )
 
     /**

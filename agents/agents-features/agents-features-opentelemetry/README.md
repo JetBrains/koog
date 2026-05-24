@@ -52,12 +52,11 @@ Here is an example of installing the OpenTelemetry feature with a basic set of c
 
 ```kotlin
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
 
 install(OpenTelemetry) {
     setServiceInfo("my-agent-service", "1.0.0")    // Set your service configuration
-    addSpanExporter(LoggingSpanExporter.create())  // Java SDK exporter (bridged via JVM addSpanExporter)
+    addSpanExporter(LoggingSpanExporter.create())  // Java SDK exporter is bridged automatically on JVM
 }
 ```
 
@@ -83,14 +82,14 @@ Configuration API:
 | Name                    | Arguments                                                | Description                                                                                                              |
 |-------------------------|----------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
 | `setServiceInfo`        | `serviceName: String, serviceVersion: String`            | Sets the service information including name and version.                                                                 |
-| `addSpanExporter`       | `exporter: SpanExporter` (Kotlin SDK or Java SDK on JVM) | Registers an exporter behind a `batchSpanProcessor`. Use the JVM overload (in `OpenTelemetryConfigJvm`) for Java exporters. |
+| `addSpanExporter`       | `exporter: SpanExporter` (Kotlin SDK or Java SDK on JVM) | Registers an exporter behind a `batchSpanProcessor`. On JVM the method is overloaded to accept Java-SDK exporters directly (bridged via the compat layer). |
 | `addSpanProcessor`      | `factory: TraceExportConfigDsl.() -> SpanProcessor`      | Registers a custom span processor (e.g., simple/composite/custom-batched) via the SDK's DSL.                             |
 | `addResourceAttributes` | `attributes: Map<String, Any>`                           | Adds resource attributes to provide additional context about the service. Supported value types: `String`, `Long`, `Double`, `Boolean`. |
 | `setVerbose`            | `verbose: Boolean`                                       | Enables or disables verbose logging for debugging OpenTelemetry configuration.                                           |
 | `setSdk`                | `openTelemetry: OpenTelemetry`                           | Injects a pre-built Kotlin OpenTelemetry SDK instance, bypassing internal configuration.                                 |
 | `setShutdownOnAgentClose`| `shutdownOnAgentClose: Boolean`                         | Toggles whether the SDK is shut down when the owning agent closes.                                                       |
 
-JVM-only metric extensions live on [`OpenTelemetryConfigJvm`][OpenTelemetryConfigJvm] (`addMetricExporter`, `addMetricFilter`, `meter`) — the Kotlin SDK 0.3.0 ships no metrics module, so metrics are sent through the Java SDK.
+JVM-only members on [`OpenTelemetryConfig`][OpenTelemetryConfig] cover metrics (`addMetricExporter`, `addMetricFilter`, `meter`) — the Kotlin SDK 0.3.0 ships no metrics module, so metrics are sent through the Java SDK.
 
 ### Advanced configuration
 

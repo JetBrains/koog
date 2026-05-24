@@ -1,8 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
-group = rootProject.group
-version = rootProject.version
-
 plugins {
     id("ai.kotlin.multiplatform")
 }
@@ -16,7 +13,7 @@ kotlin {
                 api(project(":http-client:http-client-core"))
                 api(libs.kotlinx.coroutines.core)
                 api(project(":prompt:prompt-structure"))
-                api(libs.oshai.kotlin.logging)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
         androidMain {

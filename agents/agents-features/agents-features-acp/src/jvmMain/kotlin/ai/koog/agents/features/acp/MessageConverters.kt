@@ -2,8 +2,13 @@ package ai.koog.agents.features.acp
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentContent.Binary.Base64
+import ai.koog.prompt.message.AttachmentContent.PlainText
+import ai.koog.prompt.message.AttachmentContent.URL
+import ai.koog.prompt.message.AttachmentSource
+import ai.koog.prompt.message.AttachmentSource.File
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.utils.time.KoogClock
 import com.agentclientprotocol.common.Event.SessionUpdateEvent
@@ -50,27 +55,23 @@ public fun List<ContentBlock>.toKoogMessage(clock: KoogClock): Message {
  * 2. Stub all nullable content types with 'unknown' constants
  * 3. Assume that a format is the last segment of the MIME type
  */
-public fun ContentPart.toAcpContentBlock(): ContentBlock {
-    return when (this) {
-        is ContentPart.Text -> {
-            ContentBlock.Text(this.text)
-        }
-
-        is ContentPart.Audio -> {
-            when (val content = this.content) {
+public fun MessagePart.Attachment.toAcpContentBlock(): ContentBlock {
+    return when (val source = this.source) {
+        is AttachmentSource.Audio -> {
+            when (val content = source.content) {
                 is AttachmentContent.Binary.Base64,
                 is AttachmentContent.Binary.Bytes -> {
                     ContentBlock.Audio(
                         data = content.asBase64(),
-                        mimeType = this.mimeType,
+                        mimeType = source.mimeType,
                     )
                 }
 
                 is AttachmentContent.URL -> {
                     ContentBlock.ResourceLink(
-                        name = this.fileName ?: UNKNOWN_FILE_NAME,
+                        name = source.fileName ?: UNKNOWN_FILE_NAME,
                         uri = content.url,
-                        mimeType = this.mimeType,
+                        mimeType = source.mimeType,
                     )
                 }
 
@@ -80,57 +81,57 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
             }
         }
 
-        is ContentPart.File ->
-            when (val content = this.content) {
+        is AttachmentSource.File ->
+            when (val content = source.content) {
                 is AttachmentContent.Binary.Base64 -> ContentBlock.Resource(
                     resource = EmbeddedResourceResource.BlobResourceContents(
                         blob = content.base64,
-                        uri = this.fileName ?: UNKNOWN_URI,
-                        mimeType = this.mimeType
+                        uri = source.fileName ?: UNKNOWN_URI,
+                        mimeType = source.mimeType
                     )
                 )
 
                 is AttachmentContent.Binary.Bytes -> ContentBlock.Resource(
                     resource = EmbeddedResourceResource.BlobResourceContents(
                         blob = content.asBase64(),
-                        uri = this.fileName ?: UNKNOWN_URI,
-                        mimeType = this.mimeType
+                        uri = source.fileName ?: UNKNOWN_URI,
+                        mimeType = source.mimeType
                     )
                 )
 
                 is AttachmentContent.PlainText -> ContentBlock.Resource(
                     resource = EmbeddedResourceResource.TextResourceContents(
                         text = content.text,
-                        uri = this.fileName ?: UNKNOWN_URI,
-                        mimeType = this.mimeType,
+                        uri = source.fileName ?: UNKNOWN_URI,
+                        mimeType = source.mimeType,
                     )
                 )
 
                 is AttachmentContent.URL -> {
                     ContentBlock.ResourceLink(
-                        name = this.fileName ?: UNKNOWN_FILE_NAME,
+                        name = source.fileName ?: UNKNOWN_FILE_NAME,
                         uri = content.url,
-                        mimeType = this.mimeType,
+                        mimeType = source.mimeType,
                     )
                 }
             }
 
-        is ContentPart.Image -> {
-            when (val content = this.content) {
+        is AttachmentSource.Image -> {
+            when (val content = source.content) {
                 is AttachmentContent.Binary.Base64,
                 is AttachmentContent.Binary.Bytes -> {
                     ContentBlock.Image(
                         data = content.asBase64(),
-                        mimeType = this.mimeType,
-                        uri = this.fileName,
+                        mimeType = source.mimeType,
+                        uri = source.fileName,
                     )
                 }
 
                 is AttachmentContent.URL -> {
                     ContentBlock.ResourceLink(
-                        name = this.fileName ?: UNKNOWN_FILE_NAME,
+                        name = source.fileName ?: UNKNOWN_FILE_NAME,
                         uri = content.url,
-                        mimeType = this.mimeType,
+                        mimeType = source.mimeType,
                     )
                 }
 
@@ -140,7 +141,7 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
             }
         }
 
-        is ContentPart.Video -> {
+        is AttachmentSource.Video -> {
             throw IllegalArgumentException("Video content is not supported yet in Acp content blocks.")
         }
     }
@@ -154,24 +155,28 @@ public fun ContentPart.toAcpContentBlock(): ContentBlock {
  * 2. Stub all nullable content types with 'unknown' constants
  * 3. Assume that a format is the last segment of the MIME type
  */
-public fun ContentBlock.toKoogContentPart(): ContentPart {
+public fun ContentBlock.toKoogContentPart(): MessagePart.RequestPart {
     return when (this) {
         // https://agentclientprotocol.com/protocol/content#audio-content
         is ContentBlock.Audio -> {
-            ContentPart.Audio(
-                content = AttachmentContent.Binary.Base64(data),
-                format = parseFormat(mimeType),
-                mimeType = mimeType,
+            MessagePart.Attachment(
+                AttachmentSource.Audio(
+                    content = Base64(data),
+                    format = parseFormat(mimeType),
+                    mimeType = mimeType,
+                )
             )
         }
 
         // https://agentclientprotocol.com/protocol/content#image-content
         is ContentBlock.Image -> {
-            ContentPart.Image(
-                content = AttachmentContent.Binary.Base64(data),
-                format = parseFormat(mimeType),
-                mimeType = mimeType,
-                fileName = uri
+            MessagePart.Attachment(
+                AttachmentSource.Image(
+                    content = Base64(data),
+                    format = parseFormat(mimeType),
+                    mimeType = mimeType,
+                    fileName = uri
+                )
             )
         }
 
@@ -179,20 +184,24 @@ public fun ContentBlock.toKoogContentPart(): ContentPart {
         is ContentBlock.Resource -> {
             when (val resource = this.resource) {
                 is EmbeddedResourceResource.BlobResourceContents -> {
-                    ContentPart.File(
-                        content = AttachmentContent.Binary.Base64(resource.blob),
-                        format = parseFormat(resource.mimeType),
-                        mimeType = resource.mimeType ?: UNKNOWN_MIME_TYPE,
-                        fileName = resource.uri
+                    MessagePart.Attachment(
+                        File(
+                            content = Base64(resource.blob),
+                            format = parseFormat(resource.mimeType),
+                            mimeType = resource.mimeType ?: UNKNOWN_MIME_TYPE,
+                            fileName = resource.uri
+                        )
                     )
                 }
 
                 is EmbeddedResourceResource.TextResourceContents -> {
-                    ContentPart.File(
-                        content = AttachmentContent.PlainText(resource.text),
-                        format = parseFormat(resource.mimeType),
-                        mimeType = resource.mimeType ?: UNKNOWN_MIME_TYPE,
-                        fileName = resource.uri
+                    MessagePart.Attachment(
+                        File(
+                            content = PlainText(resource.text),
+                            format = parseFormat(resource.mimeType),
+                            mimeType = resource.mimeType ?: UNKNOWN_MIME_TYPE,
+                            fileName = resource.uri
+                        )
                     )
                 }
             }
@@ -200,64 +209,73 @@ public fun ContentBlock.toKoogContentPart(): ContentPart {
 
         // https://agentclientprotocol.com/protocol/content#resource-link
         is ContentBlock.ResourceLink -> {
-            ContentPart.File(
-                content = AttachmentContent.URL(uri),
-                format = parseFormat(mimeType),
-                mimeType = mimeType ?: UNKNOWN_MIME_TYPE,
-                fileName = uri
+            MessagePart.Attachment(
+                File(
+                    content = URL(uri),
+                    format = parseFormat(mimeType),
+                    mimeType = mimeType ?: UNKNOWN_MIME_TYPE,
+                    fileName = uri
+                )
             )
         }
 
-        // https://agentclientprotocol.com/protocol/content#text-content
-        is ContentBlock.Text -> {
-            ContentPart.Text(text)
-        }
+        is ContentBlock.Text -> MessagePart.Text(text)
     }
 }
 
 /**
- * Converts a [Message.Response] to a list of ACP [SessionUpdateEvent].
+ * Converts a [Message.Assistant] to a list of ACP [SessionUpdateEvent].
  *
  * As the Koog and ACP models are slightly different, some assumptions in converters are made:
  * 1. Stub all nullable content types with 'unknown' constants
  */
-public fun Message.Response.toAcpEvents(tools: List<ToolDescriptor> = emptyList()): List<SessionUpdateEvent> {
+public fun Message.Assistant.toAcpEvents(tools: List<ToolDescriptor> = emptyList()): List<SessionUpdateEvent> {
     val response = this
     return buildList {
-        when (response) {
-            is Message.Assistant -> {
-                response.parts.forEach { part ->
+        response.parts.forEach { part ->
+            when (part) {
+                is MessagePart.Reasoning -> {
+                    part.content.forEach {
+                        add(
+                            SessionUpdateEvent(
+                                update = SessionUpdate.AgentThoughtChunk(
+                                    content = ContentBlock.Text(it)
+                                )
+                            )
+                        )
+                    }
+                }
+
+                is MessagePart.Tool.Call -> {
+                    add(
+                        SessionUpdateEvent(
+                            update = SessionUpdate.ToolCall(
+                                toolCallId = ToolCallId(response.id ?: UNKNOWN_TOOL_CALL_ID),
+                                title = tools.firstOrNull { it.name == part.tool }?.description
+                                    ?: UNKNOWN_TOOL_DESCRIPTION,
+                                // TODO: Support kind for tools
+                                status = ToolCallStatus.PENDING,
+                                rawInput = part.argsJson,
+                            )
+                        )
+                    )
+                }
+
+                is MessagePart.Text -> {
+                    add(
+                        SessionUpdateEvent(
+                            update = AgentMessageChunk(ContentBlock.Text(part.text))
+                        )
+                    )
+                }
+
+                is MessagePart.Attachment -> {
                     add(
                         SessionUpdateEvent(
                             update = AgentMessageChunk(part.toAcpContentBlock())
                         )
                     )
                 }
-            }
-
-            is Message.Reasoning -> {
-                add(
-                    SessionUpdateEvent(
-                        update = SessionUpdate.AgentThoughtChunk(
-                            content = ContentBlock.Text(response.content)
-                        )
-                    )
-                )
-            }
-
-            is Message.Tool.Call -> {
-                add(
-                    SessionUpdateEvent(
-                        update = SessionUpdate.ToolCall(
-                            toolCallId = ToolCallId(response.id ?: UNKNOWN_TOOL_CALL_ID),
-                            title = tools.firstOrNull { it.name == response.tool }?.description
-                                ?: UNKNOWN_TOOL_DESCRIPTION,
-                            // TODO: Support kind for tools
-                            status = ToolCallStatus.PENDING,
-                            rawInput = response.contentJsonResult.getOrNull(),
-                        )
-                    )
-                )
             }
         }
     }

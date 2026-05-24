@@ -518,7 +518,6 @@ Now we'll create a strategy that orchestrates multiple nodes:
 
 
 ```kotlin
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
 import ai.koog.agents.ext.agent.subgraphWithTask

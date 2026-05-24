@@ -1,6 +1,7 @@
 package ai.koog.agents.features.chathistory.aws
 
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import aws.sdk.kotlin.services.bedrockagentcore.model.Content
@@ -65,7 +66,7 @@ public object AgentcoreMessageConverter {
         }
 
         // Extract text content; reject messages with no text at all
-        val textContent = message.content
+        val textContent = message.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
         if (textContent.isEmpty()) {
             if (ignoreUnsupportedValues) {
                 return null

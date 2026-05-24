@@ -1,7 +1,9 @@
 package ai.koog.agents.snapshot.providers.file
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
@@ -49,10 +51,14 @@ class FileAgentCheckpointStorageProviderTest {
         val checkpoint = AgentCheckpointData(
             checkpointId = checkpointId,
             createdAt = createdAt,
-            nodePath = nodeId,
-            lastOutput = lastInput,
             messageHistory = messageHistory,
-            version = 0L
+            version = 0L,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = nodeId,
+                lastOutput = lastInput
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         val agentId = "testAgentId"
@@ -67,19 +73,20 @@ class FileAgentCheckpointStorageProviderTest {
         val retrievedCheckpoint = checkpoints.first()
         assertEquals(checkpointId, retrievedCheckpoint.checkpointId)
         assertEquals(createdAt, retrievedCheckpoint.createdAt)
-        assertEquals(nodeId, retrievedCheckpoint.nodePath)
-        assertEquals(lastInput, retrievedCheckpoint.lastOutput)
+        val retrievedNodePath = retrievedCheckpoint.graphProperties?.nodePath
+        assertEquals(nodeId, retrievedNodePath)
+        assertEquals(lastInput, retrievedCheckpoint.graphProperties?.lastOutput)
         assertEquals(messageHistory.size, retrievedCheckpoint.messageHistory.size)
 
         // Check first message (User)
         val originalUserMsg = messageHistory[0] as Message.User
         val retrievedUserMsg = retrievedCheckpoint.messageHistory[0] as Message.User
-        assertEquals(originalUserMsg.content, retrievedUserMsg.content)
+        assertEquals((originalUserMsg.parts[0] as MessagePart.Text).text, (retrievedUserMsg.parts[0] as MessagePart.Text).text)
 
         // Check second message (Assistant)
         val originalAssistantMsg = messageHistory[1] as Message.Assistant
         val retrievedAssistantMsg = retrievedCheckpoint.messageHistory[1] as Message.Assistant
-        assertEquals(originalAssistantMsg.content, retrievedAssistantMsg.content)
+        assertEquals((originalAssistantMsg.parts[0] as MessagePart.Text).text, (retrievedAssistantMsg.parts[0] as MessagePart.Text).text)
 
         // Test getLatestCheckpoint
         val latestCheckpoint = provider.getLatestCheckpoint(agentId)
@@ -92,10 +99,14 @@ class FileAgentCheckpointStorageProviderTest {
         val laterCheckpoint = AgentCheckpointData(
             checkpointId = laterCheckpointId,
             createdAt = laterCreatedAt,
-            nodePath = nodeId,
-            lastOutput = lastInput,
             messageHistory = messageHistory,
-            version = checkpoint.version.plus(1)
+            version = checkpoint.version.plus(1),
+            graphProperties = GraphCheckpointProperties(
+                nodePath = nodeId,
+                lastOutput = lastInput
+            ),
+            plannerProperties = null,
+            properties = null,
         )
 
         // Save the later checkpoint

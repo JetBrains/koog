@@ -11,6 +11,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.kotlinx.KotlinxSerializer
@@ -68,7 +69,8 @@ class HistoryCompressionStrategiesTest {
     companion object {
         private val dummyArgsContent = Json.encodeToString(DummyTool.Args("dummy"))
 
-        private fun testClock(delay: Duration): KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z").plus(delay) }
+        private fun testClock(delay: Duration): KoogClock =
+            KoogClock { Instant.parse("2023-01-01T00:00:00Z").plus(delay) }
 
         val simpleHistory = listOf(
             Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
@@ -93,7 +95,10 @@ class HistoryCompressionStrategiesTest {
             Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
             Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
             Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
-            Message.Tool.Call("ID", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(3.minutes))),
+            Message.Assistant(
+                part = MessagePart.Tool.Call("ID", "DummyTool", "Args"),
+                metaInfo = ResponseMetaInfo.create(testClock(3.minutes))
+            )
         )
 
         val multipleSystemMessagesHistory = listOf(
@@ -110,47 +115,56 @@ class HistoryCompressionStrategiesTest {
             Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
             Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
             Message.Assistant("Assistant message 0", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
-            Message.Tool.Call(
-                "id1",
-                "DummyTool",
-                dummyArgsContent,
+            Message.Assistant(
+                part = MessagePart.Tool.Call(
+                    "id1",
+                    "DummyTool",
+                    dummyArgsContent
+                ),
                 metaInfo = ResponseMetaInfo.create(testClock(3.minutes))
             ),
-            Message.Tool.Result("id1", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(4.minutes))),
-            Message.Tool.Call(
-                "id2",
-                "DummyTool",
-                dummyArgsContent,
+            Message.User(
+                part = MessagePart.Tool.Result("id1", "DummyTool", "Result"),
+                metaInfo = RequestMetaInfo.create(testClock(4.minutes))
+            ),
+            Message.Assistant(
+                part = MessagePart.Tool.Call("id2", "DummyTool", dummyArgsContent),
                 metaInfo = ResponseMetaInfo.create(testClock(5.minutes))
             ),
-            Message.Tool.Result("id2", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
+            Message.User(
+                part = MessagePart.Tool.Result("id2", "DummyTool", "Result"),
+                metaInfo = RequestMetaInfo.create(testClock(6.minutes))
+            ),
             Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
             Message.User("User message 1", metaInfo = RequestMetaInfo.create(testClock(8.minutes))),
             Message.Assistant("Assistant message 1", metaInfo = ResponseMetaInfo.create(testClock(9.minutes))),
-            Message.Tool.Call(
-                "id3",
-                "DummyTool",
-                dummyArgsContent,
+            Message.Assistant(
+                part = MessagePart.Tool.Call("id3", "DummyTool", dummyArgsContent),
                 metaInfo = ResponseMetaInfo.create(testClock(10.minutes))
             ),
-            Message.Tool.Result("id3", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(11.minutes))),
-            Message.Tool.Call(
-                "id4",
-                "DummyTool",
-                dummyArgsContent,
+            Message.User(
+                part = MessagePart.Tool.Result("id3", "DummyTool", "Result"),
+                metaInfo = RequestMetaInfo.create(testClock(11.minutes))
+            ),
+            Message.Assistant(
+                part = MessagePart.Tool.Call("id4", "DummyTool", dummyArgsContent),
                 metaInfo = ResponseMetaInfo.create(testClock(12.minutes))
             ),
-            Message.Tool.Result("id4", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(13.minutes))),
+            Message.User(
+                part = MessagePart.Tool.Result("id4", "DummyTool", "Result"),
+                metaInfo = RequestMetaInfo.create(testClock(13.minutes))
+            ),
             Message.Assistant("Assistant message 2", metaInfo = ResponseMetaInfo.create(testClock(14.minutes))),
             Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
             Message.Assistant("Assistant message 3", metaInfo = ResponseMetaInfo.create(testClock(16.minutes))),
-            Message.Tool.Call(
-                "id5",
-                "DummyTool",
-                dummyArgsContent,
+            Message.Assistant(
+                part = MessagePart.Tool.Call("id5", "DummyTool", dummyArgsContent),
                 metaInfo = ResponseMetaInfo.create(testClock(17.minutes))
             ),
-            Message.Tool.Result("id5", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(18.minutes))),
+            Message.User(
+                part = MessagePart.Tool.Result("id5", "DummyTool", "Result"),
+                metaInfo = RequestMetaInfo.create(testClock(18.minutes))
+            ),
         )
 
         @JvmStatic
@@ -169,7 +183,10 @@ class HistoryCompressionStrategiesTest {
                     Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
                     Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
                     Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
-                    Message.Tool.Call("ID", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(3.minutes)))
+                    Message.Assistant(
+                        part = MessagePart.Tool.Call("ID", "DummyTool", "Args"),
+                        metaInfo = ResponseMetaInfo.create(testClock(3.minutes))
+                    )
                 )
             ),
             Arguments.of(
@@ -226,7 +243,10 @@ class HistoryCompressionStrategiesTest {
                     Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
                     Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
                     Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
-                    Message.Tool.Call("ID", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(3.minutes)))
+                    Message.Assistant(
+                        part = MessagePart.Tool.Call("ID", "DummyTool", "Args"),
+                        metaInfo = ResponseMetaInfo.create(testClock(3.minutes))
+                    )
                 )
             ),
             Arguments.of(
@@ -387,7 +407,7 @@ class HistoryCompressionStrategiesTest {
 
         assert(resultMessages.size == compressedMessages.size)
         resultMessages.forEachIndexed { index, message ->
-            assert(message.content == compressedMessages[index].content)
+            assert(message.parts == compressedMessages[index].parts)
             assert(message.role == compressedMessages[index].role)
         }
     }
@@ -488,29 +508,29 @@ class HistoryCompressionStrategiesTest {
             "All original system messages must be preserved, got: $systemMessages"
         }
         val firstUser = resultMessages.firstOrNull { it is Message.User }
-        assert(firstUser != null && firstUser.content == "User message 0") {
+        assert(firstUser != null && firstUser.textContent() == "User message 0") {
             "First user message must be preserved"
         }
 
         // A context-restoration assistant message with extracted facts must be appended
         val contextRestoration = resultMessages
             .filterIsInstance<Message.Assistant>()
-            .lastOrNull { it.content.contains("[CONTEXT RESTORATION]") }
+            .lastOrNull { it.textContent().contains("[CONTEXT RESTORATION]") }
         assert(contextRestoration != null) { "Context-restoration assistant message should be present" }
-        assert(contextRestoration!!.content.contains(concept.keyword)) {
+        assert(contextRestoration!!.textContent().contains(concept.keyword)) {
             "Context-restoration must reference the concept keyword '${concept.keyword}'"
         }
-        assert(contextRestoration.content.contains("Fact A") && contextRestoration.content.contains("Fact B")) {
+        assert(contextRestoration.textContent().contains("Fact A") && contextRestoration.textContent().contains("Fact B")) {
             "Context-restoration must contain extracted multiple-facts values"
         }
 
         // No TLDR fallback should have been produced
-        assert(resultMessages.none { it.content == "TLDR" }) {
+        assert(resultMessages.none { it.textContent() == "TLDR" }) {
             "FactRetrieval should not fall back to WholeHistory TLDR when facts are extracted"
         }
 
         // Trailing tool-calls (none in longMessagesHistory) — verify no Tool.Call leaked
-        assert(resultMessages.none { it is Message.Tool.Call }) {
+        assert(resultMessages.none { it is Message.Assistant && it.parts.any { p -> p is MessagePart.Tool.Call } }) {
             "Tool.Call messages should not survive FactRetrieval compression for this history"
         }
     }
@@ -532,9 +552,9 @@ class HistoryCompressionStrategiesTest {
 
         val contextRestoration = resultMessages
             .filterIsInstance<Message.Assistant>()
-            .lastOrNull { it.content.contains("[CONTEXT RESTORATION]") }
+            .lastOrNull { it.textContent().contains("[CONTEXT RESTORATION]") }
         assert(contextRestoration != null) { "Context-restoration assistant message should be present" }
-        assert(contextRestoration!!.content.contains("Single fact")) {
+        assert(contextRestoration!!.textContent().contains("Single fact")) {
             "Context-restoration must contain the extracted single fact"
         }
     }
@@ -555,8 +575,12 @@ class HistoryCompressionStrategiesTest {
         )
 
         // Trailing tool call must be preserved at the end
-        assert(resultMessages.last() is Message.Tool.Call) {
+        val last = resultMessages.last()
+        assert(last is Message.Assistant && last.parts.any { it is MessagePart.Tool.Call }) {
             "Trailing Tool.Call must be preserved as the last message"
         }
     }
+
+    private fun Message.textContent(): String =
+        parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
 }

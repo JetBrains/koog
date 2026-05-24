@@ -2,7 +2,6 @@ package ai.koog.agents.features.opentelemetry.metric.adapter
 
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addMetricAdapter
 import ai.koog.agents.features.opentelemetry.metric.MetricEvent
 
 private const val FALLBACK_TOOL_NAME = "filtered"

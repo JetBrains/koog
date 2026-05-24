@@ -4,6 +4,8 @@ plugins {
     application
 }
 
+val isBeta by extra(true)
+
 application {
     mainClass = "ai.koog.a2a.test.tck.MainKt"
 }

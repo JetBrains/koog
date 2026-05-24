@@ -6,12 +6,12 @@ import ai.koog.agents.core.agent.context.agentInput
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.subgraphWithTask
@@ -27,8 +27,8 @@ import ai.koog.integration.tests.utils.tools.files.DeleteFile
 import ai.koog.integration.tests.utils.tools.files.ListFiles
 import ai.koog.integration.tests.utils.tools.files.MockFileSystem
 import ai.koog.integration.tests.utils.tools.files.ReadFile
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
@@ -40,7 +40,7 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import io.kotest.matchers.paths.shouldExist
@@ -130,23 +130,21 @@ open class AIAgentTestBase {
                     val input = eventContext.input
 
                     if (input is List<*>) {
-                        input.filterIsInstance<Message.Tool.Call>().forEach { call ->
+                        input.filterIsInstance<MessagePart.Tool.Call>().forEach { call ->
                             parallelToolCalls.add(
                                 ToolCallInfo(
                                     id = call.id,
                                     tool = call.tool,
-                                    content = call.content,
-                                    metaInfo = call.metaInfo,
+                                    content = call.args,
                                 )
                             )
                         }
-                    } else if (input is Message.Tool.Call) {
+                    } else if (input is MessagePart.Tool.Call) {
                         singleToolCalls.add(
                             ToolCallInfo(
                                 id = input.id,
                                 tool = input.tool,
-                                content = input.content,
-                                metaInfo = input.metaInfo,
+                                content = input.args,
                             )
                         )
                     }
@@ -166,7 +164,6 @@ open class AIAgentTestBase {
         val id: String?,
         val tool: String,
         val content: String,
-        val metaInfo: ResponseMetaInfo,
     )
 
     protected class ReportingLLMClient(
@@ -191,7 +188,7 @@ open class AIAgentTestBase {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
+        ): Message.Assistant {
             CoroutineScope(currentCoroutineContext()).launch {
                 eventsChannel.send(
                     Event.Message(
@@ -300,17 +297,17 @@ open class AIAgentTestBase {
                     }
                 }
 
-                val callLLM by nodeLLMRequest(allowToolCalls = true)
-                val callTool by nodeExecuteTool()
-                val sendToolResult by nodeLLMSendToolResult()
+                val callLLM by nodeLLMRequest()
+                val callTool by nodeExecuteTools()
+                val sendToolResult by nodeLLMSendToolResults()
 
                 edge(nodeStart forwardTo definePromptAnthropic transformed {})
                 edge(definePromptAnthropic forwardTo callLLM transformed { agentInput<String>() })
-                edge(callLLM forwardTo callTool onToolCall { true })
-                edge(callLLM forwardTo nodeFinish onAssistantMessage { true } transformed {})
+                edge(callLLM forwardTo callTool onToolCalls { true })
+                edge(callLLM forwardTo nodeFinish onTextMessage { true } transformed {})
                 edge(callTool forwardTo sendToolResult)
-                edge(sendToolResult forwardTo callTool onToolCall { true })
-                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true } transformed {})
+                edge(sendToolResult forwardTo callTool onToolCalls { true })
+                edge(sendToolResult forwardTo nodeFinish onTextMessage { true } transformed {})
             }
 
             val openaiSubgraph by subgraph("openai") {
@@ -332,17 +329,17 @@ open class AIAgentTestBase {
                     }
                 }
 
-                val callLLM by nodeLLMRequest(allowToolCalls = true)
-                val callTool by nodeExecuteTool()
-                val sendToolResult by nodeLLMSendToolResult()
+                val callLLM by nodeLLMRequest()
+                val callTool by nodeExecuteTools()
+                val sendToolResult by nodeLLMSendToolResults()
 
                 edge(nodeStart forwardTo definePromptOpenAI)
                 edge(definePromptOpenAI forwardTo callLLM transformed { agentInput<String>() })
-                edge(callLLM forwardTo callTool onToolCall { true })
-                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+                edge(callLLM forwardTo callTool onToolCalls { true })
+                edge(callLLM forwardTo nodeFinish onTextMessage { true })
                 edge(callTool forwardTo sendToolResult)
-                edge(sendToolResult forwardTo callTool onToolCall { true })
-                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+                edge(sendToolResult forwardTo callTool onToolCalls { true })
+                edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
             }
 
             val compressHistoryNode by nodeLLMCompressHistory<Unit>("compress_history")

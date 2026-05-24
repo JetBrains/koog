@@ -4,7 +4,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.http.client.ktor.KtorKoogHttpClient
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
 import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
@@ -14,8 +15,9 @@ import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -43,7 +45,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should use null maxTokens if unspecified`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
         val request = client.createGoogleRequest(
             prompt = Prompt(
@@ -58,7 +60,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should use maxTokens from user specified parameters when available`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
         val request = client.createGoogleRequest(
             prompt = Prompt(
@@ -74,7 +76,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should handle Null parameter type`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         val tool = ToolDescriptor(
@@ -115,7 +117,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should handle AnyOf parameter type`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         val tool = ToolDescriptor(
@@ -182,7 +184,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should handle complex AnyOf with Null`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         val tool = ToolDescriptor(
@@ -232,7 +234,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should map GoogleParams to generationConfig`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         val params = GoogleParams(
@@ -268,7 +270,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should map JSON Basic schema to responseSchema`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         val schema = LLMParams.Schema.JSON.Basic(
@@ -290,7 +292,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest should map JSON Standard schema to responseJsonSchema`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         val schema = LLMParams.Schema.JSON.Standard(
@@ -312,7 +314,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `toolChoice Auto None Required should map to Google function calling modes`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
 
         fun getMode(tc: LLMParams.ToolChoice): GoogleFunctionCallingMode? {
@@ -331,7 +333,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `toolChoice Named should set ANY with allowedFunctionNames`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
         val req = client.createGoogleRequest(
             prompt = Prompt(
@@ -350,7 +352,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `processGoogleCandidate should handle InlineData image part`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val imageData = "png-bytes".encodeToByteArray()
         val candidate = GoogleCandidate(
             content = GoogleContent(
@@ -363,19 +365,17 @@ class GoogleLLMClientTest {
             )
         )
 
-        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+        val response = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
 
-        responses shouldHaveSize 1
-        val assistantMessage = responses.single() as Message.Assistant
-        assistantMessage.parts shouldHaveSize 1
-        val imagePart = assistantMessage.parts.single() as ContentPart.Image
+        val attachmentPart = response.parts.single() as MessagePart.Attachment
+        val imagePart = attachmentPart.source as AttachmentSource.Image
         imagePart.format shouldBe "png"
         (imagePart.content as AttachmentContent.Binary.Bytes).asBytes() shouldBe imageData
     }
 
     @Test
     fun `processGoogleCandidate should handle InlineData generic file part`() {
-        val client = GoogleLLMClient(apiKey = "apiKey")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val fileData = "pdf-bytes".encodeToByteArray()
         val candidate = GoogleCandidate(
             content = GoogleContent(
@@ -388,28 +388,36 @@ class GoogleLLMClientTest {
             )
         )
 
-        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+        val response = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
 
-        responses shouldHaveSize 1
-        val assistantMessage = responses.single() as Message.Assistant
-        assistantMessage.parts shouldHaveSize 1
-        val filePart = assistantMessage.parts.single() as ContentPart.File
+        val attachmentPart = response.parts.single() as MessagePart.Attachment
+        val filePart = attachmentPart.source as AttachmentSource.File
         filePart.mimeType shouldBe "application/pdf"
         (filePart.content as AttachmentContent.Binary.Bytes).asBytes() shouldBe fileData
     }
 
     @Test
     fun `createGoogleRequest groups parallel Tool Results into single content`() {
-        val client = GoogleLLMClient(apiKey = "test")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val request = client.createGoogleRequest(
             Prompt(
                 messages = listOf(
                     Message.User("query", RequestMetaInfo.Empty),
-                    Message.Reasoning(encrypted = "sig", content = "", metaInfo = ResponseMetaInfo.Empty),
-                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
-                    Message.Tool.Call(id = "2", tool = "t2", content = "{}", metaInfo = ResponseMetaInfo.Empty),
-                    Message.Tool.Result(id = "1", tool = "t1", content = "r1", metaInfo = RequestMetaInfo.Empty),
-                    Message.Tool.Result(id = "2", tool = "t2", content = "r2", metaInfo = RequestMetaInfo.Empty),
+                    Message.Assistant(
+                        parts = listOf(
+                            MessagePart.Reasoning(encrypted = "sig", content = ""),
+                            MessagePart.Tool.Call(id = "1", tool = "t1", args = JsonObject(mapOf())),
+                            MessagePart.Tool.Call(id = "2", tool = "t2", args = JsonObject(mapOf())),
+                        ),
+                        metaInfo = ResponseMetaInfo.Empty
+                    ),
+                    Message.User(
+                        parts = listOf(
+                            MessagePart.Tool.Result(id = "1", tool = "t1", output = "r1"),
+                            MessagePart.Tool.Result(id = "2", tool = "t2", output = "r2")
+                        ),
+                        metaInfo = RequestMetaInfo.Empty
+                    )
                 ),
                 id = "id"
             ),
@@ -431,14 +439,19 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest attaches signature from Reasoning and fallback to subsequent calls`() {
-        val client = GoogleLLMClient(apiKey = "test")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val request = client.createGoogleRequest(
             Prompt(
                 messages = listOf(
                     Message.User("query", RequestMetaInfo.Empty),
-                    Message.Reasoning(encrypted = "my-sig", content = "", metaInfo = ResponseMetaInfo.Empty),
-                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
-                    Message.Tool.Call(id = "2", tool = "t2", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Assistant(
+                        parts = listOf(
+                            MessagePart.Reasoning(encrypted = "my-sig", content = emptyList()),
+                            MessagePart.Tool.Call(id = "1", tool = "t1", args = JsonObject(mapOf())),
+                            MessagePart.Tool.Call(id = "2", tool = "t2", args = JsonObject(mapOf())),
+                        ),
+                        metaInfo = ResponseMetaInfo.Empty
+                    ),
                 ),
                 id = "id"
             ),
@@ -460,13 +473,19 @@ class GoogleLLMClientTest {
     fun `createGoogleRequest uses configurable fallback thought signature`() {
         val client = GoogleLLMClient(
             apiKey = "test",
-            settings = GoogleClientSettings(fallbackThoughtSignature = "custom-fallback")
+            settings = GoogleClientSettings(fallbackThoughtSignature = "custom-fallback"),
+            httpClientFactory = KtorKoogHttpClient.Factory()
         )
         val request = client.createGoogleRequest(
             Prompt(
                 messages = listOf(
                     Message.User("query", RequestMetaInfo.Empty),
-                    Message.Tool.Call(id = "1", tool = "t1", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+                    Message.Assistant(
+                        parts = listOf(
+                            MessagePart.Tool.Call(id = "1", tool = "t1", args = JsonObject(mapOf())),
+                        ),
+                        metaInfo = ResponseMetaInfo.Empty
+                    ),
                 ),
                 id = "id"
             ),
@@ -480,7 +499,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `processGoogleCandidate creates Reasoning before FunctionCall with signature`() {
-        val client = GoogleLLMClient(apiKey = "test")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val candidate = GoogleCandidate(
             content = GoogleContent(
                 role = "model",
@@ -494,18 +513,18 @@ class GoogleLLMClientTest {
             finishReason = "STOP"
         )
 
-        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+        val response = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
 
-        responses shouldHaveSize 2
-        responses[0].shouldBeInstanceOf<Message.Reasoning>()
-        responses[1].shouldBeInstanceOf<Message.Tool.Call>()
-        (responses[0] as Message.Reasoning).encrypted shouldBe "sig-123"
-        (responses[0] as Message.Reasoning).content shouldBe ""
+        response.parts shouldHaveSize 2
+        response.parts[0].shouldBeInstanceOf<MessagePart.Reasoning>()
+        response.parts[1].shouldBeInstanceOf<MessagePart.Tool.Call>()
+        (response.parts[0] as MessagePart.Reasoning).encrypted shouldBe "sig-123"
+        (response.parts[0] as MessagePart.Reasoning).content shouldHaveSize 0
     }
 
     @Test
     fun `processGoogleCandidate creates Reasoning from Text with thought=true`() {
-        val client = GoogleLLMClient(apiKey = "test")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val candidate = GoogleCandidate(
             content = GoogleContent(
                 role = "model",
@@ -520,12 +539,12 @@ class GoogleLLMClientTest {
             finishReason = "STOP"
         )
 
-        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+        val response = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
 
-        responses shouldHaveSize 1
-        responses[0].shouldBeInstanceOf<Message.Reasoning>()
-        val reasoning = responses[0] as Message.Reasoning
-        reasoning.content shouldBe "I am thinking..."
+        response.parts shouldHaveSize 1
+        response.parts[0].shouldBeInstanceOf<MessagePart.Reasoning>()
+        val reasoning = response.parts[0] as MessagePart.Reasoning
+        reasoning.content.single() shouldBe "I am thinking..."
         reasoning.encrypted shouldBe "thought-sig"
     }
 
@@ -544,27 +563,30 @@ class GoogleLLMClientTest {
                 path: String,
                 responseType: KClass<R>,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): R = error("GET is not expected in this test")
 
             override suspend fun <T : Any, R : Any> post(
                 path: String,
-                request: T,
+                requestBody: T,
                 requestBodyType: KClass<T>,
                 responseType: KClass<R>,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): R = error("POST is not expected in this test")
 
             override fun <T : Any, R : Any, O : Any> sse(
                 path: String,
-                request: T,
+                requestBody: T,
                 requestBodyType: KClass<T>,
                 dataFilter: (String?) -> Boolean,
                 decodeStreamingResponse: (String) -> R,
                 processStreamingChunk: (R) -> O?,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): Flow<O> {
                 path shouldBe "v1beta/models/${model.id}:streamGenerateContent"
-                request.shouldBeInstanceOf<GoogleRequest>()
+                requestBody.shouldBeInstanceOf<GoogleRequest>()
 
                 val response = GoogleResponse(
                     candidates = listOf(
@@ -590,6 +612,14 @@ class GoogleLLMClientTest {
                 return if (chunk != null) flowOf(chunk) else emptyFlow()
             }
 
+            override fun <T : Any> lines(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<String> = error("lines is not expected in this test")
+
             override fun close(): Unit = Unit
         }
 
@@ -602,7 +632,7 @@ class GoogleLLMClientTest {
 
         frames shouldBe listOf(
             StreamFrame.ReasoningDelta(id = thoughtSignature, text = thoughtText, index = 0),
-            StreamFrame.ReasoningComplete(id = thoughtSignature, text = listOf(thoughtText), index = 0),
+            StreamFrame.ReasoningComplete(id = thoughtSignature, content = listOf(thoughtText), index = 0),
             StreamFrame.TextDelta(finalAnswer, 1),
             StreamFrame.TextComplete(finalAnswer, 1),
             StreamFrame.End(finishReason, ResponseMetaInfo.Empty),
@@ -611,16 +641,17 @@ class GoogleLLMClientTest {
 
     @Test
     fun `createGoogleRequest includes Reasoning as Text part with thought=true`() {
-        val client = GoogleLLMClient(apiKey = "test")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val request = client.createGoogleRequest(
             Prompt(
                 messages = listOf(
                     Message.User("query", RequestMetaInfo.Empty),
-                    Message.Reasoning(
-                        content = "Previous thought",
-                        encrypted = "prev-sig",
+                    Message.Assistant(
+                        parts = listOf(
+                            MessagePart.Reasoning(encrypted = "prev-sig", content = "Previous thought"),
+                        ),
                         metaInfo = ResponseMetaInfo.Empty
-                    )
+                    ),
                 ),
                 id = "id"
             ),
@@ -640,7 +671,7 @@ class GoogleLLMClientTest {
 
     @Test
     fun `processGoogleCandidate creates Reasoning for InlineData with signature`() {
-        val client = GoogleLLMClient(apiKey = "test")
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val candidate = GoogleCandidate(
             content = GoogleContent(
                 role = "model",
@@ -654,14 +685,14 @@ class GoogleLLMClientTest {
             finishReason = "STOP"
         )
 
-        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+        val response = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
 
-        responses shouldHaveSize 2
-        responses[0].shouldBeInstanceOf<Message.Reasoning>()
-        (responses[0] as Message.Reasoning).encrypted shouldBe "image-sig"
+        response.parts shouldHaveSize 2
+        response.parts[0].shouldBeInstanceOf<MessagePart.Reasoning>()
+        (response.parts[0] as MessagePart.Reasoning).encrypted shouldBe "image-sig"
 
-        responses[1].shouldBeInstanceOf<Message.Assistant>()
-        val filePart = (responses[1] as Message.Assistant).parts.single() as ContentPart.Image
+        response.parts[1].shouldBeInstanceOf<MessagePart.Attachment>()
+        val filePart = (response.parts[1] as MessagePart.Attachment).source as AttachmentSource.Image
         filePart.format shouldBe "png"
     }
 }

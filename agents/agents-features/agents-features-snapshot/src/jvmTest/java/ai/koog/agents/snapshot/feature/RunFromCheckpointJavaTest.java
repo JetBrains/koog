@@ -6,12 +6,13 @@ import ai.koog.agents.core.agent.context.RollbackStrategy;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.ext.tool.SayToUser;
 import ai.koog.agents.testing.tools.MockExecutorBuilder;
-import ai.koog.prompt.dsl.Prompt;
+import ai.koog.prompt.Prompt;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
 import ai.koog.prompt.message.RequestMetaInfo;
 import ai.koog.prompt.message.ResponseMetaInfo;
 import ai.koog.serialization.JSONElementKt;
+import ai.koog.serialization.JSONPrimitive;
 import ai.koog.serialization.kotlinx.KotlinxSerializer;
 import kotlin.time.Clock;
 import kotlin.time.Instant;
@@ -65,14 +66,16 @@ public class RunFromCheckpointJavaTest {
         AgentCheckpointData checkpoint = new AgentCheckpointData(
             "checkpoint-1",
             time,
-            nodePath(sessionId, "straight-forward", "Node2"),
-            null,
-            JSONElementKt.JSONPrimitive("Node 2 output"),
             List.of(
                 new Message.User("User message", new RequestMetaInfo(time, null)),
                 new Message.Assistant("Assistant message", new ResponseMetaInfo(time, null, null, null))
             ),
+            null,
             0L,
+            new GraphCheckpointProperties(
+                nodePath(sessionId, "straight-forward", "Node2"),
+                JSONPrimitive.of("Node 2 output")
+            ),
             null
         );
 
@@ -102,13 +105,15 @@ public class RunFromCheckpointJavaTest {
         AgentCheckpointData checkpoint = new AgentCheckpointData(
             "checkpoint-1",
             time,
-            nodePath(sessionId, "straight-forward", "Node1"),
-            null,
-            JSONElementKt.JSONPrimitive("Node 1 output"),
             List.of(
                 new Message.User("Restored message", new RequestMetaInfo(time, null))
             ),
+            null,
             0L,
+            new GraphCheckpointProperties(
+                nodePath(sessionId, "straight-forward", "Node1"),
+                JSONElementKt.JSONPrimitive("Node 1 output")
+            ),
             null
         );
 
@@ -137,15 +142,17 @@ public class RunFromCheckpointJavaTest {
         AgentCheckpointData checkpoint = new AgentCheckpointData(
             "checkpoint-no-persistence",
             time,
-            nodePath(sessionId, "straight-forward", "Node1"),
-            null,
-            JSONElementKt.JSONPrimitive("Node 1 output"),
             List.of(
                 new Message.System("You are a test agent.", new RequestMetaInfo(time, null)),
                 new Message.User("Hello", new RequestMetaInfo(time, null)),
                 new Message.Assistant("Hi there", new ResponseMetaInfo(time, null, null, null))
             ),
+            null,
             0L,
+            new GraphCheckpointProperties(
+                nodePath(sessionId, "straight-forward", "Node1"),
+                JSONElementKt.JSONPrimitive("Node 1 output")
+            ),
             null
         );
 
@@ -173,14 +180,16 @@ public class RunFromCheckpointJavaTest {
         AgentCheckpointData checkpoint = new AgentCheckpointData(
             "checkpoint-defaults",
             time,
-            nodePath(sessionId, "straight-forward", "Node1"),
-            null,
-            JSONElementKt.JSONPrimitive("Node 1 output"),
             List.of(
                 new Message.User("User message", new RequestMetaInfo(time, null)),
                 new Message.Assistant("Assistant message", new ResponseMetaInfo(time, null, null, null))
             ),
+            null,
             0L,
+            new GraphCheckpointProperties(
+                nodePath(sessionId, "straight-forward", "Node1"),
+                JSONElementKt.JSONPrimitive("Node 1 output")
+            ),
             null
         );
 

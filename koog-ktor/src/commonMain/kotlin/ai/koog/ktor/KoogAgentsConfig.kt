@@ -7,8 +7,9 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolRegistryBuilder
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.ktor.KoogAgentsConfig.TimeoutConfiguration.Companion.DEFAULT_TIMEOUT
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.PromptDSL
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -870,7 +871,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
     public class OllamaConfig {
         /**
          * The base URL for the Ollama API, used as the endpoint for all HTTP requests made
-         * by the Ollama client. By default, it is set to `[OllamaClient.baseUrl]`.
+         * by the Ollama client. By default, it is set to `[OllamaClient.DEFAULT_BASE_URL]`.
          *
          * This property can be configured to point to a custom server or different instance
          * of the Ollama service, depending on the deployment or development needs.
@@ -935,7 +936,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
                     embeddingsPath = embeddingsPath ?: defaults.embeddingsPath,
                     moderationsPath = moderationsPath ?: defaults.moderationsPath,
                 ),
-                baseClient = httpClient
+                httpClientFactory = KtorKoogHttpClient.Factory(httpClient)
             )
         }
         addLLMClient(LLMProvider.OpenAI, client)
@@ -962,7 +963,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
             AnthropicLLMClient(
                 apiKey = apiKey,
                 settings = settings,
-                baseClient = httpClient
+                httpClientFactory = KtorKoogHttpClient.Factory(httpClient)
             )
         }
         addLLMClient(LLMProvider.Anthropic, client)
@@ -985,7 +986,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
                     baseUrl = baseUrl ?: defaults.baseUrl,
                     timeoutConfig = timeoutConfig ?: defaults.timeoutConfig,
                 ),
-                baseClient = httpClient
+                httpClientFactory = KtorKoogHttpClient.Factory(httpClient)
             )
         }
         addLLMClient(LLMProvider.Google, client)
@@ -1011,7 +1012,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
                     moderationPath = moderationPath ?: defaults.moderationPath,
                     timeoutConfig = timeoutConfig ?: defaults.timeoutConfig,
                 ),
-                baseClient = httpClient
+                httpClientFactory = KtorKoogHttpClient.Factory(httpClient)
             )
         }
         addLLMClient(LLMProvider.MistralAI, client)
@@ -1034,7 +1035,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
                     baseUrl = baseUrl ?: defaults.baseUrl,
                     timeoutConfig = timeoutConfig
                 ),
-                baseClient = httpClient
+                httpClientFactory = KtorKoogHttpClient.Factory(httpClient)
             )
         }
         addLLMClient(LLMProvider.OpenRouter, client)
@@ -1057,7 +1058,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
                     baseUrl = baseUrl ?: defaults.baseUrl,
                     timeoutConfig = timeoutConfig
                 ),
-                baseClient = httpClient
+                httpClientFactory = KtorKoogHttpClient.Factory(httpClient)
             )
         }
         addLLMClient(LLMProvider.DeepSeek, client)
@@ -1071,11 +1072,10 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
     internal fun ollama(configure: OllamaConfig.() -> Unit) {
         val client = with(OllamaConfig()) {
             configure()
-            val defaults = OllamaClient()
 
             OllamaClient(
-                baseUrl = baseUrl ?: defaults.baseUrl,
-                baseClient = httpClient,
+                baseUrl = baseUrl ?: OllamaClient.DEFAULT_BASE_URL,
+                httpClientFactory = KtorKoogHttpClient.Factory(httpClient),
                 timeoutConfig = timeoutConfig ?: ConnectionTimeoutConfig()
             )
         }

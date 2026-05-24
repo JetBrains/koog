@@ -1,6 +1,6 @@
 package ai.koog.agents.longtermmemory.retrieval.augmentation
 
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.rag.base.TextDocument
 import ai.koog.rag.base.storage.search.SearchResult
 import kotlin.jvm.JvmStatic
@@ -63,6 +63,14 @@ public fun interface PromptAugmenter {
          * The prefix to add before relevant context.
          */
         public const val DEFAULT_CONTEXT_PREFIX: String = "Relevant information:\n"
+
+        /**
+         * Separator inserted between logical sections of a message (e.g. between the
+         * original system content and an appended retrieved-context section, or between
+         * multiple retrieved-context sections). Shared by all built-in [PromptAugmenter]
+         * implementations to keep the rendered layout consistent.
+         */
+        public const val SECTION_SEPARATOR: String = "\n\n"
 
         /**
          * Formats a list of search results into a numbered text block with the given prefix.

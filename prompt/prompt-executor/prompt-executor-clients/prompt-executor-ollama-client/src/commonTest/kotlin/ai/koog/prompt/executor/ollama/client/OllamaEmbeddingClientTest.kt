@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.ollama.client
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingBatchRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingRequestDTO
 import io.ktor.client.HttpClient
@@ -42,7 +43,7 @@ class OllamaEmbeddingClientTest {
                 headers = headersOf(HttpHeaders.ContentType to listOf(ContentType.Application.Json.toString()))
             )
         }
-        val client = OllamaClient(baseClient = HttpClient(mockEngine))
+        val client = OllamaClient(httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockEngine)))
 
         val embedding = client.embed("sample", OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
 
@@ -64,7 +65,7 @@ class OllamaEmbeddingClientTest {
                 headers = headersOf(HttpHeaders.ContentType to listOf(ContentType.Application.Json.toString()))
             )
         }
-        val client = OllamaClient(baseClient = HttpClient(mockEngine))
+        val client = OllamaClient(httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockEngine)))
 
         val embedding = client.embed("sample", OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
 
@@ -88,7 +89,7 @@ class OllamaEmbeddingClientTest {
                 headers = headersOf(HttpHeaders.ContentType to listOf(ContentType.Application.Json.toString()))
             )
         }
-        val client = OllamaClient(baseClient = HttpClient(mockEngine))
+        val client = OllamaClient(httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockEngine)))
 
         val embeddings = client.embed(listOf("one", "two"), OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
 

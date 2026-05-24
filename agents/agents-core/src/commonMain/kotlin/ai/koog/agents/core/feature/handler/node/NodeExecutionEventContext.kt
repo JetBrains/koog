@@ -10,24 +10,31 @@ import ai.koog.serialization.TypeToken
 /**
  * Represents the context for handling node-specific events within the framework.
  */
-public interface NodeExecutionEventContext : AgentLifecycleEventContext
+public interface NodeExecutionEventContext : AgentLifecycleEventContext {
+    /**
+     * The AI agent context.
+     */
+    public val context: AIAgentGraphContextBase
+
+    /**
+     * The AI Agent node instance.
+     */
+    public val node: AIAgentNodeBase<*, *>
+}
 
 /**
  * Represents the context for handling a before node execution event.
  *
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property node The node that is about to be executed.
- * @property context The stage context in which the node is being executed.
- * @property input The input data for the node execution.
+ * @property input The node input data;
  * @property inputType [TypeToken] representing the type of the [input].
  */
 public data class NodeExecutionStartingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    val node: AIAgentNodeBase<*, *>,
-    val context: AIAgentGraphContextBase,
-    val input: Any?,
-    val inputType: TypeToken,
+    override val context: AIAgentGraphContextBase,
+    override val node: AIAgentNodeBase<*, *>,
+    public val input: Any?,
+    public val inputType: TypeToken,
 ) : NodeExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.NodeExecutionStarting
 }
@@ -35,10 +42,7 @@ public data class NodeExecutionStartingContext(
 /**
  * Represents the context for handling an after node execution event.
  *
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property node The node that was executed.
- * @property context The stage context in which the node was executed.
- * @property input The input data that was provided to the node.
+ * @property input The node input data;
  * @property inputType [TypeToken] representing the type of the [input].
  * @property output The output data produced by the node execution.
  * @property outputType [TypeToken] representing the type of the [output].
@@ -46,12 +50,12 @@ public data class NodeExecutionStartingContext(
 public data class NodeExecutionCompletedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    val node: AIAgentNodeBase<*, *>,
-    val context: AIAgentGraphContextBase,
-    val input: Any?,
-    val inputType: TypeToken,
-    val output: Any?,
-    val outputType: TypeToken,
+    override val context: AIAgentGraphContextBase,
+    override val node: AIAgentNodeBase<*, *>,
+    public val input: Any?,
+    public val inputType: TypeToken,
+    public val output: Any?,
+    public val outputType: TypeToken,
 ) : NodeExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.NodeExecutionCompleted
 }
@@ -59,21 +63,18 @@ public data class NodeExecutionCompletedContext(
 /**
  * Represents the context for handling errors during the execution of a node.
  *
- * @property executionInfo The execution information containing parentId and current execution path;
- * @property node The node where the error occurred.
- * @property context The stage context in which the node experienced the error.
- * @property input The input data for the node execution.
+ * @property input The node input data;
  * @property inputType [TypeToken] representing the type of the [input].
  * @property error The exception or error that occurred during node execution.
  */
 public data class NodeExecutionFailedContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
-    val node: AIAgentNodeBase<*, *>,
-    val context: AIAgentGraphContextBase,
-    val input: Any?,
-    val inputType: TypeToken,
-    val error: Throwable
+    override val context: AIAgentGraphContextBase,
+    override val node: AIAgentNodeBase<*, *>,
+    public val input: Any?,
+    public val inputType: TypeToken,
+    public val error: Throwable
 ) : NodeExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.NodeExecutionFailed
 }

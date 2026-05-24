@@ -4,9 +4,9 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy
+import ai.koog.agents.core.planner.PlannerAIAgent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.planner.AIAgentPlannerStrategy
-import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -134,7 +134,7 @@ public fun <Input, Output> AIAgent(
 public fun <Input, Output> AIAgent(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfig,
-    strategy: AIAgentPlannerStrategy<Input, Output, *>,
+    strategy: AIAgentPlannerStrategy<Input, Output>,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     clock: KoogClock = KoogClock.System,
@@ -294,7 +294,7 @@ public fun <Input, Output> AIAgent(
 public fun <Input, Output> AIAgent(
     promptExecutor: PromptExecutor,
     llmModel: LLModel,
-    strategy: AIAgentPlannerStrategy<Input, Output, *>,
+    strategy: AIAgentPlannerStrategy<Input, Output>,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     systemPrompt: String? = null,
     temperature: Double? = null,

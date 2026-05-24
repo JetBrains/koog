@@ -6,6 +6,7 @@ import ai.koog.agents.features.opentelemetry.integration.TraceStructureTestBase
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 
@@ -90,11 +91,9 @@ class WeaveTraceStructureTest :
                 Message.System(systemPrompt, RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())),
                 Message.User(userPrompt, RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())),
                 OpenTelemetryTestAPI.toolCallMessage(toolCallId, TestGetWeatherTool.name, "{\"location\":\"Paris\"}"),
-                Message.Tool.Result(
-                    toolCallId,
-                    TestGetWeatherTool.name,
-                    toolResponse,
-                    RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())
+                Message.User(
+                    parts = listOf(MessagePart.Tool.Result(id = toolCallId, tool = TestGetWeatherTool.name, output = toolResponse)),
+                    metaInfo = RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())
                 )
             )
         )
@@ -140,7 +139,7 @@ class WeaveTraceStructureTest :
             "gen_ai.prompt.2.tool_calls.0.id" to toolCallId,
             "gen_ai.prompt.2.tool_calls.0.type" to "function",
             "gen_ai.prompt.2.tool_calls.0.function" to "{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"}",
-            "gen_ai.prompt.3.role" to Message.Role.Tool.name.lowercase(),
+            "gen_ai.prompt.3.role" to "tool",
             "gen_ai.prompt.3.content" to toolResponse,
             "gen_ai.prompt.3.tool_call_id" to toolCallId,
 
@@ -234,11 +233,9 @@ class WeaveTraceStructureTest :
                     TestGetWeatherTool.name,
                     "{\"location\":\"Paris\"}"
                 ),
-                Message.Tool.Result(
-                    toolCallId,
-                    TestGetWeatherTool.name,
-                    toolResponse,
-                    RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())
+                Message.User(
+                    parts = listOf(MessagePart.Tool.Result(id = toolCallId, tool = TestGetWeatherTool.name, output = toolResponse)),
+                    metaInfo = RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())
                 )
             )
         )
@@ -288,7 +285,7 @@ class WeaveTraceStructureTest :
             "gen_ai.prompt.2.tool_calls.0.id" to toolCallId,
             "gen_ai.prompt.2.tool_calls.0.type" to "function",
             "gen_ai.prompt.2.tool_calls.0.function" to "{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"}",
-            "gen_ai.prompt.3.role" to Message.Role.Tool.name.lowercase(),
+            "gen_ai.prompt.3.role" to "tool",
             "gen_ai.prompt.3.content" to toolResponse,
             "gen_ai.prompt.3.tool_call_id" to toolCallId,
 

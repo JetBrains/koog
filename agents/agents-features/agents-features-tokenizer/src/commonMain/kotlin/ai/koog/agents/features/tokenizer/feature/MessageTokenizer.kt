@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
@@ -53,7 +54,7 @@ public class MessageTokenizer(public val promptTokenizer: PromptTokenizer) {
         AIAgentPlannerFeature<MessageTokenizerConfig, MessageTokenizer> {
 
         override val key: AIAgentStorageKey<MessageTokenizer> =
-            AIAgentStorageKey("agents-features-tracing")
+            createStorageKey<MessageTokenizer>("agents-features-tracing")
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig,

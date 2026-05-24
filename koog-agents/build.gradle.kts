@@ -1,8 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 import ai.koog.gradle.xcframework.XCFrameworkConfig.configureFrameworkExportsIfRequested
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -55,18 +53,34 @@ val excluded = setOf(
     ":agents:agents-features:agents-features-longterm-memory-aws", // Optional AWS LongTermMemory provider
 
     project.path, // the current project should not depend on itself
+    ":koog-agents-additions"
 )
 
+val betaModules = setOf(
+    ":agents:agents-cli",
+    ":agents:agents-features:agents-features-longterm-memory",
+    ":agents:agents-mcp",
+    ":agents:agents-planner",
+    ":prompt:prompt-cache:prompt-cache-redis",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-client",
+    ":prompt:prompt-executor:prompt-executor-llms-all",
+    ":rag:rag-vector"
+)
+
+// Non-beta modules ONLY:
 val included = setOf(
     ":agents:agents-core",
     ":agents:agents-features:agents-features-event-handler",
-    ":agents:agents-features:agents-features-longterm-memory",
     ":agents:agents-features:agents-features-memory",
     ":agents:agents-features:agents-features-opentelemetry",
     ":agents:agents-features:agents-features-trace",
     ":agents:agents-features:agents-features-tokenizer",
     ":agents:agents-features:agents-features-snapshot",
-    ":agents:agents-mcp",
     ":agents:agents-mcp-metadata",
     ":agents:agents-tools",
     ":agents:agents-utils",
@@ -74,20 +88,13 @@ val included = setOf(
     ":embeddings:embeddings-llm",
     ":prompt:prompt-cache:prompt-cache-files",
     ":prompt:prompt-cache:prompt-cache-model",
-    ":prompt:prompt-cache:prompt-cache-redis",
     ":prompt:prompt-executor:prompt-executor-cached",
     ":prompt:prompt-executor:prompt-executor-clients",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
-    ":prompt:prompt-executor:prompt-executor-llms-all",
     ":prompt:prompt-executor:prompt-executor-model",
     ":prompt:prompt-llm",
     ":prompt:prompt-markdown",
@@ -96,17 +103,25 @@ val included = setOf(
     ":prompt:prompt-structure",
     ":prompt:prompt-tokenizer",
     ":prompt:prompt-xml",
-    ":rag:rag-base",
-    ":rag:rag-vector",
     ":http-client:http-client-core",
     ":http-client:http-client-ktor",
     ":serialization:serialization-core",
+    ":rag:rag-base",
     ":utils",
+)
+
+// Modules that do not publish a wasmJs artifact. They are filtered out of the
+// commonMain api auto-loop and declared on a local `nonWasmJsMain` intermediate
+// source set that all non-wasmJs leaf targets inherit from, so that the
+// koog-agents-wasm-js publication does not reference missing coordinates.
+val wasmJsExcluded = setOf(
+    ":agents:agents-features:agents-features-opentelemetry",
 )
 
 kotlin {
     val projects = rootProject.subprojects
         .filterNot { it.path in excluded }
+        .filterNot { it.path in betaModules }
         .filter { it.buildFile.exists() }
     val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
 
@@ -143,26 +158,46 @@ kotlin {
                     }
                 }
 
-                projects.forEach {
+                projects.filterNot { it.path in wasmJsExcluded }.forEach {
                     api(project(it.path))
                 }
             }
         }
 
-        androidMain.dependencies {
-            api(libs.ktor.client.okhttp)
+        // Source set holding dependencies that are valid on every target except wasmJs.
+        // 'jvmCommonMain', 'jsMain', and 'appleMain' pick these up.
+        // 'wasmJsMain' keeps its existing parent (nonJvmCommonMain, commonMain) and never sees them.
+        val nonWasmJsMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                wasmJsExcluded.forEach { api(project(it)) }
+            }
+        }
+
+        jvmCommonMain {
+            dependsOn(nonWasmJsMain)
         }
 
         jvmMain.dependencies {
             api(libs.ktor.client.apache5)
         }
 
-        appleMain.dependencies {
-            api(libs.ktor.client.darwin)
+        androidMain.dependencies {
+            api(libs.ktor.client.okhttp)
         }
 
-        jsMain.dependencies {
-            api(libs.ktor.client.js)
+        appleMain {
+            dependsOn(nonWasmJsMain)
+            dependencies {
+                api(libs.ktor.client.darwin)
+            }
+        }
+
+        jsMain {
+            dependsOn(nonWasmJsMain)
+            dependencies {
+                api(libs.ktor.client.js)
+            }
         }
 
         wasmJsMain.dependencies {

@@ -11,7 +11,7 @@ fun submitRun(
 ): Future<String> {
     return sharedExecutor.submit<String> {
         try {
-            agent.javaNonSuspendRun("hello", null, sharedExecutor)
+            agent.runBlocking("hello", null)
         } catch (e: ExecutionException) {
             throw e.cause ?: e
         }

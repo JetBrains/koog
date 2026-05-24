@@ -4,7 +4,7 @@ import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.prompt.llm.LLModel
@@ -62,7 +62,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
 @OptIn(InternalAgentToolsApi::class)
 @AIAgentBuilderDslMarker
 public inline fun <reified Input, reified Output> subgraphWithTask(
-    tools: List<Tool<*, *>>,
+    tools: List<ToolBase<*, *>>,
     finishToolFunction: KFunction<Output>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,

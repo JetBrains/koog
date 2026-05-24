@@ -141,7 +141,7 @@ is eligible for caching.
     import ai.koog.prompt.executor.clients.anthropic.AnthropicCacheControl
     import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-    import ai.koog.prompt.message.ContentPart
+    import ai.koog.prompt.message.MessagePart
     import kotlinx.coroutines.runBlocking
 
     fun main() = runBlocking {
@@ -155,8 +155,8 @@ is eligible for caching.
     val prompt = prompt("conversation") {
         system("You are a helpful assistant.")
         // Cache after a large user message (e.g. document content)
-        user(listOf(ContentPart.Text("Here is a long document: ...")), AnthropicCacheControl.Default)
-        assistant("I have read the document.", AnthropicCacheControl.Default)
+        user(listOf(MessagePart.Text("Here is a long document: ...", cacheControl = AnthropicCacheControl.Default)))
+        assistant(listOf(MessagePart.Text("I have read the document.")))
         user("Summarize it.")
     }
 
@@ -379,6 +379,7 @@ immediately after the annotated element.
     import ai.koog.prompt.executor.clients.bedrock.BedrockModels
     import ai.koog.prompt.executor.clients.bedrock.BedrockRegions
     import ai.koog.prompt.executor.clients.bedrock.StaticBearerTokenProvider
+    import ai.koog.prompt.message.MessagePart
     import kotlinx.coroutines.runBlocking
     
     fun main() = runBlocking {
@@ -396,7 +397,7 @@ immediately after the annotated element.
         system("You are a helpful assistant.")
         // Cache after the large context message
         user("Here is the document: ...", BedrockCacheControl.FiveMinutes)
-        assistant("I have read the document.", BedrockCacheControl.Default)
+        assistant(listOf(MessagePart.Text("I have read the document.")))
         user("Summarize it.")
     }
 

@@ -1,3 +1,194 @@
+# 1.0.0
+> Published 21 May 2026
+
+This is the **first stable release of Koog**. The 1.0 line establishes a long-term-supported surface across the framework: modules are split into stable and beta streams so production code can pin to APIs that won't break without a deprecation cycle, every previously deprecated API has been removed, and the graph DSL's node names are finalized. Alongside that, 1.0 lands a redesigned Java interop layer, decouples HTTP transport from Ktor, brings OpenTelemetry to Kotlin Multiplatform, and adds Anthropic prompt caching.
+
+## Major Features
+
+**Stable / Beta module split**
+- Modules now ship under two streams — **stable** and **beta** — so production code can pin to APIs that won't break without a deprecation cycle (#2011, #2000).
+- All previously `@Deprecated` APIs have been removed across event handlers, pipeline, agent/strategy/DSL, tools, persistence, executors, MCP, models, Spring autoconfig, and RAG utilities. The 1.0 line carries no deprecated surface (#2001).
+
+**Java interop, redesigned**
+- **Uniform blocking API**: All Java-facing entry points follow one pattern — `xxxBlocking` in Kotlin, plain `xxx` from Java. Explicit `ExecutorService` / `Executor` parameters are gone; the agent's configured dispatcher is used instead (#2005).
+- **Deadlock-free reentrant calls**: Kotlin → Java → Kotlin call chains on a single-threaded executor no longer deadlock — the reentrant dispatch is detected and skipped (#1945, KG-750).
+
+**Graph DSL, finalized**
+- The `String`-input nodes (`nodeLLMRequest`, `nodeLLMRequestOnlyCallingTools`, `nodeLLMRequestWithoutTools`, `nodeLLMRequestForceOneTool`, `nodeLLMRequestMultipleChoices`, `nodeLLMRequestStreaming`, `nodeLLMRequestStructured`) keep their original names; the `Message.User`-input variants now use a `nodeLLMSendMessage*` prefix.
+- `nodeExecuteTools` returns `ReceivedToolResults` directly — connect it to `nodeLLMSendMessage` / `nodeLLMSendToolResults*` instead of relying on the old auto-writeback behavior.
+- New `nodeLLMModerateText(name, moderatingModel, includeCurrentPrompt)` accepts plain `String` input alongside the existing `nodeLLMModerateMessage(Message.User)` (#2035).
+
+**Memory and persistence**
+- **`AIAgentStorage` in checkpoints**: Custom key-value data is now saved and restored alongside agent checkpoints; a new `runFromCheckpoint` API restores execution without requiring the Persistence feature (#1998, #1828).
+- **Persistence for planner agents**: Planner-based agents now support checkpoint/restore (#1786, KG-673).
+- **Amazon Bedrock AgentCore as `LongTermMemory`**: Managed vector-memory backend on Bedrock (#1855, KG-603).
+- **`LongTermMemory` reliability**: Storage errors no longer silently swallowed — new `FailurePolicy` plus a fix for double-ingestion during active sessions. Feature promoted from experimental (#1963).
+
+**HTTP transport, decoupled from Ktor**
+- **Pluggable HTTP factory**: LLM clients now take a `KoogHttpClient.Factory` instead of a Ktor `HttpClient`. A Ktor-backed default is auto-discovered on JVM/Android; users can plug in Java's HTTP client, OkHttp, or Spring's `RestClient` without touching Koog internals (#2006, #1948, KG-821, KG-818).
+- **Ollama on `KoogHttpClient`**: Ollama now routes streaming, headers, and endpoint config through the same abstraction as every other provider (#1993, KG-833).
+
+**OpenTelemetry on every target**
+- **Multiplatform OpenTelemetry**: Langfuse, Weave, and DataDog now run on every Koog target via a Ktor-based OTLP/JSON exporter, not just JVM (#1942, KG-785). Please note: the WasmJS target is not included for now (please see KG-846 for more details).
+- **Built-in metrics**: Agents emit standard `gen_ai.client.token.usage`, `gen_ai.client.operation.duration`, and a custom `gen_ai.client.tool.count` metric — plug straight into existing Prometheus/Grafana stacks (#1381, KG-136).
+
+**Anthropic prompt caching**
+- **Automatic and explicit cache control**: End-to-end caching support — automatic on requests, explicit breakpoints on messages, cache tokens in usage metrics. Cuts cost and latency for agents that re-send long system prompts (#1812, KG-707).
+
+**New providers**
+- **LiteRT LLM client**: New client for running Google's LiteRT models locally (#1980).
+- **Oracle Database `ChatHistoryProvider`** for Oracle-standardized deployments (#1851, KG-772).
+
+## Improvements
+
+- **New models**: Anthropic Opus 4.7 (#1861), OpenAI GPT-5.5 and GPT-5.5 Pro (#1913), DeepSeek V4 Flash and Pro (#1914), additional Bedrock models — Kimi K 2.5, MiniMax 2.5, Gemma 3, GPT OSS (#1902), and Ollama gpt-oss / qwen3.5 (#1292).
+- **`ToolCallMetadata` side channel**: Tools can now receive per-call context (trace IDs, correlation IDs, feature flags, the live `AIAgentContext`) without polluting their LLM-visible argument schema. Features can contribute metadata via `AIAgentPipeline.provideToolCallMetadata`, with caller-supplied values winning on key collision (#1886, #1777).
+- **Planners moved to a dedicated module**: `GOAPPlanner` and `SimpleLLMPlanner` now live in a separate `agents:agents-planners` module, and a simpler `AIAgentPlannerStrategy.create(name, planner)` factory replaces the old builder. Agents that don't use planning no longer pay the dependency cost (#1997).
+- **MCP SDK upgrade with Streamable HTTP**: MCP kotlin-sdk upgraded from 0.8.1 to 0.11.1; Streamable HTTP is now the primary transport for both MCP client and server (#1870, KG-792, KG-756, KG-755, KG-49).
+- **`RetrieveFactsFromHistory` extracted from AgentMemory**: This `HistoryCompressionStrategy` now lives outside the AgentMemory feature so it can be used independently. The old `AgentMemory` feature is removed in favor of the more capable `LongTermMemory` (#1927).
+- **OpenTelemetry GenAI semantic conventions update**: Aligned with the latest spec — content is carried via `gen_ai.input.messages` / `gen_ai.output.messages` attributes instead of deprecated per-message events; moderation results moved to a Koog custom attribute `koog.moderation.result` (#1967, KG-826).
+- **`KoogClock` migration**: Internal time APIs now use a `KoogClock` abstraction instead of `kotlin.time.Clock`, enabling virtual-time testing and consistent clock behavior across platforms (#1925).
+- **Minimum Java version raised to 17**: Aligns the runtime requirement with documentation and modern toolchain expectations (#1931).
+- **Factory functions replace `invoke` constructors**: `AIAgent`, `AIAgentService`, `ToolRegistry`, `RollbackToolRegistry`, and `AIAgentPlannerStrategy` now use top-level factory functions. Usage syntax (`A(...)`) is unchanged for normal callers (#1882).
+- **Agent pipeline cleanup**: Pipeline event contexts now expose the `AIAgent` instance directly instead of separate `agentId` / `config` fields; parameter order is harmonized across pipeline interfaces (#1991, KG-807).
+
+## Bug Fixes
+
+Highlights below — see the `1.0.0-preview` entry for the full per-PR list.
+
+- **Streaming hardening across providers** (#1844, #1775, #1887, #1237, #1888, KG-811, #1884, #1878, #2012, #1978, #1868, #1865, #1866, #1369, KG-626): Ollama (`Flow invariant is violated` from cross-dispatcher emission, `text/plain` JSON responses, tool-call-before-text ordering), OpenAI (`additional_properties` leak under `JsonNamingStrategy.SnakeCase`, decode failures wrapped in `LLMClientException`, keepalive frames honored), Google (reasoning vs. plain text in streaming), and OpenRouter (tool calls during streaming) all now behave consistently end-to-end.
+- **Error propagation through the pipeline** (#1918, KG-815, #1548, KG-704, #2037, KG-845, #2024, KG-844): Pipeline failure hooks now receive the original `Throwable` instead of a stringified `AIAgentError` — fixes a latent `error.type` mislabel in OpenTelemetry spans, and reflective tool failures surface the real exception message instead of `"Unknown error"`. `LLMCallFailedContext.eventType` now reports `LLMCallFailed` (was `LLMCallStarting`); `LLMCallFailedEvent` / `LLMStreaming` / `SubgraphExecution` are registered for remote event serialization.
+- **OpenTelemetry stability** (#1435, KG-675, #1969, KG-808, #1547, KG-703, #1856, #1850): Failed LLM requests no longer crash the feature — failures are signaled via span ERROR status and `error.type`. `SpanAdapter.onBeforeSpanFinished` now runs on fully populated spans, so Langfuse and Weave adapters see the same data the SDK exports. Langfuse trace-level attributes (`langfuse.environment`, etc.) are set on every span, not just `invoke_agent`. The hardcoded JVM shutdown hook is gone — opt in via `setShutdownOnAgentClose` (default `false`).
+- **Persistence & subgraph correctness** (#2044, #1971, #2039): `Persistence.runFromCheckpoint` skips tools that are no longer registered instead of throwing. `subgraphWithTask` / `subtask` no longer drop tool results when the finish tool is called alongside other tools. `PromptAugmenter` implementations (`SystemPromptAugmenter`, `UserPromptAugmenter`, `AgentcorePromptAugmenter`) append a new `MessagePart` to the existing `Message` after the `Message` / `MessagePart` refactor.
+- **Tool / concurrency / security** (#1883, #1881, #1871, #1965): `@Tool(customName = ...)` is honored in `ToolSet.asTools()`. `withPrompt` uses a write lock (was read lock — could race with concurrent prompt mutations). Anthropic API key is masked in Spring Boot autoconfiguration logs (security fix).
+
+## Breaking Changes
+
+The 1.0 release is the stable baseline. Highlights below — for the full per-API list (constructor signatures, parameter renames, removed members), see the `1.0.0-preview` entry.
+
+- **All `@Deprecated` APIs removed** (#2001): no deprecated members survive into 1.0. Includes a typo-spelling fix `Persistency*` → `Persistence*` across the storage providers (update imports). Old `AIAgentPipeline` / `AIAgentPipelineImpl` are gone — use `AIAgentPipelineAPI` / `AIAgentGraphPipeline` / `AIAgentPlannerPipeline`. Retired models: `AnthropicModels.Haiku_3`, `BedrockModels.AnthropicClaude3Haiku`, and deprecated Google / DeepSeek entries. Companion `invoke` constructors for `AIAgent`, `AIAgentService`, `ToolRegistry`, `RollbackToolRegistry`, `AIAgentPlannerStrategy` are also gone (#1882) — normal `A(...)` syntax is unchanged.
+- **Graph DSL node renames** (#2035): `String`-input nodes are `nodeLLMRequest*` / `nodeLLMModerate*`; `Message.User`-input variants are `nodeLLMSendMessage*` / `nodeLLMSendToolResults*`. `nodeExecuteTools` now returns `ReceivedToolResults` directly (previously `nodeExecuteToolsAndGetResults`); the old auto-writeback `nodeExecuteTools` is removed.
+- **Java blocking API redesign** (#2005): uniform `xxxBlocking` in Kotlin, plain `xxx` from Java via `@JvmName`, so most Java source code requires no changes. `ExecutorService` / `Executor` parameters are removed from blocking wrappers — the agent's own dispatcher is used instead (also drops `SubtaskBuilder.withExecutorService()` and the `executorService` property). Renames cover `AIAgent.javaNonSuspendRun` → `runBlocking`, `FeatureMessageProcessor.javaNonSuspend*` → `*Blocking`, `AIAgentService` / `PromptExecutor` / `LLMClient` Java overloads → `*Blocking`, `NonSuspendAIAgentStrategy` → `AIAgentStrategyBlocking`, `NonSuspendAIAgentFunctionalStrategy` → `AIAgentFunctionalStrategyBlocking`.
+- **HTTP transport decoupled from Ktor** (#2006): LLM client constructors and `PromptExecutor.builder().{openAI, anthropic, google, deepseek, mistral, ollama, openRouter, dashscope}(...)` no longer accept a Ktor `HttpClient` — pass a `KoogHttpClient.Factory` instead, or omit for the auto-discovered default. `prompt-executor-llms-all` no longer leaks Ktor types transitively (depend on `http-client-ktor` directly if you used `KtorKoogHttpClient`). Java synthetic class `SimplePromptExecutorsKt` is renamed to `SimplePromptExecutors`. `KoogHttpClient` implementations must implement the new `lines()` method for non-SSE line streaming and accept per-request `headers` parameters (#1993, KG-833); `OllamaClient.baseUrl` property removed — endpoint configuration is delegated to the supplied `KoogHttpClient`.
+- **OpenTelemetry Multiplatform migration** (#1942, KG-785, #1967, KG-826): `addSpanExporter`, `addMetricExporter`, `addMetricFilter` are now JVM-only extensions on `OpenTelemetryConfigJvm` (JVM users must update imports). `addResourceAttributes` signature changes from `io.opentelemetry.api.common.Attributes` to `Map<String, Any>`. The `SpanEndStatus` wrapper is removed — use `StatusData` directly. The `ai.koog.agents.features.opentelemetry.event` package and all event APIs on `GenAIAgentSpan` (`events`, `addEvent`, `addEvents`, `removeEvent`) are removed; the `gen_ai.system` attribute and `moderation.result` span event are no longer emitted.
+- **Planners moved to a new module** (#1997): GOAP and LLM-based planner usage requires an explicit `agents:agents-planners` dependency. `AIAgentPlanner` and `JavaAIAgentPlanner` gain two abstract methods (`initializeState`, `provideOutput`); `AIAgentPlannerStrategy.builder()` / `.goap()` are removed in favor of `AIAgentPlannerStrategy(name, planner)` / `.create(name, planner)`.
+- **Memory & persistence API changes**: `AgentMemory` feature removed — use `LongTermMemory` instead; `RetrieveFactsFromHistory` moved out of `agents-features-memory` (#1927). `LongTermMemory` renames: `QueryExtractor` → `SearchQueryProvider`, `ExtractionStrategy` → `DocumentExtractor`, `IngestionTiming` removed (#1963). `AIAgentStorage`: `AIAgentStorageKey` equality is now name-based; no-arg constructor replaced by `AIAgentStorage(serializer)`; `toMap()` removed (use `toSerializedMap()` / `putAll(other)`); `runFromCheckpoint`'s `agentInput` renamed to `input` (#1998). `AgentCheckpointData` fields `nodePath`, `lastInput`, `lastOutput` removed — they now live inside `properties: JSONObject` (#1786).
+- **`Prompt` class moved out of `dsl`** (#2022): `ai.koog.prompt.dsl.Prompt` → `ai.koog.prompt.Prompt`. The `prompt { ... }` DSL builder stays in `ai.koog.prompt.dsl` — only the type import changes.
+- **`KoogClock` replaces `kotlin.time.Clock`** (#1925) in all APIs that previously took a `Clock` parameter.
+- **Anthropic prompt caching**: deprecated `user` message builders removed to make room for the `cacheControl` variant (#1812).
+- **Minimum Java version: 17** (#1931).
+- **Dependency ABI cleanup** (#2007): `oshai.kotlin.logging` no longer in `:prompt-executor-clients` public API (consumers must add their own `implementation(libs.oshai.kotlin.logging)`); `oshai-logging` upgraded `7.0.7` → `8.0.01`; `ktor.server.sse` no longer transitively exposed by `:agents-features-tokenizer` / `:agents-features-trace`; `android.useAndroidX=true` is now required.
+
+# 1.0.0-preview
+> Published 15 May 2026
+
+This release marks Koog's transition toward a stable 1.0 API. The library is now split into "stable" and "beta" modules, so production code can pin to APIs that won't break unexpectedly while experimental features continue to evolve. Alongside that, this release lands a redesigned Java interop layer, decouples HTTP transport from Ktor, brings OpenTelemetry to Kotlin Multiplatform, and adds Anthropic prompt caching.
+
+## Major Features
+
+**Stable / Beta module split**
+- **Versioning by stability**: Modules now ship under two streams — stable (`1.0.0-preview`) and beta (`1.0.0-preview-beta`) — so production code can pin to APIs that won't break without a deprecation cycle (#2011, #2000).
+
+**Java interop, redesigned**
+- **Uniform blocking API**: All Java-facing entry points now follow one pattern — `xxxBlocking` in Kotlin, plain `xxx` from Java. Explicit `ExecutorService` / `Executor` parameters are gone; the agent's configured dispatcher is used instead (#2005).
+- **Deadlock-free reentrant calls**: Kotlin → Java → Kotlin call chains on a single-threaded executor no longer deadlock — the reentrant dispatch is detected and skipped (#1945, KG-750).
+
+**HTTP transport, decoupled from Ktor**
+- **Pluggable HTTP factory**: LLM clients now take a `KoogHttpClient.Factory` instead of a Ktor `HttpClient`. A Ktor-backed default is auto-discovered on JVM/Android; users can plug in Java's HTTP client, OkHttp, or Spring's `RestClient` without touching Koog internals (#2006, #1948, KG-821, KG-818).
+- **Ollama on `KoogHttpClient`**: Ollama now routes streaming, headers, and endpoint config through the same abstraction as every other provider (#1993, KG-833).
+
+**OpenTelemetry on every target**
+- **Multiplatform OpenTelemetry**: Langfuse, Weave, and DataDog now run on every Koog target via a Ktor-based OTLP/JSON exporter, not just JVM (#1942, KG-785).
+- **Built-in metrics**: Agents emit standard `gen_ai.client.token.usage`, `gen_ai.client.operation.duration`, and a custom `gen_ai.client.tool.count` metric — plug straight into existing Prometheus/Grafana stacks (#1381, KG-136).
+
+**Anthropic prompt caching**
+- **Automatic and explicit cache control**: End-to-end caching support — automatic on requests, explicit breakpoints on messages, cache tokens in usage metrics. Cuts cost and latency for agents that re-send long system prompts (#1812, KG-707).
+
+**Memory and persistence**
+- **`AIAgentStorage` in checkpoints**: Custom key-value data is now saved and restored alongside agent checkpoints; a new `runFromCheckpoint` API restores execution without requiring the Persistence feature (#1998, #1828).
+- **Persistence for planner agents**: Planner-based agents now support checkpoint/restore (#1786, KG-673).
+- **Amazon Bedrock AgentCore as `LongTermMemory`**: Managed vector-memory backend on Bedrock (#1855, KG-603).
+- **`LongTermMemory` reliability**: Storage errors no longer silently swallowed — new `FailurePolicy` plus a fix for double-ingestion during active sessions. Feature promoted from experimental (#1963).
+
+**New providers**
+- **LiteRT LLM client**: New client for running Google's LiteRT models locally (#1980).
+- **Oracle Database `ChatHistoryProvider`** for Oracle-standardized deployments (#1851, KG-772).
+
+## Improvements
+
+- **New models**: Anthropic Opus 4.7 (#1861), OpenAI GPT-5.5 and GPT-5.5 Pro (#1913), DeepSeek V4 Flash and Pro (#1914), additional Bedrock models — Kimi K 2.5, MiniMax 2.5, Gemma 3, GPT OSS (#1902), and Ollama gpt-oss / qwen3.5 (#1292).
+- **`ToolCallMetadata` side channel**: Tools can now receive per-call context (trace IDs, correlation IDs, feature flags, the live `AIAgentContext`) without polluting their LLM-visible argument schema. Features can contribute metadata via `AIAgentPipeline.provideToolCallMetadata`, with caller-supplied values winning on key collision (#1886, #1777).
+- **Planners moved to a dedicated module**: `GOAPPlanner` and `SimpleLLMPlanner` now live in a separate `agents:agents-planners` module, and a simpler `AIAgentPlannerStrategy.create(name, planner)` factory replaces the old builder. Agents that don't use planning no longer pay the dependency cost (#1997).
+- **MCP SDK upgrade with Streamable HTTP**: MCP kotlin-sdk upgraded from 0.8.1 to 0.11.1; Streamable HTTP is now the primary transport for both MCP client and server (#1870, KG-792, KG-756, KG-755, KG-49).
+- **`RetrieveFactsFromHistory` extracted from AgentMemory**: This `HistoryCompressionStrategy` now lives outside the AgentMemory feature so it can be used independently. The old `AgentMemory` feature is removed in favor of the more capable `LongTermMemory` (#1927).
+- **OpenTelemetry GenAI semantic conventions update**: Aligned with the latest spec — content is carried via `gen_ai.input.messages` / `gen_ai.output.messages` attributes instead of deprecated per-message events; moderation results moved to a Koog custom attribute `koog.moderation.result` (#1967, KG-826).
+- **`KoogClock` migration**: Internal time APIs now use a `KoogClock` abstraction instead of `kotlin.time.Clock`, enabling virtual-time testing and consistent clock behavior across platforms (#1925).
+- **Ollama `think` parameter from prompt params**: The `think` flag is now sourced from `prompt.params` instead of being hard-coded, so callers can control reasoning behavior per prompt (#1615, #1877, KG-736).
+- **`SearchRequest` interface in `LongTermMemory`**: Replaces the concrete `SimilaritySearchRequest` so storages can implement keyword, hybrid, or other search types (#1864).
+- **Minimum Java version raised to 17**: Aligns the runtime requirement with documentation and modern toolchain expectations (#1931).
+- **Factory functions replace `invoke` constructors**: `AIAgent`, `AIAgentService`, `ToolRegistry`, `RollbackToolRegistry`, and `AIAgentPlannerStrategy` now use top-level factory functions instead of companion-object `invoke` operators. Usage syntax (`A(...)`) is unchanged for normal callers; only unusual forms like `A.Companion.invoke()` are affected (#1882).
+- **Agent pipeline cleanup**: Pipeline event contexts now expose the `AIAgent` instance directly instead of separate `agentId` / `config` fields, parameter order is harmonized, and KDoc style is unified across pipeline interfaces (#1991, KG-807).
+- **Locks and exception utilities consolidated**: Duplicate `RWLock` code moved into a dedicated `agents-utils` module (#1893, KG-812).
+
+## Bug Fixes
+
+- **Spring Boot: Anthropic API key masked in autoconfiguration logs**: Previously the key was emitted in plaintext during application startup. Security fix (#1965).
+- **Ollama streaming `Flow invariant is violated`**: `buildStreamFrameFlow` now uses `channelFlow` so emission works across the dispatched contexts Ktor's streaming HTTP introduces. Most visibly fixes Ollama streaming (#1844, #1775).
+- **Ollama: `text/plain` responses parsed as JSON**: Ollama sometimes returns valid JSON with `Content-Type: text/plain`. The client now registers JSON decoding for that content type too (#1887, #1237).
+- **Ollama: tool calls returned before assistant text**: When the model emits both a tool call and a text message, the tool call now comes first — matching OpenAI behavior — so built-in strategies don't terminate prematurely (#1888, KG-811).
+- **Ollama batch embeddings**: Implementation now handles both current and legacy Ollama API response formats (#1885, #1874).
+- **Ollama embeddings implementation**: Aligned with the official Ollama embeddings API (#1854).
+- **OpenAI: `additional_properties` no longer leaks into requests**: `AdditionalPropertiesFlatteningSerializer` now recognizes both camelCase and snake_case forms, so the `additionalProperties` map is correctly stripped under `JsonNamingStrategy.SnakeCase` and no longer trips OpenAI's 400 `unknown_parameter` error (#1884, #1878).
+- **OpenAI: response decoding exceptions wrapped**: `AbstractOpenAILLMClient` now wraps decode failures in `LLMClientException` instead of letting arbitrary exception types escape (#2012, #1978).
+- **OpenAI / Google: keepalive and reasoning handling in streaming responses**: OpenAI streaming now honors keepalive events; Google streaming now correctly distinguishes reasoning content from plain text (#1868, #1865, #1866).
+- **OpenRouter: streaming with tool calls no longer errors** (#1369, KG-626).
+- **Streaming: blank tool call IDs processed correctly** (#1915, #1900).
+- **Streaming: empty text complete frames filtered out** (#1924).
+- **Reflective tool failures preserve the original exception message**: Previously the `InvocationTargetException` wrapper hid the real error so agents received `"Unknown error"` — now the underlying cause is surfaced (#1548, KG-704).
+- **`@Tool(customName = ...)` honored in `ToolSet.asTools()`**: Custom tool names declared via the `@Tool` annotation are now respected when registering via `tools(ToolSet)` (#1883, #1881).
+- **`AIAgentError` carries a `type` parameter**: Adds the exception type to the error data class so downstream consumers can branch on it (#1917, KG-814).
+- **Tool/agent event contexts carry the original `Throwable`**: Pipeline failure hooks (`onToolValidationFailed`, `onToolCallFailed`, etc.) now receive a real `Throwable` instead of a stringified `AIAgentError`, preserving full exception details and fixing a latent `error.type` mislabel in OpenTelemetry spans (#1918, KG-815).
+- **OpenTelemetry: failed LLM requests no longer crash the feature**: Failures are signalled via span ERROR status and `error.type` attribute instead of the non-spec `finish_reasons=[error]` (#1435, KG-675).
+- **OpenTelemetry: span adapter hooks run on fully populated spans**: `SpanAdapter.onBeforeSpanFinished` now fires after all attributes are set, so Langfuse and Weave adapters see the same data the SDK exports (#1969, KG-808).
+- **OpenTelemetry: Langfuse trace attributes set on every span**: Previously only `invoke_agent` carried trace-level attributes, so settings like `langfuse.environment` were ignored on most spans (#1547, KG-703).
+- **OpenTelemetry: Java API for the feature works correctly** (#1992, KG-835).
+- **OpenTelemetry: configurable shutdown hook**: Removed the hardcoded JVM shutdown hook that caused `IllegalStateException` during graceful drain windows. A new `setShutdownOnAgentClose` opt-in (default `false`) replaces the previous always-on behavior (#1856, #1850).
+- **`subgraphWithTask` / `subtask`: missing tool results when finish tool is called alongside other tools**: When the model requests other tools together with the finish tool, results from those tools are now appended to the prompt so the model doesn't see orphan tool calls (#1971).
+- **`RetryingLLMClient` JSON schema generators**: The wrapper no longer drops the underlying client's `JsonSchemaGenerator` implementation on retry (#1781).
+- **Tool raw result preserved**: Added `resultObject` to `ReceivedToolResult` so tools producing structured intermediate results expose them to downstream code (#2004).
+- **`withPrompt` uses a write lock**: Previously used a read lock and could race with concurrent prompt mutations (#1871).
+- **LiteRT iOS stub + `FactRetrieval` varargs constructor restored** (#2008).
+- **Gemini 2.0 Flash and Flash-Lite advertise `fullCapabilities`**: These models support structured output and now declare it (#1191).
+- **Llama 3 model IDs on OpenRouter**: Corrected the provider prefix from `meta` to `meta-llama` so the models actually resolve (#1346).
+- **`LLAMA4_SCOUT` model definition**: Fixed `LLAMA4_SCOUT` which was incorrectly pointing to base `LLAMA4` (#1155).
+
+## Breaking Changes
+
+This is the 1.0 preview — breaking changes are intentional and grouped here so migration is straightforward.
+
+- **LLM client constructors**: The `(apiKey, settings, baseClient: HttpClient, ...)` constructor is removed from all 8 HTTP-based LLM clients. Use the factory-based constructor or, on JVM, the convenience top-level function. The `baseClient: HttpClient` parameter is also removed from `PromptExecutor.builder().{openAI, anthropic, google, deepseek, mistral, ollama, openRouter, dashscope}(...)`; pass an optional `httpClientFactory: KoogHttpClient.Factory` instead, or omit it for the default. The deprecated `KoogHttpClient.Companion.fromKtorClient(... baseUrl ...)` overload is also removed (#2006).
+- **`prompt-executor-llms-all` consumers**: Ktor types no longer leak onto the compile classpath transitively — add an explicit `http-client-ktor` dependency if you need `KtorKoogHttpClient` / `KtorKoogHttpClient.Factory` directly. The Java synthetic class `SimplePromptExecutorsKt` is renamed to `SimplePromptExecutors` (update `import static` lines) (#2006).
+- **Java blocking API rename**: `javaNonSuspendRun` → `runBlocking` on `AIAgent`; `javaNonSuspendInitialize` / `javaNonSuspendOnMessage` → `initializeBlocking` / `onMessageBlocking` on `FeatureMessageProcessor`; all `createAgent*`, `removeAgent*`, `agentById` Java overloads on `AIAgentService` and all blocking overloads on `PromptExecutor` / `LLMClient` renamed to `*Blocking`; `NonSuspendAIAgentStrategy` → `AIAgentStrategyBlocking` (abstract `executeStrategy` → `executeBlocking`); `NonSuspendAIAgentFunctionalStrategy` → `AIAgentFunctionalStrategyBlocking`. Java callers see the original names via `@JvmName`, so most Java source code requires no changes (#2005).
+- **`ExecutorService` / `Executor` parameters removed from blocking wrappers**: Each agent's own configured dispatcher is used instead. Also removed: `SubtaskBuilder.withExecutorService()` and `executorService` property (#2005).
+- **Planners moved to a new module**: GOAP and LLM-based planner usage now requires an explicit `agents:agents-planners` dependency. `AIAgentPlanner` and `JavaAIAgentPlanner` gain two abstract methods (`initializeState`, `provideOutput`); `AIAgentPlannerStrategy.builder()` and `AIAgentPlannerStrategy.goap()` are removed in favor of `AIAgentPlannerStrategy(name, planner)` / `AIAgentPlannerStrategy.create(name, planner)` (#1997).
+- **`AgentMemory` feature removed**: Use `LongTermMemory` instead. `RetrieveFactsFromHistory` moved out of `agents-features-memory` (#1927).
+- **`LongTermMemory` API renames**: `IngestionTiming` removed; `QueryExtractor` → `SearchQueryProvider`; `ExtractionStrategy` → `DocumentExtractor` (#1963).
+- **`AIAgentStorage` API changes**: `AIAgentStorageKey` equality is now name-based rather than referential; the no-arg `AIAgentStorage()` constructor is replaced by `AIAgentStorage(serializer)`; `AIAgentStorageAPI.toMap()` removed (use `toSerializedMap()` or `putAll(other)`); `runFromCheckpoint`'s `agentInput` parameter renamed to `input` (#1998).
+- **OpenTelemetry Multiplatform migration**: `addSpanExporter`, `addMetricExporter`, `addMetricFilter` are now JVM-only extensions on `OpenTelemetryConfigJvm` — JVM users must update imports. `addResourceAttributes` signature changes from `io.opentelemetry.api.common.Attributes` to `Map<String, Any>`. The `SpanEndStatus` wrapper is removed — use `StatusData` directly (#1942, KG-785).
+- **OpenTelemetry deprecated events removed**: The `ai.koog.agents.features.opentelemetry.event` package and all event APIs on `GenAIAgentSpan` (`events`, `addEvent`, `addEvents`, `removeEvent`) are removed. The `gen_ai.system` attribute and `moderation.result` span event are no longer emitted (#1967, KG-826).
+- **`KoogClock` replaces `kotlin.time.Clock`**: All APIs that previously took a `Clock` parameter are affected (#1925).
+- **`KoogHttpClient` implementations**: Must now implement the new `lines()` method for non-SSE line streaming, and methods accept per-request `headers` parameters (#1993, KG-833).
+- **`OllamaClient.baseUrl`** property removed — endpoint configuration is delegated to the supplied `KoogHttpClient` (#1993).
+- **Anthropic prompt caching**: Removed deprecated `user` message builders to make room for the `cacheControl` variant (#1812).
+- **Companion `invoke` constructors removed**: For `AIAgent`, `AIAgentService`, `ToolRegistry`, `RollbackToolRegistry`, `AIAgentPlannerStrategy`. Normal `A(...)` syntax is unchanged; only unusual forms like `A.Companion.invoke()` or `A.invoke()` no longer compile (#1882).
+- **Minimum Java version: 17** (#1931).
+- **`AgentCheckpointData` shape**: Fields `nodePath`, `lastInput`, and `lastOutput` are removed — they now live in the existing `properties: JSONObject` (#1786).
+
+## Deprecations
+
+- **`AIAgentConfig` JVM constructors / methods taking `ExecutorService`** — use the more general `Executor` variants instead (#1945).
+- **`startSseMcpServer(factory, port, host, tools)` and `startSseMcpServer(factory, host, tools)`** — use `startMcpServer(factory, tools, port, host)` / `startMcpServer(factory, tools, host)` (#1870).
+
 # 0.8.0
 > Published 10 April 2026
 

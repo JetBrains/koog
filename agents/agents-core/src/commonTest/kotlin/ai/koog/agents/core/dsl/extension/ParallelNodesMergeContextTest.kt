@@ -3,10 +3,9 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.strategy
@@ -24,7 +23,7 @@ import kotlin.test.assertNotNull
 class ParallelNodesMergeContextTest {
     private val serializer = KotlinxSerializer()
 
-    private val testKey = AIAgentStorageKey<String>("testKey")
+    private val testKey = createStorageKey<String>("testKey")
 
     private fun AIAgentGraphStrategyBuilder<String, String>.testNode(
         name: String,

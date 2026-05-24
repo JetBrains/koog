@@ -87,7 +87,7 @@ class AIAgentStrategiesTest {
 
         val strategyWithParallel = structuredOutputWithToolsStrategy<String, TestResult>(
             config = config,
-            parallelTools = true
+            parallelTools = true,
         ) { input ->
             "Processing with parallel tools: $input"
         }
@@ -97,7 +97,7 @@ class AIAgentStrategiesTest {
 
         val strategyWithoutParallel = structuredOutputWithToolsStrategy<String, TestResult>(
             config = config,
-            parallelTools = false
+            parallelTools = false,
         ) { input ->
             "Processing without parallel tools: $input"
         }

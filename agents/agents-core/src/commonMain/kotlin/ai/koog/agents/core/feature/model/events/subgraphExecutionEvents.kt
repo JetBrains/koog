@@ -28,32 +28,7 @@ public data class SubgraphExecutionStartingEvent(
     val subgraphName: String,
     val input: JSONElement?,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("SubgraphExecutionStartingEvent(executionInfo, runId, subgraphName, input, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        subgraphName: String,
-        input: JSONElement?,
-        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = SubgraphExecutionStartingEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = SubgraphExecutionStartingEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        subgraphName = subgraphName,
-        input = input,
-        timestamp = timestamp
-    )
-}
+) : DefinedFeatureEvent()
 
 /**
  * Represents an event triggered when the execution of a specific subgraph completes.
@@ -75,34 +50,7 @@ public data class SubgraphExecutionCompletedEvent(
     val input: JSONElement?,
     val output: JSONElement?,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("SubgraphExecutionCompletedEvent(executionInfo, runId, subgraphName, input, output, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        subgraphName: String,
-        input: JSONElement?,
-        output: JSONElement?,
-        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = SubgraphExecutionCompletedEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = SubgraphExecutionCompletedEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        subgraphName = subgraphName,
-        input = input,
-        output = output,
-        timestamp = timestamp
-    )
-}
+) : DefinedFeatureEvent()
 
 /**
  * Represents an event triggered when the execution of a specific subgraph fails.
@@ -124,31 +72,4 @@ public data class SubgraphExecutionFailedEvent(
     val input: JSONElement?,
     val error: AIAgentError,
     override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("SubgraphExecutionFailedEvent(executionInfo, runId, subgraphName, input, error, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        subgraphName: String,
-        input: JSONElement?,
-        error: AIAgentError,
-        timestamp: Long = KoogClock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = SubgraphExecutionFailedEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = SubgraphExecutionFailedEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        subgraphName = subgraphName,
-        input = input,
-        error = error,
-        timestamp = timestamp
-    )
-}
+) : DefinedFeatureEvent()

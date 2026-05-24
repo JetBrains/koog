@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+val isBeta by extra(true)
+
 kotlin {
     sourceSets {
         commonMain {

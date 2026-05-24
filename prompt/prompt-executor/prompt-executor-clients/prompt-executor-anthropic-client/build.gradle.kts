@@ -1,7 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -18,17 +16,8 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-model"))
-                api(project(":http-client:http-client-ktor"))
                 api(libs.kotlinx.coroutines.core)
-                api(libs.ktor.client.content.negotiation)
-                api(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.oshai.kotlin.logging)
-            }
-        }
-
-        jsMain {
-            dependencies {
-                implementation(libs.ktor.client.js)
             }
         }
 
@@ -41,6 +30,7 @@ kotlin {
 
         jvmTest {
             dependencies {
+                implementation(project(":http-client:http-client-ktor"))
                 implementation(libs.ktor.client.cio)
             }
         }

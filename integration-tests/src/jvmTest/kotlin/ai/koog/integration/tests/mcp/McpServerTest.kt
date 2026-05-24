@@ -6,7 +6,8 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.mcp.metadata.McpMetadataKeys
-import ai.koog.agents.mcp.server.startSseMcpServer
+import ai.koog.agents.mcp.server.McpServerTransportType
+import ai.koog.agents.mcp.server.startMcpServer
 import ai.koog.agents.testing.network.NetUtil.isPortAvailable
 import ai.koog.agents.testing.tools.RandomNumberTool
 import ai.koog.integration.tests.utils.RetryUtils
@@ -46,11 +47,12 @@ class McpServerTest {
         val randomNumberTool = RandomNumberTool()
         randomNumberTool.metadata shouldBe emptyMap()
 
-        val (server, connectors) = startSseMcpServer(
+        val (server, connectors) = startMcpServer(
             factory = Netty,
             tools = ToolRegistry {
                 tool(randomNumberTool)
             },
+            transport = McpServerTransportType.SSE,
         )
 
         val port = connectors.firstOrNull()?.port ?: 0

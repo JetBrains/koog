@@ -8,6 +8,7 @@ import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.writer.TraceFeatureMessageLogWriter
 import ai.koog.agents.mcp.McpToolRegistryProvider
+import ai.koog.agents.mcp.metadata.McpServerInfo
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.koogelis.llm.SupportedGoogleModels
 import ai.koog.koogelis.logging.KLoggerImpl
@@ -184,7 +185,8 @@ class KoogAgent(val agentConfiguration: AgentConfiguration) {
                 toolDefinition.options.transportType,
                 toolDefinition.options.serverUrl,
                 headers
-            )
+            ),
+            serverInfo = McpServerInfo(url = toolDefinition.options.serverUrl),
         )
     }
 

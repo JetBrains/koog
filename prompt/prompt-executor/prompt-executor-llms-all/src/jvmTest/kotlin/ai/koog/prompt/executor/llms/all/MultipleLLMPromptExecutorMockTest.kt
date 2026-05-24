@@ -1,7 +1,8 @@
 package ai.koog.prompt.executor.llms.all
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.http.client.ktor.KtorKoogHttpClient
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
@@ -12,6 +13,7 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.filterTextOnly
@@ -24,6 +26,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.time.Instant
 
 class MultipleLLMPromptExecutorMockTest {
@@ -35,13 +38,13 @@ class MultipleLLMPromptExecutorMockTest {
     val mockClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     // Mock client for OpenAI
-    private inner class MockOpenAILLMClient : OpenAILLMClient(API_KEY) {
+    private inner class MockOpenAILLMClient : OpenAILLMClient(apiKey = API_KEY, httpClientFactory = KtorKoogHttpClient.Factory()) {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            return listOf(Message.Assistant("OpenAI response", ResponseMetaInfo.create(mockClock)))
+        ): Message.Assistant {
+            return Message.Assistant("OpenAI response", ResponseMetaInfo.create(mockClock))
         }
 
         override fun executeStreaming(
@@ -53,13 +56,13 @@ class MultipleLLMPromptExecutorMockTest {
     }
 
     // Mock client for Anthropic
-    private inner class MockAnthropicLLMClient : AnthropicLLMClient(API_KEY) {
+    private inner class MockAnthropicLLMClient : AnthropicLLMClient(apiKey = API_KEY, httpClientFactory = KtorKoogHttpClient.Factory()) {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(mockClock)))
+        ): Message.Assistant {
+            return Message.Assistant("Anthropic response", ResponseMetaInfo.create(mockClock))
         }
 
         override fun executeStreaming(
@@ -71,13 +74,13 @@ class MultipleLLMPromptExecutorMockTest {
     }
 
     // Mock client for Anthropic
-    private inner class MockGoogleLLMClient : GoogleLLMClient(API_KEY) {
+    private inner class MockGoogleLLMClient : GoogleLLMClient(apiKey = API_KEY, httpClientFactory = KtorKoogHttpClient.Factory()) {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(mockClock)))
+        ): Message.Assistant {
+            return Message.Assistant("Gemini response", ResponseMetaInfo.create(mockClock))
         }
 
         override fun executeStreaming(
@@ -106,11 +109,12 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = OpenAIModels.Chat.GPT4o).single()
+        val response = executor.execute(prompt = prompt, model = OpenAIModels.Chat.GPT4o)
+        val textContent = assertIs<MessagePart.Text>(response.parts.first())
 
         assertEquals(
             "OpenAI response",
-            response.content,
+            textContent.text,
             "Response should be from OpenAI client"
         )
     }
@@ -122,11 +126,12 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = AnthropicModels.Opus_4_6).single()
+        val response = executor.execute(prompt = prompt, model = AnthropicModels.Opus_4_6)
+        val textContent = assertIs<MessagePart.Text>(response.parts.first())
 
         assertEquals(
             "Anthropic response",
-            response.content,
+            textContent.text,
             "Response should be from Anthropic client"
         )
     }
@@ -138,11 +143,12 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = GoogleModels.Gemini2_0Flash).single()
+        val response = executor.execute(prompt = prompt, model = GoogleModels.Gemini2_5Flash)
+        val textContent = assertIs<MessagePart.Text>(response.parts.first())
 
         assertEquals(
             "Gemini response",
-            response.content,
+            textContent.text,
             "Response should be from Google client"
         )
     }
@@ -192,7 +198,7 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, GoogleModels.Gemini2_0Flash)
+        val responseChunks = executor.executeStreaming(prompt, GoogleModels.Gemini2_5Flash)
             .filterTextOnly()
             .toList()
 

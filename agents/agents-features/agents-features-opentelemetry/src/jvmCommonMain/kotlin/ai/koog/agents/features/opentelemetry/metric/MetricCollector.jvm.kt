@@ -2,7 +2,6 @@ package ai.koog.agents.features.opentelemetry.metric
 
 import ai.koog.agents.features.opentelemetry.attribute.toJavaSdkAttributes
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.meter
 import ai.koog.agents.features.opentelemetry.metric.events.toFailedDurationHistogramMetricEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.metrics.DoubleHistogram

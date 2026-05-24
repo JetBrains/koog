@@ -2,6 +2,11 @@ package ai.koog.prompt.text
 
 import ai.koog.prompt.dsl.PromptDSL
 
+@PromptDSL
+public abstract class BuilderBase<TContent> {
+    public abstract fun build(): TContent
+}
+
 /**
  * A base utility class for building and manipulating content based on the text.
  * This class can be extended to support more types of text-based content, e.g. text with attachments or some metadata.
@@ -11,7 +16,7 @@ import ai.koog.prompt.dsl.PromptDSL
  * approach to managing text content.
  */
 @PromptDSL
-public abstract class TextContentBuilderBase<TContent> {
+public abstract class TextContentBuilderBase<TContent> : BuilderBase<TContent>() {
     /**
      * Represents the position of a caret within a text document.
      *
@@ -128,9 +133,4 @@ public abstract class TextContentBuilderBase<TContent> {
         newline()
         newline()
     }
-
-    /**
-     * Constructs and returns the content
-     */
-    public abstract fun build(): TContent
 }

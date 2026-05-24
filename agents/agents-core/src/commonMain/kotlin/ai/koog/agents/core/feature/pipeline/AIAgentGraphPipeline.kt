@@ -1,6 +1,3 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-@file:OptIn(InternalAgentsApi::class)
-
 package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -24,8 +21,9 @@ import ai.koog.utils.time.KoogClock
  * Represents a pipeline for AI agent graph execution, extending the functionality of `AIAgentPipeline`.
  * This class manages the execution of specific nodes in the pipeline using registered handlers.
  *
- * @property clock The clock used for time-based operations within the pipeline
+ * @property [clock] The clock used for time-based operations within the pipeline.
  */
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 public expect open class AIAgentGraphPipeline(
     agentConfig: AIAgentConfig,
     clock: KoogClock = KoogClock.System,
@@ -38,10 +36,10 @@ public expect open class AIAgentGraphPipeline(
      * This method initializes the feature with a custom configuration and registers it in the pipeline.
      * The feature's message processors are initialized during installation.
      *
-     * @param TConfig The type of the feature configuration
-     * @param TFeatureImpl The type of the feature being installed
-     * @param feature The feature implementation to be installed
-     * @param configure A lambda to customize the feature configuration
+     * @param TConfig The type of the feature configuration;
+     * @param TFeatureImpl The type of the feature being installed;
+     * @param feature The feature implementation to be installed;
+     * @param configure A lambda to customize the feature configuration.
      */
     public fun <TConfig : FeatureConfig, TFeatureImpl : Any> install(
         feature: AIAgentGraphFeature<TConfig, TFeatureImpl>,
@@ -53,41 +51,43 @@ public expect open class AIAgentGraphPipeline(
     /**
      * Notifies all registered node handlers before a node is executed.
      *
-     * @param eventId The unique identifier for the event group.
-     * @param executionInfo The execution information for the agent environment transformation event
-     * @param node The node that is about to be executed
-     * @param context The agent context in which the node is being executed
-     * @param input The input data for the node execution
-     * @param inputType The type of the input data provided to the node
+     * @param eventId The unique identifier for the event group;
+     * @param executionInfo The execution information for the node execution event;
+     * @param context The agent context in which the node is being executed;
+     * @param node The node that is about to be executed;
+     * @param input The input data for the node execution;
+     * @param inputType The type of the input data provided to the node.
      */
+    @Suppress("RedundantModalityModifier")
     @InternalAgentsApi
     public open override suspend fun onNodeExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
+        node: AIAgentNodeBase<*, *>,
         input: Any?,
-        inputType: TypeToken
+        inputType: TypeToken,
     )
 
     /**
      * Notifies all registered node handlers after a node has been executed.
      *
-     * @param eventId The unique identifier for the event group.
-     * @param executionInfo The execution information for the agent environment transformation event
-     * @param node The node that was executed
-     * @param context The agent context in which the node was executed
-     * @param input The input data that was provided to the node
-     * @param inputType The type of the input data provided to the node
-     * @param output The output data produced by the node execution
-     * @param outputType The type of the output data produced by the node execution
+     * @param eventId The unique identifier for the event group;
+     * @param executionInfo The execution information for the node execution event;
+     * @param context The agent context in which the node was executed;
+     * @param node The node that was executed;
+     * @param input The input data that was provided to the node;
+     * @param inputType The type of the input data provided to the node;
+     * @param output The output data produced by the node execution;
+     * @param outputType The type of the output data produced by the node execution.
      */
+    @Suppress("RedundantModalityModifier")
     @InternalAgentsApi
     public open override suspend fun onNodeExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
+        node: AIAgentNodeBase<*, *>,
         input: Any?,
         inputType: TypeToken,
         output: Any?,
@@ -97,23 +97,24 @@ public expect open class AIAgentGraphPipeline(
     /**
      * Handles errors occurring during the execution of a node by invoking all registered node execution error handlers.
      *
-     * @param eventId The unique identifier for the event group.
-     * @param executionInfo The execution information for the agent environment transformation event
-     * @param node The instance of the node where the error occurred.
-     * @param context The context associated with the AI agent executing the node.
-     * @param input The input data provided to the node.
-     * @param inputType The type of the input data provided to the node.
+     * @param eventId The unique identifier for the event group;
+     * @param executionInfo The execution information for the node execution event;
+     * @param context The context associated with the AI agent executing the node;
+     * @param node The instance of the node where the error occurred;
+     * @param input The input data provided to the node;
+     * @param inputType The type of the input data provided to the node;
      * @param error The exception or error that occurred during node execution.
      */
+    @Suppress("RedundantModalityModifier")
     @InternalAgentsApi
     public open override suspend fun onNodeExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
+        node: AIAgentNodeBase<*, *>,
         input: Any?,
         inputType: TypeToken,
-        error: Throwable
+        error: Throwable,
     )
 
     //endregion Trigger Node Handlers
@@ -123,41 +124,43 @@ public expect open class AIAgentGraphPipeline(
     /**
      * Notifies all registered subgraph handlers before a subgraph is executed.
      *
-     * @param eventId The unique identifier for the event group.
-     * @param executionInfo The execution information for the agent environment transformation event
-     * @param subgraph The subgraph that is about to be executed.
-     * @param context The agent context in which the subgraph is being executed.
-     * @param input The input data for the subgraph execution.
+     * @param eventId The unique identifier for the event group;
+     * @param executionInfo The execution information for the subgraph execution event;
+     * @param context The agent context in which the subgraph is being executed;
+     * @param subgraph The subgraph that is about to be executed;
+     * @param input The input data for the subgraph execution;
      * @param inputType The type of the input data provided to the subgraph.
      */
+    @Suppress("RedundantModalityModifier")
     @InternalAgentsApi
     public open override suspend fun onSubgraphExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
+        subgraph: AIAgentSubgraphBase<*, *>,
         input: Any?,
-        inputType: TypeToken
+        inputType: TypeToken,
     )
 
     /**
      * Notifies all registered subgraph handlers after a subgraph has been executed.
      *
-     * @param eventId The unique identifier for the event group.
-     * @param executionInfo The execution information for the agent environment transformation event
-     * @param subgraph The subgraph that was executed.
-     * @param context The agent context in which the subgraph was executed.
-     * @param input The input data provided to the subgraph.
-     * @param inputType The type of the input data provided to the subgraph.
-     * @param output The output data produced by the subgraph execution.
+     * @param eventId The unique identifier for the event group;
+     * @param executionInfo The execution information for the subgraph execution event;
+     * @param context The agent context in which the subgraph was executed;
+     * @param subgraph The subgraph that was executed;
+     * @param input The input data provided to the subgraph;
+     * @param inputType The type of the input data provided to the subgraph;
+     * @param output The output data produced by the subgraph execution;
      * @param outputType The type of the output data produced by the subgraph execution.
      */
+    @Suppress("RedundantModalityModifier")
     @InternalAgentsApi
     public open override suspend fun onSubgraphExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
+        subgraph: AIAgentSubgraphBase<*, *>,
         input: Any?,
         inputType: TypeToken,
         output: Any?,
@@ -167,23 +170,24 @@ public expect open class AIAgentGraphPipeline(
     /**
      * Notifies all registered subgraph handlers when a subgraph execution fails.
      *
-     * @param eventId The unique identifier for the event group.
-     * @param executionInfo The execution information for the agent environment transformation event
-     * @param subgraph The subgraph for which the execution failed.
-     * @param context The agent context in which the subgraph execution occurred.
-     * @param input The input data that was provided to the subgraph when it failed.
-     * @param inputType The type of the input data provided to the subgraph.
+     * @param eventId The unique identifier for the event group;
+     * @param executionInfo The execution information for the subgraph execution event;
+     * @param context The agent context in which the subgraph execution occurred;
+     * @param subgraph The subgraph for which the execution failed;
+     * @param input The input data that was provided to the subgraph when it failed;
+     * @param inputType The type of the input data provided to the subgraph;
      * @param error The exception or error that caused the subgraph execution to fail.
      */
+    @Suppress("RedundantModalityModifier")
     @InternalAgentsApi
     public open override suspend fun onSubgraphExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
+        subgraph: AIAgentSubgraphBase<*, *>,
         input: Any?,
         inputType: TypeToken,
-        error: Throwable
+        error: Throwable,
     )
 
     //endregion Trigger Subgraph Handlers
@@ -193,8 +197,8 @@ public expect open class AIAgentGraphPipeline(
     /**
      * Intercepts node execution before it starts.
      *
-     * @param feature The feature associated with this handler.
-     * @param handle The handler that processes before-node events
+     * @param feature The feature associated with this handler;
+     * @param handle The handler that processes before-node events.
      *
      * Example:
      * ```
@@ -203,6 +207,7 @@ public expect open class AIAgentGraphPipeline(
      * }
      * ```
      */
+    @Suppress("RedundantModalityModifier")
     public open override fun interceptNodeExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionStartingContext) -> Unit
@@ -211,8 +216,8 @@ public expect open class AIAgentGraphPipeline(
     /**
      * Intercepts node execution after it completes.
      *
-     * @param feature The feature associated with this handler.
-     * @param handle The handler that processes after-node events
+     * @param feature The feature associated with this handler;
+     * @param handle The handler that processes after-node events.
      *
      * Example:
      * ```
@@ -221,6 +226,7 @@ public expect open class AIAgentGraphPipeline(
      * }
      * ```
      */
+    @Suppress("RedundantModalityModifier")
     public open override fun interceptNodeExecutionCompleted(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionCompletedContext) -> Unit
@@ -229,7 +235,7 @@ public expect open class AIAgentGraphPipeline(
     /**
      * Intercepts and handles node execution errors for a given feature.
      *
-     * @param feature The feature associated with this handler.
+     * @param feature The feature associated with this handler;
      * @param handle A suspend function that processes the node execution error.
      *
      * Example:
@@ -239,6 +245,7 @@ public expect open class AIAgentGraphPipeline(
      * }
      * ```
      */
+    @Suppress("RedundantModalityModifier")
     public open override fun interceptNodeExecutionFailed(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionFailedContext) -> Unit
@@ -247,7 +254,7 @@ public expect open class AIAgentGraphPipeline(
     /**
      * Intercepts the execution of a subgraph when it starts.
      *
-     * @param feature The graph feature associated with the AI agent for which the subgraph execution is intercepted.
+     * @param feature The graph feature associated with the AI agent for which the subgraph execution is intercepted;
      * @param handle A suspendable lambda that handles the subgraph execution starting event context.
      *
      * Example:
@@ -257,6 +264,7 @@ public expect open class AIAgentGraphPipeline(
      * }
      * ```
      */
+    @Suppress("RedundantModalityModifier")
     public open override fun interceptSubgraphExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionStartingContext) -> Unit
@@ -265,7 +273,7 @@ public expect open class AIAgentGraphPipeline(
     /**
      * Intercepts the completion of a subgraph execution and allows handling of the event.
      *
-     * @param feature The AI agent graph feature that specifies the feature to intercept.
+     * @param feature The AI agent graph feature that specifies the feature to intercept;
      * @param handle A suspendable function that handles the subgraph execution completion event,
      * taking the event context as a parameter.
      *
@@ -276,6 +284,7 @@ public expect open class AIAgentGraphPipeline(
      * }
      * ```
      */
+    @Suppress("RedundantModalityModifier")
     public open override fun interceptSubgraphExecutionCompleted(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionCompletedContext) -> Unit
@@ -284,7 +293,7 @@ public expect open class AIAgentGraphPipeline(
     /**
      * Intercepts and handles subgraph execution failures for a given feature.
      *
-     * @param feature The feature associated with this handler.
+     * @param feature The feature associated with this handler;
      * @param handle A suspend function that processes the subgraph execution failure event.
      *
      * Example:
@@ -294,6 +303,7 @@ public expect open class AIAgentGraphPipeline(
      * }
      * ```
      */
+    @Suppress("RedundantModalityModifier")
     public open override fun interceptSubgraphExecutionFailed(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionFailedContext) -> Unit

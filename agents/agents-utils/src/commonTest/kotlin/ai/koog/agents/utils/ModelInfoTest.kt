@@ -21,7 +21,6 @@ class ModelInfoTest {
         assertEquals("GPT-4", modelInfo.displayName)
         assertEquals(128000L, modelInfo.contextLength)
         assertEquals(4096L, modelInfo.maxOutputTokens)
-        assertEquals("openai:gpt-4", modelInfo.eventString)
         assertEquals("GPT-4", modelInfo.modelIdentifierName)
     }
 
@@ -37,7 +36,6 @@ class ModelInfoTest {
         assertNull(modelInfo.displayName)
         assertNull(modelInfo.contextLength)
         assertNull(modelInfo.maxOutputTokens)
-        assertEquals("anthropic:claude-3", modelInfo.eventString)
         assertEquals("anthropic/claude-3", modelInfo.modelIdentifierName)
     }
 

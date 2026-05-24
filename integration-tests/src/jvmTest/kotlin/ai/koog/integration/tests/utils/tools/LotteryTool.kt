@@ -4,12 +4,11 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
+import ai.koog.serialization.typeToken
 
 object LotteryTool : Tool<List<List<Int>>, List<Int>>(
-    argsSerializer = ListSerializer(ListSerializer(Int.serializer())),
-    resultSerializer = ListSerializer(Int.serializer()),
+    argsType = typeToken<List<List<Int>>>(),
+    resultType = typeToken<List<Int>>(),
     descriptor = ToolDescriptor(
         name = "lottery_picker",
         description = "A tool that by lottery tickets (list of 5 number from 1 to 100) picks the ids of winning tickets. " +

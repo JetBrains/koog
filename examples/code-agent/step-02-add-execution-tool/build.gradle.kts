@@ -8,6 +8,8 @@ application.mainClass.set("ai.koog.agents.examples.codeagent.step02.MainKt")
 
 dependencies {
     implementation("ai.koog:koog-agents")
+    implementation("ai.koog:koog-agents-additions")
+    implementation("ai.koog:agents-ext")
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.logback.classic)
 }

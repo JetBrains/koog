@@ -1,5 +1,3 @@
-@file:Suppress("MissingKDocForPublicAPI")
-
 package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
@@ -15,6 +13,7 @@ import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedCo
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
 import ai.koog.serialization.TypeToken
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Public API surface for graph-specific pipeline operations (nodes and subgraphs).
@@ -30,18 +29,18 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
     public suspend fun onNodeExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
+        node: AIAgentNodeBase<*, *>,
         input: Any?,
-        inputType: TypeToken
+        inputType: TypeToken,
     )
 
     @InternalAgentsApi
     public suspend fun onNodeExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
+        node: AIAgentNodeBase<*, *>,
         input: Any?,
         inputType: TypeToken,
         output: Any?,
@@ -52,11 +51,11 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
     public suspend fun onNodeExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        node: AIAgentNodeBase<*, *>,
         context: AIAgentGraphContextBase,
+        node: AIAgentNodeBase<*, *>,
         input: Any?,
         inputType: TypeToken,
-        error: Throwable
+        error: Throwable,
     )
 
     //endregion Trigger Node Handlers
@@ -67,18 +66,18 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
     public suspend fun onSubgraphExecutionStarting(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
+        subgraph: AIAgentSubgraphBase<*, *>,
         input: Any?,
-        inputType: TypeToken
+        inputType: TypeToken,
     )
 
     @InternalAgentsApi
     public suspend fun onSubgraphExecutionCompleted(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
+        subgraph: AIAgentSubgraphBase<*, *>,
         input: Any?,
         inputType: TypeToken,
         output: Any?,
@@ -89,45 +88,52 @@ public interface AIAgentGraphPipelineAPI : AIAgentPipelineAPI {
     public suspend fun onSubgraphExecutionFailed(
         eventId: String,
         executionInfo: AgentExecutionInfo,
-        subgraph: AIAgentSubgraphBase<*, *>,
         context: AIAgentGraphContextBase,
+        subgraph: AIAgentSubgraphBase<*, *>,
         input: Any?,
         inputType: TypeToken,
-        error: Throwable
+        error: Throwable,
     )
 
     //endregion Trigger Subgraph Handlers
 
     //region Interceptors
 
+    @JvmSynthetic
     public fun interceptNodeExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionStartingContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptNodeExecutionCompleted(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionCompletedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptNodeExecutionFailed(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: NodeExecutionFailedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptSubgraphExecutionStarting(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionStartingContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptSubgraphExecutionCompleted(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionCompletedContext) -> Unit
     )
 
+    @JvmSynthetic
     public fun interceptSubgraphExecutionFailed(
         feature: AIAgentGraphFeature<*, *>,
         handle: suspend (eventContext: SubgraphExecutionFailedContext) -> Unit
     )
+
     //endregion Interceptors
 }

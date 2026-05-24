@@ -125,7 +125,6 @@ class OpenAIResponsesAPIResponseTest {
                     outputTokensDetails = OpenAIResponsesAPIResponse.Usage.OutputTokensDetails(50),
                     totalTokens = 300
                 ),
-                user = "deprecated_user"
             )
 
             json.decodeFromString<OpenAIResponsesAPIResponse>(json.encodeToString(response)).shouldNotBeNull {
@@ -176,7 +175,6 @@ class OpenAIResponsesAPIResponseTest {
                     outputTokens shouldBe 200
                     totalTokens shouldBe 300
                 }
-                user shouldBe "deprecated_user"
             }
         }
 

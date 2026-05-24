@@ -5,26 +5,19 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-group = rootProject.group
-version = rootProject.version
-
 kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":agents:agents-tools"))
                 api(project(":http-client:http-client-core"))
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-model"))
                 api(project(":prompt:prompt-tokenizer"))
-                api(project(":agents:agents-tools"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 api(project(":embeddings:embeddings-base"))
+                api(project(":prompt:prompt-structure"))
 
-                api(libs.ktor.client.logging)
                 api(libs.kotlinx.coroutines.core)
-                api(libs.ktor.client.content.negotiation)
-                api(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.oshai.kotlin.logging)
             }
         }
@@ -55,6 +48,7 @@ kotlin {
 
         commonTest {
             dependencies {
+                implementation(project(":http-client:http-client-ktor"))
                 implementation(project(":test-utils"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(libs.kotlinx.coroutines.core)

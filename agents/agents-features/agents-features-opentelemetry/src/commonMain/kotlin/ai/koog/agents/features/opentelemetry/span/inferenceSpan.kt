@@ -4,10 +4,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
 import ai.koog.agents.features.opentelemetry.extension.addCommonErrorAttributes
-import ai.koog.agents.features.opentelemetry.extension.mergedResponseMetadata
-import ai.koog.agents.features.opentelemetry.extension.sumInputTokens
-import ai.koog.agents.features.opentelemetry.extension.sumOutputTokens
 import ai.koog.agents.features.opentelemetry.extension.systemMessages
+import ai.koog.agents.features.opentelemetry.extension.toFinishReason
 import ai.koog.agents.features.opentelemetry.extension.toStatusData
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.prompt.llm.LLMProvider
@@ -17,7 +15,6 @@ import ai.koog.prompt.params.LLMParams
 import io.opentelemetry.kotlin.factory.ContextFactory
 import io.opentelemetry.kotlin.tracing.SpanKind
 import io.opentelemetry.kotlin.tracing.Tracer
-import kotlinx.serialization.json.JsonObject
 
 /**
  * Build and start a new Inference Span with necessary attributes.
@@ -174,8 +171,8 @@ internal fun startInferenceSpan(
  */
 internal fun endInferenceSpan(
     span: GenAIAgentSpan,
-    messages: List<Message>,
     model: LLModel,
+    message: Message.Assistant?,
     error: Throwable? = null,
     verbose: Boolean = false,
     spanAdapter: SpanAdapter? = null,
@@ -193,21 +190,39 @@ internal fun endInferenceSpan(
     // gen_ai.response.model
     span.addAttribute(GenAIAttributes.Response.Model(model))
 
-    // gen_ai.response.metadata
-    val responseMetadata = messages.mergedResponseMetadata()
-    if (responseMetadata.isNotEmpty()) {
-        span.addAttribute(GenAIAttributes.Response.Metadata(JsonObject(responseMetadata).toString()))
-    }
+    if (message != null) {
+        // gen_ai.response.finish_reasons
+        // TODO: use message.finishReason
+        span.addAttribute(GenAIAttributes.Response.FinishReasons(listOf(message.toFinishReason())))
 
-    // gen_ai.usage.input_tokens
-    span.addAttribute(GenAIAttributes.Usage.InputTokens(messages.sumInputTokens()))
+        // gen_ai.response.id
+        message.id?.let {
+            span.addAttribute(GenAIAttributes.Response.Id(it))
+        }
 
-    // gen_ai.usage.output_tokens
-    span.addAttribute(GenAIAttributes.Usage.OutputTokens(messages.sumOutputTokens()))
+        // gen_ai.response.metadata
+        message.metaInfo.metadata?.let { responseMetadata ->
+            if (responseMetadata.isNotEmpty()) {
+                span.addAttribute(GenAIAttributes.Response.Metadata(responseMetadata.toString()))
+            }
+        }
 
-    // gen_ai.output.messages
-    if (messages.isNotEmpty()) {
-        span.addAttribute(GenAIAttributes.Output.Messages(messages))
+        // gen_ai.usage.input_tokens
+        span.addAttribute(
+            GenAIAttributes.Usage.InputTokens(
+                message.metaInfo.inputTokensCount ?: 0
+            )
+        )
+
+        // gen_ai.usage.output_tokens
+        span.addAttribute(
+            GenAIAttributes.Usage.OutputTokens(
+                message.metaInfo.outputTokensCount ?: 0
+            )
+        )
+
+        // gen_ai.output.messages
+        span.addAttribute(GenAIAttributes.Output.Messages(listOf(message)))
     }
 
     spanAdapter?.onBeforeSpanFinished(span)

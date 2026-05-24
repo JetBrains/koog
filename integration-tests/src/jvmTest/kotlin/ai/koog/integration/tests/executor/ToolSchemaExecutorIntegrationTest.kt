@@ -13,9 +13,9 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
-import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldEndWith
@@ -149,9 +149,10 @@ class ToolSchemaExecutorIntegrationTest {
         }
 
         withRetry {
-            getLLMClientForProvider(model.provider).execute(prompt, model, listOf(writeFileTool)) shouldNotBeNull {
-                shouldNotBeEmpty()
-                with(Json.decodeFromString<FileOperation>(joinToString("\n") { it.content })) {
+            val response = getLLMClientForProvider(model.provider).execute(prompt, model, listOf(writeFileTool))
+            val toolCall = response.parts.filterIsInstance<MessagePart.Tool.Call>().firstOrNull()
+            toolCall.shouldNotBeNull {
+                with(Json.decodeFromString<FileOperation>(args)) {
                     filePath shouldEndWith "hello.txt"
                     content.trim().shouldContain("Hello, World!")
                 }

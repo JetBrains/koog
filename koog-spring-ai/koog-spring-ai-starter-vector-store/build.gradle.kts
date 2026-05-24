@@ -2,8 +2,7 @@ import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
-group = rootProject.group
-version = rootProject.version
+val isBeta by extra(true)
 
 plugins {
     id("ai.kotlin.jvm")

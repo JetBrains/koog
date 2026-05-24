@@ -36,6 +36,7 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.xml.xml
 import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.SerialName
@@ -85,8 +86,6 @@ private fun jokeWriterAgent(
     )
 
     return GraphAIAgent(
-        inputType = typeToken<A2AMessage>(),
-        outputType = typeToken<Unit>(),
         promptExecutor = promptExecutor,
         strategy = jokeWriterStrategy(),
         agentConfig = agentConfig,
@@ -279,7 +278,11 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
                 artifact = Artifact(
                     artifactId = "joke",
                     parts = listOf(
-                        TextPart(jokeMessage.content)
+                        TextPart(
+                            jokeMessage.parts
+                                .filterIsInstance<MessagePart.Text>()
+                                .joinToString("\n") { it.text }
+                        )
                     )
                 ),
             )
@@ -335,7 +338,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
     // After creating task, classify the joke details
     edge(
         createTask forwardTo classifyJokeRequest
-            transformed { agentInput<A2AMessage>().content() }
+            transformed { agentInput<A2AMessage>().content()  }
     )
 
     // Joke classification: Ask for clarification if needed

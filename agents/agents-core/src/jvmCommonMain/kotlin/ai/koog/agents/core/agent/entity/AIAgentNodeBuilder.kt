@@ -9,13 +9,13 @@ import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.appendPromptImpl
 import ai.koog.agents.core.dsl.extension.llmCompressHistoryImpl
-import ai.koog.agents.core.dsl.extension.requestStreamingAndSendResultsImpl
 import ai.koog.agents.core.dsl.extension.setStructuredOutputImpl
 import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.agents.ext.agent.setupLLMAsAJudge
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.toMessageResponse
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.serialization.TypeToken
@@ -23,6 +23,7 @@ import ai.koog.serialization.typeToken
 import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.concurrency.runBlockingReentrant
 import ai.koog.utils.concurrency.withContextReentrant
+import kotlinx.coroutines.flow.toList
 import kotlin.random.Random
 
 /**
@@ -162,7 +163,7 @@ public class TypedCompressHistoryNodeBuilder<Input : Any>(
  *
  * @param Input The type of input data the [AIAgentNode] will process.
  * @property name An optional name for the agent node.
- * @property inputClass The class representation of the input type.
+ * @property inputTypeToken The class representation of the input type.
  */
 @JavaAPI
 public class AIAgentNodeBuilderWithInput<Input : Any>(
@@ -213,20 +214,25 @@ public class AIAgentNodeBuilderWithInput<Input : Any>(
         }
 
     /**
-     * Sends a streaming request to the Large Language Model (LLM) and processes the results, optionally using
-     * a specified structure definition for content customization.
+     * Sends a streaming request to the Large Language Model (LLM), accumulates the streamed
+     * frames into a single [Message.Assistant], and returns it as this node's output.
      *
-     * @param structureDefinition An optional [StructureDefinition] instance that defines the structure of
-     * textual content for the LLM request. If `null`, the default behavior is used without structured customization.
-     * @return An instance of [AIAgentNodeBase] with the input type [Input] and output type as a list of unspecified elements.
+     * The streaming request operates on the session's current prompt; the node's own [Input]
+     * value is not consumed by this method.
+     *
+     * @param structureDefinition Optional [StructureDefinition] that guides structured text content
+     *   in the streamed response. When `null`, the default unstructured streaming behavior is used.
      */
+    @JvmOverloads
     public fun llmRequestStreamingAndSendResults(
-        structureDefinition: StructureDefinition? = null
-    ): AIAgentNodeBase<Input, List<Message.Response>> =
+        structureDefinition: StructureDefinition? = null,
+    ): AIAgentNodeBase<Input, Message.Assistant> =
         this
-            .withOutput<List<Message.Response>>(typeToken<List<Message.Response>>())
-            .executeOnLLMDispatcher { input ->
-                requestStreamingAndSendResultsImpl(structureDefinition)
+            .withOutput<Message.Assistant>(typeToken<Message.Assistant>())
+            .executeOnLLMDispatcher { _ ->
+                llm.writeSession {
+                    requestLLMStreaming(structureDefinition).toList().toMessageResponse()
+                }
             }
 
     /**
@@ -265,8 +271,7 @@ public class AIAgentNodeBuilderWithInput<Input : Any>(
      * @return An instance of `AIAgentNodeBase` with the input type [Input] and output type [Input],
      *         updated with the configured structured output setup.
      */
-    @JvmOverloads
-    public fun <T : Any> setStructuredOutput(
+    public fun <T> setStructuredOutput(
         config: StructuredRequestConfig<T>,
     ): AIAgentNodeBase<Input, Input> = this
         .withOutput<Input>(inputTypeToken)

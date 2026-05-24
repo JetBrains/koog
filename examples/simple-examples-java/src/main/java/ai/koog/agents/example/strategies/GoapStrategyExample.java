@@ -2,10 +2,13 @@ package ai.koog.agents.example.strategies;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.example.ApiKeyService;
-import ai.koog.agents.planner.AIAgentPlannerStrategy;
+import ai.koog.agents.planner.Planners;
 import ai.koog.agents.planner.goap.GoapAgentState;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.model.PromptExecutor;
+import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
+import java.util.stream.Collectors;
 
 public class GoapStrategyExample {
     static class SolutionAssessment {
@@ -29,8 +32,12 @@ public class GoapStrategyExample {
         public SolutionAssessment assessment = null;
 
         public MyState(String agentInput) {
-            super(agentInput);
             problem = agentInput;
+        }
+
+        @Override
+        public String getAgentInput() {
+            return problem;
         }
 
         public MyState copy(String newSolution, SolutionAssessment newAssessment) {
@@ -70,8 +77,7 @@ public class GoapStrategyExample {
             .openAI(ApiKeyService.getOpenAIApiKey())
             .build();
 
-        var strategy = AIAgentPlannerStrategy.builder("my-strategy")
-            .goap(MyState::new)
+        var strategy = Planners.goap("my-strategy", MyState::new)
             .goal("solve the task", builder ->
                 builder.condition(state -> state.assessment != null && state.assessment.correct)
             )
@@ -81,7 +87,7 @@ public class GoapStrategyExample {
                         .precondition(state -> true) // always can execute
                         .belief(state -> state.copy("solution", null))
                         .execute((context, state) -> {
-                                var solution = context.requestLLM(state.solveTask()).getContent();
+                                var solution = assistantText(context.requestLLM(state.solveTask()));
                                 return state.copy(solution, null);
                             }
                         )
@@ -92,7 +98,7 @@ public class GoapStrategyExample {
                         .precondition(state -> state.solution != null && state.assessment == null)
                         .belief(state -> state.copy(state.solution, new SolutionAssessment(true, "solved")))
                         .execute((context, state) -> {
-                                var feedback = context.requestLLM(state.assessmentTask()).getContent();
+                                var feedback = assistantText(context.requestLLM(state.assessmentTask()));
                                 return state.copy(state.solution, new SolutionAssessment(feedback));
                             }
                         )
@@ -108,5 +114,12 @@ public class GoapStrategyExample {
         var result = agent.run("Solve the following problem: Find the square root of 16");
 
         System.out.println("\n\nAgent result:\n%s\n".formatted(result));
+    }
+
+    private static String assistantText(Message.Assistant response) {
+        return response.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Text)
+            .map(p -> ((MessagePart.Text) p).getText())
+            .collect(Collectors.joining());
     }
 }

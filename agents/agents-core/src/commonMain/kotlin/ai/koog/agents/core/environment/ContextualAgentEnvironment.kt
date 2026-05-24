@@ -2,8 +2,10 @@ package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.core.agent.tools.AgentContextAwareTool
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.prompt.message.Message
+import ai.koog.agents.core.tools.ToolCallMetadata
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -16,6 +18,16 @@ import kotlin.uuid.Uuid
  *
  * This class acts as a decorator over an existing [AIAgentEnvironment], augmenting operations with contextual
  * processing using the provided [AIAgentContext].
+ *
+ * Metadata handling: when [executeTool] is called with a [ToolCallMetadata] argument, this environment
+ * collects metadata contributions from every feature that registered a handler via
+ * [ai.koog.agents.core.feature.pipeline.AIAgentPipelineAPI.provideToolCallMetadata] and merges them with
+ * the caller-supplied metadata. On key collision, the caller's value wins, so an explicit call-site
+ * override is never silently replaced by a feature contribution. After the merge, the framework injects
+ * the live [AIAgentContext] under [AgentContextAwareTool.AgentContextKey]; the framework's value always
+ * wins over caller and feature entries so a tool always observes the real context driving the current
+ * call. The merged metadata is then passed to the wrapped environment, which threads it into
+ * [ai.koog.agents.core.tools.ToolBase.execute].
  *
  * @constructor Constructs a new instance of [ContextualAgentEnvironment] with a decorated [environment] and a
  * contextual [context].
@@ -33,13 +45,19 @@ public class ContextualAgentEnvironment(
         private val logger = KotlinLogging.logger { }
     }
 
-    override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+    override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult =
+        executeTool(toolCall, ToolCallMetadata.EMPTY)
+
+    override suspend fun executeTool(
+        toolCall: MessagePart.Tool.Call,
+        metadata: ToolCallMetadata,
+    ): ReceivedToolResult {
         @OptIn(ExperimentalUuidApi::class)
         val eventId = Uuid.random().toString()
         val toolDescription = context.llm.toolRegistry.getToolOrNull(toolCall.tool)?.descriptor?.description
 
         val toolArgs = try {
-            toolCall.contentJson.toKoogJSONObject()
+            toolCall.argsJson.toKoogJSONObject()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -51,6 +69,7 @@ public class ContextualAgentEnvironment(
             context.pipeline.onToolValidationFailed(
                 eventId = eventId,
                 executionInfo = context.executionInfo,
+                context = context,
                 runId = context.runId,
                 toolCallId = toolCall.id,
                 toolName = tool,
@@ -58,14 +77,13 @@ public class ContextualAgentEnvironment(
                 toolArgs = toolArgs,
                 message = message,
                 error = e,
-                context = context
             )
             return ReceivedToolResult(
                 id = toolCall.id,
                 tool = tool,
                 toolArgs = toolArgs,
                 toolDescription = null,
-                content = message,
+                output = message,
                 resultKind = ToolResultKind.ValidationError(e),
                 result = null
             )
@@ -83,6 +101,17 @@ public class ContextualAgentEnvironment(
         context.pipeline.onToolCallStarting(
             eventId = eventId,
             executionInfo = context.executionInfo,
+            context = context,
+            runId = context.runId,
+            toolCallId = toolCall.id,
+            toolName = toolCall.tool,
+            toolDescription = toolDescription,
+            toolArgs = toolArgs,
+        )
+
+        val featureMetadata = context.pipeline.collectToolCallMetadata(
+            eventId = eventId,
+            executionInfo = context.executionInfo,
             runId = context.runId,
             toolCallId = toolCall.id,
             toolName = toolCall.tool,
@@ -91,7 +120,13 @@ public class ContextualAgentEnvironment(
             context = context
         )
 
-        val toolResult = environment.executeTool(toolCall)
+        // Caller-supplied metadata wins on key collision, so an explicit call-site override is never
+        // silently replaced by a feature contribution. The framework's live AIAgentContext is then injected
+        // under the reserved key so that tools always see the real context driving the current call.
+        val mergedMetadata = featureMetadata + metadata +
+            ToolCallMetadata.of(AgentContextAwareTool.AgentContextKey to context)
+
+        val toolResult = environment.executeTool(toolCall, mergedMetadata)
         processToolResult(eventId, context.executionInfo, toolResult)
 
         logger.trace {
@@ -125,13 +160,13 @@ public class ContextualAgentEnvironment(
                 context.pipeline.onToolCallCompleted(
                     eventId = eventId,
                     executionInfo = executionInfo,
+                    context = context,
                     runId = context.runId,
                     toolCallId = toolResult.id,
                     toolName = toolResult.tool,
                     toolDescription = toolResult.toolDescription,
                     toolArgs = toolResult.toolArgs,
                     toolResult = toolResult.result,
-                    context = context
                 )
             }
 
@@ -139,14 +174,14 @@ public class ContextualAgentEnvironment(
                 context.pipeline.onToolCallFailed(
                     eventId = eventId,
                     executionInfo = executionInfo,
+                    context = context,
                     runId = context.runId,
                     toolCallId = toolResult.id,
                     toolName = toolResult.tool,
                     toolDescription = toolResult.toolDescription,
                     toolArgs = toolResult.toolArgs,
-                    message = toolResult.content,
+                    message = toolResult.output,
                     error = toolResultKind.error,
-                    context = context
                 )
             }
 
@@ -154,14 +189,14 @@ public class ContextualAgentEnvironment(
                 context.pipeline.onToolValidationFailed(
                     eventId = eventId,
                     executionInfo = executionInfo,
+                    context = context,
                     runId = context.runId,
                     toolCallId = toolResult.id,
                     toolName = toolResult.tool,
                     toolDescription = toolResult.toolDescription,
                     toolArgs = toolResult.toolArgs,
-                    message = toolResult.content,
+                    message = toolResult.output,
                     error = toolResultKind.error,
-                    context = context
                 )
             }
         }

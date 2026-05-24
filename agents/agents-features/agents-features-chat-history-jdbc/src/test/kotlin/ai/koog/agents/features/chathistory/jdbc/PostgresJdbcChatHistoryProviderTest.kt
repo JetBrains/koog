@@ -1,6 +1,7 @@
 package ai.koog.agents.features.chathistory.jdbc
 
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.test.utils.DockerAvailableCondition
@@ -106,12 +107,12 @@ class PostgresJdbcChatHistoryProviderTest : AbstractJdbcChatHistoryProviderTest(
 
         val aliceFinal = run3.load("agent-alice")
         assertEquals(5, aliceFinal.size)
-        assertEquals("And 3+3?", aliceFinal[3].content)
-        assertEquals("6", aliceFinal[4].content)
+        assertEquals("And 3+3?", (aliceFinal[3].parts[0] as MessagePart.Text).text)
+        assertEquals("6", (aliceFinal[4].parts[0] as MessagePart.Text).text)
 
         val bobFinal = run3.load("agent-bob")
         assertEquals(5, bobFinal.size)
-        assertEquals("Who was the first person on the moon?", bobFinal[3].content)
-        assertEquals("Neil Armstrong.", bobFinal[4].content)
+        assertEquals("Who was the first person on the moon?", (bobFinal[3].parts[0] as MessagePart.Text).text)
+        assertEquals("Neil Armstrong.", (bobFinal[4].parts[0] as MessagePart.Text).text)
     }
 }

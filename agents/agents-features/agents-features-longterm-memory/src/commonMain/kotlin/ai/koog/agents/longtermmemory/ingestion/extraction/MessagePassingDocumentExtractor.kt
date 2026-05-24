@@ -2,6 +2,7 @@ package ai.koog.agents.longtermmemory.ingestion.extraction
 
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.rag.base.TextDocument
 
 /**
@@ -57,7 +58,7 @@ public class MessagePassingDocumentExtractor(
     }
 
     private fun messageToMemoryRecord(message: Message): TextDocument = MemoryRecord(
-        content = message.content,
+        content = message.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text },
         metadata = mapOf(
             MESSAGE_ROLE_FIELD_NAME to message.role.name,
             TIMESTAMP_FIELD_NAME to message.metaInfo.timestamp.toEpochMilliseconds()

@@ -41,6 +41,18 @@ jobs:
             test-group: "ai.koog.integration.tests.agent.AIAgent*"
             artifact-name: "agent-tests"
             os: ubuntu-latest
+          - job-name: "cli-agent-tests (linux)"
+            test-group: "ai.koog.integration.tests.agent.CliAIAgentIntegrationTest"
+            artifact-name: "cli-agent-tests"
+            os: ubuntu-latest
+          - job-name: "cli-agent-tests (windows)"
+            test-group: "ai.koog.integration.tests.agent.CliAIAgentIntegrationTest"
+            artifact-name: "cli-agent-tests"
+            os: windows-latest
+          - job-name: "single-llm-executor-tests"
+            test-group: "ai.koog.integration.tests.executor.SingleLLMPromptExecutorIntegrationTest"
+            artifact-name: "single-llm-executor-tests"
+            os: ubuntu-latest
           - job-name: "multiple-llm-executor-tests"
             test-group: "ai.koog.integration.tests.executor.MultipleLLMPromptExecutorIntegrationTest"
             artifact-name: "multiple-llm-executor-tests"
@@ -84,6 +96,18 @@ jobs:
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install CLI agents globally
+        run: npm install -g @openai/codex@0.130.0 @anthropic-ai/claude-code@2.1.140
+
+      - name: Build cli-agents Docker image
+        if: ${{ matrix.job-name == 'cli-agent-tests (linux)' }}
+        run: docker build -t cli-agents .github/CliAgentsImage
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v6

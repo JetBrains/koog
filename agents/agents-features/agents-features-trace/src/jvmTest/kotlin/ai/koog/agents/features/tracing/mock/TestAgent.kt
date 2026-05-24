@@ -13,6 +13,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONElement
@@ -58,19 +59,30 @@ fun systemMessage(content: String): Message.System =
     Message.System(content, metaInfo = RequestMetaInfo.create(testClock))
 
 /**
- * Creates a `Message.Tool.Call` instance with the specified tool name and content.
+ * Creates a `MessagePart.Tool.Call` instance with the specified tool name and content.
  *
  * @param toolName The name of the tool being called.
  * @param content The content of the tool call.
- * @return A `Message.Tool.Call` object initialized with the provided tool name, content,
+ * @return A `MessagePart.Tool.Call` object initialized with the provided tool name, content,
  *         and default metadata including a pre-defined ID as "0".
  */
-fun toolCallMessage(toolName: String, content: String): Message.Tool.Call =
-    Message.Tool.Call(
+fun toolCallMessage(toolName: String, content: String): Message.Assistant =
+    Message.Assistant(
+        toolCallMessagePart(toolName, content),
+        metaInfo = ResponseMetaInfo.create(testClock)
+    )
+
+/**
+ * Bare [MessagePart.Tool.Call] with the same id/tool/args shape as the part embedded in
+ * [toolCallMessage]. Use this when a test needs the part itself (e.g. when encoding to JSON
+ * via `typeToken<MessagePart.Tool.Call>()` for an output/input assertion), rather than the
+ * surrounding `Message.Assistant` wrapper.
+ */
+fun toolCallMessagePart(toolName: String, content: String): MessagePart.Tool.Call =
+    MessagePart.Tool.Call(
         id = "0",
         tool = toolName,
-        content = content,
-        metaInfo = ResponseMetaInfo.create(testClock)
+        args = content,
     )
 
 fun receivedToolResult(
@@ -85,9 +97,33 @@ fun receivedToolResult(
     tool = toolName,
     toolArgs = toolArgs,
     toolDescription = toolDescription,
-    content = content,
+    output = content,
     resultKind = ToolResultKind.Success,
-    result = result,
+    result = result
+)
+
+/**
+ * Wraps the same data as [receivedToolResult] into a [Message.User] containing a
+ * [MessagePart.Tool.Result] part - the shape that appears inside a prompt's `messages` list
+ * once a tool result has been delivered back to the LLM.
+ */
+fun receivedToolResultMessage(
+    toolCallId: String?,
+    toolName: String,
+    toolArgs: JSONObject,
+    toolDescription: String,
+    content: String,
+    result: JSONElement
+): Message.User = Message.User(
+    part = receivedToolResult(
+        toolCallId = toolCallId,
+        toolName = toolName,
+        toolArgs = toolArgs,
+        toolDescription = toolDescription,
+        content = content,
+        result = result,
+    ).toMessagePart(),
+    metaInfo = RequestMetaInfo.create(testClock)
 )
 
 /**

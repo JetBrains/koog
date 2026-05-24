@@ -1,7 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -33,6 +31,7 @@ kotlin {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
                 implementation(project(":serialization:serialization-jackson"))
+                implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(libs.mockk)
                 implementation(libs.ktor.client.cio)
             }

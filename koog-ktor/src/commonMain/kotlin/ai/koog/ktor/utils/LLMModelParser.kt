@@ -259,7 +259,6 @@ private val ANTHROPIC_MODELS_MAP = mapOf(
     "opus_4_5" to AnthropicModels.Opus_4_5,
     "opus_4_6" to AnthropicModels.Opus_4_6,
     "opus_4_7" to AnthropicModels.Opus_4_7,
-    "haiku_3" to AnthropicModels.Haiku_3,
     "haiku_4_5" to AnthropicModels.Haiku_4_5,
     "sonnet_4" to AnthropicModels.Sonnet_4,
     "sonnet_4_5" to AnthropicModels.Sonnet_4_5,
@@ -267,9 +266,6 @@ private val ANTHROPIC_MODELS_MAP = mapOf(
 )
 
 private val GOOGLE_MODELS_MAP = mapOf(
-    "gemini2_0flash" to GoogleModels.Gemini2_0Flash,
-    "gemini2_0flash001" to GoogleModels.Gemini2_0Flash001,
-    "gemini2_0flashlite" to GoogleModels.Gemini2_0FlashLite,
     "gemini2_0flashlite001" to GoogleModels.Gemini2_0FlashLite001,
     "gemini2_5flash" to GoogleModels.Gemini2_5Flash,
     "gemini2_5flashlite" to GoogleModels.Gemini2_5FlashLite,
@@ -319,8 +315,6 @@ private val OPENROUTER_MODELS_MAP = mapOf(
 private val DEEPSEEK_MODELS_MAP = mapOf(
     "deepseek-v4-flash" to DeepSeekModels.DeepSeekV4Flash,
     "deepseek-v4-pro" to DeepSeekModels.DeepSeekV4Pro,
-    "deepseek-chat" to DeepSeekModels.DeepSeekChat,
-    "deepseek-reasoner" to DeepSeekModels.DeepSeekReasoner,
 )
 
 private val OLLAMA_GROQ_MODELS_MAP = mapOf(

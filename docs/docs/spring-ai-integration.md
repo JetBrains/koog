@@ -368,9 +368,9 @@ This starter provides text-only conversation persistence, not full Koog executio
 Only plain-text `System`, `User`, and `Assistant` messages are persisted.
 The following are silently dropped on store:
 
-- `Message.Tool.Call`
-- `Message.Tool.Result`
-- `Message.Reasoning`
+- `MessagePart.Tool.Call`
+- `MessagePart.Tool.Result`
+- `MessagePart.Reasoning`
 - any message carrying attachments
 
 On load, Spring AI `TOOL` rows are silently skipped.

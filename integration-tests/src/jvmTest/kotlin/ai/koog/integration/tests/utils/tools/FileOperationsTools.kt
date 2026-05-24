@@ -1,6 +1,7 @@
 package ai.koog.integration.tests.utils.tools
 
 import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 class FileOperationsTools {
@@ -11,7 +12,7 @@ class FileOperationsTools {
 
     class CreateNewFileWithText(private val fileOperationsTools: FileOperationsTools) :
         SimpleTool<CreateNewFileWithText.Args>(
-            argsSerializer = Args.serializer(),
+            argsType = typeToken<Args>(),
             name = "create_new_file_with_text",
             description = "Creates a new file at the specified path with the provided text content"
         ) {
@@ -28,7 +29,7 @@ class FileOperationsTools {
 
     class ReadFileContent(private val fileOperationsTools: FileOperationsTools) :
         SimpleTool<ReadFileContent.Args>(
-            argsSerializer = Args.serializer(),
+            argsType = typeToken<Args>(),
             name = "read_file_content",
             description = "Reads the content of a file at the specified path"
         ) {

@@ -1,6 +1,7 @@
 package ai.koog.agents.features.chathistory.aws
 
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.utils.time.KoogClock
@@ -125,7 +126,10 @@ class AgentcoreChatHistoryProviderTest {
         val messages = listOf(
             Message.System("system prompt", RequestMetaInfo.Empty),
             Message.User("Hello", RequestMetaInfo.Empty),
-            Message.Tool.Call(id = "1", tool = "t", content = "{}", metaInfo = ResponseMetaInfo.Empty),
+            Message.Assistant(
+                part = MessagePart.Tool.Call(id = "1", tool = "t", args = "{}"),
+                metaInfo = ResponseMetaInfo.Empty
+            ),
             Message.Assistant("Hi!", ResponseMetaInfo.Empty)
         )
 
@@ -142,7 +146,11 @@ class AgentcoreChatHistoryProviderTest {
 
         val messages = listOf(
             Message.System("system prompt", RequestMetaInfo.Empty),
-            Message.Tool.Call(id = "1", tool = "t", content = "{}", metaInfo = ResponseMetaInfo.Empty)
+            Message.Assistant(
+                part = MessagePart.Tool.Call(id = "1", tool = "t", args = "{}"),
+                metaInfo = ResponseMetaInfo.Empty
+            )
+
         )
 
         provider.store("actor:session", messages)
@@ -342,9 +350,9 @@ class AgentcoreChatHistoryProviderTest {
 
         assertEquals(2, messages.size)
         assertIs<Message.User>(messages[0])
-        assertEquals("Hello", messages[0].content)
+        assertEquals("Hello", (messages[0].parts[0] as MessagePart.Text).text)
         assertIs<Message.Assistant>(messages[1])
-        assertEquals("Hi!", messages[1].content)
+        assertEquals("Hi!", (messages[1].parts[0] as MessagePart.Text).text)
     }
 
     @Test
@@ -406,9 +414,9 @@ class AgentcoreChatHistoryProviderTest {
 
         assertEquals(2, messages.size)
         assertIs<Message.User>(messages[0])
-        assertEquals("question", messages[0].content)
+        assertEquals("question", (messages[0].parts[0] as MessagePart.Text).text)
         assertIs<Message.Assistant>(messages[1])
-        assertEquals("response", messages[1].content)
+        assertEquals("response", (messages[1].parts[0] as MessagePart.Text).text)
     }
 
     @Test
@@ -437,8 +445,8 @@ class AgentcoreChatHistoryProviderTest {
         val messages = provider.load("actor:session")
 
         assertEquals(2, messages.size)
-        assertEquals("page2-msg", messages[0].content)
-        assertEquals("page1-msg", messages[1].content)
+        assertEquals("page2-msg", (messages[0].parts[0] as MessagePart.Text).text)
+        assertEquals("page1-msg", (messages[1].parts[0] as MessagePart.Text).text)
         coVerify(exactly = 2) { client.listEvents(any<ListEventsRequest>()) }
     }
 

@@ -5,19 +5,17 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMModerateMessage
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
+import ai.koog.agents.core.dsl.extension.nodeLLMModerateText
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.agents.ext.agent.subgraphWithVerification
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.RequestMetaInfo
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 
 class MermaidDiagramGeneratorTest {
 
@@ -25,15 +23,15 @@ class MermaidDiagramGeneratorTest {
     fun `Should generate a diagram for simple graph`() {
         val myStrategy = strategy<String, String>("my-strategy") {
             val nodeCallLLM by nodeLLMRequest()
-            val executeToolCall by nodeExecuteTool()
-            val sendToolResult by nodeLLMSendToolResult()
+            val executeToolCall by nodeExecuteTools()
+            val sendToolResult by nodeLLMSendToolResults()
 
             edge(nodeStart forwardTo nodeCallLLM)
-            edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
-            edge(nodeCallLLM forwardTo executeToolCall onToolCall { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
+            edge(nodeCallLLM forwardTo executeToolCall onToolCalls { true })
             edge(executeToolCall forwardTo sendToolResult)
-            edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
-            edge(sendToolResult forwardTo executeToolCall onToolCall { true })
+            edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
+            edge(sendToolResult forwardTo executeToolCall onToolCalls { true })
         }
 
         val diagram = myStrategy.asMermaidDiagram()
@@ -48,13 +46,13 @@ class MermaidDiagramGeneratorTest {
                 state "nodeCallLLM" as nodeCallLLM
                 state "executeToolCall" as executeToolCall
                 state "sendToolResult" as sendToolResult
-
+            
                 [*] --> nodeCallLLM
                 nodeCallLLM --> [*] : transformed
-                nodeCallLLM --> executeToolCall : onCondition
+                nodeCallLLM --> executeToolCall : transformed
                 executeToolCall --> sendToolResult
                 sendToolResult --> [*] : transformed
-                sendToolResult --> executeToolCall : onCondition
+                sendToolResult --> executeToolCall : transformed
             """.trimIndent()
     }
 
@@ -63,25 +61,23 @@ class MermaidDiagramGeneratorTest {
         val strategy = strategy<String, String>(
             name = "test-strategy",
         ) {
-            val moderateInput by nodeLLMModerateMessage(
+            val moderateInput by nodeLLMModerateText(
                 name = "moderate-input",
                 moderatingModel = OpenAIModels.Moderation.Omni,
             )
             val nodeCallLLM by nodeLLMRequest("CallLLM")
 
-            val nodeExecuteTool by nodeExecuteTool("ExecuteTool")
-            val nodeSendToolResult by nodeLLMSendToolResult("SendToolResult")
+            val nodeExecuteTool by nodeExecuteTools("ExecuteTool")
+            val nodeSendToolResult by nodeLLMSendToolResults("SendToolResult")
 
             edge(
-                nodeStart forwardTo moderateInput transformed {
-                    Message.User(it, metaInfo = RequestMetaInfo.Empty)
-                },
+                nodeStart forwardTo moderateInput,
             )
 
             edge(
                 moderateInput forwardTo nodeCallLLM
                     onCondition { !it.moderationResult.isHarmful }
-                    transformed { it.message.content },
+                    transformed { "" },
             )
 
             edge(
@@ -90,11 +86,11 @@ class MermaidDiagramGeneratorTest {
                     transformed { "Moderation Error" },
             )
 
-            edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
-            edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
+            edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
             edge(nodeExecuteTool forwardTo nodeSendToolResult)
-            edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-            edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+            edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
+            edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
         }
 
         val diagram = strategy.asMermaidDiagram()
@@ -111,14 +107,14 @@ class MermaidDiagramGeneratorTest {
                 state "ExecuteTool" as ExecuteTool
                 state "SendToolResult" as SendToolResult
 
-                [*] --> moderate_input : transformed
+                [*] --> moderate_input
                 moderate_input --> CallLLM : transformed
                 moderate_input --> [*] : transformed
                 CallLLM --> [*] : transformed
-                CallLLM --> ExecuteTool : onCondition
+                CallLLM --> ExecuteTool : transformed
                 ExecuteTool --> SendToolResult
                 SendToolResult --> [*] : transformed
-                SendToolResult --> ExecuteTool : onCondition
+                SendToolResult --> ExecuteTool : transformed
             """.trimIndent()
     }
 
@@ -226,7 +222,7 @@ class MermaidDiagramGeneratorTest {
         val myStrategy = strategy<String, String>("object-test") {
             val nodeCallLLM by nodeLLMRequest()
             edge(nodeStart forwardTo nodeCallLLM)
-            edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
         }
 
         val fromExtension = myStrategy.asMermaidDiagram()
@@ -328,7 +324,7 @@ class MermaidDiagramGeneratorTest {
                         nodeDecide --> callToolsHacked : transformed
                         nodeDecide --> handleAssistantMessage : transformed
                         nodeDecide --> [*] : transformed
-                        callToolsHacked --> finalizeTask : transformed
+                        callToolsHacked --> finalizeTask : onCondition
                         callToolsHacked --> sendToolsResults
                         handleAssistantMessage --> nodeDecide
                         finalizeTask --> [*]

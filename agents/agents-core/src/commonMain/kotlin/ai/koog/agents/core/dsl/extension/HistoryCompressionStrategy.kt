@@ -4,7 +4,9 @@ import ai.koog.agents.annotations.KtLintIgnoreNaming
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.prompt.Prompts.summarizeInTLDR
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import kotlin.jvm.JvmField
+import kotlin.jvm.JvmOverloads
 import kotlin.jvm.JvmStatic
 import kotlin.time.Instant
 
@@ -40,7 +42,7 @@ public abstract class HistoryCompressionStrategy {
      *                   and request a response without utilizing external tools.
      * @return A list of language model responses containing the summarized "TL;DR" of the conversation.
      */
-    protected suspend fun compressPromptIntoTLDR(llmSession: AIAgentLLMWriteSession): List<Message.Response> {
+    protected suspend fun compressPromptIntoTLDR(llmSession: AIAgentLLMWriteSession): List<Message.Assistant> {
         return with(llmSession) {
             // If there are any tool calls left in a history, we are not allowed to send a user message back
             dropTrailingToolCalls()
@@ -74,8 +76,8 @@ public abstract class HistoryCompressionStrategy {
         val systemMessages = originalMessages.filterIsInstance<Message.System>()
         messages.addAll(systemMessages)
 
-        // Leave the first user message if present
-        val firstUserMessage = originalMessages.firstOrNull { it is Message.User }
+        // Leave the first user message with text content (skip pure tool-result messages)
+        val firstUserMessage = originalMessages.firstOrNull { it is Message.User && it.parts.any { part -> part is MessagePart.Text } }
         firstUserMessage?.let { messages.add(it) }
 
         // Add the memory messages
@@ -87,7 +89,13 @@ public abstract class HistoryCompressionStrategy {
         // Add the tldr messages
         messages.addAll(tldrMessages)
 
-        val trailingToolCalls = originalMessages.takeLastWhile { it is Message.Tool.Call }
+        val lastMessage = originalMessages.lastOrNull()
+        val trailingToolCalls = if (lastMessage is Message.Assistant && lastMessage.parts.any { it is MessagePart.Tool.Call }) {
+            listOf(lastMessage)
+        } else {
+            emptyList()
+        }
+
         messages.addAll(trailingToolCalls)
 
         return messages
@@ -239,6 +247,29 @@ public abstract class HistoryCompressionStrategy {
          */
         @JvmStatic
         @KtLintIgnoreNaming
-        public fun FactRetrieval(concepts: List<Concept>): HistoryCompressionStrategy = FactRetrievalHistoryCompressionStrategy(concepts)
+        public fun FactRetrieval(concepts: List<Concept>): HistoryCompressionStrategy =
+            FactRetrievalHistoryCompressionStrategy(concepts)
+
+        /**
+         * A strategy for compressing history by extracting structured facts about predefined concepts
+         * fro m the current conversation history using an LLM, then replacing the full history with a
+         * compact assistant message that contains those extracted facts.
+         *
+         * This strategy preserves all system messages as well as the first user message
+         * (if present) and memory messages (if provided), then appends a single assistant message
+         * summarising the extracted facts and the approximate number of tool interactions that occurred.
+         *
+         * [System, User, Assistant, ToolCall, ToolResult, Assistant]
+         * ->
+         * [System, User, Memory, Assistant([CONTEXT RESTORATION] facts about configured concepts)]
+         *
+         * @param concepts A variable number of [Concept] objects that define the topics for which facts
+         *                 are to be extracted from the conversation history.
+         * @return A [HistoryCompressionStrategy] configured for fact-based history compression.
+         */
+        @JvmStatic
+        @JvmOverloads
+        @KtLintIgnoreNaming
+        public fun FactRetrieval(vararg concepts: Concept): HistoryCompressionStrategy = FactRetrieval(concepts.toList())
     }
 }

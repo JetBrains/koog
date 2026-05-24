@@ -2,11 +2,12 @@ package ai.koog.integration.tests.utils.tools.files
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 class CreateFile(private val fs: MockFileSystem) : Tool<CreateFile.Args, CreateFile.Result>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Result.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Result>(),
     name = "create_file",
     description = "Create a file and writes the given text content to it"
 ) {

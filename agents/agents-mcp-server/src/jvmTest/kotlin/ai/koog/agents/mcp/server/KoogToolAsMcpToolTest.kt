@@ -162,18 +162,18 @@ class KoogToolAsMcpToolTest {
         assertEquals("${origin.last}", content.text)
     }
 
-    @Suppress("DEPRECATION")
     private fun <T : Tool<*, *>> testMcpTool(
         tool: T,
         block: suspend (McpTool, T) -> Unit,
     ) = runTest(timeout = 30.seconds) {
         assertIsNot<McpTool>(tool)
 
-        val (server, connectors) = startSseMcpServer(
+        val (server, connectors) = startMcpServer(
             factory = CIO,
             tools = ToolRegistry {
                 tool(tool)
             },
+            transport = McpServerTransportType.SSE,
         )
 
         val port = connectors.firstOrNull()?.port ?: 0

@@ -29,7 +29,7 @@ import kotlin.jvm.JvmStatic
  *
  * @property tools The list of tools contained in this registry
  */
-public class ToolRegistry internal constructor(tools: List<Tool<*, *>> = emptyList()) {
+public class ToolRegistry internal constructor(tools: List<ToolBase<*, *>> = emptyList()) {
 
     /**
      * Creates a new ToolRegistry using the provided builder initialization block.
@@ -38,7 +38,7 @@ public class ToolRegistry internal constructor(tools: List<Tool<*, *>> = emptyLi
      */
     public constructor(init: ToolRegistryBuilder.() -> Unit) : this(ToolRegistryBuilder().apply(init).build().tools)
 
-    private val _tools: MutableList<Tool<*, *>> = tools.toMutableList()
+    private val _tools: MutableList<ToolBase<*, *>> = tools.toMutableList()
 
     /**
      * Provides an immutable list of tools currently available in the registry.
@@ -46,7 +46,7 @@ public class ToolRegistry internal constructor(tools: List<Tool<*, *>> = emptyLi
      * The tools are sourced from the internal backing collection and returned as
      * a read-only list to prevent external modification of the registry state.
      */
-    public val tools: List<Tool<*, *>>
+    public val tools: List<ToolBase<*, *>>
         get() = _tools.toList()
 
     /**
@@ -58,7 +58,7 @@ public class ToolRegistry internal constructor(tools: List<Tool<*, *>> = emptyLi
      * @param toolName The name of the tool to retrieve
      * @return The tool with the specified name, or null if not found
      */
-    public fun getToolOrNull(toolName: String): Tool<*, *>? {
+    public fun getToolOrNull(toolName: String): ToolBase<*, *>? {
         return _tools.firstOrNull { it.name == toolName }
     }
 
@@ -71,7 +71,7 @@ public class ToolRegistry internal constructor(tools: List<Tool<*, *>> = emptyLi
      * @return The tool with the specified name
      * @throws IllegalArgumentException if no tool with the specified name is found
      */
-    public fun getTool(toolName: String): Tool<*, *> {
+    public fun getTool(toolName: String): ToolBase<*, *> {
         return getToolOrNull(toolName)
             ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined")
     }
@@ -85,7 +85,7 @@ public class ToolRegistry internal constructor(tools: List<Tool<*, *>> = emptyLi
      * @return The tool of the specified type
      * @throws IllegalArgumentException if no tool of the specified type is found
      */
-    public inline fun <reified T : Tool<*, *>> getTool(): T {
+    public inline fun <reified T : ToolBase<*, *>> getTool(): T {
         return tools
             .firstOrNull { it::class == T::class }
             ?.let { it as? T }
@@ -111,7 +111,7 @@ public class ToolRegistry internal constructor(tools: List<Tool<*, *>> = emptyLi
      *
      * @param tool The tool to be added to the registry.
      */
-    public fun add(tool: Tool<*, *>) {
+    public fun add(tool: ToolBase<*, *>) {
         if (_tools.contains(tool)) return
         _tools.add(tool)
     }
@@ -123,7 +123,7 @@ public class ToolRegistry internal constructor(tools: List<Tool<*, *>> = emptyLi
      *
      * @param tools The tools to be added to the registry.
      */
-    public fun addAll(vararg tools: Tool<*, *>) {
+    public fun addAll(vararg tools: ToolBase<*, *>) {
         tools.forEach { tool -> add(tool) }
     }
 

@@ -12,6 +12,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -180,7 +181,7 @@ class AIAgentLLMContextTest : AgentTestBase() {
     )
 
     private class TestTool : SimpleTool<TestToolArgs>(
-        argsSerializer = TestToolArgs.serializer(),
+        argsType = typeToken<TestToolArgs>(),
         name = "test-tool",
         description = "A test tool for testing"
     ) {

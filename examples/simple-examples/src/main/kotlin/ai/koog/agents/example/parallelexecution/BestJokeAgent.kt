@@ -11,7 +11,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfigJvm.addSpanExporter
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -20,6 +19,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.MessagePart
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import kotlinx.serialization.Serializable
 
@@ -143,7 +143,7 @@ private suspend fun AIAgentContext.requestAJoke(
         }
     }
     val response = requestLLMWithoutTools()
-    response.content
+    response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
 }
 
 private suspend fun AIAgentContext.findTheBestJoke(

@@ -4,16 +4,15 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.context.AgentContextData
-import ai.koog.agents.core.agent.context.getAgentContextData
-import ai.koog.agents.core.agent.context.removeAgentContextData
+import ai.koog.agents.core.agent.context.GraphAgentContextData
+import ai.koog.agents.core.agent.context.getGraphAgentContextData
+import ai.koog.agents.core.agent.context.removeGraphAgentContextData
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.serialization.JSONElement
-import ai.koog.serialization.kotlinx.toKoogJSONElement
+import ai.koog.serialization.JSONNull
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Represents a strategy for managing and executing AI agent workflows built as subgraphs of interconnected nodes.
@@ -77,7 +76,7 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
 
         var result: TOutput? = super.execute(context = context, input = input)
 
-        while (result == null && context.getAgentContextData() != null) {
+        while (result == null && context.getGraphAgentContextData() != null) {
             restoreStateIfNeeded(context)
             result = super.execute(context = context, input = input)
         }
@@ -89,39 +88,56 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
     private suspend fun restoreStateIfNeeded(
         agentContext: AIAgentGraphContextBase
     ) {
-        val additionalContextData: AgentContextData = agentContext.getAgentContextData() ?: return
+        val additionalContextData: GraphAgentContextData = agentContext.getGraphAgentContextData() ?: return
 
         restoreDefault(agentContext, additionalContextData)
-        agentContext.removeAgentContextData()
+        agentContext.removeGraphAgentContextData()
     }
 
     @OptIn(InternalAgentsApi::class)
-    private suspend fun restoreMessageOnly(agentContext: AIAgentContext, data: AgentContextData) {
+    private suspend fun restoreMessageOnly(agentContext: AIAgentContext, data: GraphAgentContextData) {
         agentContext.llm.withPrompt {
             this.withMessages { (data.messageHistory) }
         }
     }
 
     @OptIn(InternalAgentsApi::class)
-    private suspend fun restoreDefault(agentContext: AIAgentGraphContextBase, data: AgentContextData) {
+    private suspend fun restoreDefault(agentContext: AIAgentGraphContextBase, data: GraphAgentContextData) {
         val nodePath = data.nodePath
 
         // Perform additional cleanup (ex: rollback tools):
         data.additionalRollbackActions(agentContext)
 
         // Set current graph node:
-        @Suppress("DEPRECATION")
-        when {
-            data.lastInput != null -> setExecutionPoint(nodePath, data.lastInput, agentContext)
-            data.lastOutput != null -> setExecutionPointAfterNode(nodePath, data.lastOutput, agentContext)
-
-            // Unexpected state, either input (before 0.6.1) or output (since 0.6.1) should be saved in checkpoints:
-            else -> {}
+        if (data.lastOutput != JSONNull) {
+            setExecutionPointAfterNode(nodePath, data.lastOutput, agentContext)
+        } else {
+            logger.warn { "Unexpected state in checkpoint: output was not saved" }
         }
 
-        // Reset the message history:
-        agentContext.llm.withPrompt {
-            this.withMessages { (data.messageHistory) }
+        // Restore LLM session
+        agentContext.llm.writeSession {
+            // Restore LLM model
+            data.llmModel?.let { model = it }
+
+            // Restore messages and LLM params
+            prompt = prompt.copy(
+                messages = data.messageHistory,
+                params = data.llmParams ?: prompt.params
+            )
+
+            data.tools?.let { toolNames ->
+                // Restore tools
+                tools = tools.filter { it.name in toolNames }
+            }
+        }
+
+        // Restore the storage
+        agentContext.storage.putAllSerialized(data.storage.entries)
+
+        // Restore agent iterations
+        agentContext.stateManager.withStateLock { state ->
+            state.iterations = data.agentIterations
         }
     }
 
@@ -156,73 +172,6 @@ public open class AIAgentGraphStrategyBase<TInput, TOutput>(
                 ?: throw IllegalStateException("Node ${currentNode?.name} is not a valid leaf node")
             currentNode.enforceExecutionPoint(it, input)
         }
-    }
-
-    /**
-     * Enforces the strategy's next execution to start at the node identified by [nodePath], feeding
-     * it with [input] decoded as that node's declared input type.
-     *
-     * [nodePath] is a [DEFAULT_AGENT_PATH_SEPARATOR]-joined path whose first segment is the agent's id
-     * and is ignored; the remaining segments identify the node inside this strategy's [metadata].
-     * The identified node will be re-executed (its previous output was not persisted in checkpoints,
-     * which is the original behavior prior to version 0.6.1).
-     *
-     * @param nodePath The path identifying the target node within the strategy's metadata.
-     * @param input The serialized input to pass to the target node; it is decoded using the node's [AIAgentNodeBase.inputType].
-     * @param agentContext The graph context whose execution point should be enforced.
-     * @throws IllegalArgumentException if [nodePath] does not contain any node segment after the agent id.
-     * @throws IllegalStateException if no node corresponding to [nodePath] can be found in [metadata],
-     * or if one of the intermediate path segments is not an [ExecutionPointNode].
-     */
-    @Deprecated("Use setExecutionPointAfterNode instead, setExecutionPoint will be removed in future versions")
-    public suspend fun setExecutionPoint(
-        nodePath: String,
-        input: JSONElement,
-        agentContext: AIAgentGraphContextBase,
-    ) {
-        // we drop first because it's agent's id, we don't need it here
-        val segments = nodePath.split(DEFAULT_AGENT_PATH_SEPARATOR).drop(1)
-
-        if (segments.isEmpty()) {
-            throw IllegalArgumentException("Invalid node path: $nodePath")
-        }
-
-        val actualPath = segments.joinToString(DEFAULT_AGENT_PATH_SEPARATOR)
-
-        val completedNode = metadata.nodesMap[actualPath] ?: throw IllegalStateException("Node $actualPath not found")
-
-        val actualInput = agentContext.config.serializer
-            .decodeFromJSONElement<Any?>(input, completedNode.inputType)
-
-        // Note: completed node will be re-executed because the output wasn't saved in checkpoints
-        // (this was the original behavior before 0.6.1)
-        setExecutionPointImpl(segments, completedNode, actualInput)
-    }
-
-    /**
-     * Overload of [setExecutionPointAfterNode] accepting a [kotlinx.serialization.json.JsonElement]
-     * as the node's output. The element is converted to [ai.koog.serialization.JSONElement] via
-     * [toKoogJSONElement] and delegated to the primary overload.
-     *
-     * Prefer the overload that accepts an [ai.koog.serialization.JSONElement] directly.
-     *
-     * @param nodePath The path identifying the completed node within the strategy's metadata.
-     * @param output The serialized output produced by the node at [nodePath].
-     * @param agentContext The graph context whose execution point should be enforced.
-     */
-    @Deprecated(
-        "Pass an ai.koog.serialization.JSONElement instead of kotlinx.serialization.json.JsonElement",
-        ReplaceWith(
-            "setExecutionPointAfterNode(nodePath, output.toKoogJSONElement(), agentContext)",
-            "ai.koog.serialization.kotlinx.toKoogJSONElement"
-        )
-    )
-    public suspend fun setExecutionPointAfterNode(
-        nodePath: String,
-        output: JsonElement,
-        agentContext: AIAgentGraphContextBase
-    ) {
-        setExecutionPointAfterNode(nodePath, output.toKoogJSONElement(), agentContext)
     }
 
     /**

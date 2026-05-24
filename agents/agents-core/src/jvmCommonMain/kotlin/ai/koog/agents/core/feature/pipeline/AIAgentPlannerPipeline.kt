@@ -1,6 +1,3 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
-@file:OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
-
 package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.annotations.JavaAPI
@@ -19,6 +16,7 @@ import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.concurrency.withContextReentrant
 import ai.koog.utils.time.KoogClock
 
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "DELEGATED_MEMBER_HIDES_SUPERTYPE_OVERRIDE")
 public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor(
     agentConfig: AIAgentConfig,
     clock: KoogClock,
@@ -55,11 +53,12 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      */
     @JavaAPI
     @JvmName("interceptPlanCreationStarting")
-    public fun javaApiInterceptPlanCreationStarting(
+    public fun interceptPlanCreationStartingBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<PlanCreationStartingContext>
     ) {
         interceptPlanCreationStarting(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -73,11 +72,12 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      */
     @JavaAPI
     @JvmName("interceptPlanCreationCompleted")
-    public fun javaApiInterceptPlanCreationCompleted(
+    public fun interceptPlanCreationCompletedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<PlanCreationCompletedContext>
     ) {
         interceptPlanCreationCompleted(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -97,11 +97,12 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      */
     @JavaAPI
     @JvmName("interceptStepExecutionStarting")
-    public fun javaApiInterceptStepExecutionStarting(
+    public fun interceptStepExecutionStartingBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<StepExecutionStartingContext>
     ) {
         interceptStepExecutionStarting(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -121,11 +122,12 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      */
     @JavaAPI
     @JvmName("interceptStepExecutionCompleted")
-    public fun javaApiInterceptStepExecutionCompleted(
+    public fun interceptStepExecutionCompletedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<StepExecutionCompletedContext>
     ) {
         interceptStepExecutionCompleted(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -139,11 +141,12 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      */
     @JavaAPI
     @JvmName("interceptPlanCompletionEvaluationStarting")
-    public fun javaApiInterceptPlanCompletionEvaluationStarting(
+    public fun interceptPlanCompletionEvaluationStartingBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<PlanCompletionEvaluationStartingContext>
     ) {
         interceptPlanCompletionEvaluationStarting(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }
@@ -163,11 +166,12 @@ public actual open class AIAgentPlannerPipeline @JvmOverloads actual constructor
      */
     @JavaAPI
     @JvmName("interceptPlanCompletionEvaluationCompleted")
-    public fun javaApiInterceptPlanCompletionEvaluationCompleted(
+    public fun interceptPlanCompletionEvaluationCompletedBlocking(
         feature: AIAgentFeature<*, *>,
         handle: Interceptor<PlanCompletionEvaluationCompletedContext>
     ) {
         interceptPlanCompletionEvaluationCompleted(feature) { ctx ->
+            @OptIn(InternalKoogUtils::class, InternalAgentsApi::class)
             withContextReentrant(config.strategyDispatcher) {
                 handle.intercept(ctx)
             }

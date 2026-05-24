@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.message.MessagePart
 import kotlinx.coroutines.runBlocking
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -14,10 +15,10 @@ fun main(): Unit = runBlocking {
             systemPrompt = "You're helpful librarian agent.",
             promptExecutor = executor,
             strategy = functionalStrategy {
-                val responses = requestLLMMultiple(it)
+                val response = requestLLM(it)
 
                 // Result:
-                responses.single().asAssistantMessage().content
+                response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { part -> part.text }
             },
             llmModel = OllamaModels.Meta.LLAMA_3_2,
         )

@@ -109,7 +109,7 @@ post("/llm-chat") {
     )
 
     // Join all assistant messages into a single string
-    val text = messages.joinToString(separator = "") { it.content }
+    val text = messages.joinToString(separator = "\n") { it.content }
     call.respond(HttpStatusCode.OK, text)
 }
 ```

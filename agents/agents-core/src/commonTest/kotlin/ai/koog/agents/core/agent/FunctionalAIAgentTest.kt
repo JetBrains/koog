@@ -17,7 +17,9 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -54,15 +56,15 @@ class FunctionalAIAgentTest {
             systemPrompt = "You are helpful",
             promptExecutor = mockLLMApi,
             strategy = functionalStrategy { inputParam ->
-                var responses = requestLLMMultiple(inputParam)
+                var responses = requestLLM(inputParam)
 
-                while (responses.containsToolCalls()) {
-                    val tools = extractToolCalls(responses)
-                    val results = executeMultipleTools(tools)
-                    responses = sendMultipleToolResults(results)
+                while (responses.parts.any { it is MessagePart.Tool.Call }) {
+                    val tools = getToolCalls(responses)
+                    val results = executeTools(tools)
+                    responses = sendToolResults(results)
                 }
 
-                responses.single().asAssistantMessage().content
+                responses.parts.filterIsInstance<MessagePart.Text>().first().text
             },
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry
@@ -102,7 +104,7 @@ class FunctionalAIAgentTest {
                     appendPrompt { user(inputParam) }
                     requestLLM()
                 }
-                resp.content
+                resp.parts.filterIsInstance<MessagePart.Text>().first().text
             },
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry,
@@ -138,15 +140,15 @@ class FunctionalAIAgentTest {
             OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry,
             strategy = functionalStrategy { inputParam: String ->
-                var responses = requestLLMMultiple(inputParam)
+                var responses = requestLLM(inputParam)
 
-                while (responses.containsToolCalls()) {
-                    val tools = extractToolCalls(responses)
-                    val results = executeMultipleTools(tools)
-                    responses = sendMultipleToolResults(results)
+                while (responses.parts.any { it is MessagePart.Tool.Call }) {
+                    val tools = getToolCalls(responses)
+                    val results = executeTools(tools)
+                    responses = sendToolResults(results)
                 }
 
-                responses.single().asAssistantMessage().content
+                responses.parts.filterIsInstance<MessagePart.Text>().first().text
             }
         ) {
             install(EventHandler) {
@@ -270,7 +272,7 @@ class FunctionalAIAgentTest {
 
     object QATools {
         object TestEngine : SimpleTool<Spacecraft>(
-            argsSerializer = Spacecraft.serializer(),
+            argsType = typeToken<Spacecraft>(),
             name = "test_engine",
             description = "Performs testing of the spacecraft engine."
         ) {
@@ -278,7 +280,7 @@ class FunctionalAIAgentTest {
         }
 
         object TestBody : SimpleTool<Spacecraft>(
-            argsSerializer = Spacecraft.serializer(),
+            argsType = typeToken<Spacecraft>(),
             name = "test_body",
             description = "Performs testing of the spacecraft bofy."
         ) {
@@ -286,7 +288,7 @@ class FunctionalAIAgentTest {
         }
 
         object TestBuild : SimpleTool<Spacecraft>(
-            argsSerializer = Spacecraft.serializer(),
+            argsType = typeToken<Spacecraft>(),
             name = "test_build",
             description = "Tests how spacecraft is built."
         ) {
@@ -300,7 +302,7 @@ class FunctionalAIAgentTest {
     // Define sample tools for subtasks, similar in spirit to QATools so tool lists are not empty
     object ArchitectureTools {
         object AnalyzeRequirements : SimpleTool<AnalyzeRequirements.Requirements>(
-            argsSerializer = Requirements.serializer(),
+            argsType = typeToken<Requirements>(),
             name = "analyze_requirements",
             description = "Analyzes high-level mission requirements."
         ) {
@@ -313,7 +315,7 @@ class FunctionalAIAgentTest {
         }
 
         object DraftArchitecture : SimpleTool<Architecture>(
-            argsSerializer = Architecture.serializer(),
+            argsType = typeToken<Architecture>(),
             name = "draft_architecture",
             description = "Drafts an initial spacecraft architecture proposal."
         ) {
@@ -325,7 +327,7 @@ class FunctionalAIAgentTest {
 
     object BuildEngineTools {
         object EstimateThrust : SimpleTool<Architecture>(
-            argsSerializer = Architecture.serializer(),
+            argsType = typeToken<Architecture>(),
             name = "estimate_thrust",
             description = "Estimates required thrust for the given architecture."
         ) {
@@ -333,7 +335,7 @@ class FunctionalAIAgentTest {
         }
 
         object SelectFuelType : SimpleTool<Architecture>(
-            argsSerializer = Architecture.serializer(),
+            argsType = typeToken<Architecture>(),
             name = "select_fuel_type",
             description = "Selects suitable fuel type based on mission profile and constraints."
         ) {
@@ -345,7 +347,7 @@ class FunctionalAIAgentTest {
 
     object BuildBodyTools {
         object ComputeMassBudget : SimpleTool<Architecture>(
-            argsSerializer = Architecture.serializer(),
+            argsType = typeToken<Architecture>(),
             name = "compute_mass_budget",
             description = "Computes mass budget for the spacecraft body."
         ) {
@@ -353,7 +355,7 @@ class FunctionalAIAgentTest {
         }
 
         object ChooseMaterial : SimpleTool<Architecture>(
-            argsSerializer = Architecture.serializer(),
+            argsType = typeToken<Architecture>(),
             name = "choose_material",
             description = "Chooses hull material given constraints."
         ) {
@@ -365,7 +367,7 @@ class FunctionalAIAgentTest {
 
     object AssemblyTools {
         object CheckInterfaces : SimpleTool<Assembly>(
-            argsSerializer = Assembly.serializer(),
+            argsType = typeToken<Assembly>(),
             name = "check_interfaces",
             description = "Checks mechanical, power, and data interfaces between components."
         ) {
@@ -374,7 +376,7 @@ class FunctionalAIAgentTest {
         }
 
         object ComputeDryMass : SimpleTool<Assembly>(
-            argsSerializer = Assembly.serializer(),
+            argsType = typeToken<Assembly>(),
             name = "compute_dry_mass",
             description = "Computes total dry mass of the assembly."
         ) {
@@ -504,13 +506,13 @@ class FunctionalAIAgentTest {
                         taskDescription = "Assemble the product: $assembly",
                         tools = AssemblyTools.tools,
                         llmModel = OllamaModels.Meta.LLAMA_4,
-                        runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+                        parallelTools = false
                     )
 
                     qaReport = subtask<FullQAReport>(
                         taskDescription = "Verify the product is built correctly: $product",
                         tools = QATools.tools,
-                        runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+                        parallelTools = false
                     )
 
                     if (qaReport.isCorrect) break
@@ -543,8 +545,8 @@ class FunctionalAIAgentTest {
         taskDescription = "Create the body for the given architecture: $architecture" +
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
         tools = BuildBodyTools.tools,
-        llmModel = GoogleModels.Gemini2_0Flash,
-        runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+        llmModel = GoogleModels.Gemini2_5Flash,
+        parallelTools = false
     )
 
     private suspend fun AIAgentFunctionalContext.buildEngine(
@@ -555,7 +557,7 @@ class FunctionalAIAgentTest {
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
         tools = BuildEngineTools.tools,
         llmModel = AnthropicModels.Opus_4_6,
-        runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+        parallelTools = false
     )
 
     private suspend fun AIAgentFunctionalContext.designArchitecture(
@@ -566,7 +568,7 @@ class FunctionalAIAgentTest {
             (additionalInfo?.let { "Additional feedback: $additionalInfo" } ?: ""),
         tools = ArchitectureTools.tools,
         llmModel = OpenAIModels.Chat.GPT5,
-        runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+        parallelTools = false
     )
 
     @Test
@@ -591,7 +593,7 @@ class FunctionalAIAgentTest {
                 subtask<SimpleOut>(
                     taskDescription = "Do simple subtask: $input",
                     tools = null, // no extra tools
-                    runMode = ToolCalls.SEQUENTIAL
+                    parallelTools = false
                 )
             },
             systemPrompt = "You are helpful"
@@ -638,7 +640,7 @@ class FunctionalAIAgentTest {
                 subtask<SimpleOut>(
                     taskDescription = "Compose task with tool: $input",
                     tools = listOf(DummyTool),
-                    runMode = ToolCalls.SEQUENTIAL
+                    parallelTools = false
                 )
             },
             toolRegistry = testToolRegistry
@@ -677,7 +679,7 @@ class FunctionalAIAgentTest {
                 subtask<SimpleOut>(
                     taskDescription = "Parallel subtask: $input",
                     tools = null,
-                    runMode = ToolCalls.PARALLEL
+                    parallelTools = false
                 )
             }
         ) {
@@ -712,7 +714,7 @@ class FunctionalAIAgentTest {
                 subtask<SimpleOut>(
                     taskDescription = "Single-run subtask: $input",
                     tools = null,
-                    runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL
+                    parallelTools = false
                 )
             }
         ) {
@@ -747,7 +749,7 @@ class FunctionalAIAgentTest {
             strategy = functionalStrategy<String, CriticResult<String>> { input ->
                 subtaskWithVerification(
                     taskDescription = "Judge this: $input",
-                    runMode = ToolCalls.SEQUENTIAL
+                    parallelTools = false
                 )
             },
             systemPrompt = "You are helpful"

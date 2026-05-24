@@ -321,7 +321,6 @@ The fixing process iteratively passes the parsing error to the auxiliary model, 
 You can integrate structured data processing into your agent strategies:
 
 <!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -331,10 +330,10 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.executor.model.StructureFixingParser
 -->
 ```kotlin
-val agentStrategy = strategy("weather-forecast") {
+val agentStrategy = strategy<String, String>("weather-forecast") {
     val setup by nodeLLMRequest()
 
-    val getStructuredForecast by node<Message.Response, String> { _ ->
+    val getStructuredForecast by node<Message.Assistant, String> { _ ->
         val structuredResponse = llm.writeSession {
             requestLLMStructured<WeatherForecast>(
                 fixingParser = StructureFixingParser(
@@ -370,7 +369,6 @@ This creates an agent node that:
 #### Node layer example
 
 <!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -382,7 +380,7 @@ import ai.koog.prompt.structure.StructuredResponse
 import ai.koog.prompt.executor.model.StructureFixingParser
 -->
 ```kotlin
-val agentStrategy = strategy("weather-forecast") {
+val agentStrategy = strategy<Unit, String>("weather-forecast") {
     val setup by node<Unit, String> { _ ->
         "Please provide a weather forecast for Amsterdam"
     }
@@ -425,7 +423,6 @@ Here is a full example of using the Structured Output API:
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -479,10 +476,10 @@ fun main(): Unit = runBlocking {
     )
 
     // Define the agent strategy
-    val agentStrategy = strategy("weather-forecast") {
+    val agentStrategy = strategy<String, String>("weather-forecast") {
         val setup by nodeLLMRequest()
   
-        val getStructuredForecast by node<Message.Response, String> { _ ->
+        val getStructuredForecast by node<Message.Assistant, String> { _ ->
             val structuredResponse = llm.writeSession {
                 requestLLMStructured<SimpleWeatherForecast>()
             }

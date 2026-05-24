@@ -17,6 +17,10 @@ abstract class OkHttpKoogHttpClientTestBase : BaseKoogHttpClientTest() {
         super.`test return success string response on post`()
 
     @Test
+    override fun `test post request headers override inferred string content type`() =
+        super.`test post request headers override inferred string content type`()
+
+    @Test
     override fun `test return success string response on get`() =
         super.`test return success string response on get`()
 
@@ -55,6 +59,30 @@ abstract class OkHttpKoogHttpClientTestBase : BaseKoogHttpClientTest() {
     }
 
     @Test
+    override fun `test lines emits non-blank lines`() =
+        super.`test lines emits non-blank lines`()
+
+    @Test
+    override fun `test lines request headers override inferred string content type`() =
+        super.`test lines request headers override inferred string content type`()
+
+    @Test
+    override fun `test lines skips blank lines`() =
+        super.`test lines skips blank lines`()
+
+    @Test
+    override fun `test lines emits nothing for empty body`() =
+        super.`test lines emits nothing for empty body`()
+
+    @Test
+    override fun `test lines surfaces non-2xx as KoogHttpClientException`() =
+        super.`test lines surfaces non-2xx as KoogHttpClientException`()
+
+    @Test
+    override fun `test lines propagates cancellation`() =
+        super.`test lines propagates cancellation`()
+
+    @Test
     fun testOkHttpFactoryAppliesBaseUrlAndDefaultQueryParameters() = runTest {
         val mockServer = MockWebServer()
         try {
@@ -80,7 +108,7 @@ abstract class OkHttpKoogHttpClientTestBase : BaseKoogHttpClientTest() {
 
             val result = client.post<TestRequest, TestResponse>(
                 path = "echo",
-                request = TestRequest("hello"),
+                requestBody = TestRequest("hello"),
                 parameters = mapOf("request" to "one")
             )
 

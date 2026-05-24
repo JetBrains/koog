@@ -3,6 +3,7 @@ package ai.koog.http.client.ktor
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
 import ai.koog.http.client.lowercaseHeaderKeys
+import ai.koog.http.client.mergeHeaders
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -16,13 +17,15 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.accept
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import io.ktor.client.request.preparePost
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
@@ -37,6 +40,7 @@ import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.reflect.TypeInfo
 import io.ktor.utils.io.CancellationException
+import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -102,36 +106,53 @@ public class KtorKoogHttpClient internal constructor(
     private fun Headers.toResponseHeaderMap(): Map<String, List<String>> =
         entries().associate { it.key to it.value }.lowercaseHeaderKeys()
 
+    private fun HttpRequestBuilder.applyRequestHeaders(headers: Map<String, String>) {
+        headers.forEach { (name, value) ->
+            if (name.equals(HttpHeaders.ContentType, ignoreCase = true)) {
+                contentType(ContentType.parse(value))
+            } else {
+                headers {
+                    remove(name)
+                    append(name, value)
+                }
+            }
+        }
+    }
+
     override suspend fun <R : Any> get(
         path: String,
         responseType: KClass<R>,
-        parameters: Map<String, String>
+        parameters: Map<String, String>,
+        headers: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val response = ktorClient.get(path) {
             parameters.forEach { (key, value) ->
                 parameter(key, value)
             }
+            applyRequestHeaders(headers)
         }
         processResponse(response, responseType)
     }
 
     override suspend fun <T : Any, R : Any> post(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         responseType: KClass<R>,
-        parameters: Map<String, String>
+        parameters: Map<String, String>,
+        headers: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val response = ktorClient.post(path) {
             if (requestBodyType == String::class) {
                 @Suppress("UNCHECKED_CAST")
-                setBody(request as String)
+                setBody(requestBody as String)
             } else {
-                setBody(request, TypeInfo(requestBodyType))
+                setBody(requestBody, TypeInfo(requestBodyType))
             }
             parameters.forEach { (key, value) ->
                 parameter(key, value)
             }
+            applyRequestHeaders(headers)
         }
 
         processResponse(response, responseType)
@@ -139,12 +160,13 @@ public class KtorKoogHttpClient internal constructor(
 
     override fun <T : Any, R : Any, O : Any> sse(
         path: String,
-        request: T,
+        requestBody: T,
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
         processStreamingChunk: (R) -> O?,
         parameters: Map<String, String>,
+        headers: Map<String, String>,
     ): Flow<O> = flow {
         logger.debug { "Opening sse connection for $clientName" }
 
@@ -157,16 +179,21 @@ public class KtorKoogHttpClient internal constructor(
                     parameters.forEach { (key, value) ->
                         parameter(key, value)
                     }
-                    accept(ContentType.Text.EventStream)
-                    headers {
-                        append(HttpHeaders.CacheControl, "no-cache")
-                        append(HttpHeaders.Connection, "keep-alive")
-                    }
+                    applyRequestHeaders(
+                        mergeHeaders(
+                            mapOf(
+                                HttpHeaders.Accept to ContentType.Text.EventStream.toString(),
+                                HttpHeaders.CacheControl to "no-cache",
+                                HttpHeaders.Connection to "keep-alive",
+                            ),
+                            headers,
+                        )
+                    )
                     if (requestBodyType == String::class) {
                         @Suppress("UNCHECKED_CAST")
-                        setBody(request as String)
+                        setBody(requestBody as String)
                     } else {
-                        setBody(request, TypeInfo(requestBodyType))
+                        setBody(requestBody, TypeInfo(requestBodyType))
                     }
                 }
             ) {
@@ -205,6 +232,56 @@ public class KtorKoogHttpClient internal constructor(
         }
     }
 
+    override fun <T : Any> lines(
+        path: String,
+        requestBody: T,
+        requestBodyType: KClass<T>,
+        parameters: Map<String, String>,
+        headers: Map<String, String>,
+    ): Flow<String> = flow {
+        logger.debug { "Opening lines flow for $clientName" }
+
+        try {
+            ktorClient.preparePost(path) {
+                parameters.forEach { (key, value) ->
+                    parameter(key, value)
+                }
+                applyRequestHeaders(headers)
+                if (requestBodyType == String::class) {
+                    @Suppress("UNCHECKED_CAST")
+                    setBody(requestBody as String)
+                } else {
+                    setBody(requestBody, TypeInfo(requestBodyType))
+                }
+            }.execute { response: HttpResponse ->
+                if (!response.status.isSuccess()) {
+                    throw KoogHttpClientException(
+                        clientName = clientName,
+                        statusCode = response.status.value,
+                        errorBody = response.bodyAsText(),
+                    )
+                }
+
+                val channel = response.bodyAsChannel()
+                while (!channel.isClosedForRead) {
+                    val line = channel.readUTF8Line() ?: break
+                    if (line.isBlank()) continue
+                    emit(line)
+                }
+            }
+        } catch (e: KoogHttpClientException) {
+            throw e
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw KoogHttpClientException(
+                clientName = clientName,
+                message = "Exception during streaming: ${e.message}",
+                cause = e,
+            )
+        }
+    }
+
     override fun close() {
         logger.debug { "Closing $clientName" }
         ktorClient.close()
@@ -217,7 +294,7 @@ public class KtorKoogHttpClient internal constructor(
      * @property withSse Whether created clients should install Ktor SSE support.
      * @property logger Logger used by created clients.
      */
-    public class Factory(
+    public class Factory @JvmOverloads public constructor(
         private val baseClient: HttpClient = HttpClient(),
         private val withSse: Boolean = true,
         private val logger: KLogger = KotlinLogging.logger {}
@@ -289,52 +366,3 @@ public fun KoogHttpClient.Companion.fromKtorClient(
     baseClient: HttpClient = HttpClient(),
     configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit = {}
 ): KoogHttpClient = KtorKoogHttpClient(clientName, logger, baseClient, configurer)
-
-/**
- * Creates an instance of `KoogHttpClient` using Ktor's `HttpClient` and additional configuration options.
- *
- * This method combines a base `HttpClient` with predefined configurations for request handling,
- * such as timeouts, headers, query parameters, content type, and optional Server-Sent Events (SSE) support.
- *
- * @param clientName The name assigned to the client instance, used for logging and traceability purposes.
- * @param logger A `KLogger` instance for logging client operations and errors.
- * @param baseClient The base Ktor `HttpClient` instance to be used. Defaults to a new `HttpClient` instance.
- * @param baseUrl The base URL for all HTTP requests made through this client.
- * @param requestTimeoutMillis The timeout in milliseconds for HTTP requests.
- * @param connectTimeoutMillis The timeout in milliseconds for establishing a connection.
- * @param socketTimeoutMillis The timeout in milliseconds for socket operations.
- * @param json A `Json` instance used for serializing request bodies and deserializing responses.
- * @param headers A map of default HTTP headers to include in every request. Defaults to an empty map.
- * @param queryParameters A map of default query parameters to include in every request. Defaults to an empty map.
- * @param withSse A flag indicating whether the client should support Server-Sent Events (SSE). Defaults to `true`.
- * @return A `KoogHttpClient` instance configured with the specified parameters and options.
- */
-@Deprecated(
-    "Use KtorKoogHttpClient.Factory instead",
-    ReplaceWith("KtorKoogHttpClient.Factory(baseClient, withSse).create(clientName, baseUrl, headers, queryParameters, requestTimeoutMillis, connectTimeoutMillis, socketTimeoutMillis, json)")
-)
-@Experimental
-@JvmOverloads
-public fun KoogHttpClient.Companion.fromKtorClient(
-    clientName: String,
-    logger: KLogger,
-    baseClient: HttpClient = HttpClient(),
-    baseUrl: String,
-    requestTimeoutMillis: Long = KoogHttpClient.Factory.DEFAULT_REQUEST_TIMEOUT_MS,
-    connectTimeoutMillis: Long = KoogHttpClient.Factory.DEFAULT_CONNECT_TIMEOUT_MS,
-    socketTimeoutMillis: Long = KoogHttpClient.Factory.DEFAULT_SOCKET_TIMEOUT_MS,
-    json: Json,
-    headers: Map<String, String> = emptyMap(),
-    queryParameters: Map<String, String> = emptyMap(),
-    withSse: Boolean = true,
-): KtorKoogHttpClient =
-    KtorKoogHttpClient.Factory(baseClient, withSse, logger).create(
-        clientName,
-        baseUrl,
-        headers,
-        queryParameters,
-        requestTimeoutMillis,
-        connectTimeoutMillis,
-        socketTimeoutMillis,
-        json
-    )

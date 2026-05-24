@@ -86,7 +86,7 @@ The general format of the `user` message that includes a text message and a list
     <!--- INCLUDE
     import ai.koog.prompt.dsl.prompt
     import ai.koog.prompt.message.AttachmentContent
-    import ai.koog.prompt.message.ContentPart
+    import ai.koog.prompt.message.AttachmentSource
     val prompt = prompt("custom_image") {
     -->
     <!--- SUFFIX
@@ -97,7 +97,7 @@ The general format of the `user` message that includes a text message and a list
     user {
         +"Describe this image"
         image(
-            ContentPart.Image(
+            AttachmentSource.Image(
                 content = AttachmentContent.URL("https://example.com/capture.png"),
                 format = "png",
                 mimeType = "image/png",

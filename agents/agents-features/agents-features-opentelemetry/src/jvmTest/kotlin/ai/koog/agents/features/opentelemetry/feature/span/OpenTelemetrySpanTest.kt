@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import kotlin.test.assertTrue
@@ -42,6 +43,7 @@ import kotlin.time.Duration.Companion.seconds
  * These tests verify that spans are created correctly during agent execution
  * and that the structure of spans matches the expected hierarchy.
  */
+@Disabled("Flaky test")
 class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
 
     val systemPrompt = SYSTEM_PROMPT

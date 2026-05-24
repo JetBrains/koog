@@ -1,11 +1,10 @@
 package ai.koog.prompt.executor.clients.mistralai
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.ktor.KtorKoogHttpClient
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
@@ -33,14 +32,14 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
@@ -104,25 +103,6 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         toolsConverter = toolsConverter
     )
 
-    @JvmOverloads
-    public constructor(
-        apiKey: String,
-        settings: MistralAIClientSettings = MistralAIClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
-    ) : this(
-        settings = settings,
-        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(
-            apiKey = apiKey,
-            settings = settings,
-            httpClientFactory = KtorKoogHttpClient.Factory(baseClient),
-            clientName = MISTRALAI_CLIENT_NAME
-        ),
-        clock = clock,
-        toolsConverter = toolsConverter
-    )
-
     override val clientName: String = MISTRALAI_CLIENT_NAME
 
     private companion object {
@@ -174,7 +154,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         return json.encodeToString(MistralAIChatCompletionRequestSerializer, request)
     }
 
-    override fun processProviderChatResponse(response: MistralAIChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: MistralAIChatCompletionResponse): List<Message.Assistant> {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
         val usageInfo = OpenAIUsage(
             promptTokens = response.usage.promptTokens,
@@ -182,7 +162,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
             totalTokens = response.usage.totalTokens,
         )
         return response.choices.map {
-            it.message.toMessageResponses(
+            it.message.toMessageResponse(
                 it.finishReason,
                 createMetaInfo(usageInfo),
             )
@@ -263,7 +243,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         val mistralAIResponse = try {
             httpClient.post(
                 path = settings.embeddingsPath,
-                request = request,
+                requestBody = request,
                 requestBodyType = MistralAIEmbeddingRequest::class,
                 responseType = MistralAIEmbeddingResponse::class
             )
@@ -299,10 +279,10 @@ public open class MistralAILLMClient @JvmOverloads constructor(
 
         val input = prompt.messages
             .map { message ->
-                require(!message.hasAttachments()) {
+                require(!message.parts.any { it !is MessagePart.Text }) {
                     "Only text input is supported for MistralAI moderation"
                 }
-                message.toMessageContent(model)
+                message.parts.filterIsInstance<MessagePart.Text>().toMessageContent(model)
             }
             .let { contents ->
                 when {
@@ -328,7 +308,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         val response = try {
             httpClient.post(
                 path = settings.moderationPath,
-                request = request,
+                requestBody = request,
                 requestBodyType = MistralAIModerationRequest::class,
                 responseType = MistralAIModerationResponse::class
             )

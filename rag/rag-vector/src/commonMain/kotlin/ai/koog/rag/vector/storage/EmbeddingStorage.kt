@@ -10,7 +10,6 @@ import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import ai.koog.rag.vector.backend.VectorStorageBackend
 import ai.koog.rag.vector.embedder.DocumentEmbedder
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 /**
  * A [VectorStorage] naive implementation that composes a [DocumentEmbedder] with a [VectorStorageBackend].
@@ -73,14 +72,6 @@ public open class EmbeddingStorage<Document>(
     protected open fun validateSearchRequest(request: SimilaritySearchRequest): SimilaritySearchRequest {
         requireNoFilterExpression(request)
         return request
-    }
-
-    @Deprecated("Use search instead", ReplaceWith("search(SimilaritySearchRequest(query))"))
-    open override fun rankDocuments(query: String): Flow<SearchResult<Document>> = flow {
-        val queryVector = embedQuery(query)
-        storage.allDocumentsWithPayload().collect { (document, documentVector) ->
-            emit(SearchResult(document = document, score = score(queryVector, documentVector)))
-        }
     }
 
     /**

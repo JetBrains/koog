@@ -4,18 +4,15 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
-import ai.koog.agents.core.agent.entity.NonSuspendAIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentStrategyBlocking
 import java.util.concurrent.ExecutorService
 
 /**
  * [AIAgentFunctionalStrategy] that operates in non-suspend context and is run on [ExecutorService] configured in [ai.koog.agents.core.agent.config.AIAgentConfig].
  *
- * See [ai.koog.agents.core.agent.NonSuspendAIAgentFunctionalStrategy.executeStrategy]
+ * See [ai.koog.agents.core.agent.AIAgentFunctionalStrategyBlocking.executeBlocking]
  * */
 @JavaAPI
-public abstract class NonSuspendAIAgentFunctionalStrategy<TInput, TOutput> public constructor(
+public abstract class AIAgentFunctionalStrategyBlocking<TInput, TOutput> public constructor(
     override val name: String
-) : NonSuspendAIAgentStrategy<TInput, TOutput, AIAgentFunctionalContext>(), AIAgentFunctionalStrategy<TInput, TOutput> {
-
-    abstract override fun executeStrategy(context: AIAgentFunctionalContext, input: TInput): TOutput
-}
+) : AIAgentStrategyBlocking<TInput, TOutput, AIAgentFunctionalContext>(), AIAgentFunctionalStrategy<TInput, TOutput>

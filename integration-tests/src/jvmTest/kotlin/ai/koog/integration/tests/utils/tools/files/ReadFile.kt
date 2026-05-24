@@ -2,11 +2,12 @@ package ai.koog.integration.tests.utils.tools.files
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 class ReadFile(private val fs: MockFileSystem) : Tool<ReadFile.Args, ReadFile.Result>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Result.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Result>(),
     name = "read_file",
     description = "Reads a file"
 ) {

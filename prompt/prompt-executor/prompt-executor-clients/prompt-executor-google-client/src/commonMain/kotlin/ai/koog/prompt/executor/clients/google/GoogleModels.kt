@@ -1,9 +1,7 @@
 package ai.koog.prompt.executor.clients.google
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
-import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0Flash
-import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0Flash001
-import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0FlashLite
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0FlashLite001
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5Flash
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5FlashLite
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5Pro
@@ -20,9 +18,7 @@ import kotlin.jvm.JvmField
  *
  * | Name                        | Speed     | Price (per 1M tokens)        | Input                                       | Output              |
  * |-----------------------------|-----------|------------------------------|---------------------------------------------|---------------------|
- * | [Gemini2_0Flash]            | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools            | Text, Tools         |
- * | [Gemini2_0Flash001]         | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools            | Text, Tools         |
- * | [Gemini2_0FlashLite]        | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Tools            | Text, Tools         |
+ * | [Gemini2_0FlashLite001]     | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Tools            | Text, Tools         |
  * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
  * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools            | Text, Tools         |
  * | [Gemini2_5FlashLite]        | Fast      | $0.10-$0.30 / $0.40          | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
@@ -70,58 +66,15 @@ public object GoogleModels : LLModelDefinitions {
         standardCapabilities + multimodalCapabilities + toolCapabilities + structuredOutputCapabilities
 
     /**
-     * Gemini 2.0 Flash is a fast, efficient model for a wide range of tasks.
-     * It's optimized for speed and efficiency.
-     *
-     * Context window: 1 million tokens
-     * Knowledge cutoff: July 2024
-     *
-     * @see <a href="storage.googleapis.com/model-cards/documents/gemini-2-flash.pdf">
-     */
-    @Deprecated("Use Gemini2_5Flash instead")
-    @JvmField
-    public val Gemini2_0Flash: LLModel = LLModel(
-        provider = LLMProvider.Google,
-        id = "gemini-2.0-flash",
-        capabilities = fullCapabilities,
-        contextLength = 1_048_576,
-        maxOutputTokens = 8_192,
-    )
-
-    /**
-     * Specific version of Gemini 2.0 Flash
-     */
-    @Deprecated("Use Gemini2_5Flash instead")
-    @JvmField
-    public val Gemini2_0Flash001: LLModel = Gemini2_0Flash.copy(
-        id = "gemini-2.0-flash-001",
-    )
-
-    /**
-     * Gemini 2.0 Flash-Lite is the smallest and most efficient model in the Gemini 2.0 family.
-     * Optimized for low-latency applications.
-     *
-     * Context window: 1 million tokens
-     * Knowledge cutoff: July 2024
-     *
-     * @see <a href="storage.googleapis.com/model-cards/documents/gemini-2-flash-lite.pdf">
-     */
-    @Deprecated("Use Gemini2_5FlashLite instead")
-    @JvmField
-    public val Gemini2_0FlashLite: LLModel = LLModel(
-        provider = LLMProvider.Google,
-        id = "gemini-2.0-flash-lite",
-        capabilities = fullCapabilities,
-        contextLength = 1_048_576,
-        maxOutputTokens = 8_192,
-    )
-
-    /**
      * Specific version of Gemini 2.0 Flash-Lite
      */
     @JvmField
-    public val Gemini2_0FlashLite001: LLModel = Gemini2_0FlashLite.copy(
+    public val Gemini2_0FlashLite001: LLModel = LLModel(
+        provider = LLMProvider.Google,
         id = "gemini-2.0-flash-lite-001",
+        capabilities = fullCapabilities,
+        contextLength = 1_048_576,
+        maxOutputTokens = 8_192,
     )
 
     /**
@@ -228,9 +181,6 @@ public object GoogleModels : LLModelDefinitions {
      * List of the supported models by the Google provider.
      */
     private val supportedModels: List<LLModel> = listOf(
-        Gemini2_0Flash,
-        Gemini2_0Flash001,
-        Gemini2_0FlashLite,
         Gemini2_0FlashLite001,
         Gemini2_5Pro,
         Gemini2_5Flash,

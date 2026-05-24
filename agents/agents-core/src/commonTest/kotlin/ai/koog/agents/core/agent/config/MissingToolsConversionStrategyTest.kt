@@ -3,11 +3,12 @@ package ai.koog.agents.core.agent.config
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
-import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.utils.time.KoogClock
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlin.time.Instant.Companion.fromEpochMilliseconds
 
@@ -32,35 +33,31 @@ class MissingToolsConversionStrategyTest {
             requiredParameters = emptyList(),
         )
 
-        private val testToolCall = Message.Tool.Call(
+        private val testToolCall = MessagePart.Tool.Call(
             id = "test-call-id",
             tool = "test-tool",
-            content = """{"param": "value"}""",
-            metaInfo = ResponseMetaInfo.create(testClock),
+            args = """{"param": "value"}""",
         )
 
-        private val anotherToolCall = Message.Tool.Call(
+        private val anotherToolCall = MessagePart.Tool.Call(
             id = "another-call-id",
             tool = "another-tool",
-            content = """{"param": "another-value"}""",
-            metaInfo = ResponseMetaInfo.create(testClock),
+            args = """{"param": "another-value"}""",
         )
 
-        private val testToolResult = Message.Tool.Result(
+        private val testToolResult = MessagePart.Tool.Result(
             id = "test-call-id",
             tool = "test-tool",
-            content = "Test result content",
-            metaInfo = RequestMetaInfo.create(testClock),
+            output = "Test result content",
         )
 
-        private val anotherToolResult = Message.Tool.Result(
+        private val anotherToolResult = MessagePart.Tool.Result(
             id = "another-call-id",
             tool = "another-tool",
-            content = "Another test result content",
-            metaInfo = RequestMetaInfo.create(testClock),
+            output = "Another test result content",
         )
 
-        private val regularMessage = Message.User(
+        private val regularUserMessage = Message.User(
             content = "Regular message content",
             metaInfo = RequestMetaInfo.create(testClock),
         )
@@ -68,27 +65,45 @@ class MissingToolsConversionStrategyTest {
 
     @Test
     fun testConvertMessageWithToolCall() {
-        val result = allStrategy.convertMessage(testToolCall)
+        val testPrompt = prompt("test-prompt") {
+            assistant {
+                toolCall(testToolCall)
+            }
+        }
+
+        val result = allStrategy.convertPrompt(testPrompt, emptyList())
         val expectedContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_args\":{\"param\":\"value\"}}"
 
-        assertEquals(expectedContent, result.content)
+        val message = assertIs<Message.Assistant>(result.messages.single())
+        val textMessage = assertIs<MessagePart.Text>(message.parts.single())
+
+        assertEquals(expectedContent, textMessage.text)
     }
 
     @Test
     fun testConvertMessageWithToolResult() {
-        val result = allStrategy.convertMessage(testToolResult)
+        val testPrompt = prompt("test-prompt") {
+            user {
+                toolResult(testToolResult)
+            }
+        }
+
+        val result = allStrategy.convertPrompt(testPrompt, emptyList())
         val expectedContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_result\":\"Test result content\"}"
 
-        assertEquals(expectedContent, result.content)
+        val message = assertIs<Message.User>(result.messages.single())
+        val textPart = assertIs<MessagePart.Text>(message.parts.single())
+
+        assertEquals(expectedContent, textPart.text)
     }
 
     @Test
     fun testConvertMessageWithRegularMessage() {
-        val result = allStrategy.convertMessage(regularMessage)
+        val result = allStrategy.convertMessage(regularUserMessage, emptyList())
 
-        assertEquals(regularMessage, result)
+        assertEquals(regularUserMessage, result)
     }
 
     @Test
@@ -96,9 +111,11 @@ class MissingToolsConversionStrategyTest {
         val testPrompt = prompt("test-prompt") {
             user("User message")
             assistant("Assistant message")
-            tool {
-                call(testToolCall)
-                result(testToolResult)
+            assistant {
+                toolCall(testToolCall)
+            }
+            user {
+                toolResult(testToolResult)
             }
         }
 
@@ -110,12 +127,17 @@ class MissingToolsConversionStrategyTest {
         val expectedToolResultContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_result\":\"Test result content\"}"
 
-        assertEquals("User message", messages[0].content)
-        assertEquals("Assistant message", messages[1].content)
-        assertTrue(messages[2] is Message.Assistant)
-        assertTrue(messages[3] is Message.User)
-        assertEquals(expectedToolCallContent, messages[2].content)
-        assertEquals(expectedToolResultContent, messages[3].content)
+        val userMsg = assertIs<Message.User>(messages[0])
+        assertEquals("User message", assertIs<MessagePart.Text>(userMsg.parts.single()).text)
+
+        val assistantMsg = assertIs<Message.Assistant>(messages[1])
+        assertEquals("Assistant message", assertIs<MessagePart.Text>(assistantMsg.parts.single()).text)
+
+        val toolCallMsg = assertIs<Message.Assistant>(messages[2])
+        assertEquals(expectedToolCallContent, assertIs<MessagePart.Text>(toolCallMsg.parts.single()).text)
+
+        val toolResultMsg = assertIs<Message.User>(messages[3])
+        assertEquals(expectedToolResultContent, assertIs<MessagePart.Text>(toolResultMsg.parts.single()).text)
     }
 
     @Test
@@ -123,11 +145,17 @@ class MissingToolsConversionStrategyTest {
         val testPrompt = prompt("test-prompt") {
             user("User message")
             assistant("Assistant message")
-            tool {
-                call(testToolCall)
-                result(testToolResult)
-                call(anotherToolCall)
-                result(anotherToolResult)
+            assistant {
+                toolCall(testToolCall)
+            }
+            user {
+                toolResult(testToolResult)
+            }
+            assistant {
+                toolCall(anotherToolCall)
+            }
+            user {
+                toolResult(anotherToolResult)
             }
         }
 
@@ -141,19 +169,27 @@ class MissingToolsConversionStrategyTest {
             "{\"tool_call_id\":\"another-call-id\",\"tool_name\":\"another-tool\",\"tool_result\":\"Another test result content\"}"
 
         // first two messages should remain unchanged
-        assertEquals("User message", messages[0].content)
-        assertEquals("Assistant message", messages[1].content)
+        val userMsg = assertIs<Message.User>(messages[0])
+        assertEquals("User message", assertIs<MessagePart.Text>(userMsg.parts.single()).text)
+
+        val assistantMsg = assertIs<Message.Assistant>(messages[1])
+        assertEquals("Assistant message", assertIs<MessagePart.Text>(assistantMsg.parts.single()).text)
 
         // testToolCall and testToolResult should remain as tool messages
-        assertTrue(messages[2] is Message.Tool.Call)
-        assertTrue(messages[3] is Message.Tool.Result)
-        assertEquals("test-tool", (messages[2] as Message.Tool.Call).tool)
-        assertEquals("test-tool", (messages[3] as Message.Tool.Result).tool)
+        val testCallMsg = assertIs<Message.Assistant>(messages[2])
+        val testCallPart = assertIs<MessagePart.Tool.Call>(testCallMsg.parts.single())
+        assertEquals("test-tool", testCallPart.tool)
 
-        assertTrue(messages[4] is Message.Assistant)
-        assertTrue(messages[5] is Message.User)
-        assertEquals(expectedAnotherToolCallContent, messages[4].content)
-        assertEquals(expectedAnotherToolResultContent, messages[5].content)
+        val testResultMsg = assertIs<Message.User>(messages[3])
+        val testResultPart = assertIs<MessagePart.Tool.Result>(testResultMsg.parts.single())
+        assertEquals("test-tool", testResultPart.tool)
+
+        // anotherToolCall and anotherToolResult should be converted to text
+        val anotherCallMsg = assertIs<Message.Assistant>(messages[4])
+        assertEquals(expectedAnotherToolCallContent, assertIs<MessagePart.Text>(anotherCallMsg.parts.single()).text)
+
+        val anotherResultMsg = assertIs<Message.User>(messages[5])
+        assertEquals(expectedAnotherToolResultContent, assertIs<MessagePart.Text>(anotherResultMsg.parts.single()).text)
     }
 
     @Test
@@ -161,11 +197,17 @@ class MissingToolsConversionStrategyTest {
         val testPrompt = prompt("test-prompt") {
             user("User message")
             assistant("Assistant message")
-            tool {
-                call(testToolCall)
-                result(testToolResult)
-                call(anotherToolCall)
-                result(anotherToolResult)
+            assistant {
+                toolCall(testToolCall)
+            }
+            user {
+                toolResult(testToolResult)
+            }
+            assistant {
+                toolCall(anotherToolCall)
+            }
+            user {
+                toolResult(anotherToolResult)
             }
         }
 
@@ -174,10 +216,17 @@ class MissingToolsConversionStrategyTest {
         val messages = result.messages
         assertEquals(6, messages.size)
 
-        assertTrue(messages[2] is Message.Tool.Call)
-        assertTrue(messages[3] is Message.Tool.Result)
-        assertTrue(messages[4] is Message.Tool.Call)
-        assertTrue(messages[5] is Message.Tool.Result)
+        val callMsg1 = assertIs<Message.Assistant>(messages[2])
+        assertIs<MessagePart.Tool.Call>(callMsg1.parts.single())
+
+        val resultMsg1 = assertIs<Message.User>(messages[3])
+        assertIs<MessagePart.Tool.Result>(resultMsg1.parts.single())
+
+        val callMsg2 = assertIs<Message.Assistant>(messages[4])
+        assertIs<MessagePart.Tool.Call>(callMsg2.parts.single())
+
+        val resultMsg2 = assertIs<Message.User>(messages[5])
+        assertIs<MessagePart.Tool.Result>(resultMsg2.parts.single())
     }
 
     @Test
@@ -185,11 +234,17 @@ class MissingToolsConversionStrategyTest {
         val testPrompt = prompt("test-prompt") {
             user("User message")
             assistant("Assistant message")
-            tool {
-                call(testToolCall)
-                result(testToolResult)
-                call(anotherToolCall)
-                result(anotherToolResult)
+            assistant {
+                toolCall(testToolCall)
+            }
+            user {
+                toolResult(testToolResult)
+            }
+            assistant {
+                toolCall(anotherToolCall)
+            }
+            user {
+                toolResult(anotherToolResult)
             }
         }
 
@@ -197,10 +252,17 @@ class MissingToolsConversionStrategyTest {
         val result = missingStrategy.convertPrompt(testPrompt, emptyList())
         val messages = result.messages
 
-        assertTrue(messages[2] is Message.Assistant)
-        assertTrue(messages[3] is Message.User)
-        assertTrue(messages[4] is Message.Assistant)
-        assertTrue(messages[5] is Message.User)
+        val callMsg1 = assertIs<Message.Assistant>(messages[2])
+        assertIs<MessagePart.Text>(callMsg1.parts.single())
+
+        val resultMsg1 = assertIs<Message.User>(messages[3])
+        assertIs<MessagePart.Text>(resultMsg1.parts.single())
+
+        val callMsg2 = assertIs<Message.Assistant>(messages[4])
+        assertIs<MessagePart.Text>(callMsg2.parts.single())
+
+        val resultMsg2 = assertIs<Message.User>(messages[5])
+        assertIs<MessagePart.Text>(resultMsg2.parts.single())
     }
 
     @Test
@@ -216,33 +278,41 @@ class MissingToolsConversionStrategyTest {
 
     @Test
     fun testNullIdToolCall() {
-        val nullIdToolCall = Message.Tool.Call(
+        val nullIdToolCall = MessagePart.Tool.Call(
             id = null,
             tool = "test-tool",
-            content = """{"param": "value"}""",
-            metaInfo = ResponseMetaInfo.create(testClock)
+            args = """{"param": "value"}""",
         )
+        val testPrompt = prompt("test-prompt") {
+            assistant {
+                toolCall(nullIdToolCall)
+            }
+        }
 
-        val result = allStrategy.convertMessage(nullIdToolCall)
+        val result = allStrategy.convertPrompt(testPrompt, emptyList())
         val expectedContent = "{\"tool_name\":\"test-tool\",\"tool_args\":{\"param\":\"value\"}}"
 
-        assertTrue(result is Message.Assistant)
-        assertEquals(expectedContent, result.content)
+        val message = assertIs<Message.Assistant>(result.messages.single())
+        assertEquals(expectedContent, assertIs<MessagePart.Text>(message.parts.single()).text)
     }
 
     @Test
     fun testNullIdToolResult() {
-        val nullIdToolResult = Message.Tool.Result(
+        val nullIdToolResult = MessagePart.Tool.Result(
             id = null,
             tool = "test-tool",
-            content = "Test result content",
-            metaInfo = RequestMetaInfo.create(testClock)
+            output = "Test result content",
         )
+        val testPrompt = prompt("test-prompt") {
+            user {
+                toolResult(nullIdToolResult)
+            }
+        }
 
-        val result = allStrategy.convertMessage(nullIdToolResult)
+        val result = allStrategy.convertPrompt(testPrompt, emptyList())
         val expectedContent = "{\"tool_name\":\"test-tool\",\"tool_result\":\"Test result content\"}"
 
-        assertTrue(result is Message.User)
-        assertEquals(expectedContent, result.content)
+        val message = assertIs<Message.User>(result.messages.single())
+        assertEquals(expectedContent, assertIs<MessagePart.Text>(message.parts.single()).text)
     }
 }

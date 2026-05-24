@@ -2,8 +2,7 @@ import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
-group = rootProject.group
-version = rootProject.version
+val isBeta by extra(true)
 
 plugins {
     id("ai.kotlin.jvm")
@@ -30,6 +29,7 @@ tasks.withType<JavaCompile>().configureEach {
 
 dependencies {
     api(project(":koog-agents"))
+    api(project(":koog-agents-additions"))
 
     implementation(project.dependencies.platform(libs.spring.boot.bom))
     api(libs.bundles.spring.boot.core)

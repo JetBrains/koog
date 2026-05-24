@@ -12,6 +12,7 @@ import ai.koog.agents.core.feature.handler.planner.PlanCreationCompletedContext
 import ai.koog.agents.core.feature.handler.planner.PlanCreationStartingContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.planner.StepExecutionStartingContext
+import ai.koog.serialization.TypeToken
 import ai.koog.utils.time.KoogClock
 
 /**
@@ -32,12 +33,14 @@ public class AIAgentPlannerPipelineImpl(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any?,
+        planType: TypeToken?,
         stepIndex: Int,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.BuildPlanStarting,
-            context = PlanCreationStartingContext(eventId, executionInfo, context, state, plan, stepIndex)
+            context = PlanCreationStartingContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex)
         )
     }
 
@@ -47,12 +50,15 @@ public class AIAgentPlannerPipelineImpl(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
-        plan: Any,
+        stateType: TypeToken?,
+        plan: Any?,
+        planType: TypeToken?,
         stepIndex: Int,
+        updatedPlan: Any,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.BuildPlanCompleted,
-            context = PlanCreationCompletedContext(eventId, executionInfo, context, state, null, plan, stepIndex)
+            context = PlanCreationCompletedContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex, updatedPlan)
         )
     }
 
@@ -62,12 +68,14 @@ public class AIAgentPlannerPipelineImpl(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any,
+        planType: TypeToken?,
         stepIndex: Int
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.ExecuteStepStarting,
-            context = StepExecutionStartingContext(eventId, executionInfo, context, state, plan, stepIndex)
+            context = StepExecutionStartingContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex)
         )
     }
 
@@ -77,12 +85,14 @@ public class AIAgentPlannerPipelineImpl(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any,
+        planType: TypeToken?,
         stepIndex: Int,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.ExecuteStepCompleted,
-            context = StepExecutionCompletedContext(eventId, executionInfo, context, state, plan, stepIndex)
+            context = StepExecutionCompletedContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex)
         )
     }
 
@@ -92,12 +102,14 @@ public class AIAgentPlannerPipelineImpl(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any,
+        planType: TypeToken?,
         stepIndex: Int,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.IsPlanCompletedStarting,
-            context = PlanCompletionEvaluationStartingContext(eventId, executionInfo, context, state, plan, stepIndex)
+            context = PlanCompletionEvaluationStartingContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex)
         )
     }
 
@@ -107,13 +119,15 @@ public class AIAgentPlannerPipelineImpl(
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         state: Any,
+        stateType: TypeToken?,
         plan: Any,
-        isCompleted: Boolean,
+        planType: TypeToken?,
         stepIndex: Int,
+        isCompleted: Boolean,
     ) {
         basePipelineDelegate.invokeRegisteredHandlersForEvent(
             eventType = AgentLifecycleEventType.IsPlanCompletedCompleted,
-            context = PlanCompletionEvaluationCompletedContext(eventId, executionInfo, context, state, plan, isCompleted, stepIndex)
+            context = PlanCompletionEvaluationCompletedContext(eventId, executionInfo, context, state, stateType, plan, planType, stepIndex, isCompleted)
         )
     }
 
@@ -121,7 +135,6 @@ public class AIAgentPlannerPipelineImpl(
 
     //region Planner Interceptors
 
-    @OptIn(InternalAgentsApi::class)
     public override fun interceptPlanCreationStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (PlanCreationStartingContext) -> Unit
@@ -133,7 +146,6 @@ public class AIAgentPlannerPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
     public override fun interceptPlanCreationCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (PlanCreationCompletedContext) -> Unit
@@ -145,7 +157,6 @@ public class AIAgentPlannerPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
     public override fun interceptStepExecutionStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (StepExecutionStartingContext) -> Unit
@@ -157,7 +168,6 @@ public class AIAgentPlannerPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
     public override fun interceptStepExecutionCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (StepExecutionCompletedContext) -> Unit
@@ -169,7 +179,6 @@ public class AIAgentPlannerPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
     public override fun interceptPlanCompletionEvaluationStarting(
         feature: AIAgentFeature<*, *>,
         handle: suspend (PlanCompletionEvaluationStartingContext) -> Unit
@@ -181,7 +190,6 @@ public class AIAgentPlannerPipelineImpl(
         )
     }
 
-    @OptIn(InternalAgentsApi::class)
     public override fun interceptPlanCompletionEvaluationCompleted(
         feature: AIAgentFeature<*, *>,
         handle: suspend (PlanCompletionEvaluationCompletedContext) -> Unit

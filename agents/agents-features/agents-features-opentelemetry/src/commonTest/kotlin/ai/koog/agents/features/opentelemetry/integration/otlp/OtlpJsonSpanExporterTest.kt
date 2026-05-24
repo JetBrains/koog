@@ -27,13 +27,12 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class OtlpJsonSpanExporterTest {
 
     /**
      * A Ktor [HttpClient] paired with captured request metadata and raw body bytes.
-     * The body is read inside the mock handler using the public [OutgoingContent.toByteArray]
+     * The body is read inside the mock handler using the public `OutgoingContent.toByteArray`
      * extension from `io.ktor.client.engine.mock`, avoiding post-hoc internal-type casts.
      */
     private data class CapturingClient(
@@ -72,7 +71,7 @@ class OtlpJsonSpanExporterTest {
         assertEquals(HttpMethod.Post, request.method)
         assertEquals("https://example.test/v1/traces", request.url.toString())
         assertEquals("Basic abcdef", request.headers[HttpHeaders.Authorization])
-        assertTrue(request.headers[HttpHeaders.UserAgent]?.startsWith("koog-otlp-exporter") == true)
+        assertEquals(true, request.headers[HttpHeaders.UserAgent]?.startsWith("koog-otlp-exporter"))
     }
 
     @Test

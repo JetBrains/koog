@@ -9,10 +9,10 @@ import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy
+import ai.koog.agents.core.planner.PlannerAIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
-import ai.koog.agents.planner.AIAgentPlannerStrategy
-import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.utils.time.KoogClock
 
@@ -201,7 +201,7 @@ public class FunctionalAgentBuilder<Input, Output>(
  * @param featureInstallers A list of feature installers that enhance the agent's behavior with additional functionality.
  */
 public class PlannerAgentBuilder<Input, Output>(
-    private val strategy: AIAgentPlannerStrategy<Input, Output, *>,
+    private val strategy: AIAgentPlannerStrategy<Input, Output>,
     promptExecutor: PromptExecutor? = null,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,

@@ -2,6 +2,7 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 /**
@@ -9,7 +10,7 @@ import kotlinx.serialization.Serializable
  * This tool accepts a placeholder parameter and returns a constant result.
  */
 public class DummyTool : SimpleTool<DummyTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "dummy",
     description = "Dummy tool for testing"
 ) {

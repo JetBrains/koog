@@ -2,10 +2,11 @@ package ai.koog.integration.tests.utils.tools
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 object GenericParameterTool : SimpleTool<GenericParameterTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = "generic_parameter_tool",
     description = "A tool that demonstrates handling of required and optional parameters"
 ) {

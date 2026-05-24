@@ -1,11 +1,12 @@
 package ai.koog.prompt.executor.ollama.client
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatMessageDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaToolCallDTO
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -18,6 +19,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class OllamaClientTest {
@@ -48,7 +50,7 @@ class OllamaClientTest {
         }
 
         val ollamaClient = OllamaClient(
-            baseClient = HttpClient(mockServer.mockEngine)
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockServer.mockEngine))
         )
 
         val responses = ollamaClient.execute(
@@ -56,17 +58,14 @@ class OllamaClientTest {
             model = OllamaModels.Meta.LLAMA_3_2
         )
 
-        assertEquals(2, responses.size)
+        assertEquals(2, responses.parts.size)
 
-        // tool call should come first and message second
-        val toolCallMessage = responses[0]
-        assertTrue(toolCallMessage is Message.Tool.Call)
-        assertEquals(toolName, toolCallMessage.tool)
-        assertTrue(toolCallMessage.content.contains("London"))
+        val textMessage = assertIs<MessagePart.Text>(responses.parts[0])
+        assertEquals(responseContent, textMessage.text)
 
-        val assistantMessage = responses[1]
-        assertTrue(assistantMessage is Message.Assistant)
-        assertEquals(responseContent, assistantMessage.content)
+        val toolCallPart = assertIs<MessagePart.Tool.Call>(responses.parts[1])
+        assertEquals(toolName, toolCallPart.tool)
+        assertTrue(toolCallPart.args.contains("London"))
     }
 
     @Test
@@ -91,7 +90,7 @@ class OllamaClientTest {
         }
 
         val ollamaClient = OllamaClient(
-            baseClient = HttpClient(mockEngine)
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockEngine))
         )
 
         val exception = assertFailsWith<LLMClientException> {

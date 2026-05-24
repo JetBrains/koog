@@ -3,7 +3,7 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentStorage
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.session.AdditionalInputs
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
@@ -23,8 +23,8 @@ class AIAgentStoragePassingTest {
     private val serializer = KotlinxSerializer()
 
     companion object {
-        val greetingKey = AIAgentStorageKey<String>("greeting")
-        val counterKey = AIAgentStorageKey<Int>("counter")
+        val greetingKey = createStorageKey<String>("greeting")
+        val counterKey = createStorageKey<Int>("counter")
     }
 
     private val agentConfig = AIAgentConfig(
@@ -58,26 +58,6 @@ class AIAgentStoragePassingTest {
         edge(nodeStart forwardTo writeNode)
         edge(writeNode forwardTo readNode)
         edge(readNode forwardTo nodeFinish)
-    }
-
-    @Suppress("DEPRECATION")
-    private fun legacyStoreApiStrategy() = strategy("legacy-store-api") {
-        val writeNode by node<String, String>("writeLegacyStorage") {
-            store(greetingKey, "legacy-value")
-            val stored = storage.get(greetingKey)
-            "greeting=$stored"
-        }
-
-        val removeNode by node<String, String>("removeLegacyStorage") {
-            val beforeRemove = get<String>(greetingKey)
-            val removed = remove(greetingKey)
-            val afterRemove = storage.get(greetingKey)
-            "before=$beforeRemove, removed=$removed, after=$afterRemove"
-        }
-
-        edge(nodeStart forwardTo writeNode)
-        edge(writeNode forwardTo removeNode)
-        edge(removeNode forwardTo nodeFinish)
     }
 
     private fun storageAddNewKeyStrategy() = strategy("storage-add-new-key") {
@@ -132,7 +112,7 @@ class AIAgentStoragePassingTest {
             toolRegistry = ToolRegistry.EMPTY,
         )
 
-        val storage = AIAgentStorage()
+        val storage = AIAgentStorage(KotlinxSerializer())
         storage.set(greetingKey, "hello from outside")
         storage.set(counterKey, 42)
 
@@ -174,7 +154,7 @@ class AIAgentStoragePassingTest {
         val session = agent.createSession("test-session")
         val output = session.run(
             input = "ignored",
-            sessionInputs = AdditionalInputs.Storage(AIAgentStorage()),
+            sessionInputs = AdditionalInputs.Storage(AIAgentStorage(KotlinxSerializer())),
         )
 
         assertEquals("greeting=null, counter=null", output)
@@ -189,7 +169,7 @@ class AIAgentStoragePassingTest {
             toolRegistry = ToolRegistry.EMPTY,
         )
 
-        val storage = AIAgentStorage()
+        val storage = AIAgentStorage(KotlinxSerializer())
         storage.set(greetingKey, "original")
 
         val session = agent.createSession("test-session")
@@ -211,7 +191,7 @@ class AIAgentStoragePassingTest {
             toolRegistry = ToolRegistry.EMPTY,
         )
 
-        val externalStorage = AIAgentStorage()
+        val externalStorage = AIAgentStorage(KotlinxSerializer())
         externalStorage.set(greetingKey, "original")
 
         val session = agent.createSession("test-session")
@@ -232,7 +212,7 @@ class AIAgentStoragePassingTest {
             toolRegistry = ToolRegistry.EMPTY,
         )
 
-        val externalStorage = AIAgentStorage()
+        val externalStorage = AIAgentStorage(KotlinxSerializer())
         externalStorage.set(greetingKey, "keep-me")
 
         val session = agent.createSession("test-session")
@@ -254,7 +234,7 @@ class AIAgentStoragePassingTest {
             toolRegistry = ToolRegistry.EMPTY,
         )
 
-        val externalStorage = AIAgentStorage()
+        val externalStorage = AIAgentStorage(KotlinxSerializer())
         externalStorage.set(greetingKey, "to-be-removed")
         externalStorage.set(counterKey, 7)
 
@@ -277,7 +257,7 @@ class AIAgentStoragePassingTest {
             toolRegistry = ToolRegistry.EMPTY,
         )
 
-        val externalStorage = AIAgentStorage()
+        val externalStorage = AIAgentStorage(KotlinxSerializer())
         externalStorage.set(greetingKey, "original")
 
         val session = agent.createSession("test-session")
@@ -300,7 +280,7 @@ class AIAgentStoragePassingTest {
             toolRegistry = ToolRegistry.EMPTY,
         )
 
-        val firstStorage = AIAgentStorage()
+        val firstStorage = AIAgentStorage(KotlinxSerializer())
         firstStorage.set(greetingKey, "first-run")
         firstStorage.set(counterKey, 1)
 
@@ -325,7 +305,7 @@ class AIAgentStoragePassingTest {
             toolRegistry = ToolRegistry.EMPTY,
         )
 
-        val externalStorage = AIAgentStorage()
+        val externalStorage = AIAgentStorage(KotlinxSerializer())
         externalStorage.set(greetingKey, "hello")
 
         val session = agent.createSession("test-session")
@@ -337,20 +317,5 @@ class AIAgentStoragePassingTest {
         assertEquals(1, capturedContexts.size)
         assertEquals("hello", capturedContexts.single().storage.get(greetingKey))
         assertNotSame(capturedContexts.single().storage, externalStorage)
-    }
-
-    @Test
-    fun testLegacyStoreApiRemainsIndependentFromConcurrentStorageApi() = runTest {
-        val agent = AIAgent(
-            promptExecutor = getMockExecutor(serializer) { },
-            strategy = legacyStoreApiStrategy(),
-            agentConfig = agentConfig,
-            toolRegistry = ToolRegistry.EMPTY,
-        )
-
-        val session = agent.createSession("test-session")
-        val output = session.run(input = "ignored")
-
-        assertEquals("before=legacy-value, removed=true, after=null", output)
     }
 }

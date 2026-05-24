@@ -16,7 +16,6 @@ import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.message.Message
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -58,10 +57,6 @@ class SimpleJokeAgentExecutor : AgentExecutor {
 
         // Get a response from the LLM
         val responseMessage = promptExecutor.execute(prompt, AnthropicModels.Sonnet_4)
-            .single()
-            .let { message ->
-                message as? Message.Assistant ?: throw IllegalStateException("Unexpected message type: $message")
-            }
             .toA2AMessage(
                 a2aMetadata = MessageA2AMetadata(
                     messageId = Uuid.random().toString(),

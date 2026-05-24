@@ -38,7 +38,6 @@ An edge is created using the `edge` function and the `forwardTo` infix function:
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
@@ -65,8 +64,16 @@ An edge is created using the `edge` function and the `forwardTo` infix function:
             var strategy = AIAgentGraphStrategy.builder("strategyName")
                 .withInput(String.class)
                 .withOutput(String.class);
-            var sourceNode = AIAgentNode.doNothing(String.class);
-            var targetNode = AIAgentNode.doNothing(String.class);
+            var sourceNode = AIAgentNode.builder("source")
+                .withInput(String.class)
+                .withOutput(String.class)
+                .withAction((input, ctx) -> input)
+                .build();
+            var targetNode = AIAgentNode.builder("target")
+                .withInput(String.class)
+                .withOutput(String.class)
+                .withAction((input, ctx) -> input)
+                .build();
     -->
     <!--- SUFFIX
         }
@@ -84,9 +91,8 @@ Conditions determine when to follow a particular edge in the strategy graph. The
 | Condition type      | Description                                                                              |
 |---------------------|------------------------------------------------------------------------------------------|
 | onCondition         | A general-purpose condition that takes a lambda expression that returns a boolean value. |
-| onToolCall          | A condition that matches when the LLM calls a tool.                                      |
-| onAssistantMessage  | A condition that matches when the LLM responds with a message.                           |
-| onMultipleToolCalls | A condition that matches when the LLM calls multiple tools.                              |
+| onToolCalls         | A condition that matches when the LLM calls one or more tools.                           |
+| onTextMessage         | A condition that matches when the LLM responds with a text message.                      |
 | onToolNotCalled     | A condition that matches when the LLM does not call a tool.                              |
 
 You can transform the output before passing it to the target node by using the `transformed` function:
@@ -94,7 +100,6 @@ You can transform the output before passing it to the target node by using the `
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
@@ -125,8 +130,16 @@ You can transform the output before passing it to the target node by using the `
             var strategy = AIAgentGraphStrategy.builder("strategyName")
                 .withInput(String.class)
                 .withOutput(String.class);
-            var sourceNode = AIAgentNode.doNothing(String.class);
-            var targetNode = AIAgentNode.doNothing(String.class);
+            var sourceNode = AIAgentNode.builder("source")
+                .withInput(String.class)
+                .withOutput(String.class)
+                .withAction((input, ctx) -> input)
+                .build();
+            var targetNode = AIAgentNode.builder("target")
+                .withInput(String.class)
+                .withOutput(String.class)
+                .withAction((input, ctx) -> input)
+                .build();
     -->
     <!--- SUFFIX
         }
@@ -283,29 +296,28 @@ Here is an example of a basic strategy graph:
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
     import ai.koog.agents.core.dsl.builder.subgraph
-    import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTools
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-    import ai.koog.agents.core.dsl.extension.onAssistantMessage
-    import ai.koog.agents.core.dsl.extension.onToolCall
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+    import ai.koog.agents.core.dsl.extension.onTextMessage
+    import ai.koog.agents.core.dsl.extension.onToolCalls
     -->
     ```kotlin
     val myStrategy = strategy<String, String>("my-strategy") {
         val nodeCallLLM by nodeLLMRequest()
-        val executeToolCall by nodeExecuteTool()
-        val sendToolResult by nodeLLMSendToolResult()
+        val executeToolCall by nodeExecuteTools()
+        val sendToolResult by nodeLLMSendToolResults()
     
         edge(nodeStart forwardTo nodeCallLLM)
-        edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
-        edge(nodeCallLLM forwardTo executeToolCall onToolCall { true })
+        edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
+        edge(nodeCallLLM forwardTo executeToolCall onToolCalls { true })
         edge(executeToolCall forwardTo sendToolResult)
-        edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
-        edge(sendToolResult forwardTo executeToolCall onToolCall { true })
+        edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
+        edge(sendToolResult forwardTo executeToolCall onToolCalls { true })
     }
     ```
     <!--- KNIT example-custom-strategy-graphs-05.kt -->
@@ -317,6 +329,8 @@ Here is an example of a basic strategy graph:
     import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
     import ai.koog.agents.core.agent.entity.AIAgentNode;
     import ai.koog.prompt.message.Message;
+    import ai.koog.prompt.message.MessagePart;
+    import java.util.stream.Collectors;
     class exampleCustomStrategyGraphsJava05 {
         public static void main(String[] args) {
     -->
@@ -329,23 +343,25 @@ Here is an example of a basic strategy graph:
         .withInput(String.class)
         .withOutput(String.class);
 
-    var nodeCallLLM = AIAgentNode.llmRequest(true, "sendInput");
-    var nodeExecuteTool = AIAgentNode.executeTool("nodeExecuteTool");
-    var nodeSendToolResult = AIAgentNode.llmSendToolResult("nodeSendToolResult");
+    var nodeCallLLM = AIAgentNode.llmRequest("sendInput");
+    var nodeExecuteTool = AIAgentNode.executeTools("nodeExecuteTool");
+    var nodeSendToolResult = AIAgentNode.llmSendToolResults("nodeSendToolResult");
 
-    graph.edge(graph.nodeStart, nodeCallLLM);
+    graph.edge(AIAgentEdge.builder()
+        .from(graph.nodeStart)
+        .to(nodeCallLLM)
+        .build());
 
     graph.edge(AIAgentEdge.builder()
         .from(nodeCallLLM)
         .to(nodeExecuteTool)
-        .onIsInstance(Message.Tool.Call.class)
+        .onToolCalls()
         .build());
 
     graph.edge(AIAgentEdge.builder()
         .from(nodeCallLLM)
         .to(graph.nodeFinish)
-        .onIsInstance(Message.Assistant.class)
-        .transformed(Message.Assistant::getContent)
+        .onTextMessage()
         .build());
 
     graph.edge(nodeExecuteTool, nodeSendToolResult);
@@ -353,14 +369,13 @@ Here is an example of a basic strategy graph:
     graph.edge(AIAgentEdge.builder()
         .from(nodeSendToolResult)
         .to(graph.nodeFinish)
-        .onIsInstance(Message.Assistant.class)
-        .transformed(Message.Assistant::getContent)
+        .onTextMessage()
         .build());
 
     graph.edge(AIAgentEdge.builder()
         .from(nodeSendToolResult)
         .to(nodeExecuteTool)
-        .onIsInstance(Message.Tool.Call.class)
+        .onToolCalls()
         .build());
 
     var strategy = graph.build();
@@ -377,27 +392,26 @@ For the graph created in the previous example, you can run:
 
     <!--- INCLUDE
     import ai.koog.agents.core.agent.asMermaidDiagram
-    import ai.koog.agents.core.dsl.builder.forwardTo
     import ai.koog.agents.core.dsl.builder.strategy
     import ai.koog.agents.core.dsl.builder.node
     import ai.koog.agents.core.dsl.builder.parallel
     import ai.koog.agents.core.dsl.builder.subgraph
-    import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+    import ai.koog.agents.core.dsl.extension.nodeExecuteTools
     import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-    import ai.koog.agents.core.dsl.extension.onAssistantMessage
-    import ai.koog.agents.core.dsl.extension.onToolCall
+    import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+    import ai.koog.agents.core.dsl.extension.onTextMessage
+    import ai.koog.agents.core.dsl.extension.onToolCalls
     fun main() {
-        val myStrategy = strategy("my-strategy") {
+        val myStrategy = strategy<String, String>("my-strategy") {
             val nodeCallLLM by nodeLLMRequest()
-            val executeToolCall by nodeExecuteTool()
-            val sendToolResult by nodeLLMSendToolResult()
+            val executeToolCall by nodeExecuteTools()
+            val sendToolResult by nodeLLMSendToolResults()
             edge(nodeStart forwardTo nodeCallLLM)
-            edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
-            edge(nodeCallLLM forwardTo executeToolCall onToolCall { true })
+            edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
+            edge(nodeCallLLM forwardTo executeToolCall onToolCalls { true })
             edge(executeToolCall forwardTo sendToolResult)
-            edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
-            edge(sendToolResult forwardTo executeToolCall onToolCall { true })
+            edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
+            edge(sendToolResult forwardTo executeToolCall onToolCalls { true })
         }
     -->
     <!--- SUFFIX
@@ -460,27 +474,26 @@ For long-running conversations, the history can grow large and consume a lot of 
 
 ### Parallel tool execution
 
-For workflows that require executing multiple tools in parallel, you can use the `nodeExecuteMultipleTools` node:
+For workflows that require executing multiple tools in parallel, you can use the `nodeExecuteTools` node with `parallel = true`:
 
 <!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
-import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
-import ai.koog.prompt.message.Message
+import ai.koog.agents.core.dsl.extension.ToolCalls
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 
 val strategy = strategy<String, String>("strategy_name") {
-    val someNode by node<String, List<Message.Tool.Call>> { emptyList() }
+    val someNode by node<String, ToolCalls> { ToolCalls(emptyList()) }
 -->
 <!--- SUFFIX
 }
 -->
 ```kotlin
-val executeMultipleTools by nodeExecuteMultipleTools()
-val processMultipleResults by nodeLLMSendMultipleToolResults()
+val executeMultipleTools by nodeExecuteTools(parallel = true)
+val processMultipleResults by nodeLLMSendToolResults()
 
 edge(someNode forwardTo executeMultipleTools)
 edge(executeMultipleTools forwardTo processMultipleResults)
@@ -542,7 +555,6 @@ For more information related to parallel node execution and a detailed reference
 For complex workflows that require different paths based on certain conditions, you can use conditional branching:
 
 <!--- INCLUDE
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
@@ -597,27 +609,26 @@ The tone analysis strategy is a good example of a tool-based strategy that inclu
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
-import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 -->
 ```kotlin
 fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy<String, String> {
     return strategy(name) {
         val nodeSendInput by nodeLLMRequest()
-        val nodeExecuteTool by nodeExecuteTool()
-        val nodeSendToolResult by nodeLLMSendToolResult()
-        val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResult>()
+        val nodeExecuteTool by nodeExecuteTools()
+        val nodeSendToolResult by nodeLLMSendToolResults()
+        val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResults>()
 
         // Define the flow of the agent
         edge(nodeStart forwardTo nodeSendInput)
@@ -625,13 +636,13 @@ fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy
         // If the LLM responds with a message, finish
         edge(
             (nodeSendInput forwardTo nodeFinish)
-                    onAssistantMessage { true }
+                onTextMessage { true }
         )
 
         // If the LLM calls a tool, execute it
         edge(
             (nodeSendInput forwardTo nodeExecuteTool)
-                    onToolCall { true }
+                    onToolCalls { true }
         )
 
         // If the history gets too large, compress it
@@ -651,13 +662,13 @@ fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy
         // If the LLM calls another tool, execute it
         edge(
             (nodeSendToolResult forwardTo nodeExecuteTool)
-                    onToolCall { true }
+                    onToolCalls { true }
         )
 
         // If the LLM responds with a message, finish
         edge(
             (nodeSendToolResult forwardTo nodeFinish)
-                    onAssistantMessage { true }
+                onTextMessage { true }
         )
     }
 }

@@ -14,11 +14,29 @@ It lets you save and restore the state of an agent at specific points during exe
 A checkpoint captures the complete state of an agent at a specific point in its execution, including:
 
 - Message history (all interactions between user, system, assistant, and tools)
-- Current node being executed
-- Input data for the current node
+- Last node that was successfully executed
+- Output data from that node
+- Selected LLM
+- Common LLM parameters
+- Selected tools
+- `AIAgentStorage` contents (key-value data stored during execution)
 - Timestamp of creation
 
 Checkpoints are identified by unique IDs and are associated with a specific agent.
+
+### `AIAgentStorage` persistence
+
+When a checkpoint is created, the framework serializes all values currently held in `AIAgentStorage` and includes them in the checkpoint.
+On restore, those values are deserialized and made available to the resumed agent exactly as they were at the time of the checkpoint.
+
+**Only serializable values are persisted.**
+The serializer used is the one configured in `AIAgentConfig` via its `serializer` property.
+Values that cannot be encoded by that serializer are silently skipped and will not be present in the restored storage.
+
+Non-serializable values are dropped silently when the checkpoint is written.
+If a value is missing after restoring from a checkpoint, verify that its type is serializable by the configured serializer.
+
+See [Serialization](../serialization.md) for more information.
 
 ## Installation
 
@@ -53,7 +71,7 @@ To use the Agent Persistence feature, add it to your agent's configuration:
 
     <!--- INCLUDE
     /**
-    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
+    var executor = SimplePromptExecutors.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
@@ -109,7 +127,7 @@ Set the storage provider that will be used to save and retrieve checkpoints:
 
     <!--- INCLUDE
     /**
-    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
+    var executor = SimplePromptExecutors.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
@@ -167,7 +185,7 @@ To disable continuous persistence, use the code below:
 
     <!--- INCLUDE
     /**
-    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
+    var executor = SimplePromptExecutors.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
@@ -345,7 +363,7 @@ With Koog Persistence you can achieve that by providing a `RollbackToolRegistry`
 
     <!--- INCLUDE
     /**
-    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
+    var executor = SimplePromptExecutors.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
@@ -535,7 +553,7 @@ feature in your agent.
 
     <!--- INCLUDE
     /**
-    var executor = SimplePromptExecutorsKt.simpleOllamaAIExecutor("http://localhost:11434")
+    var executor = SimplePromptExecutors.simpleOllamaAIExecutor("http://localhost:11434")
     -->
     <!--- SUFFIX
     **/
@@ -562,21 +580,12 @@ For advanced control, you can directly set the execution point of an agent:
     import ai.koog.agents.snapshot.feature.persistence
     import ai.koog.prompt.message.Message.User
     import ai.koog.serialization.JSONPrimitive
-    val customInput = JSONPrimitive("custom-input")
     val customOutput = JSONPrimitive("custom-output")
     val customMessageHistory = emptyList<User>()
     -->
     ```kotlin
     suspend fun example(context: AIAgentContext) {
-        // You can set the execution point before some node and provide an input for it:
-        context.persistence().setExecutionPoint(
-            agentContext = context,
-            nodePath = context.executionInfo.path(),
-            messageHistory = customMessageHistory,
-            input = customInput
-        )
-
-        // Or after some node and provide an output from the node:
+        // You can set the execution point after some node and provide an output from the node:
         context.persistence().setExecutionPointAfterNode(
             agentContext = context,
             nodePath = context.executionInfo.path(),
@@ -599,15 +608,7 @@ For advanced control, you can directly set the execution point of an agent:
     ```java
     Persistence persistence = PersistenceKt.persistence(context);
 
-    // Set the execution point before a node and provide an input for it:
-    persistence.setExecutionPoint(
-        context,
-        context.getExecutionInfo().path(),
-        customMessageHistory,
-        customInput
-    );
-
-    // Or after a node and provide an output from the node:
+    // Set the execution point after a node and provide an output from the node:
     persistence.setExecutionPointAfterNode(
         context,
         context.getExecutionInfo().path(),

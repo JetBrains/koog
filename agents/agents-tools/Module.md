@@ -14,6 +14,13 @@ The agents-tools module provides a comprehensive framework for creating and mana
 
 Tools are designed to be executed within an environment context, ensuring proper handling of events, feature pipelines, and testing capabilities.
 
+### Passing metadata to a tool
+
+Tools can receive caller- and feature-contributed per-call metadata alongside their typed arguments,
+through a side channel that is not part of the tool's argument schema and is not serialized to the
+LLM. See [Class-based tools](https://docs.koog.ai/class-based-tools/) on the documentation site for
+usage and code samples.
+
 ### Using in your project
 
 To use tools in your project:

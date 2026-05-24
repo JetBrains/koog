@@ -1,9 +1,8 @@
 package ai.koog.prompt.executor.clients.deepseek
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.ktor.KtorKoogHttpClient
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionRequest
@@ -22,14 +21,13 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
 
@@ -80,20 +78,6 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
     ) : this(
         settings = settings,
         httpClient = createConfiguredHttpClient(apiKey, settings, httpClientFactory, clientName = DEEPSEEK_CLIENT_NAME),
-        clock = clock,
-        toolsConverter = toolsConverter
-    )
-
-    @JvmOverloads
-    public constructor(
-        apiKey: String,
-        settings: DeepSeekClientSettings = DeepSeekClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: KoogClock = KoogClock.System,
-        toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
-    ) : this(
-        settings = settings,
-        httpClient = createConfiguredHttpClient(apiKey, settings, KtorKoogHttpClient.Factory(baseClient), clientName = DEEPSEEK_CLIENT_NAME),
         clock = clock,
         toolsConverter = toolsConverter
     )
@@ -187,10 +171,10 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         return preparedMessages
     }
 
-    override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<Message.Assistant> {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
         return response.choices.map {
-            it.message.toMessageResponses(
+            it.message.toMessageResponse(
                 it.finishReason,
                 createMetaInfo(response.usage),
             )

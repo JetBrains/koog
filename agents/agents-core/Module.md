@@ -80,6 +80,13 @@ val result = agent.execute("Calculate the square root of 16")
 ```
 
 
+### Passing metadata to tool calls
+
+Caller code and installed features can thread per-call metadata (for example a trace span id) into
+`Tool.execute` through the environment, without modifying the tool's argument schema. See
+[Class-based tools](https://docs.koog.ai/class-based-tools/) on the documentation site for usage
+and code samples, including the typed `agentContext` accessor and caller/feature precedence rules.
+
 ### Standard Feature Events
 
 Features in the Koog ecosystem consume standardized Feature Events emitted by agents-core during agent execution. These events are defined in this module under the package `ai.koog.agents.core.feature.model.events`.

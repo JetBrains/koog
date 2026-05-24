@@ -39,16 +39,16 @@ textual content, optional unique identifier, key-value metadata, and the
 An enum that classifies AgentCore memory strategy kinds and drives the augmentation pathway
 used by `AgentcorePromptAugmenter`: `SEMANTIC` and `PREFERENCE` records are folded into the
 system message; `EPISODES` and `REFLECTIONS` records are placed under dedicated labelled
-sections in the system message; `SUMMARY` records rewrite the last user message to prepend
-retrieved context.
+sections in the system message; `SUMMARY` records are appended to the last user message as
+an additional text part.
 
 ### AgentcorePromptAugmenter
 
 A `PromptAugmenter` that routes each retrieved `AgentcoreMemoryRecord` to the correct
 injection point based on its `AgentcoreMemoryStrategy`. SEMANTIC and PREFERENCE content is
 appended to the system message; EPISODES and REFLECTIONS are rendered as distinct labelled
-sections in the system message; SUMMARY content rewrites the last user message. A system
-message is created automatically when none is present.
+sections in the system message; SUMMARY content is appended as an extra text part at the
+end of the last user message. A system message is created automatically when none is present.
 
 ### AgentcoreNamespaceScope
 

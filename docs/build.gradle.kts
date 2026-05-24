@@ -1,8 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Properties
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.jvm")
@@ -49,6 +47,8 @@ dependencies {
     implementation(project(":agents:agents-features:agents-features-acp"))
     implementation(project(":agents:agents-test"))
     implementation(project(":koog-agents"))
+    implementation(project(":agents:agents-ext"))
+    implementation(project(":koog-agents-additions"))
     implementation(project(":serialization:serialization-jackson"))
     api(libs.opentelemetry.exporter.logging)
     api(libs.opentelemetry.exporter.otlp)

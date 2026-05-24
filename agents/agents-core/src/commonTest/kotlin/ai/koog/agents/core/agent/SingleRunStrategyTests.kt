@@ -90,7 +90,7 @@ class SingleRunStrategyTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
+            strategy = singleRunStrategy(),
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
@@ -120,7 +120,7 @@ class SingleRunStrategyTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(ToolCalls.PARALLEL),
+            strategy = singleRunStrategy(parallelTools = true),
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
@@ -159,7 +159,7 @@ class SingleRunStrategyTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
+            strategy = singleRunStrategy(parallelTools = true),
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
@@ -198,7 +198,7 @@ class SingleRunStrategyTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(ToolCalls.PARALLEL),
+            strategy = singleRunStrategy(parallelTools = true),
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
@@ -238,7 +238,7 @@ class SingleRunStrategyTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
+            strategy = singleRunStrategy(parallelTools = true),
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
@@ -278,7 +278,7 @@ class SingleRunStrategyTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(ToolCalls.PARALLEL),
+            strategy = singleRunStrategy(parallelTools = true),
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {

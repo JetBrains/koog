@@ -1,6 +1,7 @@
 package ai.koog.agents.features.sql.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -42,7 +43,7 @@ class SQLPersistenceProvidersTest {
         val retrieved = provider.getLatestCheckpoint(agentId)
         assertNotNull(retrieved)
         assertEquals(checkpoint.checkpointId, retrieved.checkpointId)
-        assertEquals(checkpoint.nodePath, retrieved.nodePath)
+        assertEquals(checkpoint.graphProperties?.nodePath, retrieved.graphProperties?.nodePath)
         assertEquals(checkpoint.messageHistory.size, retrieved.messageHistory.size)
     }
 
@@ -162,14 +163,16 @@ class SQLPersistenceProvidersTest {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = KoogClock.System.now(),
-            nodePath = "test-node",
-            lastOutput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test assistant", RequestMetaInfo.create(KoogClock.System)),
                 Message.User("Hello", RequestMetaInfo.create(KoogClock.System)),
                 Message.Assistant("Hi there!", ResponseMetaInfo.create(KoogClock.System))
             ),
-            version = version
+            version = version,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = "test-node",
+                lastOutput = JSONPrimitive("Test input"),
+            ),
         )
     }
 }

@@ -8,15 +8,13 @@ import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.BaseBuilder
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
-import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.ollama.client.OllamaModels
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.Prompt
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.serialization.TypeToken
 import ai.koog.serialization.typeToken
 import org.jetbrains.annotations.TestOnly
@@ -69,7 +67,7 @@ public class DummyAIAgentContext(
 
     @OptIn(InternalAgentsApi::class)
     private var _pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(
-        _config ?: AIAgentConfig(Prompt.Empty, OllamaModels.Meta.LLAMA_3_2, 100)
+        _config ?: AIAgentConfig(Prompt.Empty, OpenAIModels.Chat.GPT5, 100)
     )
 
     override val environment: AIAgentEnvironment
@@ -108,23 +106,6 @@ public class DummyAIAgentContext(
         set(value) {
             _executionInfo = value
         }
-
-    @Suppress("DEPRECATION")
-    override fun store(key: AIAgentStorageKey<*>, value: Any) {
-        throw NotImplementedError("store() is not supported for mock")
-    }
-
-    @Suppress("DEPRECATION")
-    override fun <T> get(key: AIAgentStorageKey<*>): T {
-        throw NotImplementedError("get() is not supported for mock")
-    }
-
-    @Suppress("DEPRECATION")
-    override fun remove(key: AIAgentStorageKey<*>): Boolean {
-        throw NotImplementedError("remove() is not supported for mock")
-    }
-
-    override suspend fun getHistory(): List<Message> = emptyList()
 
     /**
      * Creates a new instance of `AIAgentContextBase` with the specified parameters,

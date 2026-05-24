@@ -1,7 +1,8 @@
 package ai.koog.prompt.executor.clients.openai
 
-import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.message.Message
+import ai.koog.http.client.ktor.KtorKoogHttpClient
+import ai.koog.prompt.Prompt
+import ai.koog.prompt.message.MessagePart
 import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -11,6 +12,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -66,7 +69,7 @@ class OpenAIChatCompletionLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = OpenAILLMClient(apiKey = key, baseClient = http, clock = FixedClock)
+        val client = OpenAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
 
         val prompt = Prompt.build(id = "p-tool-response", clock = FixedClock, params = OpenAIChatParams()) {
             user("What is the weather in Boston?")
@@ -74,12 +77,14 @@ class OpenAIChatCompletionLLMClientTest {
 
         val responses = client.execute(prompt, OpenAIModels.Chat.GPT4o)
 
-        assertEquals(2, responses.size, "Response should contain reasoning and tool call")
-        assertIs<Message.Reasoning>(responses[0])
-        assertEquals("I should call the weather tool first.", responses[0].content)
-        val toolCall = assertIs<Message.Tool.Call>(responses[1])
+        assertEquals(2, responses.parts.size, "Response should contain reasoning and tool call")
+        val reasoningPart = assertIs<MessagePart.Reasoning>(responses.parts[0])
+        assertEquals(1, reasoningPart.content.size, "Reasoning should contain one message")
+        assertEquals("I should call the weather tool first.", reasoningPart.content.first())
+
+        val toolCall = assertIs<MessagePart.Tool.Call>(responses.parts[1])
         assertEquals("call_weather", toolCall.id)
         assertEquals("weather", toolCall.tool)
-        assertEquals("{\"city\":\"Boston\"}", toolCall.content)
+        assertEquals(buildJsonObject { put("city", JsonPrimitive("Boston")) }, toolCall.argsJson)
     }
 }

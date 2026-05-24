@@ -14,8 +14,9 @@ import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.testing.feature.withTesting
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
@@ -97,7 +98,7 @@ class SimpleAgentMockedTest {
 
         onLLMCallCompleted { eventContext ->
             // Capture which tools the LLM requested (whether they exist or not)
-            eventContext.responses.filterIsInstance<Message.Tool.Call>().forEach { toolCall ->
+            eventContext.response?.parts?.filterIsInstance<MessagePart.Tool.Call>()?.forEach { toolCall ->
                 llmRequestedTools.add(toolCall.tool)
             }
         }
@@ -113,7 +114,7 @@ class SimpleAgentMockedTest {
     }
 
     object ErrorTool : SimpleTool<ErrorTool.Args>(
-        argsSerializer = Args.serializer(),
+        argsType = typeToken<Args>(),
         name = "error_tool",
         description = "A tool that always throws an exception"
     ) {
@@ -129,7 +130,7 @@ class SimpleAgentMockedTest {
     }
 
     object ConditionalTool : SimpleTool<ConditionalTool.Args>(
-        argsSerializer = Args.serializer(),
+        argsType = typeToken<Args>(),
         name = "conditional_tool",
         description = "A tool that conditionally throws an exception"
     ) {

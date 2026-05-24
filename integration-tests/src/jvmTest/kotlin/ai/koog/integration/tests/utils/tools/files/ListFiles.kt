@@ -2,11 +2,12 @@ package ai.koog.integration.tests.utils.tools.files
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.Serializable
 
 class ListFiles(private val fs: MockFileSystem) : Tool<ListFiles.Args, ListFiles.Result>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Result.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Result>(),
     name = "list_files",
     description = "List all files inside the given path of the directory"
 ) {

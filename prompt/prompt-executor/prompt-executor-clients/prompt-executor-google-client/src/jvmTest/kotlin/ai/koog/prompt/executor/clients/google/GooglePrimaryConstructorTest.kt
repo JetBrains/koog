@@ -5,7 +5,7 @@ import ai.koog.prompt.executor.clients.google.models.GooglePart
 import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.test.utils.CapturingKoogHttpClient
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -56,7 +56,7 @@ class GooglePrimaryConstructorTest {
             httpClient = transport
         )
 
-        val responses = client.execute(
+        val response = client.execute(
             prompt = prompt("test") { user("Hello?") },
             model = GoogleModels.Gemini2_5Pro
         )
@@ -67,7 +67,7 @@ class GooglePrimaryConstructorTest {
         assertTrue(request is GoogleRequest)
         val userPart = request.contents.single().parts!!.single() as GooglePart.Text
         assertEquals("Hello?", userPart.text)
-        val message = assertIs<Message.Assistant>(responses.single())
-        assertEquals("Hello from Google KoogHttpClient", message.content)
+        val message = assertIs<MessagePart.Text>(response.parts.single())
+        assertEquals("Hello from Google KoogHttpClient", message.text)
     }
 }

@@ -35,6 +35,8 @@ dependencies {
     implementation("ai.koog:agents-features-acp")
     //noinspection UseTomlInstead
     testImplementation("ai.koog:agents-test")
+    //noinspection UseTomlInstead
+    implementation("ai.koog:agents-ext")
 
     implementation(libs.kotlinx.datetime)
 

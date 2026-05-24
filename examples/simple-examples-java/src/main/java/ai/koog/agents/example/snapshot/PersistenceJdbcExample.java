@@ -3,9 +3,10 @@ package ai.koog.agents.example.snapshot;
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.features.persistence.jdbc.PostgresJdbcPersistenceStorageProvider;
 import ai.koog.agents.snapshot.feature.Persistence;
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+
+import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -57,7 +58,7 @@ public class PersistenceJdbcExample {
         storageProvider.migrateBlocking();
 
         AIAgent<String, String> agent = AIAgent.builder()
-                .promptExecutor(new MultiLLMPromptExecutor(new OpenAILLMClient(apiKey)))
+                .promptExecutor(new MultiLLMPromptExecutor(openAIClient(apiKey)))
                 .llmModel(OpenAIModels.Chat.GPT4o)
                 .systemPrompt("You are a friendly assistant. Keep your answers concise.")
                 .install(Persistence.Feature, config -> {

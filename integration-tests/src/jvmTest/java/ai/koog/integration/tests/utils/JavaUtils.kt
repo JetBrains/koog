@@ -16,7 +16,6 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.annotations.InternalKoogUtils
@@ -217,17 +216,6 @@ object JavaUtils {
 
         return StreamCollectionResult(frames, error)
     }
-
-    @JvmStatic
-    fun mergeAssistantAndReasoningContent(responses: List<Message.Response>): String = responses
-        .asSequence()
-        .filter { it is Message.Assistant || it is Message.Reasoning }.joinToString("") { it.content }
-
-    @JvmStatic
-    fun firstAssistantContent(responses: List<Message.Response>): String = responses
-        .firstOrNull { it is Message.Assistant }
-        ?.content
-        .orEmpty()
 
     @JvmStatic
     fun weatherSchemaJson(): JsonObject {

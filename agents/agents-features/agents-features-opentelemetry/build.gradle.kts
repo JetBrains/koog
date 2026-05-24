@@ -1,8 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -86,6 +84,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
+                implementation(project(":http-client:http-client-ktor"))
                 implementation(libs.junit.jupiter.params)
 
                 // Real Ktor engine for jvmTest paths that need an actual HTTP transport
@@ -113,18 +112,6 @@ extensions.configure<LibraryAndroidComponentsExtension> {
             GenerateProductProperties::outputDir,
         )
     }
-}
-
-// OTel Kotlin SDK 0.3.0 doesn't publish wasmJs artifacts, so the wasmJs target can't
-// actually compile against OTel. We keep the target registered (so its KMP publication
-// has the standard `agents-features-opentelemetry-wasm-js` coordinates that KMP consumers
-// expect) but exclude OTel from wasmJs configurations and skip wasmJs tasks so nothing
-// tries to build/publish broken wasmJs artifacts.
-configurations.matching { it.name.startsWith("wasmJs") }.configureEach {
-    exclude(group = "io.opentelemetry.kotlin")
-}
-tasks.matching { it.name.startsWith("wasmJs") || it.name == "compileKotlinWasmJs" || it.name == "compileTestKotlinWasmJs" }.configureEach {
-    onlyIf("OTel Kotlin SDK 0.3.0 does not publish wasmJs artifacts") { false }
 }
 
 publishToMaven()

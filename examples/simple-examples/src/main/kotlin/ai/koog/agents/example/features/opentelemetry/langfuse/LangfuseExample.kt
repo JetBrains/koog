@@ -8,7 +8,8 @@ import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
 import ai.koog.agents.mcp.McpToolRegistryProvider
-import ai.koog.agents.mcp.server.startSseMcpServer
+import ai.koog.agents.mcp.server.McpServerTransportType
+import ai.koog.agents.mcp.server.startMcpServer
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import io.ktor.server.cio.CIO
@@ -31,9 +32,13 @@ import kotlin.time.Duration.Companion.seconds
  * @see <a href="https://langfuse.com/docs/opentelemetry/get-started#opentelemetry-endpoint">Langfuse OpenTelemetry Docs</a>
  */
 suspend fun main() {
-    val server = startSseMcpServer(CIO, port = 30001, host = "localhost", ToolRegistry {
-        tool(::applyArithmetic)
-    })
+    val server = startMcpServer(
+        factory = CIO,
+        tools = ToolRegistry { tool(::applyArithmetic) },
+        port = 30001,
+        host = "localhost",
+        transport = McpServerTransportType.SSE,
+    )
     delay(1.seconds)
     try {
         val tools = McpToolRegistryProvider.fromSseUrl("http://localhost:30001")

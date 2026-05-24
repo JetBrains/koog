@@ -3,15 +3,25 @@ package ai.koog.http.client.test
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
 import ai.koog.http.client.get
+import ai.koog.http.client.lines
 import ai.koog.http.client.post
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.assertThrows
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.test.fail
 
 /**
@@ -64,7 +74,34 @@ abstract class BaseKoogHttpClientTest {
 
         val result: String = client.post(
             path = mockServer.url("/echo"),
-            request = "PAYLOAD"
+            requestBody = "PAYLOAD"
+        )
+
+        assertEquals(responseBody, result)
+    }
+
+    @Suppress("FunctionName")
+    open fun `test post request headers override inferred string content type`(): Unit = runTest {
+        val responseBody = "RESPONSE_OK"
+
+        mockServer.start(
+            postEndpoints = listOf(
+                MockWebServer.PostEndpointConfig(
+                    path = "/echo",
+                    responseBody = responseBody,
+                    statusCode = HttpStatusCode.OK,
+                    contentType = ContentType.Text.Plain,
+                    expectedHeaders = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val result: String = client.post(
+            path = mockServer.url("/echo"),
+            requestBody = "{}",
+            headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
         )
 
         assertEquals(responseBody, result)
@@ -113,7 +150,7 @@ abstract class BaseKoogHttpClientTest {
 
         val result: TestResponse = client.post(
             path = mockServer.url("/echo"),
-            request = TestRequest("How are you?"),
+            requestBody = TestRequest("How are you?"),
             requestBodyType = TestRequest::class,
             responseType = TestResponse::class
         )
@@ -139,7 +176,7 @@ abstract class BaseKoogHttpClientTest {
         try {
             client.post<String, String>(
                 path = mockServer.url("/fail"),
-                request = "PAYLOAD",
+                requestBody = "PAYLOAD",
             )
             fail("Expected an exception for non-success status")
         } catch (e: KoogHttpClientException) {
@@ -169,7 +206,7 @@ abstract class BaseKoogHttpClientTest {
         try {
             client.post<String, String>(
                 path = mockServer.url("/rate-limited"),
-                request = "PAYLOAD",
+                requestBody = "PAYLOAD",
             )
             fail("Expected a KoogHttpClientException for 429")
         } catch (e: KoogHttpClientException) {
@@ -197,7 +234,7 @@ abstract class BaseKoogHttpClientTest {
 
         val flow = client.sse(
             path = mockServer.url("/stream"),
-            request = "{}",
+            requestBody = "{}",
             requestBodyType = String::class,
             dataFilter = { it != "[DONE]" },
             decodeStreamingResponse = { it },
@@ -229,7 +266,7 @@ abstract class BaseKoogHttpClientTest {
 
         val flow = client.sse(
             path = mockServer.url("/stream"),
-            request = "{}",
+            requestBody = "{}",
             requestBodyType = String::class,
             dataFilter = { it != "[DONE]" },
             decodeStreamingResponse = { it },
@@ -264,7 +301,7 @@ abstract class BaseKoogHttpClientTest {
 
         val flow = client.sse(
             path = mockServer.url("/stream"),
-            request = "{}",
+            requestBody = "{}",
             requestBodyType = String::class,
             dataFilter = { it != "[DONE]" },
             decodeStreamingResponse = { it },
@@ -306,6 +343,165 @@ abstract class BaseKoogHttpClientTest {
     }
 
     @Suppress("FunctionName")
+    open fun `test lines emits non-blank lines`(): Unit = runTest {
+        val lines = listOf("""{"i":1}""", """{"i":2}""", """{"i":3}""")
+
+        mockServer.start(
+            linesEndpoints = listOf(
+                MockWebServer.LinesEndpointConfig(
+                    path = "/stream",
+                    lines = lines
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val collected = client.lines(
+            path = mockServer.url("/stream"),
+            requestBody = "{}"
+        ).toList()
+
+        assertEquals(lines, collected)
+    }
+
+    @Suppress("FunctionName")
+    open fun `test lines request headers override inferred string content type`(): Unit = runTest {
+        val lines = listOf("""{"i":1}""")
+
+        mockServer.start(
+            linesEndpoints = listOf(
+                MockWebServer.LinesEndpointConfig(
+                    path = "/stream",
+                    lines = lines,
+                    expectedHeaders = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val collected = client.lines(
+            path = mockServer.url("/stream"),
+            requestBody = "{}",
+            headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
+        ).toList()
+
+        assertEquals(lines, collected)
+    }
+
+    @Suppress("FunctionName")
+    open fun `test lines skips blank lines`(): Unit = runTest {
+        val lines = listOf("""{"i":1}""", "", "   ", """{"i":2}""")
+
+        mockServer.start(
+            linesEndpoints = listOf(
+                MockWebServer.LinesEndpointConfig(
+                    path = "/stream",
+                    lines = lines
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val collected = client.lines(
+            path = mockServer.url("/stream"),
+            requestBody = "{}"
+        ).toList()
+
+        assertEquals(listOf("""{"i":1}""", """{"i":2}"""), collected)
+    }
+
+    @Suppress("FunctionName")
+    open fun `test lines emits nothing for empty body`(): Unit = runTest {
+        mockServer.start(
+            linesEndpoints = listOf(
+                MockWebServer.LinesEndpointConfig(
+                    path = "/stream",
+                    lines = emptyList()
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val collected = client.lines(
+            path = mockServer.url("/stream"),
+            requestBody = "{}"
+        ).toList()
+
+        assertTrue(collected.isEmpty())
+    }
+
+    @Suppress("FunctionName")
+    open fun `test lines surfaces non-2xx as KoogHttpClientException`(): Unit = runTest {
+        mockServer.start(
+            linesEndpoints = listOf(
+                MockWebServer.LinesEndpointConfig(
+                    path = "/stream",
+                    lines = listOf("ignored"),
+                    statusCode = HttpStatusCode.BadRequest,
+                    contentType = ContentType.Text.Plain
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val failure = assertThrows<KoogHttpClientException> {
+            client.lines(
+                path = mockServer.url("/stream"),
+                requestBody = "{}"
+            ).toList()
+        }
+        assertEquals(client.clientName, failure.clientName)
+        assertEquals(400, failure.statusCode)
+    }
+
+    @Suppress("FunctionName")
+    open fun `test lines propagates cancellation`(): Unit = runTest {
+        // Given: server that emits up to 1000 lines
+        val totalLines = 1_000
+        val lines = List(totalLines) { """{"i":$it}""" }
+        val writtenLines = AtomicInteger(0)
+        val streamClosed = CompletableDeferred<Unit>()
+
+        mockServer.start(
+            linesEndpoints = listOf(
+                MockWebServer.LinesEndpointConfig(
+                    path = "/stream",
+                    lines = lines,
+                    lineDelayMillis = 20,
+                    onLineWritten = { writtenLines.incrementAndGet() },
+                    onStreamClosed = { streamClosed.complete(Unit) }
+                )
+            )
+        )
+
+        // And: client
+        val client = createClient()
+
+        // When: client collects only the first 3 lines, causing upstream cancellation
+        val collected = client.lines(
+            path = mockServer.url("/stream"),
+            requestBody = "{}"
+        ).take(3).toList()
+
+        // Then: client received correct lines
+        assertEquals(3, collected.size)
+        assertEquals(lines.take(3), collected)
+
+        // And: server observes stream closure before writing all lines
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(2_000) {
+                streamClosed.await()
+            }
+        }
+        assertTrue(writtenLines.get() < totalLines)
+    }
+
+    @Suppress("FunctionName")
     open fun `test return success string response on post with parameters`(): Unit = runTest {
         val responseBody = "RESPONSE_OK_WITH_PARAMS"
         val expectedParameters = mapOf("filter" to "active", "sort" to "desc")
@@ -326,7 +522,7 @@ abstract class BaseKoogHttpClientTest {
 
         val result: String = client.post(
             path = mockServer.url("/echo"),
-            request = "PAYLOAD",
+            requestBody = "PAYLOAD",
             parameters = expectedParameters
         )
 

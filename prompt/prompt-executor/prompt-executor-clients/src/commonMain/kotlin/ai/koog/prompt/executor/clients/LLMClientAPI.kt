@@ -1,8 +1,8 @@
 package ai.koog.prompt.executor.clients
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -11,6 +11,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.flow.Flow
+import kotlin.jvm.JvmSynthetic
 
 /**
  * API for [LLMClient]
@@ -24,11 +25,12 @@ public interface LLMClientAPI : AutoCloseable {
      * @param tools Optional list of tools that can be used by the LLM
      * @return List of response messages
      */
+    @JvmSynthetic
     public suspend fun execute(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
-    ): List<Message.Response>
+    ): Message.Assistant
 
     /**
      * Executes a prompt and returns a streaming flow of response chunks.
@@ -37,6 +39,7 @@ public interface LLMClientAPI : AutoCloseable {
      * @param model The LLM model to use
      * @return Flow of response chunks
      */
+    @JvmSynthetic
     public fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
@@ -50,6 +53,7 @@ public interface LLMClientAPI : AutoCloseable {
      * @param tools Optional list of tools that can be used by the LLM
      * @return Flow of response chunks
      */
+    @JvmSynthetic
     public fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
@@ -64,11 +68,12 @@ public interface LLMClientAPI : AutoCloseable {
      * @param model The LLM model to use
      *  @return List of LLM choices
      */
+    @JvmSynthetic
     public suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
-    ): List<LLMChoice> =
+    ): LLMChoice =
         throw UnsupportedOperationException("Not implemented for this client")
 
     /**
@@ -78,6 +83,7 @@ public interface LLMClientAPI : AutoCloseable {
      * @param model The language model to be used for conducting the moderation analysis.
      * @return The result of the moderation analysis, encapsulated in a ModerationResult object.
      */
+    @JvmSynthetic
     public suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult
 
     /**
@@ -85,6 +91,7 @@ public interface LLMClientAPI : AutoCloseable {
      *
      * @return A list of model ids instances representing the available LLMs.
      */
+    @JvmSynthetic
     public suspend fun models(): List<LLModel> {
         throw UnsupportedOperationException("Not implemented for this client")
     }

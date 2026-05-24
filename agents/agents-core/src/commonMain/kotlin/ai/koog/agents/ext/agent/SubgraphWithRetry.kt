@@ -198,7 +198,7 @@ public inline fun <reified Input : Any, reified Output> subgraphWithRetry(
  * Example usage:
  * ```
  * val subgraphRetryCallLLM by subgraphWithRetrySimple(
- *     condition = { (it is Message.Tool.Call).asConditionResult },
+ *     condition = { (it is MessagePart.Tool.Call).asConditionResult },
  *     maxRetries = 2,
  * ) {
  *     val nodeCallLLM by nodeLLMRequest("sendInput")

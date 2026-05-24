@@ -79,9 +79,9 @@ public class FilePromptCache(
     private val lock = Mutex()
 
     @Serializable
-    private data class CachedElement(val response: List<Message.Response>, val request: PromptCache.Request)
+    private data class CachedElement(val response: Message.Assistant, val request: PromptCache.Request)
 
-    override suspend fun get(request: PromptCache.Request): List<Message.Response>? {
+    override suspend fun get(request: PromptCache.Request): Message.Assistant? {
         val response = getOrNull(request)
 
         if (response != null) {
@@ -91,7 +91,7 @@ public class FilePromptCache(
         return response
     }
 
-    override suspend fun put(request: PromptCache.Request, response: List<Message.Response>): Unit = lock.withLock {
+    override suspend fun put(request: PromptCache.Request, response: Message.Assistant): Unit = lock.withLock {
         // Check if we need to remove old files before adding a new one
         enforceFileLimit()
 
@@ -108,7 +108,7 @@ public class FilePromptCache(
 
     private fun file(request: PromptCache.Request): Path = requestsDir / request.asCacheKey
 
-    private fun getOrNull(request: PromptCache.Request): List<Message.Response>? {
+    private fun getOrNull(request: PromptCache.Request): Message.Assistant? {
         val file = file(request)
         if (!file.exists()) return null
 
