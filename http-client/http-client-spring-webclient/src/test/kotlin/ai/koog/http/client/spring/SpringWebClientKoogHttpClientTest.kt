@@ -23,9 +23,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @Execution(ExecutionMode.SAME_THREAD)
-class SpringKoogHttpClientTest : SpringKoogHttpClientTestBase() {
+class SpringWebClientKoogHttpClientTest : SpringWebClientKoogHttpClientTestBase() {
     override fun createClient(): KoogHttpClient {
-        return SpringKoogHttpClient(
+        return SpringWebClientKoogHttpClient(
             clientName = "TestClient",
             logger = KotlinLogging.logger("TestLogger"),
             webClient = configuredWebClient()
@@ -50,7 +50,7 @@ class SpringKoogHttpClientTest : SpringKoogHttpClientTestBase() {
                 )
             }
             .build()
-        val client = SpringKoogHttpClient(
+        val client = SpringWebClientKoogHttpClient(
             clientName = "TestClient",
             logger = KotlinLogging.logger("TestLogger"),
             webClient = webClient

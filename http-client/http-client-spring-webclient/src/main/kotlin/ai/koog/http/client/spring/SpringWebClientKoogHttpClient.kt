@@ -50,7 +50,7 @@ import kotlin.reflect.KClass
  * @property headers Default headers to be applied to all requests.
  * @property queryParameters Default query parameters to be applied to all requests.
  */
-public class SpringKoogHttpClient(
+public class SpringWebClientKoogHttpClient(
     override val clientName: String,
     private val logger: KLogger,
     private val webClient: WebClient,
@@ -106,11 +106,11 @@ public class SpringKoogHttpClient(
         logger.debug { "Opening sse connection for $clientName" }
         try {
             webClient.post()
-                .uriWithParameters(path, this@SpringKoogHttpClient.queryParameters + parameters)
+                .uriWithParameters(path, this@SpringWebClientKoogHttpClient.queryParameters + parameters)
                 .body(BodyInserters.fromValue(requestBody))
                 .applyRequestHeaders(
                     mergeHeaders(
-                        this@SpringKoogHttpClient.headers,
+                        this@SpringWebClientKoogHttpClient.headers,
                         mapOf(
                             HttpHeaders.CONTENT_TYPE to requestBodyType.defaultContentType(),
                             HttpHeaders.ACCEPT to MediaType.TEXT_EVENT_STREAM_VALUE,
@@ -162,11 +162,11 @@ public class SpringKoogHttpClient(
 
         try {
             webClient.post()
-                .uriWithParameters(path, this@SpringKoogHttpClient.queryParameters + parameters)
+                .uriWithParameters(path, this@SpringWebClientKoogHttpClient.queryParameters + parameters)
                 .body(BodyInserters.fromValue(requestBody))
                 .applyRequestHeaders(
                     mergeHeaders(
-                        this@SpringKoogHttpClient.headers,
+                        this@SpringWebClientKoogHttpClient.headers,
                         mapOf(HttpHeaders.CONTENT_TYPE to requestBodyType.defaultContentType()),
                         headers,
                     )
@@ -219,7 +219,7 @@ public class SpringKoogHttpClient(
             connectTimeoutMillis: Long,
             socketTimeoutMillis: Long,
             json: Json
-        ): SpringKoogHttpClient {
+        ): SpringWebClientKoogHttpClient {
             val reactorClient = HttpClient.create()
                 .responseTimeout(Duration.ofMillis(requestTimeoutMillis))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis.toConnectTimeoutInt())
@@ -238,7 +238,7 @@ public class SpringKoogHttpClient(
             }
 
             val configuredWebClient = configuredWebClientBuilder.build()
-            return SpringKoogHttpClient(
+            return SpringWebClientKoogHttpClient(
                 clientName = clientName,
                 logger = logger,
                 webClient = configuredWebClient,

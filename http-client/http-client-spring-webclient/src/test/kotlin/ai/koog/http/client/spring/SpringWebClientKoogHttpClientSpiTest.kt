@@ -6,21 +6,21 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class SpringKoogHttpClientSpiTest {
+class SpringWebClientKoogHttpClientSpiTest {
 
     @Test
     fun testServiceLoaderDiscoversSpringFactory() {
         val providers = ServiceLoader.load(KoogHttpClient.Factory::class.java).toList()
-        val springFactory = providers.singleOrNull { it is SpringKoogHttpClient.Factory }
+        val springFactory = providers.singleOrNull { it is SpringWebClientKoogHttpClient.Factory }
         assertNotNull(
             springFactory,
-            "Expected SpringKoogHttpClient.Factory to be discoverable via ServiceLoader"
+            "Expected SpringWebClientKoogHttpClient.Factory to be discoverable via ServiceLoader"
         )
     }
 
     @Test
     fun testFactoryHasNoArgConstructorForReflectiveInstantiation() {
-        val instance = SpringKoogHttpClient.Factory::class.java.getDeclaredConstructor().newInstance()
+        val instance = SpringWebClientKoogHttpClient.Factory::class.java.getDeclaredConstructor().newInstance()
         assertTrue(
             instance is KoogHttpClient.Factory,
             "Expected reflective no-arg instantiation to yield a KoogHttpClient.Factory, got ${instance::class}"

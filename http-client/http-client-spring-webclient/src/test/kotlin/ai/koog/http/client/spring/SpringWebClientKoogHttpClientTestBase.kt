@@ -10,7 +10,7 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-abstract class SpringKoogHttpClientTestBase : BaseKoogHttpClientTest() {
+abstract class SpringWebClientKoogHttpClientTestBase : BaseKoogHttpClientTest() {
 
     @Test
     override fun `test return success string response on get`() =
@@ -88,7 +88,7 @@ abstract class SpringKoogHttpClientTestBase : BaseKoogHttpClientTest() {
                 )
             )
 
-            val client = SpringKoogHttpClient.Factory().create(
+            val client = SpringWebClientKoogHttpClient.Factory().create(
                 clientName = "TestClient",
                 baseUrl = mockServer.url("/api"),
                 headers = mapOf("Authorization" to "Bearer token"),
