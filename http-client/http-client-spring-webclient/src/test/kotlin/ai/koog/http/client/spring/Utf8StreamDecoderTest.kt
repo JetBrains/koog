@@ -20,7 +20,7 @@ class Utf8StreamDecoderTest {
             {"model":"llama3.2","message":{"role":"assistant","content":""},"done":true,"done_reason":"stop"}
         """.trimIndent()
         val bytes = ndjson.toByteArray(Charsets.UTF_8)
-        val split = ndjson.substringBefore("😀").toByteArray(Charsets.UTF_8).size + 2  // split inside 😀 (F0 9F | 98 80)
+        val split = ndjson.substringBefore("😀").toByteArray(Charsets.UTF_8).size + 2 // split inside 😀 (F0 9F | 98 80)
 
         val decoder = Utf8StreamDecoder()
         val chunk1 = decoder.decode(dataBuffer(bytes.copyOfRange(0, split)))
@@ -38,7 +38,7 @@ class Utf8StreamDecoderTest {
     @Test
     fun testDecodeMultiByteCharSplitAfterFirstByte() {
         val decoder = Utf8StreamDecoder()
-        val euro = "€".toByteArray(Charsets.UTF_8)  // E2 82 AC
+        val euro = "€".toByteArray(Charsets.UTF_8) // E2 82 AC
         assertEquals("", decoder.decode(dataBuffer(euro.copyOfRange(0, 1))))
         assertEquals("€", decoder.decode(dataBuffer(euro.copyOfRange(1, 3))))
         assertEquals("", decoder.finish())
@@ -65,7 +65,7 @@ class Utf8StreamDecoderTest {
     fun testMixedAsciiAndMultiByteCharSplit() {
         val decoder = Utf8StreamDecoder()
         val bytes = "zażółć".toByteArray(Charsets.UTF_8)
-        val split = "za".toByteArray(Charsets.UTF_8).size + 1  // "za" + first byte of 'ż' (C5 BC)
+        val split = "za".toByteArray(Charsets.UTF_8).size + 1 // "za" + first byte of 'ż' (C5 BC)
         val chunk1 = decoder.decode(dataBuffer(bytes.copyOfRange(0, split)))
         val chunk2 = decoder.decode(dataBuffer(bytes.copyOfRange(split, bytes.size)))
         assertEquals("zażółć", chunk1 + chunk2 + decoder.finish())
@@ -74,7 +74,7 @@ class Utf8StreamDecoderTest {
     @Test
     fun testDecodeFourByteCharSplitAfterFirstByte() {
         val decoder = Utf8StreamDecoder()
-        val emoji = "😀".toByteArray(Charsets.UTF_8)  // F0 9F 98 80
+        val emoji = "😀".toByteArray(Charsets.UTF_8) // F0 9F 98 80
         assertEquals("", decoder.decode(dataBuffer(emoji.copyOfRange(0, 1))))
         assertEquals("😀", decoder.decode(dataBuffer(emoji.copyOfRange(1, 4))))
         assertEquals("", decoder.finish())
@@ -83,7 +83,7 @@ class Utf8StreamDecoderTest {
     @Test
     fun testDecodeFourByteCharSplitAfterThirdByte() {
         val decoder = Utf8StreamDecoder()
-        val emoji = "😀".toByteArray(Charsets.UTF_8)  // F0 9F 98 80
+        val emoji = "😀".toByteArray(Charsets.UTF_8) // F0 9F 98 80
         assertEquals("", decoder.decode(dataBuffer(emoji.copyOfRange(0, 3))))
         assertEquals("😀", decoder.decode(dataBuffer(emoji.copyOfRange(3, 4))))
         assertEquals("", decoder.finish())
@@ -92,8 +92,8 @@ class Utf8StreamDecoderTest {
     @Test
     fun testFinishWithIncompleteSequenceThrows() {
         val decoder = Utf8StreamDecoder()
-        val pound = "£".toByteArray(Charsets.UTF_8)  // C2 A3
-        decoder.decode(dataBuffer(pound.copyOfRange(0, 1)))  // only C2 — incomplete
+        val pound = "£".toByteArray(Charsets.UTF_8) // C2 A3
+        decoder.decode(dataBuffer(pound.copyOfRange(0, 1))) // only C2 — incomplete
         assertFailsWith<MalformedInputException> { decoder.finish() }
     }
 

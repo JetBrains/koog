@@ -44,7 +44,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import org.jetbrains.annotations.ApiStatus.Experimental
 import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KClass
 
@@ -62,7 +61,6 @@ import kotlin.reflect.KClass
  * @property ktorClient The configured Ktor HttpClient instance used for making HTTP requests.
  * The configuration is applied using the Ktor `HttpClient.config` method.
  */
-@Experimental
 public class KtorKoogHttpClient internal constructor(
     override val clientName: String,
     private val logger: KLogger,
@@ -351,7 +349,6 @@ public class KtorKoogHttpClient internal constructor(
  * Ktor’s `HttpClientConfig`.
  * @return An instance of `KoogHttpClient` configured with the provided parameters.
  */
-@Experimental
 @JvmOverloads
 public fun KoogHttpClient.Companion.fromKtorClient(
     clientName: String,

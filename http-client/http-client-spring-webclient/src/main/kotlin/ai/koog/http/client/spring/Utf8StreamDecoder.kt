@@ -46,8 +46,11 @@ internal class Utf8StreamDecoder {
             when {
                 result.isOverflow -> continue
                 result.isUnderflow -> {
-                    pendingBytes = if (endOfInput) ByteArray(0)
-                    else ByteArray(input.remaining()).also { input.get(it) }
+                    pendingBytes = if (endOfInput) {
+                        ByteArray(0)
+                    } else {
+                        ByteArray(input.remaining()).also { input.get(it) }
+                    }
                     return decoded.toString()
                 }
                 else -> result.throwException()

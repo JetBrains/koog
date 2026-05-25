@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.serialization.json.Json
-import org.jetbrains.annotations.ApiStatus.Experimental
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.core.io.buffer.DataBufferUtils
@@ -53,7 +52,6 @@ import kotlin.reflect.KClass
  * @property headers Default headers to be applied to all requests.
  * @property queryParameters Default query parameters to be applied to all requests.
  */
-@Experimental
 public class SpringKoogHttpClient(
     override val clientName: String,
     private val logger: KLogger,

@@ -2,7 +2,6 @@ package ai.koog.http.client
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
-import org.jetbrains.annotations.ApiStatus.Experimental
 import kotlin.reflect.KClass
 import kotlin.time.Duration.Companion.minutes
 
@@ -14,7 +13,6 @@ import kotlin.time.Duration.Companion.minutes
  *
  * @property clientName The name of the client, used for logging and traceability.
  */
-@Experimental
 public interface KoogHttpClient : AutoCloseable {
 
     /**
