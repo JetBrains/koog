@@ -25,6 +25,7 @@ nav:
             - Cache control: prompts/prompt-creation/multimodal-content.md
           - Running prompts:
             - LLM clients: prompts/llm-clients.md
+            - HTTP clients: prompts/http-clients.md
             - Prompt executors: prompts/prompt-executors.md
           - Handling failures: prompts/handling-failures.md
           - LLM response caching: prompts/llm-response-caching.md
@@ -172,6 +173,7 @@ plugins:
           - prompts/prompt-creation/cache-control.md: This page provides details about provider-side prompt caching control for Anthropic and Amazon Bedrock, including automatic and block-level cache breakpoints and TTL options.
         Running prompts:
           - prompts/llm-clients.md: This page provides details about LLM clients, which are used to run prompts and receive responses from LLMs. They allow working with a single LLM provider only.
+          - prompts/http-clients.md: This page explains how Koog LLM clients talk HTTP via the pluggable KoogHttpClient abstraction, how the default backend is auto-resolved on JVM via ServiceLoader, and how to switch between Ktor, Java, and OkHttp backends or bring your own.
           - prompts/prompt-executors.md: This page provides details about prompt executors, which wrap LLM clients and are used to run prompts and receive responses from LLMs. They allow working with multiple LLM providers in a unified way.
         Tools:
           - tools-overview.md: This page provides a broad overview of the implementation of tools in Koog.
