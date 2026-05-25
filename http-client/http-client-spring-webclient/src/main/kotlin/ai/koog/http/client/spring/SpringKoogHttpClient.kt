@@ -11,8 +11,6 @@ import io.netty.handler.timeout.WriteTimeoutHandler
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.serialization.json.Json
@@ -161,7 +159,6 @@ public class SpringKoogHttpClient(
         headers: Map<String, String>
     ): Flow<String> = flow {
         logger.debug { "Opening lines flow for $clientName" }
-        val decoder = Utf8StreamDecoder()
 
         try {
             webClient.post()
@@ -181,22 +178,7 @@ public class SpringKoogHttpClient(
                         response.handleErrorFlux()
                     }
                 }
-                .asFlow()
-                .map { dataBuffer ->
-                    try {
-                        decoder.decode(dataBuffer)
-                    } finally {
-                        DataBufferUtils.release(dataBuffer)
-                    }
-                }
-                .onCompletion { cause ->
-                    if (cause == null) {
-                        val tail = decoder.finish()
-                        if (tail.isNotEmpty()) {
-                            emit(tail)
-                        }
-                    }
-                }
+                .decodeUtf8Lines()
                 .chunkedToLines()
                 .collect { emit(it) }
         } catch (e: KoogHttpClientException) {
@@ -331,6 +313,21 @@ public class SpringKoogHttpClient(
 
     private fun <R> ClientResponse.handleErrorFlux(): Flux<R> =
         bodyToMono<String>().defaultIfEmpty("").flatMapMany { Flux.error(createException(it)) }
+
+    private fun Flux<DataBuffer>.decodeUtf8Lines(): Flow<String> = flow {
+        val decoder = Utf8StreamDecoder()
+        asFlow().collect { dataBuffer ->
+            try {
+                emit(decoder.decode(dataBuffer))
+            } finally {
+                DataBufferUtils.release(dataBuffer)
+            }
+        }
+        val tail = decoder.finish()
+        if (tail.isNotEmpty()) {
+            emit(tail)
+        }
+    }
 
     private fun ClientResponse.createException(errorBody: String): KoogHttpClientException =
         KoogHttpClientException(
