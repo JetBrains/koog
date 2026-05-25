@@ -8,7 +8,6 @@ plugins {
 
 dependencies {
     api(project(":http-client:http-client-core"))
-
     implementation(project(":utils"))
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.oshai.kotlin.logging)
