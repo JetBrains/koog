@@ -30,8 +30,7 @@ import ai.koog.rag.base.storage.search.SearchResult
  *   Defaults to [PromptAugmenter.DEFAULT_CONTEXT_PREFIX].
  * @param sectionEpisodes Section header for EPISODES records. Defaults to [SECTION_EPISODES].
  * @param sectionReflections Section header for REFLECTIONS records. Defaults to [SECTION_REFLECTIONS].
- * @param sectionSeparator Separator string between sections. Defaults to
- *   [PromptAugmenter.SECTION_SEPARATOR].
+ * @param sectionSeparator Separator string between sections. Defaults to [SECTION_SEPARATOR].
  * @param userTemplate Template used to render SUMMARY context appended to the last user message.
  *   Must contain the [PromptAugmenter.RELEVANT_CONTEXT_PLACEHOLDER] placeholder. Defaults to
  *   [DEFAULT_USER_TEMPLATE].
@@ -40,7 +39,7 @@ public class AgentcorePromptAugmenter @JvmOverloads constructor(
     private val contextPrefix: String = PromptAugmenter.DEFAULT_CONTEXT_PREFIX,
     private val sectionEpisodes: String = SECTION_EPISODES,
     private val sectionReflections: String = SECTION_REFLECTIONS,
-    private val sectionSeparator: String = PromptAugmenter.SECTION_SEPARATOR,
+    private val sectionSeparator: String = SECTION_SEPARATOR,
     private val userTemplate: String = DEFAULT_USER_TEMPLATE,
 ) : PromptAugmenter {
 
@@ -50,6 +49,9 @@ public class AgentcorePromptAugmenter @JvmOverloads constructor(
 
         /** Default section header for EPISODIC reflections (actor-scoped lessons learned). */
         public const val SECTION_REFLECTIONS: String = "Lessons learned"
+
+        /** Trailing newline separator between sections. */
+        public const val SECTION_SEPARATOR: String = "\n\n"
 
         /**
          * Default template used to wrap SUMMARY context appended to the last user message.
@@ -126,11 +128,7 @@ public class AgentcorePromptAugmenter @JvmOverloads constructor(
             if (systemIndex >= 0) {
                 val existing = messages[systemIndex] as Message.System
                 val merged = existing.copy(
-                    parts = buildList {
-                        addAll(existing.parts)
-                        add(MessagePart.Text(sectionSeparator))
-                        add(MessagePart.Text(contextText))
-                    }
+                    parts = existing.parts + MessagePart.Text(contextText)
                 )
                 messages.toMutableList().also { it[systemIndex] = merged }
             } else {
@@ -152,12 +150,12 @@ public class AgentcorePromptAugmenter @JvmOverloads constructor(
         }
         val contextText = formatPlain(context)
         if (contextText.isBlank()) return prompt
-        val rendered = PromptAugmenter.formatTemplate(userTemplate, contextText)
-        if (rendered.isBlank()) return prompt
+        val formattedContext = PromptAugmenter.formatTemplate(userTemplate, contextText)
+        if (formattedContext.isBlank()) return prompt
         return prompt.withMessages { messages ->
             val original = messages[userIndex] as Message.User
             val rewritten = original.copy(
-                parts = original.parts + MessagePart.Text(rendered)
+                parts = original.parts + MessagePart.Text(formattedContext)
             )
             messages.toMutableList().also { it[userIndex] = rewritten }
         }
