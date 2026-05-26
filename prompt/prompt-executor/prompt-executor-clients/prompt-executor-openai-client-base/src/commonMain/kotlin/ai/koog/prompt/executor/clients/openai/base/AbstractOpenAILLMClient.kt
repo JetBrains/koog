@@ -319,7 +319,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                                     ?.map {
                                         OpenAIToolCall(
                                             it.id ?: Uuid.random().toString(),
-                                            function = OpenAIFunction(it.tool, Json.encodeToString(it.args))
+                                            function = OpenAIFunction(it.tool, it.args)
                                         )
                                     }
                             )
