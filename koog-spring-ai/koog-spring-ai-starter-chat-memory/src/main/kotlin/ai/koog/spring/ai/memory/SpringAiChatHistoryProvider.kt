@@ -2,6 +2,7 @@ package ai.koog.spring.ai.memory
 
 import ai.koog.agents.chatMemory.feature.ChatHistoryProvider
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.CoroutineDispatcher
@@ -53,7 +54,7 @@ public class SpringAiChatHistoryProvider(
     private val logger = LoggerFactory.getLogger(SpringAiChatHistoryProvider::class.java)
 
     override suspend fun store(conversationId: String, messages: List<Message>) {
-        val springMessages = messages.mapNotNull { filterAndConvert(it) }
+        val springMessages = filterAndConvert(messages)
         withContext(dispatcher) {
             repository.saveAll(conversationId, springMessages)
         }
@@ -70,26 +71,28 @@ public class SpringAiChatHistoryProvider(
      * Returns a Spring AI message for persistable Koog messages, or `null` for
      * non-persistable types (tool calls/results, reasoning, attachments).
      */
-    private fun filterAndConvert(message: Message): SpringMessage? {
-        if (message.hasAttachments()) {
-            logger.debug(
-                "Dropping Koog message with attachments (type={}); not persistable via Spring AI ChatMemoryRepository",
-                message::class.simpleName
-            )
-            return null
-        }
-        return when (message) {
-            is Message.System -> SystemMessage(message.content)
-            is Message.User -> UserMessage(message.content)
-            is Message.Assistant -> AssistantMessage(message.content)
-            is Message.Tool.Call,
-            is Message.Tool.Result,
-            is Message.Reasoning -> {
-                logger.debug(
-                    "Dropping non-persistable Koog message (type={}); only System, User, and Assistant text messages are stored",
-                    message::class.simpleName
-                )
-                null
+    private fun filterAndConvert(messages: List<Message>): List<SpringMessage> {
+        return buildList {
+            messages.forEach { message ->
+                if (message.parts.any { it is MessagePart.Attachment }) {
+                    logger.debug(
+                        "Dropping Koog message with attachments (type={}); not persistable via Spring AI ChatMemoryRepository",
+                        message::class.simpleName
+                    )
+                    return@forEach
+                }
+                when (message) {
+                    is Message.System -> message.parts.forEach {
+                        add(SystemMessage(it.text))
+                    }
+
+                    is Message.User -> message.parts.filterIsInstance<MessagePart.Text>().forEach {
+                        add(UserMessage(it.text))
+                    }
+                    is Message.Assistant -> message.parts.filterIsInstance<MessagePart.Text>().forEach {
+                        add(AssistantMessage(it.text))
+                    }
+                }
             }
         }
     }

@@ -1,8 +1,8 @@
 package ai.koog.prompt.executor.clients.deepseek
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionRequest
@@ -21,16 +21,15 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 
 /**
  * Configuration settings for connecting to the DeepSeek API.
@@ -53,13 +52,13 @@ public class DeepSeekClientSettings(
  * @param settings The base URL, chat completion path, and timeouts for the DeepSeek API,
  * defaults to "https://api.deepseek.com" and 900s
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
- *   to create a Ktor-backed client configured with an API key.
+ *   that accepts an API key and a [KoogHttpClient.Factory] to create a client with standard defaults.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public class DeepSeekLLMClient @JvmOverloads constructor(
     private val settings: DeepSeekClientSettings = DeepSeekClientSettings(),
     httpClient: KoogHttpClient,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DeepSeekChatCompletionResponse, DeepSeekChatCompletionStreamResponse>(
     settings = settings,
@@ -73,12 +72,12 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
     public constructor(
         apiKey: String,
         settings: DeepSeekClientSettings = DeepSeekClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        httpClientFactory: KoogHttpClient.Factory,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,
-        httpClient = createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = DEEPSEEK_CLIENT_NAME),
+        httpClient = createConfiguredHttpClient(apiKey, settings, httpClientFactory, clientName = DEEPSEEK_CLIENT_NAME),
         clock = clock,
         toolsConverter = toolsConverter
     )
@@ -172,10 +171,10 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         return preparedMessages
     }
 
-    override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<Message.Assistant> {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
         return response.choices.map {
-            it.message.toMessageResponses(
+            it.message.toMessageResponse(
                 it.finishReason,
                 createMetaInfo(response.usage),
             )

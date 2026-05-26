@@ -11,7 +11,6 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
-import ai.koog.serialization.typeToken
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
@@ -49,8 +48,6 @@ class AIAgentToolTest {
             model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 5
         ),
-        inputType = typeToken<String>(),
-        outputType = typeToken<String>()
     ) {
         constructor(result: String) : this({ result })
     }
@@ -66,7 +63,7 @@ class AIAgentToolTest {
         private val agent = createMockAgent()
 
         @OptIn(InternalAgentToolsApi::class)
-        val tool = agent.asTool(
+        val tool = AIAgentService.fromAgent(agent).createAgentTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
         )
@@ -77,7 +74,7 @@ class AIAgentToolTest {
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testAsToolCreation() = runTest {
-        val tool = agent.asTool(
+        val tool = AIAgentService.fromAgent(agent).createAgentTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
         )
@@ -100,7 +97,7 @@ class AIAgentToolTest {
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testAsToolWithDefaultName() = runTest {
-        val tool = agent.asTool(
+        val tool = AIAgentService.fromAgent(agent).createAgentTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
         )
@@ -125,7 +122,7 @@ class AIAgentToolTest {
         val testError = IllegalStateException("Test error")
         val agent = MockAgent { throw testError }
 
-        val tool = agent.asTool(
+        val tool = AIAgentService.fromAgent(agent).createAgentTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
         )

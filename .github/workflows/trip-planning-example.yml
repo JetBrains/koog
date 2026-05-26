@@ -9,6 +9,10 @@ on:
     paths:
       - 'examples/trip-planning-example/**'
 
+env:
+  JAVA_VERSION: 17
+  JAVA_DISTRIBUTION: 'corretto'
+
 jobs:
   app-compilation:
 
@@ -21,11 +25,11 @@ jobs:
         run: |
           git config --global core.autocrlf input
       - uses: actions/checkout@v6
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
-          java-version: '17'
-          distribution: 'corretto'
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
 
       # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
@@ -35,3 +39,7 @@ jobs:
       - name: Assemble
         working-directory: ./examples/trip-planning-example
         run: ./gradlew assemble
+
+      - name: ktlintCheck
+        working-directory: ./examples/trip-planning-example
+        run: ./gradlew ktlintCheck

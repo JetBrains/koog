@@ -6,9 +6,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-group = rootProject.group
-version = rootProject.version
-
 dependencies {
     api(project(":http-client:http-client-core"))
     implementation(project(":utils"))

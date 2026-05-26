@@ -1,27 +1,26 @@
 package ai.koog.agents.features.tracing.mock
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrames
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 class MockLLMExecutor : PromptExecutor() {
 
-    private val clock: Clock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
+    private val clock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        return listOf(handlePrompt(prompt))
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
+        return handlePrompt(prompt)
     }
 
     override fun executeStreaming(
@@ -31,13 +30,15 @@ class MockLLMExecutor : PromptExecutor() {
     ): Flow<StreamFrame> =
         flow { handlePrompt(prompt).toStreamFrames().forEach { emit(it) } }
 
-    private fun handlePrompt(prompt: Prompt): Message.Response {
+    private fun handlePrompt(prompt: Prompt): Message.Assistant {
         val lastMessage = prompt.messages.last()
-        if (lastMessage.content.contains("tool")) {
-            return Message.Tool.Call(
-                id = "0",
-                tool = "Tool call",
-                content = "{}",
+        if (lastMessage.parts.any { it is MessagePart.Text && it.text.contains("tool") }) {
+            return Message.Assistant(
+                MessagePart.Tool.Call(
+                    id = "0",
+                    tool = "Tool call",
+                    args = "{}",
+                ),
                 metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
             )
         }

@@ -13,7 +13,7 @@ import kotlinx.io.buffered
 public suspend fun startStdioMcpServer(tools: ToolRegistry): Server {
     return configureMcpServer(tools)
         .apply {
-            connect(
+            createSession(
                 StdioServerTransport(
                     inputStream = System.`in`.asSource().buffered(),
                     outputStream = System.out.asSink().buffered()

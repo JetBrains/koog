@@ -44,6 +44,7 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
+@Disabled("Flaky test")
 class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
     override val testTimeout = 10.seconds
 

@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients
 
 import ai.koog.prompt.llm.LLModel
+import kotlin.jvm.JvmSynthetic
 
 /**
  * API for [LLMEmbeddingProvider]
@@ -14,6 +15,7 @@ public interface LLMEmbeddingProviderAPI {
      * @return A list of floating-point values representing the embedding.
      * @throws IllegalArgumentException if the model does not have the Embed capability.
      */
+    @JvmSynthetic
     public suspend fun embed(text: String, model: LLModel): List<Double> {
         throw UnsupportedOperationException("Not implemented for this client")
     }
@@ -27,6 +29,7 @@ public interface LLMEmbeddingProviderAPI {
      * Each inner list represents a single input embedding.
      * @throws IllegalArgumentException if the model does not have the Embed capability.
      */
+    @JvmSynthetic
     public suspend fun embed(inputs: List<String>, model: LLModel): List<List<Double>> {
         throw UnsupportedOperationException("Not implemented for this client")
     }

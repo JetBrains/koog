@@ -116,6 +116,12 @@ public sealed interface AgentLifecycleEventType {
     public object ToolCallStarting : AgentLifecycleEventType
 
     /**
+     * Represents the metadata-contribution event fired before a tool call to let features
+     * contribute per-call metadata (e.g. a trace span id) that is threaded into the tool's execution.
+     */
+    public object ToolCallMetadataContributing : AgentLifecycleEventType
+
+    /**
      * Represents an event triggered when a tool call fails validation.
      */
     public object ToolValidationFailed : AgentLifecycleEventType

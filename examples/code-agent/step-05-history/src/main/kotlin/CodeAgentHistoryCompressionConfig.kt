@@ -1,22 +1,26 @@
 package ai.koog.agents.example.codeagent.step05
 
-import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory
-import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.FactType
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.agents.core.dsl.extension.FactRetrievalHistoryCompressionStrategy
+import ai.koog.agents.core.dsl.extension.Concept
+import ai.koog.agents.core.dsl.extension.FactType
+import ai.koog.prompt.Prompt
+import ai.koog.prompt.message.MessagePart
 
 /**
  * Triggers compression when history exceeds 200 messages OR 200k characters (~50k tokens).
  */
 val CODE_AGENT_HISTORY_TOO_BIG: (Prompt) -> Boolean = { prompt ->
-    prompt.messages.size > 200 || prompt.messages.sumOf { it.content.length } > 200_000
+    prompt.messages.size > 200 ||
+        prompt.messages.sumOf { msg ->
+            msg.parts.filterIsInstance<MessagePart.Text>().sumOf { it.text.length }
+        } > 200_000
 }
 
 /**
  * Extracts key facts from conversation history.
  * LLM answers these questions, and the answers become the compressed history.
  */
-val CODE_AGENT_COMPRESSION_STRATEGY = RetrieveFactsFromHistory(
+val CODE_AGENT_COMPRESSION_STRATEGY = FactRetrievalHistoryCompressionStrategy(
     Concept(
         "project-structure",
         "What is the structure of this project?",

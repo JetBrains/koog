@@ -11,6 +11,7 @@ import ai.koog.ktor.mcp
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.message.MessagePart
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -126,9 +127,11 @@ private fun Route.agenticRoutes() {
                 user(userRequest)
             },
             OllamaModels.Meta.LLAMA_3_2
-        ).single()
+        )
 
-        val output = aiAgent(updatedRequest.content, OpenAIModels.Chat.GPT4_1)
+        val updatedRequestText = updatedRequest.parts.filterIsInstance<MessagePart.Text>()
+            .joinToString("\n") { it.text }
+        val output = aiAgent(updatedRequestText, OpenAIModels.Chat.GPT4_1)
         call.respond(HttpStatusCode.OK, output)
     }
     get("organization") {

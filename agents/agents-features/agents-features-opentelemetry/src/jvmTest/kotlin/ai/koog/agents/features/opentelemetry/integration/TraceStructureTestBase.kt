@@ -4,12 +4,12 @@ import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
@@ -26,8 +26,8 @@ import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Response.FinishReasonType
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
-import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
+import ai.koog.agents.features.opentelemetry.mock.TestSpanProcessor
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMToolCall
@@ -40,12 +40,13 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
-import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.sdk.trace.export.SpanExporter
+import ai.koog.utils.time.KoogClock
+import io.opentelemetry.kotlin.tracing.data.SpanData
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -53,23 +54,35 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 
 abstract class TraceStructureTestBase(private val openTelemetryConfigurator: OpenTelemetryConfig.() -> Unit) {
     private val json = Json { allowStructuredMapKeys = true }
     private val serializer = KotlinxSerializer()
 
+    /**
+     * Name of the inference-span input-token-usage attribute as it appears AFTER any [SpanAdapter]
+     * has run. Defaults to the OTel GenAI semconv name; adapters that rename the attribute (e.g.
+     * Weave → `gen_ai.usage.prompt_tokens`) override this.
+     */
+    protected open val inputTokensAttributeName: String = "gen_ai.usage.input_tokens"
+
+    /**
+     * Name of the inference-span output-token-usage attribute as it appears AFTER any [SpanAdapter]
+     * has run. Defaults to the OTel GenAI semconv name; adapters that rename the attribute (e.g.
+     * Weave → `gen_ai.usage.completion_tokens`) override this.
+     */
+    protected open val outputTokensAttributeName: String = "gen_ai.usage.output_tokens"
+
     @Test
     fun testSingleLLMCall() = runBlocking {
-        MockSpanExporter().use { mockSpanExporter ->
+        TestSpanProcessor().let { testProcessor ->
 
             val strategy = strategy("single-llm-call-strategy") {
                 val llmRequest by nodeLLMRequest("llm-call")
 
                 edge(nodeStart forwardTo llmRequest)
-                edge(llmRequest forwardTo nodeFinish onAssistantMessage { true })
+                edge(llmRequest forwardTo nodeFinish onTextMessage { true })
             }
 
             val model = OpenAIModels.Chat.GPT4o
@@ -89,10 +102,10 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 userPrompt = userPrompt,
                 model = model,
                 temperature = temperature,
-                spanExporter = mockSpanExporter,
+                spanProcessor = testProcessor,
             )
 
-            val testData = createTestData(mockSpanExporter)
+            val testData = createTestData(testProcessor)
 
             // Filter only LLM generation spans
             val actualLLMSpans = testData.filterInferenceSpans()
@@ -108,14 +121,14 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "chat",
                             "gen_ai.provider.name" to model.provider.id,
-                            "gen_ai.conversation.id" to mockSpanExporter.lastRunId,
+                            "gen_ai.conversation.id" to testProcessor.lastRunId,
                             "gen_ai.output.type" to "text",
                             "gen_ai.request.model" to model.id,
                             "gen_ai.request.temperature" to temperature,
                             "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
                             "gen_ai.response.model" to model.id,
-                            "gen_ai.usage.input_tokens" to 0L,
-                            "gen_ai.usage.output_tokens" to 0L,
+                            inputTokensAttributeName to 0L,
+                            outputTokensAttributeName to 0L,
                             "koog.event.id" to llmCallEventId,
                             "gen_ai.input.messages" to getMessagesString(
                                 listOf(
@@ -165,16 +178,16 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
     @Test
     fun testLLMCallToolCallLLMCall() = runBlocking {
-        MockSpanExporter().use { mockSpanExporter ->
+        TestSpanProcessor().let { testProcessor ->
             val strategy = strategy("llm-tool-llm-strategy") {
-                val llmRequest by nodeLLMRequest("LLM Request", allowToolCalls = true)
-                val executeTool by nodeExecuteTool("Execute Tool")
-                val sendToolResult by nodeLLMSendToolResult("Send Tool Result")
+                val llmRequest by nodeLLMRequest("LLM Request")
+                val executeTool by nodeExecuteTools("Execute Tool")
+                val sendToolResult by nodeLLMSendToolResults("Send Tool Result")
 
                 edge(nodeStart forwardTo llmRequest)
-                edge(llmRequest forwardTo executeTool onToolCall { true })
+                edge(llmRequest forwardTo executeTool onToolCalls { true })
                 edge(executeTool forwardTo sendToolResult)
-                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+                edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
             }
 
             val model = OpenAIModels.Chat.GPT4o
@@ -208,10 +221,10 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 userPrompt = userPrompt,
                 model = model,
                 temperature = temperature,
-                spanExporter = mockSpanExporter
+                spanProcessor = testProcessor
             )
 
-            val testData = createTestData(mockSpanExporter)
+            val testData = createTestData(testProcessor)
 
             // Filter LLM spans
             val actualLLMSpans = testData.filterInferenceSpans()
@@ -231,7 +244,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 temperature = temperature,
                 systemPrompt = systemPrompt,
                 userPrompt = userPrompt,
-                runId = mockSpanExporter.lastRunId,
+                runId = testProcessor.lastRunId,
                 toolCallId = toolCallId,
             ).plus(
                 mapOf(
@@ -244,7 +257,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 temperature = temperature,
                 systemPrompt = systemPrompt,
                 userPrompt = userPrompt,
-                runId = mockSpanExporter.lastRunId,
+                runId = testProcessor.lastRunId,
                 toolCallId = toolCallId,
                 toolResponse = toolResponse,
                 finalResponse = finalResponse,
@@ -297,21 +310,21 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
     @Test
     fun testMultipleToolCalls() = runBlocking {
-        MockSpanExporter().use { mockSpanExporter ->
+        TestSpanProcessor().let { testProcessor ->
             val strategy = strategy("multiple-tool-calls-strategy") {
-                val llmRequest by nodeLLMRequest("Initial LLM Request", allowToolCalls = true)
-                val executeTool1 by nodeExecuteTool("Execute Tool 1")
-                val sendToolResult1 by nodeLLMSendToolResult("Send Tool Result 1")
-                val executeTool2 by nodeExecuteTool("Execute Tool 2")
-                val sendToolResult2 by nodeLLMSendToolResult("Send Tool Result 2")
+                val llmRequest by nodeLLMRequest("Initial LLM Request")
+                val executeTool1 by nodeExecuteTools("Execute Tool 1")
+                val sendToolResult1 by nodeLLMSendToolResults("Send Tool Result 1")
+                val executeTool2 by nodeExecuteTools("Execute Tool 2")
+                val sendToolResult2 by nodeLLMSendToolResults("Send Tool Result 2")
 
                 edge(nodeStart forwardTo llmRequest)
-                edge(llmRequest forwardTo executeTool1 onToolCall { true })
+                edge(llmRequest forwardTo executeTool1 onToolCalls { true })
                 edge(executeTool1 forwardTo sendToolResult1)
-                edge(sendToolResult1 forwardTo executeTool2 onToolCall { true })
-                edge(sendToolResult1 forwardTo nodeFinish onAssistantMessage { true })
+                edge(sendToolResult1 forwardTo executeTool2 onToolCalls { true })
+                edge(sendToolResult1 forwardTo nodeFinish onTextMessage { true })
                 edge(executeTool2 forwardTo sendToolResult2)
-                edge(sendToolResult2 forwardTo nodeFinish transformed { input -> input.content })
+                edge(sendToolResult2 forwardTo nodeFinish onTextMessage { true })
             }
 
             val model = OpenAIModels.Chat.GPT4o
@@ -346,10 +359,10 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 userPrompt = userPrompt,
                 model = model,
                 temperature = temperature,
-                spanExporter = mockSpanExporter
+                spanProcessor = testProcessor
             )
 
-            val testData = createTestData(mockSpanExporter)
+            val testData = createTestData(testProcessor)
 
             // Filter tool execution spans
             val actualToolSpans = testData.filterExecuteToolSpans()
@@ -401,7 +414,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
     @Test
     fun testSubgraphWithFinishTool() = runBlocking {
-        MockSpanExporter().use { mockSpanExporter ->
+        TestSpanProcessor().let { testProcessor ->
             val finishTool = ::subgraphFinish.asTool()
 
             val strategy = strategy("subgraph-finish-tool-strategy") {
@@ -437,10 +450,10 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 userPrompt = userPrompt,
                 model = model,
                 temperature = temperature,
-                spanExporter = mockSpanExporter
+                spanProcessor = testProcessor
             )
 
-            val actualSpans = mockSpanExporter.collectedSpans
+            val actualSpans = testProcessor.collectedSpans
 
             // Verify that basic spans are present
             assertTrue { actualSpans.count { it.name == "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" } == 1 }
@@ -451,21 +464,21 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
     @Test
     fun `test adapter customizes spans after creation`() = runBlocking {
-        MockSpanExporter().use { mockExporter ->
+        TestSpanProcessor().let { testProcessor ->
             val systemPrompt = "You are the application that predicts weather"
             val userPrompt = "What's the weather in Paris?"
             val mockResponse = "The weather in Paris is rainy and overcast, with temperatures around 58°F"
 
             val agentId = "test-agent-id"
             val promptId = "test-prompt-id"
-            val testClock = Clock.System
+            val testClock = KoogClock.System
             val model = OpenAIModels.Chat.GPT4o
             val temperature = 0.4
 
             val strategy = strategy("test-strategy") {
                 val nodeSendInput by nodeLLMRequest("test-llm-call")
                 edge(nodeStart forwardTo nodeSendInput)
-                edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+                edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
             }
 
             val mockExecutor = getMockExecutor(serializer, testClock) {
@@ -481,7 +494,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 model = model,
                 temperature = temperature,
             ) {
-                addSpanExporter(mockExporter)
+                addSpanProcessor { testProcessor }
                 setVerbose(true)
                 openTelemetryConfigurator()
                 addSpanAdapter(object : SpanAdapter() {
@@ -497,21 +510,24 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             agent.run(userPrompt)
 
-            val spans = mockExporter.collectedSpans
+            val spans = testProcessor.collectedSpans
             assertTrue(spans.isNotEmpty(), "Spans should be created during agent execution")
             agent.close()
 
             val nodeSpan = spans.first { it.name == "node test-llm-call" }
-            val nodeAttrs = nodeSpan.attributes.asMap().asSequence().associate { it.key.key to it.value }
+            val nodeAttrs = nodeSpan.attributes
             assertEquals("value-start", nodeAttrs["custom.after.start"])
-            val llmSpan = spans.first { it.name == "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
-            val llmAttrs = llmSpan.attributes.asMap().asSequence().associate { it.key.key to it.value }
+            val llmSpan =
+                spans.first { it.name == "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
+            val llmAttrs = llmSpan.attributes
 
+            // onBeforeSpanStarted fires for all span types, including inference spans
+            assertEquals("value-start", llmAttrs["custom.after.start"])
             assertEquals(123L, llmAttrs["custom.before.finish"])
 
             val expectedLlmAttrs = mapOf(
                 "gen_ai.provider.name" to model.provider.id,
-                "gen_ai.conversation.id" to mockExporter.lastRunId,
+                "gen_ai.conversation.id" to testProcessor.lastRunId,
                 "gen_ai.operation.name" to "chat",
                 "gen_ai.request.model" to model.id,
                 "gen_ai.request.temperature" to temperature,
@@ -527,7 +543,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
     @Test
     fun testStructuredDataLLMCall() = runBlocking {
-        MockSpanExporter().use { mockSpanExporter ->
+        TestSpanProcessor().let { testProcessor ->
             @Serializable
             @SerialName("SimpleWeatherForecast")
             @LLMDescription("Simple weather forecast for a location")
@@ -548,7 +564,8 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 edge(nodeStart forwardTo llmStructured)
                 edge(
                     llmStructured forwardTo nodeFinish transformed { result ->
-                        result.getOrThrow().message.content
+                        result.getOrThrow().message.parts.filterIsInstance<MessagePart.Text>()
+                            .joinToString("") { it.text }
                     }
                 )
             }
@@ -573,10 +590,10 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 userPrompt = userPrompt,
                 model = model,
                 temperature = temperature,
-                spanExporter = mockSpanExporter,
+                spanProcessor = testProcessor,
             )
 
-            val testData = createTestData(mockSpanExporter)
+            val testData = createTestData(testProcessor)
 
             // Filter only LLM generation spans
             val actualLLMSpans = testData.filterInferenceSpans()
@@ -592,14 +609,14 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "chat",
                             "gen_ai.provider.name" to model.provider.id,
-                            "gen_ai.conversation.id" to mockSpanExporter.lastRunId,
+                            "gen_ai.conversation.id" to testProcessor.lastRunId,
                             "gen_ai.output.type" to "json",
                             "gen_ai.request.model" to model.id,
                             "gen_ai.request.temperature" to temperature,
                             "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
                             "gen_ai.response.model" to model.id,
-                            "gen_ai.usage.input_tokens" to 0L,
-                            "gen_ai.usage.output_tokens" to 0L,
+                            inputTokensAttributeName to 0L,
+                            outputTokensAttributeName to 0L,
                             "koog.event.id" to llmCallEventId,
                             "gen_ai.input.messages" to getMessagesString(
                                 listOf(
@@ -655,16 +672,16 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
     @Test
     fun testTokensCountAttributes() = runBlocking {
-        MockSpanExporter().use { mockSpanExporter ->
+        TestSpanProcessor().let { testProcessor ->
             val strategy = strategy("llm-tool-llm-strategy") {
-                val llmRequest by nodeLLMRequest("LLM Request", allowToolCalls = true)
-                val executeTool by nodeExecuteTool("Execute Tool")
-                val sendToolResult by nodeLLMSendToolResult("Send Tool Result")
+                val llmRequest by nodeLLMRequest("LLM Request")
+                val executeTool by nodeExecuteTools("Execute Tool")
+                val sendToolResult by nodeLLMSendToolResults("Send Tool Result")
 
                 edge(nodeStart forwardTo llmRequest)
-                edge(llmRequest forwardTo executeTool onToolCall { true })
+                edge(llmRequest forwardTo executeTool onToolCalls { true })
                 edge(executeTool forwardTo sendToolResult)
-                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+                edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
             }
 
             val model = OpenAIModels.Chat.GPT4o
@@ -702,10 +719,10 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 model = model,
                 temperature = temperature,
                 maxTokens = maxTokens,
-                spanExporter = mockSpanExporter
+                spanProcessor = testProcessor
             )
 
-            val testData = createTestData(mockSpanExporter)
+            val testData = createTestData(testProcessor)
 
             // Filter LLM spans
             val actualLLMSpans = testData.filterInferenceSpans()
@@ -716,8 +733,8 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val finalLLMEventId = testData.singleAttributeValue(actualLLMSpans[1], "koog.event.id")
 
             // Get actual token counts from spans
-            val inputTokens0 = getAttributeValue<Long>(actualLLMSpans[0], "gen_ai.usage.input_tokens") ?: 0L
-            val inputTokens1 = getAttributeValue<Long>(actualLLMSpans[1], "gen_ai.usage.input_tokens") ?: 0L
+            val inputTokens0 = getAttributeValue<Long>(actualLLMSpans[0], inputTokensAttributeName) ?: 0L
+            val inputTokens1 = getAttributeValue<Long>(actualLLMSpans[1], inputTokensAttributeName) ?: 0L
 
             // Build expected spans using abstract methods
             val expectedInitialLLMSpanAttributes =
@@ -727,14 +744,14 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                     maxTokens = maxTokens.toLong(),
                     systemPrompt = systemPrompt,
                     userPrompt = userPrompt,
-                    runId = mockSpanExporter.lastRunId,
+                    runId = testProcessor.lastRunId,
                     toolCallId = toolCallId,
                     outputTokens = tokenizer.countTokens(
                         text = TestGetWeatherTool.encodeArgsToString(TestGetWeatherTool.Args("Paris"), serializer)
                     ).toLong()
                 ).plus(
                     mapOf(
-                        "gen_ai.usage.input_tokens" to inputTokens0,
+                        inputTokensAttributeName to inputTokens0,
                         "koog.event.id" to initialLLMEventId,
                     )
                 )
@@ -746,14 +763,14 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                     maxTokens = maxTokens.toLong(),
                     systemPrompt = systemPrompt,
                     userPrompt = userPrompt,
-                    runId = mockSpanExporter.lastRunId,
+                    runId = testProcessor.lastRunId,
                     toolCallId = toolCallId,
                     toolResponse = toolResponse,
                     finalResponse = finalResponse,
                     outputTokens = tokenizer.countTokens(text = finalResponse).toLong(),
                 ).plus(
                     mapOf(
-                        "gen_ai.usage.input_tokens" to inputTokens1,
+                        inputTokensAttributeName to inputTokens1,
                         "koog.event.id" to finalLLMEventId,
                     )
                 )
@@ -781,12 +798,12 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     @OptIn(DetachedPromptExecutorAPI::class)
     @Test
     fun testContentModerationEventOnLLMSpan() = runBlocking {
-        MockSpanExporter().use { mockSpanExporter ->
+        TestSpanProcessor().let { testProcessor ->
             val strategy = strategy<String, String>("moderation-strategy") {
                 val moderate by node<String, String>("moderate-message") { input ->
                     llm.writeSession {
                         val moderationPrompt = prompt("single-message-moderation") {
-                            message(Message.User(input, RequestMetaInfo.create(Clock.System)))
+                            message(Message.User(input, RequestMetaInfo.create(KoogClock.System)))
                         }
                         llm.promptExecutor.moderate(moderationPrompt, OpenAIModels.Moderation.Omni)
                     }
@@ -823,37 +840,29 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 systemPrompt = systemPrompt,
                 userPrompt = userPrompt,
                 promptExecutor = promptExecutor,
-                spanExporter = mockSpanExporter,
+                spanProcessor = testProcessor,
                 model = model,
             )
 
-            val spans = mockSpanExporter.collectedSpans
+            val spans = testProcessor.collectedSpans
             assertTrue(spans.any { it.name == "node moderate-message" })
 
             val llmSpan =
                 spans.firstOrNull { it.name == "${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}" }
-                    ?: spans.firstOrNull { span -> span.events.any { it.name == "moderation.result" } }
-                    ?: error("No LLM span for moderation found (expected '${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}' or a span with 'moderation.result' event)")
+                    ?: error("No LLM span for moderation found (expected '${GenAIAttributes.Operation.OperationNameType.CHAT.id} ${model.id}')")
 
-            val moderationEvent = llmSpan.events.firstOrNull { it.name == "moderation.result" }
-            assertNotNull(moderationEvent, "LLM span should contain a moderation.result event")
-
-            val eventAttrs = moderationEvent.attributes.asMap().map { (k, v) -> k.key to v }.toMap()
-
+            // Moderation outcome is now carried as a Koog-namespaced attribute on the inference
+            // span (the old `moderation.result` event has been removed in line with the OTel GenAI
+            // semconv update).
             val expectedContent = json.encodeToString(ModerationResult.serializer(), moderationResult)
-
-            assertEquals(expectedContent, eventAttrs["content"])
-            assertEquals(OpenAIModels.Moderation.Omni.provider.id, eventAttrs["gen_ai.system"])
-
-            val llmAttrs = llmSpan.attributes.asMap().map { (k, v) -> k.key to v }.toMap()
-            assertEquals(expectedContent, llmAttrs["gen_ai.completion.0.content"])
+            assertEquals(expectedContent, llmSpan.attributes["koog.moderation.result"])
         }
     }
 
     @Ignore("KG-288")
     @Test
     fun testEmbeddingsTracingWithOpenAI() = runBlocking {
-        MockSpanExporter().use { mockSpanExporter ->
+        TestSpanProcessor().let { testProcessor ->
             val model = OpenAIModels.Embeddings.TextEmbeddingAda002
             val openaiKey = System.getenv("OPENAI_API_KEY")
 
@@ -877,23 +886,22 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 strategy = strategy,
                 model = model,
                 temperature = 0.0,
-                spanExporter = mockSpanExporter,
+                spanProcessor = testProcessor,
                 verbose = true,
             )
 
-            val spans = mockSpanExporter.collectedSpans
+            val spans = testProcessor.collectedSpans
             assertTrue(spans.any { it.name.startsWith("run.") })
             assertTrue(spans.any { it.name == "node __start__" })
             assertTrue(spans.any { it.name == "node embeddings-call" })
 
             val embeddingsSpan = spans.firstOrNull { span ->
-                val attrs = span.attributes.asMap().asSequence().associate { it.key.key to it.value }
-                attrs["gen_ai.operation.name"] == "embeddings"
+                span.attributes["gen_ai.operation.name"] == "embeddings"
             } ?: error("No embeddings span found (expected a span with gen_ai.operation.name = 'embeddings')")
 
-            val attrs = embeddingsSpan.attributes.asMap().asSequence().associate { it.key.key to it.value }
+            val attrs = embeddingsSpan.attributes
 
-            assertEquals(model.provider.id, attrs["gen_ai.system"], "gen_ai.system should match provider id")
+            assertEquals(model.provider.id, attrs["gen_ai.provider.name"], "gen_ai.provider.name should match provider id")
             assertEquals("embeddings", attrs["gen_ai.operation.name"], "operation should be embeddings")
             assertEquals(model.id, attrs["gen_ai.request.model"], "model id should match embeddings model")
         }
@@ -902,11 +910,11 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     //region Private Methods
 
     /**
-     * Creates test data from the mock span exporter.
+     * Creates test data from the synchronous span processor.
      */
-    private fun createTestData(mockSpanExporter: MockSpanExporter): OpenTelemetryTestData {
+    private fun createTestData(testProcessor: TestSpanProcessor): OpenTelemetryTestData {
         return OpenTelemetryTestData().apply {
-            this.collectedSpans = mockSpanExporter.collectedSpans
+            this.collectedSpans = testProcessor.collectedSpans
         }
     }
 
@@ -914,11 +922,14 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
      * Gets an attribute value from a span by key.
      */
     private inline fun <reified T> getAttributeValue(spanData: SpanData, key: String): T? {
-        return spanData.attributes?.asMap()?.mapKeys { it.key.key }?.get(key) as? T
+        return spanData.attributes[key] as? T
     }
 
     /**
-     * Runs an agent with the given strategy and verifies the spans.
+     * Runs an agent with the given strategy and collects spans via [TestSpanProcessor].
+     *
+     * Spans are available immediately after this function returns because [TestSpanProcessor.onEnd]
+     * is called synchronously by the SDK — no polling or grace delays are needed.
      */
     private suspend fun runAgentWithStrategy(
         strategy: AIAgentGraphStrategy<String, String>,
@@ -929,7 +940,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
         model: LLModel? = null,
         temperature: Double? = null,
         maxTokens: Int? = null,
-        spanExporter: SpanExporter? = null,
+        spanProcessor: TestSpanProcessor? = null,
         verbose: Boolean = true
     ) {
         val agentId = "test-agent-id"
@@ -946,7 +957,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             systemPrompt = systemPrompt,
             toolRegistry = toolRegistry,
         ) {
-            spanExporter?.let { exporter -> addSpanExporter(exporter) }
+            spanProcessor?.let { processor -> addSpanProcessor { processor } }
             setVerbose(verbose)
             openTelemetryConfigurator()
         }.use { agent ->

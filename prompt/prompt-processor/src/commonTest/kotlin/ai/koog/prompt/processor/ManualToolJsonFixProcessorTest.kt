@@ -4,25 +4,22 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 class ManualToolJsonFixProcessorTest {
     private companion object {
         private val serializer = KotlinxSerializer()
 
-        private val testClock: Clock = object : Clock {
-            override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-        }
+        private val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
         private val testMetaInfo = ResponseMetaInfo.create(testClock)
 
@@ -96,11 +93,11 @@ class ManualToolJsonFixProcessorTest {
 
         private val processor = ManualToolCallFixProcessor(toolRegistry)
 
-        private fun validateToolCallResult(result: Message.Response, checkId: Boolean = false) {
-            assertIs<Message.Tool.Call>(result)
-            if (checkId) assertEquals(ID, result.id)
-            assertEquals(TOOL, result.tool)
-            assertEquals(ARGS, result.content)
+        private fun validateToolCallResult(result: Message.Assistant, checkId: Boolean = false) {
+            val toolCall = result.parts.filterIsInstance<MessagePart.Tool.Call>().single()
+            if (checkId) assertEquals(ID, toolCall.id)
+            assertEquals(TOOL, toolCall.tool)
+            assertEquals(ARGS, toolCall.args)
         }
     }
 
@@ -177,16 +174,15 @@ class ManualToolJsonFixProcessorTest {
 
         val message = Message.Assistant(validJson, metaInfo = testMetaInfo)
         val result = process(message)
+        val toolCall = result.parts.filterIsInstance<MessagePart.Tool.Call>().single()
 
-        assertNotNull(result)
-        assertIs<Message.Tool.Call>(result)
-        assertEquals("string_tool", result.tool)
+        assertEquals("string_tool", toolCall.tool)
 
         val expectedContentJson = buildJsonObject {
             put("text1", JsonPrimitive(text1))
             put("text2", JsonPrimitive(text2))
         }
-        assertEquals(expectedContentJson.toString(), result.content)
+        assertEquals(expectedContentJson, toolCall.argsJson)
     }
 
     @Test
@@ -207,17 +203,16 @@ class ManualToolJsonFixProcessorTest {
         val message = Message.Assistant(malformedJson, metaInfo = testMetaInfo)
         val result = process(message)
 
-        assertNotNull(result)
-        assertIs<Message.Tool.Call>(result)
-        assertEquals("string_tool", result.tool)
+        val toolCall = result.parts.filterIsInstance<MessagePart.Tool.Call>().single()
+        assertEquals("string_tool", toolCall.tool)
 
         val expectedContentJson = buildJsonObject {
             put("text1", JsonPrimitive(text1))
             put("text2", JsonPrimitive(text2))
         }
-        assertEquals(expectedContentJson.toString(), result.content)
+        assertEquals(expectedContentJson, toolCall.argsJson)
     }
 
-    private suspend fun process(response: Message.Response) =
+    private suspend fun process(response: Message.Assistant) =
         processor.process(executor, prompt, model, tools, response, serializer)
 }

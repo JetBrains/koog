@@ -1,7 +1,9 @@
 package ai.koog.prompt.executor.clients.openrouter
 
-import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.message.Message
+import ai.koog.http.client.ktor.KtorKoogHttpClient
+import ai.koog.prompt.Prompt
+import ai.koog.prompt.message.MessagePart
+import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -10,15 +12,16 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 class OpenRouterLLMClientTest {
 
-    object FixedClock : Clock {
+    object FixedClock : KoogClock {
         override fun now(): Instant = Instant.fromEpochMilliseconds(0)
     }
 
@@ -66,7 +69,7 @@ class OpenRouterLLMClientTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = OpenRouterLLMClient(apiKey = apiKey, baseClient = http, clock = FixedClock)
+        val client = OpenRouterLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = apiKey, clock = FixedClock)
 
         val prompt = Prompt.build(id = "p-tool-response", clock = FixedClock) {
             user("What is the weather in Boston?")
@@ -74,12 +77,14 @@ class OpenRouterLLMClientTest {
 
         val responses = client.execute(prompt, OpenRouterModels.GPT4oMini)
 
-        assertEquals(2, responses.size, "Response should contain reasoning and tool call")
-        assertIs<Message.Reasoning>(responses[0])
-        assertEquals("I should call the weather tool first.", responses[0].content)
-        val toolCall = assertIs<Message.Tool.Call>(responses[1])
+        assertEquals(2, responses.parts.size, "Response should contain reasoning and tool call")
+        val reasoningPart = assertIs<MessagePart.Reasoning>(responses.parts[0])
+        assertEquals(1, reasoningPart.content.size, "Reasoning should contain one message")
+        assertEquals("I should call the weather tool first.", reasoningPart.content.first())
+
+        val toolCall = assertIs<MessagePart.Tool.Call>(responses.parts[1])
         assertEquals("call_weather", toolCall.id)
         assertEquals("weather", toolCall.tool)
-        assertEquals("{\"city\":\"Boston\"}", toolCall.content)
+        assertEquals(buildJsonObject { put("city", JsonPrimitive("Boston")) }, toolCall.argsJson)
     }
 }

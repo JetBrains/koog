@@ -16,7 +16,8 @@ data class State(
     val newWordings: List<String> = emptyList(),
     val feedback: List<String> = emptyList(),
     val learnings: List<String> = emptyList()
-) : GoapAgentState<GrouperConfig, String>(config) {
+) : GoapAgentState<GrouperConfig, String>() {
+    override val agentInput: GrouperConfig get() = config
     override fun provideOutput(): String = bestWordings.show(config.numWordingsRequired)
 }
 

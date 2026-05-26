@@ -30,25 +30,23 @@ import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.system.mock.MockLLMProvider
 import ai.koog.agents.testing.agent.agentExecutionInfo
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
-import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONPrimitive
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 import kotlin.time.Instant
 
 internal object AIAgentFeatureTestAPI {
 
-    internal val testClock: Clock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
+    internal val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     internal val mockLLModel = LLModel(
         provider = MockLLMProvider(),
@@ -94,7 +92,8 @@ internal object AIAgentFeatureTestAPI {
         error = AIAgentError(
             message = "test-error-message",
             stackTrace = "test-error-stacktrace",
-            cause = "test-error-cause"
+            cause = "test-error-cause",
+            type = "test-error-type"
         ),
         timestamp = testClock.now().toEpochMilliseconds()
     )
@@ -173,7 +172,8 @@ internal object AIAgentFeatureTestAPI {
             error = AIAgentError(
                 message = "test-error-message",
                 stackTrace = "test-error-stacktrace",
-                cause = "test-error-cause"
+                cause = "test-error-cause",
+                type = "test-error-type"
             ),
             timestamp = testClock.now().toEpochMilliseconds()
         )
@@ -215,7 +215,8 @@ internal object AIAgentFeatureTestAPI {
             error = AIAgentError(
                 message = "test-error-message",
                 stackTrace = "test-error-stacktrace",
-                cause = "test-error-cause"
+                cause = "test-error-cause",
+                type = "test-error-type"
             ),
             timestamp = testClock.now().toEpochMilliseconds()
         )
@@ -240,7 +241,12 @@ internal object AIAgentFeatureTestAPI {
         toolArgs = JSONObject(mapOf("test-argument-key" to JSONPrimitive("test-argument-value"))),
         toolDescription = "test-tool-description",
         message = "test-error-message",
-        error = AIAgentError("test-error-message", "test-error-stacktrace", "test-error-cause"),
+        error = AIAgentError(
+            message = "test-error-message",
+            stackTrace = "test-error-stacktrace",
+            cause = "test-error-cause",
+            type = "test-error-type"
+        ),
         timestamp = testClock.now().toEpochMilliseconds()
     )
 
@@ -255,7 +261,8 @@ internal object AIAgentFeatureTestAPI {
         error = AIAgentError(
             message = "test-error-message",
             stackTrace = "test-error-stacktrace",
-            cause = "test-error-cause"
+            cause = "test-error-cause",
+            type = "test-error-type"
         ),
         timestamp = testClock.now().toEpochMilliseconds()
     )
@@ -280,7 +287,7 @@ internal object AIAgentFeatureTestAPI {
             id = "test-prompt-id",
             messages = listOf(
                 Message.System(
-                    part = ContentPart.Text("test-system-message"),
+                    part = MessagePart.Text("test-system-message"),
                     metaInfo = RequestMetaInfo(timestamp = testClock.now())
                 )
             ),
@@ -299,18 +306,16 @@ internal object AIAgentFeatureTestAPI {
             id = "test-prompt-id",
             messages = listOf(
                 Message.System(
-                    part = ContentPart.Text("test-system-message"),
+                    part = MessagePart.Text("test-system-message"),
                     metaInfo = RequestMetaInfo(timestamp = testClock.now())
                 )
             ),
             params = LLMParams()
         ),
         model = mockLLModel.toModelInfo(),
-        responses = listOf(
-            Message.Assistant(
-                content = "test-assistant-message",
-                metaInfo = ResponseMetaInfo(timestamp = testClock.now())
-            )
+        response = Message.Assistant(
+            content = "test-assistant-message",
+            metaInfo = ResponseMetaInfo(timestamp = testClock.now())
         ),
         timestamp = testClock.now().toEpochMilliseconds()
     )
@@ -323,7 +328,7 @@ internal object AIAgentFeatureTestAPI {
             id = "test-prompt-id",
             messages = listOf(
                 Message.System(
-                    part = ContentPart.Text("test-system-message"),
+                    part = MessagePart.Text("test-system-message"),
                     metaInfo = RequestMetaInfo(timestamp = testClock.now())
                 )
             ),
@@ -342,7 +347,7 @@ internal object AIAgentFeatureTestAPI {
             id = "test-prompt-id",
             messages = listOf(
                 Message.System(
-                    part = ContentPart.Text("test-system-message"),
+                    part = MessagePart.Text("test-system-message"),
                     metaInfo = RequestMetaInfo(timestamp = testClock.now())
                 )
             ),
@@ -361,7 +366,7 @@ internal object AIAgentFeatureTestAPI {
             id = "test-prompt-id",
             messages = listOf(
                 Message.System(
-                    part = ContentPart.Text("test-system-message"),
+                    part = MessagePart.Text("test-system-message"),
                     metaInfo = RequestMetaInfo(timestamp = testClock.now())
                 )
             ),
@@ -371,7 +376,8 @@ internal object AIAgentFeatureTestAPI {
         error = AIAgentError(
             message = "test-error-message",
             stackTrace = "test-error-stacktrace",
-            cause = "test-error-cause"
+            cause = "test-error-cause",
+            type = "test-error-type"
         ),
         timestamp = testClock.now().toEpochMilliseconds(),
     )
@@ -384,7 +390,7 @@ internal object AIAgentFeatureTestAPI {
             id = "test-prompt-id",
             messages = listOf(
                 Message.System(
-                    part = ContentPart.Text("test-system-message"),
+                    part = MessagePart.Text("test-system-message"),
                     metaInfo = RequestMetaInfo(timestamp = testClock.now())
                 )
             ),

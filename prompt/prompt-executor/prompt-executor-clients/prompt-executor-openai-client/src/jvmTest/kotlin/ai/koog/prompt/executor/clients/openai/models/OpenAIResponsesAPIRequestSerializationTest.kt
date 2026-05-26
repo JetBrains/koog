@@ -142,7 +142,6 @@ class OpenAIResponsesAPIRequestSerializationTest {
                     store = true,
                     topLogprobs = 5,
                     topP = 0.9,
-                    user = "user-123",
                     additionalProperties = mapOf("extra" to JsonPrimitive("value"))
                 )
             ) shouldEqualJson
@@ -169,7 +168,6 @@ class OpenAIResponsesAPIRequestSerializationTest {
                 "store": true,
                 "topLogprobs": 5,
                 "topP": 0.9,
-                "user": "user-123",
                 "extra": "value"
             }
                 """.trimIndent()
@@ -208,7 +206,6 @@ class OpenAIResponsesAPIRequestSerializationTest {
                 put("store", JsonPrimitive(true))
                 put("topLogprobs", JsonPrimitive(5))
                 put("topP", JsonPrimitive(0.9))
-                put("user", JsonPrimitive("user-123"))
                 // additional flattened custom fields
                 put("extra", JsonPrimitive("value"))
                 put("customNumber", JsonPrimitive(42))
@@ -234,7 +231,6 @@ class OpenAIResponsesAPIRequestSerializationTest {
                 store shouldBe true
                 topLogprobs shouldBe 5
                 topP shouldBe 0.9
-                user shouldBe "user-123"
                 reasoning.shouldNotBeNull {
                     effort shouldBe ReasoningEffort.HIGH
                     summary shouldBe ReasoningSummary.CONCISE

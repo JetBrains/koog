@@ -127,6 +127,9 @@ public fun PropertyDefinition.toToolParameter(
                 val const = (this.constValue as? JsonPrimitive)?.contentOrNull
 
                 when {
+                    // Null represented as "type": ["null"]
+                    type == JsonSchemaConstants.Types.NULL_TYPE -> ToolParameterType.Null
+
                     // Normal enum
                     enum != null -> ToolParameterType.Enum(enum.toTypedArray())
 
@@ -180,8 +183,8 @@ public fun PropertyDefinition.toToolParameter(
                 throw IllegalArgumentException("Unsupported value property definition type: $this")
         }
 
-        val effectiveParameterType = if (isNullableType) {
-            // emulate type union
+        // If the type is nullable, except the null itself, wrap it in an AnyOf with the null type to simulate type union
+        val effectiveParameterType = if (isNullableType && parameterType !is ToolParameterType.Null) {
             ToolParameterType.AnyOf(
                 types = arrayOf(
                     ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),

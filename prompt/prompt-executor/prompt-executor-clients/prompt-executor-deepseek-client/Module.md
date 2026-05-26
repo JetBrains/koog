@@ -8,10 +8,12 @@ This module provides a client implementation for the DeepSeek API, allowing you 
 
 ### Supported Models
 
-| Name               | Speed  | Price       | Input       | Output      |
-|--------------------|--------|-------------|-------------|-------------|
-| [DeepSeekChat]     | Fast   | $0.27-$1.1  | Text, Tools | Text, Tools |
-| [DeepSeekReasoner] | Medium | $0.55-$2.19 | Text, Tools | Text, Tools |
+| Name               | Speed  | Price                | Input       | Output      |
+|--------------------|--------|----------------------|-------------|-------------|
+| [DeepSeekV4Flash]  | Fast   | $0.14 / $0.28 per 1M | Text, Tools | Text, Tools |
+| [DeepSeekV4Pro]    | Medium | $1.74 / $3.48 per 1M | Text, Tools | Text, Tools |
+| [DeepSeekChat]     | Fast   | Deprecated alias     | Text, Tools | Text, Tools |
+| [DeepSeekReasoner] | Medium | Deprecated alias     | Text, Tools | Text, Tools |
 
 
 ### Model-Specific Parameters Support
@@ -76,7 +78,7 @@ suspend fun main() {
             system("You are helpful assistant")
             user("What time is it now?")
         },
-        model = DeepSeekModels.DeepSeekChat,
+        model = DeepSeekModels.DeepSeekV4Flash,
     )
 
     // Advanced example with custom parameters
@@ -85,7 +87,7 @@ suspend fun main() {
             system("You are a helpful coding assistant")
             user("Write a Python function to calculate factorial")
         },
-        model = DeepSeekModels.DeepSeekReasoner,
+        model = DeepSeekModels.DeepSeekV4Pro,
         params = DeepSeekParams(
             temperature = 0.3,
             maxTokens = 2000,
@@ -111,7 +113,7 @@ val structuredResponse = client.execute(
         system("Extract key information as JSON")
         user("John Doe, age 30, works as software engineer at TechCorp")
     },
-    model = DeepSeekModels.DeepSeekChat,
+    model = DeepSeekModels.DeepSeekV4Flash,
     params = DeepSeekParams(
         temperature = 0.1,
         schema = jsonSchema {
@@ -131,7 +133,7 @@ val reasoningResponse = client.execute(
         system("Solve this step by step")
         user("If a train travels 120 km in 2 hours, what's its average speed?")
     },
-    model = DeepSeekModels.DeepSeekReasoner,
+    model = DeepSeekModels.DeepSeekV4Pro,
     params = DeepSeekParams(
         temperature = 0.5,
         includeThoughts = true,

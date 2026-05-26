@@ -2,17 +2,17 @@ package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
@@ -139,7 +139,11 @@ class AIAgentNodesTest {
             assertTrue(executionEvents.contains("compress -> nodeFinish"), "Should transition from compress to finish")
 
             assertTrue(
-                agentConfig.prompt.messages.any { it.content.contains("testing history compression") },
+                agentConfig.prompt.messages.any {
+                    it.parts.any { part ->
+                        part is MessagePart.Text && part.text.contains("testing history compression")
+                    }
+                },
                 "Prompt should contain test content for compression"
             )
             assertTrue(
@@ -239,5 +243,55 @@ class AIAgentNodesTest {
         assertNotNull(capturedPrompt, "Prompt should be captured")
         assertNotNull(capturedPrompt!!.params.schema, "Schema should be set for Native config")
         assertEquals(nativeStructure.schema, capturedPrompt!!.params.schema, "Schema should match structure's schema")
+    }
+
+    @Test
+    fun testSend() = runTest {
+        val agentStrategy = strategy<String, String>("test") {
+            val nodeSendMessage by nodeLLMSendMessage()
+            val nodeExecuteTools by nodeExecuteTools()
+
+            edge(nodeStart forwardTo nodeSendMessage asUserMessage { "Hello, $it" })
+            edge(nodeSendMessage forwardTo nodeExecuteTools onToolCalls { true })
+            edge(nodeSendMessage forwardTo nodeFinish onTextMessage { true })
+            edge(nodeExecuteTools forwardTo nodeSendMessage asToolResultMessage { true })
+        }
+
+        val results = mutableListOf<Any?>()
+
+        val agentConfig = AIAgentConfig(
+            prompt = prompt("test-agent") {},
+            model = OllamaModels.Meta.LLAMA_3_2,
+            maxAgentIterations = 10
+        )
+
+        val tool = DummyTool()
+
+        val testExecutor = getMockExecutor(serializer) {
+            mockLLMToolCall(tool = tool, args = DummyTool.Args("test"), toolCallId = "0") onRequestContains "Hello"
+            mockLLMAnswer("Buy!").asDefaultResponse
+        }
+
+        val executedNode = mutableListOf<String>()
+        AIAgent(
+            promptExecutor = testExecutor,
+            strategy = agentStrategy,
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry {
+                tool(tool)
+            }
+        ) {
+            install(EventHandler) {
+                onAgentCompleted { eventContext -> results += eventContext.result }
+                onNodeExecutionStarting { executedNode.add(it.node.name) }
+            }
+        }.use { agent ->
+            agent.run("Koog", null)
+        }
+
+        assertEquals(1, results.size)
+        assertEquals("Buy!", results.first())
+        assertEquals(5, executedNode.size)
+        assertEquals(listOf("__start__", "nodeSendMessage", "nodeExecuteTools", "nodeSendMessage", "__finish__"), executedNode)
     }
 }

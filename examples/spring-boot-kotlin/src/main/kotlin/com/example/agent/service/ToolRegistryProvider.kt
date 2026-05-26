@@ -3,6 +3,7 @@ package com.example.agent.service
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.mcp.defaultStdioTransport
+import ai.koog.agents.mcp.metadata.McpServerInfo
 import com.example.agent.config.AgentConfiguration
 import org.springframework.stereotype.Service
 
@@ -44,7 +45,8 @@ class ToolRegistryProvider {
         if (toolDefinition.options.serverUrl != null) {
             val transport = McpToolRegistryProvider.defaultSseTransport(toolDefinition.options.serverUrl)
             return McpToolRegistryProvider.fromTransport(
-                transport = transport
+                transport = transport,
+                serverInfo = McpServerInfo(url = toolDefinition.options.serverUrl),
             )
         }
 
@@ -68,7 +70,8 @@ class ToolRegistryProvider {
 
         // Create and return the MCP tool registry
         return McpToolRegistryProvider.fromTransport(
-            transport = McpToolRegistryProvider.defaultStdioTransport(process)
+            transport = McpToolRegistryProvider.defaultStdioTransport(process),
+            serverInfo = McpServerInfo(command = dockerCommandList.joinToString(" ")),
         )
     }
 }

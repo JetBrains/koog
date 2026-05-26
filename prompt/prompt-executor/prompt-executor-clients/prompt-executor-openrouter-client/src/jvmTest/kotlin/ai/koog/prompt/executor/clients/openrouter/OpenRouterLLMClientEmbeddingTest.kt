@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openrouter
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.executor.clients.LLMClientException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -62,7 +63,7 @@ class OpenRouterLLMClientEmbeddingTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = OpenRouterLLMClient(apiKey = apiKey, baseClient = http)
+        val client = OpenRouterLLMClient(apiKey = apiKey, httpClientFactory = KtorKoogHttpClient.Factory(http))
 
         val embedding = client.embed(
             text = "Hello, world!",
@@ -86,7 +87,7 @@ class OpenRouterLLMClientEmbeddingTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = OpenRouterLLMClient(apiKey = apiKey, baseClient = http)
+        val client = OpenRouterLLMClient(apiKey = apiKey, httpClientFactory = KtorKoogHttpClient.Factory(http))
 
         val exception = assertFailsWith<LLMClientException> {
             client.embed(
@@ -107,7 +108,7 @@ class OpenRouterLLMClientEmbeddingTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = OpenRouterLLMClient(apiKey = apiKey, baseClient = http)
+        val client = OpenRouterLLMClient(apiKey = apiKey, httpClientFactory = KtorKoogHttpClient.Factory(http))
 
         val exception = assertFailsWith<LLMClientException> {
             client.embed(
@@ -128,7 +129,7 @@ class OpenRouterLLMClientEmbeddingTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = OpenRouterLLMClient(apiKey = apiKey, baseClient = http)
+        val client = OpenRouterLLMClient(apiKey = apiKey, httpClientFactory = KtorKoogHttpClient.Factory(http))
 
         assertFailsWith<LLMClientException> {
             client.embed(
@@ -155,7 +156,7 @@ class OpenRouterLLMClientEmbeddingTest {
             baseUrl = "https://custom.openrouter.ai",
             embeddingsPath = "custom/embeddings"
         )
-        val client = OpenRouterLLMClient(apiKey = apiKey, settings = customSettings, baseClient = http)
+        val client = OpenRouterLLMClient(apiKey = apiKey, settings = customSettings, httpClientFactory = KtorKoogHttpClient.Factory(http))
 
         client.embed(
             text = "Hello, world!",
@@ -179,7 +180,7 @@ class OpenRouterLLMClientEmbeddingTest {
             )
         }
         val http = HttpClient(engine) {}
-        val client = OpenRouterLLMClient(apiKey = apiKey, baseClient = http)
+        val client = OpenRouterLLMClient(apiKey = apiKey, httpClientFactory = KtorKoogHttpClient.Factory(http))
 
         // Test with a different model
         client.embed(

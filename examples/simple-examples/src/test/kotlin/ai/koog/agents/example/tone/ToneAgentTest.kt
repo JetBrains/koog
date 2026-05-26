@@ -54,7 +54,7 @@ class ToneAgentTest {
 
             onAgentExecutionFailed { eventContext ->
                 println(
-                    "[DEBUG_LOG] An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}"
+                    "[DEBUG_LOG] An error occurred: ${eventContext.error.message}\n${eventContext.error.stackTraceToString()}"
                 )
             }
 

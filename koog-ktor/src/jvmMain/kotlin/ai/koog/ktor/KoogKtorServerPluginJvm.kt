@@ -8,6 +8,7 @@ import ai.koog.agents.mcp.McpToolRegistryProvider.DEFAULT_MCP_CLIENT_NAME
 import ai.koog.agents.mcp.McpToolRegistryProvider.DEFAULT_MCP_CLIENT_VERSION
 import ai.koog.agents.mcp.fromProcess
 import ai.koog.agents.mcp.metadata.McpServerInfo
+import io.ktor.client.HttpClient
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import kotlinx.coroutines.launch
@@ -53,6 +54,39 @@ public class McpToolsConfig(private val agentConfig: KoogAgentsConfig.AgentConfi
                 mcpToolParser = mcpToolParser
             )
             mutex.withLock { agentConfig.toolRegistry += transport }
+        }
+    }
+
+    /**
+     * Registers tools from an MCP server via Streamable HTTP transport.
+     *
+     * This is the recommended way to connect to remote MCP servers. Streamable HTTP supports
+     * bidirectional communication, session management, and reconnection.
+     *
+     * @param url The URL of the MCP server (e.g., "http://localhost:3000/mcp").
+     * @param httpClient The [HttpClient] to use for the MCP connection. Must have the Ktor `SSE`
+     *     plugin installed. Lifecycle is managed by the caller — the same client can be reused
+     *     across multiple MCP connections.
+     * @param mcpToolParser A parser for converting the MCP SDK tool definitions into a standardized format.
+     * @param name The name of the MCP client.
+     * @param version The version of the MCP client.
+     */
+    public fun streamableHttp(
+        url: String,
+        httpClient: HttpClient,
+        mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
+        name: String = DEFAULT_MCP_CLIENT_NAME,
+        version: String = DEFAULT_MCP_CLIENT_VERSION,
+    ) {
+        agentConfig.scope.launch {
+            val registry = McpToolRegistryProvider.streamableHttp {
+                this.url = url
+                this.httpClient = httpClient
+                this.mcpToolParser = mcpToolParser
+                this.name = name
+                this.version = version
+            }
+            mutex.withLock { agentConfig.toolRegistry += registry }
         }
     }
 

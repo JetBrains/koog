@@ -1,16 +1,16 @@
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.agent.OutputOption
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
+import ai.koog.agents.core.utils.runBlockingOnStrategyDispatcher
 import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
-import java.util.concurrent.ExecutorService
+import ai.koog.utils.annotations.InternalKoogUtils
 
 /**
  * A builder class responsible for creating and managing subtasks within the context of an AI agent's functional operations.
@@ -57,21 +57,19 @@ public class SubtaskBuilder(
  * @param llmModel Optional language model to be used for the subtask.
  * @param llmParams Optional parameters for the language model configuration.
  * @param responseProcessor Optional processor for post-processing LLM responses.
- * @param runMode Specifies the mode in which tools should be called (e.g., sequentially).
+ * @param parallelTools Specifies the mode in which tools should be called (e.g., sequentially).
  * @param assistantResponseRepeatMax Optional maximum number of response repetitions allowed for the assistant.
- * @param executorService Optional executor service for managing asynchronous operations.
  */
 public class SubtaskBuilderWithOutput<Output : Any>(
     public val context: AIAgentFunctionalContextBase<*>,
     public val taskDescription: String,
     public val output: OutputOption<Output>,
-    public var tools: List<Tool<*, *>>? = null,
+    public var tools: List<ToolBase<*, *>>? = null,
     public var llmModel: LLModel? = null,
     public var llmParams: LLMParams? = null,
     public var responseProcessor: ResponseProcessor? = null,
-    public var runMode: ToolCalls = ToolCalls.SEQUENTIAL,
+    public var parallelTools: Boolean = false,
     public var assistantResponseRepeatMax: Int? = null,
-    public var executorService: ExecutorService? = null,
 ) {
 
     /**
@@ -109,7 +107,7 @@ public class SubtaskBuilderWithOutput<Output : Any>(
      * @param tools A list of tools, each represented as an instance of `Tool<*, *>`,
      *              to be utilized for the execution of the subtask.
      */
-    public fun withTools(tools: List<Tool<*, *>>): SubtaskBuilderWithOutput<Output> =
+    public fun withTools(tools: List<ToolBase<*, *>>): SubtaskBuilderWithOutput<Output> =
         apply { this.tools = tools }
 
     /**
@@ -149,13 +147,10 @@ public class SubtaskBuilderWithOutput<Output : Any>(
     /**
      * Sets the execution mode for the AI agent's task execution.
      *
-     * @param runMode Specifies the mode in which tool calls are executed. The available modes are:
-     * - `SEQUENTIAL`: Executes multiple tool calls sequentially.
-     * - `PARALLEL`: Executes tool calls in parallel.
-     * - `SINGLE_RUN_SEQUENTIAL`: Allows only a single tool call to be executed.
+     * @param parallelTools Specifies the mode in which tool calls are executed. The available modes are:
      */
-    public fun runMode(runMode: ToolCalls): SubtaskBuilderWithOutput<Output> =
-        apply { this.runMode = runMode }
+    public fun parallelTools(parallelTools: Boolean): SubtaskBuilderWithOutput<Output> =
+        apply { this.parallelTools = parallelTools }
 
     /**
      * Sets the maximum number of times the assistant's response can be repeated.
@@ -167,20 +162,12 @@ public class SubtaskBuilderWithOutput<Output : Any>(
         apply { this.assistantResponseRepeatMax = max }
 
     /**
-     * Configures the subtask builder to use the specified ExecutorService for task execution.
-     *
-     * @param service the ExecutorService to be used for managing task execution.
-     */
-    public fun withExecutorService(service: ExecutorService): SubtaskBuilderWithOutput<Output> =
-        apply { this.executorService = service }
-
-    /**
      * Executes the defined task within the configured context and returns the output.
      * The method handles different output options (`OutputOption.ByClass` and `OutputOption.ByFinishTool`)
      * and executes subtasks using the provided input, tools, and configuration parameters.
      */
-    @OptIn(InternalAgentsApi::class)
-    public fun run(): Output = context.config.runOnStrategyDispatcher(executorService) {
+    @OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
+    public fun run(): Output = context.config.runBlockingOnStrategyDispatcher {
         @Suppress("UNCHECKED_CAST")
         when (output) {
             is OutputOption.ByClass<Output> -> {
@@ -190,7 +177,7 @@ public class SubtaskBuilderWithOutput<Output : Any>(
                     tools = tools,
                     llmModel = llmModel,
                     llmParams = llmParams,
-                    runMode = runMode,
+                    parallelTools = parallelTools,
                     assistantResponseRepeatMax = assistantResponseRepeatMax,
                     responseProcessor = responseProcessor
                 )
@@ -202,7 +189,7 @@ public class SubtaskBuilderWithOutput<Output : Any>(
                 tools = tools,
                 llmModel = llmModel,
                 llmParams = llmParams,
-                runMode = runMode,
+                parallelTools = parallelTools,
                 assistantResponseRepeatMax = assistantResponseRepeatMax,
                 responseProcessor = responseProcessor
             )
@@ -212,7 +199,7 @@ public class SubtaskBuilderWithOutput<Output : Any>(
                 tools = tools,
                 llmModel = llmModel,
                 llmParams = llmParams,
-                runMode = runMode,
+                parallelTools = parallelTools,
                 assistantResponseRepeatMax = assistantResponseRepeatMax,
                 responseProcessor = responseProcessor
             ) as Output // Output === CriticResult<String> in this case

@@ -4,9 +4,10 @@ import ai.koog.agents.chatMemory.feature.ChatMemory;
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.features.chathistory.jdbc.PostgresJdbcChatHistoryProvider;
 import ai.koog.agents.features.chatmemory.sql.SQLChatHistoryProviderJvm;
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+
+import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -63,7 +64,7 @@ public class ChatMemoryJdbcExample {
 
         // 4. Build the agent with ChatMemory feature
         AIAgent<String, String> agent = AIAgent.builder()
-                .promptExecutor(new MultiLLMPromptExecutor(new OpenAILLMClient(apiKey)))
+                .promptExecutor(new MultiLLMPromptExecutor(openAIClient(apiKey)))
                 .llmModel(OpenAIModels.Chat.GPT4o)
                 .systemPrompt("You are a friendly assistant. Keep your answers concise.")
                 .install(ChatMemory.Feature, config -> {

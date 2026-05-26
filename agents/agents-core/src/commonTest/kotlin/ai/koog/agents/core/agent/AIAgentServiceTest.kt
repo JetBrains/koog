@@ -9,6 +9,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -16,7 +17,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 
 class AIAgentServiceTest {
     private val serializer = KotlinxSerializer()
@@ -65,7 +65,7 @@ class AIAgentServiceTest {
         assertNotNull(service.toolRegistry)
 
         // create agent and run
-        val agent = service.createAgent(id = "id-1", clock = Clock.System)
+        val agent = service.createAgent(id = "id-1", clock = KoogClock.System)
         val out = agent.run("in", null)
         assertEquals("ok:in", out)
     }
@@ -80,7 +80,6 @@ class AIAgentServiceTest {
             toolRegistry = ToolRegistry {},
             systemPrompt = "You are helpful",
             temperature = 0.5,
-            numberOfChoices = 2,
             maxIterations = 7
         )
         assertEquals(executor, service.promptExecutor)
@@ -118,8 +117,6 @@ class AIAgentServiceTest {
             strategy = strat,
             promptExecutor = executor,
             agentConfig = cfg,
-            inputType = typeToken<String>(),
-            outputType = typeToken<String>()
         )
 
         val serviceFromGraph = AIAgentService.fromAgent<String, String>(graphAgent)

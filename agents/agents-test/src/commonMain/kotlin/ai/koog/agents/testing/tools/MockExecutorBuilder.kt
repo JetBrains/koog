@@ -4,7 +4,7 @@ import ai.koog.agents.annotations.JavaAPI
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.tokenizer.Tokenizer
 import ai.koog.serialization.JSONSerializer
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 
 /**
  * Fluent-style builder class for creating a mock prompt executor with configurable tools and behaviors.
@@ -13,7 +13,7 @@ import kotlin.time.Clock
 public class MockExecutorBuilder internal constructor(
     private val serializer: JSONSerializer,
 ) {
-    private var clock: Clock = Clock.System
+    private var clock: KoogClock = KoogClock.System
 
     private var tokenizer: Tokenizer? = null
 
@@ -25,7 +25,7 @@ public class MockExecutorBuilder internal constructor(
      * Sets the clock instance.
      * @return The updated [MockExecutorBuilder] instance for method chaining.
      */
-    public fun clock(clock: Clock): MockExecutorBuilder = apply { this.clock = clock }
+    public fun clock(clock: KoogClock): MockExecutorBuilder = apply { this.clock = clock }
 
     /**
      * Sets the tokenizer.

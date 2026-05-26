@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
@@ -101,7 +102,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
         public const val KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION: String = "koog.debugger.wait.connection.ms"
 
         override val key: AIAgentStorageKey<Debugger> =
-            AIAgentStorageKey("agents-features-debugger")
+            createStorageKey<Debugger>("agents-features-debugger")
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig,
@@ -195,7 +196,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                 val event = AgentCompletedEvent(
                     eventId = eventContext.eventId,
                     executionInfo = eventContext.executionInfo,
-                    agentId = eventContext.agentId,
+                    agentId = eventContext.agent.id,
                     runId = eventContext.runId,
                     result = eventContext.result?.toString(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
@@ -207,9 +208,9 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                 val event = AgentExecutionFailedEvent(
                     eventId = eventContext.eventId,
                     executionInfo = eventContext.executionInfo,
-                    agentId = eventContext.agentId,
+                    agentId = eventContext.agent.id,
                     runId = eventContext.runId,
-                    error = eventContext.throwable.toAgentError(),
+                    error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -219,7 +220,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                 val event = AgentClosingEvent(
                     eventId = eventContext.eventId,
                     executionInfo = eventContext.executionInfo,
-                    agentId = eventContext.agentId,
+                    agentId = eventContext.agent.id,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -288,7 +289,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
-                    responses = eventContext.responses,
+                    response = eventContext.response,
                     moderationResponse = eventContext.moderationResponse,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -378,7 +379,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     toolArgs = eventContext.toolArgs,
                     toolDescription = eventContext.toolDescription,
                     message = eventContext.message,
-                    error = eventContext.error,
+                    error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -393,7 +394,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                     toolName = eventContext.toolName,
                     toolArgs = eventContext.toolArgs,
                     toolDescription = eventContext.toolDescription,
-                    error = eventContext.error,
+                    error = eventContext.error?.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -474,7 +475,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                         eventContext.inputType,
                         pipeline.config.serializer
                     ),
-                    error = eventContext.throwable.toAgentError(),
+                    error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -532,7 +533,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                         eventContext.inputType,
                         pipeline.config.serializer
                     ),
-                    error = eventContext.throwable.toAgentError(),
+                    error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)

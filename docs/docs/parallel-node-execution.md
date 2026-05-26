@@ -240,6 +240,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 
@@ -261,7 +262,7 @@ val strategy = strategy("best-joke") {
             user("Tell me a joke about $topic.")
          }
          val response = requestLLMWithoutTools()
-         response.content
+         response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
       }
    }
 
@@ -273,7 +274,7 @@ val strategy = strategy("best-joke") {
             user("Tell me a joke about $topic.")
          }
          val response = requestLLMWithoutTools()
-         response.content
+         response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
       }
    }
 
@@ -285,7 +286,7 @@ val strategy = strategy("best-joke") {
             user("Tell me a joke about $topic.")
          }
          val response = requestLLMWithoutTools()
-         response.content
+         response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
       }
    }
 

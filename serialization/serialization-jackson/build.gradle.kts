@@ -5,9 +5,6 @@ plugins {
     id("ai.kotlin.jvm.publish")
 }
 
-group = rootProject.group
-version = rootProject.version
-
 kotlin {
     explicitApi()
 }

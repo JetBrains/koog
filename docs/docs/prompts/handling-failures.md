@@ -49,7 +49,7 @@ Wrap any existing client with the retry capability:
     **/
     -->
     ```java
-    OpenAILLMClient client = new OpenAILLMClient(apiKey);
+    OpenAILLMClient client = openAIClient(apiKey);
     RetryingLLMClient resilientClient = new RetryingLLMClient(client);
 
     // Now all operations will automatically retry on transient errors
@@ -91,7 +91,7 @@ For example:
     **/
     -->
     ```java
-    OpenAILLMClient client = new OpenAILLMClient(apiKey);
+    OpenAILLMClient client = openAIClient(apiKey);
     // Use the predefined configuration
     RetryingLLMClient conservativeClient = new RetryingLLMClient(
         client,
@@ -315,7 +315,7 @@ To learn more about prompt executors, see [Prompt executors](prompt-executors.md
     ```java
     // Single provider executor with retry (Java)
     RetryingLLMClient resilientClient = new RetryingLLMClient(
-        new OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
+        openAIClient(System.getenv("OPENAI_API_KEY")),
         RetryConfig.Companion.getPRODUCTION()
     );
 
@@ -323,12 +323,12 @@ To learn more about prompt executors, see [Prompt executors](prompt-executors.md
 
     // Multi-provider executor with flexible client configuration (Java)
     LLMClient openai = new RetryingLLMClient(
-        new OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
+        openAIClient(System.getenv("OPENAI_API_KEY")),
         RetryConfig.Companion.getCONSERVATIVE()
     );
 
     LLMClient anthropic = new RetryingLLMClient(
-        new AnthropicLLMClient(System.getenv("ANTHROPIC_API_KEY")),
+        anthropicClient(System.getenv("ANTHROPIC_API_KEY")),
         RetryConfig.Companion.getAGGRESSIVE()
     );
 
@@ -403,7 +403,7 @@ You can customize these values for your specific needs. For example:
         "v1/moderations",         // moderationsPath
         "v1/models"               // modelsPath
     );
-    OpenAILLMClient client = new OpenAILLMClient(apiKey, settings);
+    OpenAILLMClient client = openAIClient(apiKey, settings);
     ```
     <!--- KNIT example-handling-failures-java-04.java -->
 
@@ -479,7 +479,7 @@ Here is an example of error handling in Kotlin and Java:
 === "Java"
 
     <!--- INCLUDE
-    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.Prompt;
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.clients.retry.RetryConfig;
@@ -490,6 +490,7 @@ Here is an example of error handling in Kotlin and Java:
     import org.slf4j.LoggerFactory;
     import java.util.List;
     import java.util.function.Consumer;
+    import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
     class exampleHandlingFailuresJava05 {
         public static void main(String[] args) {
     -->
@@ -500,7 +501,7 @@ Here is an example of error handling in Kotlin and Java:
     ```java
     Logger logger = LoggerFactory.getLogger("Example");
     RetryingLLMClient resilientClient = new RetryingLLMClient(
-            new OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
+            openAIClient(System.getenv("OPENAI_API_KEY")),
             RetryConfig.PRODUCTION
     );
     Prompt prompt = Prompt.builder("test")
@@ -508,13 +509,13 @@ Here is an example of error handling in Kotlin and Java:
             .build();
     MultiLLMPromptExecutor promptExecutor = new MultiLLMPromptExecutor(resilientClient);
 
-    Consumer<List<Message.Response>> processResponse = (resp) -> { /* implementation */ };
+    Consumer<Message.Assistant> processResponse = (resp) -> { /* implementation */ };
     Runnable scheduleRetryLater = () -> { /* implementation */ };
     Runnable notifyAdministrator = () -> { /* implementation */ };
     Runnable useDefaultResponse = () -> { /* implementation */ };
 
     try {
-        List<Message.Response> response = promptExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
+        Message.Assistant response = promptExecutor.execute(prompt, OpenAIModels.Chat.GPT4o);
         processResponse.accept(response);
     } catch (Exception e) {
         logger.error("LLM operation failed", e);

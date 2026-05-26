@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.context
 
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -26,7 +26,7 @@ class AIAgentContextTest : AgentTestBase() {
 
     @Test
     fun testFeatureRetrieval() = runTest {
-        val featureKey = AIAgentStorageKey<String>("test-feature")
+        val featureKey = createStorageKey<String>("test-feature")
         val featureValue = "test-feature-value"
 
         val context = createTestContext()
@@ -39,7 +39,7 @@ class AIAgentContextTest : AgentTestBase() {
 
     @Test
     fun testFeatureRetrievalNotFound() = runTest {
-        val featureKey = AIAgentStorageKey<String>("non-existent-feature")
+        val featureKey = createStorageKey<String>("non-existent-feature")
         val context = createTestContext()
 
         val retrievedFromStorage = context.storage.get(featureKey)
@@ -48,7 +48,7 @@ class AIAgentContextTest : AgentTestBase() {
 
     @Test
     fun testFeatureOverwrite() = runTest {
-        val featureKey = AIAgentStorageKey<String>("test-feature")
+        val featureKey = createStorageKey<String>("test-feature")
         val initialValue = "initial-value"
         val updatedValue = "updated-value"
         val context = createTestContext()
@@ -203,7 +203,7 @@ class AIAgentContextTest : AgentTestBase() {
 
     @Test
     fun testContextForkWithIsolatedStorage() = runTest {
-        val storageKey = AIAgentStorageKey<String>("test-key")
+        val storageKey = createStorageKey<String>("test-key")
 
         val originalContext = createTestContext()
         originalContext.storage.set(storageKey, "original-value")
@@ -236,8 +236,8 @@ class AIAgentContextTest : AgentTestBase() {
         val forkedContext = originalContext.fork()
 
         assertNotSame(originalContext.llm.prompt, forkedContext.llm.prompt)
-        assertEquals(listOf("original-message"), originalContext.getHistory().map { it.content })
-        assertEquals(listOf("original-message"), forkedContext.getHistory().map { it.content })
+        assertEquals(listOf("original-message"), originalContext.llm.prompt.messages.map { it.textContent() })
+        assertEquals(listOf("original-message"), forkedContext.llm.prompt.messages.map { it.textContent() })
 
         originalContext.llm.writeSession {
             appendPrompt {
@@ -253,11 +253,11 @@ class AIAgentContextTest : AgentTestBase() {
 
         assertEquals(
             listOf("original-message", "original-only-message"),
-            originalContext.getHistory().map { it.content }
+            originalContext.llm.prompt.messages.map { it.textContent() }
         )
         assertEquals(
             listOf("original-message", "forked-only-message"),
-            forkedContext.getHistory().map { it.content }
+            forkedContext.llm.prompt.messages.map { it.textContent() }
         )
     }
 

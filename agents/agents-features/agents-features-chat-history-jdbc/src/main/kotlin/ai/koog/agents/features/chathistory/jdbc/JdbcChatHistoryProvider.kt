@@ -3,6 +3,7 @@ package ai.koog.agents.features.chathistory.jdbc
 import ai.koog.agents.features.chatmemory.sql.SQLChatHistoryProvider
 import ai.koog.agents.features.chatmemory.sql.SQLChatHistorySchemaMigrator
 import ai.koog.prompt.message.Message
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -10,7 +11,6 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import java.sql.Types
 import javax.sql.DataSource
-import kotlin.time.Clock
 
 /**
  * Abstract pure JDBC implementation of [SQLChatHistoryProvider] for managing chat conversation
@@ -82,7 +82,7 @@ public abstract class JdbcChatHistoryProvider @JvmOverloads constructor(
 
     override suspend fun store(conversationId: String, messages: List<Message>) {
         val messagesJson = serializeMessages(messages)
-        val now = Clock.System.now()
+        val now = KoogClock.System.now()
         val nowMillis = now.toEpochMilliseconds()
         val ttlTimestamp = calculateTtlTimestamp(now)
 
@@ -104,7 +104,7 @@ public abstract class JdbcChatHistoryProvider @JvmOverloads constructor(
     }
 
     override suspend fun load(conversationId: String): List<Message> {
-        val now = Clock.System.now().toEpochMilliseconds()
+        val now = KoogClock.System.now().toEpochMilliseconds()
 
         return withContext(ioDispatcher) {
             dataSource.connection.use { connection ->
@@ -126,7 +126,7 @@ public abstract class JdbcChatHistoryProvider @JvmOverloads constructor(
     override suspend fun cleanupExpired() {
         if (ttlSeconds == null) return
 
-        val now = Clock.System.now().toEpochMilliseconds()
+        val now = KoogClock.System.now().toEpochMilliseconds()
 
         withContext(ioDispatcher) {
             dataSource.connection.use { connection ->
@@ -150,7 +150,7 @@ public abstract class JdbcChatHistoryProvider @JvmOverloads constructor(
     }
 
     override suspend fun getConversationCount(): Long {
-        val now = Clock.System.now().toEpochMilliseconds()
+        val now = KoogClock.System.now().toEpochMilliseconds()
 
         return withContext(ioDispatcher) {
             dataSource.connection.use { connection ->

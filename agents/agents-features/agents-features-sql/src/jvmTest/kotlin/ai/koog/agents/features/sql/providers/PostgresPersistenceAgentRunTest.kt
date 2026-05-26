@@ -4,10 +4,10 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.agents.snapshot.feature.tombstoneCheckpoint
@@ -17,11 +17,13 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.test.utils.DockerAvailableCondition
+import ai.koog.utils.time.KoogClock
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
@@ -37,7 +39,6 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 @TestInstance(Lifecycle.PER_CLASS)
@@ -111,7 +112,7 @@ class PostgresPersistenceAgentRunTest {
         name: String? = null,
     ): AIAgentNodeDelegate<String, String> = node(name) {
         return@node llm.readSession {
-            val history = this.prompt.messages.joinToString("\n") { it.content }
+            val history = this.prompt.messages.joinToString("\n") { msg -> msg.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text } }
             return@readSession "History: $history"
         }
     }
@@ -152,11 +153,11 @@ class PostgresPersistenceAgentRunTest {
 
     fun preSeedValidCheckpointChainTest(provider: PersistenceStorageProvider<*>) = runBlocking<Unit> {
         val agentId = "pg-agent-preseed-1"
-        val time = Clock.System.now()
+        val time = KoogClock.System.now()
 
         val cp1 = createTestCheckpoint("cp-1", time = time, version = 0, nodePath = path(agentId, "straight-forward", "Node2"))
         val cp2 = createTestCheckpoint("cp-2", version = cp1.version + 1, time = time, nodePath = path(agentId, "straight-forward", "Node2"))
-        val tomb = tombstoneCheckpoint(time = Clock.System.now(), version = cp2.version + 1)
+        val tomb = tombstoneCheckpoint(createdAt = KoogClock.System.now(), version = cp2.version + 1)
 
         // Save in order: cp1 -> cp2 -> tombstone
         provider.saveCheckpoint(agentId, cp1)
@@ -195,11 +196,11 @@ class PostgresPersistenceAgentRunTest {
         val agentId = "pg-agent-preseed-2"
         val sessionId = "pg-agent-preseed-2"
         val stratName = "strategy"
-        val time = Clock.System.now()
+        val time = KoogClock.System.now()
 
         val cp1 = createTestCheckpoint("cp-1", version = 0, time = time, nodePath = path(agentId, stratName, "Node2"))
         val cp2 = createTestCheckpoint("cp-2", version = cp1.version + 1, time = time, nodePath = path(agentId, stratName, "Node2"))
-        val tomb = tombstoneCheckpoint(time = Clock.System.now(), version = cp2.version + 1)
+        val tomb = tombstoneCheckpoint(createdAt = KoogClock.System.now(), version = cp2.version + 1)
         val cp3 = createTestCheckpoint("cp-3", version = tomb.version + 1, time = time, nodePath = path(agentId, stratName, "Node1"))
 
         // Save in order: cp1 -> cp2 -> tombstone -> cp3
@@ -231,7 +232,6 @@ class PostgresPersistenceAgentRunTest {
         output shouldBeEqual "History: You are a test agent.\n" +
             "Node 1 output\n" +
             "Node 2 output\n" +
-            "Node 1 output\n" +
             "Node 2 output"
 
         // Post-run: latest should still be cp3 since we did not persist new checkpoints
@@ -244,7 +244,7 @@ class PostgresPersistenceAgentRunTest {
         val agentId = "pg-agent-preseed-3"
         val sessionId = "sessionid"
         val strategyId = "strategy"
-        val time = Clock.System.now()
+        val time = KoogClock.System.now()
 
         val cp1 = createTestCheckpoint("cp-1", version = 0, time = time, nodePath = path(sessionId, strategyId, "Node1"))
 
@@ -275,7 +275,6 @@ class PostgresPersistenceAgentRunTest {
         output shouldBe "History: You are a test agent.\n" +
             "Node 1 output\n" +
             "Node 2 output\n" +
-            "Node 1 output\n" +
             "Node 2 output"
 
         latest?.checkpointId shouldBe "cp-1"
@@ -290,14 +289,16 @@ class PostgresPersistenceAgentRunTest {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = time,
-            nodePath = nodePath,
-            lastInput = JSONPrimitive("Test input"),
             messageHistory = listOf(
                 Message.System("You are a test agent.", RequestMetaInfo(time)),
                 Message.User("Node 1 output", RequestMetaInfo(time)),
                 Message.Assistant("Node 2 output", ResponseMetaInfo(time))
             ),
-            version = version
+            version = version,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = nodePath,
+                lastOutput = JSONPrimitive("Test input"),
+            ),
         )
     }
 }

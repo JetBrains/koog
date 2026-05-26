@@ -1,8 +1,6 @@
 package ai.koog.agents.core.agent.config
 
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.Message.Assistant
-import ai.koog.prompt.message.Message.User
+import ai.koog.prompt.message.MessagePart
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -15,18 +13,18 @@ public interface ToolCallDescriber {
     /**
      * Composes a description of a tool call message.
      *
-     * @param message The tool call message to be described. Must be an instance of Message.Tool.Call.
+     * @param message The tool call message to be described. Must be an instance of MessagePart.Tool.Call.
      * @return A Message instance containing the description of the tool call.
      */
-    public fun describeToolCall(message: Message.Tool.Call): Message
+    public fun describeToolCall(message: MessagePart.Tool.Call): String
 
     /**
-     * Describes the tool result by transforming it into a user-readable message object.
+     * Describes the tool result by transforming it into a user-readable string.
      *
      * @param message The tool result message to be described. It contains the tool call id, tool name, and content details.
      * @return A transformed message representing the description of the tool result.
      */
-    public fun describeToolResult(message: Message.Tool.Result): Message
+    public fun describeToolResult(message: MessagePart.Tool.Result): String
 
     /**
      * JSON object implementing the `ToolCallDescriber` interface.
@@ -51,23 +49,24 @@ public interface ToolCallDescriber {
         /**
          * Formats a tool call message into a standardized Message.Assistant response.
          *
-         * @param message the tool call message of type [Message.Tool.Call] containing details about the tool invocation,
+         * @param message the tool call message of type [MessagePart.Tool.Call] containing details about the tool invocation,
          * such as tool ID, name, and arguments.
-         * @return a [Message.Assistant] containing the serialized JSON representation of the tool call information.
+         * @return a string containing the serialized JSON representation of the tool call information.
          */
-        override fun describeToolCall(message: Message.Tool.Call): Message {
-            return Assistant(
-                content = Json.encodeToString(
-                    buildJsonObject {
-                        message.id?.let { put("tool_call_id", JsonPrimitive(it)) }
-                        put("tool_name", JsonPrimitive(message.tool))
-                        message.contentJsonResult.fold(
-                            onSuccess = { put("tool_args", it) },
-                            onFailure = { put("tool_args_error", JsonPrimitive("Failed to parse tool arguments: $it")) }
-                        )
-                    }
-                ),
-                metaInfo = message.metaInfo
+        override fun describeToolCall(message: MessagePart.Tool.Call): String {
+            return Json.encodeToString(
+                buildJsonObject {
+                    message.id?.let { put("tool_call_id", JsonPrimitive(it)) }
+                    put("tool_name", JsonPrimitive(message.tool))
+                    runCatching { message.argsJson }
+                        .onSuccess { put("tool_args", it) }
+                        .onFailure { e ->
+                            put(
+                                "tool_args_error",
+                                JsonPrimitive("Failed to parse tool arguments: ${e::class.simpleName}: ${e.message}")
+                            )
+                        }
+                }
             )
         }
 
@@ -78,16 +77,13 @@ public interface ToolCallDescriber {
          * @param message The tool result message containing the tool's ID, name, and content.
          * @return A User message with a JSON-encoded representation of the tool result.
          */
-        override fun describeToolResult(message: Message.Tool.Result): Message {
-            return User(
-                content = Json.encodeToString(
-                    buildJsonObject {
-                        message.id?.let { put("tool_call_id", JsonPrimitive(it)) }
-                        put("tool_name", JsonPrimitive(message.tool))
-                        put("tool_result", JsonPrimitive(message.content))
-                    }
-                ),
-                metaInfo = message.metaInfo
+        override fun describeToolResult(message: MessagePart.Tool.Result): String {
+            return Json.encodeToString(
+                buildJsonObject {
+                    message.id?.let { put("tool_call_id", JsonPrimitive(it)) }
+                    put("tool_name", JsonPrimitive(message.tool))
+                    put("tool_result", JsonPrimitive(message.output))
+                }
             )
         }
     }

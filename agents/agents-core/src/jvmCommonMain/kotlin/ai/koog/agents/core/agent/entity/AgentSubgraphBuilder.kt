@@ -1,15 +1,14 @@
-@file:OptIn(InternalAgentsApi::class)
+@file:OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
 
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.agent.OutputOption
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.utils.submitToMainDispatcher
 import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.ext.agent.subgraphWithVerification
@@ -17,6 +16,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.serialization.TypeToken
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.withContextReentrant
 import kotlin.random.Random
 
 /**
@@ -53,7 +54,7 @@ public open class AgentSubgraphBuilder<SubgraphBuilder : AgentSubgraphBuilder<Su
      * @param tools A list of tools to be used, each represented by its descriptor.
      * @return The current instance of [AgentSubgraphBuilder] for chaining further configurations.
      */
-    public fun limitedTools(tools: List<Tool<*, *>>): SubgraphBuilder = self().apply {
+    public fun limitedTools(tools: List<ToolBase<*, *>>): SubgraphBuilder = self().apply {
         toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor })
     }
 
@@ -486,7 +487,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
     inputClass: Class<Input>,
     outputOption: OutputOption<Output>,
     private val defineTask: ContextualAction<Input, String>,
-    private var runMode: ToolCalls = ToolCalls.SEQUENTIAL,
+    private var parallelTools: Boolean = false,
     private var assistantResponseRepeatMax: Int? = null,
 ) : TypedAIAgentSubgraphBuilderBase<Input, Output, SubgraphWithTaskBuilder<Input, Output>>(
     name,
@@ -499,8 +500,8 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
 ) {
     /**
      * Configures the run mode for*/
-    public fun runMode(runMode: ToolCalls): SubgraphWithTaskBuilder<Input, Output> = this.apply {
-        this.runMode = runMode
+    public fun parallelTools(parallelTools: Boolean): SubgraphWithTaskBuilder<Input, Output> = this.apply {
+        this.parallelTools = parallelTools
     }
 
     /**
@@ -527,12 +528,12 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
                 toolSelectionStrategy = toolSelectionStrategy,
                 llmModel = llmModel,
                 llmParams = llmParams,
-                runMode = runMode,
+                parallelTools = parallelTools,
                 assistantResponseRepeatMax = assistantResponseRepeatMax,
                 responseProcessor = responseProcessor,
             ) { input ->
                 val ctx = this
-                ctx.config.submitToMainDispatcher {
+                withContextReentrant(ctx.config.strategyDispatcher) {
                     defineTask.execute(input, ctx)
                 }
             }
@@ -548,12 +549,12 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
                 finishTool = outputOption.finishTool,
                 llmModel = llmModel,
                 llmParams = llmParams,
-                runMode = runMode,
+                parallelTools = parallelTools,
                 assistantResponseRepeatMax = assistantResponseRepeatMax,
                 responseProcessor = responseProcessor,
             ) { input ->
                 val ctx = this
-                ctx.config.submitToMainDispatcher {
+                withContextReentrant(ctx.config.strategyDispatcher) {
                     defineTask.execute(input, ctx)
                 }
             }
@@ -568,12 +569,12 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
                 toolSelectionStrategy = toolSelectionStrategy,
                 llmModel = llmModel,
                 llmParams = llmParams,
-                runMode = runMode,
+                parallelTools = parallelTools,
                 assistantResponseRepeatMax = assistantResponseRepeatMax,
                 responseProcessor = responseProcessor,
             ) { input ->
                 val ctx = this
-                ctx.config.submitToMainDispatcher {
+                withContextReentrant(ctx.config.strategyDispatcher) {
                     defineTask.execute(input, ctx)
                 }
             }

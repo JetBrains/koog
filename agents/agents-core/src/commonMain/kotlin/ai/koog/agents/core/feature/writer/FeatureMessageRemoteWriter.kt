@@ -5,7 +5,7 @@ import ai.koog.agents.core.feature.message.FeatureMessageProcessor
 import ai.koog.agents.core.feature.remote.server.FeatureMessageRemoteServer
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.ServerConnectionConfig
-import ai.koog.agents.core.utils.MutexCheck.withLockCheck
+import ai.koog.agents.lock.withLockCheck
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlin.jvm.JvmOverloads

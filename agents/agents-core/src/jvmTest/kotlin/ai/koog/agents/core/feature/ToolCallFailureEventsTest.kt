@@ -2,10 +2,12 @@ package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+import ai.koog.agents.core.dsl.extension.ToolCalls
+import ai.koog.agents.core.dsl.extension.nodeExecuteSingleTool
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
@@ -14,8 +16,7 @@ import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
@@ -33,7 +34,7 @@ class ToolCallFailureEventsTest {
     private data class RequiredArgs(val required: String)
 
     private class RequiredArgsTool : SimpleTool<RequiredArgs>(
-        argsSerializer = RequiredArgs.serializer(),
+        argsType = typeToken<RequiredArgs>(),
         name = "required_args",
         description = "Tool that requires a single argument.",
     ) {
@@ -41,7 +42,7 @@ class ToolCallFailureEventsTest {
     }
 
     private class BadResultTool : SimpleTool<RequiredArgs>(
-        argsSerializer = RequiredArgs.serializer(),
+        argsType = typeToken<RequiredArgs>(),
         name = "bad_result",
         description = "Tool that fails on result serialization.",
     ) {
@@ -57,7 +58,7 @@ class ToolCallFailureEventsTest {
     }
 
     private object ToolFailureCaptureFeature : AIAgentGraphFeature<ToolFailureCaptureConfig, Unit> {
-        override val key = AIAgentStorageKey<Unit>("tool_failure_capture")
+        override val key = createStorageKey<Unit>("tool_failure_capture")
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig,
@@ -77,15 +78,13 @@ class ToolCallFailureEventsTest {
     fun testInvalidJsonTriggersToolValidationFailedEvent() = runTest {
         var toolValidationFailed: ToolValidationFailedContext? = null
 
-        val strategy = strategy<Message.Tool.Call, ReceivedToolResult>("tool_failure_strategy") {
-            val executeTool by nodeExecuteTool()
+        val strategy = strategy<ToolCalls, ReceivedToolResults>("tool_failure_strategy") {
+            val executeTool by nodeExecuteTools()
             edge(nodeStart forwardTo executeTool)
             edge(executeTool forwardTo nodeFinish)
         }
 
         val agent = GraphAIAgent(
-            inputType = typeToken<Message.Tool.Call>(),
-            outputType = typeToken<ReceivedToolResult>(),
             promptExecutor = getMockExecutor(serializer) { },
             agentConfig = AIAgentConfig.withSystemPrompt("test"),
             strategy = strategy,
@@ -97,14 +96,13 @@ class ToolCallFailureEventsTest {
             }
         )
 
-        val toolCall = Message.Tool.Call(
+        val toolCall = MessagePart.Tool.Call(
             id = "1",
             tool = "required_args",
-            content = "not-json",
-            metaInfo = ResponseMetaInfo.Empty,
+            args = "not-json",
         )
 
-        agent.run(toolCall)
+        agent.run(ToolCalls(listOf(toolCall)))
         val capturedFailure = assertNotNull(toolValidationFailed)
         assertEquals("required_args", capturedFailure.toolName)
         assertTrue(capturedFailure.message.contains("Failed to parse tool arguments"))
@@ -114,15 +112,13 @@ class ToolCallFailureEventsTest {
     fun testMissingFieldTriggersToolCallFailedEvent() = runTest {
         var toolCallFailed: ToolCallFailedContext? = null
 
-        val strategy = strategy<Message.Tool.Call, ReceivedToolResult>("tool_failure_strategy") {
-            val executeTool by nodeExecuteTool()
+        val strategy = strategy<MessagePart.Tool.Call, ReceivedToolResult>("tool_failure_strategy") {
+            val executeTool by nodeExecuteSingleTool()
             edge(nodeStart forwardTo executeTool)
             edge(executeTool forwardTo nodeFinish)
         }
 
         val agent = GraphAIAgent(
-            inputType = typeToken<Message.Tool.Call>(),
-            outputType = typeToken<ReceivedToolResult>(),
             promptExecutor = getMockExecutor(serializer) { },
             agentConfig = AIAgentConfig.withSystemPrompt("test"),
             strategy = strategy,
@@ -134,11 +130,10 @@ class ToolCallFailureEventsTest {
             }
         )
 
-        val toolCall = Message.Tool.Call(
+        val toolCall = MessagePart.Tool.Call(
             id = "1",
             tool = "required_args",
-            content = "{}",
-            metaInfo = ResponseMetaInfo.Empty,
+            args = "{}",
         )
 
         agent.run(toolCall)
@@ -150,15 +145,13 @@ class ToolCallFailureEventsTest {
     fun testResultSerializationFailureTriggersToolCallFailedEvent() = runTest {
         var toolCallFailed: ToolCallFailedContext? = null
 
-        val strategy = strategy<Message.Tool.Call, ReceivedToolResult>("tool_failure_strategy") {
-            val executeTool by nodeExecuteTool()
+        val strategy = strategy<MessagePart.Tool.Call, ReceivedToolResult>("tool_failure_strategy") {
+            val executeTool by nodeExecuteSingleTool()
             edge(nodeStart forwardTo executeTool)
             edge(executeTool forwardTo nodeFinish)
         }
 
         val agent = GraphAIAgent(
-            inputType = typeToken<Message.Tool.Call>(),
-            outputType = typeToken<ReceivedToolResult>(),
             promptExecutor = getMockExecutor(serializer) { },
             agentConfig = AIAgentConfig.withSystemPrompt("test"),
             strategy = strategy,
@@ -170,11 +163,10 @@ class ToolCallFailureEventsTest {
             }
         )
 
-        val toolCall = Message.Tool.Call(
+        val toolCall = MessagePart.Tool.Call(
             id = "1",
             tool = "bad_result",
-            content = "{\"required\": \"value\"}",
-            metaInfo = ResponseMetaInfo.Empty,
+            args = "{\"required\": \"value\"}",
         )
 
         agent.run(toolCall)

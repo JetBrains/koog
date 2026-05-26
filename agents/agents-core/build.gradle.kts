@@ -2,8 +2,6 @@ import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 import org.gradle.kotlin.dsl.implementation
 import org.gradle.kotlin.dsl.project
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -51,6 +49,7 @@ kotlin {
                 implementation(project(":agents:agents-test"))
                 implementation(project(":test-utils"))
                 implementation(libs.kotest.assertions.json)
+                implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
             }
         }
 
@@ -65,6 +64,7 @@ kotlin {
             dependencies {
                 implementation(project(":integration-tests"))
                 implementation(project(":serialization:serialization-jackson"))
+                implementation(libs.mockk)
 
                 implementation(libs.ktor.client.cio)
             }

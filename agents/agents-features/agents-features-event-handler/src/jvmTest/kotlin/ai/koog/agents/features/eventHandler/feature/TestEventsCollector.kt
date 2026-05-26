@@ -32,7 +32,7 @@ class TestEventsCollector {
             someSuspendFunction()
             updateRunId(eventContext.runId)
             _collectedEvents.add(
-                "OnAgentCompleted (agent id: ${eventContext.agentId}, run id: ${eventContext.runId}, result: ${eventContext.result})"
+                "OnAgentCompleted (agent id: ${eventContext.agent.id}, run id: ${eventContext.runId}, result: ${eventContext.result})"
             )
         }
 
@@ -40,14 +40,14 @@ class TestEventsCollector {
             someSuspendFunction()
             updateRunId(eventContext.runId)
             _collectedEvents.add(
-                "OnAgentExecutionFailed (agent id: ${eventContext.agentId}, run id: ${eventContext.runId}, error: ${eventContext.throwable.message})"
+                "OnAgentExecutionFailed (agent id: ${eventContext.agent.id}, run id: ${eventContext.runId}, error: ${eventContext.error.message})"
             )
         }
 
         onAgentClosing { eventContext ->
             someSuspendFunction()
             _collectedEvents.add(
-                "OnAgentClosing (agent id: ${eventContext.agentId})"
+                "OnAgentClosing (agent id: ${eventContext.agent.id})"
             )
         }
 
@@ -55,7 +55,7 @@ class TestEventsCollector {
             someSuspendFunction()
             updateRunId(eventContext.context.runId)
             _collectedEvents.add(
-                "OnStrategyStarting (run id: ${eventContext.runId}, strategy: ${eventContext.strategy.name})"
+                "OnStrategyStarting (run id: ${eventContext.context.runId}, strategy: ${eventContext.strategy.name})"
             )
         }
 
@@ -87,7 +87,7 @@ class TestEventsCollector {
             someSuspendFunction()
             updateRunId(eventContext.context.runId)
             _collectedEvents.add(
-                "OnNodeExecutionFailed (run id: ${eventContext.context.runId}, node: ${eventContext.node.name}, input: ${eventContext.input}, error: ${eventContext.throwable.message})"
+                "OnNodeExecutionFailed (run id: ${eventContext.context.runId}, node: ${eventContext.node.name}, input: ${eventContext.input}, error: ${eventContext.error.message})"
             )
         }
 
@@ -111,7 +111,7 @@ class TestEventsCollector {
             someSuspendFunction()
             updateRunId(eventContext.context.runId)
             _collectedEvents.add(
-                "OnSubgraphExecutionFailed (run id: ${eventContext.context.runId}, subgraph: ${eventContext.subgraph.name}, input: ${eventContext.input}, error: ${eventContext.throwable.message})"
+                "OnSubgraphExecutionFailed (run id: ${eventContext.context.runId}, subgraph: ${eventContext.subgraph.name}, input: ${eventContext.input}, error: ${eventContext.error.message})"
             )
         }
 
@@ -135,7 +135,7 @@ class TestEventsCollector {
                     eventContext.tools.joinToString {
                         it.name
                     }
-                }], responses: [${eventContext.responses.joinToString { response -> response.traceString }}])"
+                }], responses: [${eventContext.response?.traceString}])"
             )
         }
 
@@ -159,7 +159,7 @@ class TestEventsCollector {
             someSuspendFunction()
             updateRunId(eventContext.runId)
             _collectedEvents.add(
-                "OnToolCallFailed (run id: ${eventContext.runId}, tool: ${eventContext.toolName}, args: ${eventContext.toolArgs}, throwable: ${eventContext.error?.message})"
+                "OnToolCallFailed (run id: ${eventContext.runId}, tool: ${eventContext.toolName}, args: ${eventContext.toolArgs}, error: ${eventContext.error?.message})"
             )
         }
 

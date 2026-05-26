@@ -2,17 +2,17 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 import kotlin.random.Random
 
 /**
  * A tool that provides a random number using the passed seed.
  */
 public class RandomNumberTool : Tool<RandomNumberTool.Args, Int>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Int.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Int>(),
     name = "random_number",
     description = "Generates a random number"
 ) {

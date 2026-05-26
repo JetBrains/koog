@@ -86,7 +86,7 @@ class Logging(val logger: Logger) {
             }
 
             pipeline.interceptLLMCallCompleted(this) { eventContext ->
-                logging.logger.info("After LLM call with response: ${eventContext.responses}")
+                logging.logger.info("After LLM call with response: ${eventContext.response}")
             }
 
             return logging

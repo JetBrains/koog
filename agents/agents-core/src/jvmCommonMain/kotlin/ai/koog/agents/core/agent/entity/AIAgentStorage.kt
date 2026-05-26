@@ -1,74 +1,56 @@
-@file:Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.annotations.JavaAPI
-import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.utils.runBlockingIfRequired
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.TypeToken
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.runBlockingReentrant
 
-/**
- * Represents a storage key used for identifying and accessing data associated with an AI agent.
- *
- * The generic type parameter [T] specifies the type of data associated with this key, ensuring
- * type safety when storing and retrieving data in the context of an AI agent.
- */
+@Suppress("MissingKDocForPublicAPI", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+@OptIn(InternalKoogUtils::class)
 public actual class AIAgentStorage internal actual constructor(
     internal actual val delegate: AIAgentStorageImpl,
 ) : AIAgentStorageAPI by delegate {
-    public actual constructor() : this(
-        delegate = AIAgentStorageImpl()
-    )
 
-    internal actual suspend fun copy(): AIAgentStorage {
-        return AIAgentStorage(delegate = delegate.copy())
-    }
+    public actual constructor(
+        serializer: JSONSerializer,
+    ) : this(
+        delegate = AIAgentStorageImpl(serializer)
+    )
 
     @JavaAPI
     @JvmName("set")
-    @OptIn(InternalAgentsApi::class)
-    public fun <T : Any> setBlocking(key: AIAgentStorageKey<T>, value: T): Unit = runBlockingIfRequired {
+    public fun <T : Any> setBlocking(key: AIAgentStorageKey<T>, value: T): Unit = runBlockingReentrant {
         set(key, value)
     }
 
     @JavaAPI
     @JvmName("get")
-    @OptIn(InternalAgentsApi::class)
-    public fun <T : Any> getBlocking(key: AIAgentStorageKey<T>): T? = runBlockingIfRequired {
+    public fun <T : Any> getBlocking(key: AIAgentStorageKey<T>): T? = runBlockingReentrant {
         get(key)
     }
 
     @JavaAPI
     @JvmName("getValue")
-    @OptIn(InternalAgentsApi::class)
-    public fun <T : Any> getValueBlocking(key: AIAgentStorageKey<T>): T = runBlockingIfRequired {
+    public fun <T : Any> getValueBlocking(key: AIAgentStorageKey<T>): T = runBlockingReentrant {
         getValue(key)
     }
 
     @JavaAPI
     @JvmName("remove")
-    @OptIn(InternalAgentsApi::class)
-    public fun <T : Any> removeBlocking(key: AIAgentStorageKey<T>): T? = runBlockingIfRequired {
+    public fun <T : Any> removeBlocking(key: AIAgentStorageKey<T>): T? = runBlockingReentrant {
         remove(key)
     }
 
     @JavaAPI
-    @JvmName("toMap")
-    @OptIn(InternalAgentsApi::class)
-    public fun toMapBlocking(): Map<AIAgentStorageKey<*>, Any> = runBlockingIfRequired {
-        toMap()
-    }
-
-    @JavaAPI
     @JvmName("putAll")
-    @OptIn(InternalAgentsApi::class)
-    public fun putAllBlocking(map: Map<AIAgentStorageKey<*>, Any>): Unit = runBlockingIfRequired {
+    public fun putAllBlocking(map: Map<AIAgentStorageKey<*>, Any>): Unit = runBlockingReentrant {
         putAll(map)
     }
 
     @JavaAPI
     @JvmName("clear")
-    @OptIn(InternalAgentsApi::class)
-    public fun clearBlocking(): Unit = runBlockingIfRequired {
+    public fun clearBlocking(): Unit = runBlockingReentrant {
         clear()
     }
 
@@ -77,10 +59,11 @@ public actual class AIAgentStorage internal actual constructor(
          * Creates a storage key for a specific type, allowing identification and retrieval of values associated with it.
          *
          * @param name The name of the storage key, used to uniquely identify it.
-         * @return A new instance of [AIAgentStorageKey] for the specified type.
+         * @param typeToken Type of the value stored under this key.
          */
         @JavaAPI
         @JvmStatic
-        public fun <T : Any> createStorageKey(name: String): AIAgentStorageKey<T> = AIAgentStorageKey(name)
+        public fun <T : Any> createStorageKey(name: String, typeToken: TypeToken): AIAgentStorageKey<T> =
+            AIAgentStorageKey(name, typeToken)
     }
 }

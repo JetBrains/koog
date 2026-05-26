@@ -36,8 +36,9 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.xml.xml
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import ai.koog.serialization.typeToken
@@ -85,8 +86,6 @@ private fun jokeWriterAgent(
     )
 
     return GraphAIAgent(
-        inputType = typeToken<A2AMessage>(),
-        outputType = typeToken<Unit>(),
         promptExecutor = promptExecutor,
         strategy = jokeWriterStrategy(),
         agentConfig = agentConfig,
@@ -159,7 +158,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
                     status = TaskStatus(
                         state = TaskState.Working,
                         message = userInput,
-                        timestamp = Clock.System.now(),
+                        timestamp = KoogClock.System.now(),
                     ),
                     final = false,
                 )
@@ -207,7 +206,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
                 status = TaskStatus(
                     state = TaskState.Submitted,
                     message = userInput,
-                    timestamp = Clock.System.now(),
+                    timestamp = KoogClock.System.now(),
                 ),
 
             )
@@ -261,7 +260,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
                         taskId = context.taskId,
                         contextId = context.contextId
                     ),
-                    timestamp = Clock.System.now(),
+                    timestamp = KoogClock.System.now(),
                 ),
                 final = true,
             )
@@ -279,7 +278,11 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
                 artifact = Artifact(
                     artifactId = "joke",
                     parts = listOf(
-                        TextPart(jokeMessage.content)
+                        TextPart(
+                            jokeMessage.parts
+                                .filterIsInstance<MessagePart.Text>()
+                                .joinToString("\n") { it.text }
+                        )
                     )
                 ),
             )
@@ -335,7 +338,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
     // After creating task, classify the joke details
     edge(
         createTask forwardTo classifyJokeRequest
-            transformed { agentInput<A2AMessage>().content() }
+            transformed { agentInput<A2AMessage>().content()  }
     )
 
     // Joke classification: Ask for clarification if needed

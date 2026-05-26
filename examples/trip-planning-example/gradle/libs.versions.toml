@@ -1,34 +1,28 @@
 [versions]
-kotlin = "2.3.10"
-ktor = "3.1.2"
 coroutines = "1.10.2"
-koog = "0.4.2-feat-1-3"
-logback = "1.5.13"
-oshai-logging = "7.0.7"
+koog = "0.8.0"
+kotlin = "2.3.21"
+kotlinx-datetime = "0.7.1"
+ktlint = "14.2.0"
+ktor = "3.4.2"
+logback = "1.5.32"
+oshai-logging = "8.0.01"
 
 [libraries]
+koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
-
-# Serialization
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json"}
-
-# Ktor
-ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
-ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
-
-# Koog (meta-dependency to get all core modules)
-koog-all = { module = "ai.koog:koog-agents", version.ref = "koog" }
-
-# Coroutines
-kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
-
-# Logging
+ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 oshai-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

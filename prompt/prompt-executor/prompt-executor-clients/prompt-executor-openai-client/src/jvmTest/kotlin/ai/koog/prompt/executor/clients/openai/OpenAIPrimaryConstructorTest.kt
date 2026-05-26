@@ -1,7 +1,7 @@
 package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.models.Item
 import ai.koog.prompt.executor.clients.openai.models.OpenAIInputStatus
@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIStreamEvent
 import ai.koog.prompt.executor.clients.openai.models.OpenAITextConfig
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.test.utils.CapturingKoogHttpClient
@@ -68,9 +69,9 @@ class OpenAIPrimaryConstructorTest {
             """{"role":"user","content":"Hello?"}""",
             transport.lastRequest.toString().substringAfter("\"messages\":[").substringBefore("]")
         )
-        assertEquals(1, responses.size)
-        val message = assertIs<Message.Assistant>(responses.single())
-        assertEquals("Hello from KoogHttpClient", message.content)
+        assertEquals(1, responses.parts.size)
+        val textPart = assertIs<MessagePart.Text>(responses.parts.single())
+        assertEquals("Hello from KoogHttpClient", textPart.text)
     }
 
     @Test
@@ -94,24 +95,27 @@ class OpenAIPrimaryConstructorTest {
                 path: String,
                 responseType: KClass<R>,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): R = error("GET is not expected in this test")
 
             override suspend fun <T : Any, R : Any> post(
                 path: String,
-                request: T,
+                requestBody: T,
                 requestBodyType: KClass<T>,
                 responseType: KClass<R>,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): R = error("POST is not expected in this test")
 
             override fun <T : Any, R : Any, O : Any> sse(
                 path: String,
-                request: T,
+                requestBody: T,
                 requestBodyType: KClass<T>,
                 dataFilter: (String?) -> Boolean,
                 decodeStreamingResponse: (String) -> R,
                 processStreamingChunk: (R) -> O?,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): Flow<O> {
                 assertEquals(responsesPath, path)
 
@@ -171,6 +175,14 @@ class OpenAIPrimaryConstructorTest {
                 }
             }
 
+            override fun <T : Any> lines(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<String> = error("lines is not expected in this test")
+
             override fun close(): Unit = Unit
         }
         val client = OpenAILLMClient(
@@ -195,7 +207,7 @@ class OpenAIPrimaryConstructorTest {
         assertEquals(
             StreamFrame.ReasoningComplete(
                 id = reasoningId,
-                text = listOf(reasoningContent),
+                content = listOf(reasoningContent),
                 summary = listOf(reasoningSummary),
                 encrypted = encryptedReasoning,
                 index = 0

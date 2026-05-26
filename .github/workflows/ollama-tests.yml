@@ -13,7 +13,7 @@ on:
     branches: [ "main", "develop" ]
 
 env:
-  OLLAMA_VERSION: "0.12.6"
+  OLLAMA_VERSION: "0.22.0"
 
 jobs:
   integration-tests:
@@ -104,18 +104,25 @@ jobs:
         run: |
           echo "=== Installing Ollama ==="
           curl -fsSL https://ollama.com/install.sh | sh
+          ollama --version
 
-          echo "=== Starting Ollama in background ==="
-          nohup ollama serve > /tmp/ollama.log 2>&1 &
-          OLLAMA_PID=$!
-          echo "OLLAMA_PID=$OLLAMA_PID" >> $GITHUB_ENV
-          echo "Ollama PID: $OLLAMA_PID"
+          if systemctl is-active --quiet ollama; then
+            echo "=== Ollama systemd service is active ==="
+            echo "OLLAMA_PID=" >> $GITHUB_ENV
+          else
+            echo "=== Starting Ollama in background ==="
+            nohup ollama serve > /tmp/ollama.log 2>&1 &
+            OLLAMA_PID=$!
+            echo "OLLAMA_PID=$OLLAMA_PID" >> $GITHUB_ENV
+            echo "Ollama PID: $OLLAMA_PID"
+          fi
 
           echo "=== Waiting for Ollama to be ready ==="
           timeout 10 bash -c 'until curl -s http://localhost:11434 > /dev/null 2>&1; do echo "Waiting..."; sleep 2; done'
 
           echo "=== Ollama started successfully ==="
           curl -s http://localhost:11434
+          curl -s http://localhost:11434/api/version
 
       - name: JvmOllamaTest with Gradle Wrapper
         env:
@@ -152,7 +159,10 @@ jobs:
         if: always()
         run: |
           echo "=== Stopping Ollama ==="
-          if [ -n "$OLLAMA_PID" ]; then
+          if systemctl is-active --quiet ollama; then
+            sudo systemctl stop ollama || true
+            echo "Ollama systemd service stopped"
+          elif [ -n "$OLLAMA_PID" ]; then
             kill $OLLAMA_PID || true
             echo "Ollama process $OLLAMA_PID stopped"
           else
@@ -161,6 +171,7 @@ jobs:
           fi
 
           echo "=== Ollama logs (last 50 lines) ==="
+          journalctl -u ollama --no-pager -n 50 || true
           tail -50 /tmp/ollama.log || echo "No Ollama logs found"
 
       - name: Collect reports

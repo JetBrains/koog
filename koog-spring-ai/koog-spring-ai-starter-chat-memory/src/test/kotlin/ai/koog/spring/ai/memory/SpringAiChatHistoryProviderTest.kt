@@ -1,12 +1,14 @@
 package ai.koog.spring.ai.memory
 
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonObject
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -45,13 +47,13 @@ class SpringAiChatHistoryProviderTest {
         assertEquals(3, loaded.size)
 
         val system = loaded[0] as Message.System
-        assertEquals("You are a helpful assistant.", system.content)
+        assertEquals("You are a helpful assistant.", system.parts.first().text)
 
         val user = loaded[1] as Message.User
-        assertEquals("Hello!", user.content)
+        assertEquals("Hello!", (user.parts.first() as MessagePart.Text).text)
 
         val assistant = loaded[2] as Message.Assistant
-        assertEquals("Hi there! How can I help you?", assistant.content)
+        assertEquals("Hi there! How can I help you?", (assistant.parts.first() as MessagePart.Text).text)
     }
 
     @Test
@@ -78,9 +80,9 @@ class SpringAiChatHistoryProviderTest {
         val loadedB = adapter.load("conv-b")
 
         assertEquals(1, loadedA.size)
-        assertEquals("Hello from A", loadedA[0].content)
+        assertEquals("Hello from A", (loadedA[0] as Message.User).parts.filterIsInstance<MessagePart.Text>().first().text)
         assertEquals(1, loadedB.size)
-        assertEquals("Hello from B", loadedB[0].content)
+        assertEquals("Hello from B", (loadedB[0] as Message.User).parts.filterIsInstance<MessagePart.Text>().first().text)
     }
 
     @Test
@@ -92,7 +94,7 @@ class SpringAiChatHistoryProviderTest {
 
         val loaded = adapter.load(conversationId)
         assertEquals(1, loaded.size)
-        assertEquals("Second", loaded[0].content)
+        assertEquals("Second", (loaded[0] as Message.User).parts.filterIsInstance<MessagePart.Text>().first().text)
     }
 
     // endregion
@@ -102,16 +104,12 @@ class SpringAiChatHistoryProviderTest {
     fun testToolCallMessageIsFilteredOnStore() = runTest {
         val messages = listOf(
             Message.User("Hello", RequestMetaInfo.Empty),
-            Message.Tool.Call(
-                id = "call-1",
-                tool = "getWeather",
-                content = """{"city":"London"}""",
+            Message.Assistant(
+                parts = listOf(MessagePart.Tool.Call(id = "call-1", tool = "getWeather", args = JsonObject(emptyMap()))),
                 metaInfo = ResponseMetaInfo.Empty
             ),
-            Message.Tool.Result(
-                id = "call-1",
-                tool = "getWeather",
-                content = """{"temp":15}""",
+            Message.User(
+                parts = listOf(MessagePart.Tool.Result(id = "call-1", tool = "getWeather", output = """{"temp":15}""")),
                 metaInfo = RequestMetaInfo.Empty
             ),
             Message.Assistant("The weather is 15°C.", ResponseMetaInfo.Empty)
@@ -121,16 +119,16 @@ class SpringAiChatHistoryProviderTest {
         val loaded = adapter.load("conv-tools")
 
         assertEquals(2, loaded.size)
-        assertEquals("Hello", loaded[0].content)
-        assertEquals("The weather is 15°C.", loaded[1].content)
+        assertEquals("Hello", (loaded[0] as Message.User).parts.filterIsInstance<MessagePart.Text>().first().text)
+        assertEquals("The weather is 15°C.", (loaded[1] as Message.Assistant).parts.filterIsInstance<MessagePart.Text>().first().text)
     }
 
     @Test
     fun testReasoningMessageIsFilteredOnStore() = runTest {
         val messages = listOf(
             Message.User("Explain quantum computing", RequestMetaInfo.Empty),
-            Message.Reasoning(
-                content = "Let me think step by step...",
+            Message.Assistant(
+                parts = listOf(MessagePart.Reasoning("Let me think step by step...")),
                 metaInfo = ResponseMetaInfo.Empty
             ),
             Message.Assistant("Quantum computing uses qubits.", ResponseMetaInfo.Empty)
@@ -140,8 +138,8 @@ class SpringAiChatHistoryProviderTest {
         val loaded = adapter.load("conv-reasoning")
 
         assertEquals(2, loaded.size)
-        assertEquals("Explain quantum computing", loaded[0].content)
-        assertEquals("Quantum computing uses qubits.", loaded[1].content)
+        assertEquals("Explain quantum computing", (loaded[0] as Message.User).parts.filterIsInstance<MessagePart.Text>().first().text)
+        assertEquals("Quantum computing uses qubits.", (loaded[1] as Message.Assistant).parts.filterIsInstance<MessagePart.Text>().first().text)
     }
 
     @Test
@@ -150,8 +148,8 @@ class SpringAiChatHistoryProviderTest {
         val messages = listOf(
             Message.User(
                 parts = listOf(
-                    ContentPart.Text("Look at this"),
-                    ContentPart.Image(content = imageContent, format = "png")
+                    MessagePart.Text("Look at this"),
+                    MessagePart.Attachment(AttachmentSource.Image(content = imageContent, format = "png"))
                 ),
                 metaInfo = RequestMetaInfo.Empty
             ),
@@ -162,15 +160,15 @@ class SpringAiChatHistoryProviderTest {
         val loaded = adapter.load("conv-attachments")
 
         assertEquals(1, loaded.size)
-        assertEquals("I see an image.", loaded[0].content)
+        assertEquals("I see an image.", (loaded[0] as Message.Assistant).parts.filterIsInstance<MessagePart.Text>().first().text)
     }
 
     @Test
     fun testAllNonPersistableMessagesFilteredLeavesOnlyTextMessages() = runTest {
         val messages = listOf(
-            Message.Tool.Call(id = "c1", tool = "t", content = "{}", metaInfo = ResponseMetaInfo.Empty),
-            Message.Tool.Result(id = "c1", tool = "t", content = "{}", metaInfo = RequestMetaInfo.Empty),
-            Message.Reasoning(content = "thinking", metaInfo = ResponseMetaInfo.Empty),
+            Message.Assistant(parts = listOf(MessagePart.Tool.Call(id = "c1", tool = "t", args = JsonObject(emptyMap()))), metaInfo = ResponseMetaInfo.Empty),
+            Message.User(parts = listOf(MessagePart.Tool.Result(id = "c1", tool = "t", output = "{}")), metaInfo = RequestMetaInfo.Empty),
+            Message.Assistant(parts = listOf(MessagePart.Reasoning("thinking")), metaInfo = ResponseMetaInfo.Empty),
         )
 
         adapter.store("conv-all-filtered", messages)

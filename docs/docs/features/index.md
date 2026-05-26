@@ -30,12 +30,6 @@ The Koog framework has the following features available out of the box:
 
     Store and retrieve chat message history between agent runs
 
--   :material-chip:{ .lg .middle } [Agent memory](agent-memory.md)
-
-    ---
-
-    Store, retrieve, and use arbitrary data during and between agent runs
-
 -   :material-database-clock:{ .lg .middle } [Long-term memory](long-term-memory.md)
 
     ---

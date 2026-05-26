@@ -1,11 +1,13 @@
 package ai.koog.agents.features.sql.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.test.utils.DockerAvailableCondition
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SortOrder
@@ -22,7 +24,6 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
@@ -74,7 +75,7 @@ class ExposedPersistenceFilterPostgresTest {
         val agentId = "agent-filter-1"
         val otherAgent = "agent-filter-2"
 
-        val baseTime = Clock.System.now()
+        val baseTime = KoogClock.System.now()
 
         val checkpoint1 = createTestCheckpoint("cp-a1", baseTime - 10.seconds, version = 0)
         val checkpoint2 = createTestCheckpoint("cp-a2", baseTime - 5.seconds, version = checkpoint1.version.plus(1))
@@ -108,7 +109,7 @@ class ExposedPersistenceFilterPostgresTest {
         p.migrate()
 
         val agentId = "agent-prefix-1"
-        val baseTime = Clock.System.now()
+        val baseTime = KoogClock.System.now()
 
         val checkpoint1 = createTestCheckpoint("order-001", baseTime - 2.seconds, version = 0)
         val checkpoint2 = createTestCheckpoint("order-002", baseTime - 1.seconds, version = checkpoint1.version.plus(1))
@@ -132,14 +133,16 @@ class ExposedPersistenceFilterPostgresTest {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = createdAt,
-            nodePath = "test-node",
-            lastOutput = JSONPrimitive("Test input"),
             messageHistory = listOf(
-                Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),
-                Message.User("Hello", RequestMetaInfo.create(Clock.System)),
-                Message.Assistant("Hi there!", ResponseMetaInfo.create(Clock.System))
+                Message.System("You are a test assistant", RequestMetaInfo.create(KoogClock.System)),
+                Message.User("Hello", RequestMetaInfo.create(KoogClock.System)),
+                Message.Assistant("Hi there!", ResponseMetaInfo.create(KoogClock.System))
             ),
-            version = version
+            version = version,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = "test-node",
+                lastOutput = JSONPrimitive("Test input"),
+            ),
         )
     }
 

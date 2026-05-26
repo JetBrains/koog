@@ -2,6 +2,7 @@ package ai.koog.agents.core.feature.message
 
 import ai.koog.utils.io.Closeable
 import kotlinx.coroutines.flow.StateFlow
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Represents a provider responsible for handling outbound feature messages or events.
@@ -57,6 +58,7 @@ public expect abstract class FeatureMessageProcessor() : Closeable {
     /**
      * Initializes the feature output stream provider to ensure it is ready for use.
      */
+    @JvmSynthetic
     public open suspend fun initialize()
 
     /**
@@ -74,6 +76,7 @@ public expect abstract class FeatureMessageProcessor() : Closeable {
      *
      * @param message The incoming feature message to be evaluated and potentially processed.
      */
+    @JvmSynthetic
     public suspend fun onMessage(message: FeatureMessage)
 
     /**

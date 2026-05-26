@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openai
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import io.kotest.matchers.shouldBe
@@ -19,6 +20,16 @@ class OpenAILLMClientTest {
                 LLMParams(),
                 OpenAIModels.Chat.GPT4o,
                 OpenAIChatParams::class,
+            ),
+            Arguments.of(
+                LLMParams(),
+                OpenAIModels.Chat.GPT5_5,
+                OpenAIChatParams::class,
+            ),
+            Arguments.of(
+                LLMParams(),
+                OpenAIModels.Chat.GPT5_5Pro,
+                OpenAIResponsesParams::class,
             ),
             Arguments.of(
                 OpenAIChatParams(),
@@ -44,7 +55,7 @@ class OpenAILLMClientTest {
         model: LLModel,
         expectedClass: KClass<out OpenAIChatParams>
     ) {
-        val client = OpenAILLMClient("dummy-key")
+        val client = OpenAILLMClient(apiKey = "dummy-key", httpClientFactory = KtorKoogHttpClient.Factory())
         val result = client.determineParams(
             params = inputParams,
             model = model,

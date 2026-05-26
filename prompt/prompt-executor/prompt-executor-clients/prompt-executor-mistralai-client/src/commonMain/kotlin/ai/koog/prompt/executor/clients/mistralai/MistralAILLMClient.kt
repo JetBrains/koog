@@ -1,10 +1,10 @@
 package ai.koog.prompt.executor.clients.mistralai
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
@@ -32,17 +32,17 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 
 /**
  * Represents the settings for configuring a Mistral AI client.
@@ -68,13 +68,13 @@ public class MistralAIClientSettings(
  *
  * @param settings The base URL, chat completion path, and timeouts for the Mistral AI
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
- *   to create a Ktor-backed client configured with an API key.
+ *   that accepts an API key and a [KoogHttpClient.Factory] to create a client with standard defaults.
  * @param clock Clock instance used for tracking response metadata timestamps
  */
 public open class MistralAILLMClient @JvmOverloads constructor(
     private val settings: MistralAIClientSettings = MistralAIClientSettings(),
     httpClient: KoogHttpClient,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<MistralAIChatCompletionResponse, MistralAIChatCompletionStreamResponse>(
     settings = settings,
@@ -88,12 +88,17 @@ public open class MistralAILLMClient @JvmOverloads constructor(
     public constructor(
         apiKey: String,
         settings: MistralAIClientSettings = MistralAIClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        httpClientFactory: KoogHttpClient.Factory,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,
-        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = MISTRALAI_CLIENT_NAME),
+        httpClient = AbstractOpenAILLMClient.createConfiguredHttpClient(
+            apiKey = apiKey,
+            settings = settings,
+            httpClientFactory = httpClientFactory,
+            clientName = MISTRALAI_CLIENT_NAME
+        ),
         clock = clock,
         toolsConverter = toolsConverter
     )
@@ -149,7 +154,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         return json.encodeToString(MistralAIChatCompletionRequestSerializer, request)
     }
 
-    override fun processProviderChatResponse(response: MistralAIChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: MistralAIChatCompletionResponse): List<Message.Assistant> {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
         val usageInfo = OpenAIUsage(
             promptTokens = response.usage.promptTokens,
@@ -157,7 +162,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
             totalTokens = response.usage.totalTokens,
         )
         return response.choices.map {
-            it.message.toMessageResponses(
+            it.message.toMessageResponse(
                 it.finishReason,
                 createMetaInfo(usageInfo),
             )
@@ -238,7 +243,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         val mistralAIResponse = try {
             httpClient.post(
                 path = settings.embeddingsPath,
-                request = request,
+                requestBody = request,
                 requestBodyType = MistralAIEmbeddingRequest::class,
                 responseType = MistralAIEmbeddingResponse::class
             )
@@ -274,10 +279,10 @@ public open class MistralAILLMClient @JvmOverloads constructor(
 
         val input = prompt.messages
             .map { message ->
-                require(!message.hasAttachments()) {
+                require(!message.parts.any { it !is MessagePart.Text }) {
                     "Only text input is supported for MistralAI moderation"
                 }
-                message.toMessageContent(model)
+                message.parts.filterIsInstance<MessagePart.Text>().toMessageContent(model)
             }
             .let { contents ->
                 when {
@@ -303,7 +308,7 @@ public open class MistralAILLMClient @JvmOverloads constructor(
         val response = try {
             httpClient.post(
                 path = settings.moderationPath,
-                request = request,
+                requestBody = request,
                 requestBodyType = MistralAIModerationRequest::class,
                 responseType = MistralAIModerationResponse::class
             )

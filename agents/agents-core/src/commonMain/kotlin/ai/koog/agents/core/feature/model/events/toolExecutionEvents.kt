@@ -4,9 +4,8 @@ import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
-import ai.koog.serialization.JSONPrimitive
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
-import kotlin.time.Clock
 
 /**
  * Represents an event triggered when a tool is called within the system.
@@ -32,35 +31,8 @@ public data class ToolCallStartingEvent(
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: JSONObject,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("ToolCallStartingEvent(executionInfo, runId, toolCallId, toolName, toolArgs, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        toolCallId: String?,
-        toolName: String,
-        toolArgs: JSONObject,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = ToolCallStartingEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = ToolCallStartingEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        toolCallId = toolCallId,
-        toolName = toolName,
-        toolArgs = toolArgs,
-        timestamp = timestamp
-    )
-}
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
+) : DefinedFeatureEvent()
 
 /**
  * Represents an event indicating that a tool encountered a validation error during its execution.
@@ -89,38 +61,8 @@ public data class ToolValidationFailedEvent(
     val toolDescription: String?,
     val message: String?,
     val error: AIAgentError,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("ToolValidationFailedEvent(executionInfo, runId, toolCallId, toolName, toolArgs, message, error, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        toolCallId: String?,
-        toolName: String,
-        toolArgs: JSONObject,
-        error: String,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = ToolValidationFailedEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = ToolValidationFailedEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        toolCallId = toolCallId,
-        toolName = toolName,
-        toolArgs = toolArgs,
-        toolDescription = null,
-        message = error,
-        error = AIAgentError(error, "", null)
-    )
-}
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
+) : DefinedFeatureEvent()
 
 /**
  * Captures an event where a tool call has failed during its execution.
@@ -149,38 +91,8 @@ public data class ToolCallFailedEvent(
     val toolArgs: JSONObject,
     val toolDescription: String?,
     val error: AIAgentError?,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("ToolCallFailedEvent(executionInfo, runId, toolCallId, toolName, toolArgs, error, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        toolCallId: String?,
-        toolName: String,
-        toolArgs: JSONObject,
-        error: AIAgentError,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = ToolCallFailedEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = ToolCallFailedEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        toolCallId = toolCallId,
-        toolName = toolName,
-        toolArgs = toolArgs,
-        toolDescription = null,
-        error = error,
-        timestamp = timestamp
-    )
-}
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
+) : DefinedFeatureEvent()
 
 /**
  * Represents an event that contains the results of a tool invocation.
@@ -209,63 +121,5 @@ public data class ToolCallCompletedEvent(
     val toolArgs: JSONObject,
     val toolDescription: String?,
     val result: JSONElement?,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("ToolCallCompletedEvent(executionInfo, runId, toolCallId, toolName, toolArgs, result, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        toolCallId: String?,
-        toolName: String,
-        toolArgs: JSONObject,
-        result: String?,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = ToolCallCompletedEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = ToolCallCompletedEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        toolCallId = toolCallId,
-        toolName = toolName,
-        toolArgs = toolArgs,
-        toolDescription = null,
-        result = JSONPrimitive(result),
-        timestamp = timestamp
-    )
-}
-
-//region Deprecated
-
-@Deprecated(
-    message = "Use ToolCallStartingEvent instead",
-    replaceWith = ReplaceWith("ToolCallStartingEvent")
-)
-public typealias ToolCallEvent = ToolCallStartingEvent
-
-@Deprecated(
-    message = "Use ToolValidationFailedEvent instead",
-    replaceWith = ReplaceWith("ToolValidationFailedEvent")
-)
-public typealias ToolValidationErrorEvent = ToolValidationFailedEvent
-
-@Deprecated(
-    message = "Use ToolCallFailedEvent instead",
-    replaceWith = ReplaceWith("ToolCallFailedEvent")
-)
-public typealias ToolCallFailureEvent = ToolCallFailedEvent
-
-@Deprecated(
-    message = "Use ToolCallCompletedEvent instead",
-    replaceWith = ReplaceWith("ToolCallCompletedEvent")
-)
-public typealias ToolCallResultEvent = ToolCallCompletedEvent
-
-//endregion Deprecated
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
+) : DefinedFeatureEvent()

@@ -6,7 +6,7 @@ import ai.koog.a2a.model.TaskArtifactUpdateEvent
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.server.exceptions.TaskOperationException
-import ai.koog.a2a.utils.RWLock
+import ai.koog.agents.lock.RWLock
 import kotlinx.serialization.json.JsonObject
 
 /**

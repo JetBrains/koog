@@ -1,7 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -14,7 +12,6 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-core"))
                 api(project(":prompt:prompt-markdown"))
-                api(project(":rag:rag-base"))
 
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.client.content.negotiation)
@@ -34,6 +31,7 @@ kotlin {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
                 implementation(project(":serialization:serialization-jackson"))
+                implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(libs.mockk)
                 implementation(libs.ktor.client.cio)
             }

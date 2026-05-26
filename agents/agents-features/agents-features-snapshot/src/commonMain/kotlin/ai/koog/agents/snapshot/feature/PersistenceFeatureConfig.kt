@@ -1,18 +1,8 @@
 package ai.koog.agents.snapshot.feature
 
-import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
-
-@Deprecated(
-    "`PersistencyFeatureConfig` has been renamed to `PersistenceFeatureConfig`",
-    replaceWith = ReplaceWith(
-        expression = "PersistenceFeatureConfig",
-        "ai.koog.agents.snapshot.feature.PersistenceFeatureConfig"
-    )
-)
-public typealias PersistencyFeatureConfig = PersistenceFeatureConfig
 
 /**
  * Configuration class for the Snapshot feature.
@@ -40,11 +30,6 @@ public class PersistenceFeatureConfig : FeatureConfig() {
      * or `false` to disable it.
      */
     public var enableAutomaticPersistence: Boolean = true
-
-    @Deprecated(
-        message = "rollbackStrategy is deprecated. Use ChatMemory feature is you want to preserve only message history."
-    )
-    public var rollbackStrategy: RollbackStrategy = RollbackStrategy.Default
 
     /**
      * Registry for rollback tools used when rolling back to checkpoints.

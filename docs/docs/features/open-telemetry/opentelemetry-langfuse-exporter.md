@@ -33,6 +33,7 @@ Install the **OpenTelemetry feature** and call [`addLangfuseExporter()`](api:age
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+    import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import kotlinx.coroutines.runBlocking
@@ -63,6 +64,7 @@ Install the **OpenTelemetry feature** and call [`addLangfuseExporter()`](api:age
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
+    import ai.koog.agents.features.opentelemetry.integration.langfuse.LangfuseKt;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     public class exampleLangfuseExporterJava01 {
@@ -80,7 +82,7 @@ Install the **OpenTelemetry feature** and call [`addLangfuseExporter()`](api:age
             .llmModel(OpenAIModels.Chat.GPT4oMini)
             .systemPrompt("You are a code assistant. Provide concise code examples.")
             .install(OpenTelemetry.Feature, config ->
-                config.addLangfuseExporter()
+                LangfuseKt.addLangfuseExporter(config)
             )
             .build();
 
@@ -118,6 +120,7 @@ Common attributes to include:
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+    import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import kotlinx.coroutines.runBlocking
@@ -154,51 +157,8 @@ Common attributes to include:
 
 === "Java"
 
-    <!--- INCLUDE
-    import ai.koog.agents.core.agent.AIAgent;
-    import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute;
-    import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
-    import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-    import ai.koog.prompt.executor.model.PromptExecutor;
-    import java.util.List;
-    import java.util.UUID;
-    public class exampleLangfuseExporterJava02 {
-        static PromptExecutor promptExecutor = PromptExecutor.builder()
-            .openAI("openai-api-key")
-            .build();
-    -->
-    <!--- SUFFIX
-    }
-    -->
-    ```java
-    public static void main(String[] args) {
-        var sessionId = UUID.randomUUID().toString();
-
-        var agent = AIAgent.builder()
-            .promptExecutor(promptExecutor)
-            .systemPrompt("You are a helpful assistant.")
-            .llmModel(OpenAIModels.Chat.GPT4oMini)
-            .install(OpenTelemetry.Feature, config ->
-                config.addLangfuseExporter(
-                    null,           // Langfuse host (falls back to LANGFUSE_HOST)
-                    null,           // Public key (falls back to LANGFUSE_PUBLIC_KEY)
-                    null,           // Secret key (falls back to LANGFUSE_SECRET_KEY)
-                    null,           // Timeout (uses default)
-                    List.of(
-                        new CustomAttribute("langfuse.session.id", sessionId),
-                        new CustomAttribute("langfuse.trace.tags", List.of("chat", "java", "production"))
-                    )
-                ))
-            .build();
-
-        System.out.println("Running agent with Langfuse tracing");
-
-        // Multiple runs with the same session ID will be grouped in Langfuse
-        agent.run("How to setup Langfuse integration in Koog agent?");
-        agent.run("Show me a Java API example");
-    }
-    ```
-    <!--- KNIT exampleLangfuseExporterJava02.java -->
+    !!! note
+        Setting `traceAttributes` from Java is currently not supported because the underlying Kotlin function carries a [`kotlin.time.Duration`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.time/-duration/) parameter (a value class) that causes JVM-name mangling on all overloads including parameters after it. Use the Kotlin example above when you need `traceAttributes`.
 
 ## What gets traced
 

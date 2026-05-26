@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import io.modelcontextprotocol.kotlin.sdk.types.Tool
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
@@ -13,7 +14,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -384,8 +384,6 @@ class DefaultMcpToolDescriptorParserTest {
         }
     }
 
-    // Ignore until https://github.com/JetBrains/koog/issues/307 is fixed
-    @Ignore
     @Test
     fun `test parsing enum parameter type with complex values`() {
         // Create an SDK Tool with an enum parameter that has complex values (JsonArray)
@@ -432,6 +430,127 @@ class DefaultMcpToolDescriptorParserTest {
         assertEquals("option1", enumType.entries[0])
         assertEquals("[\"nested1\",\"nested2\"]", enumType.entries[1])
         assertEquals("{\"key\":\"value\"}", enumType.entries[2])
+    }
+
+    @Test
+    fun `test parsing enum parameter with mixed primitive types`() {
+        // Covers the JSON Schema example from issue #307:
+        //   { "color": { "enum": ["red", "amber", "green", null, 42] } }
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with mixed enum values",
+            properties = buildJsonObject {
+                putJsonObject("color") {
+                    putJsonArray("enum") {
+                        add("red")
+                        add("amber")
+                        add("green")
+                        add(JsonNull)
+                        add(42)
+                    }
+                }
+            },
+            required = listOf("color")
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val param = toolDescriptor.requiredParameters.single()
+        val enumType = param.type as ToolParameterType.Enum
+
+        assertEquals(
+            listOf("red", "amber", "green", "null", "42"),
+            enumType.entries.toList()
+        )
+    }
+
+    @Test
+    fun `test parsing enum parameter with boolean values`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with boolean enum",
+            properties = buildJsonObject {
+                putJsonObject("flag") {
+                    putJsonArray("enum") {
+                        add(true)
+                        add(false)
+                    }
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val enumType = toolDescriptor.optionalParameters.single().type as ToolParameterType.Enum
+        assertEquals(listOf("true", "false"), enumType.entries.toList())
+    }
+
+    @Test
+    fun `test parsing object parameter with empty additionalProperties schema`() {
+        // Covers issue #1676: `"additionalProperties": {}` must not throw.
+        // An empty schema is equivalent to `true` — any additional property is allowed
+        // without a type constraint.
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool",
+            properties = buildJsonObject {
+                putJsonObject("payload") {
+                    put("type", "object")
+                    putJsonObject("properties") {
+                        putJsonObject("id") {
+                            put("type", "string")
+                        }
+                    }
+                    putJsonObject("additionalProperties") { }
+                }
+            },
+            required = listOf("payload")
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val param = toolDescriptor.requiredParameters.single()
+        val objType = param.type as ToolParameterType.Object
+        assertEquals(true, objType.additionalProperties)
+        assertEquals(null, objType.additionalPropertiesType)
+    }
+
+    @Test
+    fun `test parsing object parameter with additionalProperties true`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool",
+            properties = buildJsonObject {
+                putJsonObject("payload") {
+                    put("type", "object")
+                    put("additionalProperties", true)
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val objType = toolDescriptor.optionalParameters.single().type as ToolParameterType.Object
+        assertEquals(true, objType.additionalProperties)
+        assertEquals(null, objType.additionalPropertiesType)
+    }
+
+    @Test
+    fun `test parsing object parameter with additionalProperties false`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool",
+            properties = buildJsonObject {
+                putJsonObject("payload") {
+                    put("type", "object")
+                    put("additionalProperties", false)
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val objType = toolDescriptor.optionalParameters.single().type as ToolParameterType.Object
+        assertEquals(false, objType.additionalProperties)
+        assertEquals(null, objType.additionalPropertiesType)
     }
 
     @Test
@@ -826,19 +945,312 @@ class DefaultMcpToolDescriptorParserTest {
         assertEquals(expectedToolDescriptor, toolDescriptor)
     }
 
+    // ====== Type-array tests ======
+
+    @Test
+    fun `test parsing type array with nullable integer`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool",
+            properties = buildJsonObject {
+                putJsonObject("count") {
+                    putJsonArray("type") {
+                        add("integer")
+                        add("null")
+                    }
+                    put("description", "Nullable count")
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val param = toolDescriptor.optionalParameters.single()
+        assertEquals("count", param.name)
+        assertTrue(param.type is ToolParameterType.AnyOf)
+        val anyOf = param.type as ToolParameterType.AnyOf
+        assertEquals(2, anyOf.types.size)
+        assertEquals(ToolParameterType.Null, anyOf.types[0].type)
+        assertEquals(ToolParameterType.Integer, anyOf.types[1].type)
+    }
+
+    @Test
+    fun `test parsing type array with nullable string`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool",
+            properties = buildJsonObject {
+                putJsonObject("label") {
+                    putJsonArray("type") {
+                        add("string")
+                        add("null")
+                    }
+                    put("description", "Nullable label")
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val param = toolDescriptor.optionalParameters.single()
+        val anyOf = param.type as ToolParameterType.AnyOf
+        assertEquals(ToolParameterType.Null, anyOf.types[0].type)
+        assertEquals(ToolParameterType.String, anyOf.types[1].type)
+    }
+
+    @Test
+    fun `test parsing single element type array`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool",
+            properties = buildJsonObject {
+                putJsonObject("name") {
+                    putJsonArray("type") {
+                        add("string")
+                    }
+                    put("description", "A name")
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val param = toolDescriptor.optionalParameters.single()
+        // Single-element array without "null" should not be wrapped in AnyOf
+        assertEquals(ToolParameterType.String, param.type)
+    }
+
+    @Test
+    fun `test parsing type array with null only`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool",
+            properties = buildJsonObject {
+                putJsonObject("nothing") {
+                    putJsonArray("type") {
+                        add("null")
+                    }
+                    put("description", "Always null")
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val param = toolDescriptor.optionalParameters.single()
+        assertEquals(ToolParameterType.Null, param.type)
+    }
+
+    // ====== $ref/$defs tests ======
+
+    @Test
+    fun `test parsing ref defs simple resolution`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with ${'$'}ref",
+            properties = buildJsonObject {
+                putJsonObject("address") {
+                    put("\$ref", "#/\$defs/Address")
+                }
+            },
+            required = listOf("address"),
+            defs = buildJsonObject {
+                putJsonObject("Address") {
+                    put("type", "object")
+                    putJsonObject("properties") {
+                        putJsonObject("street") {
+                            put("type", "string")
+                            put("description", "Street name")
+                        }
+                        putJsonObject("city") {
+                            put("type", "string")
+                            put("description", "City name")
+                        }
+                    }
+                    putJsonArray("required") {
+                        add("street")
+                        add("city")
+                    }
+                }
+            }
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        assertEquals(1, toolDescriptor.requiredParameters.size)
+        val param = toolDescriptor.requiredParameters.single()
+        assertEquals("address", param.name)
+        assertTrue(param.type is ToolParameterType.Object)
+        val objType = param.type as ToolParameterType.Object
+        assertEquals(2, objType.properties.size)
+        assertEquals("street", objType.properties[0].name)
+        assertEquals("city", objType.properties[1].name)
+        assertEquals(listOf("street", "city"), objType.requiredProperties)
+    }
+
+    @Test
+    fun `test parsing ref defs with enum type`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with enum ref",
+            properties = buildJsonObject {
+                putJsonObject("region") {
+                    put("\$ref", "#/\$defs/Region")
+                    put("description", "Search region")
+                }
+            },
+            required = listOf("region"),
+            defs = buildJsonObject {
+                putJsonObject("Region") {
+                    put("type", "enum")
+                    putJsonArray("enum") {
+                        add("us")
+                        add("eu")
+                        add("asia")
+                    }
+                }
+            }
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val param = toolDescriptor.requiredParameters.single()
+        assertTrue(param.type is ToolParameterType.Enum)
+        val enumType = param.type as ToolParameterType.Enum
+        assertEquals(listOf("us", "eu", "asia"), enumType.entries.toList())
+    }
+
+    @Test
+    fun `test parsing ref defs nested resolution`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with nested refs",
+            properties = buildJsonObject {
+                putJsonObject("person") {
+                    put("\$ref", "#/\$defs/Person")
+                }
+            },
+            required = listOf("person"),
+            defs = buildJsonObject {
+                putJsonObject("Person") {
+                    put("type", "object")
+                    putJsonObject("properties") {
+                        putJsonObject("name") {
+                            put("type", "string")
+                            put("description", "Person name")
+                        }
+                        putJsonObject("address") {
+                            put("\$ref", "#/\$defs/Address")
+                        }
+                    }
+                }
+                putJsonObject("Address") {
+                    put("type", "object")
+                    putJsonObject("properties") {
+                        putJsonObject("city") {
+                            put("type", "string")
+                            put("description", "City")
+                        }
+                    }
+                }
+            }
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val person = toolDescriptor.requiredParameters.single()
+        val personObj = person.type as ToolParameterType.Object
+        assertEquals(2, personObj.properties.size)
+        val addressProp = personObj.properties[1]
+        assertEquals("address", addressProp.name)
+        assertTrue(addressProp.type is ToolParameterType.Object)
+        val addressObj = addressProp.type as ToolParameterType.Object
+        assertEquals("city", addressObj.properties.single().name)
+    }
+
+    @Test
+    fun `test parsing ref defs cycle detection`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "Circular ref test",
+            properties = buildJsonObject {
+                putJsonObject("node") {
+                    put("\$ref", "#/\$defs/Node")
+                }
+            },
+            required = emptyList(),
+            defs = buildJsonObject {
+                // Node references itself — should hit MAX_DEPTH
+                putJsonObject("Node") {
+                    put("type", "object")
+                    putJsonObject("properties") {
+                        putJsonObject("child") {
+                            put("\$ref", "#/\$defs/Node")
+                        }
+                    }
+                }
+            }
+        )
+
+        assertFailsWith<IllegalArgumentException>("Should fail on circular ref") {
+            parser.parse(sdkTool)
+        }
+    }
+
+    @Test
+    fun `test parsing ref with definitions key`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "Legacy definitions test",
+            properties = buildJsonObject {
+                putJsonObject("item") {
+                    put("\$ref", "#/definitions/Item")
+                }
+            },
+            required = listOf("item"),
+            defs = buildJsonObject {
+                putJsonObject("Item") {
+                    put("type", "string")
+                }
+            }
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+        val param = toolDescriptor.requiredParameters.single()
+        assertEquals(ToolParameterType.String, param.type)
+    }
+
+    @Test
+    fun `test parsing ref with missing definition throws`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "Missing def test",
+            properties = buildJsonObject {
+                putJsonObject("item") {
+                    put("\$ref", "#/\$defs/NonExistent")
+                }
+            },
+            required = emptyList(),
+            defs = buildJsonObject { }
+        )
+
+        assertFailsWith<IllegalArgumentException>("Should fail on missing definition") {
+            parser.parse(sdkTool)
+        }
+    }
+
     // Helper function to create an SDK Tool for testing
     private fun createSdkTool(
         name: String,
         description: String,
         properties: JsonObject,
-        required: List<String>
+        required: List<String>,
+        defs: JsonObject? = null,
     ): Tool {
         return Tool(
             name = name,
             description = description,
             inputSchema = ToolSchema(
                 properties = properties,
-                required = required
+                required = required,
+                defs = defs,
             ),
             outputSchema = null,
             annotations = null,

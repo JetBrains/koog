@@ -1,14 +1,15 @@
 package ai.koog.prompt.message
 
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 import kotlin.time.Instant
 
-public typealias LLMChoice = List<Message.Response>
+/** A list of [Message.Assistant] responses representing multiple completion choices from the LLM. */
+public typealias LLMChoice = List<Message.Assistant>
 
 /**
  * Represents a message exchanged in a chat with LLM. Messages can be categorized
@@ -19,17 +20,9 @@ public typealias LLMChoice = List<Message.Response>
 @Serializable
 public sealed interface Message {
     /**
-     * The textual content of the message aggregated from all [ContentPart.Text] parts joined to [String] separated by newlines.
+     * The unique identifier of the message.
      */
-    public val content: String
-        get() = parts.filterIsInstance<ContentPart.Text>().joinToString(separator = "\n") { it.text }
-
-    /**
-     * The content parts of the message. By default, if the message is a single text message,
-     * it will contain a single [ContentPart.Text] part. If the message contains multiple parts,
-     * it will contain an ordered list of [ContentPart.Text] and [ContentPart.Attachment] instances.
-     */
-    public val parts: List<ContentPart>
+    public val id: String?
 
     /**
      * The role associated with the message.
@@ -37,43 +30,193 @@ public sealed interface Message {
     public val role: Role
 
     /**
+     * The list of message parts: text, reasoning, tool calls and results
+     */
+    public val parts: List<MessagePart>
+
+    /**
+     * Extracts and concatenates the textual content from all `MessagePart.Text` elements in the message.
+     *
+     * @param separator The delimiter used to join the text content of the parts. Default is "\n".
+     * @return A single string with the concatenated text content of all `MessagePart.Text` elements,
+     *         separated by the specified delimiter.
+     */
+    public fun textContent(
+        separator: String,
+    ): String = parts.filterIsInstance<MessagePart.Text>().joinToString(separator = separator) { it.text }
+
+    /**
+     * Extracts and concatenates the textual content from all `MessagePart.Text` elements in the message.
+     * Messages are joined by a newline character ("\n").
+     *
+     * @return A single string with the concatenated text content of all `MessagePart.Text` elements,
+     *         separated by a newline character.
+     */
+    public fun textContent(): String = textContent(separator = "\n")
+
+    /**
      * Stores metadata information for the current message instance, such as token count and timestamp.
      */
     public val metaInfo: MessageMetaInfo
 
     /**
-     * Checks weather the message consists of attachments.
-     */
-    public fun hasAttachments(): Boolean = parts.any { it is ContentPart.Attachment }
-
-    /**
-     * Checks weather the message consists of only single text content.
-     */
-    public fun hasOnlyTextContent(): Boolean = parts.singleOrNull() is ContentPart.Text
-
-    /**
-     * Represents a request message in the chat.
+     * A system-role message used to set the behaviour or persona of the assistant.
+     * Only [MessagePart.Text] parts are supported.
+     *
+     * @property parts The text parts that make up the system prompt.
+     * @property metaInfo Request metadata such as timestamp.
+     * @property id Optional unique identifier for the message.
      */
     @Serializable
-    public sealed interface Request : Message {
-        override val metaInfo: RequestMetaInfo
-    }
-
-    /**
-     * Represents a response message in the chat.
-     */
-    @Serializable
-    public sealed interface Response : Message {
-        override val metaInfo: ResponseMetaInfo
+    public data class System @JvmOverloads constructor(
+        override val parts: List<MessagePart.Text>,
+        override val metaInfo: RequestMetaInfo,
+        override val id: String? = null,
+    ) : Message {
+        override val role: Role = Role.System
 
         /**
-         * Creates a copy of the current Response instance with updated metadata.
+         * Convenience constructor that wraps a single [MessagePart.Text] in a list.
          */
-        public fun copy(updatedMetaInfo: ResponseMetaInfo): Response
+        @JvmOverloads
+        public constructor(
+            part: MessagePart.Text,
+            metaInfo: RequestMetaInfo,
+            id: String? = null,
+        ) : this(
+            listOf(part),
+            metaInfo,
+            id,
+        )
+
+        /**
+         * Convenience constructor that creates a [MessagePart.Text] from a raw string.
+         *
+         * @param content The plain-text content of the system message.
+         * @param cache Optional cache-control directive for the message part.
+         */
+        @JvmOverloads
+        public constructor(
+            content: String,
+            metaInfo: RequestMetaInfo,
+            cache: CacheControl? = null,
+            id: String? = null,
+        ) : this(
+            MessagePart.Text(content, cache),
+            metaInfo,
+            id,
+        )
     }
 
     /**
-     * Defines the role of the message in the chat (e.g., system, user, assistant, tool).
+     * A user-role message sent to the LLM. May contain text, attachments, or tool results.
+     *
+     * @property parts The request parts (text, attachments, or tool results) of the message.
+     * @property metaInfo Request metadata such as timestamp.
+     * @property id Optional unique identifier for the message.
+     */
+    @Serializable
+    public data class User @JvmOverloads constructor(
+        override val parts: List<MessagePart.RequestPart>,
+        override val metaInfo: RequestMetaInfo,
+        override val id: String? = null,
+    ) : Message {
+        override val role: Role = Role.User
+
+        /**
+         * Convenience constructor that wraps a single [MessagePart.RequestPart] in a list.
+         */
+        @JvmOverloads
+        public constructor(
+            part: MessagePart.RequestPart,
+            metaInfo: RequestMetaInfo,
+            id: String? = null,
+        ) : this(
+            listOf(part),
+            metaInfo,
+            id
+        )
+
+        /**
+         * Convenience constructor that creates a [MessagePart.Text] from a raw string.
+         *
+         * @param content The plain-text content of the user message.
+         * @param cache Optional cache-control directive for the message part.
+         */
+        @JvmOverloads
+        public constructor(
+            content: String,
+            metaInfo: RequestMetaInfo,
+            cache: CacheControl? = null,
+            id: String? = null,
+        ) : this(
+            MessagePart.Text(content, cache),
+            metaInfo,
+            id,
+        )
+    }
+
+    /**
+     * An assistant-role message returned by the LLM. May contain text, reasoning, and/or tool calls.
+     *
+     * @property parts The response parts (text, reasoning, tool calls) produced by the LLM.
+     * @property metaInfo Response metadata including token counts and timestamp.
+     * @property finishReason The reason the LLM stopped generating (e.g. `"stop"`, `"tool_calls"`), or null if unknown.
+     * @property rawResponse The raw JSON response body from the provider, or null if not captured.
+     * @property id Optional unique identifier for the message.
+     */
+    @Serializable
+    public data class Assistant @JvmOverloads constructor(
+        override val parts: List<MessagePart.ResponsePart>,
+        override val metaInfo: ResponseMetaInfo,
+        public val finishReason: String? = null,
+        // TODO: replace with JSONObject?
+        public val rawResponse: JsonObject? = null,
+        override val id: String? = null,
+    ) : Message {
+        override val role: Role = Role.Assistant
+
+        /**
+         * Convenience constructor that wraps a single [MessagePart.ResponsePart] in a list.
+         */
+        @JvmOverloads
+        public constructor(
+            part: MessagePart.ResponsePart,
+            metaInfo: ResponseMetaInfo,
+            finishReason: String? = null,
+            rawResponse: JsonObject? = null,
+            id: String? = null,
+        ) : this(
+            listOf(part),
+            metaInfo,
+            finishReason,
+            rawResponse,
+            id
+        )
+
+        /**
+         * Convenience constructor that creates a [MessagePart.Text] from a raw string.
+         *
+         * @param content The plain-text content of the assistant message.
+         */
+        @JvmOverloads
+        public constructor(
+            content: String,
+            metaInfo: ResponseMetaInfo,
+            finishReason: String? = null,
+            rawResponse: JsonObject? = null,
+            id: String? = null,
+        ) : this(
+            MessagePart.Text(content),
+            metaInfo,
+            finishReason,
+            rawResponse,
+            id
+        )
+    }
+
+    /**
+     * Defines the role of the message in the chat (e.g., system, user, assistant).
      */
     @Serializable
     public enum class Role {
@@ -91,140 +234,104 @@ public sealed interface Message {
          * Role for messages generated by an assistant (e.g., an AI assistant).
          */
         Assistant,
+    }
+}
 
-        /**
-         * Role for reasoning messages generated by an assistant (e.g., an AI assistant).
-         */
-        Reasoning,
+/**
+ * A discrete piece of content within a [Message]. Parts are typed by their direction and purpose:
+ * [RequestPart] parts go to the LLM, [ResponsePart] parts come from the LLM, and [ContentPart]
+ * parts (text, attachments) are valid in both directions.
+ */
+@Serializable
+public sealed interface MessagePart {
 
-        /**
-         * Role for messages related to tools (e.g., tool usage or tool results).
-         */
-        Tool
+    /**
+     * A part that can appear in a request sent to the LLM.
+     * All request parts carry an optional [cacheControl] directive.
+     */
+    @Serializable
+    public sealed interface RequestPart : MessagePart {
+        /** Optional cache-control directive for the provider's prompt-caching feature. */
+        public val cacheControl: CacheControl?
     }
 
     /**
-     * Represents a message sent by the user as a request.
-     *
-     * @property parts The parts of the user's message.
-     * @property metaInfo Metadata associated with the request, including timestamp information. Defaults to a new [RequestMetaInfo].
-     * @property role The role of the message, which is fixed as [Role.User] for this implementation.
-     * @property cacheControl The cache strategy for this message.
+     * A part that can appear in a response received from the LLM
+     * (e.g. text, reasoning, or tool calls).
      */
     @Serializable
-    public data class User @JvmOverloads constructor(
-        override val parts: List<ContentPart>,
-        override val metaInfo: RequestMetaInfo,
-        val cacheControl: CacheControl? = null,
-    ) : Request {
-        override val role: Role = Role.User
-
-        /**
-         * Single content part user message constructor
-         */
-        @JvmOverloads
-        public constructor(part: ContentPart, metaInfo: RequestMetaInfo, cacheControl: CacheControl? = null) :
-            this(listOf(part), metaInfo, cacheControl)
-
-        /**
-         * Text content user message constructor
-         */
-        @JvmOverloads
-        public constructor(content: String, metaInfo: RequestMetaInfo, cacheControl: CacheControl? = null) :
-            this(ContentPart.Text(content), metaInfo, cacheControl)
-    }
+    public sealed interface ResponsePart : MessagePart
 
     /**
-     * Represents a message generated by the assistant as a response.
-     *
-     * @property parts The parts of the assistant's response.
-     * @property metaInfo Metadata related to the response, including token counts and timestamp.
-     * @property finishReason An optional explanation for why the assistant's response was finalized.
-     * Defaults to null if not provided.
-     * @property role The role associated with the response, which is fixed as `Role.Assistant`.
-     * @property cacheControl The cache strategy for this message.
+     * Represents a part of a message that can be used in both request and response contexts.
+     * Parts can be text [MessagePart.Text] or attachments [MessagePart.Attachment].
      */
     @Serializable
-    public data class Assistant @JvmOverloads constructor(
-        override val parts: List<ContentPart>,
-        override val metaInfo: ResponseMetaInfo,
-        val finishReason: String? = null,
-        val cacheControl: CacheControl? = null,
-    ) : Response {
-        override val role: Role = Role.Assistant
+    public sealed interface ContentPart : RequestPart, ResponsePart
 
-        /**
-         * Single content part assistant message constructor
-         */
-        @JvmOverloads
-        public constructor(part: ContentPart, metaInfo: ResponseMetaInfo, finishReason: String? = null, cacheControl: CacheControl? = null) :
-            this(listOf(part), metaInfo, finishReason, cacheControl)
+    /**
+     * Text content part of the message.
+     *
+     * @property text The text content.
+     */
+    @Serializable
+    public data class Text @JvmOverloads constructor(
+        public val text: String,
+        override val cacheControl: CacheControl? = null,
+    ) : ContentPart
 
-        /**
-         * Text content assistant message constructor
-         */
-        @JvmOverloads
-        public constructor(content: String, metaInfo: ResponseMetaInfo, finishReason: String? = null, cacheControl: CacheControl? = null) :
-            this(ContentPart.Text(content), metaInfo, finishReason, cacheControl)
-
-        override fun copy(updatedMetaInfo: ResponseMetaInfo): Assistant = this.copy(metaInfo = updatedMetaInfo)
-    }
+    /**
+     * Attachment content part of the message.
+     *
+     * @property source The attachment source.
+     */
+    @Serializable
+    public data class Attachment @JvmOverloads constructor(
+        public val source: AttachmentSource,
+        override val cacheControl: CacheControl? = null,
+    ) : ContentPart
 
     /**
      * Represents a reasoning message exchanged in a chat system, encapsulating the content,
      * role, and associated metadata, with an optional reference to the original thinking process.
      *
      * @property id An optional identifier for the reasoning process.
+     * @property content The content of the reasoning message.
+     * @property summary An optional summary of the reasoning process.
      * @property encrypted The encrypted content of the reasoning message.
-     * @property parts The parts of the reasoning message. Only the [ContentPart.Text] part is allowed.
-     * @property summary An optional summary of the reasoning process. Only the [ContentPart.Text] part is allowed.
-     * @property content The content of the message as a string.
-     * @property role The [Role] of the message, indicating its source or function in the chat (e.g., assistant, user).
-     *                Defaults to [Role.Assistant].
-     * @property metaInfo Metadata associated with the reasoning, captured as a [ResponseMetaInfo] instance.
-     *                    Provides details such as token usage and timestamps.
      */
     @Serializable
-    public data class Reasoning(
-        public val id: String? = null,
+    public data class Reasoning @JvmOverloads constructor(
+        public val content: List<String>,
+        public val summary: List<String>? = null,
         public val encrypted: String? = null,
-        override val parts: List<ContentPart.Text>,
-        public val summary: List<ContentPart.Text>? = null,
-        override val metaInfo: ResponseMetaInfo
-    ) : Response {
+        public val id: String? = null,
+    ) : ResponsePart {
 
         /**
-         * Single content part reasoning message constructor
+         * Convenience constructor for a single reasoning string.
+         *
+         * @param content The reasoning text, wrapped in a single-element list.
          */
+        @JvmOverloads
         public constructor(
-            id: String? = null,
-            encrypted: String? = null,
-            summary: String? = null,
             content: String,
-            metaInfo: ResponseMetaInfo
+            summary: List<String>? = null,
+            encrypted: String? = null,
+            id: String? = null,
         ) : this(
-            id = id,
-            encrypted = encrypted,
-            parts = listOf(ContentPart.Text(content)),
-            summary = summary?.let { listOf(ContentPart.Text(it)) },
-            metaInfo = metaInfo
+            listOf(content),
+            summary,
+            encrypted,
+            id,
         )
-
-        override val role: Role = Role.Reasoning
-
-        override fun copy(updatedMetaInfo: ResponseMetaInfo): Reasoning = this.copy(metaInfo = updatedMetaInfo)
     }
 
     /**
      * Represents messages exchanged with tools, either as calls or results.
      */
     @Serializable
-    public sealed interface Tool : Message {
-        /**
-         * The unique identifier of the tool call.
-         */
-        public val id: String?
-
+    public sealed interface Tool : MessagePart {
         /**
          * The name of the tool used.
          */
@@ -235,47 +342,36 @@ public sealed interface Message {
          *
          * @property id The unique identifier of the tool call.
          * @property tool The name of the tool being called.
-         * @property parts The parts of the tool call. Only the [ContentPart.Text] part is allowed.
-         * @property metaInfo Metadata related to the response, including token counts and timestamp.
+         * @property args The JSON-encoded arguments for the tool call.
          */
         @Serializable
-        public data class Call(
-            override val id: String?,
+        public data class Call @JvmOverloads constructor(
+            public val id: String? = null,
             override val tool: String,
-            override val parts: List<ContentPart.Text>,
-            override val metaInfo: ResponseMetaInfo
-        ) : Tool, Response {
-            override val role: Role = Role.Tool
+            public val args: String,
+        ) : Tool, ResponsePart {
 
-            /**
-             * Single content part tool call message constructor
-             */
-            public constructor(id: String?, tool: String, part: ContentPart.Text, metaInfo: ResponseMetaInfo) :
-                this(id, tool, listOf(part), metaInfo)
-
-            /**
-             * Text content tool call message constructor
-             */
-            public constructor(id: String?, tool: String, content: String, metaInfo: ResponseMetaInfo) :
-                this(id, tool, ContentPart.Text(content), metaInfo)
-
-            /**
-             * Lazily parses and caches the result of parsing [content] as a JSON object.
-             */
-            // TODO remove?
-            val contentJsonResult: kotlin.Result<JsonObject> by lazy {
-                runCatching { Json.parseToJsonElement(content).jsonObject }
+            // TODO: replace with JSONObject?
+            /** Lazily parsed [JsonObject] view of [args]. */
+            val argsJson: JsonObject by lazy {
+                Json.parseToJsonElement(args).jsonObject
             }
 
             /**
-             * Lazily parses the content of the tool call as a JSON object.
-             * Can throw an exception when parsing fails.
+             * Convenience constructor that accepts a [JsonObject] and serialises it to [args].
+             *
+             * @param args The tool arguments as a [JsonObject].
              */
-            // TODO make it JSONObject instead?
-            val contentJson: JsonObject
-                get() = contentJsonResult.getOrThrow()
-
-            override fun copy(updatedMetaInfo: ResponseMetaInfo): Call = this.copy(metaInfo = updatedMetaInfo)
+            @JvmOverloads
+            public constructor(
+                id: String? = null,
+                tool: String,
+                args: JsonObject,
+            ) : this(
+                id = id,
+                tool = tool,
+                args = Json.encodeToString(args)
+            )
         }
 
         /**
@@ -283,66 +379,19 @@ public sealed interface Message {
          *
          * @property id The unique identifier of the tool result.
          * @property tool The name of the tool that provided the result.
-         * @property parts The parts of the tool result. Only the [ContentPart.Text] part is allowed.
-         * @property metaInfo Metadata associated with the request, including timestamp information. Defaults to a new [RequestMetaInfo].
+         * @property output The output of the tool.
          * @property isError Whether this tool result represents an error. Defaults to false.
-         * @property cacheControl The cache strategy for this message.
          */
         @Serializable
-        public data class Result(
-            override val id: String?,
+        public data class Result @JvmOverloads constructor(
+            public val id: String? = null,
             override val tool: String,
-            override val parts: List<ContentPart.Text>,
-            override val metaInfo: RequestMetaInfo,
-            val isError: Boolean = false,
-            val cacheControl: CacheControl? = null,
-        ) : Tool, Request {
-
-            /**
-             * Single content part tool result message constructor
-             */
-            public constructor(id: String?, tool: String, part: ContentPart.Text, metaInfo: RequestMetaInfo, isError: Boolean = false, cacheControl: CacheControl? = null) :
-                this(id, tool, listOf(part), metaInfo, isError, cacheControl)
-
-            /**
-             * Text content tool result message constructor
-             */
-            public constructor(id: String?, tool: String, content: String, metaInfo: RequestMetaInfo, isError: Boolean = false, cacheControl: CacheControl? = null) :
-                this(id, tool, ContentPart.Text(content), metaInfo, isError, cacheControl)
-
-            override val role: Role = Role.Tool
+            public val output: String,
+            public val isError: Boolean = false,
+        ) : Tool, RequestPart {
+            // Tool result does not support cache control
+            override val cacheControl: CacheControl? = null
         }
-    }
-
-    /**
-     * Represents a system-generated message.
-     *
-     * @property parts The parts of the system message.
-     * @property metaInfo Metadata associated with the request, including timestamp information. Defaults to a new [RequestMetaInfo].
-     * @property cacheControl The cache strategy for this message.
-     *
-     */
-    @Serializable
-    public data class System @JvmOverloads constructor(
-        override val parts: List<ContentPart.Text>,
-        override val metaInfo: RequestMetaInfo,
-        val cacheControl: CacheControl? = null
-    ) : Request {
-        override val role: Role = Role.System
-
-        /**
-         * Single content part system message constructor
-         */
-        @JvmOverloads
-        public constructor(part: ContentPart.Text, metaInfo: RequestMetaInfo, cacheControl: CacheControl? = null) :
-            this(listOf(part), metaInfo, cacheControl)
-
-        /**
-         * Text content system message constructor
-         */
-        @JvmOverloads
-        public constructor(content: String, metaInfo: RequestMetaInfo, cacheControl: CacheControl? = null) :
-            this(ContentPart.Text(content), metaInfo, cacheControl)
     }
 }
 
@@ -366,6 +415,7 @@ public sealed interface MessageMetaInfo {
      * Free-form information associated with a message.
      * Can be used to store custom metadata that doesn't fit into the standard fields.
      */
+    // TODO: replace with JSONObject?
     public val metadata: JsonObject?
 }
 
@@ -393,7 +443,7 @@ public data class RequestMetaInfo @JvmOverloads constructor(
          * @param clock The clock to use for generating the timestamp.
          * @return A new RequestMetadata instance with the timestamp from the provided clock.
          */
-        public fun create(clock: Clock): RequestMetaInfo = RequestMetaInfo(clock.now())
+        public fun create(clock: KoogClock): RequestMetaInfo = RequestMetaInfo(clock.now())
 
         /**
          * An empty instance of [RequestMetaInfo] with the timestamp set to a distant past.
@@ -418,9 +468,12 @@ public data class RequestMetaInfo @JvmOverloads constructor(
  * @property totalTokensCount The total number of tokens involved in the response, including both input and output tokens, or null if not available.
  * @property inputTokensCount The number of tokens used in the input, or null if not available.
  * @property outputTokensCount The number of tokens generated in the output, or null if not available.
- * @property additionalInfo Additional metadata as a map of string keys to string values.
- *                          This can be used to store custom metadata that doesn't fit into the standard fields.
+ * @property metadata Additional metadata as a JSON object.
+ *                    This can be used to store custom metadata that doesn't fit into the standard fields.
  * @property timestamp The timestamp indicating when the response was created.
+ * @property modelId The ID of the model used for generating the response, or null if not available.
+ * @property metadata Additional metadata associated with the response, or null if not available.
+ *
  * Defaults to the current system time if not explicitly set.
  */
 @Serializable
@@ -429,11 +482,7 @@ public data class ResponseMetaInfo @JvmOverloads constructor(
     public val totalTokensCount: Int? = null,
     public val inputTokensCount: Int? = null,
     public val outputTokensCount: Int? = null,
-    @Deprecated(
-        "additionalInfo is deprecated, use metadata instead",
-        ReplaceWith("metadata")
-    )
-    public val additionalInfo: Map<String, String> = emptyMap(),
+    public val modelId: String? = null,
     override val metadata: JsonObject? = null,
 ) : MessageMetaInfo {
     /**
@@ -448,27 +497,26 @@ public data class ResponseMetaInfo @JvmOverloads constructor(
          * @param totalTokensCount The total number of tokens involved in the response, including both input and output tokens.
          * @param inputTokensCount The number of tokens used in the input.
          * @param outputTokensCount The number of tokens generated in the output.
-         * @param additionalInfo Deprecated: use [metadata] instead. Additional metadata as a map of string keys to string values.
+         * @param modelId The ID of the model used for generating the response, or null if not available.
          * @param metadata Additional metadata as a JSON object.
          * @return A new ResponseMetadata instance with the timestamp from the provided clock.
          */
         @JvmOverloads
         public fun create(
-            clock: Clock,
+            clock: KoogClock,
             totalTokensCount: Int? = null,
             inputTokensCount: Int? = null,
             outputTokensCount: Int? = null,
-            additionalInfo: Map<String, String> = emptyMap(),
+            modelId: String? = null,
             metadata: JsonObject? = null,
-        ): ResponseMetaInfo =
-            ResponseMetaInfo(
-                clock.now(),
-                totalTokensCount,
-                inputTokensCount,
-                outputTokensCount,
-                additionalInfo,
-                metadata
-            )
+        ): ResponseMetaInfo = ResponseMetaInfo(
+            clock.now(),
+            totalTokensCount,
+            inputTokensCount,
+            outputTokensCount,
+            modelId,
+            metadata
+        )
 
         /**
          * An empty instance of the [ResponseMetaInfo] with the timestamp set to a distant past.

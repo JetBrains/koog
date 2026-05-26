@@ -8,8 +8,6 @@ import ai.koog.rag.base.TextDocument
  * @property content The main textual content to be embedded and searched
  * @property id Unique identifier for the record
  * @property metadata Flexible key-value metadata for filtering and custom fields.
- *   Values must be primitive types (String, Number, or Boolean) when used with
- *   Spring AI vector store backends.
  */
 public data class MemoryRecord(
     /**

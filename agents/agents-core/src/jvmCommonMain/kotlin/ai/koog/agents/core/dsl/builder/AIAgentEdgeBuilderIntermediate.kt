@@ -1,5 +1,4 @@
 @file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-@file:OptIn(InternalAgentsApi::class)
 
 package ai.koog.agents.core.dsl.builder
 
@@ -8,7 +7,8 @@ import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.utils.Option
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.withContextReentrant
 
 /**
  * Represents an intermediate stage in the construction of a directed edge between two nodes
@@ -27,6 +27,7 @@ import ai.koog.agents.core.utils.runOnStrategyDispatcher
  * the originating node's output into an intermediate representation
  * or filtering the flow based on specific conditions.
  */
+@OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
 @EdgeTransformationDslMarker
 public actual class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> internal actual constructor(
     fromNode: AIAgentNodeBase<*, IncomingOutput>,
@@ -48,7 +49,7 @@ public actual class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateO
     @JavaAPI
     @EdgeTransformationDslMarker
     @JvmName("onCondition")
-    public fun javaNonSuspendOnCondition(
+    public fun onConditionBlocking(
         block: ContextualCondition<IntermediateOutput>
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> {
         return AIAgentEdgeBuilderIntermediate(
@@ -56,7 +57,7 @@ public actual class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateO
             toNode = toNode,
             forwardOutputComposition = { ctx, output ->
                 with(forwardOutputComposition(ctx, output)) {
-                    ctx.config.runOnStrategyDispatcher {
+                    withContextReentrant(ctx.config.strategyDispatcher) {
                         filter { transOutput ->
                             block.invoke(transOutput, ctx)
                         }
@@ -77,10 +78,10 @@ public actual class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateO
     @JavaAPI
     @EdgeTransformationDslMarker
     @JvmName("onCondition")
-    public fun javaNonSuspendOnCondition(
+    public fun onConditionBlocking(
         block: SimpleCondition<IntermediateOutput>
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> =
-        javaNonSuspendOnCondition { output, ctx ->
+        onConditionBlocking { output, ctx ->
             block.invoke(output)
         }
 
@@ -93,7 +94,7 @@ public actual class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateO
      */
     @EdgeTransformationDslMarker
     @JvmName("transformed")
-    public infix fun <NewIntermediateOutput> javaNonSuspendTransformed(
+    public infix fun <NewIntermediateOutput> transformedBlocking(
         block: ContextualTransformation<IntermediateOutput, NewIntermediateOutput>
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, NewIntermediateOutput, OutgoingInput> {
         return AIAgentEdgeBuilderIntermediate(
@@ -101,7 +102,7 @@ public actual class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateO
             toNode = toNode,
             forwardOutputComposition = { ctx, output ->
                 with(forwardOutputComposition(ctx, output)) {
-                    ctx.config.runOnStrategyDispatcher {
+                    withContextReentrant(ctx.config.strategyDispatcher) {
                         map { block.invoke(it, ctx) }
                     }
                 }
@@ -118,10 +119,10 @@ public actual class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateO
      */
     @EdgeTransformationDslMarker
     @JvmName("transformed")
-    public infix fun <NewIntermediateOutput> javaNonSuspendTransformed(
+    public infix fun <NewIntermediateOutput> transformedBlocking(
         block: SimpleTransformation<IntermediateOutput, NewIntermediateOutput>
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, NewIntermediateOutput, OutgoingInput> =
-        javaNonSuspendTransformed { output, ctx ->
+        transformedBlocking { output, ctx ->
             block.invoke(output)
         }
 }

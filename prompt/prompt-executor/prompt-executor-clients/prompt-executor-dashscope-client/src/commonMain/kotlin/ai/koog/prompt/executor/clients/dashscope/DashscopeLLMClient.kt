@@ -1,8 +1,8 @@
 package ai.koog.prompt.executor.clients.dashscope
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionRequest
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionRequestSerializer
@@ -21,11 +21,10 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 
 /**
  * Configuration settings for connecting to the DashScope API using OpenAI-compatible endpoints.
@@ -48,13 +47,13 @@ public class DashscopeClientSettings(
  * @param settings The base URL, chat completion path, and timeouts for the DashScope API,
  * defaults to "https://dashscope-intl.aliyuncs.com/compatible-mode/v1" and 900s
  * @param httpClient A fully configured [KoogHttpClient] for making API requests. Use the secondary constructor
- *   to create a Ktor-backed client configured with an API key.
+ *   that accepts an API key and a [KoogHttpClient.Factory] to create a client with standard defaults.
  * @param clock Clock instance used for tracking response metadata timestamps
  */
 public class DashscopeLLMClient @JvmOverloads constructor(
     private val settings: DashscopeClientSettings = DashscopeClientSettings(),
     httpClient: KoogHttpClient,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DashscopeChatCompletionResponse, DashscopeChatCompletionStreamResponse>(
     settings = settings,
@@ -68,12 +67,12 @@ public class DashscopeLLMClient @JvmOverloads constructor(
     public constructor(
         apiKey: String,
         settings: DashscopeClientSettings = DashscopeClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System,
+        httpClientFactory: KoogHttpClient.Factory,
+        clock: KoogClock = KoogClock.System,
         toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
     ) : this(
         settings = settings,
-        httpClient = createConfiguredHttpClient(apiKey, settings, staticLogger, baseClient, clientName = DASHSCOPE_CLIENT_NAME),
+        httpClient = createConfiguredHttpClient(apiKey, settings, httpClientFactory, clientName = DASHSCOPE_CLIENT_NAME),
         clock = clock,
         toolsConverter = toolsConverter
     )
@@ -121,10 +120,10 @@ public class DashscopeLLMClient @JvmOverloads constructor(
         return json.encodeToString(DashscopeChatCompletionRequestSerializer, request)
     }
 
-    override fun processProviderChatResponse(response: DashscopeChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: DashscopeChatCompletionResponse): LLMChoice {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
         return response.choices.map {
-            it.message.toMessageResponses(
+            it.message.toMessageResponse(
                 it.finishReason,
                 createMetaInfo(response.usage),
             )

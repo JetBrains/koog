@@ -11,23 +11,25 @@ import ai.koog.rag.base.storage.search.Score
 import ai.koog.rag.base.storage.search.ScoreMetric
 import ai.koog.rag.base.storage.search.SearchRequest
 import ai.koog.rag.base.storage.search.SearchResult
+import ai.koog.rag.base.storage.search.SimilaritySearchRequest
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * In-memory implementation of [SearchStorage]
- * and [WriteStorage] that stores records in a map.
+ * In-memory implementation of [SearchStorage], [WriteStorage], [LookupStorage],
+ * and [DeletionStorage] that stores records in a map.
  *
  * This implementation is useful for testing, development, and scenarios where persistence
  * is not required. All data is stored in memory and will be lost when the application stops.
  *
  * ## Limitations:
  * - Data is not persisted and will be lost on application restart
- * - Both [ai.koog.rag.base.storage.search.KeywordSearchRequest] and
- *   [ai.koog.rag.base.storage.search.SimilaritySearchRequest] are accepted, but both are
- *   implemented as simple case-insensitive substring matching; no vector embeddings are used
+ * - [ai.koog.rag.base.storage.search.KeywordSearchRequest] is implemented as a simple
+ *   case-insensitive substring match.
+ * - [ai.koog.rag.base.storage.search.SimilaritySearchRequest] is implemented as a Jaccard
+ *   coefficient over case-insensitive word sets; no vector embeddings are used.
  * - Filter expressions are ignored
  *
  * @param defaultNamespace The default namespace to use when none is specified in method calls.
@@ -89,7 +91,17 @@ public open class InMemoryRecordStorage(
                 namespace
             )
 
-            else -> throw UnsupportedOperationException("InMemoryRecordStorage supports only KeywordSearchRequest.")
+            is SimilaritySearchRequest -> searchBySimilarity(
+                request.queryText,
+                request.limit,
+                request.offset,
+                request.minScore ?: 0.0,
+                namespace
+            )
+
+            else -> throw UnsupportedOperationException(
+                "InMemoryRecordStorage supports only KeywordSearchRequest and SimilaritySearchRequest."
+            )
         }
     }
 
@@ -126,6 +138,30 @@ public open class InMemoryRecordStorage(
             .filter { it.content.lowercase().contains(queryLower) }
             .map { record -> SearchResult(record, Score(1.0, ScoreMetric.COSINE_SIMILARITY)) }
             .filter { it.score.value >= similarityThreshold }
+            .take(limit)
+    }
+
+    private suspend fun searchBySimilarity(
+        query: String,
+        limit: Int,
+        offset: Int,
+        minScore: Double,
+        namespace: String?
+    ): List<SearchResult<TextDocument>> {
+        val allRecords = mutex.withLock { getRecordsForNamespace(namespace).values.toList() }
+        val queryWords = query.lowercase().split(Regex("\\W+")).filter { it.isNotEmpty() }.toSet()
+
+        return allRecords
+            .map { record ->
+                val docWords = record.content.lowercase().split(Regex("\\W+")).filter { it.isNotEmpty() }.toSet()
+                val intersection = queryWords.intersect(docWords).size.toDouble()
+                val union = (queryWords + docWords).size.toDouble()
+                val score = if (union == 0.0) 0.0 else intersection / union
+                SearchResult(record, Score(score, ScoreMetric.COSINE_SIMILARITY))
+            }
+            .filter { it.score.value > 0.0 && it.score.value >= minScore }
+            .sortedByDescending { it.score.value }
+            .drop(offset)
             .take(limit)
     }
 

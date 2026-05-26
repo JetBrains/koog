@@ -4,12 +4,13 @@ import ai.koog.agents.features.sql.providers.H2PersistenceStorageProvider
 import ai.koog.agents.features.sql.providers.MySQLPersistenceStorageProvider
 import ai.koog.agents.features.sql.providers.PostgresPersistenceStorageProvider
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.GraphCheckpointProperties
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONPrimitive
 import kotlinx.coroutines.runBlocking
-import kotlin.time.Clock
-import kotlinx.serialization.json.JsonPrimitive
+import ai.koog.utils.time.KoogClock
 import org.jetbrains.exposed.sql.Database
 
 /**
@@ -169,15 +170,17 @@ object SQLPersistentAgentExample {
     private fun createSampleCheckpoint(checkpointId: String, version: Long): AgentCheckpointData {
         return AgentCheckpointData(
             checkpointId = checkpointId,
-            createdAt = Clock.System.now(),
-            nodePath = "example-node",
-            lastInput = JsonPrimitive("Sample input for $checkpointId"),
+            createdAt = KoogClock.System.now(),
             messageHistory = listOf(
-                Message.System("You are a helpful assistant", RequestMetaInfo.create(Clock.System)),
-                Message.User("Hello, agent!", RequestMetaInfo.create(Clock.System)),
-                Message.Assistant("Hello! How can I help you today?", ResponseMetaInfo.create(Clock.System))
+                Message.System("You are a helpful assistant", RequestMetaInfo.create(KoogClock.System)),
+                Message.User("Hello, agent!", RequestMetaInfo.create(KoogClock.System)),
+                Message.Assistant("Hello! How can I help you today?", ResponseMetaInfo.create(KoogClock.System))
             ),
-            version = version
+            version = version,
+            graphProperties = GraphCheckpointProperties(
+                nodePath = "example-node",
+                lastOutput = JSONPrimitive("Sample input for $checkpointId"),
+            ),
         )
     }
 }

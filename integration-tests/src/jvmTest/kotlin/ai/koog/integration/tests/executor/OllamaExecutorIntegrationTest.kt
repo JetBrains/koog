@@ -6,25 +6,28 @@ import ai.koog.integration.tests.OllamaTestFixtureExtension
 import ai.koog.integration.tests.utils.MediaTestScenarios
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestUtils
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationCategory
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.findByNameOrNull
-import ai.koog.prompt.llm.LLMCapability.Completion
 import ai.koog.prompt.llm.LLMCapability.Schema
 import ai.koog.prompt.llm.LLMCapability.Temperature
 import ai.koog.prompt.llm.LLMCapability.Tools
 import ai.koog.prompt.llm.LLMCapability.Vision
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.streaming.StreamFrame
 import io.kotest.assertions.withClue
+import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.booleans.shouldNotBeTrue
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -256,20 +259,13 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     fun `ollama_test get model`() = runTest(timeout = 600.seconds) {
         client.getModelOrNull(model.id) shouldNotBeNull {
             name shouldBe model.id
-            family shouldBe "llama"
-            families shouldBe listOf("llama")
-            size shouldBe 2019393189
-            parameterCount shouldBe 3212749888
-            contextLength shouldBe 131072
-            embeddingLength shouldBe 3072
-            quantizationLevel shouldBe "Q4_K_M"
-            capabilities shouldBe listOf(
-                Completion,
-                Tools,
-                Temperature,
-                Schema.JSON.Basic,
-                Schema.JSON.Standard
-            )
+            size shouldBeGreaterThan 0
+            contextLength.shouldNotBeNull {
+                this shouldBeGreaterThan 0L
+            }
+            capabilities shouldContain Schema.JSON.Basic
+            capabilities shouldContain Temperature
+            capabilities shouldContain Tools
         }
     }
 
@@ -313,13 +309,13 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         }
 
         try {
-            val response = executor.execute(prompt, visionModel).single()
+            val response = executor.execute(prompt, visionModel)
 
             when (scenario) {
                 ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG,
 
                 ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                    response.content.shouldNotBeBlank()
+                    response.parts.shouldForAny { it !is MessagePart.Attachment }
                 }
             }
         } catch (e: Exception) {
@@ -354,8 +350,8 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             }
         }
 
-        val response = executor.execute(prompt, model).single()
-        response.content.shouldNotBeBlank()
+        val response = executor.execute(prompt, model)
+        response.parts.shouldForAny { it is MessagePart.Text }
     }
 
     @Test

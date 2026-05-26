@@ -1,10 +1,10 @@
 package ai.koog.prompt.executor.cached
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.cache.model.put
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -13,21 +13,19 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.streamFrameFlowOf
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 
 class CachedPromptExecutorTest {
     companion object {
         private val testPrompt = Prompt(listOf(Message.User("Hello, world!", RequestMetaInfo.Empty)), "test-prompt-id")
         private val testTools = emptyList<ToolDescriptor>()
-        private val testResponse = listOf(Message.Assistant("Hello, user!", ResponseMetaInfo.Empty))
-        private val testClock = object : Clock {
-            override fun now() = testResponse.first().metaInfo.timestamp
-        }
+        private val testResponse = Message.Assistant("Hello, user!", ResponseMetaInfo.Empty)
+        private val testClock = KoogClock { testResponse.metaInfo.timestamp }
         private val testModel = LLModel(
             provider = object : LLMProvider("", "") {},
             id = "",
@@ -38,16 +36,16 @@ class CachedPromptExecutorTest {
 
     // Mock implementation of PromptCache
     private class MockPromptCache : PromptCache {
-        private val cache = mutableMapOf<String, List<Message.Response>>()
+        private val cache = mutableMapOf<String, Message.Assistant>()
         var getCalled = false
         var putCalled = false
 
-        override suspend fun get(request: PromptCache.Request): List<Message.Response>? {
+        override suspend fun get(request: PromptCache.Request): Message.Assistant? {
             getCalled = true
             return cache[request.asCacheKey]
         }
 
-        override suspend fun put(request: PromptCache.Request, response: List<Message.Response>) {
+        override suspend fun put(request: PromptCache.Request, response: Message.Assistant) {
             putCalled = true
             cache[request.asCacheKey] = response
         }
@@ -62,7 +60,7 @@ class CachedPromptExecutorTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
+        ): Message.Assistant {
             executeCalled = true
             return testResponse
         }

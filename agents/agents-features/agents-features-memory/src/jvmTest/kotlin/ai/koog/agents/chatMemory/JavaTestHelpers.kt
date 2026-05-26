@@ -3,8 +3,8 @@ package ai.koog.agents.chatMemory
 import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.serialization.jackson.JacksonSerializer
+import ai.koog.utils.time.KoogClock
 import java.util.function.Consumer
-import kotlin.time.Clock
 
 /**
  * Helper functions to simplify Java test interop with Kotlin APIs
@@ -18,7 +18,7 @@ object JavaTestHelpers {
      */
     @JvmStatic
     fun createMockExecutor(configure: Consumer<MockExecutorDSLBuilder>): PromptExecutor {
-        val builder = MockExecutorDSLBuilder(Clock.System, serializer)
+        val builder = MockExecutorDSLBuilder(KoogClock.System, serializer)
         configure.accept(builder)
         return builder.build()
     }

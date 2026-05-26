@@ -48,7 +48,6 @@ nav:
             - features/chat-memory/index.md
             - Chat agent with memory: features/chat-memory/chat-agent-with-memory.md
             - Chat backend with memory: features/chat-memory/chat-backend-with-memory.md
-          - Agent memory: features/agent-memory.md
           - Long-term memory: features/long-term-memory.md
           - Agent persistence: features/agent-persistence.md
           - OpenTelemetry:
@@ -192,7 +191,6 @@ plugins:
           - features/agent-event-handlers.md: This page provides details about event handlers that let you monitor and respond to specific events during the agent workflow.
           - features/tracing.md: This page includes details about the Tracing feature, which provides comprehensive tracing capabilities for AI agents. The page includes configuration and initialization details, examples and quickstart, details about error handling and FAQ and troubleshooting.
           - features/chat-memory/index.md: This page provides details about the ChatMemory feature which lets AI agents store and retrieve chat message history to combine multiple agent runs into one conversation. The page includes information about installing the feature, configuration details, best practices, and links to examples and tutorials.
-          - features/agent-memory.md: This page provides details about the AgentMemory feature which lets AI agents store, retrieve, and use information across conversations. The page includes configuration and initialization details, examples and quickstart, best practices, error handling and FAQ and troubleshooting.
           - features/agent-persistence.md: This page describes Agent Persistence, which is a feature that lets you save and restore the state of an agent at specific points during execution. The page includes key concepts, prerequisites, installation instructions, configuration, and basic and advanced usage guides.
           - features/custom-features.md: This page provides details on how to implement custom features in Koog. The page includes information about the basic feature structure and implementation, as well as a practical example of a custom feature.
           - features/open-telemetry/index.md: This page provides details about the support for OpenTelemetry with the Koog agentic framework for tracing and monitoring AI agents. The page includes details about installation and configuration, span types and attributes, and common exporters.

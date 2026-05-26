@@ -2,7 +2,6 @@ package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.strategy
@@ -13,25 +12,26 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.TestBlankTool
 import ai.koog.agents.testing.tools.TestFinishTool
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 import kotlin.js.JsName
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -74,10 +74,10 @@ class SubgraphWithTaskTest {
 
         val expectedExecutionResult = listOf(
             requestString(Message.Role.User, inputRequest),
-            responseString(Message.Role.Tool, blankToolArgsSerialized),
+            responseString(Message.Role.Assistant, blankToolArgsSerialized),
             toolCallString(blankTool.name, blankToolArgsSerialized),
-            requestString(Message.Role.Tool, "\"$blankToolResult\""),
-            responseString(Message.Role.Tool, finishToolArgsSerialized),
+            requestString(Message.Role.User, "\"$blankToolResult\""),
+            responseString(Message.Role.Assistant, finishToolArgsSerialized),
         )
 
         val actualExecutionResult = mutableListOf<String>()
@@ -85,7 +85,7 @@ class SubgraphWithTaskTest {
         // Run Test
         createAgent(
             model = model,
-            runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+            parallelTools = false,
             toolRegistry = toolRegistry,
             executor = mockExecutor,
             finishTool = finishTool,
@@ -116,15 +116,15 @@ class SubgraphWithTaskTest {
 
         createAgent(
             model = model,
-            runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+            parallelTools = false,
             executor = mockExecutor,
             toolRegistry = toolRegistry,
         ).use { agent ->
             val throwable = assertFails { agent.run(inputRequest, null) }
 
             val expectedMessage =
-                "Subgraph with task must always call tools, but no ${Message.Tool.Call::class.simpleName} was generated, " +
-                    "got instead: ${Message.Assistant::class.simpleName}"
+                "Subgraph with task must always call tools, but no ${MessagePart.Tool.Call::class.simpleName} was generated, " +
+                    "got instead: $testAssistantResponse"
 
             assertEquals(expectedMessage, throwable.message)
         }
@@ -168,21 +168,19 @@ class SubgraphWithTaskTest {
 
         val expectedExecutionResult = listOf(
             requestString(Message.Role.User, inputRequest),
-            responseString(Message.Role.Tool, blankTool1ArgsSerialized),
-            responseString(Message.Role.Tool, blankTool2ArgsSerialized),
+            responseString(Message.Role.Assistant, blankTool1ArgsSerialized),
+            responseString(Message.Role.Assistant, blankTool2ArgsSerialized),
             toolCallString(blankTool1.name, blankTool1ArgsSerialized),
             toolCallString(blankTool2.name, blankTool2ArgsSerialized),
-            requestString(Message.Role.Tool, "\"$blankTool1Result\""),
-            // TODO: Currently, mock request execution support processing only a single llm request content.
-            //  Uncomment this when a test framework support condition for multi-llm-request
-            // requestString(Message.Role.Tool, blankTool2Result),
-            responseString(Message.Role.Tool, finishToolArgsSerialized),
+            requestString(Message.Role.User, "\"$blankTool1Result\""),
+            requestString(Message.Role.User, "\"$blankTool2Result\""),
+            responseString(Message.Role.Assistant, finishToolArgsSerialized),
         )
 
         // Run Test
         createAgent(
             model = model,
-            runMode = ToolCalls.PARALLEL,
+            parallelTools = true,
             toolRegistry = toolRegistry,
             executor = mockExecutor,
             finishTool = finishTool,
@@ -215,14 +213,14 @@ class SubgraphWithTaskTest {
 
         createAgent(
             model = model,
-            runMode = ToolCalls.PARALLEL,
+            parallelTools = true,
             executor = mockExecutor,
         ).use { agent ->
             val throwable = assertFails { agent.run(inputRequest, null) }
 
             val expectedMessage =
-                "Subgraph with task must always call tools, but no ${Message.Tool.Call::class.simpleName} was generated, " +
-                    "got instead: ${Message.Assistant::class.simpleName}"
+                "Subgraph with task must always call tools, but no ${MessagePart.Tool.Call::class.simpleName} was generated, " +
+                    "got instead: $testAssistantResponse"
 
             assertEquals(expectedMessage, throwable.message)
         }
@@ -261,10 +259,10 @@ class SubgraphWithTaskTest {
             val expectedExecutionResult = listOf(
                 requestString(Message.Role.User, inputRequest),
                 responseString(Message.Role.Assistant, assistantResponse),
-                responseString(Message.Role.Tool, blankToolArgsSerialized),
+                responseString(Message.Role.Assistant, blankToolArgsSerialized),
                 toolCallString(blankTool.name, blankToolArgsSerialized),
-                requestString(Message.Role.Tool, "\"$blankToolResult\""),
-                responseString(Message.Role.Tool, finishToolArgsSerialized),
+                requestString(Message.Role.User, "\"$blankToolResult\""),
+                responseString(Message.Role.Assistant, finishToolArgsSerialized),
             )
 
             val actualExecutionResult = mutableListOf<String>()
@@ -272,7 +270,7 @@ class SubgraphWithTaskTest {
             // Run Test
             createAgent(
                 model = model,
-                runMode = ToolCalls.PARALLEL,
+                parallelTools = true,
                 toolRegistry = toolRegistry,
                 executor = mockExecutor,
                 finishTool = finishTool,
@@ -318,10 +316,10 @@ class SubgraphWithTaskTest {
 
         val expectedExecutionResult = listOf(
             requestString(Message.Role.User, inputRequest),
-            responseString(Message.Role.Tool, blankToolArgsSerialized),
+            responseString(Message.Role.Assistant, blankToolArgsSerialized),
             toolCallString(blankTool.name, blankToolArgsSerialized),
-            requestString(Message.Role.Tool, "\"$blankToolResult\""),
-            responseString(Message.Role.Tool, finishToolArgsSerialized),
+            requestString(Message.Role.User, "\"$blankToolResult\""),
+            responseString(Message.Role.Assistant, finishToolArgsSerialized),
         )
 
         val actualExecutionResult = mutableListOf<String>()
@@ -329,7 +327,7 @@ class SubgraphWithTaskTest {
         // Run Test
         createAgent(
             model = model,
-            runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+            parallelTools = false,
             toolRegistry = toolRegistry,
             executor = mockExecutor,
             finishTool = finishTool,
@@ -388,14 +386,14 @@ class SubgraphWithTaskTest {
 
         val expectedExecutionResult = listOf(
             requestString(Message.Role.User, inputRequest),
-            responseString(Message.Role.Tool, blankToolArgsSerialized),
+            responseString(Message.Role.Assistant, blankToolArgsSerialized),
             toolCallString(blankTool.name, blankToolArgsSerialized),
-            requestString(Message.Role.Tool, "\"$blankToolResult\""),
+            requestString(Message.Role.User, "\"$blankToolResult\""),
             responseString(Message.Role.Assistant, mockResponse),
             requestString(Message.Role.User, expectedToolCallAssistantRequest),
             responseString(Message.Role.Assistant, mockResponse),
             requestString(Message.Role.User, expectedToolCallAssistantRequest),
-            responseString(Message.Role.Tool, finishToolArgsSerialized),
+            responseString(Message.Role.Assistant, finishToolArgsSerialized),
         )
 
         val actualExecutionResult = mutableListOf<String>()
@@ -403,7 +401,7 @@ class SubgraphWithTaskTest {
         // Run Test
         createAgent(
             model = model,
-            runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+            parallelTools = false,
             toolRegistry = toolRegistry,
             executor = mockExecutor,
             finishTool = finishTool,
@@ -452,9 +450,9 @@ class SubgraphWithTaskTest {
 
             val expectedExecutionResult = listOf(
                 requestString(Message.Role.User, inputRequest),
-                responseString(Message.Role.Tool, blankToolArgsSerialized),
+                responseString(Message.Role.Assistant, blankToolArgsSerialized),
                 toolCallString(blankTool.name, blankToolArgsSerialized),
-                requestString(Message.Role.Tool, "\"$blankToolResult\""),
+                requestString(Message.Role.User, "\"$blankToolResult\""),
                 responseString(Message.Role.Assistant, mockResponse),
                 requestString(Message.Role.User, expectedToolCallAssistantRequest),
                 responseString(Message.Role.Assistant, mockResponse),
@@ -468,7 +466,7 @@ class SubgraphWithTaskTest {
 
             createAgent(
                 model = model,
-                runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+                parallelTools = false,
                 toolRegistry = toolRegistry,
                 executor = mockExecutor,
                 finishTool = finishTool,
@@ -525,15 +523,13 @@ class SubgraphWithTaskTest {
 
         val expectedExecutionResult = listOf(
             requestString(Message.Role.User, inputRequest),
-            responseString(Message.Role.Tool, blankTool1ArgsSerialized),
-            responseString(Message.Role.Tool, blankTool2ArgsSerialized),
+            responseString(Message.Role.Assistant, blankTool1ArgsSerialized),
+            responseString(Message.Role.Assistant, blankTool2ArgsSerialized),
             toolCallString(blankTool1.name, blankTool1ArgsSerialized),
             toolCallString(blankTool2.name, blankTool2ArgsSerialized),
-            requestString(Message.Role.Tool, "\"$blankTool1Result\""),
-            // TODO: Currently, mock request execution support processing only a single llm request content.
-            //  Uncomment this when a test framework support condition for multi-llm-request
-            // requestString(Message.Role.Tool, blankTool2Result),
-            responseString(Message.Role.Tool, finishToolArgsSerialized),
+            requestString(Message.Role.User, "\"$blankTool1Result\""),
+            requestString(Message.Role.User, "\"$blankTool2Result\""),
+            responseString(Message.Role.Assistant, finishToolArgsSerialized),
         )
 
         val actualExecutionResult = mutableListOf<String>()
@@ -541,7 +537,7 @@ class SubgraphWithTaskTest {
         // Run Test
         createAgent(
             model = model,
-            runMode = ToolCalls.PARALLEL,
+            parallelTools = true,
             toolRegistry = toolRegistry,
             executor = mockExecutor,
             finishTool = finishTool,
@@ -603,14 +599,14 @@ class SubgraphWithTaskTest {
 
         val expectedExecutionResult = listOf(
             requestString(Message.Role.User, inputRequest),
-            responseString(Message.Role.Tool, blankToolArgsSerialized),
+            responseString(Message.Role.Assistant, blankToolArgsSerialized),
             toolCallString(blankTool.name, blankToolArgsSerialized),
-            requestString(Message.Role.Tool, "\"$blankToolResult\""),
+            requestString(Message.Role.User, "\"$blankToolResult\""),
             responseString(Message.Role.Assistant, mockResponse),
             requestString(Message.Role.User, expectedToolCallAssistantRequest),
             responseString(Message.Role.Assistant, mockResponse),
             requestString(Message.Role.User, expectedToolCallAssistantRequest),
-            responseString(Message.Role.Tool, finishToolArgsSerialized),
+            responseString(Message.Role.Assistant, finishToolArgsSerialized),
         )
 
         val actualExecutionResult = mutableListOf<String>()
@@ -618,7 +614,7 @@ class SubgraphWithTaskTest {
         // Run Test
         createAgent(
             model = model,
-            runMode = ToolCalls.PARALLEL,
+            parallelTools = true,
             toolRegistry = toolRegistry,
             executor = mockExecutor,
             finishTool = finishTool,
@@ -670,9 +666,9 @@ class SubgraphWithTaskTest {
 
             val expectedExecutionResult = listOf(
                 requestString(Message.Role.User, inputRequest),
-                responseString(Message.Role.Tool, blankToolArgsSerialized),
+                responseString(Message.Role.Assistant, blankToolArgsSerialized),
                 toolCallString(blankTool.name, blankToolArgsSerialized),
-                requestString(Message.Role.Tool, "\"$blankToolResult\""),
+                requestString(Message.Role.User, "\"$blankToolResult\""),
                 responseString(Message.Role.Assistant, mockResponse),
                 requestString(Message.Role.User, expectedToolCallAssistantRequest),
                 responseString(Message.Role.Assistant, mockResponse),
@@ -686,7 +682,7 @@ class SubgraphWithTaskTest {
 
             createAgent(
                 model = model,
-                runMode = ToolCalls.PARALLEL,
+                parallelTools = true,
                 toolRegistry = toolRegistry,
                 executor = mockExecutor,
                 finishTool = finishTool,
@@ -715,8 +711,8 @@ class SubgraphWithTaskTest {
     private data class StrictFinishArgs(val value: String)
 
     private object StrictFinishTool : Tool<StrictFinishArgs, String>(
-        argsSerializer = StrictFinishArgs.serializer(),
-        resultSerializer = String.serializer(),
+        argsType = typeToken<StrictFinishArgs>(),
+        resultType = typeToken<String>(),
         name = "strict_finish_tool",
         description = "Strict finish tool",
     ) {
@@ -734,16 +730,16 @@ class SubgraphWithTaskTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
+        ): Message.Assistant {
             callCount += 1
             val content = if (callCount == 1) invalidArgsJson else validArgsJson
-            return listOf(
-                Message.Tool.Call(
+            return Message.Assistant(
+                part = MessagePart.Tool.Call(
                     id = callCount.toString(),
                     tool = finishToolName,
-                    content = content,
-                    metaInfo = ResponseMetaInfo.Empty,
-                )
+                    args = content,
+                ),
+                metaInfo = ResponseMetaInfo.Empty,
             )
         }
 
@@ -765,7 +761,7 @@ class SubgraphWithTaskTest {
             val subgraph by subgraphWithTask<String, StrictFinishArgs, String>(
                 toolSelectionStrategy = ToolSelectionStrategy.ALL,
                 finishTool = StrictFinishTool,
-                runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+                parallelTools = false,
             ) { input -> input }
 
             nodeStart then subgraph then nodeFinish
@@ -798,7 +794,7 @@ class SubgraphWithTaskTest {
 
     fun createAgent(
         model: LLModel,
-        runMode: ToolCalls,
+        parallelTools: Boolean,
         toolRegistry: ToolRegistry? = null,
         finishTool: Tool<TestFinishTool.Args, String>? = null,
         executor: PromptExecutor? = null,
@@ -810,11 +806,11 @@ class SubgraphWithTaskTest {
 
         val strategy = strategy("test-strategy") {
             val testSubgraphWithTask by subgraphWithTask<String, TestFinishTool.Args, String>(
-                tools = toolRegistry.tools,
+                toolSelectionStrategy = ToolSelectionStrategy.Tools(toolRegistry.tools.map { it.descriptor }),
                 finishTool = finishTool,
                 llmModel = model,
                 llmParams = llmParams,
-                runMode = runMode,
+                parallelTools = parallelTools,
             ) { input -> input }
 
             nodeStart then testSubgraphWithTask then nodeFinish
@@ -845,14 +841,33 @@ class SubgraphWithTaskTest {
 
             onLLMCallStarting {
                 val request = it.prompt.messages.last()
-                actualEvents += requestString(request.role, request.content)
+                val toolResults = request.parts.filterIsInstance<MessagePart.Tool.Result>()
+                if (toolResults.isNotEmpty()) {
+                    toolResults.forEach { result ->
+                        actualEvents += requestString(request.role, result.output)
+                    }
+                } else {
+                    actualEvents += requestString(request.role, request.textContent())
+                }
             }
 
             onLLMCallCompleted { context ->
-                actualEvents.addAll(context.responses.map { message -> responseString(message.role, message.content) })
+                context.response?.let { message ->
+                    val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+                    val toolCallParts = message.parts.filterIsInstance<MessagePart.Tool.Call>()
+                    if (textParts.isNotEmpty()) {
+                        actualEvents += responseString(message.role, textParts.joinToString("\n") { it.text })
+                    }
+                    toolCallParts.forEach { call ->
+                        actualEvents += responseString(Message.Role.Assistant, call.args)
+                    }
+                }
             }
         }
     }
+
+    private fun Message.textContent(): String =
+        parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
 
     private fun toolCallString(name: String, args: String): String =
         "$name: $args"

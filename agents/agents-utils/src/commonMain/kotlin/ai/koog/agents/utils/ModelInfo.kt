@@ -24,15 +24,6 @@ public data class ModelInfo(
     val maxOutputTokens: Long? = null
 ) {
     /**
-     * Backwards compatibility: provides the same string format as legacy model representation
-     * Format: "provider:model"
-     * @deprecated This format is maintained for backwards compatibility.
-     *             Consider using modelIdentifierName for display purposes.
-     */
-    @Deprecated("Use modelIdentifierName for display, or access provider/model directly")
-    public val eventString: String get() = "$provider:$model"
-
-    /**
      * Model identifier name for display purposes
      * Falls back to "provider/model" if displayName is not provided
      */

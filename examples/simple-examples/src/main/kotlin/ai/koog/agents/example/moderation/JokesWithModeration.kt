@@ -1,7 +1,6 @@
 package ai.koog.agents.example.moderation
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMModerateMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -34,7 +33,7 @@ fun main() = runBlocking {
         edge(
             moderateInput forwardTo callLLM
                 onCondition { !it.moderationResult.isHarmful }
-                transformed { it.message.content }
+                transformed { it.message.textContent() }
         )
 
         edge(
@@ -49,25 +48,25 @@ fun main() = runBlocking {
         edge(
             moderateJoke forwardTo nodeFinish
                 onCondition { !it.moderationResult.isHarmful }
-                transformed { it.message.content }
+                transformed { it.message.textContent() }
         )
         // Give feedback to re-generate joke if it's harmful
         edge(
             moderateJoke forwardTo callLLM
                 onCondition { it.moderationResult.isHarmful }
                 transformed { moderatedMessage ->
-                    markdown {
-                        h1("You must re-generate the joke to make it not harmful")
+                markdown {
+                    h1("You must re-generate the joke to make it not harmful")
 
-                        text("The following moderation categories were detected: ")
-                        bulleted {
-                            moderatedMessage.moderationResult.violatedCategories.forEach { category ->
-                                // Tell specifically what moderation categories were violated
-                                item(category.name)
-                            }
+                    text("The following moderation categories were detected: ")
+                    bulleted {
+                        moderatedMessage.moderationResult.violatedCategories.forEach { category ->
+                            // Tell specifically what moderation categories were violated
+                            item(category.name)
                         }
                     }
                 }
+            }
         )
     }
 

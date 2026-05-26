@@ -11,6 +11,7 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.transport.Request
 import ai.koog.a2a.transport.client.jsonrpc.http.HttpJSONRPCClientTransport
 import ai.koog.agents.a2a.core.toKoogMessage
+import ai.koog.prompt.message.MessagePart
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -73,7 +74,9 @@ suspend fun main() {
             Request(MessageSendParams(message = message))
         )
 
-        val reply = (response.data as Message).toKoogMessage().content
+        val reply = (response.data as Message).toKoogMessage().parts
+            .filterIsInstance<MessagePart.Text>()
+            .joinToString("\n") { it.text }
         println("${BRIGHT_MAGENTA}Agent response:${RESET}\n$reply\n")
     }
 

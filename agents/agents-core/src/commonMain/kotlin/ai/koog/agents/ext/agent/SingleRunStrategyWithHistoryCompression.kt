@@ -1,24 +1,17 @@
 package ai.koog.agents.ext.agent
 
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
-import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onMultipleAssistantMessages
-import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
-import ai.koog.agents.core.dsl.extension.onToolCall
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
+import ai.koog.agents.core.dsl.extension.onToolCalls
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 
@@ -46,44 +39,32 @@ public data class HistoryCompressionConfig(
  *
  * @param config specifies when to trigger compression (size threshold), how to compress
  *   (fact extraction strategy), and optionally which model to use for compression
- * @param runMode how tools are executed: [ToolCalls.SINGLE_RUN_SEQUENTIAL] (one tool per LLM call),
- *   [ToolCalls.SEQUENTIAL] (multiple tools per call, executed sequentially), or [ToolCalls.PARALLEL]
+ * @param parallelTools
  *   (multiple tools per call, executed concurrently)
  * @return [AIAgentGraphStrategy] that compresses conversation history when needed
  */
 public fun singleRunStrategyWithHistoryCompression(
     config: HistoryCompressionConfig,
-    runMode: ToolCalls = ToolCalls.SINGLE_RUN_SEQUENTIAL
-): AIAgentGraphStrategy<String, String> =
-    when (runMode) {
-        ToolCalls.SEQUENTIAL -> singleRunWithHistoryCompressionParallelAbility(config, false)
-        ToolCalls.PARALLEL -> singleRunWithHistoryCompressionParallelAbility(config, true)
-        ToolCalls.SINGLE_RUN_SEQUENTIAL -> singleRunWithHistoryCompressionModeStrategy(config)
-    }
-
-private fun singleRunWithHistoryCompressionParallelAbility(
-    config: HistoryCompressionConfig,
-    parallelTools: Boolean
-) = strategy("single_run_with_history_compression_sequential") {
-    val nodeCallLLM by nodeLLMRequestMultiple()
-    val nodeExecuteTool by nodeExecuteMultipleTools(parallelTools = parallelTools)
-    val nodeSendToolResult by nodeLLMSendMultipleToolResults()
-    val nodeCompressHistory by nodeLLMCompressHistory<List<ReceivedToolResult>>(
+    parallelTools: Boolean = false,
+): AIAgentGraphStrategy<String, String> = strategy<String, String>("single_run_with_history_compression") {
+    val nodeCallLLM by nodeLLMRequest()
+    val nodeExecuteTool by nodeExecuteTools(parallel = parallelTools)
+    val nodeSendToolResult by nodeLLMSendToolResults()
+    val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResults>(
         strategy = config.compressionStrategy,
         retrievalModel = config.retrievalModel
     )
-    val nodeSendCompressedHistory by node<List<ReceivedToolResult>, List<Message.Response>> {
+    val nodeSendCompressedHistory by node<ReceivedToolResults, Message.Assistant> {
         llm.writeSession {
-            requestLLMMultiple()
+            requestLLM()
         }
     }
 
     edge(nodeStart forwardTo nodeCallLLM)
-    edge(nodeCallLLM forwardTo nodeExecuteTool onMultipleToolCalls { true })
+    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
     edge(
         nodeCallLLM forwardTo nodeFinish
-            onMultipleAssistantMessages { true }
-            transformed { it.joinToString("\n") { message -> message.content } }
+            onTextMessage { true }
     )
 
     edge(nodeExecuteTool forwardTo nodeCompressHistory onCondition { llm.readSession { config.isHistoryTooBig(prompt) } })
@@ -92,46 +73,15 @@ private fun singleRunWithHistoryCompressionParallelAbility(
 
     edge(
         nodeSendToolResult forwardTo nodeFinish
-            onMultipleAssistantMessages { true }
-            transformed { it.joinToString("\n") { message -> message.content } }
+            onTextMessage { true }
     )
 
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onMultipleToolCalls { true })
+    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
 
     edge(
         nodeSendCompressedHistory forwardTo nodeFinish
-            onMultipleAssistantMessages { true }
-            transformed { it.joinToString("\n") { message -> message.content } }
+            onTextMessage { true }
     )
 
-    edge(nodeSendCompressedHistory forwardTo nodeExecuteTool onMultipleToolCalls { true })
-}
-
-private fun singleRunWithHistoryCompressionModeStrategy(config: HistoryCompressionConfig) = strategy("single_run_with_history_compression") {
-    val nodeCallLLM by nodeLLMRequest()
-    val nodeExecuteTool by nodeExecuteTool()
-    val nodeSendToolResult by nodeLLMSendToolResult()
-    val compressHistory by nodeLLMCompressHistory<ReceivedToolResult>(
-        strategy = config.compressionStrategy,
-        retrievalModel = config.retrievalModel
-    )
-    val nodeSendCompressedHistory by node<ReceivedToolResult, Message.Response> {
-        llm.writeSession {
-            requestLLM()
-        }
-    }
-
-    edge(nodeStart forwardTo nodeCallLLM)
-    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
-    edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
-
-    edge(nodeExecuteTool forwardTo compressHistory onCondition { llm.readSession { config.isHistoryTooBig(prompt) } })
-    edge(nodeExecuteTool forwardTo nodeSendToolResult onCondition { llm.readSession { !config.isHistoryTooBig(prompt) } })
-    edge(compressHistory forwardTo nodeSendCompressedHistory)
-
-    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
-
-    edge(nodeSendCompressedHistory forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendCompressedHistory forwardTo nodeExecuteTool onToolCall { true })
+    edge(nodeSendCompressedHistory forwardTo nodeExecuteTool onToolCalls { true })
 }

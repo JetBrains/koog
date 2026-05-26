@@ -1,11 +1,12 @@
 package ai.koog.prompt.cache.files
 
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.cache.model.get
 import ai.koog.prompt.cache.model.put
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -21,7 +22,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
@@ -31,9 +31,7 @@ class FilePromptCacheTest {
 
     private lateinit var cache: FilePromptCache
 
-    private val testClock: Clock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
+    private val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
     @BeforeEach
     fun setUp() {
@@ -64,7 +62,7 @@ class FilePromptCacheTest {
     fun `test basic cache operations`() = runBlocking {
         // Create a simple prompt and response
         val prompt = createTestPrompt("test prompt")
-        val response = listOf(assistantMessage("test response"))
+        val response = assistantMessage("test response")
 
         // Put the response in the cache
         cache.put(prompt, emptyList(), response)
@@ -85,7 +83,7 @@ class FilePromptCacheTest {
 
         // Create several prompts and responses
         val prompts = (1..5).map { createTestPrompt("test prompt $it") }
-        val responses = (1..5).map { listOf(assistantMessage("test response $it")) }
+        val responses = (1..5).map { assistantMessage("test response $it") }
 
         // Put all responses in the cache
         prompts.zip(responses).forEach { (prompt, response) ->
@@ -114,7 +112,7 @@ class FilePromptCacheTest {
 
         // Create several prompts and responses
         val prompts = (1..3).map { createTestPrompt("test prompt $it") }
-        val responses = (1..3).map { listOf(assistantMessage("test response $it")) }
+        val responses = (1..3).map { assistantMessage("test response $it") }
 
         // Put all responses in the cache
         prompts.zip(responses).forEach { (prompt, response) ->
@@ -128,7 +126,7 @@ class FilePromptCacheTest {
 
         // Add a new file which should trigger removal of least recently accessed
         val newPrompt = createTestPrompt("test prompt new")
-        val newResponse = listOf(assistantMessage("test response new"))
+        val newResponse = assistantMessage("test response new")
         smallCache.put(newPrompt, emptyList(), newResponse)
 
         // Check that the number of files is still limited to maxFiles

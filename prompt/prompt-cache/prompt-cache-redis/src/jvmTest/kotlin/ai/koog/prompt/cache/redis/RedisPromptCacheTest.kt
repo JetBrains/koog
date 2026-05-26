@@ -3,12 +3,13 @@
 package ai.koog.prompt.cache.redis
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.cache.model.get
 import ai.koog.prompt.cache.model.put
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.utils.time.KoogClock
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.coroutines
@@ -27,7 +28,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -46,11 +46,9 @@ class RedisPromptCacheTest {
 
         private val testPrompt = Prompt(listOf(Message.User("Hello, world!", RequestMetaInfo.Empty)), "test-prompt-id")
         private val testTools = emptyList<ToolDescriptor>()
-        private val testResponse = listOf(Message.Assistant("Hello, user!", ResponseMetaInfo.Empty))
+        private val testResponse = Message.Assistant("Hello, user!", ResponseMetaInfo.Empty)
 
-        private val testClock = object : Clock {
-            override fun now() = testResponse.first().metaInfo.timestamp
-        }
+        private val testClock = KoogClock { testResponse.metaInfo.timestamp }
     }
 
     @BeforeTest

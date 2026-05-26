@@ -3,8 +3,8 @@ package ai.koog.agents.core.feature.model.events
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
-import kotlin.time.Clock
 
 /**
  * Represents an event triggered at the start of an AI agent strategy execution.
@@ -42,33 +42,8 @@ public data class GraphStrategyStartingEvent(
     override val runId: String,
     override val strategyName: String,
     val graph: StrategyEventGraph,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : StrategyStartingEventBase() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("GraphStrategyStartingEvent(executionInfo, runId, strategyName, graph, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        strategyName: String,
-        graph: StrategyEventGraph,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = GraphStrategyStartingEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = GraphStrategyStartingEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        strategyName = strategyName,
-        graph = graph,
-        timestamp = timestamp
-    )
-}
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
+) : StrategyStartingEventBase()
 
 /**
  * Represents an event triggered at the start of executing a functional, planner, and other strategy types by an AI agent.
@@ -85,31 +60,8 @@ public data class StrategyStartingEvent(
     override val executionInfo: AgentExecutionInfo,
     override val runId: String,
     override val strategyName: String,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : StrategyStartingEventBase() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("FunctionalStrategyStartingEvent(executionInfo, runId, strategyName, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        strategyName: String,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = StrategyStartingEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = StrategyStartingEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        strategyName = strategyName,
-        timestamp = timestamp
-    )
-}
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
+) : StrategyStartingEventBase()
 
 /**
  * Event that represents the completion of an AI agent's strategy execution.
@@ -131,33 +83,8 @@ public data class StrategyCompletedEvent(
     val runId: String,
     val strategyName: String,
     val result: String?,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * @deprecated Use constructor with [executionInfo] parameter
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter",
-        replaceWith = ReplaceWith("StrategyCompletedEvent(executionInfo, runId, strategyName, result, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        strategyName: String,
-        result: String?,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = StrategyCompletedEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = StrategyCompletedEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        strategyName = strategyName,
-        result = result,
-        timestamp = timestamp
-    )
-}
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
+) : DefinedFeatureEvent()
 
 /**
  * Represents a graph structure used by an AI agent, consisting of a collection
@@ -267,19 +194,3 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.startNodeToGr
 
     return graph
 }
-
-//region Deprecated
-
-@Deprecated(
-    message = "Use StrategyStartingEvent instead or one of particular methods like GraphStrategyStartingEvent or FunctionalStrategyStartingEvent",
-    replaceWith = ReplaceWith("StrategyStartingEvent")
-)
-public typealias AIAgentStrategyStartEvent = StrategyStartingEvent
-
-@Deprecated(
-    message = "Use StrategyCompletedEvent instead",
-    replaceWith = ReplaceWith("StrategyCompletedEvent")
-)
-public typealias AIAgentStrategyFinishedEvent = StrategyCompletedEvent
-
-//endregion Deprecated

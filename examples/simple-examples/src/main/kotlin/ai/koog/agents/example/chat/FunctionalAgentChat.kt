@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.message.MessagePart
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
@@ -15,8 +16,8 @@ suspend fun main() {
             strategy = functionalStrategy {
                 var userResponse = it
                 while (userResponse != "/bye") {
-                    val responses = requestLLM(userResponse)
-                    println(responses.content)
+                    val response = requestLLM(userResponse)
+                    println(response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text })
                     userResponse = readln()
                 }
             },

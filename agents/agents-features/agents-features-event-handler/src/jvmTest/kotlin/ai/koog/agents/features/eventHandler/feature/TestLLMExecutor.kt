@@ -1,21 +1,22 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrames
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlin.time.Clock
 
-class TestLLMExecutor(val clock: Clock) : PromptExecutor() {
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        return listOf(handlePrompt(prompt))
+class TestLLMExecutor(val clock: KoogClock) : PromptExecutor() {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
+        return handlePrompt(prompt)
     }
 
     override fun executeStreaming(
@@ -26,9 +27,13 @@ class TestLLMExecutor(val clock: Clock) : PromptExecutor() {
         handlePrompt(prompt).toStreamFrames().forEach { emit(it) }
     }
 
-    private fun handlePrompt(prompt: Prompt): Message.Response {
+    private fun handlePrompt(prompt: Prompt): Message.Assistant {
         // For a compression test, return a summary
-        if (prompt.messages.any { it.content.contains("Summarize all the main achievements") }) {
+        if (prompt.messages.any {
+                it.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                    .contains("Summarize all the main achievements")
+            }
+        ) {
             return Message.Assistant(
                 "Here's a summary of the conversation: Test user asked questions and received responses.",
                 metaInfo = ResponseMetaInfo.create(clock)

@@ -8,11 +8,11 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 
 public actual open class AIAgentLLMContext actual constructor(
     tools: List<ToolDescriptor>,
@@ -23,7 +23,7 @@ public actual open class AIAgentLLMContext actual constructor(
     promptExecutor: PromptExecutor,
     environment: AIAgentEnvironment,
     config: AIAgentConfig,
-    clock: Clock
+    clock: KoogClock
 ) : AIAgentLLMContextCommon(
     initialTools = tools,
     initialToolRegistry = toolRegistry,

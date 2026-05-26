@@ -19,6 +19,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.MessagePart
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import kotlinx.serialization.Serializable
 
@@ -142,7 +143,7 @@ private suspend fun AIAgentContext.requestAJoke(
         }
     }
     val response = requestLLMWithoutTools()
-    response.content
+    response.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
 }
 
 private suspend fun AIAgentContext.findTheBestJoke(

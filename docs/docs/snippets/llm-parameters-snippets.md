@@ -159,3 +159,7 @@ search:
 # --8<-- [start:safePrompt]
 | `safePrompt` | Boolean | Specifies whether to inject a safety prompt before all conversations. The safety prompt is used to enforce guardrails and protect against harmful content. For more information, see Mistral's [Moderation & Guardarailing](https://docs.mistral.ai/capabilities/guardrailing) documentation. |
 # --8<-- [end:safePrompt]
+
+# --8<-- [start:think]
+| `think` | Boolean | Configuration for activating Ollama extended thinking. When activated, responses also include thinking content blocks. For more information, see the API reference for [Ollama thinking](https://docs.ollama.com/capabilities/thinking#enable-thinking-in-api-calls). |
+# --8<-- [end:think]

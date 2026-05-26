@@ -3,9 +3,12 @@ rootProject.name = "koog"
 pluginManagement {
     includeBuild("convention-plugin-ai")
     repositories {
-        google()
-        gradlePluginPortal()
+        maven("https://artifacts-caching-proxy.aws.intellij.net/plugins.gradle.org/m2")
+        maven("https://cache-redirector.jetbrains.com/plugins.gradle.org/m2")
+        maven("https://cache-redirector.jetbrains.com/maven-central")
         maven(url = "https://packages.jetbrains.team/maven/p/jcs/maven")
+        google()
+        // gradlePluginPortal()
     }
 }
 
@@ -15,6 +18,7 @@ include(":agents:agents-ext")
 include(":agents:agents-features:agents-features-acp")
 include(":agents:agents-features:agents-features-event-handler")
 include(":agents:agents-features:agents-features-longterm-memory")
+include(":agents:agents-features:agents-features-longterm-memory-aws")
 include(":agents:agents-features:agents-features-memory")
 include(":agents:agents-features:agents-features-opentelemetry")
 include(":agents:agents-features:agents-features-sql")
@@ -39,6 +43,7 @@ include(":agents:agents-utils")
 include(":integration-tests")
 
 include(":koog-agents")
+include(":koog-agents-additions")
 
 include(":prompt:prompt-cache:prompt-cache-files")
 include(":prompt:prompt-cache:prompt-cache-model")
@@ -57,6 +62,7 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client")
+include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-client")
 
 include(":prompt:prompt-executor:prompt-executor-llms-all")
 include(":prompt:prompt-executor:prompt-executor-model")
@@ -106,3 +112,7 @@ include(":docs")
 
 include(":test-utils")
 include(":utils")
+
+include(":agents:agents-planner")
+
+include("agents:agents-cli")

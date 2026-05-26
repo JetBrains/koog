@@ -1,13 +1,15 @@
 package ai.koog.agents.example.chat;
 
-import static ai.koog.prompt.executor.llms.all.SimplePromptExecutorsKt.simpleOllamaAIExecutor;
+import static ai.koog.prompt.executor.llms.all.SimplePromptExecutors.simpleOllamaAIExecutor;
 
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.executor.ollama.client.OllamaModels.Meta;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 import kotlin.Unit;
 
 /**
@@ -29,10 +31,12 @@ public class FunctionalAgentChat {
                 .functionalStrategy("chat", (AIAgentFunctionalContext context, String firstUserInput) -> {
                     String userInput = firstUserInput;
                     while (!"/bye".equals(userInput)) {
-                        Message.Response response = context.requestLLM(userInput);
-                        if (response instanceof Message.Assistant assistantResponse) {
-                            System.out.println(assistantResponse.getContent());
-                        }
+                        Message.Assistant response = context.requestLLM(userInput);
+                        String text = response.getParts().stream()
+                            .filter(p -> p instanceof MessagePart.Text)
+                            .map(p -> ((MessagePart.Text) p).getText())
+                            .collect(Collectors.joining());
+                        System.out.println(text);
                         userInput = scanner.nextLine();
                     }
                     return Unit.INSTANCE;

@@ -12,7 +12,6 @@ data class UserInput(
     val timezone: TimeZone,
 )
 
-
 sealed interface SuggestPlanRequest {
     data class InitialRequest(
         val userPlan: TripPlan,
@@ -33,7 +32,6 @@ data class PlanSuggestionFeedback(
     @property:LLMDescription("The original message from the user.")
     val message: String,
 )
-
 
 @Serializable
 @LLMDescription(

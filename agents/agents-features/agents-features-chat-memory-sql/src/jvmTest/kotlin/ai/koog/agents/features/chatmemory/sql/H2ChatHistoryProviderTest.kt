@@ -1,8 +1,10 @@
 package ai.koog.agents.features.chatmemory.sql
 
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -12,7 +14,6 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 
 @TestInstance(Lifecycle.PER_METHOD)
 @Execution(ExecutionMode.SAME_THREAD)
@@ -27,9 +28,9 @@ class H2ChatHistoryProviderTest {
     }
 
     private fun createTestMessages(): List<Message> = listOf(
-        Message.System("You are a helpful assistant", RequestMetaInfo.create(Clock.System)),
-        Message.User("Hello", RequestMetaInfo.create(Clock.System)),
-        Message.Assistant("Hi there! How can I help?", ResponseMetaInfo.create(Clock.System))
+        Message.System("You are a helpful assistant", RequestMetaInfo.create(KoogClock.System)),
+        Message.User("Hello", RequestMetaInfo.create(KoogClock.System)),
+        Message.Assistant("Hi there! How can I help?", ResponseMetaInfo.create(KoogClock.System))
     )
 
     @Test
@@ -42,9 +43,9 @@ class H2ChatHistoryProviderTest {
 
         val loaded = p.load("conv-1")
         assertEquals(3, loaded.size)
-        assertEquals("You are a helpful assistant", loaded[0].content)
-        assertEquals("Hello", loaded[1].content)
-        assertEquals("Hi there! How can I help?", loaded[2].content)
+        assertEquals("You are a helpful assistant", (loaded[0].parts[0] as MessagePart.Text).text)
+        assertEquals("Hello", (loaded[1].parts[0] as MessagePart.Text).text)
+        assertEquals("Hi there! How can I help?", (loaded[2].parts[0] as MessagePart.Text).text)
     }
 
     @Test
@@ -65,15 +66,15 @@ class H2ChatHistoryProviderTest {
         p.store("conv-1", original)
 
         val updated = listOf(
-            Message.User("New message", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("New response", ResponseMetaInfo.create(Clock.System))
+            Message.User("New message", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("New response", ResponseMetaInfo.create(KoogClock.System))
         )
         p.store("conv-1", updated)
 
         val loaded = p.load("conv-1")
         assertEquals(2, loaded.size)
-        assertEquals("New message", loaded[0].content)
-        assertEquals("New response", loaded[1].content)
+        assertEquals("New message", (loaded[0].parts[0] as MessagePart.Text).text)
+        assertEquals("New response", (loaded[1].parts[0] as MessagePart.Text).text)
 
         // Should still be one row in the table
         assertEquals(1, p.getConversationCount())
@@ -85,12 +86,12 @@ class H2ChatHistoryProviderTest {
         p.migrate()
 
         val messages1 = listOf(
-            Message.User("Hello from conv-1", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Response to conv-1", ResponseMetaInfo.create(Clock.System))
+            Message.User("Hello from conv-1", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Response to conv-1", ResponseMetaInfo.create(KoogClock.System))
         )
         val messages2 = listOf(
-            Message.User("Hello from conv-2", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Response to conv-2", ResponseMetaInfo.create(Clock.System))
+            Message.User("Hello from conv-2", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Response to conv-2", ResponseMetaInfo.create(KoogClock.System))
         )
 
         p.store("conv-1", messages1)
@@ -100,10 +101,10 @@ class H2ChatHistoryProviderTest {
         val loaded2 = p.load("conv-2")
 
         assertEquals(2, loaded1.size)
-        assertEquals("Hello from conv-1", loaded1[0].content)
+        assertEquals("Hello from conv-1", (loaded1[0].parts[0] as MessagePart.Text).text)
 
         assertEquals(2, loaded2.size)
-        assertEquals("Hello from conv-2", loaded2[0].content)
+        assertEquals("Hello from conv-2", (loaded2[0].parts[0] as MessagePart.Text).text)
 
         assertEquals(2, p.getConversationCount())
     }
@@ -114,20 +115,24 @@ class H2ChatHistoryProviderTest {
         p.migrate()
 
         val messages = listOf(
-            Message.System("System prompt", RequestMetaInfo.create(Clock.System)),
-            Message.User("User input", RequestMetaInfo.create(Clock.System)),
-            Message.Assistant("Assistant response", ResponseMetaInfo.create(Clock.System)),
-            Message.Tool.Call(
-                id = "call-1",
-                tool = "searchTool",
-                content = """{"query": "test"}""",
-                metaInfo = ResponseMetaInfo.create(Clock.System)
+            Message.System("System prompt", RequestMetaInfo.create(KoogClock.System)),
+            Message.User("User input", RequestMetaInfo.create(KoogClock.System)),
+            Message.Assistant("Assistant response", ResponseMetaInfo.create(KoogClock.System)),
+            Message.Assistant(
+                part = MessagePart.Tool.Call(
+                    id = "call-1",
+                    tool = "searchTool",
+                    args = """{"query": "test"}""",
+                ),
+                metaInfo = ResponseMetaInfo.create(KoogClock.System)
             ),
-            Message.Tool.Result(
-                id = "call-1",
-                tool = "searchTool",
-                content = """{"result": "found"}""",
-                metaInfo = RequestMetaInfo.create(Clock.System)
+            Message.User(
+                MessagePart.Tool.Result(
+                    id = "call-1",
+                    tool = "searchTool",
+                    output = """{"result": "found"}""",
+                ),
+                metaInfo = RequestMetaInfo.create(KoogClock.System)
             )
         )
 
@@ -140,16 +145,16 @@ class H2ChatHistoryProviderTest {
         assertTrue(loaded[0] is Message.System)
         assertTrue(loaded[1] is Message.User)
         assertTrue(loaded[2] is Message.Assistant)
-        assertTrue(loaded[3] is Message.Tool.Call)
-        assertTrue(loaded[4] is Message.Tool.Result)
+        assertTrue(loaded[3] is Message.Assistant)
+        assertTrue(loaded[4] is Message.User)
 
         // Verify Tool.Call fields
-        val toolCall = loaded[3] as Message.Tool.Call
+        val toolCall = loaded[3].parts[0] as MessagePart.Tool.Call
         assertEquals("call-1", toolCall.id)
         assertEquals("searchTool", toolCall.tool)
 
         // Verify Tool.Result fields
-        val toolResult = loaded[4] as Message.Tool.Result
+        val toolResult = loaded[4].parts[0] as MessagePart.Tool.Result
         assertEquals("call-1", toolResult.id)
         assertEquals("searchTool", toolResult.tool)
     }

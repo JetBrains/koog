@@ -4,10 +4,11 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
-import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
-import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResultsStreaming
+import ai.koog.agents.core.dsl.extension.onTextMessage
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.simpleapi.Switch
@@ -22,9 +23,9 @@ import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toMessageResponse
+import kotlinx.coroutines.flow.toList
 
 suspend fun main() {
     val switch = Switch()
@@ -41,7 +42,7 @@ suspend fun main() {
                 }
                 onLLMStreamingFrameReceived { context ->
                     when (val frame = context.streamFrame) {
-                        is StreamFrame.ReasoningComplete -> println("Reasoning complete:id=${frame.id}\ntext=${frame.text}\nsummary=${frame.summary}")
+                        is StreamFrame.ReasoningComplete -> println("Reasoning complete:id=${frame.id}\ntext=${frame.content}\nsummary=${frame.summary}")
                         is StreamFrame.TextComplete -> println("Text complete")
                         is StreamFrame.ToolCallComplete -> println("Tool call complete")
                         is StreamFrame.ReasoningDelta -> println("Reasoning delta:id=${frame.id}\ntext=${frame.text}\nsummary=${frame.summary}")
@@ -82,13 +83,16 @@ private fun openAiAgent(
 ) = AIAgent.builder()
     .graphStrategy { streamingWithToolsStrategy() }
     .promptExecutor(executor)
-    .prompt(prompt("agent", OpenAIResponsesParams(
-        temperature = 1.0,
-        reasoning = ReasoningConfig(effort = ReasoningEffort.MEDIUM, summary = ReasoningSummary.AUTO)
-    ))
-    {
-        system("You're responsible for running a Switch and perform operations on it by request")
-    })
+    .prompt(
+        prompt(
+            "agent", OpenAIResponsesParams(
+                temperature = 1.0,
+                reasoning = ReasoningConfig(effort = ReasoningEffort.MEDIUM, summary = ReasoningSummary.AUTO)
+            )
+        )
+        {
+            system("You're responsible for running a Switch and perform operations on it by request")
+        })
     .llmModel(OpenAIModels.Chat.GPT5_1)
     .toolRegistry(toolRegistry)
     .install(installFeatures)
@@ -110,45 +114,24 @@ private fun anthropicAgent(
 )
 
 fun streamingWithToolsStrategy() = strategy("streaming_loop") {
-    val executeMultipleTools by nodeExecuteMultipleTools(parallelTools = true)
-    val nodeStreaming by nodeLLMRequestStreamingAndSendResults()
-
-    val mapStringToRequests by node<String, List<Message.Request>> { input ->
-        listOf(Message.User(content = input, metaInfo = RequestMetaInfo.Empty))
+    // Streaming node: appends the user message to the prompt, issues a streaming LLM call (so the
+    // onLLMStreamingFrameReceived / onLLMStreamingFailed / onLLMStreamingCompleted event handlers
+    // fire frame-by-frame), then collapses the stream into a Message.Assistant for downstream
+    // tool-call / text-part dispatch.
+    val nodeCallLLM by nodeLLMRequestStreaming().transform {
+        it.toList().toMessageResponse()
     }
 
-    val applyRequestToSession by node<List<Message.Request>, List<Message.Request>> { input ->
-        llm.writeSession {
-            appendPrompt {
-                input.filterIsInstance<Message.User>()
-                    .forEach {
-                        user(it.content)
-                    }
-
-                tool {
-                    input.filterIsInstance<Message.Tool.Result>()
-                        .forEach {
-                            result(it)
-                        }
-                }
-            }
-            input
-        }
+    val nodeSendToolResults by nodeLLMSendToolResultsStreaming().transform {
+        it.toList().toMessageResponse()
     }
 
-    val mapToolCallsToRequests by node<List<ReceivedToolResult>, List<Message.Request>> { input ->
-        input.map { it.toMessage() }
-    }
+    val executeTools by nodeExecuteTools(parallel = true)
 
-    edge(nodeStart forwardTo mapStringToRequests)
-    edge(mapStringToRequests forwardTo applyRequestToSession)
-    edge(applyRequestToSession forwardTo nodeStreaming)
-    edge(nodeStreaming forwardTo executeMultipleTools onMultipleToolCalls { true })
-    edge(executeMultipleTools forwardTo mapToolCallsToRequests)
-    edge(mapToolCallsToRequests forwardTo applyRequestToSession)
-    edge(
-        nodeStreaming forwardTo nodeFinish onCondition {
-            it.filterIsInstance<Message.Tool.Call>().isEmpty()
-        }
-    )
+    edge(nodeStart forwardTo nodeCallLLM)
+    edge(nodeCallLLM forwardTo executeTools onToolCalls { true })
+    edge(executeTools forwardTo nodeSendToolResults)
+    edge(nodeSendToolResults forwardTo executeTools onToolCalls { true })
+    edge(nodeSendToolResults forwardTo nodeFinish onTextMessage { true })
+    edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
 }

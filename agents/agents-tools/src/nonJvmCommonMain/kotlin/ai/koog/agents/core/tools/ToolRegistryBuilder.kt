@@ -3,13 +3,13 @@
 package ai.koog.agents.core.tools
 
 public actual class ToolRegistryBuilder {
-    private val tools = mutableListOf<Tool<*, *>>()
+    private val tools = mutableListOf<ToolBase<*, *>>()
 
-    public actual fun tool(tool: Tool<*, *>): ToolRegistryBuilder = apply {
+    public actual fun tool(tool: ToolBase<*, *>): ToolRegistryBuilder = apply {
         tools.addTool(tool)
     }
 
-    public actual fun tools(toolsList: List<Tool<*, *>>): ToolRegistryBuilder = apply {
+    public actual fun tools(toolsList: List<ToolBase<*, *>>): ToolRegistryBuilder = apply {
         toolsList.forEach { tool(it) }
     }
 

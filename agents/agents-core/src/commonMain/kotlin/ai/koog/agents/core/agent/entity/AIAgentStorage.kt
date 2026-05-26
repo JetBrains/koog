@@ -2,29 +2,55 @@
 
 package ai.koog.agents.core.agent.entity
 
+import ai.koog.serialization.JSONElement
+import ai.koog.serialization.JSONSerializer
+import ai.koog.serialization.TypeToken
+import ai.koog.serialization.typeToken
+
 /**
- * Represents a storage key used for identifying and accessing data associated with an AI agent.
+ * Represents a storage key used for [AIAgentStorage].
+ * Equality is based on the [name].
  *
- * The generic type parameter [T] specifies the type of data associated with this key, ensuring
- * type safety when storing and retrieving data in the context of an AI agent.
- *
- * Equality of [AIAgentStorageKey] instances is based on referential identity (default implementation):
- * two different instances created with the same [name] are not equal and will refer to distinct
- * storage entries. The [name] is used only for the string representation of the key.
- *
- * @param name The human-readable name of the storage key, used only for its string representation.
+ * @param name String key.
+ * @param typeToken Type of the value stored under this key.
  */
-public class AIAgentStorageKey<T : Any>(public val name: String) {
+public data class AIAgentStorageKey<T : Any>(
+    public val name: String,
+    public val typeToken: TypeToken,
+) {
     override fun toString(): String = "${super.toString()}(name=$name)"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AIAgentStorageKey<*>) return false
+
+        if (name != other.name) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return name.hashCode()
+    }
 }
 
 /**
- * Creates a unique storage key for a specific type, allowing identification and retrieval of values associated with it.
+ * Creates a [AIAgentStorageKey].
  *
- * @param name The name of the storage key used only for its string representation.
- * @return A new instance of [AIAgentStorageKey] for the specified type.
+ * @param name String key.
+ * @param typeToken Type of the value stored under this key.
  */
-public fun <T : Any> createStorageKey(name: String): AIAgentStorageKey<T> = AIAgentStorageKey(name)
+public fun <T : Any> createStorageKey(name: String, typeToken: TypeToken): AIAgentStorageKey<T> =
+    AIAgentStorageKey(name, typeToken)
+
+/**
+ * Creates a [AIAgentStorageKey].
+ *
+ * @param name String key.
+ * @param T Type of the value stored under this key.
+ */
+public inline fun <reified T : Any> createStorageKey(name: String): AIAgentStorageKey<T> =
+    AIAgentStorageKey(name, typeToken<T>())
 
 /**
  * Concurrent-safe key-value storage for an agent.
@@ -34,25 +60,26 @@ public fun <T : Any> createStorageKey(name: String): AIAgentStorageKey<T> = AIAg
 public expect class AIAgentStorage internal constructor(
     delegate: AIAgentStorageImpl,
 ) : AIAgentStorageAPI {
-    public constructor()
-
-    internal val delegate: AIAgentStorageImpl
 
     /**
-     * Creates a copy of this storage.
+     * Creates an instance of [AIAgentStorage].
      *
-     * The key-to-value mapping is copied, but the stored values themselves are not deep-copied:
-     * both the original and the copy share the same value instances.
-     *
-     * @return A new instance of [AIAgentStorage] with the same content as this one.
+     * @param serializer The [JSONSerializer] used to handle serialization and deserialization of stored values.
      */
-    internal suspend fun copy(): AIAgentStorage
+    public constructor(
+        serializer: JSONSerializer,
+    )
+
+    internal val delegate: AIAgentStorageImpl
 
     override suspend fun <T : Any> set(key: AIAgentStorageKey<T>, value: T)
     override suspend fun <T : Any> get(key: AIAgentStorageKey<T>): T?
     override suspend fun <T : Any> getValue(key: AIAgentStorageKey<T>): T
     override suspend fun <T : Any> remove(key: AIAgentStorageKey<T>): T?
-    override suspend fun toMap(): Map<AIAgentStorageKey<*>, Any>
     override suspend fun putAll(map: Map<AIAgentStorageKey<*>, Any>)
+    override suspend fun putAll(other: AIAgentStorage)
     override suspend fun clear()
+    override suspend fun copy(): AIAgentStorage
+    override suspend fun toSerializedMap(): Map<String, JSONElement>
+    override suspend fun putAllSerialized(map: Map<String, JSONElement>)
 }

@@ -1,7 +1,6 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
-group = rootProject.group
-version = rootProject.version
+val isBeta by extra(true)
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -20,6 +19,7 @@ kotlin {
             dependencies {
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.coroutines.core)
+                implementation(project(":agents:agents-utils"))
             }
         }
 

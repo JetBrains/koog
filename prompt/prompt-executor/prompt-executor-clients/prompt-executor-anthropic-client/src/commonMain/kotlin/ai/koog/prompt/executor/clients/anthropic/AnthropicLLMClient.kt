@@ -4,9 +4,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.ktor.fromKtorClient
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
@@ -36,18 +35,19 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.CacheControl
-import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.message.require
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.streaming.requireEndFrame
+import ai.koog.utils.time.KoogClock
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
-import io.ktor.utils.io.CancellationException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -56,10 +56,8 @@ import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicCacheControl as AnthropicCacheControlBlock
@@ -90,14 +88,14 @@ public class AnthropicClientSettings(
  *
  * @param settings Configurable settings for the Anthropic client, which include the base URL and other options.
  * @param httpClient A preconfigured Koog HTTP client used for API calls. Must have authentication and other
- *   request defaults already embedded. To use a Ktor-backed client with standard defaults, use the secondary
- *   constructor that accepts an API key and an [io.ktor.client.HttpClient].
+ *   request defaults already embedded. To create a client with standard defaults, use the secondary
+ *   constructor that accepts an API key and a [KoogHttpClient.Factory].
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public open class AnthropicLLMClient @JvmOverloads constructor(
     private val settings: AnthropicClientSettings = AnthropicClientSettings(),
     protected val httpClient: KoogHttpClient,
-    private val clock: Clock = Clock.System
+    private val clock: KoogClock = KoogClock.System
 ) : LLMClient() {
 
     private companion object {
@@ -111,39 +109,32 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             explicitNulls = false
             namingStrategy = JsonNamingStrategy.SnakeCase
         }
-
-        private fun createConfiguredHttpClient(
-            apiKey: String,
-            settings: AnthropicClientSettings,
-            baseClient: HttpClient = HttpClient()
-        ): KoogHttpClient = KoogHttpClient.fromKtorClient(
-            clientName = ANTHROPIC_CLIENT_NAME,
-            logger = logger,
-            baseClient = baseClient,
-            baseUrl = settings.baseUrl,
-            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis,
-            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
-            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
-            json = json,
-            headers = mapOf(
-                "x-api-key" to apiKey,
-                "anthropic-version" to settings.apiVersion
-            ),
-        )
     }
 
     /**
-     * Secondary constructor for creating an Anthropic client from a base Ktor HTTP client.
+     * Secondary constructor for creating an Anthropic client from an HTTP client factory.
      */
     @JvmOverloads
     public constructor(
         apiKey: String,
         settings: AnthropicClientSettings = AnthropicClientSettings(),
-        baseClient: HttpClient = HttpClient(),
-        clock: Clock = Clock.System
+        httpClientFactory: KoogHttpClient.Factory,
+        clock: KoogClock = KoogClock.System
     ) : this(
         settings = settings,
-        httpClient = createConfiguredHttpClient(apiKey, settings, baseClient),
+        httpClient = httpClientFactory.create(
+            clientName = ANTHROPIC_CLIENT_NAME,
+            baseUrl = settings.baseUrl,
+            headers = mapOf(
+                "x-api-key" to apiKey,
+                "anthropic-version" to settings.apiVersion
+            ),
+            queryParameters = emptyMap(),
+            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis,
+            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis,
+            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis,
+            json = json,
+        ),
         clock = clock
     )
 
@@ -159,7 +150,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
 
     override fun llmProvider(): LLMProvider = LLMProvider.Anthropic
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
         require(model.supports(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -173,7 +164,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         return try {
             httpClient.post(
                 path = settings.messagesPath,
-                request = request,
+                requestBody = request,
                 requestBodyType = String::class,
                 responseType = AnthropicResponse::class,
             )
@@ -218,7 +209,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             try {
                 httpClient.sse(
                     path = settings.messagesPath,
-                    request = request,
+                    requestBody = request,
                     requestBodyType = String::class,
                     decodeStreamingResponse = { json.decodeFromString<AnthropicStreamResponse>(it) },
                     processStreamingChunk = { it }
@@ -374,11 +365,11 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         for (message in prompt.messages) {
             when (message) {
                 is Message.System -> {
-                    if (!message.content.isEmpty()) {
+                    message.parts.forEach { part ->
                         systemMessage.add(
                             SystemAnthropicMessage(
-                                message.content,
-                                cacheControl = message.cacheControl?.toAnthropicCacheControl()
+                                part.text,
+                                cacheControl = part.cacheControl?.toAnthropicCacheControl()
                             )
                         )
                     }
@@ -389,60 +380,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                 }
 
                 is Message.Assistant -> {
-                    messages.add(
-                        AnthropicMessage.Assistant(
-                            content = listOf(
-                                AnthropicContent.Text(
-                                    text = message.content,
-                                    cacheControl = message.cacheControl?.toAnthropicCacheControl()
-                                )
-                            ),
-                        )
-                    )
-                }
-
-                is Message.Reasoning -> {
-                    messages.add(
-                        AnthropicMessage.Assistant(
-                            content = listOf(
-                                AnthropicContent.Thinking(
-                                    signature = message.encrypted
-                                        ?: throw IllegalArgumentException("Encrypted signature is required for reasoning messages but was null"),
-                                    thinking = message.content
-                                )
-                            ),
-                        )
-                    )
-                }
-
-                is Message.Tool.Result -> {
-                    messages.add(
-                        AnthropicMessage.User(
-                            content = listOf(
-                                AnthropicContent.ToolResult(
-                                    toolUseId = message.id ?: "",
-                                    content = message.content,
-                                    isError = message.isError,
-                                    cacheControl = message.cacheControl?.toAnthropicCacheControl()
-                                )
-                            ),
-                        )
-                    )
-                }
-
-                is Message.Tool.Call -> {
-                    // Create a new assistant message with the tool call
-                    messages.add(
-                        AnthropicMessage.Assistant(
-                            content = listOf(
-                                AnthropicContent.ToolUse(
-                                    id = message.id ?: Uuid.random().toString(),
-                                    name = message.tool,
-                                    input = Json.parseToJsonElement(message.content).jsonObject,
-                                )
-                            ),
-                        )
-                    )
+                    messages.add(message.toAnthropicAssistantMessage(model))
                 }
             }
         }
@@ -531,67 +469,143 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         return json.encodeToString(AnthropicMessageRequestSerializer, request)
     }
 
-    private fun Message.User.toAnthropicUserMessage(model: LLModel): AnthropicMessage {
+    @OptIn(ExperimentalUuidApi::class)
+    private fun Message.Assistant.toAnthropicAssistantMessage(model: LLModel): AnthropicMessage.Assistant {
+        val listOfContent = buildList {
+            parts.forEach {
+                when (it) {
+                    is MessagePart.Reasoning -> {
+                        require(model.supports(LLMCapability.Thinking)) {
+                            "Model ${model.id} does not support thinking"
+                        }
+                        add(
+                            AnthropicContent.Thinking(
+                                thinking = it.content.singleOrNull()
+                                    ?: throw IllegalArgumentException("Only single content is required for reasoning messages"),
+                                signature = it.encrypted
+                                    ?: throw IllegalArgumentException("Encrypted signature is required for reasoning messages but was null"),
+                            )
+                        )
+                    }
+
+                    is MessagePart.Text -> {
+                        add(
+                            AnthropicContent.Text(
+                                text = it.text,
+                                cacheControl = it.cacheControl?.toAnthropicCacheControl()
+                            )
+                        )
+                    }
+
+                    is MessagePart.Attachment -> {
+                        throw IllegalArgumentException("Attachments in assistant messages are not supported in Anthropic")
+                    }
+
+                    is MessagePart.Tool.Call -> {
+                        require(model.supports(LLMCapability.Tools)) {
+                            "Model ${model.id} does not support tools"
+                        }
+                        add(
+                            AnthropicContent.ToolUse(
+                                id = it.id ?: Uuid.random().toString(),
+                                name = it.tool,
+                                input = it.argsJson,
+                            )
+                        )
+                    }
+                }
+            }
+        }
+        return AnthropicMessage.Assistant(content = listOfContent)
+    }
+
+    private fun Message.User.toAnthropicUserMessage(model: LLModel): AnthropicMessage.User {
         val listOfContent = buildList {
             parts.forEach { part ->
                 when (part) {
-                    is ContentPart.Text -> add(
+                    is MessagePart.Text -> add(
                         AnthropicContent.Text(
                             part.text,
-                            cacheControl = cacheControl?.toAnthropicCacheControl()
+                            cacheControl = part.cacheControl?.toAnthropicCacheControl()
                         )
                     )
 
-                    is ContentPart.Image -> {
-                        require(model.supports(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support images"
+                    is MessagePart.Tool.Result -> {
+                        require(model.supports(LLMCapability.Tools)) {
+                            "Model ${model.id} does not support tools"
                         }
+                        add(
+                            AnthropicContent.ToolResult(
+                                toolUseId = part.id ?: "",
+                                content = part.output,
+                                isError = part.isError,
+                                // TODO: check if anthropic supports cache control in tool result
+                            )
+                        )
+                    }
 
-                        val imageSource: ImageSource = when (val content = part.content) {
-                            is AttachmentContent.URL -> ImageSource.Url(content.url)
+                    is MessagePart.Attachment -> {
+                        when (val source = part.source) {
+                            is AttachmentSource.Image -> {
+                                require(model.supports(LLMCapability.Vision.Image)) {
+                                    "Model ${model.id} does not support images"
+                                }
 
-                            is AttachmentContent.Binary -> ImageSource.Base64(content.asBase64(), part.mimeType)
+                                val imageSource: ImageSource = when (val content = source.content) {
+                                    is AttachmentContent.URL -> ImageSource.Url(content.url)
+
+                                    is AttachmentContent.Binary -> ImageSource.Base64(
+                                        content.asBase64(),
+                                        source.mimeType
+                                    )
+
+                                    else -> throw LLMClientException(
+                                        clientName,
+                                        "Unsupported image attachment content: ${content::class}"
+                                    )
+                                }
+
+                                add(
+                                    AnthropicContent.Image(
+                                        imageSource,
+                                        cacheControl = part.cacheControl?.toAnthropicCacheControl()
+                                    )
+                                )
+                            }
+
+                            is AttachmentSource.File -> {
+                                require(model.supports(LLMCapability.Document)) {
+                                    "Model ${model.id} does not support files"
+                                }
+
+                                val documentSource: DocumentSource = when (val content = source.content) {
+                                    is AttachmentContent.URL -> DocumentSource.Url(content.url)
+
+                                    is AttachmentContent.Binary -> DocumentSource.Base64(
+                                        content.asBase64(),
+                                        source.mimeType
+                                    )
+
+                                    is AttachmentContent.PlainText -> DocumentSource.PlainText(
+                                        content.text,
+                                        source.mimeType
+                                    )
+                                }
+
+                                add(
+                                    AnthropicContent.Document(
+                                        documentSource,
+                                        cacheControl = part.cacheControl?.toAnthropicCacheControl()
+                                    )
+                                )
+                            }
 
                             else -> throw LLMClientException(
                                 clientName,
-                                "Unsupported image attachment content: ${content::class}"
+                                "Unsupported attachment type: $part"
                             )
                         }
-
-                        add(AnthropicContent.Image(imageSource, cacheControl = cacheControl?.toAnthropicCacheControl()))
                     }
-
-                    is ContentPart.File -> {
-                        require(model.supports(LLMCapability.Document)) {
-                            "Model ${model.id} does not support files"
-                        }
-
-                        val documentSource: DocumentSource = when (val content = part.content) {
-                            is AttachmentContent.URL -> DocumentSource.Url(content.url)
-
-                            is AttachmentContent.Binary -> DocumentSource.Base64(
-                                content.asBase64(),
-                                part.mimeType
-                            )
-
-                            is AttachmentContent.PlainText -> DocumentSource.PlainText(
-                                content.text,
-                                part.mimeType
-                            )
-                        }
-
-                        add(
-                            AnthropicContent.Document(
-                                documentSource,
-                                cacheControl = cacheControl?.toAnthropicCacheControl()
-                            )
-                        )
-                    }
-
-                    else -> throw LLMClientException(
-                        clientName,
-                        "Unsupported attachment type: $part"
-                    )
                 }
             }
         }
@@ -599,7 +613,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         return AnthropicMessage.User(content = listOfContent)
     }
 
-    private fun processAnthropicResponse(response: AnthropicResponse): List<Message.Response> {
+    private fun processAnthropicResponse(response: AnthropicResponse): Message.Assistant {
         // Extract token count from the response
         val inputTokensCount = response.usage?.inputTokens
         val outputTokensCount = response.usage?.outputTokens
@@ -620,30 +634,26 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             metadata = cacheMetadata,
         )
 
-        val responses = response.content.map { content ->
+        val parts = response.content.map { content ->
             when (content) {
-                is AnthropicContent.Text -> {
-                    Message.Assistant(
-                        content = content.text,
-                        finishReason = response.stopReason,
-                        metaInfo = metaInfo
+                is AnthropicContent.Thinking -> {
+                    MessagePart.Reasoning(
+                        encrypted = content.signature,
+                        content = listOf(content.thinking),
                     )
                 }
 
-                is AnthropicContent.Thinking -> {
-                    Message.Reasoning(
-                        encrypted = content.signature,
-                        content = content.thinking,
-                        metaInfo = metaInfo
+                is AnthropicContent.Text -> {
+                    MessagePart.Text(
+                        text = content.text,
                     )
                 }
 
                 is AnthropicContent.ToolUse -> {
-                    Message.Tool.Call(
+                    MessagePart.Tool.Call(
                         id = content.id,
                         tool = content.name,
-                        content = content.input.toString(),
-                        metaInfo = metaInfo
+                        args = content.input,
                     )
                 }
 
@@ -654,27 +664,11 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             }
         }
 
-        return when {
-            // Fix the situation when the model decides to both call tools and talk
-            responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
-
-            // If no messages where returned, return an empty message and check stopReason
-            responses.isEmpty() -> listOf(
-                Message.Assistant(
-                    content = "",
-                    finishReason = response.stopReason,
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = totalTokensCount,
-                        inputTokensCount = inputTokensCount,
-                        outputTokensCount = outputTokensCount,
-                    ),
-                )
-            )
-
-            // Just return responses
-            else -> responses
-        }
+        return Message.Assistant(
+            parts = parts,
+            finishReason = response.stopReason,
+            metaInfo = metaInfo
+        )
     }
 
     /**

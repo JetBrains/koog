@@ -27,15 +27,22 @@ import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.utils.io.use
-import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.kotlin.createOpenTelemetry
+import io.opentelemetry.kotlin.tracing.export.batchSpanProcessor
+import io.opentelemetry.kotlin.tracing.export.simpleSpanProcessor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import java.util.Properties
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Tests for the OpenTelemetry feature.
@@ -120,35 +127,21 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
 
     @ParameterizedTest
     @EnumSource(AgentType::class)
-    fun `test install Open Telemetry feature with custom sdk, should use provided sdk`(agentType: AgentType) = runTest {
-        val expectedSdk = OpenTelemetrySdk.builder().build()
-        var actualSdk: OpenTelemetrySdk? = null
-
-        createAgent(
-            strategy = getSimpleStrategy(agentType),
-        ) {
-            setSdk(expectedSdk)
-            actualSdk = sdk
-        }
-
-        assertEquals(expectedSdk, actualSdk)
-    }
-
-    @ParameterizedTest
-    @EnumSource(AgentType::class)
-    fun `test custom sdk configuration emits correct spans`(agentType: AgentType) = runTest {
+    fun `test custom exporter configuration emits correct spans`(agentType: AgentType) = runTest {
         MockSpanExporter().use { mockExporter ->
-
-            val expectedSdk = createCustomSdk(mockExporter)
 
             val agent = createAgent(
                 strategy = getSingleLLMCallStrategy(agentType),
                 executor = defaultMockExecutor,
             ) {
-                setSdk(expectedSdk)
+                addSpanProcessor { simpleSpanProcessor(mockExporter) }
             }
 
             agent.run(USER_PROMPT_PARIS, null)
+            // Wait for async span exports (Kotlin SDK exports on Dispatchers.Default)
+            withContext(Dispatchers.Default) {
+                withTimeoutOrNull(5.seconds) { mockExporter.isCollected.first { it } }
+            }
             val actualSpanNames = mockExporter.collectedSpans.map { it.name }
             agent.close()
 
@@ -171,10 +164,7 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
                 )
             }
 
-            assertEquals(expectedSpanNames.size, actualSpanNames.size)
-            expectedSpanNames.zip(actualSpanNames).forEach { (expectedSpanName, actualSpanName) ->
-                assertEquals(expectedSpanName, actualSpanName)
-            }
+            assertEquals(expectedSpanNames.sorted(), actualSpanNames.sorted())
         }
     }
 
@@ -206,7 +196,7 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
                 temperature = TEMPERATURE,
                 userPrompt = USER_PROMPT_PARIS,
             ) {
-                addSpanExporter(mockExporter)
+                addSpanProcessor { simpleSpanProcessor(mockExporter) }
 
                 // Add custom span adapter
                 addSpanAdapter(adapter)
@@ -215,29 +205,27 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
                 agent.run("", null)
             }
 
+            // Wait for async span exports (Kotlin SDK exports on Dispatchers.Default)
+            withContext(Dispatchers.Default) {
+                withTimeoutOrNull(5.seconds) { mockExporter.isCollected.first { it } }
+            }
+
             val collectedSpans = mockExporter.collectedSpans
             assertTrue(collectedSpans.isNotEmpty(), "Spans should be created during agent execution")
 
             val conversationIdAttribute = GenAIAttributes.Conversation.Id(mockExporter.lastRunId)
             val operationNameAttribute = GenAIAttributes.Operation.Name(OperationNameType.INVOKE_AGENT)
 
-            fun attributesMatches(attributes: Map<AttributeKey<*>, Any>): Boolean {
-                var conversationIdAttributeExists = false
-                var operationNameAttributeExists = false
-                attributes.forEach { (key, value) ->
-                    if (key.key == conversationIdAttribute.key && value == conversationIdAttribute.value) {
-                        conversationIdAttributeExists = true
-                    }
-
-                    if (key.key == operationNameAttribute.key && value == operationNameAttribute.value) {
-                        operationNameAttributeExists = true
-                    }
-                }
+            fun attributesMatches(attributes: Map<String, Any>): Boolean {
+                val conversationIdAttributeExists =
+                    attributes[conversationIdAttribute.key] == conversationIdAttribute.value
+                val operationNameAttributeExists =
+                    attributes[operationNameAttribute.key] == operationNameAttribute.value
                 return conversationIdAttributeExists && operationNameAttributeExists
             }
 
             val actualInvokeAgentSpans = collectedSpans.filter { span ->
-                attributesMatches(span.attributes.asMap())
+                attributesMatches(span.attributes)
             }
 
             assertEquals(1, actualInvokeAgentSpans.size, "Invoke agent span should be present")
@@ -280,6 +268,169 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
             )
 
             assertSpans(expectedInvokeAgentSpans, actualInvokeAgentSpans)
+        }
+    }
+
+    @Test
+    fun `test addSpanProcessor with batchSpanProcessor exports spans through the SDK`() = runTest {
+        MockSpanExporter().use { mockExporter ->
+            val agent = createAgent(
+                strategy = getSingleLLMCallStrategy(AgentType.Graph),
+                executor = defaultMockExecutor,
+            ) {
+                addSpanProcessor { batchSpanProcessor(mockExporter) }
+            }
+
+            agent.run(USER_PROMPT_PARIS, null)
+            // BatchSpanProcessor flushes asynchronously on its own schedule; closing the agent
+            // (with shutdown-on-close) drains the queue. We use the existing isCollected flag
+            // which fires on the first CreateAgentSpan that lands at the exporter - that span
+            // is only delivered after a flush, so receiving it proves the batch path works.
+            withContext(Dispatchers.Default) {
+                withTimeoutOrNull(10.seconds) { mockExporter.isCollected.first { it } }
+            }
+            agent.close()
+
+            assertTrue(
+                mockExporter.collectedSpans.isNotEmpty(),
+                "Spans should eventually reach the exporter when wrapped in batchSpanProcessor."
+            )
+        }
+    }
+
+    @Test
+    fun testAddSpanExporterWrapsExporterInBatchProcessorAndDeliversSpans() = runTest {
+        MockSpanExporter().use { mockExporter ->
+            val agent = createAgent(
+                strategy = getSingleLLMCallStrategy(AgentType.Graph),
+                executor = defaultMockExecutor,
+            ) {
+                addSpanExporter(mockExporter)
+            }
+
+            agent.run(USER_PROMPT_PARIS, null)
+            withContext(Dispatchers.Default) {
+                withTimeoutOrNull(10.seconds) { mockExporter.isCollected.first { it } }
+            }
+            agent.close()
+
+            assertTrue(
+                mockExporter.collectedSpans.isNotEmpty(),
+                "addSpanExporter must deliver spans through the batchSpanProcessor it registers internally"
+            )
+        }
+    }
+
+    @Test
+    fun testAddResourceAttributesAppearsInBuildResourceMap() {
+        val config = OpenTelemetryConfig()
+
+        config.addResourceAttributes(
+            mapOf(
+                "custom.string" to "hello",
+                "custom.long" to 42L,
+                "custom.bool" to true,
+                "custom.double" to 3.14,
+            )
+        )
+
+        val resourceMap = config.buildResourceMap()
+
+        assertEquals("hello", resourceMap["custom.string"])
+        assertEquals(42L, resourceMap["custom.long"])
+        assertEquals(true, resourceMap["custom.bool"])
+        assertEquals(3.14, resourceMap["custom.double"])
+    }
+
+    @Test
+    fun testSetServiceInfoWithNamespaceStoresNamespaceInBuildResourceMap() {
+        val config = OpenTelemetryConfig()
+
+        config.setServiceInfo("my-service", "1.0.0", "my-namespace")
+
+        val resourceMap = config.buildResourceMap()
+
+        assertEquals("my-service", resourceMap["service.name"])
+        assertEquals("1.0.0", resourceMap["service.version"])
+        assertEquals("my-namespace", resourceMap["service.namespace"])
+    }
+
+    @Test
+    fun testSetServiceInfoWithoutNamespaceOmitsNamespaceFromBuildResourceMap() {
+        val config = OpenTelemetryConfig()
+
+        config.setServiceInfo("my-service", "1.0.0")
+
+        val resourceMap = config.buildResourceMap()
+
+        assertEquals("my-service", resourceMap["service.name"])
+        assertEquals("1.0.0", resourceMap["service.version"])
+        assertTrue(
+            !resourceMap.containsKey("service.namespace"),
+            "service.namespace key must be absent from buildResourceMap when namespace is not set"
+        )
+    }
+
+    @Test
+    fun testMultipleAddSpanProcessorCallsSendSpansToBothProcessors() = runTest {
+        MockSpanExporter().use { exporter1 ->
+            MockSpanExporter().use { exporter2 ->
+                val agent = createAgent(
+                    strategy = getSingleLLMCallStrategy(AgentType.Graph),
+                    executor = defaultMockExecutor,
+                ) {
+                    addSpanProcessor { simpleSpanProcessor(exporter1) }
+                    addSpanProcessor { simpleSpanProcessor(exporter2) }
+                }
+
+                agent.run(USER_PROMPT_PARIS, null)
+                withContext(Dispatchers.Default) {
+                    withTimeoutOrNull(5.seconds) { exporter1.isCollected.first { it } }
+                    withTimeoutOrNull(5.seconds) { exporter2.isCollected.first { it } }
+                }
+                agent.close()
+
+                assertTrue(exporter1.collectedSpans.isNotEmpty(), "First processor's exporter must receive spans when composite processor is used")
+                assertTrue(exporter2.collectedSpans.isNotEmpty(), "Second processor's exporter must receive spans when composite processor is used")
+            }
+        }
+    }
+
+    @Test
+    fun `test setSdk overrides feature configuration and uses the user-supplied SDK`() = runTest {
+        MockSpanExporter().use { sdkExporter ->
+            MockSpanExporter().use { ignoredExporter ->
+                // User builds their own SDK directly with the Kotlin OTel DSL.
+                val userSdk = createOpenTelemetry {
+                    tracerProvider {
+                        export { simpleSpanProcessor(sdkExporter) }
+                    }
+                }
+
+                val agent = createAgent(
+                    strategy = getSingleLLMCallStrategy(AgentType.Graph),
+                    executor = defaultMockExecutor,
+                ) {
+                    setSdk(userSdk)
+                    // Must be ignored - the user-supplied SDK is in charge.
+                    addSpanProcessor { simpleSpanProcessor(ignoredExporter) }
+                }
+
+                agent.run(USER_PROMPT_PARIS, null)
+                withContext(Dispatchers.Default) {
+                    withTimeoutOrNull(5.seconds) { sdkExporter.isCollected.first { it } }
+                }
+                agent.close()
+
+                assertTrue(
+                    sdkExporter.collectedSpans.isNotEmpty(),
+                    "User-supplied SDK's exporter should receive spans."
+                )
+                assertTrue(
+                    ignoredExporter.collectedSpans.isEmpty(),
+                    "Processor registered via addSpanProcessor must be ignored when setSdk is used."
+                )
+            }
         }
     }
 }

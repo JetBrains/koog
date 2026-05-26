@@ -2,12 +2,13 @@ package ai.koog.agents.example.guesser
 
 import ai.koog.agents.core.tools.SimpleTool
 import kotlinx.serialization.Serializable
+import ai.koog.serialization.typeToken
 
 abstract class GuesserTool(
     toolName: String,
     toolDescription: String,
 ) : SimpleTool<GuesserTool.Args>(
-    argsSerializer = Args.serializer(),
+    argsType = typeToken<Args>(),
     name = toolName,
     description = toolDescription
 ) {

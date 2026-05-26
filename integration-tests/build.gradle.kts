@@ -25,6 +25,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(project(":agents:agents-ext"))
+                implementation(project(":agents:agents-planner"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
                 implementation(project(":agents:agents-features:agents-features-snapshot"))
@@ -33,6 +34,8 @@ kotlin {
                 implementation(project(":agents:agents-features:agents-features-opentelemetry"))
                 implementation(project(":agents:agents-mcp-server"))
                 implementation(project(":agents:agents-test"))
+                implementation(project(":test-utils"))
+                implementation(project(":agents:agents-cli"))
                 implementation(
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client")
                 )
@@ -45,6 +48,8 @@ kotlin {
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client")
                 )
                 implementation(project(":agents:agents-features:agents-features-chat-history-aws"))
+                implementation(project(":agents:agents-features:agents-features-longterm-memory-aws"))
+                implementation(project(":serialization:serialization-jackson"))
 
                 // External libraries
                 implementation(libs.junit.jupiter.params)
@@ -56,8 +61,12 @@ kotlin {
                 implementation(libs.aws.sdk.kotlin.bedrock)
                 implementation(libs.aws.sdk.kotlin.bedrockruntime)
                 implementation(libs.aws.sdk.kotlin.bedrockagentcore)
+                implementation(libs.aws.sdk.kotlin.bedrockagentcorecontrol)
+                implementation(libs.awaitility)
                 implementation(libs.ktor.client.content.negotiation)
+                implementation(project.dependencies.platform(libs.opentelemetry.bom))
                 implementation(libs.opentelemetry.sdk.testing)
+                implementation(libs.opentelemetry.kotlin.exporters.inMemory)
             }
         }
     }

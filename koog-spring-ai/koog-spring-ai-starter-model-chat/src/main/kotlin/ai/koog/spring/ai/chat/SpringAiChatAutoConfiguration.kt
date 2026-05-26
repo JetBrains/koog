@@ -7,6 +7,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.spring.ai.common.conditions.ConditionalOnPropertyMissingOrEmpty
 import ai.koog.spring.ai.common.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.ai.common.resolveDispatcher
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.CoroutineDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.model.ChatModel
@@ -183,7 +184,7 @@ private fun createLLMClient(
     return SpringAiLLMClient(
         chatModel = chatModel,
         provider = resolvedProvider,
-        clock = kotlin.time.Clock.System,
+        clock = KoogClock.System,
         dispatcher = dispatcher,
         chatOptionsCustomizer = chatOptionsCustomizer ?: ChatOptionsCustomizer.NOOP,
         moderationModel = moderationModel,

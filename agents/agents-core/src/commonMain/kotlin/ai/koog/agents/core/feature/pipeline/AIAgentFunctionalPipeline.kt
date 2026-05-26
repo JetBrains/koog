@@ -3,7 +3,7 @@ package ai.koog.agents.core.feature.pipeline
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 
 /**
  * Represents a specific implementation of an AI agent pipeline
@@ -12,19 +12,19 @@ import kotlin.time.Clock
  * workflows or data processing tasks that do not require graph-based
  * data structures.
  *
- * @property clock The clock used for time-based operations within the pipeline
+ * @property clock The clock used for time-based operations within the pipeline.
  */
 public class AIAgentFunctionalPipeline(
     agentConfig: AIAgentConfig,
-    clock: Clock = Clock.System
+    clock: KoogClock = KoogClock.System
 ) : AIAgentPipeline(agentConfig, clock) {
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.
      *
-     * @param TConfig The type of the feature configuration
-     * @param TFeature The type of the feature being installed
-     * @param feature The feature implementation to be installed
-     * @param configure A lambda to customize the feature configuration
+     * @param TConfig The type of the feature configuration;
+     * @param TFeature The type of the feature being installed;
+     * @param feature The feature implementation to be installed;
+     * @param configure A lambda to customize the feature configuration.
      */
     public fun <TConfig : FeatureConfig, TFeature : Any> install(
         feature: AIAgentFunctionalFeature<TConfig, TFeature>,

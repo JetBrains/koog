@@ -3,13 +3,10 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.processor.ResponseProcessor
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 
 public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> actual constructor() {
     public actual abstract val promptExecutor: PromptExecutor
@@ -19,7 +16,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock
+        clock: KoogClock
     ): TAgent
 
     public actual abstract suspend fun createAgentAndRun(
@@ -27,7 +24,7 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         id: String?,
         additionalToolRegistry: ToolRegistry,
         agentConfig: AIAgentConfig,
-        clock: Clock
+        clock: KoogClock
     ): Output
 
     public actual abstract suspend fun removeAgent(agent: TAgent): Boolean
@@ -41,55 +38,23 @@ public actual abstract class AIAgentService<Input, Output, TAgent : AIAgent<Inpu
         @OptIn(markerClass = [InternalAgentsApi::class])
         public actual inline fun <reified Input, reified Output> fromAgent(
             agent: GraphAIAgent<Input, Output>
-        ): AIAgentService<Input, Output, GraphAIAgent<Input, Output>> = AIAgentServiceHelper.fromAgent(agent)
+        ): AIAgentService<Input, Output, GraphAIAgent<Input, Output>> = AIAgentService(
+            promptExecutor = agent.promptExecutor,
+            agentConfig = agent.agentConfig,
+            strategy = agent.strategy,
+            toolRegistry = agent.toolRegistry,
+            installFeatures = agent.installFeatures
+        )
 
         @OptIn(markerClass = [InternalAgentsApi::class])
         public actual fun <Input, Output> fromAgent(
             agent: FunctionalAIAgent<Input, Output>
-        ): AIAgentService<Input, Output, FunctionalAIAgent<Input, Output>> = AIAgentServiceHelper.fromAgent(agent)
-
-        @OptIn(markerClass = [InternalAgentsApi::class])
-        public actual inline operator fun <reified Input, reified Output> invoke(
-            promptExecutor: PromptExecutor,
-            agentConfig: AIAgentConfig,
-            strategy: AIAgentGraphStrategy<Input, Output>,
-            toolRegistry: ToolRegistry,
-            noinline installFeatures: GraphAIAgent.FeatureContext.() -> Unit
-        ): GraphAIAgentService<Input, Output> =
-            AIAgentServiceHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, installFeatures)
-
-        public actual operator fun invoke(
-            promptExecutor: PromptExecutor,
-            llmModel: LLModel,
-            responseProcessor: ResponseProcessor?,
-            strategy: AIAgentGraphStrategy<String, String>,
-            toolRegistry: ToolRegistry,
-            systemPrompt: String?,
-            temperature: Double?,
-            numberOfChoices: Int,
-            maxIterations: Int,
-            installFeatures: GraphAIAgent.FeatureContext.() -> Unit
-        ): GraphAIAgentService<String, String> = AIAgentServiceHelper.invoke(
-            promptExecutor,
-            llmModel,
-            responseProcessor,
-            strategy,
-            toolRegistry,
-            systemPrompt,
-            temperature,
-            numberOfChoices,
-            maxIterations,
-            installFeatures
+        ): AIAgentService<Input, Output, FunctionalAIAgent<Input, Output>> = AIAgentService(
+            promptExecutor = agent.promptExecutor,
+            agentConfig = agent.agentConfig,
+            strategy = agent.strategy,
+            toolRegistry = agent.toolRegistry,
+            installFeatures = agent.installFeatures
         )
-
-        @OptIn(markerClass = [InternalAgentsApi::class])
-        public actual operator fun <Input, Output> invoke(
-            promptExecutor: PromptExecutor,
-            agentConfig: AIAgentConfig,
-            strategy: AIAgentFunctionalStrategy<Input, Output>,
-            toolRegistry: ToolRegistry,
-            installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit
-        ): FunctionalAIAgentService<Input, Output> =
-            AIAgentServiceHelper.invoke(promptExecutor, agentConfig, strategy, toolRegistry, installFeatures)
     }
 }

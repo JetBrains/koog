@@ -35,6 +35,7 @@ Install the **OpenTelemetry feature** and call [`addWeaveExporter()`](api:agents
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+    import ai.koog.agents.features.opentelemetry.integration.weave.addWeaveExporter
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
     import kotlinx.coroutines.runBlocking
@@ -71,6 +72,7 @@ Install the **OpenTelemetry feature** and call [`addWeaveExporter()`](api:agents
     <!--- INCLUDE
     import ai.koog.agents.core.agent.AIAgent;
     import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry;
+    import ai.koog.agents.features.opentelemetry.integration.weave.WeaveKt;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import java.util.Optional;
@@ -97,10 +99,11 @@ Install the **OpenTelemetry feature** and call [`addWeaveExporter()`](api:agents
             .llmModel(OpenAIModels.Chat.GPT4oMini)
             .systemPrompt("You are a helpful assistant.")
             .install(OpenTelemetry.Feature, config ->
-                config.addWeaveExporter(
-                    null,   // OTel endpoint URL (falls back to WEAVE_URL, defaults to https://trace.wandb.ai)
+                WeaveKt.addWeaveExporter(
+                    config,
+                    null,        // weaveOtelBaseUrl: falls back to WEAVE_URL, defaults to https://trace.wandb.ai
                     entity,
-                    projectName
+                    projectName  // remaining params (apiKey, timeout) use defaults
                 )
             )
             .build();

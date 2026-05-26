@@ -8,7 +8,7 @@ mockk = "1.13.8"
 opentelemetry = "1.51.0"
 postgresql = "42.7.4"
 oshai-logging = "7.0.7"
-mcp = "0.8.1"
+mcp = "0.11.1"
 
 [libraries]
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }

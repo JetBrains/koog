@@ -188,7 +188,7 @@ Below is a usage example of an auto-configured executor in Spring MVC RestContro
 === "Java"
 
     ```java
-    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.Prompt;
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
     import ai.koog.prompt.executor.model.PromptExecutor;
     import ai.koog.prompt.message.Message;
@@ -287,7 +287,7 @@ After configuring multiple LLM providers you can send request to multiple LLMs v
 === "Java"
 
     ```java
-    import ai.koog.prompt.dsl.Prompt;
+    import ai.koog.prompt.Prompt;
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels;

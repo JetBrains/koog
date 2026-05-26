@@ -120,6 +120,8 @@ class CheckSplitPackagesPlugin : Plugin<Project> {
                 group = "verification"
                 description = "Fails the build if any package appears in more than one JAR on the classpath."
 
+                dependsOn(cpConf)
+
                 doLast {
                     val files = cpConf.resolve().filter { it.extension == "jar" }
                     if (files.isEmpty()) {

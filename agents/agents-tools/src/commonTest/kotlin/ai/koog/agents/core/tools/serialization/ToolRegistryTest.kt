@@ -1,7 +1,7 @@
 package ai.koog.agents.core.tools.serialization
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolRegistry
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -51,8 +51,8 @@ class ToolRegistryTest {
     @Test
     fun testGetTool() {
         // Test getting a tool by name
-        assertEquals<Tool<*, *>>(tool1, sampleRegistry.getTool(tool1.name))
-        assertEquals<Tool<*, *>>(tool2, sampleRegistry.getTool(tool2.name))
+        assertEquals<ToolBase<*, *>>(tool1, sampleRegistry.getTool(tool1.name))
+        assertEquals<ToolBase<*, *>>(tool2, sampleRegistry.getTool(tool2.name))
 
         // Test getting a tool that doesn't exist
         assertFailsWith<IllegalArgumentException>("Should fail on unknown tool") {

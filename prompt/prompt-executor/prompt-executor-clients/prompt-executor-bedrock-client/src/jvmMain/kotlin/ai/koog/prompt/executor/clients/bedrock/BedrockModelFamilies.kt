@@ -53,4 +53,22 @@ public sealed class BedrockModelFamilies(
      */
     @Serializable
     public data object MoonshotKimi : BedrockModelFamilies("bedrock.moonshot", "AWS Bedrock (Moonshot Kimi)")
+
+    /**
+     * Represents the Google sub-provider under AWS Bedrock.
+     */
+    @Serializable
+    public data object GoogleGemma : BedrockModelFamilies("bedrock.google", "AWS Bedrock (Google Gemma)")
+
+    /**
+     * Represents the MiniMax sub-provider under AWS Bedrock.
+     */
+    @Serializable
+    public data object MiniMax : BedrockModelFamilies("bedrock.minimax", "AWS Bedrock (MiniMax)")
+
+    /**
+     * Represents the OpenAI sub-provider under AWS Bedrock.
+     */
+    @Serializable
+    public data object OpenAI : BedrockModelFamilies("bedrock.openai", "AWS Bedrock (OpenAI)")
 }

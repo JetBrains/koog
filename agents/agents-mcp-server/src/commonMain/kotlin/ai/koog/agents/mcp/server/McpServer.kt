@@ -1,6 +1,6 @@
 package ai.koog.agents.mcp.server
 
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -9,6 +9,7 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
+import io.ktor.server.application.Application
 import io.ktor.server.engine.ApplicationEngineFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.EngineConnectorConfig
@@ -16,6 +17,7 @@ import io.ktor.server.engine.embeddedServer
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcp
+import io.modelcontextprotocol.kotlin.sdk.server.mcpStreamableHttp
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
@@ -23,6 +25,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
@@ -32,53 +35,84 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.milliseconds
 import io.modelcontextprotocol.kotlin.sdk.types.Tool as SdkTool
 
 /**
- * Starts a new MCP server with the passed [tools] that listens to and writes
- * to the specified [port] on the passed [host].
- * A port can be obtained from the returned list of [EngineConnectorConfig].
+ * Supported MCP server transport types for the Ktor-based [startMcpServer].
+ *
+ * For stdio transport use the platform-specific `startStdioMcpServer(tools)` entry point.
  */
-public suspend fun startSseMcpServer(
-    factory: ApplicationEngineFactory<*, *>,
-    port: Int = 3000,
-    host: String = "localhost",
-    tools: ToolRegistry,
-): Server = doStartSseMcpServer(factory, port, host, tools, true).first
+public enum class McpServerTransportType {
+    /** Streamable HTTP transport. */
+    StreamableHttp,
+
+    /** SSE transport. */
+    SSE,
+}
 
 /**
- * Starts a new MCP server with the passed [tools] that listens to and writes
- * to the allocated port on the passed [host].
- * A port can be obtained from the returned list of [EngineConnectorConfig].
+ * Starts a new MCP server with the given [tools] on the specified [port] and [host].
+ * Defaults to Streamable HTTP transport.
+ *
+ * @param factory The Ktor application engine factory to use (e.g., CIO, Netty).
+ * @param tools The tools to expose via the MCP server.
+ * @param port The port to listen on.
+ * @param host The host to bind to.
+ * @param transport The transport type to use.
+ * @return The MCP [Server].
  */
-public suspend fun startSseMcpServer(
+public suspend fun startMcpServer(
     factory: ApplicationEngineFactory<*, *>,
-    host: String = "localhost",
     tools: ToolRegistry,
-): Pair<Server, List<EngineConnectorConfig>> = doStartSseMcpServer(factory, 0, host, tools, false)
+    port: Int = 3000,
+    host: String = "localhost",
+    transport: McpServerTransportType = McpServerTransportType.StreamableHttp,
+): Server = doStartMcpServer(factory, port, host, tools) { server ->
+    installMcpTransport(server, transport)
+}.first
 
-private suspend fun doStartSseMcpServer(
+/**
+ * Starts a new MCP server with the given [tools] on an OS-allocated port on the passed [host].
+ * The actual port can be obtained from the returned list of [EngineConnectorConfig].
+ * Defaults to Streamable HTTP transport.
+ *
+ * @param factory The Ktor application engine factory to use (e.g., CIO, Netty).
+ * @param tools The tools to expose via the MCP server.
+ * @param host The host to bind to.
+ * @param transport The transport type to use.
+ * @return A pair of the MCP [Server] and the list of connectors (used to discover the allocated port).
+ */
+public suspend fun startMcpServer(
+    factory: ApplicationEngineFactory<*, *>,
+    tools: ToolRegistry,
+    host: String = "localhost",
+    transport: McpServerTransportType = McpServerTransportType.StreamableHttp,
+): Pair<Server, List<EngineConnectorConfig>> = doStartMcpServer(factory, 0, host, tools) { server ->
+    installMcpTransport(server, transport)
+}
+
+private fun Application.installMcpTransport(server: Server, transport: McpServerTransportType) {
+    when (transport) {
+        McpServerTransportType.StreamableHttp -> mcpStreamableHttp { server }
+        McpServerTransportType.SSE -> mcp { server }
+    }
+}
+
+private suspend fun doStartMcpServer(
     factory: ApplicationEngineFactory<*, *>,
     port: Int,
     host: String,
     tools: ToolRegistry,
-    skipConnectors: Boolean,
+    install: Application.(Server) -> Unit,
 ): Pair<Server, List<EngineConnectorConfig>> {
     val server = configureMcpServer(tools)
 
-    val emb = embeddedServer(factory = factory, host = host, port = port) {
-        mcp { server }
-    }
+    val emb = embeddedServer(factory = factory, host = host, port = port) { install(server) }
         .also { emb -> server.onClose { emb.stop(1000, 1000) } }
         .startSuspend(wait = false)
 
-    val connectors = if (skipConnectors) {
-        emptyList()
-    } else {
-        emb.connectors()
-    }
-
-    return server to connectors
+    return server to emb.connectors()
 }
 
 private suspend fun EmbeddedServer<*, *>.connectors(): List<EngineConnectorConfig> = coroutineScope {
@@ -90,6 +124,7 @@ private suspend fun EmbeddedServer<*, *>.connectors(): List<EngineConnectorConfi
         if (connectors.isNotEmpty()) {
             return@coroutineScope connectors
         }
+        delay(50.milliseconds)
     }
 
     return@coroutineScope emptyList()
@@ -134,7 +169,7 @@ public fun configureMcpServer(
  */
 @OptIn(InternalAgentToolsApi::class)
 public fun Server.addTool(
-    tool: Tool<*, *>,
+    tool: ToolBase<*, *>,
     serializer: JSONSerializer = KotlinxSerializer(),
 ) {
     addTool(tool.descriptor.asSdkTool()) { request ->

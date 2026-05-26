@@ -2,7 +2,7 @@ package ai.koog.integration.tests.client;
 
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.TestCredentials;
-import ai.koog.prompt.dsl.Prompt;
+import ai.koog.prompt.Prompt;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
@@ -10,27 +10,30 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
+import static ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactory.anthropicClient;
+import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LLMClientIntegrationTest extends KoogJavaTestBase {
 
-    private void assertValidResponse(List<Message.Response> responses) {
-        assertNotNull(responses);
-        assertFalse(responses.isEmpty());
-        assertInstanceOf(Message.Assistant.class, responses.get(0));
-        String content = responses.get(0).getContent();
+    private void assertValidResponse(Message.Assistant response) {
+        assertNotNull(response);
+        String content = response.getParts().stream()
+            .filter(part -> part instanceof MessagePart.Text)
+            .map(part -> ((MessagePart.Text) part).getText())
+            .collect(java.util.stream.Collectors.joining());
         assertFalse(content.isEmpty());
     }
 
     @Test
     public void integration_OpenAILLMClient() {
-        OpenAILLMClient client = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
+        OpenAILLMClient client = openAIClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
         resourcesToClose.add((AutoCloseable) client);
 
         assertEquals(LLMProvider.OpenAI, client.llmProvider());
@@ -40,14 +43,14 @@ public class LLMClientIntegrationTest extends KoogJavaTestBase {
             .user("Say 'Hello from OpenAI'")
             .build();
 
-        List<Message.Response> responses = client.execute(prompt, OpenAIModels.Chat.GPT4o);
+        Message.Assistant responses = client.execute(prompt, OpenAIModels.Chat.GPT4o);
 
         assertValidResponse(responses);
     }
 
     @Test
     public void integration_AnthropicLLMClient() {
-        AnthropicLLMClient client = new AnthropicLLMClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
+        AnthropicLLMClient client = anthropicClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
         resourcesToClose.add((AutoCloseable) client);
 
         assertEquals(LLMProvider.Anthropic, client.llmProvider());
@@ -57,15 +60,15 @@ public class LLMClientIntegrationTest extends KoogJavaTestBase {
             .user("Say 'Hello from Anthropic'")
             .build();
 
-        List<Message.Response> responses = client.execute(prompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
+        Message.Assistant responses = client.execute(prompt, AnthropicModels.Haiku_4_5, Collections.emptyList());
 
         assertValidResponse(responses);
     }
 
     @Test
     public void integration_MultiLLMPromptExecutor() {
-        OpenAILLMClient openAIClient = new OpenAILLMClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
-        AnthropicLLMClient anthropicClient = new AnthropicLLMClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
+        OpenAILLMClient openAIClient = openAIClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
+        AnthropicLLMClient anthropicClient = anthropicClient(TestCredentials.INSTANCE.readTestAnthropicKeyFromEnv());
 
         resourcesToClose.add((AutoCloseable) openAIClient);
         resourcesToClose.add((AutoCloseable) anthropicClient);
@@ -82,7 +85,7 @@ public class LLMClientIntegrationTest extends KoogJavaTestBase {
             .user("Say 'OpenAI response'")
             .build();
 
-        List<Message.Response> openAIResponses = executor.execute(openAIPrompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
+        Message.Assistant openAIResponses = executor.execute(openAIPrompt, OpenAIModels.Chat.GPT4o, Collections.emptyList());
         assertValidResponse(openAIResponses);
 
         Prompt anthropicPrompt = Prompt.builder("test-multi-anthropic")
@@ -90,7 +93,7 @@ public class LLMClientIntegrationTest extends KoogJavaTestBase {
             .user("Say 'Anthropic response'")
             .build();
 
-        List<Message.Response> anthropicResponses = executor.execute(anthropicPrompt, AnthropicModels.Haiku_4_5);
+        Message.Assistant anthropicResponses = executor.execute(anthropicPrompt, AnthropicModels.Haiku_4_5);
         assertValidResponse(anthropicResponses);
     }
 }

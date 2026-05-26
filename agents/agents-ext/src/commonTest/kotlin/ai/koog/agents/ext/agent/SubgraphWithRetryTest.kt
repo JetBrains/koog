@@ -12,6 +12,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
@@ -488,7 +489,7 @@ class SubgraphWithRetryTest {
         assertIs<Message.User>(actualConditionDescriptionMessage)
         assertEquals(
             "Condition description",
-            actualConditionDescriptionMessage.content,
+            actualConditionDescriptionMessage.parts.filterIsInstance<MessagePart.Text>().single().text,
             "Condition description message should be added to the prompt"
         )
         for (i in 1..numRetries - 1) {
@@ -496,7 +497,7 @@ class SubgraphWithRetryTest {
             assertIs<Message.User>(actualFeedbackMessage)
             assertEquals(
                 "Retry $i",
-                actualFeedbackMessage.content,
+                actualFeedbackMessage.parts.filterIsInstance<MessagePart.Text>().single().text,
                 "Feedback message number $i should be added to the prompt"
             )
         }

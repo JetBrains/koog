@@ -1,17 +1,17 @@
 package ai.koog.prompt.cache.model
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlin.math.absoluteValue
-import kotlin.time.Clock
 
 private val defaultJson = Json {
     ignoreUnknownKeys = true
@@ -152,9 +152,6 @@ public interface PromptCache {
                         is Message.User -> message.copy(metaInfo = RequestMetaInfo.Empty)
                         is Message.System -> message.copy(metaInfo = RequestMetaInfo.Empty)
                         is Message.Assistant -> message.copy(metaInfo = ResponseMetaInfo.Empty)
-                        is Message.Reasoning -> message.copy(metaInfo = ResponseMetaInfo.Empty)
-                        is Message.Tool.Call -> message.copy(metaInfo = ResponseMetaInfo.Empty)
-                        is Message.Tool.Result -> message.copy(metaInfo = RequestMetaInfo.Empty)
                     }
                 }
 
@@ -195,7 +192,7 @@ public interface PromptCache {
      * @param request The request to get the cached response for
      * @return The cached response, or null if not cached
      */
-    public suspend fun get(request: Request): List<Message.Response>?
+    public suspend fun get(request: Request): Message.Assistant?
 
     /**
      * Put a response in the cache for a request.
@@ -203,7 +200,7 @@ public interface PromptCache {
      * @param request The request to cache the response for
      * @param response The response to cache
      */
-    public suspend fun put(request: Request, response: List<Message.Response>)
+    public suspend fun put(request: Request, response: Message.Assistant)
 }
 
 /**
@@ -216,18 +213,18 @@ public interface PromptCache {
 public suspend fun PromptCache.get(
     prompt: Prompt,
     tools: List<ToolDescriptor>,
-    clock: Clock = Clock.System
-): List<Message.Response>? {
-    return get(PromptCache.Request.create(prompt, tools))?.let { messages ->
+    clock: KoogClock = KoogClock.System
+): Message.Assistant? {
+    return get(PromptCache.Request.create(prompt, tools))?.let { message ->
         val metaInfo = prompt
             .messages
-            .filterIsInstance<Message.Response>()
+            .filterIsInstance<Message.Assistant>()
             .lastOrNull()
             ?.metaInfo
             ?.copy(timestamp = clock.now())
             ?: ResponseMetaInfo.create(clock)
 
-        messages.map { message -> message.copy(metaInfo) }
+        (message as Message.Assistant).copy(metaInfo = metaInfo)
     }
 }
 
@@ -238,6 +235,6 @@ public suspend fun PromptCache.get(
  * @param tools The tools used with the prompt
  * @param response The response to cache
  */
-public suspend fun PromptCache.put(prompt: Prompt, tools: List<ToolDescriptor>, response: List<Message.Response>) {
+public suspend fun PromptCache.put(prompt: Prompt, tools: List<ToolDescriptor>, response: Message.Assistant) {
     put(PromptCache.Request.create(prompt, tools), response)
 }

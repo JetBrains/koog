@@ -1,11 +1,11 @@
 package ai.koog.prompt
 
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.message.MessagePart
+import ai.koog.utils.time.KoogClock
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 /**
@@ -16,9 +16,7 @@ class JavaAPIPromptTest {
     companion object {
         val ts: Instant = Instant.parse("2023-01-01T00:00:00Z")
 
-        val testClock: Clock = object : Clock {
-            override fun now(): Instant = ts
-        }
+        val testClock: KoogClock = KoogClock { ts }
 
         const val promptId = "test-prompt-id"
     }
@@ -115,7 +113,8 @@ class JavaAPIPromptTest {
 
         assertEquals(1, prompt1.messages.size)
         assertEquals(2, prompt2.messages.size)
-        assertEquals("System 1", prompt1.messages[0].content)
-        assertEquals("System 2", prompt2.messages[0].content)
+        assertEquals("System 1", (prompt1.messages[0].parts[0] as MessagePart.Text).text)
+        assertEquals("System 2", (prompt2.messages[0].parts[0] as MessagePart.Text).text)
+        assertEquals("User 2", (prompt2.messages[1].parts[0] as MessagePart.Text).text)
     }
 }

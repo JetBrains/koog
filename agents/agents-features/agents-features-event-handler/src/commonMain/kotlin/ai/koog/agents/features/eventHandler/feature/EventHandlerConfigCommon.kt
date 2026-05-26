@@ -1,21 +1,6 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.agents.core.feature.handler.AfterLLMCallContext
-import ai.koog.agents.core.feature.handler.AgentBeforeCloseContext
-import ai.koog.agents.core.feature.handler.AgentFinishedContext
-import ai.koog.agents.core.feature.handler.AgentRunErrorContext
-import ai.koog.agents.core.feature.handler.AgentStartContext
-import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
-import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
-import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
-import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
-import ai.koog.agents.core.feature.handler.StrategyFinishedContext
-import ai.koog.agents.core.feature.handler.StrategyStartContext
-import ai.koog.agents.core.feature.handler.ToolCallContext
-import ai.koog.agents.core.feature.handler.ToolCallFailureContext
-import ai.koog.agents.core.feature.handler.ToolCallResultContext
-import ai.koog.agents.core.feature.handler.ToolValidationErrorContext
 import ai.koog.agents.core.feature.handler.agent.AgentClosingContext
 import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
 import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
@@ -38,6 +23,7 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
+import kotlin.jvm.JvmSynthetic
 
 /**
  * API for the [EventHandlerConfig]
@@ -124,6 +110,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when an agent is started.
      */
+    @JvmSynthetic
     public fun onAgentStarting(handler: suspend (eventContext: AgentStartingContext) -> Unit) {
         val originalHandler = this._onAgentStarting
         this._onAgentStarting = { eventContext ->
@@ -135,6 +122,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when an agent finishes execution.
      */
+    @JvmSynthetic
     public fun onAgentCompleted(handler: suspend (eventContext: AgentCompletedContext) -> Unit) {
         val originalHandler = this._onAgentCompleted
         this._onAgentCompleted = { eventContext ->
@@ -146,6 +134,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when an error occurs during agent execution.
      */
+    @JvmSynthetic
     public fun onAgentExecutionFailed(handler: suspend (eventContext: AgentExecutionFailedContext) -> Unit) {
         val originalHandler = this._onAgentExecutionFailed
         this._onAgentExecutionFailed = { eventContext ->
@@ -158,6 +147,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
      * Appends a handler called before an agent is closed. This allows for additional behavior
      * to be executed prior to the agent being closed.
      */
+    @JvmSynthetic
     public fun onAgentClosing(handler: suspend (eventContext: AgentClosingContext) -> Unit) {
         val originalHandler = this._onAgentClosing
         this._onAgentClosing = { eventContext ->
@@ -173,6 +163,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when a strategy starts execution.
      */
+    @JvmSynthetic
     public fun onStrategyStarting(handler: suspend (eventContext: StrategyStartingContext) -> Unit) {
         val originalHandler = this._onStrategyStarting
         this._onStrategyStarting = { eventContext ->
@@ -184,6 +175,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when a strategy finishes execution.
      */
+    @JvmSynthetic
     public fun onStrategyCompleted(handler: suspend (eventContext: StrategyCompletedContext) -> Unit) {
         val originalHandler = this._onStrategyCompleted
         this._onStrategyCompleted = { eventContext ->
@@ -199,6 +191,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called before a node in the agent's execution graph is processed.
      */
+    @JvmSynthetic
     public fun onNodeExecutionStarting(handler: suspend (eventContext: NodeExecutionStartingContext) -> Unit) {
         val originalHandler = this._onNodeExecutionStarting
         this._onNodeExecutionStarting = { eventContext ->
@@ -210,6 +203,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called after a node in the agent's execution graph has been processed.
      */
+    @JvmSynthetic
     public fun onNodeExecutionCompleted(handler: suspend (eventContext: NodeExecutionCompletedContext) -> Unit) {
         val originalHandler = this._onNodeExecutionCompleted
         this._onNodeExecutionCompleted = { eventContext ->
@@ -221,6 +215,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when an error occurs during the execution of a node.
      */
+    @JvmSynthetic
     public fun onNodeExecutionFailed(handler: suspend (eventContext: NodeExecutionFailedContext) -> Unit) {
         val originalHandler = this._onNodeExecutionFailed
         this._onNodeExecutionFailed = { eventContext ->
@@ -236,6 +231,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called before a subgraph in the agent's execution graph is processed.
      */
+    @JvmSynthetic
     public fun onSubgraphExecutionStarting(handler: suspend (eventContext: SubgraphExecutionStartingContext) -> Unit) {
         val originalHandler = this._onSubgraphExecutionStarting
         this._onSubgraphExecutionStarting = { eventContext ->
@@ -247,6 +243,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called after a subgraph in the agent's execution graph has been processed.
      */
+    @JvmSynthetic
     public fun onSubgraphExecutionCompleted(handler: suspend (eventContext: SubgraphExecutionCompletedContext) -> Unit) {
         val originalHandler = this._onSubgraphExecutionCompleted
         this._onSubgraphExecutionCompleted = { eventContext ->
@@ -258,6 +255,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when an error occurs during the execution of a subgraph.
      */
+    @JvmSynthetic
     public fun onSubgraphExecutionFailed(handler: suspend (eventContext: SubgraphExecutionFailedContext) -> Unit) {
         val originalHandler = this._onSubgraphExecutionFailed
         this._onSubgraphExecutionFailed = { eventContext ->
@@ -273,6 +271,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called before a call is made to the language model.
      */
+    @JvmSynthetic
     public fun onLLMCallStarting(handler: suspend (eventContext: LLMCallStartingContext) -> Unit) {
         val originalHandler = this._onLLMCallStarting
         this._onLLMCallStarting = { eventContext ->
@@ -284,6 +283,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called after a response is received from the language model.
      */
+    @JvmSynthetic
     public fun onLLMCallCompleted(handler: suspend (eventContext: LLMCallCompletedContext) -> Unit) {
         val originalHandler = this._onLLMCallCompleted
         this._onLLMCallCompleted = { eventContext ->
@@ -299,6 +299,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when a tool is about to be called.
      */
+    @JvmSynthetic
     public fun onToolCallStarting(handler: suspend (eventContext: ToolCallStartingContext) -> Unit) {
         val originalHandler = this._onToolCallStarting
         this._onToolCallStarting = { eventContext ->
@@ -310,6 +311,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when a validation error occurs during a tool call.
      */
+    @JvmSynthetic
     public fun onToolValidationFailed(handler: suspend (eventContext: ToolValidationFailedContext) -> Unit) {
         val originalHandler = this._onToolValidationFailed
         this._onToolValidationFailed = { eventContext ->
@@ -321,6 +323,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when a tool call fails with an exception.
      */
+    @JvmSynthetic
     public fun onToolCallFailed(handler: suspend (eventContext: ToolCallFailedContext) -> Unit) {
         val originalHandler = this._onToolCallFailed
         this._onToolCallFailed = { eventContext ->
@@ -332,6 +335,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     /**
      * Append handler called when a tool call completes successfully.
      */
+    @JvmSynthetic
     public fun onToolCallCompleted(handler: suspend (eventContext: ToolCallCompletedContext) -> Unit) {
         val originalHandler = this._onToolCallCompleted
         this._onToolCallCompleted = { eventContext ->
@@ -361,6 +365,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
      * }
      * ```
      */
+    @JvmSynthetic
     public fun onLLMStreamingStarting(handler: suspend (eventContext: LLMStreamingStartingContext) -> Unit) {
         val originalHandler = this._onLLMStreamingStarting
         this._onLLMStreamingStarting = { eventContext ->
@@ -388,6 +393,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
      * }
      * ```
      */
+    @JvmSynthetic
     public fun onLLMStreamingFrameReceived(handler: suspend (eventContext: LLMStreamingFrameReceivedContext) -> Unit) {
         val originalHandler = this._onLLMStreamingFrameReceived
         this._onLLMStreamingFrameReceived = { eventContext ->
@@ -412,6 +418,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
      * }
      * ```
      */
+    @JvmSynthetic
     public fun onLLMStreamingFailed(handler: suspend (eventContext: LLMStreamingFailedContext) -> Unit) {
         val originalHandler = this._onLLMStreamingFailed
         this._onLLMStreamingFailed = { eventContext ->
@@ -437,6 +444,7 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
      * }
      * ```
      */
+    @JvmSynthetic
     public fun onLLMStreamingCompleted(handler: suspend (eventContext: LLMStreamingCompletedContext) -> Unit) {
         val originalHandler = this._onLLMStreamingCompleted
         this._onLLMStreamingCompleted = { eventContext ->
@@ -446,188 +454,6 @@ public open class EventHandlerConfigCommon : FeatureConfig() {
     }
 
     //endregion Stream Handlers
-
-    //region Deprecated Handlers
-
-    /**
-     * Append handler called when an agent is started.
-     */
-    @Deprecated(
-        message = "Use onAgentStarting instead",
-        ReplaceWith("onAgentStarting(handler)", "ai.koog.agents.core.feature.handler.AgentStartingContext")
-    )
-    public fun onBeforeAgentStarted(handler: suspend (eventContext: AgentStartContext) -> Unit) {
-        onAgentStarting(handler)
-    }
-
-    /**
-     * Append handler called when an agent finishes execution.
-     */
-    @Deprecated(
-        message = "Use onAgentCompleted instead",
-        ReplaceWith("onAgentCompleted(handler)", "ai.koog.agents.core.feature.handler.AgentCompletedContext")
-    )
-    public fun onAgentFinished(handler: suspend (eventContext: AgentFinishedContext) -> Unit) {
-        onAgentCompleted(handler)
-    }
-
-    /**
-     * Append handler called when an error occurs during agent execution.
-     */
-    @Deprecated(
-        message = "Use onAgentExecutionFailed instead",
-        ReplaceWith(
-            "onAgentExecutionFailed(handler)",
-            "ai.koog.agents.core.feature.handler.AgentExecutionFailedContext"
-        )
-    )
-    public fun onAgentRunError(handler: suspend (eventContext: AgentRunErrorContext) -> Unit) {
-        onAgentExecutionFailed(handler)
-    }
-
-    /**
-     * Appends a handler called before an agent is closed. This allows for additional behavior
-     * to be executed prior to the agent being closed.
-     */
-    @Deprecated(
-        message = "Use onAgentClosing instead",
-        ReplaceWith("onAgentClosing(handler)", "ai.koog.agents.core.feature.handler.AgentClosingContext")
-    )
-    public fun onAgentBeforeClose(handler: suspend (eventContext: AgentBeforeCloseContext) -> Unit) {
-        onAgentClosing(handler)
-    }
-
-    /**
-     * Append handler called when a strategy starts execution.
-     */
-    @Deprecated(
-        message = "Use onStrategyStarting instead",
-        ReplaceWith("onStrategyStarting(handler)", "ai.koog.agents.core.feature.handler.StrategyStartingContext")
-    )
-    public fun onStrategyStarted(handler: suspend (eventContext: StrategyStartContext) -> Unit) {
-        onStrategyStarting(handler)
-    }
-
-    /**
-     * Append handler called when a strategy finishes execution.
-     */
-    @Deprecated(
-        message = "Use onStrategyCompleted instead",
-        ReplaceWith("onStrategyCompleted(handler)", "ai.koog.agents.core.feature.handler.StrategyCompletedContext")
-    )
-    public fun onStrategyFinished(handler: suspend (eventContext: StrategyFinishedContext) -> Unit) {
-        onStrategyCompleted(handler)
-    }
-
-    /**
-     * Append handler called before a node in the agent's execution graph is processed.
-     */
-    @Deprecated(
-        message = "Use onNodeExecutionStarting instead",
-        ReplaceWith(
-            "onNodeExecutionStarting(handler)",
-            "ai.koog.agents.core.feature.handler.NodeExecutionStartingContext"
-        )
-    )
-    public fun onBeforeNode(handler: suspend (eventContext: NodeBeforeExecuteContext) -> Unit) {
-        onNodeExecutionStarting(handler)
-    }
-
-    /**
-     * Append handler called after a node in the agent's execution graph has been processed.
-     */
-    @Deprecated(
-        message = "Use onNodeExecutionCompleted instead",
-        ReplaceWith(
-            "onNodeExecutionCompleted(handler)",
-            "ai.koog.agents.core.feature.handler.NodeExecutionCompletedContext"
-        )
-    )
-    public fun onAfterNode(handler: suspend (eventContext: NodeAfterExecuteContext) -> Unit) {
-        onNodeExecutionCompleted(handler)
-    }
-
-    /**
-     * Append handler called when an error occurs during the execution of a node.
-     */
-    @Deprecated(
-        message = "Use onNodeExecutionError instead",
-        ReplaceWith("onNodeExecutionFailed(handler)", "ai.koog.agents.core.feature.handler.NodeExecutionFailedContext")
-    )
-    public fun onNodeExecutionError(handler: suspend (eventContext: NodeExecutionErrorContext) -> Unit) {
-        onNodeExecutionFailed(handler)
-    }
-
-    /**
-     * Append handler called before a call is made to the language model.
-     */
-    @Deprecated(
-        message = "Use onLLMCallStarting instead",
-        ReplaceWith("onLLMCallStarting(handler)", "ai.koog.agents.core.feature.handler.LLMCallStartingContext")
-    )
-    public fun onBeforeLLMCall(handler: suspend (eventContext: BeforeLLMCallContext) -> Unit) {
-        onLLMCallStarting(handler)
-    }
-
-    /**
-     * Append handler called after a response is received from the language model.
-     */
-    @Deprecated(
-        message = "Use onLLMCallCompleted instead",
-        ReplaceWith("onLLMCallCompleted(handler)", "ai.koog.agents.core.feature.handler.LLMCallCompletedContext")
-    )
-    public fun onAfterLLMCall(handler: suspend (eventContext: AfterLLMCallContext) -> Unit) {
-        onLLMCallCompleted(handler)
-    }
-
-    /**
-     * Append handler called when a tool is about to be called.
-     */
-    @Deprecated(
-        message = "Use onToolCallStarting instead",
-        ReplaceWith("onToolCallStarting(handler)", "ai.koog.agents.core.feature.handler.ToolCallStartingContext")
-    )
-    public fun onToolCall(handler: suspend (eventContext: ToolCallContext) -> Unit) {
-        onToolCallStarting(handler)
-    }
-
-    /**
-     * Append handler called when a validation error occurs during a tool call.
-     */
-    @Deprecated(
-        message = "Use onToolValidationFailed instead",
-        ReplaceWith(
-            "onToolValidationFailed(handler)",
-            "ai.koog.agents.core.feature.handler.ToolValidationFailedContext"
-        )
-    )
-    public fun onToolValidationError(handler: suspend (eventContext: ToolValidationErrorContext) -> Unit) {
-        onToolValidationFailed(handler)
-    }
-
-    /**
-     * Append handler called when a tool call fails with an exception.
-     */
-    @Deprecated(
-        message = "Use onToolCallFailed instead",
-        ReplaceWith("onToolCallFailed(handler)", "ai.koog.agents.core.feature.handler.ToolCallFailedContext")
-    )
-    public fun onToolCallFailure(handler: suspend (eventContext: ToolCallFailureContext) -> Unit) {
-        onToolCallFailed(handler)
-    }
-
-    /**
-     * Append handler called when a tool call completes successfully.
-     */
-    @Deprecated(
-        message = "Use onToolCallCompleted instead",
-        ReplaceWith("onToolCallCompleted(handler)", "ai.koog.agents.core.feature.handler.ToolCallCompletedContext")
-    )
-    public fun onToolCallResult(handler: suspend (eventContext: ToolCallResultContext) -> Unit) {
-        onToolCallCompleted(handler)
-    }
-
-    //endregion Deprecated Handlers
 
     //region Invoke Agent Handlers
 

@@ -1,7 +1,6 @@
 package ai.koog.agents.example.snapshot
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.calculator.CalculatorTools
@@ -31,7 +30,7 @@ suspend fun main() {
             id = agentId,
             promptExecutor = executor,
             llmModel = OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
+            strategy = singleRunStrategy(),
             toolRegistry = brokenToolRegistry,
             systemPrompt = "You are a calculator. Use tools to calculate asked to result.",
             temperature = 0.0,
@@ -62,7 +61,7 @@ suspend fun main() {
             promptExecutor = executor,
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = correctToolRegistry,
-            strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
+            strategy = singleRunStrategy(),
             systemPrompt = "You are a calculator. Use tools to calculate asked to result.",
             temperature = 0.0,
         ) {

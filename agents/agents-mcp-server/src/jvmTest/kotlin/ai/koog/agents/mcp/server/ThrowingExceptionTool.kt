@@ -3,12 +3,12 @@ package ai.koog.agents.mcp.server
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.testing.tools.RandomNumberTool
+import ai.koog.serialization.typeToken
 import kotlinx.io.IOException
-import kotlinx.serialization.builtins.serializer
 
 internal class ThrowingExceptionTool : Tool<RandomNumberTool.Args, Int>(
-    argsSerializer = RandomNumberTool.Args.serializer(),
-    resultSerializer = Int.serializer(),
+    argsType = typeToken<RandomNumberTool.Args>(),
+    resultType = typeToken<Int>(),
     name = RandomNumberTool().name,
     description = RandomNumberTool().descriptor.description
 ) {

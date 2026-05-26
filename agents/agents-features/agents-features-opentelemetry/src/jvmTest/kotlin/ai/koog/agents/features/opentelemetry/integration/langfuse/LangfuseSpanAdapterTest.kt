@@ -3,13 +3,8 @@ package ai.koog.agents.features.opentelemetry.integration.langfuse
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
-import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
-import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
-import ai.koog.agents.features.opentelemetry.event.EventBodyFields
-import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
-import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
-import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
+import ai.koog.agents.features.opentelemetry.mock.MockContextFactory
 import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
 import ai.koog.agents.features.opentelemetry.mock.MockTracer
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
@@ -20,34 +15,35 @@ import ai.koog.agents.features.opentelemetry.span.startNodeExecuteSpan
 import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
-import kotlin.test.assertTrue
 
 class LangfuseSpanAdapterTest {
 
     @Test
     fun `onBeforeSpanStarted adds trace attributes to invoke span`() {
-        val config = OpenTelemetryConfig()
         val traceAttributes = listOf(
             CustomAttribute("langfuse.session.id", "session-123"),
             CustomAttribute("langfuse.environment", "production"),
         )
-        val adapter = LangfuseSpanAdapter(traceAttributes, config)
+        val adapter = LangfuseSpanAdapter(traceAttributes, OpenTelemetryConfig())
 
         val provider = MockLLMProvider()
         val model = createTestModel(provider)
         val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
 
         val createAgentSpanId = "create-agent-span-id"
         val agentId = "test-agent-id"
 
         val createAgentSpan = startCreateAgentSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
@@ -66,6 +62,7 @@ class LangfuseSpanAdapterTest {
 
         val invokeSpan = startInvokeAgentSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = createAgentSpan,
             id = invokeAgentSpanId,
             model = model,
@@ -84,95 +81,109 @@ class LangfuseSpanAdapterTest {
     }
 
     @Test
-    fun `onBeforeSpanStarted converts inference span events into prompt attributes`() {
-        val config = OpenTelemetryConfig().apply { setVerbose(true) }
-        val adapter = LangfuseSpanAdapter(emptyList(), config)
+    fun `onBeforeSpanStarted converts inference input messages into prompt attributes`() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
 
         val provider = MockLLMProvider()
-        val inferenceSpan = createInferenceSpan(provider, promptId = "prompt-id", nodeId = "node-name")
 
         val systemContent = "You are Koog."
         val userContent = "What's the forecast for Paris?"
         val assistantContent = "Checking the weather tool."
         val toolResponseContent = "tool response payload"
 
-        inferenceSpan.addEvent(SystemMessageEvent(provider, Message.System(systemContent, RequestMetaInfo.Empty)))
-        inferenceSpan.addEvent(UserMessageEvent(provider, Message.User(userContent, RequestMetaInfo.Empty)))
-        inferenceSpan.addEvent(AssistantMessageEvent(provider, Message.Assistant(assistantContent, ResponseMetaInfo.Empty)))
-        inferenceSpan.addEvent(ToolMessageEvent(provider, toolCallId = "tool-call-response", content = toolResponseContent))
-
-        val toolCallResponse = Message.Tool.Call(
-            id = "tool-call-id",
-            tool = "getWeather",
-            content = "{\"location\":\"Paris\"}",
-            metaInfo = ResponseMetaInfo.Empty,
+        val toolCallPart = MessagePart.Tool.Call(id = "tool-call-id", tool = "getWeather", args = "{\"location\":\"Paris\"}")
+        val inputMessages = listOf(
+            Message.System(systemContent, RequestMetaInfo.Empty),
+            Message.User(userContent, RequestMetaInfo.Empty),
+            Message.Assistant(assistantContent, ResponseMetaInfo.Empty),
+            Message.User(
+                parts = listOf(MessagePart.Tool.Result(id = "tool-call-id", tool = "getWeather", output = toolResponseContent)),
+                metaInfo = RequestMetaInfo.Empty,
+            ),
+            Message.Assistant(
+                parts = listOf(toolCallPart),
+                metaInfo = ResponseMetaInfo.Empty,
+                finishReason = "tool_call",
+            ),
         )
-        val choiceEvent = ChoiceEvent(provider, toolCallResponse, index = 0)
-        val expectedToolCallJson = EventBodyFields.ToolCalls(listOf(toolCallResponse)).valueString(true)
-        inferenceSpan.addEvent(choiceEvent)
+        val inferenceSpan = createInferenceSpan(provider, messages = inputMessages)
+        val expectedToolCallJson = encodeToolCallsContent(listOf(toolCallPart))
 
         adapter.onBeforeSpanStarted(inferenceSpan)
 
-        assertTrue(inferenceSpan.events.isEmpty(), "Events should be removed after prompt conversion")
-
         val attributes = inferenceSpan.attributes
 
+        // Adapter decomposes Input.Messages into per-index prompt attributes but leaves the
+        // original OTel-standard attribute in place.
+        assertEquals(1, attributes.count { it is GenAIAttributes.Input.Messages })
+
         assertEquals("system", attributes.requireValue("gen_ai.prompt.0.role"))
-        assertEquals(systemContent, assertIs<HiddenString>(attributes.requireValue("gen_ai.prompt.0.content")).value)
+        val actualSystemContent = attributes.requireValue("gen_ai.prompt.0.content")
+        assertIs<HiddenString>(actualSystemContent)
+        assertEquals(systemContent, actualSystemContent.value)
 
         assertEquals("user", attributes.requireValue("gen_ai.prompt.1.role"))
-        assertEquals(userContent, assertIs<HiddenString>(attributes.requireValue("gen_ai.prompt.1.content")).value)
+        val actualUserContent = attributes.requireValue("gen_ai.prompt.1.content")
+        assertIs<HiddenString>(actualUserContent)
+        assertEquals(userContent, actualUserContent.value)
 
         assertEquals("assistant", attributes.requireValue("gen_ai.prompt.2.role"))
-        assertEquals(assistantContent, assertIs<HiddenString>(attributes.requireValue("gen_ai.prompt.2.content")).value)
+        val actualAssistantContent = attributes.requireValue("gen_ai.prompt.2.content")
+        assertIs<HiddenString>(actualAssistantContent)
+        assertEquals(assistantContent, actualAssistantContent.value)
 
         assertEquals("tool", attributes.requireValue("gen_ai.prompt.3.role"))
-        assertEquals(toolResponseContent, assertIs<HiddenString>(attributes.requireValue("gen_ai.prompt.3.content")).value)
+        val actualToolResponseContent = attributes.requireValue("gen_ai.prompt.3.content")
+        assertIs<HiddenString>(actualToolResponseContent)
+        assertEquals(toolResponseContent, actualToolResponseContent.value)
 
-        assertEquals("tool", attributes.requireValue("gen_ai.prompt.4.role"))
-        assertEquals(expectedToolCallJson, attributes.requireValue("gen_ai.prompt.4.content"))
+        assertEquals("assistant", attributes.requireValue("gen_ai.prompt.4.role"))
+        val actualToolCallContent = attributes.requireValue("gen_ai.prompt.4.content")
+        assertIs<HiddenString>(actualToolCallContent)
+        assertEquals(expectedToolCallJson, actualToolCallContent.value)
     }
 
     @Test
-    fun `onBeforeSpanFinished converts inference span events into completion attributes`() {
-        val config = OpenTelemetryConfig().apply { setVerbose(true) }
-        val adapter = LangfuseSpanAdapter(emptyList(), config)
+    fun `onBeforeSpanFinished converts inference output messages into completion attributes`() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
 
         val provider = MockLLMProvider()
-        val inferenceSpan = createInferenceSpan(provider, promptId = "prompt-id", nodeId = "node-name")
+        val inferenceSpan = createInferenceSpan(provider)
 
         val assistantAnswer = "It's sunny in Rome."
-        val assistantEvent = AssistantMessageEvent(
-            provider,
-            Message.Assistant(
-                content = assistantAnswer,
-                metaInfo = ResponseMetaInfo.Empty,
-                finishReason = "stop",
-            )
-        )
-        inferenceSpan.addEvent(assistantEvent)
-
-        val toolCallResponse = Message.Tool.Call(
-            id = "tool-call-id",
-            tool = "getWeather",
-            content = "{\"location\":\"Rome\"}",
+        val assistantMessage = Message.Assistant(
+            content = assistantAnswer,
             metaInfo = ResponseMetaInfo.Empty,
+            finishReason = "stop",
         )
-        val choiceEvent = ChoiceEvent(provider, toolCallResponse, index = 0)
-        val expectedToolCallJson = EventBodyFields.ToolCalls(listOf(toolCallResponse)).valueString(true)
-        inferenceSpan.addEvent(choiceEvent)
+
+        val toolCallPart2 = MessagePart.Tool.Call(id = "tool-call-id", tool = "getWeather", args = "{\"location\":\"Rome\"}")
+        val toolCallMessage2 = Message.Assistant(
+            parts = listOf(toolCallPart2),
+            metaInfo = ResponseMetaInfo.Empty,
+            finishReason = "tool_call",
+        )
+        val expectedToolCallJson = encodeToolCallsContent(listOf(toolCallPart2))
+        inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(assistantMessage, toolCallMessage2)))
 
         adapter.onBeforeSpanFinished(inferenceSpan)
 
-        assertTrue(inferenceSpan.events.isEmpty(), "Events should be removed after completion conversion")
-
         val attributes = inferenceSpan.attributes
 
+        // Adapter decomposes Output.Messages into per-index completion attributes but leaves
+        // the original OTel-standard attribute in place.
+        assertEquals(1, attributes.count { it is GenAIAttributes.Output.Messages })
+
         assertEquals("assistant", attributes.requireValue("gen_ai.completion.0.role"))
-        assertEquals(assistantAnswer, assertIs<HiddenString>(attributes.requireValue("gen_ai.completion.0.content")).value)
+        val actualAssistantAnswer = attributes.requireValue("gen_ai.completion.0.content")
+        assertIs<HiddenString>(actualAssistantAnswer)
+        assertEquals(assistantAnswer, actualAssistantAnswer.value)
+        assertEquals("stop", attributes.requireValue("gen_ai.completion.0.finish_reason"))
 
         assertEquals("assistant", attributes.requireValue("gen_ai.completion.1.role"))
-        assertEquals(expectedToolCallJson, attributes.requireValue("gen_ai.completion.1.content"))
+        val actualToolCallContent = attributes.requireValue("gen_ai.completion.1.content")
+        assertIs<HiddenString>(actualToolCallContent)
+        assertEquals(expectedToolCallJson, actualToolCallContent.value)
         assertEquals(
             GenAIAttributes.Response.FinishReasonType.ToolCalls.id,
             attributes.requireValue("gen_ai.completion.1.finish_reason"),
@@ -181,18 +192,19 @@ class LangfuseSpanAdapterTest {
 
     @Test
     fun `onBeforeSpanStarted adds langgraph metadata to node execute spans`() {
-        val config = OpenTelemetryConfig()
-        val adapter = LangfuseSpanAdapter(emptyList(), config)
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
 
         val provider = MockLLMProvider()
         val model = createTestModel(provider)
         val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
 
         val createAgentSpanId = "create-agent-span-id"
         val agentId = "test-agent-id"
 
         val createAgentSpan = startCreateAgentSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
@@ -205,6 +217,7 @@ class LangfuseSpanAdapterTest {
 
         val invokeSpan = startInvokeAgentSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = createAgentSpan,
             id = invokeSpanId,
             model = model,
@@ -220,6 +233,7 @@ class LangfuseSpanAdapterTest {
 
         val firstNode = startNodeExecuteSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = invokeSpan,
             id = firstNodeSpanId,
             runId = runId,
@@ -239,6 +253,7 @@ class LangfuseSpanAdapterTest {
 
         val secondNode = startNodeExecuteSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = firstNode,
             id = secondNodeSpanId,
             runId = runId,
@@ -261,15 +276,17 @@ class LangfuseSpanAdapterTest {
         runId: String = "run-id",
         nodeInput: String = "node-input",
         nodeId: String = "node-id",
-        promptId: String = "prompt-id",
         temperature: Double = 0.4,
+        messages: List<Message> = emptyList(),
     ): GenAIAgentSpan {
         val model = createTestModel(provider)
         val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
 
         val createAgentSpanId = "create-agent-span-id"
         val createAgentSpan = startCreateAgentSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
@@ -280,6 +297,7 @@ class LangfuseSpanAdapterTest {
         val invokeSpanId = "invoke-agent-span-id"
         val invokeSpan = startInvokeAgentSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = createAgentSpan,
             id = invokeSpanId,
             model = model,
@@ -293,6 +311,7 @@ class LangfuseSpanAdapterTest {
         val nodeSpanId = "node-span-id"
         val nodeSpan = startNodeExecuteSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = invokeSpan,
             id = nodeSpanId,
             runId = runId,
@@ -303,12 +322,13 @@ class LangfuseSpanAdapterTest {
         val inferenceSpanId = "inference-span-id"
         val inferenceSpan = startInferenceSpan(
             tracer = tracer,
+            contextFactory = contextFactory,
             parentSpan = nodeSpan,
             id = inferenceSpanId,
             provider = provider,
             runId = runId,
             model = model,
-            messages = emptyList(),
+            messages = messages,
             llmParams = LLMParams(temperature = temperature),
             tools = emptyList()
         )

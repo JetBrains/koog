@@ -229,7 +229,6 @@ class ModelIdentifierParsingTest {
             "anthropic.opus_4_5" to AnthropicModels.Opus_4_5,
             "anthropic.opus_4_6" to AnthropicModels.Opus_4_6,
             "anthropic.opus_4_7" to AnthropicModels.Opus_4_7,
-            "anthropic.haiku_3" to AnthropicModels.Haiku_3,
             "anthropic.haiku_4_5" to AnthropicModels.Haiku_4_5,
             "anthropic.sonnet_4" to AnthropicModels.Sonnet_4,
             "anthropic.sonnet_4_5" to AnthropicModels.Sonnet_4_5,
@@ -242,7 +241,7 @@ class ModelIdentifierParsingTest {
     fun testGoogleModels() = verifyModels(
         LLMProvider.Google,
         mapOf(
-            "google.gemini2_0flash" to GoogleModels.Gemini2_0Flash,
+            "google.gemini2_0flashlite001" to GoogleModels.Gemini2_0FlashLite001,
             "google.gemini2_5flashlite" to GoogleModels.Gemini2_5FlashLite,
             "google.gemini2_5pro" to GoogleModels.Gemini2_5Pro,
             "google.gemini3flashpreview" to GoogleModels.Gemini3_Flash_Preview,
@@ -336,17 +335,17 @@ class ModelIdentifierParsingTest {
     // DeepSeek model identifier tests
     @Test
     fun testDeepSeekModels() = runTest {
-        // Test DeepSeek Chat
-        val deepSeekChat = getModelFromIdentifier("deepseek.deepseek-chat")
-        assertNotNull(deepSeekChat)
-        assertEquals(LLMProvider.DeepSeek, deepSeekChat.provider)
-        assertEquals(DeepSeekModels.DeepSeekChat, deepSeekChat)
+        // Test DeepSeek V4 Flash
+        val deepSeekV4Flash = getModelFromIdentifier("deepseek.deepseek-v4-flash")
+        assertNotNull(deepSeekV4Flash)
+        assertEquals(LLMProvider.DeepSeek, deepSeekV4Flash.provider)
+        assertEquals(DeepSeekModels.DeepSeekV4Flash, deepSeekV4Flash)
 
-        // Test DeepSeek Reasoner
-        val deepSeekReasoner = getModelFromIdentifier("deepseek.deepseek-reasoner")
-        assertNotNull(deepSeekReasoner)
-        assertEquals(LLMProvider.DeepSeek, deepSeekReasoner.provider)
-        assertEquals(DeepSeekModels.DeepSeekReasoner, deepSeekReasoner)
+        // Test DeepSeek V4 Pro
+        val deepSeekV4Pro = getModelFromIdentifier("deepseek.deepseek-v4-pro")
+        assertNotNull(deepSeekV4Pro)
+        assertEquals(LLMProvider.DeepSeek, deepSeekV4Pro.provider)
+        assertEquals(DeepSeekModels.DeepSeekV4Pro, deepSeekV4Pro)
     }
 
     // Ollama model identifier tests

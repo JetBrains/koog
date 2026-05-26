@@ -24,6 +24,7 @@ class SerializableSchemaGeneratorTest {
         val floatProperty: Float,
         val booleanNullableProperty: Boolean?,
         val nullableProperty: String? = null,
+        val nullableNestedObject: NestedProperty? = null,
         val listProperty: List<String> = emptyList(),
         val mapProperty: Map<String, Int> = emptyMap(),
         @property:LLMDescription("A custom nested property")
@@ -149,6 +150,16 @@ class SerializableSchemaGeneratorTest {
                         types = arrayOf(
                             ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
                             ToolParameterDescriptor(type = ToolParameterType.String, name = "", description = ""),
+                        )
+                    )
+                ),
+                ToolParameterDescriptor(
+                    name = "nullableNestedObject",
+                    description = "",
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(type = ToolParameterType.Null, name = "", description = ""),
+                            ToolParameterDescriptor(type = nestedObject, name = "", description = "Nested property class"),
                         )
                     )
                 ),

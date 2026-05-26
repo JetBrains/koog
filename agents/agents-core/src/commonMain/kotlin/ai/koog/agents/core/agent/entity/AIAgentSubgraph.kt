@@ -5,7 +5,7 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
-import ai.koog.agents.core.agent.context.getAgentContextData
+import ai.koog.agents.core.agent.context.getGraphAgentContextData
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
@@ -188,8 +188,8 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                 pipeline.onSubgraphExecutionStarting(
                     eventId,
                     executionInfo,
-                    this@AIAgentSubgraphBase,
                     context,
+                    this@AIAgentSubgraphBase,
                     input,
                     inputType
                 )
@@ -206,8 +206,8 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                     pipeline.onSubgraphExecutionFailed(
                         eventId,
                         executionInfo,
-                        this@AIAgentSubgraphBase,
                         context,
+                        this@AIAgentSubgraphBase,
                         input,
                         inputType,
                         e
@@ -225,7 +225,7 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                 ),
             )
 
-            val innerForcedData = context.getAgentContextData()
+            val innerForcedData = context.getGraphAgentContextData()
 
             if (innerForcedData != null) {
                 context.store(innerForcedData)
@@ -235,8 +235,8 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                 pipeline.onSubgraphExecutionCompleted(
                     eventId,
                     executionInfo,
-                    this@AIAgentSubgraphBase,
                     context,
+                    this@AIAgentSubgraphBase,
                     input,
                     inputType,
                     result,
@@ -285,7 +285,7 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
             logger.debug { formatLog(context, "Completed node '${currentNode.name}'") }
 
             // forced context data means that we've requested interruption due to jump to another node / rolling back to checkpoint
-            if (context.getAgentContextData() != null) {
+            if (context.getGraphAgentContextData() != null) {
                 return null
             }
 

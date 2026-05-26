@@ -5,15 +5,25 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-group = rootProject.group
-version = rootProject.version
-
 kotlin {
     sourceSets {
         commonMain {
             dependencies {
                 api(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.serialization.json)
                 api(libs.jetbrains.annotations)
+            }
+        }
+
+        commonTest {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation(kotlin("test-junit5"))
             }
         }
     }

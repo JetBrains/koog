@@ -5,9 +5,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-group = rootProject.group
-version = rootProject.version
-
 kotlin {
     sourceSets {
         commonMain {

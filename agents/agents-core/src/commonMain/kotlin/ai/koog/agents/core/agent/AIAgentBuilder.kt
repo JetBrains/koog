@@ -9,13 +9,12 @@ import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentPlannerFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy
+import ai.koog.agents.core.planner.PlannerAIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.ConfigureAction
-import ai.koog.agents.planner.AIAgentPlannerStrategy
-import ai.koog.agents.planner.PlannerAIAgent
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.serialization.TypeToken
-import kotlin.time.Clock
+import ai.koog.utils.time.KoogClock
 
 /**
  * Represents a configurational builder for setting up and customizing the execution parameters and
@@ -34,22 +33,18 @@ public expect class AIAgentBuilder internal constructor() : AIAgentBuilderCommon
  * @param Input The input type that the agent processes.
  * @param Output The output type that the agent produces.
  * @param strategy The execution strategy used by the agent for processing input and generating results.
- * @param inputType The [TypeToken] representation of the input parameter type.
- * @param outputType The [TypeToken] representation of the output parameter type.
  * @param promptExecutor [PromptExecutor] for the agent
  * @param id id of the agent
  * @param config [AIAgentConfig] containing initial agent configuration for the builder
- * @param clock optional [Clock] to be used in the agent for calculating timestamps
+ * @param clock optional [KoogClock] to be used in the agent for calculating timestamps
  */
 public class GraphAgentBuilder<Input, Output>(
     private val strategy: AIAgentGraphStrategy<Input, Output>,
-    private val inputType: TypeToken,
-    private val outputType: TypeToken,
     promptExecutor: PromptExecutor? = null,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     config: AIAgentConfig,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     private var featureInstallers: MutableList<FeatureContext.() -> Unit> = mutableListOf(),
 ) : AIAgentBuilderBase<GraphAgentBuilder<Input, Output>>(
     promptExecutor = promptExecutor,
@@ -100,8 +95,6 @@ public class GraphAgentBuilder<Input, Output>(
      */
     public fun build(): AIAgent<Input, Output> {
         return GraphAIAgent(
-            inputType = inputType,
-            outputType = outputType,
             strategy = strategy,
             promptExecutor = validatedPromptExecutor,
             toolRegistry = toolRegistry,
@@ -131,7 +124,7 @@ public class GraphAgentBuilder<Input, Output>(
  * @property toolRegistry A registry of tools available to the agent, by default set to `ToolRegistry.EMPTY`.
  * @property id An optional unique identifier for the agent.
  * @property config [AIAgentConfig] containing initial agent configuration for the builder
- * @property clock The clock instance used for time-related functionality, default is `Clock.System`.
+ * @property clock The clock instance used for time-related functionality, default is `KoogClock.System`.
  * @property featureInstallers A list of feature installation lambdas defining additional functionalities the agent should have.
  */
 public class FunctionalAgentBuilder<Input, Output>(
@@ -140,7 +133,7 @@ public class FunctionalAgentBuilder<Input, Output>(
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     config: AIAgentConfig,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     private var featureInstallers: MutableList<FunctionalAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) : AIAgentBuilderBase<FunctionalAgentBuilder<Input, Output>>(
     promptExecutor = promptExecutor,
@@ -208,12 +201,12 @@ public class FunctionalAgentBuilder<Input, Output>(
  * @param featureInstallers A list of feature installers that enhance the agent's behavior with additional functionality.
  */
 public class PlannerAgentBuilder<Input, Output>(
-    private val strategy: AIAgentPlannerStrategy<Input, Output, *>,
+    private val strategy: AIAgentPlannerStrategy<Input, Output>,
     promptExecutor: PromptExecutor? = null,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     id: String? = null,
     config: AIAgentConfig,
-    clock: Clock = Clock.System,
+    clock: KoogClock = KoogClock.System,
     private var featureInstallers: MutableList<PlannerAIAgent.FeatureContext.() -> Unit> = mutableListOf(),
 ) : AIAgentBuilderBase<PlannerAgentBuilder<Input, Output>>(
     promptExecutor = promptExecutor,

@@ -4,10 +4,10 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.serialization.typeToken
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -37,8 +37,8 @@ object DoubleOrStringSerializer : KSerializer<Double> {
  * Use to test tool with anyOf arguments
  */
 object PriceCalculatorTool : Tool<PriceCalculatorTool.Args, Double>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Double.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Double>(),
     descriptor = ToolDescriptor(
         name = "price_calculator",
         description = "A tool for calculating the price for LLM tokens",
@@ -107,8 +107,8 @@ object DoubleOrNullSerializer : KSerializer<Double?> {
  * Use to test tool with nullable arguments
  */
 object SimplePriceCalculatorTool : Tool<SimplePriceCalculatorTool.Args, Double>(
-    argsSerializer = Args.serializer(),
-    resultSerializer = Double.serializer(),
+    argsType = typeToken<Args>(),
+    resultType = typeToken<Double>(),
     descriptor = ToolDescriptor(
         name = "price_calculator",
         description = "A tool for calculating the price for LLM tokens",

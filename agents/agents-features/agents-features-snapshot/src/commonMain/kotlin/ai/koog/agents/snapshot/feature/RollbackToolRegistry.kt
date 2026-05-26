@@ -13,6 +13,13 @@ import kotlin.jvm.JvmStatic
 public class RollbackToolRegistry internal constructor(rollbackToolsMap: Map<Tool<*, *>, Tool<*, *>> = emptyMap()) {
 
     /**
+     * Creates a new RollbackToolRegistry using the provided builder initialization block.
+     *
+     * @param init A lambda that configures the registry by adding rollback tools
+     */
+    public constructor(init: RollbackToolRegistryBuilder.() -> Unit) : this(RollbackToolRegistryBuilder().apply(init).build().rollbackToolsMap)
+
+    /**
      * A mutable map that stores the association between tools and their corresponding rollback tools.
      * This map is initialized as a mutable copy of the `rollbackToolsMap`.
      * It is used to manage and track tools along with their rollback counterparts.
@@ -75,18 +82,9 @@ public class RollbackToolRegistry internal constructor(rollbackToolsMap: Map<Too
     public companion object {
         /**
          * Returns a [RollbackToolRegistryBuilder] for [ai.koog.agents.snapshot.feature.RollbackToolRegistry]
-         * */
+         */
         @JvmStatic
         public fun builder(): RollbackToolRegistryBuilder = RollbackToolRegistryBuilder()
-
-        /**
-         * Invokes the builder pattern to create and configure an instance of [RollbackToolRegistry].
-         *
-         * @param init A lambda function used to configure the [Builder] object.
-         * @return A fully built instance of [RollbackToolRegistry] configured using the [init] lambda.
-         */
-        public operator fun invoke(init: RollbackToolRegistryBuilder.() -> Unit): RollbackToolRegistry =
-            RollbackToolRegistryBuilder().apply(init).build()
 
         /**
          * Represents an empty instance of the [RollbackToolRegistry].

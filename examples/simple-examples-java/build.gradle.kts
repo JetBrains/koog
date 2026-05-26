@@ -11,11 +11,17 @@ java {
 
 dependencies {
     implementation(libs.koog.agents)
+    implementation(libs.koog.agents.additions)
+    implementation(libs.koog.agents.ext)
     implementation(libs.koog.serialization.jackson)
     implementation(libs.koog.agents.features.chat.history.jdbc)
     implementation(libs.koog.agents.features.persistence.jdbc)
     implementation(libs.jackson.databind)
     implementation(libs.logback.classic)
+
+    implementation(platform(libs.opentelemetry.bom))
+    implementation(libs.opentelemetry.exporter.logging)
+    implementation(libs.opentelemetry.exporter.otlp)
 }
 
 /**

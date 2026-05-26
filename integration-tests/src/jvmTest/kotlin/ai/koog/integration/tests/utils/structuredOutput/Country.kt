@@ -1,6 +1,6 @@
 package ai.koog.integration.tests.utils.structuredOutput
 
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.Flow

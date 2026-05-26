@@ -3,9 +3,8 @@ package ai.koog.agents.core.feature.model.events
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.serialization.JSONElement
-import ai.koog.serialization.JSONPrimitive
+import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.Serializable
-import kotlin.time.Clock
 
 /**
  * Represents an event triggered when the execution of a specific AI agent node starts.
@@ -32,36 +31,8 @@ public data class NodeExecutionStartingEvent(
     val runId: String,
     val nodeName: String,
     val input: JSONElement?,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * Creates an instance of [NodeExecutionStartingEvent].
-     *
-     * This constructor is deprecated and should be replaced with the constructor
-     * that accepts [executionInfo] parameter, and an input parameter of type [JSONElement].
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter, and input parameter of type [JSONElement]",
-        replaceWith = ReplaceWith("NodeExecutionStartingEvent(executionInfo, runId, nodeName, input, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        nodeName: String,
-        input: String,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = NodeExecutionStartingEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = NodeExecutionStartingEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        nodeName = nodeName,
-        input = JSONPrimitive(input),
-        timestamp = timestamp
-    )
-}
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
+) : DefinedFeatureEvent()
 
 /**
  * Represents an event indicating the completion of a node's execution within an AI agent.
@@ -85,38 +56,8 @@ public data class NodeExecutionCompletedEvent(
     val nodeName: String,
     val input: JSONElement?,
     val output: JSONElement?,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * Creates an instance of [NodeExecutionCompletedEvent].
-     *
-     * This constructor is deprecated and should be replaced with the constructor
-     * that accepts [executionInfo] parameter, and [input] and [output] parameters of type [JSONElement].
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter, and input and output parameters of type [JSONElement]",
-        replaceWith = ReplaceWith("NodeExecutionCompletedEvent(executionInfo, runId, nodeName, input, output, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        nodeName: String,
-        input: String,
-        output: String,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = NodeExecutionCompletedEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = NodeExecutionCompletedEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        nodeName = nodeName,
-        input = JSONPrimitive(input),
-        output = JSONPrimitive(output),
-        timestamp = timestamp
-    )
-}
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
+) : DefinedFeatureEvent()
 
 /**
  * Represents an event that signifies the occurrence of an error during the execution of a specific node
@@ -138,56 +79,5 @@ public data class NodeExecutionFailedEvent(
     val nodeName: String,
     val input: JSONElement?,
     val error: AIAgentError,
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent() {
-
-    /**
-     * Creates an instance of [NodeExecutionFailedEvent].
-     *
-     * This constructor is deprecated and should be replaced with the constructor
-     * that accepts [executionInfo] parameter, and an input parameter of type [JSONElement].
-     */
-    @Deprecated(
-        message = "Use constructor with executionInfo parameter, and input parameter of type [JSONElement]",
-        replaceWith = ReplaceWith("NodeExecutionFailedEvent(executionInfo, runId, nodeName, input, error, timestamp)")
-    )
-    public constructor(
-        runId: String,
-        nodeName: String,
-        error: AIAgentError,
-        timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(
-        eventId = NodeExecutionFailedEvent::class.simpleName.toString(),
-        executionInfo = AgentExecutionInfo(
-            parent = null,
-            partName = NodeExecutionFailedEvent::class.simpleName.toString(),
-        ),
-        runId = runId,
-        nodeName = nodeName,
-        input = null,
-        error = error,
-        timestamp = timestamp
-    )
-}
-
-//region Deprecated
-
-@Deprecated(
-    message = "Use NodeExecutionStartingEvent instead",
-    replaceWith = ReplaceWith("NodeExecutionStartingEvent")
-)
-public typealias AIAgentNodeExecutionStartEvent = NodeExecutionStartingEvent
-
-@Deprecated(
-    message = "Use NodeExecutionCompletedEvent instead",
-    replaceWith = ReplaceWith("NodeExecutionCompletedEvent")
-)
-public typealias AIAgentNodeExecutionEndEvent = NodeExecutionCompletedEvent
-
-@Deprecated(
-    message = "Use NodeExecutionFailedEvent instead",
-    replaceWith = ReplaceWith("NodeExecutionFailedEvent")
-)
-public typealias AIAgentNodeExecutionErrorEvent = NodeExecutionFailedEvent
-
-//endregion Deprecated
+    override val timestamp: Long = KoogClock.System.now().toEpochMilliseconds(),
+) : DefinedFeatureEvent()

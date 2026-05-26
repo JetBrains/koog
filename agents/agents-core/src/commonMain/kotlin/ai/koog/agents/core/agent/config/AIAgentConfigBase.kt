@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.config
 
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.llm.LLModel
 
 /**

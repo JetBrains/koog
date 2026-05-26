@@ -29,8 +29,8 @@ public actual class AIAgentBuilder internal actual constructor() : AIAgentBuilde
         name: String = "funStrategy",
         strategy: BiFunction<AIAgentFunctionalContext, Input, Output>
     ): FunctionalAgentBuilder<Input, Output> = functionalStrategy(
-        object : NonSuspendAIAgentFunctionalStrategy<Input, Output>(name) {
-            override fun executeStrategy(context: AIAgentFunctionalContext, input: Input): Output =
+        object : AIAgentFunctionalStrategyBlocking<Input, Output>(name) {
+            override fun executeBlocking(context: AIAgentFunctionalContext, input: Input): Output =
                 strategy.apply(context, input)
         }
     )

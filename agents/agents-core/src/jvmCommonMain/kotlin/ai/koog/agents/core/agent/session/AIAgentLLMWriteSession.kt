@@ -1,5 +1,4 @@
 @file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "MissingKDocForPublicAPI")
-@file:OptIn(InternalAgentsApi::class)
 
 package ai.koog.agents.core.agent.session
 
@@ -9,12 +8,12 @@ import ai.koog.agents.core.agent.entity.PromptBuilderAction
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
+import ai.koog.agents.core.utils.runBlockingOnStrategyDispatcher
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
@@ -25,12 +24,10 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
-import kotlinx.coroutines.flow.Flow
+import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.jdk9.asPublisher
 import kotlinx.serialization.KSerializer
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Flow.Publisher
-import kotlin.time.Clock
 
 /**
  * JVM actual implementation of a mutable LLM session.
@@ -38,6 +35,7 @@ import kotlin.time.Clock
  * In addition to common suspend APIs, this class exposes Java-friendly wrappers
  * that run session operations on the strategy dispatcher.
  */
+@OptIn(InternalAgentsApi::class)
 public actual class AIAgentLLMWriteSession actual constructor(
     environment: AIAgentEnvironment,
     executor: PromptExecutor,
@@ -47,8 +45,18 @@ public actual class AIAgentLLMWriteSession actual constructor(
     model: LLModel,
     responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
-    clock: Clock
-) : AIAgentLLMWriteSessionCommon(environment, executor, tools, toolRegistry, prompt, model, responseProcessor, config, clock) {
+    clock: KoogClock
+) : AIAgentLLMWriteSessionCommon(
+    environment,
+    executor,
+    tools,
+    toolRegistry,
+    prompt,
+    model,
+    responseProcessor,
+    config,
+    clock
+) {
 
     /**
      * Appends a prompt using the provided prompt update action.
@@ -65,266 +73,113 @@ public actual class AIAgentLLMWriteSession actual constructor(
         }
     }
 
-    /**
-     * Sends a request to the language model without utilizing any tools and returns multiple responses.
-     *
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return a list of response messages from the language model
-     */
     @JavaAPI
-    @JvmOverloads
-    public fun requestLLMMultipleWithoutTools(
-        executorService: ExecutorService? = null
-    ): List<Message.Response> = config.runOnStrategyDispatcher(executorService) {
-        requestLLMMultipleWithoutTools()
+    @JvmName("requestLLM")
+    public fun requestLLMBlocking(): Message.Assistant = config.runBlockingOnStrategyDispatcher {
+        this@AIAgentLLMWriteSession.requestLLM()
     }
 
-    /**
-     * Sends a request to the language model without utilizing any tools and returns a single response.
-     *
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return a response message from the language model
-     */
     @JavaAPI
-    @JvmOverloads
-    public fun requestLLMWithoutTools(
-        executorService: ExecutorService? = null
-    ): Message.Response = config.runOnStrategyDispatcher(executorService) {
-        requestLLMWithoutTools()
-    }
+    @JvmName("requestLLMWithoutTools")
+    public fun requestLLMWithoutToolsBlocking(): Message.Assistant =
+        config.runBlockingOnStrategyDispatcher {
+            requestLLMWithoutTools()
+        }
 
-    /**
-     * Sends a request to the language model that is allowed to only perform tool calls
-     * without generating a regular text response.
-     *
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return the response containing tool calls from the language model
-     */
     @JavaAPI
-    @JvmOverloads
-    public fun requestLLMOnlyCallingTools(
-        executorService: ExecutorService? = null
-    ): Message.Response = config.runOnStrategyDispatcher(executorService) {
-        requestLLMOnlyCallingTools()
-    }
+    @JvmName("requestLLMOnlyCallingTools")
+    public fun requestLLMOnlyCallingToolsBlocking(): Message.Assistant =
+        config.runBlockingOnStrategyDispatcher {
+            requestLLMOnlyCallingTools()
+        }
 
-    /**
-     * Requests a response from the Language Model (LLM) enforcing tool usage (`ToolChoice.Required`),
-     * validates the session, and processes all returned messages (e.g. thinking + tool call).
-     *
-     * Crucially, this method appends **all** received messages to the prompt history to preserve context.
-     *
-     * @return A list of responses received from the Language Model (LLM).
-     */
     @JavaAPI
-    @JvmOverloads
-    public fun requestLLMMultipleOnlyCallingTools(
-        executorService: ExecutorService? = null
-    ): List<Message.Response> = config.runOnStrategyDispatcher(executorService) {
-        requestLLMMultipleOnlyCallingTools()
-    }
-
-    /**
-     * Sends a request to the language model and forces it to use exactly one specific tool,
-     * identified by a [ToolDescriptor].
-     *
-     * @param tool the tool descriptor that the language model must use
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return the response from the language model containing the forced tool call
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun requestLLMForceOneTool(
-        tool: ToolDescriptor,
-        executorService: ExecutorService? = null
-    ): Message.Response = config.runOnStrategyDispatcher(executorService) {
+    @JvmName("requestLLMForceOneTool")
+    public fun requestLLMForceOneToolBlocking(
+        tool: ToolDescriptor
+    ): Message.Assistant = config.runBlockingOnStrategyDispatcher {
         requestLLMForceOneTool(tool)
     }
 
-    /**
-     * Sends a request to the language model and forces it to use exactly one specific tool instance.
-     *
-     * @param tool the tool instance that the language model must use
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return the response from the language model containing the forced tool call
-     */
     @JavaAPI
-    @JvmOverloads
-    public fun requestLLMForceOneTool(
-        tool: Tool<*, *>,
-        executorService: ExecutorService? = null
-    ): Message.Response = config.runOnStrategyDispatcher(executorService) {
+    @JvmName("requestLLMForceOneTool")
+    public fun requestLLMForceOneToolBlocking(
+        tool: ToolBase<*, *>
+    ): Message.Assistant = config.runBlockingOnStrategyDispatcher {
         requestLLMForceOneTool(tool)
     }
 
-    /**
-     * Sends a request to the language model using the current session configuration
-     * and returns a single response.
-     *
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return the response message from the language model
-     */
     @JavaAPI
-    @JvmOverloads
-    public fun requestLLM(
-        executorService: ExecutorService? = null
-    ): Message.Response = config.runOnStrategyDispatcher(executorService) {
-        requestLLM()
-    }
-
-    /**
-     * Sends a request to the language model and returns a streaming response as a [Flow] of [StreamFrame].
-     *
-     * Note: the returned [Flow] must be collected from a coroutine context by the caller.
-     *
-     * @param executorService an optional executor service used to start the streaming coroutine;
-     *        if null, the default dispatcher is used
-     * @return a flow of streaming frames from the language model
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun requestLLMStreaming(
-        executorService: ExecutorService? = null
-    ): Publisher<StreamFrame> = config.runOnStrategyDispatcher(executorService) {
-        requestLLMStreaming().asPublisher()
-    }
-
-    @JavaAPI
-    @JvmOverloads
     @JvmName("requestLLMStreaming")
-    public fun javaRequestLLMStreaming(
-        structureDefinition: StructureDefinition,
-        executorService: ExecutorService? = null
-    ): Publisher<StreamFrame> = config.runOnStrategyDispatcher(executorService) {
+    public fun requestLLMStreamingBlocking(): Publisher<StreamFrame> =
+        config.runBlockingOnStrategyDispatcher {
+            requestLLMStreaming().asPublisher()
+        }
+
+    @JavaAPI
+    @JvmName("requestLLMStreaming")
+    public fun requestLLMStreamingBlocking(
+        structureDefinition: StructureDefinition
+    ): Publisher<StreamFrame> = config.runBlockingOnStrategyDispatcher {
         requestLLMStreaming(structureDefinition).asPublisher()
     }
 
-    /**
-     * Sends a moderation request to the moderation model.
-     *
-     * @param moderatingModel an optional model to be used for moderation; if null, the default model is used
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return the moderation result
-     */
     @JavaAPI
     @JvmOverloads
-    public fun requestModeration(
-        moderatingModel: LLModel? = null,
-        executorService: ExecutorService? = null
-    ): ModerationResult = config.runOnStrategyDispatcher(executorService) {
+    @JvmName("requestModeration")
+    public fun requestModerationBlocking(
+        moderatingModel: LLModel? = null
+    ): ModerationResult = config.runBlockingOnStrategyDispatcher {
         requestModeration(moderatingModel)
     }
 
-    /**
-     * Sends a request to the language model and returns multiple responses.
-     *
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return a list of response messages from the language model
-     */
     @JavaAPI
     @JvmOverloads
-    public fun requestLLMMultiple(
-        executorService: ExecutorService? = null
-    ): List<Message.Response> = config.runOnStrategyDispatcher(executorService) {
-        requestLLMMultiple()
-    }
-
-    /**
-     * Sends a structured request to the language model using a [StructuredRequestConfig].
-     *
-     * @param config the configuration describing the expected structured output and parsing behavior
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return a [Result] containing a [StructuredResponse] on success or an error on failure
-     */
-    @JavaAPI
-    @JvmOverloads
-    public fun <T> requestLLMStructured(
+    @JvmName("requestLLMStructured")
+    public fun <T> requestLLMStructuredBlocking(
         config: StructuredRequestConfig<T>,
-        fixingParser: StructureFixingParser? = null,
-        executorService: ExecutorService? = null
-    ): Result<StructuredResponse<T>> = this.config.runOnStrategyDispatcher(executorService) {
+        fixingParser: StructureFixingParser? = null
+    ): Result<StructuredResponse<T>> = this.config.runBlockingOnStrategyDispatcher {
         requestLLMStructured(config, fixingParser)
     }
 
-    /**
-     * Sends a structured request to the language model using an explicit serializer and example values.
-     *
-     * @param serializer the serializer describing how to encode/decode the structured type [T]
-     * @param examples example values to guide the model towards the expected structure
-     * @param fixingParser an optional parser used to repair malformed structured responses
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return a [Result] containing a [StructuredResponse] on success or an error on failure
-     */
     @JavaAPI
     @JvmOverloads
-    public fun <T> requestLLMStructured(
+    @JvmName("requestLLMStructured")
+    public fun <T> requestLLMStructuredBlocking(
         serializer: KSerializer<T>,
         examples: List<T> = emptyList(),
-        fixingParser: StructureFixingParser? = null,
-        executorService: ExecutorService? = null
-    ): Result<StructuredResponse<T>> = config.runOnStrategyDispatcher(executorService) {
+        fixingParser: StructureFixingParser? = null
+    ): Result<StructuredResponse<T>> = config.runBlockingOnStrategyDispatcher {
         requestLLMStructured(serializer, examples, fixingParser)
     }
 
-    /**
-     * Parses an assistant response into a strongly typed [StructuredResponse] according to the given configuration.
-     *
-     * @param response the assistant message to parse
-     * @param config the structured request configuration describing the expected output
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return the parsed structured response
-     */
     @JavaAPI
     @JvmOverloads
-    public fun <T> parseResponseToStructuredResponse(
+    @JvmName("parseResponseToStructuredResponse")
+    public fun <T> parseResponseToStructuredResponseBlocking(
         response: Message.Assistant,
         config: StructuredRequestConfig<T>,
-        fixingParser: StructureFixingParser? = null,
-        executorService: ExecutorService? = null
-    ): StructuredResponse<T> = this.config.runOnStrategyDispatcher(executorService) {
+        fixingParser: StructureFixingParser? = null
+    ): StructuredResponse<T> = this.config.runBlockingOnStrategyDispatcher {
         parseResponseToStructuredResponse(response, config, fixingParser)
     }
 
-    /**
-     * Sends a request to the language model and returns multiple choice alternatives.
-     *
-     * @param executorService an optional executor service for managing the execution context;
-     *        if null, the default dispatcher is used
-     * @return a list of [LLMChoice] instances representing alternative completions
-     */
     @JavaAPI
-    @JvmOverloads
-    public fun requestLLMMultipleChoices(
-        executorService: ExecutorService? = null
-    ): List<LLMChoice> = config.runOnStrategyDispatcher(executorService) {
-        requestLLMMultipleChoices()
-    }
+    @JvmName("requestLLMMultipleChoices")
+    public fun requestLLMMultipleChoicesBlocking(): LLMChoice =
+        config.runBlockingOnStrategyDispatcher {
+            requestLLMMultipleChoices()
+        }
 
-    /**
-     * Rewrites LLM message history, leaving only user message and resulting TLDR.
-     *
-     * Default is `null`, which means entire history will be used.
-     * @param preserveMemory Whether to preserve memory-related messages in the history.
-     */
     @JavaAPI
     @JvmOverloads
-    public fun replaceHistoryWithTLDR(
+    @JvmName("replaceHistoryWithTLDR")
+    public fun replaceHistoryWithTLDRBlocking(
         strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
-        preserveMemory: Boolean = true,
-        executorService: ExecutorService? = null
+        preserveMemory: Boolean = true
     ) {
-        config.runOnStrategyDispatcher(executorService) {
+        config.runBlockingOnStrategyDispatcher {
             replaceHistoryWithTLDR(strategy, preserveMemory)
         }
     }

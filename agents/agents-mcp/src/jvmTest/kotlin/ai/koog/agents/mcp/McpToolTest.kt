@@ -30,8 +30,7 @@ import kotlin.time.Duration.Companion.seconds
 @OptIn(InternalAgentsApi::class)
 class McpToolTest {
     companion object {
-        private const val TEST_PORT = 3001
-        private val testServer = TestMcpServer(TEST_PORT)
+        private val testServer = TestMcpServer()
 
         @BeforeAll
         @JvmStatic
@@ -51,7 +50,7 @@ class McpToolTest {
     private suspend fun testMcpTools(action: suspend (toolRegistry: ToolRegistry) -> Unit) {
         val toolRegistry = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(1.minutes) {
-                McpToolRegistryProvider.fromSseUrl("http://localhost:$TEST_PORT")
+                McpToolRegistryProvider.fromSseUrl("http://localhost:${testServer.resolvedPort}")
             }
         }
 
@@ -166,6 +165,56 @@ class McpToolTest {
         val encodedResult = mcpTool.encodeResultToString(result, serializer)
 
         encodedResult shouldEqualJson """{"content":[{"text":"Hello world","type":"text"}]}"""
+    }
+
+    @Test
+    fun `test encode error result`() {
+        val result = CallToolResult(
+            content = listOf(TextContent("Something went wrong")),
+            isError = true,
+        )
+        val toolDescriptor = ToolDescriptor(
+            name = "test-tool",
+            description = "A test tool",
+            requiredParameters = emptyList(),
+            optionalParameters = emptyList()
+        )
+        val mcpTool = McpTool(
+            mcpClient = Client(clientInfo = Implementation(name = "Test", version = "1.0")),
+            metadata = emptyMap(),
+            descriptor = toolDescriptor,
+        )
+        val encodedResult = mcpTool.encodeResultToString(result, serializer)
+
+        assertEquals(
+            expected = "Error: Something went wrong",
+            actual = encodedResult
+        )
+    }
+
+    @Test
+    fun `test encode error result with multiple text contents`() {
+        val result = CallToolResult(
+            content = listOf(TextContent("Error line 1"), TextContent("Error line 2")),
+            isError = true,
+        )
+        val toolDescriptor = ToolDescriptor(
+            name = "test-tool",
+            description = "A test tool",
+            requiredParameters = emptyList(),
+            optionalParameters = emptyList()
+        )
+        val mcpTool = McpTool(
+            mcpClient = Client(clientInfo = Implementation(name = "Test", version = "1.0")),
+            metadata = emptyMap(),
+            descriptor = toolDescriptor,
+        )
+        val encodedResult = mcpTool.encodeResultToString(result, serializer)
+
+        assertEquals(
+            expected = "Error: Error line 1\nError line 2",
+            actual = encodedResult
+        )
     }
 
     @Test

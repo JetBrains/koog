@@ -5,16 +5,30 @@ import ai.koog.agents.chatMemory.feature.ChatMemory
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.functionalStrategy
+import ai.koog.agents.core.agent.singleRunStrategy
+import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+import ai.koog.agents.core.dsl.extension.ToolCalls
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.agents.testing.tools.mockLLMToolCall
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.serialization.typeToken
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -55,9 +69,8 @@ class ChatMemoryTest {
     private val dumpHistoryStrategy = functionalStrategy<String, List<Message>> { input ->
         llm.writeSession {
             appendPrompt { user(input) }
+            prompt.messages
         }
-
-        getHistory()
     }
 
     private fun createGraphAgent(
@@ -167,10 +180,30 @@ class ChatMemoryTest {
         assertEquals("Paris is the capital of France.", firstRun)
 
         val saved = historyProvider.load(sessionId)
-        assertTrue(saved[0] is Message.User && saved[0].content.contains("France"), "First message should be the user asking about France")
-        assertTrue(saved[1] is Message.Assistant && saved[1].content.contains("Paris"), "Second message should be the assistant replying about France")
-        assertTrue(saved[2] is Message.User && saved[2].content.contains("Germany"), "Third message should be the user asking about Germany")
-        assertTrue(saved[3] is Message.Assistant && saved[3].content.contains("Berlin"), "Fourth message should be the assistant replying about Germany")
+        assertTrue(
+            saved[0] is Message.User &&
+                saved[0].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("France"),
+            "First message should be the user asking about France"
+        )
+        assertTrue(
+            saved[1] is Message.Assistant &&
+                saved[1].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("Paris"),
+            "Second message should be the assistant replying about France"
+        )
+        assertTrue(
+            saved[2] is Message.User &&
+                saved[2].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("Germany"),
+            "Third message should be the user asking about Germany"
+        )
+        assertTrue(
+            saved[3] is Message.Assistant &&
+                saved[3].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("Berlin"),
+            "Fourth message should be the assistant replying about Germany"
+        )
     }
 
     @Test
@@ -205,11 +238,36 @@ class ChatMemoryTest {
         assertEquals("Paris is the capital of France.", firstRun)
 
         val saved = historyProvider.load(sessionId)
-        assertTrue(saved[0] is Message.System && saved[0].content.contains("You are a helpful geography assistant."), "First message should be the system message")
-        assertTrue(saved[1] is Message.User && saved[1].content.contains("France"), "Second message should be the user asking about France")
-        assertTrue(saved[2] is Message.Assistant && saved[2].content.contains("Paris"), "Third message should be the assistant replying about France")
-        assertTrue(saved[3] is Message.User && saved[3].content.contains("Germany"), "Fourth message should be the user asking about Germany")
-        assertTrue(saved[4] is Message.Assistant && saved[4].content.contains("Berlin"), "Fifth message should be the assistant replying about Germany")
+        assertTrue(
+            saved[0] is Message.System &&
+                saved[0].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("You are a helpful geography assistant."),
+            "First message should be the system message"
+        )
+        assertTrue(
+            saved[1] is Message.User &&
+                saved[1].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("France"),
+            "Second message should be the user asking about France"
+        )
+        assertTrue(
+            saved[2] is Message.Assistant &&
+                saved[2].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("Paris"),
+            "Third message should be the assistant replying about France"
+        )
+        assertTrue(
+            saved[3] is Message.User &&
+                saved[3].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("Germany"),
+            "Fourth message should be the user asking about Germany"
+        )
+        assertTrue(
+            saved[4] is Message.Assistant &&
+                saved[4].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("Berlin"),
+            "Fifth message should be the assistant replying about Germany"
+        )
     }
 
     @Test
@@ -249,12 +307,42 @@ class ChatMemoryTest {
         assertEquals("Paris is the capital of France.", firstRun)
 
         val saved = historyProvider.load(sessionId)
-        assertTrue(saved[0] is Message.System && saved[0].content.contains("You are a helpful geography assistant."), "First message should be the system message")
-        assertTrue(saved[1] is Message.User && saved[1].content.contains("I like to travel a lot!"), "Second message should be the user asking about France")
-        assertTrue(saved[2] is Message.User && saved[2].content.contains("France"), "Third message should be the user asking about France")
-        assertTrue(saved[3] is Message.Assistant && saved[3].content.contains("Paris"), "Fourth message should be the assistant replying about France")
-        assertTrue(saved[4] is Message.User && saved[4].content.contains("Germany"), "Fifth message should be the user asking about Germany")
-        assertTrue(saved[5] is Message.Assistant && saved[5].content.contains("Berlin"), "Sixth message should be the assistant replying about Germany")
+        assertTrue(
+            saved[0] is Message.System &&
+                saved[0].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("You are a helpful geography assistant."),
+            "First message should be the system message"
+        )
+        assertTrue(
+            saved[1] is Message.User &&
+                saved[1].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("I like to travel a lot!"),
+            "Second message should be the user asking about France"
+        )
+        assertTrue(
+            saved[2] is Message.User &&
+                saved[2].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("France"),
+            "Third message should be the user asking about France"
+        )
+        assertTrue(
+            saved[3] is Message.Assistant &&
+                saved[3].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("Paris"),
+            "Fourth message should be the assistant replying about France"
+        )
+        assertTrue(
+            saved[4] is Message.User &&
+                saved[4].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("Germany"),
+            "Fifth message should be the user asking about Germany"
+        )
+        assertTrue(
+            saved[5] is Message.Assistant &&
+                saved[5].parts.filterIsInstance<MessagePart.Text>()
+                    .joinToString(separator = "\n") { it.text }.contains("Berlin"),
+            "Sixth message should be the assistant replying about Germany"
+        )
     }
 
     // ---- Load/Store Call Tracking ----
@@ -330,15 +418,24 @@ class ChatMemoryTest {
 
         val userMessages = history.filterIsInstance<Message.User>()
         assertTrue(
-            userMessages.any { it.content.contains("France") },
+            userMessages.any {
+                it.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                    .contains("France")
+            },
             "Pre-seeded history about France should be present"
         )
         assertTrue(
-            userMessages.any { it.content.contains("Germany") },
+            userMessages.any {
+                it.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                    .contains("Germany")
+            },
             "Pre-seeded history about Germany should be present"
         )
         assertTrue(
-            userMessages.any { it.content.contains("Italy") },
+            userMessages.any {
+                it.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                    .contains("Italy")
+            },
             "New question about Italy should be present"
         )
     }
@@ -361,7 +458,7 @@ class ChatMemoryTest {
         val saved = historyProvider.load(sessionId)
         assertTrue(saved.size > preSeededHistory.size, "Saved history should contain pre-seeded + new messages")
 
-        val userContents = saved.filterIsInstance<Message.User>().map { it.content }
+        val userContents = saved.filterIsInstance<Message.User>().map { it.parts.filterIsInstance<MessagePart.Text>().joinToString<ai.koog.prompt.message.MessagePart.Text>(separator = "\n") { it.text } }
         assertTrue(userContents.any { it.contains("France") }, "Pre-seeded France question should be preserved")
         assertTrue(userContents.any { it.contains("Germany") }, "Pre-seeded Germany question should be preserved")
         assertTrue(userContents.any { it.contains("Italy") }, "New Italy question should be appended")
@@ -388,19 +485,19 @@ class ChatMemoryTest {
         val savedB = historyProvider.history[sessionB] ?: error("Session B should have saved history")
 
         assertTrue(
-            savedA.any { it.content.contains("France") },
+            savedA.any { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("France") },
             "Session A should contain France question"
         )
         assertTrue(
-            savedA.none { it.content.contains("Japan") },
+            savedA.none { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("Japan") },
             "Session A should NOT contain Japan question"
         )
         assertTrue(
-            savedB.any { it.content.contains("Japan") },
+            savedB.any { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("Japan") },
             "Session B should contain Japan question"
         )
         assertTrue(
-            savedB.none { it.content.contains("France") },
+            savedB.none { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("France") },
             "Session B should NOT contain France question"
         )
     }
@@ -427,8 +524,8 @@ class ChatMemoryTest {
         val savedA = historyProvider.history[sessionA]!!
         val savedB = historyProvider.history[sessionB]!!
 
-        val aContents = savedA.map { it.content }
-        val bContents = savedB.map { it.content }
+        val aContents = savedA.map { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text } }
+        val bContents = savedB.map { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text } }
 
         assertTrue(aContents.any { it.contains("A1") }, "Session A should contain A1")
         assertTrue(aContents.any { it.contains("A2") }, "Session A should contain A2")
@@ -467,7 +564,7 @@ class ChatMemoryTest {
         assertTrue(afterSecond.size > afterFirst.size, "History should grow after second run")
         assertTrue(afterThird.size > afterSecond.size, "History should grow after third run")
 
-        val allContents = afterThird.map { it.content }
+        val allContents = afterThird.map { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text } }
         assertTrue(allContents.any { it.contains("Question 1") })
         assertTrue(allContents.any { it.contains("Reply 1") })
         assertTrue(allContents.any { it.contains("Question 2") })
@@ -493,7 +590,7 @@ class ChatMemoryTest {
         agent.run("Third message", sessionId)
 
         val saved = historyProvider.history[sessionId]!!
-        val userMessages = saved.filterIsInstance<Message.User>().map { it.content }
+        val userMessages = saved.filterIsInstance<Message.User>().map { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text } }
 
         val firstIdx = userMessages.indexOfFirst { it.contains("First") }
         val secondIdx = userMessages.indexOfFirst { it.contains("Second") }
@@ -542,13 +639,13 @@ class ChatMemoryTest {
         val saved = historyProvider.history[sessionId]!!
         val userMessages = saved.filterIsInstance<Message.User>()
         assertTrue(
-            userMessages.any { it.content.contains("meaning of life") },
+            userMessages.any { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("meaning of life") },
             "User input should be stored in history"
         )
 
         val assistantMessages = saved.filterIsInstance<Message.Assistant>()
         assertTrue(
-            assistantMessages.any { it.content.contains("42") },
+            assistantMessages.any { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("42") },
             "Assistant reply should be stored in history"
         )
     }
@@ -630,7 +727,7 @@ class ChatMemoryTest {
 
         val saved = historyProvider.history[sessionId]!!
         assertTrue(
-            saved.any { it.content.contains(longInput) },
+            saved.any { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains(longInput) },
             "Long input should be preserved in history"
         )
     }
@@ -690,7 +787,7 @@ class ChatMemoryTest {
 
         val lastUserMessage = nonSystemMessages.filterIsInstance<Message.User>().last()
         assertTrue(
-            lastUserMessage.content.contains("New question"),
+            lastUserMessage.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("New question"),
             "Last user message should be the new question"
         )
     }
@@ -821,7 +918,7 @@ class ChatMemoryTest {
         )
         // The pre-seeded France messages (earliest) should be dropped
         assertTrue(
-            nonSystemMessages.none { it.content.contains("France") },
+            nonSystemMessages.none { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("France") },
             "Oldest messages about France should be outside the window"
         )
     }
@@ -847,7 +944,7 @@ class ChatMemoryTest {
         val saved = historyProvider.history[sessionId]!!
         assertEquals(4, saved.size, "Window should keep exactly 4 messages")
 
-        val contents = saved.map { it.content }
+        val contents = saved.map { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text } }
         assertTrue(contents.none { it.contains("Q1") }, "Q1 should have been truncated")
         assertTrue(contents.none { it.contains("Reply 1") }, "Reply 1 should have been truncated")
         assertTrue(contents.any { it.contains("Reply 2") }, "Reply 2 should be within window")
@@ -914,7 +1011,7 @@ class ChatMemoryTest {
         assertEquals(4, historyProvider.history[sessionId]!!.size, "After 4 runs: still 4 messages (window applied)")
 
         val saved = historyProvider.history[sessionId]!!
-        val contents = saved.map { it.content }
+        val contents = saved.map { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text } }
         assertTrue(contents.none { it.contains("Q1") }, "Q1 should be outside window")
         assertTrue(contents.none { it.contains("Q2") }, "Q2 should be outside window")
         assertTrue(contents.any { it.contains("Reply 3") || it.contains("Q3") }, "Q3 should be represented in window")
@@ -942,7 +1039,7 @@ class ChatMemoryTest {
         ) {
             install(ChatMemory) {
                 chatHistoryProvider = historyProvider
-                filterMessages { it.content.length <= 20 }
+                filterMessages { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.length <= 20 }
             }
         }
 
@@ -951,11 +1048,11 @@ class ChatMemoryTest {
 
         val saved = historyProvider.history[sessionId]!!
         assertTrue(
-            saved.none { it.content.contains("very long reply") },
+            saved.none { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("very long reply") },
             "Long reply should have been filtered out"
         )
         assertTrue(
-            saved.any { it.content == "Short" },
+            saved.any { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text } == "Short" },
             "Short reply should be kept"
         )
     }
@@ -1041,9 +1138,9 @@ class ChatMemoryTest {
         assertTrue(saved.all { it is Message.User }, "All saved messages should be User")
         // All 3 user messages fit within the window because the filter keeps the list short
         assertEquals(3, saved.size, "All 3 user messages should be kept")
-        assertTrue(saved.any { it.content.contains("Q1") }, "Q1 should be present")
-        assertTrue(saved.any { it.content.contains("Q2") }, "Q2 should be present")
-        assertTrue(saved.any { it.content.contains("Q3") }, "Q3 should be present")
+        assertTrue(saved.any { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("Q1") }, "Q1 should be present")
+        assertTrue(saved.any { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("Q2") }, "Q2 should be present")
+        assertTrue(saved.any { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("Q3") }, "Q3 should be present")
     }
 
     @Test
@@ -1084,8 +1181,135 @@ class ChatMemoryTest {
         // Window of 2 keeps: Q2, Q3
         assertEquals(2, saved.size, "Exactly 2 messages after filter-then-window")
         assertTrue(saved.all { it is Message.User }, "All should be User messages")
-        assertTrue(saved.none { it.content.contains("Q1") }, "Q1 should be outside the window")
-        assertTrue(saved.any { it.content.contains("Q2") }, "Q2 should be in the window")
-        assertTrue(saved.any { it.content.contains("Q3") }, "Q3 should be in the window")
+        assertTrue(saved.none { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("Q1") }, "Q1 should be outside the window")
+        assertTrue(saved.any { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("Q2") }, "Q2 should be in the window")
+        assertTrue(saved.any { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text }.contains("Q3") }, "Q3 should be in the window")
+    }
+
+    @Serializable
+    data class CustomInput(
+        val question: String
+    )
+
+    @Serializable
+    data class CustomOutput(
+        val x: Int,
+        val y: String
+    )
+
+    object GuesserTool : Tool<CustomInput, CustomOutput>(
+        argsType = typeToken<CustomInput>(),
+        resultType = typeToken<CustomOutput>(),
+        name = "guesser",
+        description = "Very important tool. You MUST call it ALWAYS and exactly once!"
+    ) {
+        override suspend fun execute(args: CustomInput): CustomOutput = CustomOutput(x = 100500, y = "Hidden Value")
+
+        override fun encodeResultToString(result: CustomOutput, serializer: JSONSerializer): String {
+            return "encoded_result(\"${result.y}\")"
+        }
+    }
+
+    @OptIn(InternalAgentsApi::class)
+    @Test
+    fun `test ReceivedToolResult contains resultObject that is NOT persisted via ChatMemory`() = runTest {
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        val promptExecutor = getMockExecutor {
+            mockLLMToolCall(
+                GuesserTool,
+                CustomInput(question = "What is the secret value?")
+            ) onRequestEquals "Tell me the secret!"
+
+            mockLLMAnswer("Done! Value is Hidden Value") onRequestEquals "encoded_result(\"Hidden Value\")"
+        }
+
+        val events = mutableListOf<String>()
+
+        val agent = AIAgent(
+            promptExecutor = promptExecutor,
+            systemPrompt = """
+                    You are a helpful assistant.
+                    You must use `guesser` tool to answer all questions.
+            """.trimIndent(),
+            toolRegistry = ToolRegistry {
+                tool(GuesserTool)
+            },
+            strategy = singleRunStrategy(parallelTools = false),
+            llmModel = AnthropicModels.Sonnet_4_5
+        ) {
+            install(ChatMemory) {
+                chatHistoryProvider = historyProvider
+            }
+
+            handleEvents {
+                onToolCallStarting { ctx ->
+                    events += "onToolCallStarting(${ctx.toolName}, args=${ctx.toolArgs})"
+                }
+                onNodeExecutionCompleted { ctx ->
+                    if (ctx.node.name == "nodeExecuteTool") {
+                        val toolResult = (ctx.output as ReceivedToolResults).toolResults.single()
+                        events += "finished: nodeExecuteTool(tool=${toolResult.tool}, output=${toolResult.output})"
+                    }
+                }
+                onNodeExecutionStarting { ctx ->
+                    val input = ctx.input
+                    if (input is ToolCalls) {
+                        val toolCall = input.toolCalls.single()
+                        events += "started: nodeExecuteTool(tool=${toolCall.tool}, content=${toolCall.args})"
+                    }
+                }
+                onToolCallCompleted { ctx ->
+                    events += "onToolCallCompleted(guesser, toolResult=${ctx.toolResult})"
+                }
+                onLLMCallStarting { ctx ->
+                    val lastText = (ctx.prompt.messages.last() as? Message.User)?.parts
+                        ?.joinToString(separator = "\n") { part ->
+                            when (part) {
+                                is MessagePart.Text -> part.text
+                                is MessagePart.Tool.Result -> part.output
+                                else -> ""
+                            }
+                        } ?: ""
+                    events += "onLLMCallStarting($lastText)"
+                }
+            }
+        }
+
+        val result = agent.run("Tell me the secret!", "session-01")
+        assertEquals("Done! Value is Hidden Value", result)
+
+        val expectedEvents = listOf(
+            "onLLMCallStarting(Tell me the secret!)",
+            "started: nodeExecuteTool(tool=guesser, content={\"question\":\"What is the secret value?\"})",
+            "onToolCallStarting(guesser, args={\"question\":\"What is the secret value?\"})",
+            "onToolCallCompleted(guesser, toolResult={\"x\":100500, \"y\":\"Hidden Value\"})",
+            "finished: nodeExecuteTool(tool=guesser, output=encoded_result(\"Hidden Value\"))",
+            "onLLMCallStarting(encoded_result(\"Hidden Value\"))"
+        )
+
+        assertEquals(expectedEvents.size, events.size)
+        assertContentEquals(expectedEvents, events)
+
+        val savedMessages = historyProvider.history["session-01"]!!.map { msg ->
+            msg.parts.joinToString(separator = "\n") { part ->
+                when (part) {
+                    is MessagePart.Text -> part.text
+                    is MessagePart.Tool.Call -> part.args
+                    is MessagePart.Tool.Result -> part.output
+                    else -> ""
+                }
+            }
+        }
+        val expectedMessages = listOf(
+            "You are a helpful assistant.\nYou must use `guesser` tool to answer all questions.",
+            "Tell me the secret!",
+            "{\"question\":\"What is the secret value?\"}",
+            "encoded_result(\"Hidden Value\")",
+            "Done! Value is Hidden Value",
+        )
+
+        assertEquals(expectedMessages.size, savedMessages.size)
+        assertContentEquals(expectedMessages, savedMessages)
     }
 }

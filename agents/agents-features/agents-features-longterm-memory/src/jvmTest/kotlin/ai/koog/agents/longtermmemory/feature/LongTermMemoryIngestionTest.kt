@@ -3,24 +3,23 @@ package ai.koog.agents.longtermmemory.feature
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
-import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.longtermmemory.ingestion.IngestionTiming
-import ai.koog.agents.longtermmemory.ingestion.extraction.ExtractionStrategy
-import ai.koog.agents.longtermmemory.ingestion.extraction.FilteringExtractionStrategy
+import ai.koog.agents.longtermmemory.ingestion.extraction.DocumentExtractor
+import ai.koog.agents.longtermmemory.ingestion.extraction.MessagePassingDocumentExtractor
 import ai.koog.agents.longtermmemory.model.MemoryRecord
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.rag.base.storage.search.KeywordSearchRequest
@@ -36,7 +35,6 @@ import kotlin.test.assertTrue
 /**
  * Tests for LongTermMemory ingestion (IngestionSettings): persisting messages into memory storage.
  */
-@OptIn(ExperimentalAgentsApi::class)
 class LongTermMemoryIngestionTest {
     private val defaultNamespace = "default"
 
@@ -48,9 +46,34 @@ class LongTermMemoryIngestionTest {
 
     private val nonStreamingStrategy =
         strategy<String, String>("ingestion-test", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
-            val llmNode by nodeLLMRequest(name = "llm-node", allowToolCalls = false)
+            val llmNode by nodeLLMRequestWithoutTools(name = "llm-node")
             edge(nodeStart forwardTo llmNode)
-            edge(llmNode forwardTo nodeFinish transformed { it.content })
+            edge(
+                llmNode forwardTo nodeFinish transformed {
+                    it.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                }
+            )
+        }
+
+    /**
+     * Strategy that performs two LLM calls within a single agent run.
+     *
+     * The first input is used as the first user message; a fixed second user message is
+     * appended before the second LLM call. The prompt for the second call therefore
+     * contains the first user message and the first assistant response — exactly the
+     * "prompt-history replay" scenario that must not lead to duplicate ingestion.
+     */
+    private val twoCallNonStreamingStrategy =
+        strategy<String, String>("ingestion-two-call-test", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
+            val firstLlmNode by nodeLLMRequestWithoutTools(name = "llm-node-1")
+            val secondLlmNode by nodeLLMRequestWithoutTools(name = "llm-node-2")
+            edge(nodeStart forwardTo firstLlmNode)
+            edge(firstLlmNode forwardTo secondLlmNode transformed { "Follow-up question" })
+            edge(
+                secondLlmNode forwardTo nodeFinish transformed {
+                    it.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                }
+            )
         }
 
     private val streamingStrategy =
@@ -69,8 +92,8 @@ class LongTermMemoryIngestionTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            return listOf(Message.Assistant("non-streaming", ResponseMetaInfo.Empty))
+        ): Message.Assistant {
+            return Message.Assistant("non-streaming", ResponseMetaInfo.Empty)
         }
 
         override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
@@ -87,7 +110,7 @@ class LongTermMemoryIngestionTest {
     }
 
     // ==========================================
-    // Default FilteringExtractionStrategy (User + Assistant)
+    // Default MessagePassingDocumentExtractor (User + Assistant)
     // ==========================================
 
     @Test
@@ -107,7 +130,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy()
+                    documentExtractor = MessagePassingDocumentExtractor()
                 }
             }
         }
@@ -148,7 +171,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
+                    documentExtractor = MessagePassingDocumentExtractor(setOf(Message.Role.Assistant))
                 }
             }
         }
@@ -180,8 +203,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
-                    timing = IngestionTiming.ON_LLM_CALL
+                    documentExtractor = MessagePassingDocumentExtractor(setOf(Message.Role.User))
                 }
             }
         }
@@ -198,41 +220,6 @@ class LongTermMemoryIngestionTest {
         assertTrue(
             assistantResults.none { it.document.content.contains("Assistant reply") },
             "Assistant messages should NOT be stored"
-        )
-    }
-
-    @Test
-    fun `assistant-only extractor excludes user messages`() = runTest {
-        val storage = InMemoryRecordStorage()
-
-        val executor = getMockExecutor(defaultAgentConfig.serializer) {
-            mockLLMAnswer("Kotlin is a modern language").asDefaultResponse
-        }
-
-        val agent = AIAgent(
-            promptExecutor = executor,
-            strategy = nonStreamingStrategy,
-            agentConfig = defaultAgentConfig,
-            toolRegistry = ToolRegistry.EMPTY
-        ) {
-            install(LongTermMemory.Feature) {
-                ingestion {
-                    this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(messageRolesToExtract = setOf(Message.Role.Assistant))
-                }
-            }
-        }
-
-        agent.run("What is Kotlin?")
-
-        val allResults = storage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
-        assertTrue(
-            allResults.none { it.document.content.contains("What is Kotlin") },
-            "User message should NOT be stored"
-        )
-        assertTrue(
-            allResults.any { it.document.content.contains("Kotlin is a modern language") },
-            "Assistant message should be stored"
         )
     }
 
@@ -289,79 +276,11 @@ class LongTermMemoryIngestionTest {
     }
 
     // ==========================================
-    // Streaming ingestion
+    // On-completion ingestion
     // ==========================================
 
     @Test
-    fun `streaming frames are ingested when configured`() = runTest {
-        val storage = InMemoryRecordStorage()
-
-        val executor = streamingExecutor("Hello ", "world", "!")
-
-        val agent = AIAgent(
-            promptExecutor = executor,
-            strategy = streamingStrategy,
-            agentConfig = defaultAgentConfig,
-            toolRegistry = ToolRegistry.EMPTY
-        ) {
-            install(LongTermMemory.Feature) {
-                ingestion {
-                    this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
-                }
-            }
-        }
-
-        agent.run("Hello")
-
-        assertEquals(1, storage.size(), "Streaming frames should be stored as a memory record")
-        val results = storage.search(KeywordSearchRequest(queryText = "Hello world"), defaultNamespace)
-        assertEquals(1, results.size)
-        assertTrue(
-            results.first().document.content.contains("Hello world!"),
-            "Concatenated streaming content should be stored"
-        )
-    }
-
-    @Test
-    fun `user messages are ingested during streaming with ON_LLM_CALL timing`() = runTest {
-        val storage = InMemoryRecordStorage()
-
-        val executor = streamingExecutor("Streaming reply")
-
-        val agent = AIAgent(
-            promptExecutor = executor,
-            strategy = streamingStrategy,
-            agentConfig = defaultAgentConfig,
-            toolRegistry = ToolRegistry.EMPTY
-        ) {
-            install(LongTermMemory.Feature) {
-                ingestion {
-                    this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
-                    timing = IngestionTiming.ON_LLM_CALL
-                }
-            }
-        }
-
-        agent.run("User streaming question about Kotlin")
-
-        assertTrue(storage.size() > 0, "User message should be stored during streaming")
-        val results = storage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
-        assertTrue(results.any { it.document.content.contains("User streaming question about Kotlin") })
-        val streamResults = storage.search(KeywordSearchRequest(queryText = "Streaming reply"), defaultNamespace)
-        assertTrue(
-            streamResults.none { it.document.content.contains("Streaming reply") },
-            "Streaming assistant response should NOT be stored"
-        )
-    }
-
-    // ==========================================
-    // IngestionTiming.ON_AGENT_COMPLETION
-    // ==========================================
-
-    @Test
-    fun `ON_AGENT_COMPLETION stores messages after agent run completes`() = runTest {
+    fun `stores messages after agent run completes`() = runTest {
         val storage = InMemoryRecordStorage()
 
         val executor = getMockExecutor(defaultAgentConfig.serializer) {
@@ -377,8 +296,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
-                    timing = IngestionTiming.ON_AGENT_COMPLETION
+                    documentExtractor = MessagePassingDocumentExtractor(setOf(Message.Role.Assistant))
                 }
             }
         }
@@ -393,7 +311,7 @@ class LongTermMemoryIngestionTest {
 
     @Test
     @Timeout(5)
-    fun `ON_AGENT_COMPLETION does not store messages during LLM call`() = runTest {
+    fun `does not store messages during LLM call`() = runTest {
         val storage = InMemoryRecordStorage()
         var storageSizeDuringLLMCall = -1
 
@@ -402,9 +320,9 @@ class LongTermMemoryIngestionTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
-            ): List<Message.Response> {
+            ): Message.Assistant {
                 storageSizeDuringLLMCall = storage.size()
-                return listOf(Message.Assistant("Response that should not be stored yet", ResponseMetaInfo.Empty))
+                return Message.Assistant("Response that should not be stored yet", ResponseMetaInfo.Empty)
             }
 
             override fun executeStreaming(
@@ -429,8 +347,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.Assistant))
-                    timing = IngestionTiming.ON_AGENT_COMPLETION
+                    documentExtractor = MessagePassingDocumentExtractor(setOf(Message.Role.Assistant))
                 }
             }
         }
@@ -440,84 +357,13 @@ class LongTermMemoryIngestionTest {
         assertEquals(
             0,
             storageSizeDuringLLMCall,
-            "No records should be stored during LLM call with ON_COMPLETION timing"
+            "No records should be stored during LLM call; ingestion happens only on agent completion"
         )
         assertTrue(storage.size() > 0, "Records should be stored after agent completion")
     }
 
-    @Test
-    fun `ON_AGENT_COMPLETION stores user messages`() = runTest {
-        val storage = InMemoryRecordStorage()
-
-        val executor = getMockExecutor(defaultAgentConfig.serializer) {
-            mockLLMAnswer("Assistant reply").asDefaultResponse
-        }
-
-        val agent = AIAgent(
-            promptExecutor = executor,
-            strategy = nonStreamingStrategy,
-            agentConfig = defaultAgentConfig,
-            toolRegistry = ToolRegistry.EMPTY
-        ) {
-            install(LongTermMemory.Feature) {
-                ingestion {
-                    this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User))
-                    timing = IngestionTiming.ON_AGENT_COMPLETION
-                }
-            }
-        }
-
-        agent.run("User question about Kotlin")
-
-        assertTrue(storage.size() > 0, "User message should be stored on completion")
-        val results = storage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
-        assertTrue(results.any { it.document.content.contains("User question about Kotlin") })
-        assertTrue(
-            results.none { it.document.content.contains("Assistant reply") },
-            "Assistant messages should NOT be stored"
-        )
-    }
-
-    @Test
-    fun `ON_AGENT_COMPLETION stores both user and assistant messages`() = runTest {
-        val storage = InMemoryRecordStorage()
-
-        val executor = getMockExecutor(defaultAgentConfig.serializer) {
-            mockLLMAnswer("Assistant response about Kotlin").asDefaultResponse
-        }
-
-        val agent = AIAgent(
-            promptExecutor = executor,
-            strategy = nonStreamingStrategy,
-            agentConfig = defaultAgentConfig,
-            toolRegistry = ToolRegistry.EMPTY
-        ) {
-            install(LongTermMemory.Feature) {
-                ingestion {
-                    this.storage = storage
-                    extractionStrategy = FilteringExtractionStrategy(setOf(Message.Role.User, Message.Role.Assistant))
-                    timing = IngestionTiming.ON_AGENT_COMPLETION
-                }
-            }
-        }
-
-        agent.run("User question about Kotlin")
-
-        assertTrue(storage.size() >= 2, "Both user and assistant records should be stored")
-        val results = storage.search(KeywordSearchRequest(queryText = "Kotlin"), defaultNamespace)
-        assertTrue(
-            results.any { it.document.content.contains("User question about Kotlin") },
-            "User message should be stored"
-        )
-        assertTrue(
-            results.any { it.document.content.contains("Assistant response about Kotlin") },
-            "Assistant message should be stored"
-        )
-    }
-
     // ==========================================
-    // Custom ExtractionStrategy
+    // Custom DocumentExtractor
     // ==========================================
 
     @Test
@@ -537,9 +383,12 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = ExtractionStrategy { messages ->
+                    documentExtractor = DocumentExtractor { messages ->
                         messages.filter { it.role == Message.Role.Assistant }
-                            .flatMap { it.content.split(". ") }
+                            .flatMap {
+                                it.parts.filterIsInstance<MessagePart.Text>().joinToString(separator = "\n") { it.text }
+                                    .split(". ")
+                            }
                             .map { it.trim().removeSuffix(".") }
                             .filter { it.isNotBlank() }
                             .map { MemoryRecord(content = it) }
@@ -555,42 +404,6 @@ class LongTermMemoryIngestionTest {
         assertTrue(results.any { it.document.content.contains("First sentence") })
         assertTrue(results.any { it.document.content.contains("Second sentence") })
         assertTrue(results.any { it.document.content.contains("Third sentence") })
-    }
-
-    @Test
-    fun `custom extractor that uppercases content`() = runTest {
-        val storage = InMemoryRecordStorage()
-
-        val executor = getMockExecutor(defaultAgentConfig.serializer) {
-            mockLLMAnswer("The answer is 42").asDefaultResponse
-        }
-
-        val agent = AIAgent(
-            promptExecutor = executor,
-            strategy = nonStreamingStrategy,
-            agentConfig = defaultAgentConfig,
-            toolRegistry = ToolRegistry.EMPTY
-        ) {
-            install(LongTermMemory.Feature) {
-                ingestion {
-                    this.storage = storage
-                    extractionStrategy = ExtractionStrategy { messages ->
-                        messages
-                            .filter { it.role == Message.Role.Assistant }
-                            .map { MemoryRecord(content = it.content.uppercase()) }
-                    }
-                }
-            }
-        }
-
-        agent.run("What is the answer?")
-
-        assertTrue(storage.size() > 0, "At least one record should be stored")
-        val results = storage.search(KeywordSearchRequest(queryText = "ANSWER"), defaultNamespace)
-        assertTrue(
-            results.any { it.document.content == "THE ANSWER IS 42" },
-            "Custom extractor should have uppercased the content"
-        )
     }
 
     // ==========================================
@@ -614,7 +427,7 @@ class LongTermMemoryIngestionTest {
             install(LongTermMemory.Feature) {
                 ingestion {
                     this.storage = storage
-                    extractionStrategy = ExtractionStrategy { emptyList() }
+                    documentExtractor = DocumentExtractor { emptyList() }
                 }
             }
         }
@@ -622,5 +435,91 @@ class LongTermMemoryIngestionTest {
         agent.run("Hello")
 
         assertEquals(0, storage.size(), "No records should be stored when extractor returns empty list")
+    }
+
+    // ==========================================
+    // Multi-call ingestion: prompt history is ingested once on completion
+    // ==========================================
+
+    @Test
+    fun `two LLM calls with default extractor do not duplicate prompt-history messages`() = runTest {
+        val storage = InMemoryRecordStorage()
+
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
+            mockLLMAnswer("Second answer about coroutines") onRequestContains "Follow-up question"
+            mockLLMAnswer("First answer about coroutines").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = twoCallNonStreamingStrategy,
+            agentConfig = defaultAgentConfig,
+            toolRegistry = ToolRegistry.EMPTY
+        ) {
+            install(LongTermMemory.Feature) {
+                ingestion {
+                    this.storage = storage
+                    documentExtractor = MessagePassingDocumentExtractor()
+                }
+            }
+        }
+
+        agent.run("First question")
+
+        // Expected ingested records: User1, Assistant1, User2, Assistant2 → exactly 4.
+        // Ingestion runs once on agent completion over the final prompt history,
+        // so each message appears exactly once regardless of how many LLM calls happened.
+        assertEquals(
+            4,
+            storage.size(),
+            "Each prompt-history message must be ingested exactly once on agent completion"
+        )
+
+        val firstUser = storage.search(KeywordSearchRequest(queryText = "First question"), defaultNamespace)
+        assertEquals(1, firstUser.size, "First user message must be stored exactly once")
+
+        val firstAssistant = storage.search(KeywordSearchRequest(queryText = "First answer"), defaultNamespace)
+        assertEquals(1, firstAssistant.size, "First assistant message must be stored exactly once")
+
+        val secondUser = storage.search(KeywordSearchRequest(queryText = "Follow-up"), defaultNamespace)
+        assertEquals(1, secondUser.size, "Second user message must be stored exactly once")
+
+        val secondAssistant = storage.search(KeywordSearchRequest(queryText = "Second answer"), defaultNamespace)
+        assertEquals(1, secondAssistant.size, "Second assistant message must be stored exactly once")
+    }
+
+    @Test
+    fun `consecutive agent runs each ingest their own messages on completion`() = runTest {
+        val storage = InMemoryRecordStorage()
+
+        val executor = getMockExecutor(defaultAgentConfig.serializer) {
+            mockLLMAnswer("Stable assistant reply").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = nonStreamingStrategy,
+            agentConfig = defaultAgentConfig,
+            toolRegistry = ToolRegistry.EMPTY
+        ) {
+            install(LongTermMemory.Feature) {
+                ingestion {
+                    this.storage = storage
+                    documentExtractor = MessagePassingDocumentExtractor()
+                }
+            }
+        }
+
+        agent.run("Question one")
+        val sizeAfterFirstRun = storage.size()
+        agent.run("Question two")
+        val sizeAfterSecondRun = storage.size()
+
+        // Each run is independent and ingests its own prompt history on completion.
+        assertTrue(
+            sizeAfterSecondRun > sizeAfterFirstRun,
+            "Second run must ingest its own messages on completion; " +
+                "first=$sizeAfterFirstRun second=$sizeAfterSecondRun"
+        )
     }
 }

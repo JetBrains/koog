@@ -1,12 +1,14 @@
-@file:OptIn(InternalAgentsApi::class)
+@file:OptIn(InternalKoogUtils::class)
 
 package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.utils.runOnStrategyDispatcher
+import ai.koog.utils.annotations.InternalKoogUtils
+import ai.koog.utils.concurrency.runBlockingReentrant
 
+@OptIn(InternalAgentsApi::class, InternalKoogUtils::class)
 internal actual fun <T> runBlockingOnStrategy(
     agentConfig: AIAgentConfig,
     block: suspend () -> T,
-): T = agentConfig.runOnStrategyDispatcher { block() }
+): T = runBlockingReentrant(agentConfig.strategyDispatcher) { block() }

@@ -1,12 +1,16 @@
 package ai.koog.agents.features.opentelemetry.feature
 
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
+import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
+import ai.koog.agents.features.opentelemetry.mock.MockContextFactory
 import ai.koog.agents.features.opentelemetry.mock.MockSpan
 import ai.koog.agents.features.opentelemetry.mock.MockTracer
+import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpanBuilder
 import ai.koog.agents.features.opentelemetry.span.SpanCollector
 import ai.koog.agents.features.opentelemetry.span.SpanType
-import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.kotlin.tracing.SpanKind
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -73,9 +77,10 @@ class OpenTelemetryFeatureTest {
     //region End Unfinished Spans
 
     @Test
-    fun testEndUnfinishedSpans_EndsAllSpansWhenNoFilterProvided() {
+    fun testEndUnfinishedSpans_EndsAllSpansWhenNoFilterProvided() = runTest {
         val spanCollector = SpanCollector()
         val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
         val openTelemetry = OpenTelemetry.Feature
 
         // Create and collect spans
@@ -85,7 +90,7 @@ class OpenTelemetryFeatureTest {
             id = "span1",
             name = "span1-name",
             kind = SpanKind.INTERNAL,
-        ).buildAndStart(tracer)
+        ).buildAndStart(tracer, contextFactory)
         spanCollector.collectSpan(span1, AgentExecutionInfo(null, "span1"))
 
         val span2 = GenAIAgentSpanBuilder(
@@ -94,13 +99,13 @@ class OpenTelemetryFeatureTest {
             id = "span2",
             name = "span2-name",
             kind = SpanKind.INTERNAL,
-        ).buildAndStart(tracer)
+        ).buildAndStart(tracer, contextFactory)
         spanCollector.collectSpan(span2, AgentExecutionInfo(AgentExecutionInfo(null, "span1"), "span2"))
 
         assertEquals(2, spanCollector.activeSpansCount)
 
         // End all unfinished spans
-        openTelemetry.endUnfinishedSpans(spanCollector, verbose = false)
+        openTelemetry.endUnfinishedSpans(spanCollector, spanAdapter = null, verbose = false)
 
         // Verify all spans are ended and removed
         assertEquals(0, spanCollector.activeSpansCount)
@@ -111,9 +116,10 @@ class OpenTelemetryFeatureTest {
     }
 
     @Test
-    fun testEndUnfinishedSpans_EndsOnlyMatchingSpansWhenFilterProvided() {
+    fun testEndUnfinishedSpans_EndsOnlyMatchingSpansWhenFilterProvided() = runTest {
         val spanCollector = SpanCollector()
         val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
         val openTelemetry = OpenTelemetry.Feature
 
         // Create spans of different types
@@ -123,7 +129,7 @@ class OpenTelemetryFeatureTest {
             id = "create-agent",
             name = "create-agent-name",
             kind = SpanKind.INTERNAL,
-        ).buildAndStart(tracer)
+        ).buildAndStart(tracer, contextFactory)
         spanCollector.collectSpan(createAgentSpan, AgentExecutionInfo(null, "create-agent"))
 
         val invokeAgentSpan = GenAIAgentSpanBuilder(
@@ -132,7 +138,7 @@ class OpenTelemetryFeatureTest {
             id = "invoke-agent",
             name = "invoke-agent-name",
             kind = SpanKind.INTERNAL,
-        ).buildAndStart(tracer)
+        ).buildAndStart(tracer, contextFactory)
         spanCollector.collectSpan(invokeAgentSpan, AgentExecutionInfo(AgentExecutionInfo(null, "create-agent"), "invoke-agent"))
 
         val nodeSpan = GenAIAgentSpanBuilder(
@@ -141,13 +147,13 @@ class OpenTelemetryFeatureTest {
             id = "node",
             name = "node-name",
             kind = SpanKind.INTERNAL,
-        ).buildAndStart(tracer)
+        ).buildAndStart(tracer, contextFactory)
         spanCollector.collectSpan(nodeSpan, AgentExecutionInfo(AgentExecutionInfo(AgentExecutionInfo(null, "create-agent"), "invoke-agent"), "node"))
 
         assertEquals(3, spanCollector.activeSpansCount)
 
         // End only NODE spans (filter out CREATE_AGENT and INVOKE_AGENT)
-        openTelemetry.endUnfinishedSpans(spanCollector, verbose = false) { span ->
+        openTelemetry.endUnfinishedSpans(spanCollector, spanAdapter = null, verbose = false) { span ->
             span.type == SpanType.NODE
         }
 
@@ -162,9 +168,10 @@ class OpenTelemetryFeatureTest {
     }
 
     @Test
-    fun testEndUnfinishedSpans_HandlesDeepHierarchy() {
+    fun testEndUnfinishedSpans_HandlesDeepHierarchy() = runTest {
         val spanCollector = SpanCollector()
         val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
         val openTelemetry = OpenTelemetry.Feature
 
         // Create a deep hierarchy: root -> level1 -> level2 -> level3
@@ -174,7 +181,7 @@ class OpenTelemetryFeatureTest {
             id = "root",
             name = "root-name",
             kind = SpanKind.INTERNAL,
-        ).buildAndStart(tracer)
+        ).buildAndStart(tracer, contextFactory)
         val rootPath = AgentExecutionInfo(null, "root")
         spanCollector.collectSpan(rootSpan, rootPath)
 
@@ -184,7 +191,7 @@ class OpenTelemetryFeatureTest {
             id = "level1",
             name = "level1-name",
             kind = SpanKind.INTERNAL,
-        ).buildAndStart(tracer)
+        ).buildAndStart(tracer, contextFactory)
         val level1Path = AgentExecutionInfo(rootPath, "level1")
         spanCollector.collectSpan(level1Span, level1Path)
 
@@ -194,7 +201,7 @@ class OpenTelemetryFeatureTest {
             id = "level2",
             name = "level2-name",
             kind = SpanKind.INTERNAL,
-        ).buildAndStart(tracer)
+        ).buildAndStart(tracer, contextFactory)
         val level2Path = AgentExecutionInfo(level1Path, "level2")
         spanCollector.collectSpan(level2Span, level2Path)
 
@@ -204,14 +211,14 @@ class OpenTelemetryFeatureTest {
             id = "level3",
             name = "level3-name",
             kind = SpanKind.INTERNAL,
-        ).buildAndStart(tracer)
+        ).buildAndStart(tracer, contextFactory)
         val level3Path = AgentExecutionInfo(level2Path, "level3")
         spanCollector.collectSpan(level3Span, level3Path)
 
         assertEquals(4, spanCollector.activeSpansCount)
 
         // End all spans - should handle hierarchy correctly (leaf to root)
-        openTelemetry.endUnfinishedSpans(spanCollector, verbose = false)
+        openTelemetry.endUnfinishedSpans(spanCollector, spanAdapter = null, verbose = false)
 
         // Verify all spans are ended
         assertEquals(0, spanCollector.activeSpansCount)
@@ -225,6 +232,50 @@ class OpenTelemetryFeatureTest {
         assertTrue(mockLevel1Span.isEnded)
         assertTrue(mockLevel2Span.isEnded)
         assertTrue(mockLevel3Span.isEnded)
+    }
+
+    @Test
+    fun testEndUnfinishedSpans_InvokesSpanAdapterOnBeforeSpanFinished() = runTest {
+        val spanCollector = SpanCollector()
+        val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
+        val openTelemetry = OpenTelemetry.Feature
+
+        val finishedSpans = mutableListOf<GenAIAgentSpan>()
+        val adapter = object : SpanAdapter() {
+            override fun onBeforeSpanFinished(span: GenAIAgentSpan) {
+                finishedSpans += span
+            }
+        }
+
+        val createAgentSpan = GenAIAgentSpanBuilder(
+            spanType = SpanType.CREATE_AGENT,
+            parentSpan = null,
+            id = "create-agent",
+            name = "create-agent-name",
+            kind = SpanKind.INTERNAL,
+        ).buildAndStart(tracer, contextFactory)
+        spanCollector.collectSpan(createAgentSpan, AgentExecutionInfo(null, "create-agent"))
+
+        val nodeSpan = GenAIAgentSpanBuilder(
+            spanType = SpanType.NODE,
+            parentSpan = createAgentSpan,
+            id = "node",
+            name = "node-name",
+            kind = SpanKind.INTERNAL,
+        ).buildAndStart(tracer, contextFactory)
+        spanCollector.collectSpan(nodeSpan, AgentExecutionInfo(AgentExecutionInfo(null, "create-agent"), "node"))
+
+        openTelemetry.endUnfinishedSpans(
+            spanCollector = spanCollector,
+            spanAdapter = adapter,
+            verbose = false,
+        )
+
+        assertEquals(0, spanCollector.activeSpansCount)
+        assertEquals(setOf("create-agent", "node"), finishedSpans.map { it.id }.toSet())
+        assertTrue((createAgentSpan.span as MockSpan).isEnded)
+        assertTrue((nodeSpan.span as MockSpan).isEnded)
     }
 
     //endregion End Unfinished Spans

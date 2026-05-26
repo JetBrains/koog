@@ -1,7 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
-group = rootProject.group
-version = rootProject.version
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -14,7 +12,6 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-features:agents-features-snapshot"))
-                api(project(":rag:rag-base"))
 
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.serialization.kotlinx.json)

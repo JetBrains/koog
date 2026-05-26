@@ -3,6 +3,7 @@
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContext
+import kotlin.jvm.JvmSynthetic
 
 /**
  * An interface representing the execution strategy of an AI agent.
@@ -42,5 +43,6 @@ public expect interface AIAgentStrategy<TInput, TOutput, TContext : AIAgentConte
      * @return The output produced by the AI agent's strategy, or null if no output is generated.
      * The output type is defined by the strategy's implementation.
      */
+    @JvmSynthetic
     public suspend fun execute(context: TContext, input: TInput): TOutput?
 }

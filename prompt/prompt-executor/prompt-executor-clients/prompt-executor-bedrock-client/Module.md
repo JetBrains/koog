@@ -6,98 +6,125 @@ comprehensive multimodal support, tool calling, and streaming capabilities.
 ## Overview
 
 This module provides a client implementation for AWS Bedrock, Amazon's fully managed service that offers foundation
-models from leading AI companies including Anthropic, AI21 Labs, Cohere, Meta, Mistral, and Amazon. The client supports
-multimodal content (text and images), tool/function calling, streaming responses, and comprehensive error handling
-across multiple model providers.
+models from leading AI companies including Anthropic, Amazon, Meta, Moonshot AI, MiniMax, OpenAI, Google, and Cohere.
+The client supports multimodal content (text and images), tool/function calling, structured output, streaming responses,
+and comprehensive error handling across multiple model providers via both the InvokeModel and Converse APIs.
 
 ## Supported Models
 
+Models are organized by provider. All models support both the InvokeModel and Converse APIs unless noted.
+Models marked **Converse-only** require `BedrockClientSettings(apiMethod = BedrockAPIMethod.Converse)`.
+
 ### Anthropic Claude Models
 
-| Model           | Speed     | Input Support       | Output Support | Context | Pricing            | Notes                          |
-|-----------------|-----------|---------------------|----------------|---------|--------------------|--------------------------------|
-| Claude 3 Opus   | Medium    | Text, Images, Tools | Text, Tools    | 200K    | $15/$75 per 1M     | Most capable, best for complex |
-| Claude 3 Sonnet | Fast      | Text, Images, Tools | Text, Tools    | 200K    | $3/$15 per 1M      | Balanced performance and cost  |
-| Claude 3 Haiku  | Very Fast | Text, Images, Tools | Text, Tools    | 200K    | $0.25/$1.25 per 1M | Fast and efficient             |
-| Claude 2.1      | Medium    | Text                | Text           | 200K    | $8/$24 per 1M      | Previous gen, extended context |
-| Claude 2.0      | Medium    | Text                | Text           | 100K    | $8/$24 per 1M      | Previous generation            |
-| Claude Instant  | Very Fast | Text                | Text           | 100K    | $0.8/$2.4 per 1M   | Fast, cost-effective           |
+All Claude models support text, images, documents, and tool calling.
 
-### Amazon Titan Models
+| Model                    | Context | Tools | Vision | Structured Output | Notes                       |
+|--------------------------|---------|-------|--------|-------------------|-----------------------------|
+| Claude 4.7 Opus          | 200K    | Yes   | Yes    | Yes               | Latest Opus                 |
+| Claude 4.6 Opus          | 200K    | Yes   | Yes    | Yes               | Frontier model              |
+| Claude 4.5 Opus          | 200K    | Yes   | Yes    | Yes               | Best for coding and agents  |
+| Claude 4.1 Opus          | 200K    | Yes   | Yes    | -                 |                             |
+| Claude 4 Opus            | 200K    | Yes   | Yes    | -                 |                             |
+| Claude 4.6 Sonnet        | 200K    | Yes   | Yes    | Yes               | Speed and intelligence      |
+| Claude 4.5 Sonnet        | 200K    | Yes   | Yes    | Yes               | Enhanced capabilities       |
+| Claude 4 Sonnet          | 200K    | Yes   | Yes    | -                 |                             |
+| Claude 4.5 Haiku         | 200K    | Yes   | Yes    | Yes               | Fast, cost-effective        |
+| Claude 3 Haiku (deprecated) | 200K | Yes   | Yes    | -                 | Use Claude 4.5 Haiku instead |
 
-| Model              | Speed     | Input Support | Output Support | Pricing           | Notes                     |
-|--------------------|-----------|---------------|----------------|-------------------|---------------------------|
-| Titan Text Express | Fast      | Text          | Text           | $0.2/$0.6 per 1M  | Cost-effective, general   |
-| Titan Text Lite    | Very Fast | Text          | Text           | $0.15/$0.2 per 1M | Lightweight, simple tasks |
-| Titan Text Premier | Medium    | Text          | Text           | $0.5/$1.5 per 1M  | Advanced reasoning        |
+### Amazon Nova Models
 
-### AI21 Labs Jurassic Models
-
-| Model            | Speed  | Input Support | Output Support | Pricing            | Notes                  |
-|------------------|--------|---------------|----------------|--------------------|------------------------|
-| Jurassic-2 Ultra | Medium | Text          | Text           | $15/$15 per 1M     | Most powerful, complex |
-| Jurassic-2 Mid   | Fast   | Text          | Text           | $12.5/$12.5 per 1M | Balanced performance   |
-
-### Cohere Models
-
-| Model         | Speed  | Input Support | Output Support | Pricing          | Notes                 |
-|---------------|--------|---------------|----------------|------------------|-----------------------|
-| Command       | Medium | Text          | Text           | $0.75/$2 per 1M  | Instruction following |
-| Command Light | Fast   | Text          | Text           | $0.3/$0.6 per 1M | Lightweight version   |
+| Model         | Context | Tools | Vision | Notes                          |
+|---------------|---------|-------|--------|--------------------------------|
+| Nova Micro    | 128K    | Yes   | -      | Ultra-fast, low-cost           |
+| Nova Lite     | 300K    | Yes   | -      | Balanced performance and cost  |
+| Nova Pro      | 300K    | Yes   | -      | Complex reasoning              |
+| Nova Premier  | 1M      | Yes   | -      | Most capable Amazon model      |
 
 ### Meta Llama Models
 
-| Model                | Speed  | Input Support | Output Support | Pricing            | Notes                   |
-|----------------------|--------|---------------|----------------|--------------------|-------------------------|
-| Llama 3 70B Instruct | Medium | Text          | Text           | $2.65/$3.5 per 1M  | Latest arch, 70B params |
-| Llama 3 8B Instruct  | Fast   | Text          | Text           | $0.3/$0.6 per 1M   | Latest arch, 8B params  |
-| Llama 2 70B Chat     | Medium | Text          | Text           | $1.95/$2.56 per 1M | Dialogue optimized, 70B |
-| Llama 2 13B Chat     | Fast   | Text          | Text           | $0.75/$1 per 1M    | Dialogue optimized, 13B |
+| Model                   | Context | Tools | Vision | Notes                    |
+|-------------------------|---------|-------|--------|--------------------------|
+| Llama 3.3 70B Instruct  | 128K    | Yes   | -      | Latest Llama 3.x         |
+| Llama 3.2 90B Instruct  | 128K    | Yes   | Yes    | Multimodal               |
+| Llama 3.2 11B Instruct  | 128K    | Yes   | Yes    | Multimodal               |
+| Llama 3.2 3B Instruct   | 128K    | -     | -      | Compact                  |
+| Llama 3.2 1B Instruct   | 128K    | -     | -      | Edge deployment          |
+| Llama 3.1 405B Instruct | 128K    | -     | -      | Largest Llama            |
+| Llama 3.1 70B Instruct  | 128K    | -     | -      |                          |
+| Llama 3.1 8B Instruct   | 128K    | -     | -      | Efficient                |
+| Llama 3.0 70B Instruct  | 8K      | -     | -      |                          |
+| Llama 3.0 8B Instruct   | 8K      | -     | -      |                          |
 
-### Mistral Models
+### Moonshot Kimi Models (Converse-only)
 
-| Model         | Speed  | Input Support | Output Support | Pricing           | Notes                       |
-|---------------|--------|---------------|----------------|-------------------|-----------------------------|
-| Mistral Large | Medium | Text, Tools   | Text, Tools    | $4/$12 per 1M     | Most capable, multilingual  |
-| Mixtral 8x7B  | Medium | Text          | Text           | $0.45/$0.7 per 1M | Mixture of experts          |
-| Mistral 7B    | Fast   | Text          | Text           | $0.15/$0.2 per 1M | Efficient, 7B params        |
-| Mistral Small | Fast   | Text          | Text           | $1/$3 per 1M      | Lightweight, cost-effective |
+| Model            | Context | Tools | Vision | Notes                                      |
+|------------------|---------|-------|--------|--------------------------------------------|
+| Kimi K2.5        | 256K    | Yes   | Yes    | Multimodal, dual-mode reasoning             |
+| Kimi K2 Thinking | 256K    | Yes   | -      | Deep reasoning with chain-of-thought traces |
 
-### Moonshot Kimi Models
+### MiniMax Models (Converse-only)
 
-| Model           | Speed  | Input Support | Output Support | Context | Pricing          | Notes                                |
-|-----------------|--------|---------------|----------------|---------|------------------|--------------------------------------|
-| Kimi K2 Thinking| Medium | Text, Tools   | Text, Tools    | 256K    | $0.6/$2.5 per 1M | Deep reasoning, thinking traces      |
+| Model      | Context | Tools | Vision | Notes                                  |
+|------------|---------|-------|--------|----------------------------------------|
+| MiniMax M2.5 | 1M    | Yes   | -      | Agent-native, token-efficient reasoning |
 
-*Pricing shown as Input/Output per 1M tokens
+### OpenAI GPT-OSS Models (Converse-only)
+
+| Model          | Context | Tools | Vision | Structured Output | Notes                        |
+|----------------|---------|-------|--------|-------------------|------------------------------|
+| GPT-OSS 120B   | 128K    | Yes   | -      | Yes               | MoE, 5.1B active per token   |
+| GPT-OSS 20B    | 128K    | Yes   | -      | Yes               | MoE, 3.6B active per token   |
+
+### Google Gemma 3 Models (Converse-only)
+
+| Model            | Context | Tools | Vision | Structured Output | Notes                        |
+|------------------|---------|-------|--------|-------------------|------------------------------|
+| Gemma 3 27B IT   | 128K    | Yes   | Yes    | Yes               | Largest, multimodal          |
+| Gemma 3 12B IT   | 128K    | Yes   | Yes    | Yes               | Multimodal, structured output |
+| Gemma 3 4B IT    | 128K    | Yes   | Yes    | -                 | Compact, edge deployment     |
+
+### Embedding Models
+
+| Model                      | Context | Dimensions | Notes                            |
+|----------------------------|---------|------------|----------------------------------|
+| Cohere Embed v4            | 512     | 1536       | Multimodal, requires inference profile |
+| Cohere Embed English v3    | 8K      | 1024       | English text                     |
+| Cohere Embed Multilingual v3 | 8K    | 1024       | 100+ languages                   |
+| Amazon Titan Embed Text v2 | 8K      | 1024       | Amazon native                    |
+| Amazon Titan Embed Text v1 | 8K      | 1024       | Amazon native                    |
 
 ## Media Content Support
 
-| Content Type | Supported Models        | Formats              | Max Size | Notes                     |
-|--------------|-------------------------|----------------------|----------|---------------------------|
-| Images       | Claude 3 (all variants) | PNG, JPEG, WebP, GIF | 5MB      | Base64 or URL supported   |
-| Audio        | ❌ Not supported         | -                    | -        | No audio models available |
-| Documents    | ❌ Not supported         | -                    | -        | Extract text first        |
-| Video        | ❌ Not supported         | -                    | -        | -                         |
+| Content Type | Supported Models                                          | Formats              | Max Size | Notes                   |
+|--------------|-----------------------------------------------------------|----------------------|----------|-------------------------|
+| Images       | Claude (all), Kimi K2.5, Gemma 3 (all), Llama 3.2 11B/90B | PNG, JPEG, WebP, GIF | 5MB     | Base64 or URL supported |
+| Documents    | Claude (all), Gemma 3 12B/27B                             | PDF                  | -        | Via Converse API        |
+| Audio        | Not supported                                              | -                    | -        |                         |
+| Video        | Not supported                                              | -                    | -        |                         |
 
 **Important Notes:**
 
-- **Images**: Only Claude 3 models support image input
-- **Size limits**: AWS Bedrock enforces a 5MB limit for image data
-- **Tools**: Claude 3, Mistral Large, and Kimi K2 Thinking models support function calling
-- **Streaming**: All models support token streaming
-- **Kimi K2 Thinking**: Requires Bedrock Converse API (`BedrockAPIMethod.Converse`), supports reasoning traces with up to 256K context
+- **Converse-only models**: Kimi, MiniMax, GPT-OSS, and Gemma 3 models require `BedrockAPIMethod.Converse`
+- **Inference profiles**: Cohere Embed v4 requires an inference profile prefix (default: `us.`)
+- **Third-party models**: Kimi, MiniMax, GPT-OSS, and Gemma 3 do not use inference profile prefixes
+- **Tool calling**: Supported by all models except some older Llama variants
+- **Streaming**: All models support token streaming via both InvokeModel and Converse APIs
 
 ## Features
 
-- **Multi-Model Support**: Access to models from multiple providers through a single API
-- **Tool/Function Calling**: Supported for Claude 3 and Mistral Large models
+- **Multi-Model Support**: Access to 30+ models from 8 providers through a single API
+- **Dual API Support**: Both InvokeModel (provider-specific) and Converse (unified) APIs
+- **Tool/Function Calling**: Supported across Claude, Nova, Llama 3.3, Kimi, MiniMax, GPT-OSS, and Gemma 3 models
+- **Structured Output**: JSON Schema-constrained output for GPT-OSS and Gemma 3 12B/27B models
 - **Streaming Responses**: Real-time token streaming for all supported models
-- **Multimodal Input**: Image support for Claude 3 models
+- **Multimodal Input**: Image support for Claude, Kimi K2.5, Gemma 3, and Llama 3.2 11B/90B models
+- **Embeddings**: Text embedding via Titan, Cohere v3, and Cohere v4 models
+- **Prompt Caching**: Cache control support for reduced latency and cost
 - **Kotlin Multiplatform**: Works on JVM and Android (JS/Native not supported due to AWS SDK limitations)
 - **Comprehensive Error Handling**: Model-specific error messages and validation
-- **Token Usage Tracking**: Detailed token consumption metrics
-- **Region Support**: Available across multiple AWS regions
+- **Token Usage Tracking**: Detailed token consumption metrics including cache hit/miss
+- **Region Support**: Available across multiple AWS regions with inference profile routing
 
 ## Installation
 
@@ -147,7 +174,7 @@ suspend fun main() {
             system("You are a helpful assistant")
             user("What is the capital of France?")
         },
-        model = BedrockModels.AnthropicClaude3Sonnet
+        model = BedrockModels.AnthropicClaude4Sonnet
     )
 
     println(response.first().content)
@@ -159,7 +186,7 @@ suspend fun main() {
 ### Multimodal Input (Images)
 
 ```kotlin
-// Image analysis with Claude 3
+// Image analysis with Claude
 val imageResponse = client.execute(
     prompt = prompt {
         user {
@@ -167,10 +194,10 @@ val imageResponse = client.execute(
             image("/path/to/image.jpg")
         }
     },
-    model = BedrockModels.AnthropicClaude3Opus
+    model = BedrockModels.AnthropicClaude46Opus
 )
 
-// Multiple images with Claude 3
+// Multiple images with Claude
 val multiImageResponse = client.execute(
     prompt = prompt {
         user {
@@ -179,7 +206,7 @@ val multiImageResponse = client.execute(
             image("/path/to/image2.jpg")
         }
     },
-    model = BedrockModels.AnthropicClaude3Sonnet
+    model = BedrockModels.AnthropicClaude4Sonnet
 )
 ```
 
@@ -199,12 +226,12 @@ val weatherTool = ToolDescriptor(
     )
 )
 
-// Use with Claude 3 or Mistral Large
+// Use with any tool-capable model
 val toolResponse = client.execute(
     prompt = prompt {
         user("What's the weather in New York?")
     },
-    model = BedrockModels.AnthropicClaude3Sonnet,
+    model = BedrockModels.AnthropicClaude4Sonnet,
     tools = listOf(weatherTool)
 )
 
@@ -230,7 +257,7 @@ val stream = client.executeStreaming(
     prompt = prompt {
         user("Write a haiku about clouds")
     },
-    model = BedrockModels.AnthropicClaude3Haiku
+    model = BedrockModels.AnthropicClaude4_5Haiku
 )
 
 stream.collect { token ->
@@ -238,53 +265,55 @@ stream.collect { token ->
 }
 ```
 
-### Model-Specific Features
+### Converse-Only Models
+
+Kimi, MiniMax, GPT-OSS, and Gemma 3 models require the Converse API:
 
 ```kotlin
-// Use extended context with Claude 2.1
-val longContextResponse = client.execute(
-    prompt = prompt {
-        system("Analyze this document")
-        user(veryLongDocument) // Up to 200K tokens
-    },
-    model = BedrockModels.AnthropicClaude21
-)
-
-// Use Mixtral's mixture of experts
-val mixtralResponse = client.execute(
-    prompt = prompt {
-        user("Explain quantum computing")
-    },
-    model = BedrockModels.MistralMixtral8x7BInstruct
-)
-
-// Use Mistral Large with tools
-val mistralToolResponse = client.execute(
-    prompt = prompt {
-        user("Search for recent AI news")
-    },
-    model = BedrockModels.MistralLarge,
-    tools = listOf(searchTool)
-)
-
-// Use Kimi K2 Thinking with deep reasoning (requires Converse API)
-val kimiClient = createBedrockLLMClient(
+val converseClient = createBedrockLLMClient(
     awsAccessKeyId = ApiKeyService.awsAccessKey,
     awsSecretAccessKey = ApiKeyService.awsSecretAccessKey,
     settings = BedrockClientSettings(
         region = "us-east-1",
-        apiMethod = BedrockAPIMethod.Converse // Required for Kimi models
+        apiMethod = BedrockAPIMethod.Converse // Required for these models
     )
 )
 
-val kimiResponse = kimiClient.execute(
+// MiniMax M2.5 with 1M context
+val minimaxResponse = converseClient.execute(
+    prompt = prompt {
+        user(veryLongDocument) // Up to 1M tokens
+    },
+    model = BedrockModels.MiniMaxM2_5
+)
+
+// GPT-OSS with structured output
+val gptOssResponse = converseClient.execute(
+    prompt = prompt {
+        user("List the top 3 programming languages")
+    },
+    model = BedrockModels.OpenAIGptOss120B
+)
+
+// Gemma 3 with image input
+val gemmaResponse = converseClient.execute(
+    prompt = prompt {
+        user {
+            text("Describe this image")
+            image("/path/to/image.jpg")
+        }
+    },
+    model = BedrockModels.GoogleGemma3_27BIt
+)
+
+// Kimi K2 Thinking with deep reasoning traces
+val kimiResponse = converseClient.execute(
     prompt = prompt {
         user("Solve this complex problem step by step: What are the environmental impacts of quantum computing?")
     },
     model = BedrockModels.MoonshotKimiK2Thinking
 )
 
-// Kimi K2 Thinking supports reasoning traces
 kimiResponse.forEach { message ->
     when (message) {
         is Message.Reasoning -> {
@@ -358,19 +387,21 @@ try {
 
 AWS Bedrock charges per token for model usage. Monitor your usage and set up billing alerts:
 
-- **Claude 3/4 models**: Higher cost, superior performance and capabilities
-- **Titan models**: Cost-effective for general-purpose tasks
-- **Llama models**: Good balance of cost and performance
-- **Mistral models**: Competitive pricing with tool support (Large model)
+- **Claude 4.x models**: Higher cost, superior performance and capabilities
+- **Amazon Nova models**: Cost-effective for general-purpose tasks
+- **Meta Llama models**: Good balance of cost and performance
+- **Gemma 3 / GPT-OSS models**: Competitive pricing, open-weight models
+- **MiniMax M2.5 / Kimi K2.5**: Cost-efficient for agentic workloads
 
 ## Limitations
 
 1. **Model Availability**: Not all models are available in all AWS regions
 2. **Rate Limits**: AWS imposes rate limits per model and region
 3. **Context Windows**: Vary by model (see tables above)
-4. **Feature Support**: Not all models support all features (tools, vision, etc.)
+4. **Feature Support**: Not all models support all features (tools, vision, structured output, etc.)
 5. **Platform Support**: Limited to JVM and Android due to AWS SDK constraints
-6. **Media Support**: Only images supported, no audio/video/documents
+6. **Converse-only Models**: Kimi, MiniMax, GPT-OSS, and Gemma 3 models only work with the Converse API
+7. **Embedding Limitations**: Cohere Embed v4 multimodal and configurable dimensions not yet supported by this client
 
 ## Performance Tips
 

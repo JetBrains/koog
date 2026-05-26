@@ -4,7 +4,7 @@ package ai.koog.agents.core.dsl.builder
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.context.getAgentContextData
+import ai.koog.agents.core.agent.context.getGraphAgentContextData
 import ai.koog.agents.core.agent.entity.AIAgentEdge
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
@@ -15,7 +15,7 @@ import ai.koog.agents.core.agent.entity.SubgraphMetadata
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.agent.execution.DEFAULT_AGENT_PATH_SEPARATOR
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolBase
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
@@ -27,7 +27,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlin.reflect.KProperty
-import kotlin.reflect.KType
 
 /**
  * Abstract base class for building AI agent subgraphs.
@@ -199,39 +198,6 @@ public class AIAgentSubgraphBuilder<Input, Output>(
     BaseBuilder<AIAgentSubgraphDelegate<Input, Output>> {
     override val nodeStart: StartNode<Input> = StartNode(subgraphName = name, type = inputType)
     override val nodeFinish: FinishNode<Output> = FinishNode(subgraphName = name, type = outputType)
-
-    /**
-     * Constructs an instance of AIAgentSubgraphBuilder with the provided parameters, using KTypes
-     * for input and output type representation.
-     *
-     * This constructor is deprecated. All [KType] parameters should be replaced by the use of [TypeToken] instead.
-     *
-     * @param name An optional name for the subgraph being built.
-     * @param inputType The type of the input data for the subgraph, represented as a [KType].
-     * @param outputType The type of the output data for the subgraph, represented as a [KType].
-     * @param toolSelectionStrategy The strategy used to select the tools for this subgraph.
-     * @param llmModel An optional Large Language Model ([LLModel]) to be used within the subgraph.
-     * @param llmParams An optional set of parameters ([LLMParams]) for configuring the LLM behavior.
-     * @param responseProcessor An optional [ResponseProcessor] for post-processing responses in the subgraph.
-     */
-    @Deprecated("KTypes usage in graphs and nodes is deprecated. Please, use TypeTokens instead.")
-    public constructor(
-        name: String? = null,
-        inputType: KType,
-        outputType: KType,
-        toolSelectionStrategy: ToolSelectionStrategy,
-        llmModel: LLModel?,
-        llmParams: LLMParams?,
-        responseProcessor: ResponseProcessor? = null,
-    ) : this(
-        name,
-        typeToken(inputType),
-        typeToken(outputType),
-        toolSelectionStrategy,
-        llmModel,
-        llmParams,
-        responseProcessor
-    )
 
     override fun build(): AIAgentSubgraphDelegate<Input, Output> {
         require(isFinishReachable(nodeStart)) {
@@ -447,7 +413,7 @@ public fun <Input : Any, Output : Any> subgraph(
  */
 public inline fun <reified Input, reified Output> subgraph(
     name: String? = null,
-    tools: List<Tool<*, *>>,
+    tools: List<ToolBase<*, *>>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     responseProcessor: ResponseProcessor? = null,
@@ -490,9 +456,9 @@ public fun <Input, Output> parallel(
                         val nodeContext = initialContext.fork()
                         val nodeOutput = node.execute(nodeContext, input)
 
-                        if (nodeOutput == null && nodeContext.getAgentContextData() != null) {
+                        if (nodeOutput == null && nodeContext.getGraphAgentContextData() != null) {
                             throw IllegalStateException(
-                                "Checkpoints are not supported in parallel execution. Node: ${node.name}, Context: ${nodeContext.getAgentContextData()}"
+                                "Checkpoints are not supported in parallel execution. Node: ${node.name}, Context: ${nodeContext.getGraphAgentContextData()}"
                             )
                         }
 

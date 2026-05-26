@@ -4,26 +4,39 @@ import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.core.agent.context.AIAgentPlannerContext;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.core.tools.ToolRegistryBuilder;
-import ai.koog.agents.planner.AIAgentPlannerStrategy;
-import ai.koog.agents.planner.JavaAIAgentPlanner;
-import ai.koog.agents.planner.PlannerAIAgent;
-import ai.koog.agents.planner.goap.Action;
-import ai.koog.agents.planner.goap.Goal;
+import ai.koog.agents.core.planner.AIAgentPlannerStrategy;
+import ai.koog.agents.core.planner.JavaAIAgentPlanner;
+import ai.koog.agents.planner.Planners;
 import ai.koog.agents.planner.goap.GoapAgentState;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.integration.tests.utils.annotations.Retry;
-import ai.koog.prompt.dsl.Prompt;
+import ai.koog.prompt.Prompt;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
-    static class TestPlanner extends JavaAIAgentPlanner<String, String> {
+    static class TestPlanner extends JavaAIAgentPlanner<String, String, String, String> {
+
+        @Override
+        protected @NotNull String initializeState(String input) {
+            return input;
+        }
+
+        @Override
+        protected String provideOutput(@NotNull String state) {
+            return state;
+        }
 
         @Override
         protected String buildPlan(AIAgentPlannerContext context, String state, @Nullable String plan) {
@@ -32,19 +45,22 @@ public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
 
         @Override
         protected String executeStep(AIAgentPlannerContext context, String state, String plan) {
-            Message.Response response = context.requestLLM(state, true);
+            Message.Assistant response = context.requestLLM(state);
 
             int maxIterations = 5;
-            for (int i = 0; i < maxIterations && response instanceof Message.Tool.Call; i++) {
-                response = context.sendToolResult(context.executeTool((Message.Tool.Call) response));
+            for (int i = 0; i < maxIterations; i++) {
+                Optional<MessagePart.Tool.Call> maybeToolCall = firstToolCall(response);
+                if (maybeToolCall.isEmpty()) {
+                    break;
+                }
+                response = context.sendToolResult(context.executeTool(maybeToolCall.get()));
             }
 
-            if (response instanceof Message.Assistant) {
-                return response.getContent();
-            } else if (response instanceof Message.Tool.Call) {
-                return "Max iterations reached, last tool: " + ((Message.Tool.Call) response).getTool();
+            Optional<MessagePart.Tool.Call> maybeToolCall = firstToolCall(response);
+            if (maybeToolCall.isPresent()) {
+                return "Max iterations reached, last tool: " + maybeToolCall.get().getTool();
             }
-            return response.getContent();
+            return assistantText(response);
         }
 
         @Override
@@ -56,17 +72,17 @@ public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
     private static final String SYSTEM_PROMPT = "You are a helpful assistant.";
     private static final String REQUEST = "What's 1 + 1?";
 
-    private void testPlanner(AIAgentPlannerStrategy<String, String, ?> strategy) {
+    private void testPlanner(AIAgentPlannerStrategy<String, String> strategy) {
         testPlanner(strategy, null, REQUEST, "2");
     }
 
     private void testPlanner(
-        AIAgentPlannerStrategy<String, String, ?> strategy,
-        @Nullable ToolRegistry toolRegistry,
+        AIAgentPlannerStrategy<String, String> strategy,
+        ToolRegistry toolRegistry,
         String request,
         String expectedResultPart
     ) {
-        var builder = PlannerAIAgent.<String, String>builder(strategy)
+        var builder = AIAgent.builder().<String, String>plannerStrategy(strategy)
             .promptExecutor(createExecutor(OpenAIModels.Chat.GPT5_1))
             .llmModel(OpenAIModels.Chat.GPT5_1)
             .systemPrompt(SYSTEM_PROMPT);
@@ -88,7 +104,7 @@ public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
     @Test
     @Retry
     public void integration_testSimplePlanner() {
-        var planner = AIAgentPlannerStrategy.builder("simple").llmBasedPlanner().build();
+        var planner = Planners.llmBased("simple").build();
 
         testPlanner(planner);
     }
@@ -97,7 +113,7 @@ public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
     @Retry
     public void integration_testPlannerWithTools() {
         var planner = new TestPlanner();
-        var plannerStrategy = AIAgentPlannerStrategy.builder("test-planner").withPlanner(planner).build();
+        var plannerStrategy = AIAgentPlannerStrategy.create("test-planner", planner);
         var toolRegistry = new ToolRegistryBuilder()
             .tools(new NumberTools())
             .build();
@@ -105,12 +121,16 @@ public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
         testPlanner(plannerStrategy, toolRegistry, "How much is 123 + 456?", "579");
     }
 
-    private class TextualState extends GoapAgentState<String, String> {
+    private static class TextualState extends GoapAgentState<String, String> {
         public String text;
 
         public TextualState(String text) {
-            super(text);
             this.text = text;
+        }
+
+        @Override
+        public String getAgentInput() {
+            return text;
         }
 
         @Override
@@ -122,46 +142,49 @@ public class JavaPlannerAIAgentIntegrationTest extends KoogJavaTestBase {
     @Test
     @Retry
     public void integration_testGoapPlanner() {
-        var formulateAction = Action.<TextualState>builder()
-            .name("formulate-problem")
-            .precondition(state -> true)
-            .belief(state -> new TextualState("Problem: example problem"))
-            .execute((context, state) -> {
-                String result = context.llm().writeSession(session -> {
-                    session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user("Formulate problem: " + state.text + ". Answer with the problem formulation in the form \"Problem: ...\"").build());
-                    return session.requestLLM().getContent();
-                });
-                return new TextualState(result);
-            })
-            .build();
-
-        var solveAction = Action.<TextualState>builder()
-            .name("solve-problem")
-            .precondition(state -> state.text.contains("Problem"))
-            .belief(state -> new TextualState("Solution: example solution"))
-            .execute((context, state) -> {
-                String result = context.llm().writeSession(session -> {
-                    session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user("Find solution. " + state.text + ". Answer with the solution in the form \"Solution: ...\"").build());
-                    return session.requestLLM().getContent();
-                });
-                return new TextualState(result);
-            })
-            .build();
-
-        var goal = Goal.<TextualState>builder()
-            .name("find-solution")
-            .cost(state -> 1.0)
-            .condition(state -> state.text.contains("Solution"))
-            .build();
-
-
-        var planner = AIAgentPlannerStrategy.builder("custom-goap")
-            .goap(TextualState::new)
-            .action(formulateAction)
-            .action(solveAction)
-            .goal(goal)
+        var planner = Planners.goap("custom-goap", TextualState::new)
+            .action("formulate-problem", builder -> builder
+                .precondition(state -> true)
+                .belief(state -> new TextualState("Problem: example problem"))
+                .execute((context, state) -> {
+                    String result = context.llm().writeSession(session -> {
+                        session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user("Formulate problem: " + state.text + ". Answer with the problem formulation in the form \"Problem: ...\"").build());
+                        return assistantText(session.requestLLM());
+                    });
+                    return new TextualState(result);
+                })
+            )
+            .action("solve-problem", builder -> builder
+                .precondition(state -> state.text.contains("Problem"))
+                .belief(state -> new TextualState("Solution: example solution"))
+                .execute((context, state) -> {
+                    String result = context.llm().writeSession(session -> {
+                        session.setPrompt(Prompt.builder("tmp").system(SYSTEM_PROMPT).user("Find solution. " + state.text + ". Answer with the solution in the form \"Solution: ...\"").build());
+                        return assistantText(session.requestLLM());
+                    });
+                    return new TextualState(result);
+                })
+            )
+            .goal("find-solution", builder -> builder
+                .cost(state -> 1.0)
+                .condition(state -> state.text.contains("Solution"))
+            )
             .build();
 
         testPlanner(planner);
+    }
+
+    private static String assistantText(Message.Assistant response) {
+        return response.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Text)
+            .map(p -> ((MessagePart.Text) p).getText())
+            .collect(Collectors.joining("\n"));
+    }
+
+    private static Optional<MessagePart.Tool.Call> firstToolCall(Message.Assistant response) {
+        return response.getParts().stream()
+            .filter(p -> p instanceof MessagePart.Tool.Call)
+            .map(p -> (MessagePart.Tool.Call) p)
+            .findFirst();
     }
 }

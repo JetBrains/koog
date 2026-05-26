@@ -1,7 +1,6 @@
 package ai.koog.integration.tests.agent
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.agentInput
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
@@ -9,11 +8,11 @@ import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.builder.subgraph
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
@@ -27,10 +26,9 @@ import ai.koog.integration.tests.utils.tools.AnswerVerificationTool
 import ai.koog.integration.tests.utils.tools.FileOperationsTools
 import ai.koog.integration.tests.utils.tools.GenericParameterTool
 import ai.koog.integration.tests.utils.tools.GeographyQueryTool
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
@@ -76,11 +74,11 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
 
     private val toolCalls = mutableListOf<String>()
 
-    private fun createTestStrategy() = strategy<String, String>("test-ollama") {
+    private fun createTestStrategy(llmModel: LLModel = model) = strategy<String, String>("test-ollama") {
         val askCapitalSubgraph by subgraph<String, String>("ask-capital") {
             val definePrompt by node<Unit, Unit> {
                 llm.writeSession {
-                    model = OllamaModels.Meta.LLAMA_3_2
+                    model = llmModel
                     rewritePrompt {
                         prompt("test-ollama") {
                             system(
@@ -105,23 +103,23 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
                 }
             }
 
-            val callLLM by nodeLLMRequest(allowToolCalls = true)
-            val callTool by nodeExecuteTool()
-            val sendToolResult by nodeLLMSendToolResult()
+            val callLLM by nodeLLMRequest()
+            val callTool by nodeExecuteTools()
+            val sendToolResult by nodeLLMSendToolResults()
 
             edge(nodeStart forwardTo definePrompt transformed {})
             edge(definePrompt forwardTo callLLM transformed { agentInput<String>() })
-            edge(callLLM forwardTo callTool onToolCall { true })
+            edge(callLLM forwardTo callTool onToolCalls { true })
             edge(callTool forwardTo sendToolResult)
-            edge(sendToolResult forwardTo callTool onToolCall { true })
-            edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
-            edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+            edge(sendToolResult forwardTo callTool onToolCalls { true })
+            edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
+            edge(callLLM forwardTo nodeFinish onTextMessage { true })
         }
 
         val askVerifyAnswer by subgraph<String, String>("verify-answer") {
             val definePrompt by node<Unit, Unit> {
                 llm.writeSession {
-                    model = OllamaModels.Meta.LLAMA_3_2
+                    model = llmModel
                     appendPrompt {
                         system(
                             """"
@@ -144,17 +142,17 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
                 }
             }
 
-            val callLLM by nodeLLMRequest(allowToolCalls = true)
-            val callTool by nodeExecuteTool()
-            val sendToolResult by nodeLLMSendToolResult()
+            val callLLM by nodeLLMRequest()
+            val callTool by nodeExecuteTools()
+            val sendToolResult by nodeLLMSendToolResults()
 
             edge(nodeStart forwardTo definePrompt transformed {})
             edge(definePrompt forwardTo callLLM transformed { agentInput<String>() })
-            edge(callLLM forwardTo callTool onToolCall { true })
+            edge(callLLM forwardTo callTool onToolCalls { true })
             edge(callTool forwardTo sendToolResult)
-            edge(sendToolResult forwardTo callTool onToolCall { true })
-            edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
-            edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+            edge(sendToolResult forwardTo callTool onToolCalls { true })
+            edge(sendToolResult forwardTo nodeFinish onTextMessage { true })
+            edge(callLLM forwardTo nodeFinish onTextMessage { true })
         }
 
         nodeStart then askCapitalSubgraph then askVerifyAnswer then nodeFinish
@@ -284,7 +282,7 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
 
         val strategy = strategy<String, String>("ollama-subgraph-with-task") {
             val task by subgraphWithTask<String, Summary>(
-                runMode = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+                parallelTools = false,
                 llmParams = LLMParams(
                     temperature = 0.0,
                     toolChoice = LLMParams.ToolChoice.Required
