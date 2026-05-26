@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.AfterAll
@@ -87,6 +88,25 @@ class McpToolTest {
                 ToolDescriptor(
                     name = "empty",
                     description = "An empty tool",
+                ),
+                ToolDescriptor(
+                    name = "echoObject",
+                    description = "Echoes the received payload argument as JSON",
+                    requiredParameters = listOf(
+                        ToolParameterDescriptor(
+                            name = "payload",
+                            description = "",
+                            type = ToolParameterType.Object(
+                                properties = listOf(
+                                    ToolParameterDescriptor(
+                                        name = "k",
+                                        description = "",
+                                        type = ToolParameterType.String,
+                                    )
+                                )
+                            )
+                        )
+                    )
                 )
             )
 
@@ -215,6 +235,29 @@ class McpToolTest {
             expected = "Error: Error line 1\nError line 2",
             actual = encodedResult
         )
+    }
+
+    @OptIn(InternalAgentToolsApi::class)
+    @Test
+    fun `execute coerces stringified object arg before forwarding to client`() = runTest(timeout = 30.seconds) {
+        testMcpTools { toolRegistry ->
+            val echoTool = toolRegistry.getTool("echoObject") as McpTool
+
+            // Simulate an LLM emitting a nested object as a stringified JSON primitive — the
+            // failure mode reported in issue #2017. After coercion, payload must arrive on the
+            // wire as a structured JsonObject, not as the original string.
+            val args = buildJsonObject { put("payload", "{\"k\":\"v\"}") }
+
+            val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
+                withTimeout(1.minutes) {
+                    echoTool.execute(args.toKoogJSONObject())
+                }
+            }
+
+            val echoed = (result.content.single() as TextContent).text
+            val parsed = Json.parseToJsonElement(echoed)
+            assertEquals(buildJsonObject { put("k", "v") }, parsed)
+        }
     }
 
     @Test

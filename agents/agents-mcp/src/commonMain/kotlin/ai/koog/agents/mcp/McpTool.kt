@@ -53,13 +53,18 @@ public class McpTool(
      * This method calls the MCP tool through the MCP client and converts the result
      * to a Result object that can be used by the agent framework.
      *
+     * Before forwarding, arguments are passed through [coerceArgsToDescriptorTypes] so that
+     * stringified JSON values emitted by an LLM for declared object / list / anyOf parameters are
+     * unwrapped into their declared shapes. Values that do not parse, do not match the declared
+     * shape or are not gated by the descriptor are forwarded unchanged.
+     *
      * @param args The arguments for the MCP tool call.
      * @return The result of the MCP tool call.
      */
     override suspend fun execute(args: JSONObject): CallToolResult {
         return mcpClient.callTool(
             name = descriptor.name,
-            arguments = args.toKotlinxJsonObject()
+            arguments = coerceArgsToDescriptorTypes(args.toKotlinxJsonObject(), descriptor)
         )
     }
 

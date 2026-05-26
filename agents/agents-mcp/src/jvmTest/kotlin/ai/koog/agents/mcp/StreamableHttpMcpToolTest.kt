@@ -92,6 +92,25 @@ class StreamableHttpMcpToolTest {
                 ToolDescriptor(
                     name = "empty",
                     description = "An empty tool",
+                ),
+                ToolDescriptor(
+                    name = "echoObject",
+                    description = "Echoes the received payload argument as JSON",
+                    requiredParameters = listOf(
+                        ToolParameterDescriptor(
+                            name = "payload",
+                            description = "",
+                            type = ToolParameterType.Object(
+                                properties = listOf(
+                                    ToolParameterDescriptor(
+                                        name = "k",
+                                        description = "",
+                                        type = ToolParameterType.String,
+                                    )
+                                )
+                            )
+                        )
+                    )
                 )
             )
 

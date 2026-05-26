@@ -22,6 +22,9 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -118,6 +121,30 @@ class TestMcpServer(
             inputSchema = ToolSchema()
         ) {
             CallToolResult(content = emptyList())
+        }
+
+        // Echoes the received `payload` argument back as JSON text so callers can assert how the
+        // value arrived on the wire (object vs. stringified-object). Used by McpToolTest wiring
+        // case to prove McpTool.execute() coerces stringified JSON args before forwarding.
+        server.addTool(
+            name = "echoObject",
+            description = "Echoes the received payload argument as JSON",
+            inputSchema = ToolSchema(
+                properties = buildJsonObject {
+                    putJsonObject("payload") {
+                        put("type", "object")
+                        putJsonObject("properties") {
+                            putJsonObject("k") {
+                                put("type", "string")
+                            }
+                        }
+                    }
+                },
+                required = listOf("payload")
+            )
+        ) { request ->
+            val payload = request.arguments?.get("payload") ?: JsonNull
+            CallToolResult(content = listOf(TextContent(Json.encodeToString(JsonElement.serializer(), payload))))
         }
 
         return server
