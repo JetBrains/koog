@@ -1,6 +1,6 @@
 package ai.koog.agents.core.feature
 
-import ai.koog.agents.core.CalculatorChatExecutor
+import ai.koog.agents.core.CalculatorChatExecutorBuilder
 import ai.koog.agents.core.CalculatorTools
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
@@ -621,7 +621,7 @@ class AIAgentPipelineTest {
             id = agentId,
             strategy = strategy,
             toolRegistry = toolRegistry,
-            promptExecutor = CalculatorChatExecutor
+            promptExecutor = CalculatorChatExecutorBuilder.build()
         ) {
             install(TestFeature) {
                 events = interceptedEvents
@@ -920,7 +920,7 @@ class AIAgentPipelineTest {
         createAgent(
             strategy = strategy,
             toolRegistry = toolRegistry,
-            promptExecutor = CalculatorChatExecutor
+            promptExecutor = CalculatorChatExecutorBuilder.build()
         ) {
             install(TestFeature) {
                 events = interceptedEvents

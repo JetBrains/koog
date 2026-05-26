@@ -12,6 +12,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.IncompleteStreamException
@@ -37,30 +38,30 @@ import kotlin.test.assertTrue
 class StreamingConnectionExceptionTest {
 
     /**
-     * A [PromptExecutor] that overrides [executeStreaming] with custom behavior
+     * A [PromptExecutor] that overrides [onStreaming] with custom behavior
      * for simulating streaming failures (connection drops, incomplete streams, etc.).
      */
-    private class StreamOverrideExecutor(
+    private class StreamOverrideExecutorBuilder(
         private val delegate: PromptExecutor,
         private val streamingBehavior: () -> Flow<StreamFrame>
-    ) : PromptExecutor() {
+    ) : PromptExecutorBuilder() {
 
-        override suspend fun execute(
+        override suspend fun onExecute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
         ): Message.Assistant = delegate.execute(prompt, model, tools)
 
-        override fun executeStreaming(
+        override fun onStreaming(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
         ): Flow<StreamFrame> = streamingBehavior()
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
+        override suspend fun onModerate(prompt: Prompt, model: LLModel): ModerationResult =
             delegate.moderate(prompt, model)
 
-        override fun close() = delegate.close()
+        override fun onClose() = delegate.close()
     }
 
     private val model = OpenAIModels.Chat.GPT4oMini
@@ -75,7 +76,7 @@ class StreamingConnectionExceptionTest {
     fun testIncompleteStreamExceptionPropagatesThroughAgent() = runTest {
         val errors = mutableListOf<Throwable>()
 
-        val executor = StreamOverrideExecutor(baseMockExecutor()) {
+        val executor = StreamOverrideExecutorBuilder(baseMockExecutor()) {
             flow {
                 emit(StreamFrame.TextDelta("partial"))
                 throw IncompleteStreamException()
@@ -83,7 +84,7 @@ class StreamingConnectionExceptionTest {
         }
 
         val agent = AIAgent(
-            promptExecutor = executor,
+            promptExecutor = executor.build(),
             llmModel = model,
             strategy = functionalStrategy<String, String> { input ->
                 requestLLMStreaming(input).collectText()
@@ -107,14 +108,14 @@ class StreamingConnectionExceptionTest {
     fun testLLMClientExceptionDuringStreamingPropagatesThroughAgent() = runTest {
         val errors = mutableListOf<Throwable>()
 
-        val executor = StreamOverrideExecutor(baseMockExecutor()) {
+        val executor = StreamOverrideExecutorBuilder(baseMockExecutor()) {
             flow {
                 throw LLMClientException("test-client", "Connection refused")
             }
         }
 
         val agent = AIAgent(
-            promptExecutor = executor,
+            promptExecutor = executor.build(),
             llmModel = model,
             strategy = functionalStrategy<String, String> { input ->
                 requestLLMStreaming(input).collectText()
@@ -138,7 +139,7 @@ class StreamingConnectionExceptionTest {
     fun testConnectionExceptionAfterPartialStreamData() = runTest {
         val errors = mutableListOf<Throwable>()
 
-        val executor = StreamOverrideExecutor(baseMockExecutor()) {
+        val executor = StreamOverrideExecutorBuilder(baseMockExecutor()) {
             flow {
                 emit(StreamFrame.TextDelta("Hello "))
                 emit(StreamFrame.TextDelta("World"))
@@ -147,7 +148,7 @@ class StreamingConnectionExceptionTest {
         }
 
         val agent = AIAgent(
-            promptExecutor = executor,
+            promptExecutor = executor.build(),
             llmModel = model,
             strategy = functionalStrategy<String, String> { input ->
                 requestLLMStreaming(input).toList()
@@ -172,14 +173,14 @@ class StreamingConnectionExceptionTest {
     fun testRuntimeExceptionDuringStreamingPropagatesThroughAgent() = runTest {
         val errors = mutableListOf<Throwable>()
 
-        val executor = StreamOverrideExecutor(baseMockExecutor()) {
+        val executor = StreamOverrideExecutorBuilder(baseMockExecutor()) {
             flow {
                 throw RuntimeException("Unexpected network error")
             }
         }
 
         val agent = AIAgent(
-            promptExecutor = executor,
+            promptExecutor = executor.build(),
             llmModel = model,
             strategy = functionalStrategy<String, String> { input ->
                 requestLLMStreaming(input).collectText()
@@ -208,7 +209,7 @@ class StreamingConnectionExceptionTest {
             tool(CreateTool)
         }
 
-        val executor = StreamOverrideExecutor(baseMockExecutor()) {
+        val executor = StreamOverrideExecutorBuilder(baseMockExecutor()) {
             flow {
                 // Emit a partial tool call delta, then drop connection
                 emit(StreamFrame.ToolCallDelta(id = "call_1", name = "create", content = "{\"na", index = 0))
@@ -217,7 +218,7 @@ class StreamingConnectionExceptionTest {
         }
 
         val agent = AIAgent(
-            promptExecutor = executor,
+            promptExecutor = executor.build(),
             llmModel = model,
             toolRegistry = toolRegistry,
             strategy = functionalStrategy<String, String> { input ->
@@ -246,14 +247,14 @@ class StreamingConnectionExceptionTest {
     fun testStreamingFailedEventFiredOnException() = runTest {
         val streamingFailedErrors = mutableListOf<Throwable>()
 
-        val executor = StreamOverrideExecutor(baseMockExecutor()) {
+        val executor = StreamOverrideExecutorBuilder(baseMockExecutor()) {
             flow {
                 throw IncompleteStreamException()
             }
         }
 
         val agent = AIAgent(
-            promptExecutor = executor,
+            promptExecutor = executor.build(),
             llmModel = model,
             strategy = functionalStrategy<String, String> { input ->
                 requestLLMStreaming(input).collectText()
@@ -282,7 +283,7 @@ class StreamingConnectionExceptionTest {
     fun testStreamingFailedEventFiredForLLMClientException() = runTest {
         val streamingFailedErrors = mutableListOf<Throwable>()
 
-        val executor = StreamOverrideExecutor(baseMockExecutor()) {
+        val executor = StreamOverrideExecutorBuilder(baseMockExecutor()) {
             flow {
                 emit(StreamFrame.TextDelta("partial data"))
                 throw LLMClientException("anthropic", "502 Bad Gateway")
@@ -290,7 +291,7 @@ class StreamingConnectionExceptionTest {
         }
 
         val agent = AIAgent(
-            promptExecutor = executor,
+            promptExecutor = executor.build(),
             llmModel = model,
             strategy = functionalStrategy<String, String> { input ->
                 requestLLMStreaming(input).collectText()
@@ -322,7 +323,7 @@ class StreamingConnectionExceptionTest {
     fun testGraphAgentStreamingExceptionPropagates() = runTest {
         val streamingFailedErrors = mutableListOf<Throwable>()
 
-        val executor = StreamOverrideExecutor(baseMockExecutor()) {
+        val executor = StreamOverrideExecutorBuilder(baseMockExecutor()) {
             flow {
                 throw IncompleteStreamException("Connection dropped")
             }
@@ -343,7 +344,7 @@ class StreamingConnectionExceptionTest {
         }
 
         val agent = AIAgent(
-            promptExecutor = executor,
+            promptExecutor = executor.build(),
             strategy = agentStrategy,
             llmModel = model,
             systemPrompt = "You are helpful"
@@ -370,7 +371,7 @@ class StreamingConnectionExceptionTest {
 
     @Test
     fun testSuccessfulStreamingWorksEndToEnd() = runTest {
-        val executor = StreamOverrideExecutor(baseMockExecutor()) {
+        val executor = StreamOverrideExecutorBuilder(baseMockExecutor()) {
             flow {
                 emit(StreamFrame.TextDelta("Hello "))
                 emit(StreamFrame.TextDelta("World"))
@@ -380,7 +381,7 @@ class StreamingConnectionExceptionTest {
         }
 
         val agent = AIAgent(
-            promptExecutor = executor,
+            promptExecutor = executor.build(),
             llmModel = model,
             strategy = functionalStrategy<String, String> { input ->
                 requestLLMStreaming(input).collectText()

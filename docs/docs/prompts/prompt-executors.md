@@ -11,7 +11,7 @@ Koog provides three main types of prompt executors that implement the [`PromptEx
 | Type            | <div style="width:175px">Class</div>                                                                                                                               | Description                                                                                                                                                                                                                                                          |
 |-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Single-provider | [`SingleLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.llms.SingleLLMPromptExecutor) | Wraps a single LLM client for one provider. Use this executor if your agent only requires switching between models within a single LLM provider.                                                                                                                     |
-| Multi-provider  | [`MultiLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.llms.MultiLLMPromptExecutor)   | Wraps multiple LLM clients and routes calls based on the LLM provider. It can optionally use a configured fallback provider and LLM when the requested client is unavailable. Use this executor if your agent needs to switch between LLMs from different providers. |
+| Multi-provider  | [`MultiLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.factory.MultiLLMPromptExecutor)   | Wraps multiple LLM clients and routes calls based on the LLM provider. It can optionally use a configured fallback provider and LLM when the requested client is unavailable. Use this executor if your agent needs to switch between LLMs from different providers. |
 | Routing         | [`RoutingLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor) | Distributes requests to a given LLM model across multiple client instances using routing strategies. Use this executor to avoid rate limits, improve throughput, and implement failover strategies with load balancing.                                               |
 
 ## Creating a single-provider executor
@@ -19,7 +19,7 @@ Koog provides three main types of prompt executors that implement the [`PromptEx
 To create a prompt executor for a specific LLM provider, perform the following:
 
 1. Configure an LLM client for a specific provider with the corresponding API key.
-2. Create a prompt executor using [`MultiLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.llms.MultiLLMPromptExecutor).
+2. Create a prompt executor using [`MultiLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.factory.MultiLLMPromptExecutor).
 
 Here is an example:
 
@@ -27,7 +27,7 @@ Here is an example:
 
     <!--- INCLUDE
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+    import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
     -->
 
     ```kotlin
@@ -55,7 +55,7 @@ Here is an example:
 To create a prompt executor that works with multiple LLM providers, do the following:
 
 1. Configure clients for the required LLM providers with the corresponding API keys.
-2. Pass the configured clients to the [`MultiLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.llms.MultiLLMPromptExecutor) class constructor to create a prompt executor
+2. Pass the configured clients to the [`MultiLLMPromptExecutor`](api:prompt-executor-model::ai.koog.prompt.executor.factory.MultiLLMPromptExecutor) class constructor to create a prompt executor
    with multiple LLM providers.
 
 === "Kotlin"
@@ -63,7 +63,7 @@ To create a prompt executor that works with multiple LLM providers, do the follo
     <!--- INCLUDE
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
     import ai.koog.prompt.executor.ollama.client.OllamaClient
-    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+    import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
     import ai.koog.prompt.llm.LLMProvider
     -->
 
@@ -113,8 +113,8 @@ This is useful for avoiding rate limits, improving throughput, and implementing 
     <!--- INCLUDE
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
     import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+    import ai.koog.prompt.executor.factory.RoutingLLMPromptExecutor
     import ai.koog.prompt.executor.llms.RoundRobinRouter
-    import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor
     -->
     ```kotlin
     // Create multiple client instances
@@ -185,7 +185,7 @@ Here is an example of creating a pre-defined executor:
 
     <!--- INCLUDE
     import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+    import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
     import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
     import ai.koog.prompt.executor.clients.google.GoogleLLMClient
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
@@ -293,7 +293,7 @@ Here is an example of switching between providers:
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+    import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
     import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
     import ai.koog.prompt.executor.clients.google.GoogleLLMClient
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
@@ -380,7 +380,8 @@ To configure the fallback mechanism, pass fallback settings when creating a `Mul
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+    import ai.koog.prompt.executor.builder.MultiLLMPromptExecutorBuilder
+    import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
     import ai.koog.prompt.executor.ollama.client.OllamaClient
     import ai.koog.prompt.executor.ollama.client.OllamaModels
@@ -394,7 +395,7 @@ To configure the fallback mechanism, pass fallback settings when creating a `Mul
     val multiExecutor = MultiLLMPromptExecutor(
         LLMProvider.OpenAI to openAIClient,
         LLMProvider.Ollama to ollamaClient,
-        fallback = MultiLLMPromptExecutor.FallbackPromptExecutorSettings(
+        fallback = MultiLLMPromptExecutorBuilder.FallbackPromptExecutorSettings(
             fallbackProvider = LLMProvider.Ollama,
             fallbackModel = OllamaModels.Meta.LLAMA_3_2
         )
@@ -434,19 +435,21 @@ the prompt executor will use the fallback model:
 
     <!--- INCLUDE
     import ai.koog.prompt.dsl.prompt
-    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+    import ai.koog.prompt.executor.builder.MultiLLMPromptExecutorBuilder
+    import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
     import ai.koog.prompt.executor.ollama.client.OllamaClient
     import ai.koog.prompt.executor.clients.google.GoogleModels
     import ai.koog.prompt.executor.ollama.client.OllamaModels
     import ai.koog.prompt.llm.LLMProvider
     import kotlinx.coroutines.runBlocking
+
     val openAIClient = OpenAILLMClient(System.getenv("OPENAI_API_KEY"))
     val ollamaClient = OllamaClient()
     val multiExecutor = MultiLLMPromptExecutor(
         LLMProvider.OpenAI to openAIClient,
         LLMProvider.Ollama to ollamaClient,
-        fallback = MultiLLMPromptExecutor.FallbackPromptExecutorSettings(
+        fallback = MultiLLMPromptExecutorBuilder.FallbackPromptExecutorSettings(
             fallbackProvider = LLMProvider.Ollama,
             fallbackModel = OllamaModels.Meta.LLAMA_3_2
         )

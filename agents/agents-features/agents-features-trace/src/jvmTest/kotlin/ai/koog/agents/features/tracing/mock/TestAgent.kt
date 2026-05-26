@@ -161,7 +161,7 @@ internal fun createAgent(
 
     return AIAgent(
         id = agentId,
-        promptExecutor = promptExecutor ?: MockLLMExecutor(),
+        promptExecutor = promptExecutor ?: MockLLMExecutorBuilder().build(),
         strategy = strategy,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry ?: ToolRegistry { tool(DummyTool()) },

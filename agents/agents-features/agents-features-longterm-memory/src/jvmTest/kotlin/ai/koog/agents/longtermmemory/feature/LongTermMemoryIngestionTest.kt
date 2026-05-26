@@ -16,6 +16,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -87,8 +88,8 @@ class LongTermMemoryIngestionTest {
             )
         }
 
-    private fun streamingExecutor(vararg frames: String): PromptExecutor = object : PromptExecutor() {
-        override suspend fun execute(
+    private fun streamingExecutor(vararg frames: String): PromptExecutor = object : PromptExecutorBuilder() {
+        override suspend fun onExecute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
@@ -96,18 +97,16 @@ class LongTermMemoryIngestionTest {
             return Message.Assistant("non-streaming", ResponseMetaInfo.Empty)
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
+        override fun onStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
             flow {
                 for (frame in frames) emit(StreamFrame.TextDelta(frame))
                 emit(StreamFrame.TextComplete(frames.joinToString("")))
                 emit(StreamFrame.End("stop"))
             }
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel) =
+        override suspend fun onModerate(prompt: Prompt, model: LLModel) =
             throw UnsupportedOperationException("Not needed")
-
-        override fun close() {}
-    }
+    }.build()
 
     // ==========================================
     // Default MessagePassingDocumentExtractor (User + Assistant)
@@ -315,8 +314,8 @@ class LongTermMemoryIngestionTest {
         val storage = InMemoryRecordStorage()
         var storageSizeDuringLLMCall = -1
 
-        val executor = object : PromptExecutor() {
-            override suspend fun execute(
+        val executor = object : PromptExecutorBuilder() {
+            override suspend fun onExecute(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
@@ -325,18 +324,16 @@ class LongTermMemoryIngestionTest {
                 return Message.Assistant("Response that should not be stored yet", ResponseMetaInfo.Empty)
             }
 
-            override fun executeStreaming(
+            override fun onStreaming(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
             ): Flow<StreamFrame> =
                 throw UnsupportedOperationException("Not needed")
 
-            override suspend fun moderate(prompt: Prompt, model: LLModel) =
+            override suspend fun onModerate(prompt: Prompt, model: LLModel) =
                 throw UnsupportedOperationException("Not needed")
-
-            override fun close() {}
-        }
+        }.build()
 
         val agent = AIAgent(
             promptExecutor = executor,

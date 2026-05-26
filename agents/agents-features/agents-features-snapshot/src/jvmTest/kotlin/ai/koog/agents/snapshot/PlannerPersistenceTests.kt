@@ -20,7 +20,7 @@ import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -266,8 +266,8 @@ class PlannerPersistenceTests {
         )
         val planJson = Json.encodeToString(initialPlan)
 
-        val executor = object : PromptExecutor() {
-            override suspend fun execute(
+        val executor = object : PromptExecutorBuilder() {
+            override suspend fun onExecute(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
@@ -277,17 +277,15 @@ class PlannerPersistenceTests {
                 else -> Message.Assistant("step done", ResponseMetaInfo.Empty) // executeStep on resume
             }
 
-            override fun executeStreaming(
+            override fun onStreaming(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
             ): Flow<StreamFrame> = flow { }
 
-            override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
+            override suspend fun onModerate(prompt: Prompt, model: LLModel): ModerationResult =
                 ModerationResult(isHarmful = false, categories = emptyMap())
-
-            override fun close() {}
-        }
+        }.build()
 
         fun createAgent() = AIAgent(
             promptExecutor = executor,

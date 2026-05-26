@@ -12,7 +12,8 @@ import ai.koog.prompt.executor.clients.InternalLLMClientApi
 import ai.koog.prompt.executor.clients.anthropic.AnthropicCacheControl
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -57,7 +58,7 @@ class AnthropicCacheControlIntegrationTest {
         }
 
         private suspend fun testCacheControl(
-            executor: MultiLLMPromptExecutor,
+            executor: PromptExecutor,
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor> = emptyList()

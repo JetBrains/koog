@@ -1,9 +1,11 @@
 package ai.koog.prompt.executor.llms
 
 import ai.koog.prompt.Prompt
+import ai.koog.prompt.executor.builder.RoutingLLMPromptExecutorBuilder
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.factory.RoutingLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.collect
@@ -138,7 +140,7 @@ class RoundRobinBasedExecutorTest {
         // Given
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
         val anthropicClient = MockLLMClient(provider = LLMProvider.Anthropic)
-        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(AnthropicModels.Sonnet_4)
+        val fallback = RoutingLLMPromptExecutorBuilder.FallbackPromptExecutorSettings(AnthropicModels.Sonnet_4)
         val executor = RoutingLLMPromptExecutor(openAIClient, anthropicClient, fallback = fallback)
 
         // When
@@ -165,7 +167,7 @@ class RoundRobinBasedExecutorTest {
     fun testFallbackClientNotFoundInRouterFails() = runTest {
         // Given
         val openAIClient = MockLLMClient(provider = LLMProvider.OpenAI)
-        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(AnthropicModels.Sonnet_4)
+        val fallback = RoutingLLMPromptExecutorBuilder.FallbackPromptExecutorSettings(AnthropicModels.Sonnet_4)
 
         // When, Then
         assertFailsWith<IllegalStateException> {

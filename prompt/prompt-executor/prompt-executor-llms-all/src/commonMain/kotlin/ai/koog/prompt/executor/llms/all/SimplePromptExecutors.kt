@@ -11,7 +11,8 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIServiceVersion
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.LLMProvider
 import kotlin.jvm.JvmMultifileClass
@@ -27,7 +28,7 @@ import kotlin.jvm.JvmName
 public fun simpleOpenAIExecutor(
     apiToken: String,
     httpClientFactory: KoogHttpClient.Factory,
-): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+): PromptExecutor = MultiLLMPromptExecutor(
     LLMProvider.OpenAI to OpenAILLMClient(apiKey = apiToken, httpClientFactory = httpClientFactory)
 )
 
@@ -47,7 +48,7 @@ public fun simpleAzureOpenAIExecutor(
     version: AzureOpenAIServiceVersion,
     apiToken: String,
     httpClientFactory: KoogHttpClient.Factory
-): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+): PromptExecutor = MultiLLMPromptExecutor(
     LLMProvider.OpenAI to OpenAILLMClient(
         apiToken,
         AzureOpenAIClientSettings(resourceName, deploymentName, version),
@@ -69,7 +70,7 @@ public fun simpleAzureOpenAIExecutor(
     version: AzureOpenAIServiceVersion,
     apiToken: String,
     httpClientFactory: KoogHttpClient.Factory,
-): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+): PromptExecutor = MultiLLMPromptExecutor(
     LLMProvider.OpenAI to OpenAILLMClient(
         apiKey = apiToken,
         settings = AzureOpenAIClientSettings(baseUrl, version),
@@ -86,7 +87,7 @@ public fun simpleAzureOpenAIExecutor(
 public fun simpleAnthropicExecutor(
     apiKey: String,
     httpClientFactory: KoogHttpClient.Factory,
-): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+): PromptExecutor = MultiLLMPromptExecutor(
     LLMProvider.Anthropic to AnthropicLLMClient(apiKey = apiKey, httpClientFactory = httpClientFactory)
 )
 
@@ -99,7 +100,7 @@ public fun simpleAnthropicExecutor(
 public fun simpleOpenRouterExecutor(
     apiKey: String,
     httpClientFactory: KoogHttpClient.Factory,
-): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+): PromptExecutor = MultiLLMPromptExecutor(
     LLMProvider.OpenRouter to OpenRouterLLMClient(apiKey = apiKey, httpClientFactory = httpClientFactory)
 )
 
@@ -112,7 +113,7 @@ public fun simpleOpenRouterExecutor(
 public fun simpleGoogleAIExecutor(
     apiKey: String,
     httpClientFactory: KoogHttpClient.Factory,
-): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+): PromptExecutor = MultiLLMPromptExecutor(
     LLMProvider.Google to GoogleLLMClient(apiKey = apiKey, httpClientFactory = httpClientFactory)
 )
 
@@ -125,7 +126,7 @@ public fun simpleGoogleAIExecutor(
 public fun simpleOllamaAIExecutor(
     baseUrl: String = "http://localhost:11434",
     httpClientFactory: KoogHttpClient.Factory,
-): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+): PromptExecutor = MultiLLMPromptExecutor(
     LLMProvider.Ollama to OllamaClient(baseUrl = baseUrl, httpClientFactory = httpClientFactory)
 )
 
@@ -135,5 +136,5 @@ public fun simpleOllamaAIExecutor(
  * @param apiKey The API token used for authentication with the Mistral AI provider.
  * @param httpClientFactory Factory used to create the underlying HTTP client.
  */
-public fun simpleMistralAIExecutor(apiKey: String, httpClientFactory: KoogHttpClient.Factory): MultiLLMPromptExecutor =
+public fun simpleMistralAIExecutor(apiKey: String, httpClientFactory: KoogHttpClient.Factory): PromptExecutor =
     MultiLLMPromptExecutor(LLMProvider.MistralAI to MistralAILLMClient(apiKey = apiKey, httpClientFactory = httpClientFactory))

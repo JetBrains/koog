@@ -6,6 +6,8 @@ import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.testing.tools.builder.MockPromptExecutorBuilder
+import ai.koog.prompt.annotations.InternalPromptAPI
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONSerializer
@@ -78,9 +80,11 @@ public class MockEnvironment(
      * @param toolCall The tool call to execute
      * @return A [ReceivedToolResult] containing the result of the tool call
      */
+    @OptIn(InternalPromptAPI::class)
     override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult {
-        if (promptExecutor is MockPromptExecutor) {
-            promptExecutor.toolActions
+        val mockBuilder = promptExecutor.builder as? MockPromptExecutorBuilder
+        if (mockBuilder != null) {
+            mockBuilder.toolActions
                 .find { it.satisfies(toolCall) }
                 ?.invokeAndSerialize(toolCall)
                 ?.let { (result, content) ->

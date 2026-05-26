@@ -16,6 +16,7 @@ import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -74,8 +75,8 @@ class LongTermMemoryRetrievalTest {
      * Creates a PromptExecutor that captures the full prompt content for inspection.
      * [onPrompt] receives the joined content of all prompt messages and returns the response text.
      */
-    private fun promptCapturingExecutor(onPrompt: (String) -> String): PromptExecutor = object : PromptExecutor() {
-        override suspend fun execute(
+    private fun promptCapturingExecutor(onPrompt: (String) -> String): PromptExecutor = object : PromptExecutorBuilder() {
+        override suspend fun onExecute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
@@ -84,18 +85,16 @@ class LongTermMemoryRetrievalTest {
             return Message.Assistant(onPrompt(allContent), ResponseMetaInfo.Empty)
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
+        override fun onStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
             flow {
                 val allContent = prompt.messages.joinToString("\n") { msg -> msg.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text } }
                 emit(StreamFrame.TextDelta(onPrompt(allContent)))
                 emit(StreamFrame.End("stop"))
             }
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel) =
+        override suspend fun onModerate(prompt: Prompt, model: LLModel) =
             throw UnsupportedOperationException("Not needed")
-
-        override fun close() {}
-    }
+    }.build()
 
     // ==========================================
     // Prompt augmentation with search request builder

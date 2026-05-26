@@ -1,11 +1,11 @@
-@file:OptIn(ExperimentalRoutingApi::class)
-
-package ai.koog.prompt.executor.model
+package ai.koog.prompt.executor.model.factory
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.tools.serialization.ToolDescriptorSchemaGenerator
 import ai.koog.http.client.HttpClientFactoryResolver
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.prompt.executor.builder.MultiLLMPromptExecutorBuilder
+import ai.koog.prompt.executor.builder.RoutingLLMPromptExecutorBuilder
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
@@ -13,9 +13,9 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
-import ai.koog.prompt.executor.llms.ExperimentalRoutingApi
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
-import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.RoutingLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.ContextWindowStrategy
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.executor.ollama.tools.json.OllamaToolDescriptorSchemaGenerator
@@ -24,14 +24,15 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.utils.time.KoogClock
 
 /**
- * Builder for constructing a [PromptExecutor] that automatically selects the appropriate executor
- * implementation based on the registered clients.
+ * Java-friendly factory for constructing a [PromptExecutor] from registered LLM clients.
  *
- * **Executor selection heuristic** (determined at [build] time):
+ * Distinct from [ai.koog.prompt.executor.model.PromptExecutorBuilder] (the extension-point
+ * abstraction); this class is a *factory* whose [build] method selects an appropriate executor
+ * implementation based on the registered clients:
+ *
  * - If every registered provider appears exactly once, a [MultiLLMPromptExecutor] is created.
- *   It dispatches each request to the single client registered for the requested model's provider.
- * - If any provider has more than one client registered, a [RoutingLLMPromptExecutor] is created.
- *   It load-balances requests across all clients for the same provider.
+ * - If any provider has more than one client registered, a [RoutingLLMPromptExecutorBuilder] is created
+ *   (load-balanced across the duplicate clients).
  *
  * Obtain an instance through [PromptExecutor.builder].
  *
@@ -52,7 +53,7 @@ import ai.koog.utils.time.KoogClock
  *
  * @see PromptExecutor.builder
  * @see MultiLLMPromptExecutor
- * @see RoutingLLMPromptExecutor
+ * @see RoutingLLMPromptExecutorBuilder
  */
 @JavaAPI
 public class PromptExecutorBuilder {
@@ -63,7 +64,7 @@ public class PromptExecutorBuilder {
      * Registers an additional [LLMClient].
      *
      * Multiple clients for the same provider are allowed. When more than one client is registered
-     * for the same provider, [build] will create a [RoutingLLMPromptExecutor] that load-balances
+     * for the same provider, [build] will create a [RoutingLLMPromptExecutorBuilder] that load-balances
      * across them.
      *
      * @param client The LLM client to add.
@@ -142,10 +143,6 @@ public class PromptExecutorBuilder {
     /**
      * Constructs a [PromptExecutor] from the registered clients.
      *
-     * The concrete implementation is chosen automatically:
-     * - [MultiLLMPromptExecutor] when each provider appears at most once.
-     * - [RoutingLLMPromptExecutor] when any provider has two or more clients (enables load balancing).
-     *
      * @return A configured [PromptExecutor] instance.
      * @throws IllegalArgumentException if a fallback model was configured but its provider has no registered client.
      */
@@ -162,12 +159,12 @@ public class PromptExecutorBuilder {
         return if (shouldUseRouting()) {
             RoutingLLMPromptExecutor(
                 clients,
-                fallbackModel?.let { RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(it) }
+                fallbackModel?.let { RoutingLLMPromptExecutorBuilder.FallbackPromptExecutorSettings(it) }
             )
         } else {
             MultiLLMPromptExecutor(
                 clients,
-                fallbackModel?.let { MultiLLMPromptExecutor.FallbackPromptExecutorSettings(it.provider, it) }
+                fallbackModel?.let { MultiLLMPromptExecutorBuilder.FallbackPromptExecutorSettings(it.provider, it) }
             )
         }
     }

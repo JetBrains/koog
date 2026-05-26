@@ -10,7 +10,8 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIServiceVersion
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.LLMProvider
 import kotlin.jvm.JvmMultifileClass
@@ -22,7 +23,7 @@ import kotlin.jvm.JvmName
  *
  * @see simpleOpenAIExecutor
  */
-public fun simpleOpenAIExecutor(apiToken: String): MultiLLMPromptExecutor =
+public fun simpleOpenAIExecutor(apiToken: String): PromptExecutor =
     MultiLLMPromptExecutor(LLMProvider.OpenAI to OpenAILLMClient(apiToken))
 
 /**
@@ -36,7 +37,7 @@ public fun simpleAzureOpenAIExecutor(
     deploymentName: String,
     version: AzureOpenAIServiceVersion,
     apiToken: String,
-): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+): PromptExecutor = MultiLLMPromptExecutor(
     LLMProvider.OpenAI to OpenAILLMClient(
         apiKey = apiToken,
         settings = AzureOpenAIClientSettings(resourceName, deploymentName, version),
@@ -53,7 +54,7 @@ public fun simpleAzureOpenAIExecutor(
     baseUrl: String,
     version: AzureOpenAIServiceVersion,
     apiToken: String,
-): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+): PromptExecutor = MultiLLMPromptExecutor(
     LLMProvider.OpenAI to OpenAILLMClient(
         apiKey = apiToken,
         settings = AzureOpenAIClientSettings(baseUrl, version),
@@ -66,7 +67,7 @@ public fun simpleAzureOpenAIExecutor(
  *
  * @see simpleAnthropicExecutor
  */
-public fun simpleAnthropicExecutor(apiKey: String): MultiLLMPromptExecutor =
+public fun simpleAnthropicExecutor(apiKey: String): PromptExecutor =
     MultiLLMPromptExecutor(LLMProvider.Anthropic to AnthropicLLMClient(apiKey))
 
 /**
@@ -75,7 +76,7 @@ public fun simpleAnthropicExecutor(apiKey: String): MultiLLMPromptExecutor =
  *
  * @see simpleOpenRouterExecutor
  */
-public fun simpleOpenRouterExecutor(apiKey: String): MultiLLMPromptExecutor =
+public fun simpleOpenRouterExecutor(apiKey: String): PromptExecutor =
     MultiLLMPromptExecutor(LLMProvider.OpenRouter to OpenRouterLLMClient(apiKey))
 
 /**
@@ -84,7 +85,7 @@ public fun simpleOpenRouterExecutor(apiKey: String): MultiLLMPromptExecutor =
  *
  * @see simpleGoogleAIExecutor
  */
-public fun simpleGoogleAIExecutor(apiKey: String): MultiLLMPromptExecutor =
+public fun simpleGoogleAIExecutor(apiKey: String): PromptExecutor =
     MultiLLMPromptExecutor(LLMProvider.Google to GoogleLLMClient(apiKey))
 
 /**
@@ -95,7 +96,7 @@ public fun simpleGoogleAIExecutor(apiKey: String): MultiLLMPromptExecutor =
  */
 public fun simpleOllamaAIExecutor(
     baseUrl: String = "http://localhost:11434",
-): MultiLLMPromptExecutor = MultiLLMPromptExecutor(LLMProvider.Ollama to OllamaClient(baseUrl = baseUrl))
+): PromptExecutor = MultiLLMPromptExecutor(LLMProvider.Ollama to OllamaClient(baseUrl = baseUrl))
 
 /**
  * Convenience overload that constructs the underlying client via its JVM no-factory entry point
@@ -103,5 +104,5 @@ public fun simpleOllamaAIExecutor(
  *
  * @see simpleMistralAIExecutor
  */
-public fun simpleMistralAIExecutor(apiKey: String): MultiLLMPromptExecutor =
+public fun simpleMistralAIExecutor(apiKey: String): PromptExecutor =
     MultiLLMPromptExecutor(LLMProvider.MistralAI to MistralAILLMClient(apiKey))

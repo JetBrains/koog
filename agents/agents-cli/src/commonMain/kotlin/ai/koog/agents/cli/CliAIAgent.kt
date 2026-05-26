@@ -21,15 +21,16 @@ import ai.koog.agents.core.environment.ContextualAgentEnvironment
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
-import ai.koog.agents.core.feature.ContextualPromptExecutor
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
+import ai.koog.agents.core.prompt.factory.ContextualPromptExecutor
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -647,8 +648,8 @@ public class CliAIAgent<Input, Output> internal constructor(
      * Cli agents like claude and codex have a built-in layer of llm requests and do not require koog's prompt executor.
      * This implementation is needed to initialize the [AIAgentCliContext] and cannot be used for actual execution.
      */
-    private object DummyPromptExecutor : PromptExecutor() {
-        override suspend fun execute(
+    private val DummyPromptExecutor: PromptExecutor = object : PromptExecutorBuilder() {
+        override suspend fun onExecute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
@@ -656,7 +657,7 @@ public class CliAIAgent<Input, Output> internal constructor(
             throw NotImplementedError("DummyPromptExecutor does not support execution")
         }
 
-        override fun executeStreaming(
+        override fun onStreaming(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
@@ -664,15 +665,13 @@ public class CliAIAgent<Input, Output> internal constructor(
             throw NotImplementedError("DummyPromptExecutor does not support execution")
         }
 
-        override suspend fun moderate(
+        override suspend fun onModerate(
             prompt: Prompt,
             model: LLModel
         ): ModerationResult {
             throw NotImplementedError("DummyPromptExecutor does not support execution")
         }
-
-        override fun close() {}
-    }
+    }.build()
 }
 
 /**

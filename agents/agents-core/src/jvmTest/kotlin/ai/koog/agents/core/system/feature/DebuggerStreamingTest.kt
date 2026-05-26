@@ -33,7 +33,7 @@ import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
@@ -287,8 +287,8 @@ class DebuggerStreamingTest {
         var expectedCause: String? = null
         var expectedType: String? = null
 
-        val testStreamingExecutor = object : PromptExecutor() {
-            override suspend fun execute(
+        val testStreamingExecutor = object : PromptExecutorBuilder() {
+            override suspend fun onExecute(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
@@ -296,7 +296,7 @@ class DebuggerStreamingTest {
                 TODO()
             }
 
-            override fun executeStreaming(
+            override fun onStreaming(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
@@ -308,15 +308,13 @@ class DebuggerStreamingTest {
                 throw testException
             }
 
-            override suspend fun moderate(
+            override suspend fun onModerate(
                 prompt: Prompt,
                 model: LLModel
             ): ModerationResult {
                 throw UnsupportedOperationException("Not used in test")
             }
-
-            override fun close() {}
-        }
+        }.build()
 
         // Test Data
         val port = findAvailablePort()

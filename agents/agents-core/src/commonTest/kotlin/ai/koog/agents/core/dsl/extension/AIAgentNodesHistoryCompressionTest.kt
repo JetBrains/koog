@@ -19,10 +19,12 @@ import kotlin.test.assertTrue
 
 class AIAgentNodesHistoryCompressionTest {
 
+    private val testExecutorBuilder = TestLLMExecutorBuilder()
+
     /**
      * Helper function to create a prompt with the specified number of message pairs
      */
-    private fun createPromptWithMessages(count: Int) = prompt("test", clock = TestLLMExecutor.testClock) {
+    private fun createPromptWithMessages(count: Int) = prompt("test", clock = TestLLMExecutorBuilder.testClock) {
         system("Test system message")
 
         // Add the specified number of user/assistant message pairs
@@ -34,10 +36,6 @@ class AIAgentNodesHistoryCompressionTest {
 
     @Test
     fun testNodeLLMCompressHistoryWithWholeHistory() = runTest {
-        // Create a test LLM executor to track TLDR messages
-        val testExecutor = TestLLMExecutor()
-        testExecutor.reset()
-
         val agentStrategy = strategy<String, String>("test") {
             val compress by nodeLLMCompressHistory<Unit>(
                 strategy = HistoryCompressionStrategy.WholeHistory
@@ -57,7 +55,7 @@ class AIAgentNodesHistoryCompressionTest {
         )
 
         AIAgent(
-            promptExecutor = testExecutor,
+            promptExecutor = testExecutorBuilder.build(),
             strategy = agentStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -76,10 +74,10 @@ class AIAgentNodesHistoryCompressionTest {
         assertEquals("Done", results.first())
 
         // Verify that only one TLDR message was created
-        assertEquals(1, testExecutor.tldrCount, "WholeHistory strategy should create exactly one TLDR message")
+        assertEquals(1, testExecutorBuilder.tldrCount, "WholeHistory strategy should create exactly one TLDR message")
 
         // Verify that the final messages include the TLDR
-        val tldrMessages = testExecutor.messages.last().parts.filter {
+        val tldrMessages = testExecutorBuilder.messages.last().parts.filter {
             it is MessagePart.Text && it.text.startsWith("TLDR")
         }
         assertEquals(1, tldrMessages.size, "There should be exactly one TLDR message in the final history")
@@ -87,10 +85,6 @@ class AIAgentNodesHistoryCompressionTest {
 
     @Test
     fun testNodeLLMCompressHistoryWithFromLastNMessages() = runTest {
-        // Create a test LLM executor to track TLDR messages
-        val testExecutor = TestLLMExecutor()
-        testExecutor.reset()
-
         val agentStrategy = strategy<String, String>("test") {
             val compress by nodeLLMCompressHistory<Unit>(
                 strategy = HistoryCompressionStrategy.FromLastNMessages(4)
@@ -110,7 +104,7 @@ class AIAgentNodesHistoryCompressionTest {
         )
 
         AIAgent(
-            promptExecutor = testExecutor,
+            promptExecutor = testExecutorBuilder.build(),
             strategy = agentStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -129,10 +123,10 @@ class AIAgentNodesHistoryCompressionTest {
         assertEquals("Done", results.first())
 
         // Verify that only one TLDR message was created
-        assertEquals(1, testExecutor.tldrCount, "FromLastNMessages strategy should create exactly one TLDR message")
+        assertEquals(1, testExecutorBuilder.tldrCount, "FromLastNMessages strategy should create exactly one TLDR message")
 
         // Verify that the final messages include the TLDR
-        val tldrMessages = testExecutor.messages.last().parts.filter {
+        val tldrMessages = testExecutorBuilder.messages.last().parts.filter {
             it is MessagePart.Text && it.text.startsWith("TLDR")
         }
         assertEquals(1, tldrMessages.size, "There should be exactly one TLDR message in the final history")
@@ -140,10 +134,6 @@ class AIAgentNodesHistoryCompressionTest {
 
     @Test
     fun testNodeLLMCompressHistoryWithChunked() = runTest {
-        // Create a test LLM executor to track TLDR messages
-        val testExecutor = TestLLMExecutor()
-        testExecutor.reset()
-
         // Use a chunk size of 4 (each chunk will have 4 messages)
         val chunkSize = 4
         val agentStrategy = strategy<String, String>("test") {
@@ -166,7 +156,7 @@ class AIAgentNodesHistoryCompressionTest {
         )
 
         AIAgent(
-            promptExecutor = testExecutor,
+            promptExecutor = testExecutorBuilder.build(),
             strategy = agentStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -185,24 +175,24 @@ class AIAgentNodesHistoryCompressionTest {
         assertEquals("Done", results.first())
 
         // Print the actual TLDR count for debugging
-        println("[DEBUG_LOG] Actual TLDR count: ${testExecutor.tldrCount}")
+        println("[DEBUG_LOG] Actual TLDR count: ${testExecutorBuilder.tldrCount}")
 
         // In the Chunked strategy, we expect multiple TLDR messages
         // The exact number depends on how the implementation chunks the messages
         // For now, we'll just verify that we have more than one TLDR message
         assertTrue(
-            testExecutor.tldrCount > 1,
+            testExecutorBuilder.tldrCount > 1,
             "Chunked strategy should create multiple TLDR messages"
         )
 
         // Verify that the final messages include the TLDRs
-        val tldrMessages = testExecutor.messages.flatMap { it.parts }.filter { part ->
+        val tldrMessages = testExecutorBuilder.messages.flatMap { it.parts }.filter { part ->
             part is MessagePart.Text && part.text.startsWith("TLDR")
         }
 
-        assertEquals(8, testExecutor.tldrCount)
+        assertEquals(8, testExecutorBuilder.tldrCount)
         assertEquals(
-            testExecutor.tldrCount,
+            testExecutorBuilder.tldrCount,
             tldrMessages.size,
             "The number of TLDR messages in the final history should match the TLDR count"
         )
@@ -210,10 +200,6 @@ class AIAgentNodesHistoryCompressionTest {
 
     @Test
     fun testNodeLLMCompressHistoryWithFactRetrieval() = runTest {
-        // Create a test LLM executor to track fact-extraction responses
-        val testExecutor = TestLLMExecutor()
-        testExecutor.reset()
-
         val concepts = listOf(
             Concept(
                 keyword = "user-preferences",
@@ -246,7 +232,7 @@ class AIAgentNodesHistoryCompressionTest {
         )
 
         AIAgent(
-            promptExecutor = testExecutor,
+            promptExecutor = testExecutorBuilder.build(),
             strategy = agentStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
@@ -267,19 +253,19 @@ class AIAgentNodesHistoryCompressionTest {
         // FactRetrieval issues one extraction call per concept
         assertEquals(
             concepts.size,
-            testExecutor.factCount,
+            testExecutorBuilder.factCount,
             "FactRetrieval strategy should issue one extraction request per configured concept"
         )
 
         // No TLDR was needed because facts were extracted successfully
         assertEquals(
             0,
-            testExecutor.tldrCount,
+            testExecutorBuilder.tldrCount,
             "FactRetrieval strategy should not fall back to TLDR when facts are extracted successfully"
         )
 
         // The fact-extraction system prompts should reference all configured concept keywords.
-        val systemMessages = testExecutor.messages.filterIsInstance<Message.System>()
+        val systemMessages = testExecutorBuilder.messages.filterIsInstance<Message.System>()
         assertTrue(
             concepts.all { concept ->
                 systemMessages.any { message ->
@@ -289,7 +275,7 @@ class AIAgentNodesHistoryCompressionTest {
             "Each configured concept keyword must appear in the fact-extraction system prompts"
         )
         // Each extraction request must wrap the conversation history in the dedicated XML tag.
-        val userMessages = testExecutor.messages.filterIsInstance<Message.User>()
+        val userMessages = testExecutorBuilder.messages.filterIsInstance<Message.User>()
         assertEquals(
             concepts.size,
             userMessages.count { message ->

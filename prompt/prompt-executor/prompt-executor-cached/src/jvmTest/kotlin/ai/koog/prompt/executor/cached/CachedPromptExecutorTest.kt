@@ -5,7 +5,8 @@ import ai.koog.prompt.Prompt
 import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.cache.model.put
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.cached.factory.CachedPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -52,11 +53,11 @@ class CachedPromptExecutorTest {
     }
 
     // Mock implementation of PromptExecutor
-    private class MockPromptExecutor : PromptExecutor() {
+    private class MockPromptExecutorBuilder : PromptExecutorBuilder() {
         var executeCalled = false
         var executeStreamingCalled = false
 
-        override suspend fun execute(
+        override suspend fun onExecute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
@@ -65,7 +66,7 @@ class CachedPromptExecutorTest {
             return testResponse
         }
 
-        override fun executeStreaming(
+        override fun onStreaming(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
@@ -74,36 +75,34 @@ class CachedPromptExecutorTest {
             return streamFrameFlowOf("Streaming response from executor")
         }
 
-        override suspend fun moderate(
+        override suspend fun onModerate(
             prompt: Prompt,
             model: LLModel
         ): ModerationResult {
             throw UnsupportedOperationException("Moderation is not needed for TestLLMExecutor")
         }
-
-        override fun close() {}
     }
 
     @Test
     fun `test executor uses cache when cached result is available`() = runTest {
         // Arrange
         val cache = MockPromptCache()
-        val executor = MockPromptExecutor()
-        val cachedExecutor = CachedPromptExecutor(cache, executor, testClock)
+        val executorBuilder = MockPromptExecutorBuilder()
+        val cachedExecutor = CachedPromptExecutor(cache, executorBuilder.build(), testClock)
 
         cache.put(testPrompt, testTools, testResponse)
         val response = cachedExecutor.execute(testPrompt, testModel, testTools)
 
         assertTrue(cache.getCalled, "Cache get should be called")
-        assertEquals(false, executor.executeCalled, "Executor should not be called when cache hit")
+        assertEquals(false, executorBuilder.executeCalled, "Executor should not be called when cache hit")
         assertEquals(testResponse, response, "Should return cached response")
     }
 
     @Test
     fun `test executor delegates to nested executor when no cached result is available`() = runTest {
         val cache = MockPromptCache()
-        val executor = MockPromptExecutor()
-        val cachedExecutor = CachedPromptExecutor(cache, executor, testClock)
+        val executor = MockPromptExecutorBuilder()
+        val cachedExecutor = CachedPromptExecutor(cache, executor.build(), testClock)
 
         val response = cachedExecutor.execute(testPrompt, testModel, testTools)
 

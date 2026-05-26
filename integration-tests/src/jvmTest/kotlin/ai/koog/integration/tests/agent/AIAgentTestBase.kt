@@ -36,7 +36,8 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -89,7 +90,7 @@ open class AIAgentTestBase {
 
     val systemPrompt = "You are a helpful assistant."
 
-    fun getExecutor(model: LLModel): MultiLLMPromptExecutor =
+    fun getExecutor(model: LLModel): PromptExecutor =
         MultiLLMPromptExecutor(getLLMClientForProvider(model.provider))
 
     protected class State(
@@ -267,7 +268,7 @@ open class AIAgentTestBase {
         eventHandlerConfig: EventHandlerConfig.() -> Unit,
         maxAgentIterations: Int,
         prompt: Prompt = prompt("test") {},
-        initialExecutor: MultiLLMPromptExecutor? = null,
+        initialExecutor: PromptExecutor? = null,
     ): AIAgent<String, String> {
         val executor = if (initialExecutor == null) {
             val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv())

@@ -3,7 +3,7 @@ package ai.koog.agents.longtermmemory.feature;
 import ai.koog.agents.core.agent.AIAgent;
 import ai.koog.agents.longtermmemory.ingestion.extraction.DocumentExtractor;
 import ai.koog.agents.longtermmemory.storage.InMemoryRecordStorage;
-import ai.koog.agents.testing.tools.MockPromptExecutor;
+import ai.koog.agents.testing.tools.builder.MockPromptExecutorBuilder;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.message.Message;
 import ai.koog.rag.base.storage.search.SimilaritySearchRequest;
@@ -30,7 +30,7 @@ public class LongTermMemoryIngestionJavaTest {
 
         var agent = AIAgent.builder()
             .promptExecutor(
-                MockPromptExecutor.builder(serializer)
+                MockPromptExecutorBuilder.builder(serializer)
                     .mockLLMAnswer("answer").asDefaultResponse()
                     .build()
             )
@@ -63,7 +63,7 @@ public class LongTermMemoryIngestionJavaTest {
 
         var agent = AIAgent.builder()
             .promptExecutor(
-                MockPromptExecutor.builder(serializer)
+                MockPromptExecutorBuilder.builder(serializer)
                     .mockLLMAnswer("full config answer").asDefaultResponse()
                     .build()
             )

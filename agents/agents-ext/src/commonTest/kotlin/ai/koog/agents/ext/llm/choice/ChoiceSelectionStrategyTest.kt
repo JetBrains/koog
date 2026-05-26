@@ -1,10 +1,11 @@
 package ai.koog.agents.ext.llm.choice
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.ext.llm.choice.factory.PromptExecutorWithChoiceSelection
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
@@ -51,8 +52,8 @@ class ChoiceSelectionStrategyTest {
     @JsName("PromptExecutorChoice_should_delegate_to_strategy")
     fun `PromptExecutorWithChoiceSelection should delegate to strategy`() = runTest {
         // Arrange
-        val mockExecutor = object : PromptExecutor() {
-            override suspend fun execute(
+        val mockExecutor = object : PromptExecutorBuilder() {
+            override suspend fun onExecute(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
@@ -63,14 +64,14 @@ class ChoiceSelectionStrategyTest {
                 )
             }
 
-            override fun executeStreaming(
+            override fun onStreaming(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
             ): Flow<StreamFrame> =
                 streamFrameFlowOf("Default streaming response")
 
-            override suspend fun executeMultipleChoices(
+            override suspend fun onMultipleChoices(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
@@ -82,15 +83,13 @@ class ChoiceSelectionStrategyTest {
                 return listOf(choice1, choice2)
             }
 
-            override suspend fun moderate(
+            override suspend fun onModerate(
                 prompt: Prompt,
                 model: LLModel
             ): ModerationResult {
                 throw UnsupportedOperationException("Moderation is not needed here")
             }
-
-            override fun close() {}
-        }
+        }.build()
 
         val mockStrategy = object : ChoiceSelectionStrategy {
             override suspend fun choose(prompt: Prompt, choices: List<Message.Assistant>): Message.Assistant {

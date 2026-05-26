@@ -6,9 +6,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import ai.koog.prompt.executor.clients.LLMClient;
+import ai.koog.prompt.executor.builder.MultiLLMPromptExecutorBuilder;
+import ai.koog.prompt.executor.builder.RoutingLLMPromptExecutorBuilder;
 import ai.koog.prompt.executor.llms.MockLLMClient;
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
-import ai.koog.prompt.executor.llms.RoutingLLMPromptExecutor;
+import ai.koog.prompt.executor.model.factory.PromptExecutorBuilder;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.llm.LLModel;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ class PromptExecutorBuilderTest {
             .addClient(clientFor(providerA))
             .build();
 
-        assertThat(executor).isInstanceOf(MultiLLMPromptExecutor.class);
+        assertThat(executor.getBuilder()).isInstanceOf(MultiLLMPromptExecutorBuilder.class);
     }
 
     @Test
@@ -45,7 +46,7 @@ class PromptExecutorBuilderTest {
             .addClient(clientFor(providerB))
             .build();
 
-        assertThat(executor).isInstanceOf(MultiLLMPromptExecutor.class);
+        assertThat(executor.getBuilder()).isInstanceOf(MultiLLMPromptExecutorBuilder.class);
     }
 
     @Test
@@ -55,7 +56,7 @@ class PromptExecutorBuilderTest {
             .addClient(clientFor(providerA))
             .build();
 
-        assertThat(executor).isInstanceOf(RoutingLLMPromptExecutor.class);
+        assertThat(executor.getBuilder()).isInstanceOf(RoutingLLMPromptExecutorBuilder.class);
     }
 
     @Test
@@ -66,7 +67,7 @@ class PromptExecutorBuilderTest {
             .addClient(clientFor(providerA))
             .build();
 
-        assertThat(executor).isInstanceOf(RoutingLLMPromptExecutor.class);
+        assertThat(executor.getBuilder()).isInstanceOf(RoutingLLMPromptExecutorBuilder.class);
     }
 
     @Test
@@ -88,7 +89,7 @@ class PromptExecutorBuilderTest {
             .openAI("fake-key")
             .build();
 
-        assertThat(executor).isInstanceOf(MultiLLMPromptExecutor.class);
+        assertThat(executor.getBuilder()).isInstanceOf(MultiLLMPromptExecutorBuilder.class);
     }
 
     @Test
@@ -98,7 +99,7 @@ class PromptExecutorBuilderTest {
             .openAI("fake-key-2")
             .build();
 
-        assertThat(executor).isInstanceOf(RoutingLLMPromptExecutor.class);
+        assertThat(executor.getBuilder()).isInstanceOf(RoutingLLMPromptExecutorBuilder.class);
     }
 
     @Test
@@ -108,7 +109,7 @@ class PromptExecutorBuilderTest {
             .anthropic("fake-key")
             .build();
 
-        assertThat(executor).isInstanceOf(MultiLLMPromptExecutor.class);
+        assertThat(executor.getBuilder()).isInstanceOf(MultiLLMPromptExecutorBuilder.class);
     }
 
     @Test
@@ -119,7 +120,7 @@ class PromptExecutorBuilderTest {
             .openAI("fake-key")
             .build();
 
-        assertThat(executor).isInstanceOf(RoutingLLMPromptExecutor.class);
+        assertThat(executor.getBuilder()).isInstanceOf(RoutingLLMPromptExecutorBuilder.class);
     }
 
     @Test

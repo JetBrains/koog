@@ -3,7 +3,7 @@ package ai.koog.integration.tests.acp
 import ai.koog.agents.testing.tools.RandomNumberTool
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
 import com.agentclientprotocol.common.SessionCreationParameters
 import com.agentclientprotocol.model.AcpMethod
 import com.agentclientprotocol.model.AuthMethod

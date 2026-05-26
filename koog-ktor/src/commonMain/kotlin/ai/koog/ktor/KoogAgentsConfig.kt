@@ -12,6 +12,7 @@ import ai.koog.ktor.KoogAgentsConfig.TimeoutConfiguration.Companion.DEFAULT_TIME
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.PromptDSL
+import ai.koog.prompt.executor.builder.MultiLLMPromptExecutorBuilder
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
@@ -26,7 +27,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -69,12 +70,12 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
      * LLM connection is successful or applicable for processing a request. It is an optional configuration
      * and may be null if no fallback mechanism is set up.
      *
-     * The fallback settings are encapsulated in the [MultiLLMPromptExecutor.FallbackPromptExecutorSettings] class within
+     * The fallback settings are encapsulated in the [MultiLLMPromptExecutorBuilder.FallbackPromptExecutorSettings] class within
      * the [MultiLLMPromptExecutor].
      *
      * It is internally mutable and primarily used within the `KoogAgentsServerConfig` class.
      */
-    internal var fallbackLLMSettings: MultiLLMPromptExecutor.FallbackPromptExecutorSettings? = null
+    internal var fallbackLLMSettings: MultiLLMPromptExecutorBuilder.FallbackPromptExecutorSettings? = null
 
     /**
      * Represents the configuration of an AI agent within the server.
@@ -290,7 +291,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
         public fun fallback(configure: FallbackLLMConfig.() -> Unit) {
             with(FallbackLLMConfig()) {
                 configure()
-                fallbackLLMSettings = MultiLLMPromptExecutor.FallbackPromptExecutorSettings(
+                fallbackLLMSettings = MultiLLMPromptExecutorBuilder.FallbackPromptExecutorSettings(
                     provider ?: error("Fallback provider must be specified"),
                     model ?: error("Fallback model must be specified")
                 )

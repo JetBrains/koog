@@ -42,7 +42,7 @@ import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
@@ -509,14 +509,14 @@ class TraceFeatureMessageTestWriterTest {
         var expectedCause: String? = null
         var expectedType: String? = null
 
-        val testStreamingExecutor = object : PromptExecutor() {
-            override suspend fun execute(
+        val testStreamingExecutor = object : PromptExecutorBuilder() {
+            override suspend fun onExecute(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
             ): Message.Assistant = Message.Assistant("", ResponseMetaInfo.Empty)
 
-            override fun executeStreaming(
+            override fun onStreaming(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
@@ -528,15 +528,13 @@ class TraceFeatureMessageTestWriterTest {
                 throw testException
             }
 
-            override suspend fun moderate(
+            override suspend fun onModerate(
                 prompt: Prompt,
                 model: LLModel
             ): ai.koog.prompt.dsl.ModerationResult {
                 throw UnsupportedOperationException("Not used in test")
             }
-
-            override fun close() {}
-        }
+        }.build()
 
         TestFeatureMessageWriter().use { writer ->
 
@@ -648,8 +646,8 @@ class TraceFeatureMessageTestWriterTest {
         var expectedCause: String? = null
         var expectedType: String? = null
 
-        val testCallExecutor = object : PromptExecutor() {
-            override suspend fun execute(
+        val testCallExecutor = object : PromptExecutorBuilder() {
+            override suspend fun onExecute(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
@@ -661,21 +659,19 @@ class TraceFeatureMessageTestWriterTest {
                 throw testException
             }
 
-            override fun executeStreaming(
+            override fun onStreaming(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
             ): Flow<StreamFrame> = flow { }
 
-            override suspend fun moderate(
+            override suspend fun onModerate(
                 prompt: Prompt,
                 model: LLModel
             ): ai.koog.prompt.dsl.ModerationResult {
                 throw UnsupportedOperationException("Not used in test")
             }
-
-            override fun close() {}
-        }
+        }.build()
 
         TestFeatureMessageWriter().use { writer ->
 

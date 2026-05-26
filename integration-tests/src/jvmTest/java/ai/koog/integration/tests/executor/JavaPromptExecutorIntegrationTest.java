@@ -14,7 +14,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort;
 import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude;
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig;
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary;
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.executor.model.PromptExecutorStructuredKt;
 import ai.koog.prompt.llm.LLMCapability;
 import ai.koog.prompt.llm.LLMProvider;
@@ -117,7 +117,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
         Models.assumeAvailable(model.getProvider());
         assertThat(model.getProvider()).isNotNull();
 
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
         Prompt prompt = Prompt.builder("test-prompt")
             .system("You are a calculator.")
             .user("What is 2+2?")
@@ -145,7 +145,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
             model.getProvider() == LLMProvider.OpenAI || model.getProvider() == LLMProvider.Anthropic,
             "Reasoning Java interop test currently supports only OpenAI/Anthropic providers in KoogJavaTestBase"
         );
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         LLMParams params = JavaUtils.createParams(
             model.getProvider(),
@@ -173,7 +173,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.utils.Models#reasoningCapableModels")
     public void integration_ReasoningWithEncryptionShouldContainEncryptedReasoning(LLModel model) {
         Models.assumeAvailable(model.getProvider());
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         LLMParams params = JavaUtils.createReasoningStreamingParams(model.getProvider(), 1056);
 
@@ -199,7 +199,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.utils.Models#reasoningCapableModels")
     public void integration_ReasoningStreamingShouldEndWithEndFrame(LLModel model) throws InterruptedException {
         Models.assumeAvailable(model.getProvider());
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         LLMParams params = JavaUtils.createReasoningStreamingParams(model.getProvider(), 256);
 
@@ -225,7 +225,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     @Disabled("KG-733 [Java API] OpenAILLMClient error: 'reasoning' is provided without its required following item")
     public void integration_ReasoningMultiStepShouldSucceed(LLModel model) {
         Models.assumeAvailable(model.getProvider());
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         LLMParams params = JavaUtils.createReasoningStreamingParams(model.getProvider(), 1056);
 
@@ -261,7 +261,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
         "KG-726 Responses from several OpenAI models are completing without receiving an End frame")
     public void integration_ReasoningStreamingShouldContainReasoningFrames(LLModel model) throws InterruptedException {
         Models.assumeAvailable(model.getProvider());
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         LLMParams params = JavaUtils.createReasoningStreamingParams(model.getProvider(), 1056);
 
@@ -293,7 +293,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ToolChoiceRequiredShouldEmitToolCall(LLModel model) {
         Models.assumeAvailable(model.getProvider());
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         LLMParams params = JavaUtils.createParams(
             model.getProvider(),
@@ -320,7 +320,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ToolWithoutArgsShouldProduceValidResponse(LLModel model) {
         Models.assumeAvailable(model.getProvider());
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         LLMParams params = JavaUtils.createParams(
             model.getProvider(),
@@ -348,7 +348,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ToolChoiceNoneShouldNotEmitToolCalls(LLModel model) {
         Models.assumeAvailable(model.getProvider());
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         LLMParams params = JavaUtils.createParams(
             model.getProvider(),
@@ -374,7 +374,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_ToolChoiceNamedShouldPreferSpecifiedTool(LLModel model) {
         Models.assumeAvailable(model.getProvider());
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         LLMParams params = JavaUtils.createParams(
             model.getProvider(),
@@ -404,7 +404,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     public void integration_MultipleChoicesShouldRespectNumberOfChoices(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.MultipleChoices.INSTANCE), "Model does not support multiple choices");
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         LLMParams params = JavaUtils.createParams(
             model.getProvider(),
@@ -432,7 +432,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_StreamingWithToolsShouldEmitToolFrames(LLModel model) throws InterruptedException {
         Models.assumeAvailable(model.getProvider());
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         LLMParams params = JavaUtils.createParams(
             model.getProvider(),
@@ -466,7 +466,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     @MethodSource("ai.koog.integration.tests.agent.AIAgentTestBase#latestModels")
     public void integration_MultipleSystemMessagesShouldExecute(LLModel model) {
         Models.assumeAvailable(model.getProvider());
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         LLMParams params = JavaUtils.createParams(
             model.getProvider(),
@@ -493,7 +493,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     public void integration_StructuredOutputBasicSchemaShouldReturnJson(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.Schema.JSON.Basic.INSTANCE), "Model does not support Basic JSON schema");
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         JsonObject schemaJson = JavaUtils.weatherSchemaJson();
         LLMParams.Schema.JSON.Basic schema = new LLMParams.Schema.JSON.Basic("WeatherReportBasic", schemaJson);
@@ -531,7 +531,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
     public void integration_StructuredOutputStandardSchemaShouldReturnJson(LLModel model) {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.Schema.JSON.Standard.INSTANCE), "Model does not support Standard JSON schema");
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         JsonObject schemaJson = JavaUtils.weatherSchemaJson();
         LLMParams.Schema.JSON.Standard schema = new LLMParams.Schema.JSON.Standard("WeatherReportStandard", schemaJson);
@@ -570,7 +570,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.Tools.INSTANCE), "Model does not support tools");
 
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
         LLMParams params = JavaUtils.createParams(
             model.getProvider(),
             null,
@@ -657,7 +657,7 @@ public class JavaPromptExecutorIntegrationTest extends KoogJavaTestBase {
         Models.assumeAvailable(model.getProvider());
         assumeTrue(model.supports(LLMCapability.Schema.JSON.Standard.INSTANCE), "Model does not support Standard JSON schema");
 
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
         StructuredRequestConfig<WeatherReport> config =
             WeatherReportKt.getManualConfig(executor.getStandardJsonSchemaGenerator(model));
         Message.Assistant malformedResponse = new Message.Assistant(

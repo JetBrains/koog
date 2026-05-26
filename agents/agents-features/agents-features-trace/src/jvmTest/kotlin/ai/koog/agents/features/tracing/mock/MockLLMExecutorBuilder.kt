@@ -3,7 +3,7 @@ package ai.koog.agents.features.tracing.mock
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
@@ -15,15 +15,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlin.time.Instant
 
-class MockLLMExecutor : PromptExecutor() {
+class MockLLMExecutorBuilder : PromptExecutorBuilder() {
 
     private val clock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
+    override suspend fun onExecute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         return handlePrompt(prompt)
     }
 
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -46,12 +46,10 @@ class MockLLMExecutor : PromptExecutor() {
         return Message.Assistant(content = "Default test response", ResponseMetaInfo.create(clock))
     }
 
-    override suspend fun moderate(
+    override suspend fun onModerate(
         prompt: Prompt,
         model: LLModel
     ): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed for TestLLMExecutor")
     }
-
-    override fun close() {}
 }

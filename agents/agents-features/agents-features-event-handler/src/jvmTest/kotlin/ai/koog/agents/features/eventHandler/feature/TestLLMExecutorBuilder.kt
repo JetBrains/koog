@@ -3,7 +3,7 @@ package ai.koog.agents.features.eventHandler.feature
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
@@ -14,12 +14,12 @@ import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class TestLLMExecutor(val clock: KoogClock) : PromptExecutor() {
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
+class TestLLMExecutorBuilder(val clock: KoogClock) : PromptExecutorBuilder() {
+    override suspend fun onExecute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         return handlePrompt(prompt)
     }
 
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -43,12 +43,10 @@ class TestLLMExecutor(val clock: KoogClock) : PromptExecutor() {
         return Message.Assistant("Default test response", metaInfo = ResponseMetaInfo.create(clock))
     }
 
-    override suspend fun moderate(
+    override suspend fun onModerate(
         prompt: Prompt,
         model: LLModel
     ): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed here")
     }
-
-    override fun close() {}
 }

@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.session
 
-import ai.koog.agents.core.CalculatorChatExecutor.testClock
+import ai.koog.agents.core.CalculatorChatExecutorBuilder.testClock
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult

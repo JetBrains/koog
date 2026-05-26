@@ -1,10 +1,13 @@
-package ai.koog.agents.testing.tools
+package ai.koog.agents.testing.tools.builder
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.testing.tools.MockExecutorBuilder
+import ai.koog.agents.testing.tools.ToolCondition
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
@@ -33,76 +36,52 @@ internal class ResponseMatcher<TResponse>(
     val partialMatches: Map<String, TResponse>? = null,
     val exactMatches: Map<String, TResponse>? = null,
     val conditional: Map<(String) -> Boolean, TResponse>? = null,
-    val defaultResponse: TResponse
+    val defaultResponse: TResponse,
 )
 
 /**
- * A mock implementation of [PromptExecutor] used for testing.
- *
- * This class simulates an LLM by returning predefined responses based on the input prompt.
- * It supports different types of matching:
- * 1. Exact matching - Returns a response when the input exactly matches pattern
- * 2. Partial matching - Returns a response when the input contains a pattern
- * 3. Conditional matching - Returns a response when the input satisfies condition
- * 4. Default response - Returns a default response when no other matches are found
- *
- * It also supports tool calls and can be configured to return specific tool results.
+ * Builder for a mock [PromptExecutor] used in tests. See [MockExecutorBuilder] (fluent DSL) for
+ * the canonical construction path.
  *
  * @property handleLastAssistantMessage If true, only the last `Message.Assistant`
  *           message in a prompt is processed; otherwise, the last message of any type is used.
- * @property responseMatcher Defines the rules for matching prompts to responses,
- *           including support for exact, partial, and conditional matches as well as default responses.
- * @property moderationResponseMatcher Defines the rules for evaluating moderation
- *           matches for prompt messages.
- * @property logger Logger for debugging
- * @property toolActions List of tool conditions and their corresponding actions
- * @property clock: A clock that is used for mock message timestamps
- * @property tokenizer: Tokenizer that will be used to estimate token counts in mock messages
+ * @property responseMatcher Defines the rules for matching prompts to responses.
+ * @property moderationResponseMatcher Defines the rules for evaluating moderation matches.
+ * @property logger Logger for debugging.
+ * @property toolActions List of tool conditions and their corresponding actions.
+ * @property clock A clock used for mock message timestamps.
+ * @property tokenizer Tokenizer that estimates token counts in mock messages.
  */
-public class MockPromptExecutor internal constructor(
+public class MockPromptExecutorBuilder internal constructor(
     private val handleLastAssistantMessage: Boolean,
     private val responseMatcher: ResponseMatcher<Message.Assistant>,
     private val moderationResponseMatcher: ResponseMatcher<ModerationResult>,
     private val streamResponseMatcher: ResponseMatcher<Flow<StreamFrame>>,
-    private val logger: KLogger = KotlinLogging.logger(MockPromptExecutor::class.simpleName.toString()),
+    private val logger: KLogger = KotlinLogging.logger(MockPromptExecutorBuilder::class.simpleName.toString()),
     internal val toolActions: List<ToolCondition<*, *>> = emptyList(),
     private val clock: KoogClock = KoogClock.System,
-    private val tokenizer: Tokenizer? = null
-) : PromptExecutor() {
+    private val tokenizer: Tokenizer? = null,
+) : PromptExecutorBuilder() {
+
     public companion object {
         @JvmStatic
         @JavaAPI
         public fun builder(serializer: JSONSerializer): MockExecutorBuilder = MockExecutorBuilder(serializer)
     }
 
-    /**
-     * Executes a prompt with tools and returns a list of responses.
-     *
-     * @param prompt The prompt to execute
-     * @param model The LLM model to use (ignored in mock implementation)
-     * @param tools The list of tools available for the execution
-     * @return A list containing a single response
-     */
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
+    override suspend fun onExecute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+    ): Message.Assistant {
         logger.debug { "Executing prompt with tools: ${tools.map { it.name }}" }
-
         return handlePrompt(prompt)
     }
 
-    /**
-     * Executes a prompt and returns a flow of string responses.
-     *
-     * This implementation simply wraps the result of [execute] in a flow.
-     *
-     * @param prompt The prompt to execute
-     * @param model The LLM model to use (ignored in mock implementation)
-     * @param tools The list of tools available for the execution
-     * @return A flow containing a single string response
-     */
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
     ): Flow<StreamFrame> {
         val lastMessage = getLastMessage(prompt)
         val matchedStream = lastMessage?.let {
@@ -111,24 +90,11 @@ public class MockPromptExecutor internal constructor(
         }
 
         return matchedStream ?: flow {
-            execute(prompt = prompt, model = model).toStreamFrames().forEach { emit(it) }
+            handlePrompt(prompt).toStreamFrames().forEach { emit(it) }
         }
     }
 
-    /**
-     * Processes a given prompt to determine if it adheres to moderation rules and returns a moderation result.
-     *
-     * The method evaluates the last message in the prompt for exact and partial matches against predefined moderation rules.
-     * If no matches are found, it returns a default moderation response.
-     *
-     * @param prompt The prompt containing the message to be moderated.
-     * @param model The LLM model used for processing (ignored in this implementation).
-     * @return The result of the moderation, based on matches or default rules.
-     */
-    override suspend fun moderate(
-        prompt: Prompt,
-        model: LLModel
-    ): ModerationResult {
+    override suspend fun onModerate(prompt: Prompt, model: LLModel): ModerationResult {
         val lastMessage = getLastMessage(prompt) ?: return moderationResponseMatcher.defaultResponse
 
         return findExactResponse(lastMessage, moderationResponseMatcher.exactMatches)
@@ -227,7 +193,7 @@ public class MockPromptExecutor internal constructor(
             clock = clock,
             inputTokensCount = inputTokenCount,
             outputTokensCount = outputTokenCount,
-            totalTokensCount = inputTokenCount + outputTokenCount
+            totalTokensCount = inputTokenCount + outputTokenCount,
         )
         return response.copy(metaInfo = updatedMetaInfo)
     }
@@ -245,15 +211,9 @@ public class MockPromptExecutor internal constructor(
      */
     private fun <TResponse> findPartialResponse(
         message: Message,
-        partialMatches: Map<String, TResponse>?
-    ): TResponse? {
-        return partialMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
-            if (message.textContent.contains(pattern)) {
-                response
-            } else {
-                null
-            }
-        }
+        partialMatches: Map<String, TResponse>?,
+    ): TResponse? = partialMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
+        if (message.textContent.contains(pattern)) response else null
     }
 
     /**
@@ -265,16 +225,8 @@ public class MockPromptExecutor internal constructor(
      */
     private fun <TResponse> findExactResponse(
         message: Message,
-        exactMatches: Map<String, TResponse>?
-    ): TResponse? {
-        return exactMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
-            if (message.textContent == pattern) {
-                response
-            } else {
-                null
-            }
-        }
+        exactMatches: Map<String, TResponse>?,
+    ): TResponse? = exactMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
+        if (message.textContent == pattern) response else null
     }
-
-    override fun close() {}
 }

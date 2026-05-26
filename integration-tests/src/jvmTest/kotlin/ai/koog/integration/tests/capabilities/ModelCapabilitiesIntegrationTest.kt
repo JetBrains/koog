@@ -22,7 +22,8 @@ import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -69,7 +70,7 @@ class ModelCapabilitiesIntegrationTest {
     private lateinit var openAIClient: OpenAILLMClient
     private lateinit var anthropicClient: AnthropicLLMClient
     private lateinit var googleClient: GoogleLLMClient
-    private lateinit var executor: MultiLLMPromptExecutor
+    private lateinit var executor: PromptExecutor
     private lateinit var testResourcesDir: Path
 
     @BeforeAll

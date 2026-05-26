@@ -22,7 +22,7 @@ import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.bedrock.converse.BedrockConverseParams
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -118,7 +118,7 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
         )
     }
 
-    private val executor: MultiLLMPromptExecutor = MultiLLMPromptExecutor(client)
+    private val executor: PromptExecutor = MultiLLMPromptExecutor(client)
 
     private fun JsonObject.validateRequestWasCachedCorrectly() {
         this.shouldNotBeNull()

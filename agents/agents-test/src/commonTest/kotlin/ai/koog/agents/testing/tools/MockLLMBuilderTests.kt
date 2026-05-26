@@ -1,6 +1,8 @@
 package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.testing.tools.builder.MockPromptExecutorBuilder
+import ai.koog.prompt.annotations.InternalPromptAPI
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.message.MessagePart
@@ -18,6 +20,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @Suppress("USELESS_CAST")
+@OptIn(InternalPromptAPI::class)
 class MockLLMBuilderTests {
     private val serializer = KotlinxSerializer()
 
@@ -214,7 +217,7 @@ class MockLLMBuilderTests {
         assertTrue(response.parts.any { it is MessagePart.Tool.Call })
 
         val toolCall = response.parts.filterIsInstance<MessagePart.Tool.Call>().single()
-        val toolCondition = (mockExecutor as MockPromptExecutor).toolActions.firstOrNull {
+        val toolCondition = (mockExecutor.builder as MockPromptExecutorBuilder).toolActions.firstOrNull {
             it.tool.name == toolCall.tool
         }
 
@@ -242,7 +245,7 @@ class MockLLMBuilderTests {
         assertTrue(specificResponse.parts.any { it is MessagePart.Tool.Call })
 
         val specificToolCall = specificResponse.parts.filterIsInstance<MessagePart.Tool.Call>().single()
-        val specificToolCondition = (mockExecutor as MockPromptExecutor).toolActions.first {
+        val specificToolCondition = (mockExecutor.builder as MockPromptExecutorBuilder).toolActions.first {
             it.satisfies(specificToolCall)
         }
 
@@ -258,7 +261,7 @@ class MockLLMBuilderTests {
         assertTrue(otherResponse.parts.any { it is MessagePart.Tool.Call })
 
         val otherToolCall = otherResponse.parts.filterIsInstance<MessagePart.Tool.Call>().single()
-        val otherToolCondition = (mockExecutor as MockPromptExecutor).toolActions.first {
+        val otherToolCondition = (mockExecutor.builder as MockPromptExecutorBuilder).toolActions.first {
             it.satisfies(otherToolCall)
         }
 
@@ -287,7 +290,7 @@ class MockLLMBuilderTests {
         assertTrue(response.parts.any { it is MessagePart.Tool.Call })
 
         val toolCall = response.parts.filterIsInstance<MessagePart.Tool.Call>().single()
-        val toolCondition = (mockExecutor as MockPromptExecutor).toolActions.first {
+        val toolCondition = (mockExecutor.builder as MockPromptExecutorBuilder).toolActions.first {
             it.satisfies(toolCall)
         }
 
