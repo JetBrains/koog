@@ -5,7 +5,7 @@ nav:
       - Overview:
           - index.md
           - Key features: key-features.md
-          - Module stability: module-stability.md
+          - Module versioning: module-versioning.md
           - LLM providers: llm-providers.md
           - Glossary: glossary.md
       - Quickstart: quickstart.md
@@ -22,8 +22,8 @@ nav:
           - prompts/index.md
           - Creating prompts:
             - prompts/prompt-creation/index.md
-            - Multimodal content: prompts/prompt-creation/cache-control.md
-            - Cache control: prompts/prompt-creation/multimodal-content.md
+            - Multimodal content: prompts/prompt-creation/multimodal-content.md
+            - Cache control: prompts/prompt-creation/cache-control.md
           - Running prompts:
             - LLM clients: prompts/llm-clients.md
             - HTTP clients: prompts/http-clients.md
@@ -37,10 +37,10 @@ nav:
           - Parallel node execution: parallel-node-execution.md
           - Data transfer between nodes: data-transfer-between-nodes.md
       - Tools:
-          - Overview: tools-overview.md
-          - Built-in tools: built-in-tools.md
-          - Annotation-based tools: annotation-based-tools.md
-          - Class-based tools: class-based-tools.md
+          - tools/index.md
+          - Built-in tools: tools/built-in-tools.md
+          - Annotation-based tools: tools/annotation-based-tools.md
+          - Class-based tools: tools/class-based-tools.md
           - Custom tools schema: tools/tool-descriptor-schemer.md
       - Features:
           - features/index.md
@@ -61,10 +61,10 @@ nav:
       - History compression: history-compression.md
       - Model Context Protocol: model-context-protocol.md
       - A2A Protocol:
-          - Overview: a2a-protocol-overview.md
-          - A2A server implementation: a2a-server.md
-          - A2A client implementation: a2a-client.md
-          - A2A and Koog integration: a2a-koog-integration.md
+          - a2a/index.md
+          - A2A server implementation: a2a/a2a-server.md
+          - A2A client implementation: a2a/a2a-client.md
+          - A2A and Koog integration: a2a/a2a-koog-integration.md
       - Agent Client Protocol: agent-client-protocol.md
       - LLM parameters: llm-parameters.md
       - Model capabilities: model-capabilities.md
@@ -80,7 +80,7 @@ nav:
           - Custom nodes: custom-nodes.md
           - LLM sessions and manual history management: sessions.md
           - Subgraphs:
-              - Overview: subgraphs-overview.md
+              - subgraphs-overview.md
               - Custom subgraphs: custom-subgraphs.md
           - Embeddings: embeddings.md
           - RAG: retrieval-augmented-generation.md
@@ -88,7 +88,7 @@ nav:
       - Testing: testing.md
   - Why Koog: why-koog.md
   - Examples:
-      - Overview: examples.md
+      - examples.md
       - Attachments: examples/Attachments.md
       - Banking: examples/Banking.md
       - BedrockAgent: examples/BedrockAgent.md
@@ -142,13 +142,21 @@ plugins:
         'getting-started.md': 'quickstart.md'
         'simple-api-getting-started.md': 'quickstart.md'
         'getting-started/index.md': 'quickstart.md'
-        'advanced-tool-implementation.md': 'class-based-tools.md'
+        'advanced-tool-implementation.md': 'tools/class-based-tools.md'
         'key-concepts.md': 'glossary.md'
         'single-run-agents.md': 'agents/basic-agents.md'
         'basic-agents.md': 'agents/basic-agents.md'
         'functional-agents.md': 'agents/functional-agents.md'
         'complex-workflow-agents.md': 'agents/graph-based-agents.md'
         'planner-agents.md': 'agents/planner-agents/index.md'
+        'tools-overview.md': 'tools/index.md'
+        'built-in-tools.md': 'tools/built-in-tools.md'
+        'class-based-tools.md': 'tools/class-based-tools.md'
+        'annotation-based-tools.md': 'tools/annotation-based-tools.md'
+        'a2a-protocol-overview.md': 'a2a/index.md'
+        'a2a-server.md': 'a2a/a2a-server.md'
+        'a2a-client.md': 'a2a/a2a-client.md'
+        'a2a-koog-integration.md':  'a2a/a2a-koog-integration.md'
   - llmstxt:
       markdown_description: Koog is a Kotlin-based framework designed to build and run AI agents entirely in idiomatic Kotlin.
       full_output: llms-full.txt
@@ -157,7 +165,7 @@ plugins:
         Documentation:
           - index.md: This page provides a general overview of the Koog framework, its key features and setup.
           - key-features.md: This page provides a list of key features of the Koog framework.
-          - module-stability.md: This page explains the Koog module stability model — stable modules (1.0.0) have guaranteed APIs, while beta modules (1.0.0-beta) are experimental and may change.
+          - module-versioning.md: This page explains the Koog module stability model — stable modules (1.0.0) have guaranteed APIs, while beta modules (1.0.0-beta) are experimental and may change.
           - llm-providers.md: This page provides a list of LLM providers supported by Koog.
           - glossary.md: This page provides explanations of key terms and concepts related to Koog and agentic development.
         Quickstart:
@@ -178,10 +186,11 @@ plugins:
           - prompts/http-clients.md: This page explains how Koog LLM clients talk HTTP via the pluggable KoogHttpClient abstraction, how the default backend is auto-resolved on JVM via ServiceLoader, and how to switch between Ktor, Java, and OkHttp backends or bring your own.
           - prompts/prompt-executors.md: This page provides details about prompt executors, which wrap LLM clients and are used to run prompts and receive responses from LLMs. They allow working with multiple LLM providers in a unified way.
         Tools:
-          - tools-overview.md: This page provides a broad overview of the implementation of tools in Koog.
-          - built-in-tools.md: This page provides details about built-in tools that handle common scenarios of agent-user interaction.
-          - annotation-based-tools.md: This page shows you how you can use annotations to expose functions as tools for large language models (LLMs). This approach is useful when you need to expose existing functionality to LLMs without implementing tool descriptions manually.
-          - class-based-tools.md: This page explains the implementation of class-based tools, which provides enhanced flexibility and customized behavior. With this approach, you have full control over a tool, including its parameters, metadata, execution logic, and how it is registered and invoked.
+          - tools/index.md: This page provides a broad overview of the implementation of tools in Koog.
+          - tools/built-in-tools.md: This page provides details about built-in tools that handle common scenarios of agent-user interaction.
+          - tools/annotation-based-tools.md: This page shows you how you can use annotations to expose functions as tools for large language models (LLMs). This approach is useful when you need to expose existing functionality to LLMs without implementing tool descriptions manually.
+          - tools/class-based-tools.md: This page explains the implementation of class-based tools, which provides enhanced flexibility and customized behavior. With this approach, you have full control over a tool, including its parameters, metadata, execution logic, and how it is registered and invoked.
+#          - tools/tool-description-schemer.md: TODO
         Events:
           - agent-events.md: This page describes agent events, which are actions or interactions that occur as part of an agent workflow.
         Strategies:
@@ -206,10 +215,10 @@ plugins:
         Model Context Protocol:
           - model-context-protocol.md: This page provides details about Koog integration with MCP servers, which allows you to incorporate MCP tools into your Koog agents.
         A2A Protocol:
-          - a2a-protocol-overview.md: This page provides an overview of the A2A (Agent-to-Agent) protocol implementation in the Koog agentic framework.
-          - a2a-server.md: This page provides details about the A2A server implementation in the Koog agentic framework. The A2A server is responsible for handling requests from A2A clients according to the A2A protocol specification.
-          - a2a-client.md: This page provides details about the A2A client implementation in the Koog agentic framework. The A2A client is responsible for sending requests to A2A servers according to the A2A protocol specification.
-          - a2a-koog-integration.md: This page provides details about the integration of A2A with Koog agents. It includes information about how to define your agent as A2A server and connect it to the Koog agent system.
+          - a2a/index.md: This page provides an overview of the A2A (Agent-to-Agent) protocol implementation in the Koog agentic framework.
+          - a2a/a2a-server.md: This page provides details about the A2A server implementation in the Koog agentic framework. The A2A server is responsible for handling requests from A2A clients according to the A2A protocol specification.
+          - a2a/a2a-client.md: This page provides details about the A2A client implementation in the Koog agentic framework. The A2A client is responsible for sending requests to A2A servers according to the A2A protocol specification.
+          - a2a/a2a-koog-integration.md: This page provides details about the integration of A2A with Koog agents. It includes information about how to define your agent as A2A server and connect it to the Koog agent system.
         Agent Client Protocol:
           - agent-client-protocol.md: This page provides details about the Agent Client Protocol (ACP) integration in Koog, which enables AI agents to communicate with client applications through a standardized, bidirectional interface.
         LLM Parameters:

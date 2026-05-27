@@ -4,9 +4,7 @@ status: beta
 
 # Spring AI Integration
 
-!!! warning "Beta"
-    This feature is part of a beta module (`1.0.0-beta`). The API may change in future releases.
-    See [module stability](module-stability.md) for details.
+--8<-- "versioning-snippets.md:beta"
 
 Koog provides Spring AI integration starters that bridge Spring AI's abstractions with the Koog agent framework.
 If you already use Spring AI for model access, memory, or vector storage, these starters let you plug Koog on top
@@ -639,7 +637,7 @@ Without a selector, the auto-configuration activates only when a single candidat
 
 - Learn about [basic agents](agents/basic-agents.md) to build minimal AI workflows
 - Explore [graph-based agents](agents/graph-based-agents.md) for advanced use cases
-- See the [tools overview](tools-overview.md) to extend your agents' capabilities
+- See the [tools overview](tools/index.md) to extend your agents' capabilities
 - Read [retrieval-augmented generation](retrieval-augmented-generation.md) for RAG concepts
 - Check [examples](examples.md) for real-world implementations
 - Read the [Spring Boot Integration](spring-boot.md) guide for the direct Koog starter approach

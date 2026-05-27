@@ -12,7 +12,7 @@ Koog agents are built around the following core concepts:
 - A [strategy](../nodes-and-components.md) defines the agent's workflow.
   It can be in the form of a directed graph, a function, or a planner.
   See [Agent types](#agent-types).
-- An agent can use [tools](../tools-overview.md) to interact with external data sources and services.
+- An agent can use [tools](../tools/index.md) to interact with external data sources and services.
 - You can extend and enhance the functionality of AI agents using [features](../features/index.md).
 
 !!! tip

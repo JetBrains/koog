@@ -4,9 +4,7 @@ status: beta
 
 # A2A Server
 
-!!! warning "Beta"
-    This feature is part of a beta module (`1.0.0-beta`). The API may change in future releases.
-    See [module stability](module-stability.md) for details.
+--8<-- "versioning-snippets.md:beta"
 
 The A2A server enables you to expose AI agents through the standardized A2A (Agent-to-Agent) protocol. It provides a complete implementation of the [A2A protocol specification](https://a2a-protocol.org/latest/specification/), handling client requests, executing agent logic, managing complex task lifecycles, and supporting real-time streaming responses.
 

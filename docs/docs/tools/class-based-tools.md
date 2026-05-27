@@ -93,7 +93,7 @@ Here is an example of a custom tool implementation using the `Tool` class that r
     ```
     <!--- KNIT example-class-based-tools-01.kt -->
 
-After implementing your tool, you need to add it to a tool registry and then use it with an agent. For details, see [Tool registry](tools-overview.md#tool-registry).
+After implementing your tool, you need to add it to a tool registry and then use it with an agent. For details, see [Tool registry](../tools/index.md#tool-registry).
 
 For more details, see [API reference](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool/index.html).
 
@@ -456,4 +456,4 @@ Here is an example showing custom formatted output in both Kotlin and Java:
     <!--- KNIT example-class-based-tools-java-03.java -->
 
 After implementing your tool in Kotlin or Java, you need to add it to a tool registry and then use it with an agent.
-For details, see [Tool registry](tools-overview.md#tool-registry).
+For details, see [Tool registry](../tools/index#tool-registry).

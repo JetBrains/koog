@@ -4,9 +4,7 @@ status: beta
 
 # A2A protocol
 
-!!! warning "Beta"
-    This feature is part of a beta module (`1.0.0-beta`). The API may change in future releases.
-    See [module stability](module-stability.md) for details.
+--8<-- "versioning-snippets.md:beta"
 
 This page provides an overview of the A2A (Agent-to-Agent) protocol implementation in the Koog agentic framework.
 

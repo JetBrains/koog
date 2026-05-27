@@ -19,7 +19,7 @@ While Java developers can leverage the full power of Koog on the JVM using idiom
 
     Learn the essential terms
 
--   :material-shield-check-outline:{ .lg .middle } [**Module stability**](module-stability.md)
+-   :material-shield-check-outline:{ .lg .middle } [**Module versioning**](module-versioning.md)
 
     ---
 
@@ -77,7 +77,7 @@ Learn about the core components of Koog agents in detail:
 
     Design the agent's intended workflow as a directed graph
 
--   :material-tools:{ .lg .middle } [**Tools**](tools-overview.md)
+-   :material-tools:{ .lg .middle } [**Tools**](tools/index.md)
 
     ---
 
@@ -169,7 +169,7 @@ Learn about the core components of Koog agents in detail:
 
     Trace, log, and measure your agent with popular observability tools
 
--   :material-lan:{ .lg .middle } [**A2A Protocol**](a2a-protocol-overview.md) <span class="beta-badge" title="Beta — API may change">beta</span>
+-   :material-lan:{ .lg .middle } [**A2A Protocol**](a2a/index.md) <span class="beta-badge" title="Beta — API may change">beta</span>
 
     ---
 

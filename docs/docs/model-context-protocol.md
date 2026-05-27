@@ -4,9 +4,7 @@ status: beta
 
 # Model Context Protocol
 
-!!! warning "Beta"
-    This feature is part of a beta module (`1.0.0-beta`). The API may change in future releases.
-    See [module stability](module-stability.md) for details.
+--8<-- "versioning-snippets.md:beta"
 
 Model Context Protocol (MCP) is a standardized protocol that lets AI agents interact with external tools and services through a consistent interface.
 

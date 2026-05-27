@@ -4,9 +4,7 @@ status: beta
 
 # Agent Client Protocol
 
-!!! warning "Beta"
-    This feature is part of a beta module (`1.0.0-beta`). The API may change in future releases.
-    See [module stability](module-stability.md) for details.
+--8<-- "versioning-snippets.md:beta"
 
 Agent Client Protocol (ACP) is an open-source, standardized protocol
 that enables client applications to communicate with AI agents through a consistent, bidirectional interface.
