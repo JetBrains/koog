@@ -10,8 +10,8 @@ import ai.koog.rag.base.storage.search.SearchResult
  * A [PromptAugmenter] that injects retrieved context into the first [Message.System] of the prompt.
  *
  * The retrieved context is rendered through [template] and added as an additional
- * [MessagePart.Text] **appended** to the existing parts of the first system message, separated
- * by [PromptAugmenter.SECTION_SEPARATOR]. The original system message is replaced with a copy that:
+ * [MessagePart.Text] **appended** to the existing parts of the first system message.
+ * The original system message is replaced with a copy that:
  * - preserves its [Message.metaInfo] and [Message.id],
  * - preserves all existing parts (text, attachments, etc.),
  * - gains two extra [MessagePart.Text] entries at the end: a separator and the formatted context.
@@ -83,8 +83,8 @@ public class SystemPromptAugmenter(
         if (originalPrompt.messages.none { it is Message.System }) return originalPrompt
 
         val relevantContextText = PromptAugmenter.formatContext(relevantContext, contextPrefix)
-        val contextMessage = PromptAugmenter.formatTemplate(template, relevantContextText)
-        if (contextMessage.isBlank()) return originalPrompt
+        val formattedContext = PromptAugmenter.formatTemplate(template, relevantContextText)
+        if (formattedContext.isBlank()) return originalPrompt
 
         return originalPrompt.withMessages { messages ->
             val systemIndex = messages.indexOfFirst { it is Message.System }
@@ -92,9 +92,7 @@ public class SystemPromptAugmenter(
 
             val original = messages[systemIndex] as Message.System
             val updated = original.copy(
-                parts = original.parts +
-                    MessagePart.Text(PromptAugmenter.SECTION_SEPARATOR) +
-                    MessagePart.Text(contextMessage)
+                parts = original.parts + MessagePart.Text(formattedContext)
             )
             messages.toMutableList().also { it[systemIndex] = updated }
         }
