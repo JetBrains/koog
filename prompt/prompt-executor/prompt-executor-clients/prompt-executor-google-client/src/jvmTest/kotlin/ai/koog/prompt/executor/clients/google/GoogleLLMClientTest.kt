@@ -421,7 +421,7 @@ class GoogleLLMClientTest {
                 ),
                 id = "id"
             ),
-            GoogleModels.Gemini3_Pro_Preview,
+            GoogleModels.Gemini3_1Pro_Preview,
             emptyList()
         )
 
@@ -455,7 +455,7 @@ class GoogleLLMClientTest {
                 ),
                 id = "id"
             ),
-            GoogleModels.Gemini3_Pro_Preview,
+            GoogleModels.Gemini3_1Pro_Preview,
             emptyList()
         )
 
@@ -489,7 +489,7 @@ class GoogleLLMClientTest {
                 ),
                 id = "id"
             ),
-            GoogleModels.Gemini3_Pro_Preview,
+            GoogleModels.Gemini3_1Pro_Preview,
             emptyList()
         )
 
@@ -655,7 +655,7 @@ class GoogleLLMClientTest {
                 ),
                 id = "id"
             ),
-            GoogleModels.Gemini3_Pro_Preview,
+            GoogleModels.Gemini3_1Pro_Preview,
             emptyList()
         )
 
