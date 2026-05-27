@@ -13,7 +13,7 @@ on:
     branches: [ "main", "develop" ]
 
 env:
-  OLLAMA_VERSION: "0.22.0"
+  OLLAMA_VERSION: "0.24.0"
 
 jobs:
   integration-tests:
