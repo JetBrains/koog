@@ -63,16 +63,16 @@ To help you get started with AI agents, here is a quick example:
 ```kotlin
 fun main() = runBlocking {
     // Before you run the example, assign a corresponding API key as an environment variable.
-   val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
+    val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
 
-   val agent = AIAgent(
-      promptExecutor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
-      systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
-      llmModel = OpenAIModels.Chat.GPT4o
-   )
+    val agent = AIAgent(
+        promptExecutor = MultiLLMPromptExecutor(OpenAILLMClient(apiKey)), // or Anthropic, Google, OpenRouter, etc.
+        systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
+        llmModel = OpenAIModels.Chat.GPT4o
+    )
 
-   val result = agent.run("Hello! How can you help me?")
-   println(result)
+    val result = agent.run("Hello! How can you help me?")
+    println(result)
 }
 ```
 

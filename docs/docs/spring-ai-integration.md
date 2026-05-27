@@ -1,4 +1,12 @@
+---
+status: beta
+---
+
 # Spring AI Integration
+
+!!! warning "Beta"
+    This feature is part of a beta module (`1.0.0-beta`). The API may change in future releases.
+    See [module stability](module-stability.md) for details.
 
 Koog provides Spring AI integration starters that bridge Spring AI's abstractions with the Koog agent framework.
 If you already use Spring AI for model access, memory, or vector storage, these starters let you plug Koog on top

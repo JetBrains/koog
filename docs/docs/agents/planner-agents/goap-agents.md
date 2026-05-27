@@ -1,4 +1,12 @@
+---
+status: beta
+---
+
 # GOAP agents
+
+!!! warning "Beta"
+    This feature is part of a beta module (`1.0.0-beta`). The API may change in future releases.
+    See [module stability](../../module-stability.md) for details.
 
 GOAP is an algorithmic planning approach that uses [A* search] find optimal action sequences
 that satisfy the goal conditions while minimizing the total cost.

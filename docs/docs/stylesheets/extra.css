@@ -1,3 +1,20 @@
+/* Beta badge for experimental features */
+.beta-badge {
+    display: inline-block;
+    padding: 0.1em 0.4em;
+    margin-left: 0.4em;
+    font-size: 0.65em;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff;
+    background-color: #f59e0b;
+    border-radius: 0.25em;
+    vertical-align: middle;
+    cursor: default;
+}
+
 .md_header__social {
     display: none;
 

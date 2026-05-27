@@ -5,6 +5,7 @@ nav:
       - Overview:
           - index.md
           - Key features: key-features.md
+          - Module stability: module-stability.md
           - LLM providers: llm-providers.md
           - Glossary: glossary.md
       - Quickstart: quickstart.md
@@ -156,6 +157,7 @@ plugins:
         Documentation:
           - index.md: This page provides a general overview of the Koog framework, its key features and setup.
           - key-features.md: This page provides a list of key features of the Koog framework.
+          - module-stability.md: This page explains the Koog module stability model — stable modules (1.0.0) have guaranteed APIs, while beta modules (1.0.0-beta) are experimental and may change.
           - llm-providers.md: This page provides a list of LLM providers supported by Koog.
           - glossary.md: This page provides explanations of key terms and concepts related to Koog and agentic development.
         Quickstart:
@@ -258,6 +260,7 @@ theme:
     - navigation.instant
     - navigation.indexes
     - navigation.tracking
+    - navigation.status
   color_mode: light
   nav_style: light
   user_color_mode_toggle: true
@@ -286,6 +289,8 @@ edit_uri: edit/develop/docs/docs/
 copyright: Copyright © 2000-2025 JetBrains s.r.o.
 
 extra:
+  status:
+    beta: Beta — experimental API, may change in future releases
   social:
     - icon: fontawesome/brands/slack
       link: https://docs.koog.ai/koog-slack-channel/

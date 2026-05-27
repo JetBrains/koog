@@ -1,4 +1,12 @@
+---
+status: beta
+---
+
 # Spring Boot Integration
+
+!!! warning "Beta"
+    This feature is part of a beta module (`1.0.0-beta`). The API may change in future releases.
+    See [module stability](module-stability.md) for details.
 
 Koog provides seamless Spring Boot integration through its auto-configuration starter, making it easy to incorporate AI
 agents into your Spring Boot applications with minimal setup.

@@ -1,4 +1,12 @@
+---
+status: beta
+---
+
 # A2A Client
+
+!!! warning "Beta"
+    This feature is part of a beta module (`1.0.0-beta`). The API may change in future releases.
+    See [module stability](module-stability.md) for details.
 
 The A2A client enables you to communicate with A2A-compliant agents over the network.
 It provides a complete implementation of

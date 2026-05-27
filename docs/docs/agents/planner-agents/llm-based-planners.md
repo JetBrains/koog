@@ -1,4 +1,12 @@
+---
+status: beta
+---
+
 # LLM-based planners
+
+!!! warning "Beta"
+    This feature is part of a beta module (`1.0.0-beta`). The API may change in future releases.
+    See [module stability](../../module-stability.md) for details.
 
 LLM-based planners use LLMs to generate and evaluate plans.
 They operate on a string-based state and execute steps through LLM requests.
