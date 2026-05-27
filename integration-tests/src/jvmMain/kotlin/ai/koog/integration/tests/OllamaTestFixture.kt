@@ -40,7 +40,8 @@ class OllamaTestFixture {
     lateinit var executor: MultiLLMPromptExecutor
         private set
 
-    val model get() = prepareModel(OllamaModels.Alibaba.QWEN_3_5_9B)
+    val model get() = prepareModel(OllamaModels.Meta.LLAMA_3_2)
+    val toolChoiceModel get() = prepareModel(OllamaModels.Alibaba.QWEN_3_5_9B)
     val embeddingsModel get() = prepareModel(OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
     val visionModel get() = prepareModel(OllamaModels.Granite.GRANITE_3_2_VISION)
     val moderationModel get() = prepareModel(OllamaModels.Meta.LLAMA_GUARD_3)
