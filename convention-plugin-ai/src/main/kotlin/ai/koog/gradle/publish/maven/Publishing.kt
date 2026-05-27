@@ -11,7 +11,6 @@ object Publishing {
     fun Project.publishToMaven() {
         publishTo({
             it.graziePublic(project)
-            it.artifactsMaven(project)
         }) {
             // Use configureEach so that publications added lazily by AGP (e.g. the Android
             // release variant) also get POM metadata. An eager forEach would miss them because
