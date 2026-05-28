@@ -1,0 +1,100 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:agents-utils>
+open annotation class ai.koog.agents.annotations/JavaAPI : kotlin/Annotation { // ai.koog.agents.annotations/JavaAPI|null[0]
+    constructor <init>() // ai.koog.agents.annotations/JavaAPI.<init>|<init>(){}[0]
+}
+
+open annotation class ai.koog.agents.annotations/KtLintIgnoreNaming : kotlin/Annotation { // ai.koog.agents.annotations/KtLintIgnoreNaming|null[0]
+    constructor <init>() // ai.koog.agents.annotations/KtLintIgnoreNaming.<init>|<init>(){}[0]
+}
+
+final class <#A: kotlin/Any?> ai.koog.agents.lock/KeyedMutex { // ai.koog.agents.lock/KeyedMutex|null[0]
+    constructor <init>() // ai.koog.agents.lock/KeyedMutex.<init>|<init>(){}[0]
+
+    final suspend fun holdsLock(#A, kotlin/Any): kotlin/Boolean // ai.koog.agents.lock/KeyedMutex.holdsLock|holdsLock(1:0;kotlin.Any){}[0]
+    final suspend fun isLocked(#A): kotlin/Boolean // ai.koog.agents.lock/KeyedMutex.isLocked|isLocked(1:0){}[0]
+    final suspend fun lock(#A, kotlin/Any? = ...) // ai.koog.agents.lock/KeyedMutex.lock|lock(1:0;kotlin.Any?){}[0]
+    final suspend fun tryLock(#A, kotlin/Any? = ...): kotlin/Boolean // ai.koog.agents.lock/KeyedMutex.tryLock|tryLock(1:0;kotlin.Any?){}[0]
+    final suspend fun unlock(#A, kotlin/Any? = ...) // ai.koog.agents.lock/KeyedMutex.unlock|unlock(1:0;kotlin.Any?){}[0]
+}
+
+final class ai.koog.agents.lock/RWLock { // ai.koog.agents.lock/RWLock|null[0]
+    constructor <init>() // ai.koog.agents.lock/RWLock.<init>|<init>(){}[0]
+
+    final suspend fun <#A1: kotlin/Any?> withReadLock(kotlin.coroutines/SuspendFunction0<#A1>): #A1 // ai.koog.agents.lock/RWLock.withReadLock|withReadLock(kotlin.coroutines.SuspendFunction0<0:0>){0§<kotlin.Any?>}[0]
+    final suspend fun <#A1: kotlin/Any?> withWriteLock(kotlin.coroutines/SuspendFunction0<#A1>): #A1 // ai.koog.agents.lock/RWLock.withWriteLock|withWriteLock(kotlin.coroutines.SuspendFunction0<0:0>){0§<kotlin.Any?>}[0]
+}
+
+final class ai.koog.agents.utils/HiddenString { // ai.koog.agents.utils/HiddenString|null[0]
+    constructor <init>(kotlin/String, kotlin/String = ...) // ai.koog.agents.utils/HiddenString.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+    final val value // ai.koog.agents.utils/HiddenString.value|{}value[0]
+        final fun <get-value>(): kotlin/String // ai.koog.agents.utils/HiddenString.value.<get-value>|<get-value>(){}[0]
+
+    final fun component1(): kotlin/String // ai.koog.agents.utils/HiddenString.component1|component1(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ...): ai.koog.agents.utils/HiddenString // ai.koog.agents.utils/HiddenString.copy|copy(kotlin.String;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.utils/HiddenString.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.utils/HiddenString.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.utils/HiddenString.toString|toString(){}[0]
+
+    final object Companion { // ai.koog.agents.utils/HiddenString.Companion|null[0]
+        final const val HIDDEN_STRING_PLACEHOLDER // ai.koog.agents.utils/HiddenString.Companion.HIDDEN_STRING_PLACEHOLDER|{}HIDDEN_STRING_PLACEHOLDER[0]
+            final fun <get-HIDDEN_STRING_PLACEHOLDER>(): kotlin/String // ai.koog.agents.utils/HiddenString.Companion.HIDDEN_STRING_PLACEHOLDER.<get-HIDDEN_STRING_PLACEHOLDER>|<get-HIDDEN_STRING_PLACEHOLDER>(){}[0]
+    }
+}
+
+final class ai.koog.agents.utils/ModelInfo { // ai.koog.agents.utils/ModelInfo|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/Long? = ..., kotlin/Long? = ...) // ai.koog.agents.utils/ModelInfo.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?;kotlin.Long?;kotlin.Long?){}[0]
+
+    final val contextLength // ai.koog.agents.utils/ModelInfo.contextLength|{}contextLength[0]
+        final fun <get-contextLength>(): kotlin/Long? // ai.koog.agents.utils/ModelInfo.contextLength.<get-contextLength>|<get-contextLength>(){}[0]
+    final val displayName // ai.koog.agents.utils/ModelInfo.displayName|{}displayName[0]
+        final fun <get-displayName>(): kotlin/String? // ai.koog.agents.utils/ModelInfo.displayName.<get-displayName>|<get-displayName>(){}[0]
+    final val maxOutputTokens // ai.koog.agents.utils/ModelInfo.maxOutputTokens|{}maxOutputTokens[0]
+        final fun <get-maxOutputTokens>(): kotlin/Long? // ai.koog.agents.utils/ModelInfo.maxOutputTokens.<get-maxOutputTokens>|<get-maxOutputTokens>(){}[0]
+    final val model // ai.koog.agents.utils/ModelInfo.model|{}model[0]
+        final fun <get-model>(): kotlin/String // ai.koog.agents.utils/ModelInfo.model.<get-model>|<get-model>(){}[0]
+    final val modelIdentifierName // ai.koog.agents.utils/ModelInfo.modelIdentifierName|{}modelIdentifierName[0]
+        final fun <get-modelIdentifierName>(): kotlin/String // ai.koog.agents.utils/ModelInfo.modelIdentifierName.<get-modelIdentifierName>|<get-modelIdentifierName>(){}[0]
+    final val provider // ai.koog.agents.utils/ModelInfo.provider|{}provider[0]
+        final fun <get-provider>(): kotlin/String // ai.koog.agents.utils/ModelInfo.provider.<get-provider>|<get-provider>(){}[0]
+
+    final fun component1(): kotlin/String // ai.koog.agents.utils/ModelInfo.component1|component1(){}[0]
+    final fun component2(): kotlin/String // ai.koog.agents.utils/ModelInfo.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // ai.koog.agents.utils/ModelInfo.component3|component3(){}[0]
+    final fun component4(): kotlin/Long? // ai.koog.agents.utils/ModelInfo.component4|component4(){}[0]
+    final fun component5(): kotlin/Long? // ai.koog.agents.utils/ModelInfo.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String? = ..., kotlin/Long? = ..., kotlin/Long? = ...): ai.koog.agents.utils/ModelInfo // ai.koog.agents.utils/ModelInfo.copy|copy(kotlin.String;kotlin.String;kotlin.String?;kotlin.Long?;kotlin.Long?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.utils/ModelInfo.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.utils/ModelInfo.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.utils/ModelInfo.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.agents.utils/ModelInfo> { // ai.koog.agents.utils/ModelInfo.$serializer|null[0]
+        final val descriptor // ai.koog.agents.utils/ModelInfo.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.agents.utils/ModelInfo.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.agents.utils/ModelInfo.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.agents.utils/ModelInfo // ai.koog.agents.utils/ModelInfo.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.agents.utils/ModelInfo) // ai.koog.agents.utils/ModelInfo.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.agents.utils.ModelInfo){}[0]
+    }
+
+    final object Companion { // ai.koog.agents.utils/ModelInfo.Companion|null[0]
+        final val UNDEFINED // ai.koog.agents.utils/ModelInfo.Companion.UNDEFINED|{}UNDEFINED[0]
+            final fun <get-UNDEFINED>(): ai.koog.agents.utils/ModelInfo // ai.koog.agents.utils/ModelInfo.Companion.UNDEFINED.<get-UNDEFINED>|<get-UNDEFINED>(){}[0]
+
+        final fun fromString(kotlin/String): ai.koog.agents.utils/ModelInfo // ai.koog.agents.utils/ModelInfo.Companion.fromString|fromString(kotlin.String){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.agents.utils/ModelInfo> // ai.koog.agents.utils/ModelInfo.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final val ai.koog.agents.exception/rootCause // ai.koog.agents.exception/rootCause|@kotlin.coroutines.cancellation.CancellationException{}rootCause[0]
+    final fun (kotlin.coroutines.cancellation/CancellationException).<get-rootCause>(): kotlin/Throwable? // ai.koog.agents.exception/rootCause.<get-rootCause>|<get-rootCause>@kotlin.coroutines.cancellation.CancellationException(){}[0]
+
+final suspend fun (kotlinx.coroutines.sync/Mutex).ai.koog.agents.lock/withLockCheck(kotlin/Function0<kotlin/Boolean>, kotlin/Function0<kotlin/String>, kotlin.coroutines/SuspendFunction0<kotlin/Unit>) // ai.koog.agents.lock/withLockCheck|withLockCheck@kotlinx.coroutines.sync.Mutex(kotlin.Function0<kotlin.Boolean>;kotlin.Function0<kotlin.String>;kotlin.coroutines.SuspendFunction0<kotlin.Unit>){}[0]
+final suspend inline fun <#A: kotlin/Any?, #B: kotlin/Any?> (ai.koog.agents.lock/KeyedMutex<#A>).ai.koog.agents.lock/withLock(#A, kotlin/Any? = ..., kotlin.coroutines/SuspendFunction0<#B>): #B // ai.koog.agents.lock/withLock|withLock@ai.koog.agents.lock.KeyedMutex<0:0>(0:0;kotlin.Any?;kotlin.coroutines.SuspendFunction0<0:1>){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]

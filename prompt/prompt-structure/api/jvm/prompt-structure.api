@@ -1,0 +1,286 @@
+public final class ai/koog/prompt/structure/LLMStructuredParsingError : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;Lkotlinx/serialization/SerializationException;)V
+}
+
+public abstract class ai/koog/prompt/structure/Structure : ai/koog/prompt/structure/StructureDefinition {
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Ljava/util/List;)V
+	public abstract fun examples (Lai/koog/prompt/text/TextContentBuilderBase;)Lai/koog/prompt/text/TextContentBuilderBase;
+	public final fun getExamples ()Ljava/util/List;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getSchema ()Lai/koog/prompt/params/LLMParams$Schema;
+	public abstract fun parse (Ljava/lang/String;)Ljava/lang/Object;
+	public abstract fun pretty (Ljava/lang/Object;)Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/prompt/structure/StructureDefinition {
+	public abstract fun definition (Lai/koog/prompt/text/TextContentBuilderBase;)Lai/koog/prompt/text/TextContentBuilderBase;
+}
+
+public final class ai/koog/prompt/structure/StructuredOutputPrompts {
+	public static final field INSTANCE Lai/koog/prompt/structure/StructuredOutputPrompts;
+	public final fun examplesPrompt (Lai/koog/prompt/text/TextContentBuilderBase;Lai/koog/prompt/structure/Structure;)Lai/koog/prompt/text/TextContentBuilderBase;
+	public final fun outputInstructionPrompt (Lai/koog/prompt/text/TextContentBuilderBase;Lai/koog/prompt/structure/Structure;)Lai/koog/prompt/text/TextContentBuilderBase;
+}
+
+public abstract interface class ai/koog/prompt/structure/StructuredRequest {
+	public abstract fun getStructure ()Lai/koog/prompt/structure/Structure;
+}
+
+public final class ai/koog/prompt/structure/StructuredRequest$Manual : ai/koog/prompt/structure/StructuredRequest {
+	public fun <init> (Lai/koog/prompt/structure/Structure;)V
+	public final fun component1 ()Lai/koog/prompt/structure/Structure;
+	public final fun copy (Lai/koog/prompt/structure/Structure;)Lai/koog/prompt/structure/StructuredRequest$Manual;
+	public static synthetic fun copy$default (Lai/koog/prompt/structure/StructuredRequest$Manual;Lai/koog/prompt/structure/Structure;ILjava/lang/Object;)Lai/koog/prompt/structure/StructuredRequest$Manual;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getStructure ()Lai/koog/prompt/structure/Structure;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/structure/StructuredRequest$Native : ai/koog/prompt/structure/StructuredRequest {
+	public fun <init> (Lai/koog/prompt/structure/Structure;)V
+	public final fun component1 ()Lai/koog/prompt/structure/Structure;
+	public final fun copy (Lai/koog/prompt/structure/Structure;)Lai/koog/prompt/structure/StructuredRequest$Native;
+	public static synthetic fun copy$default (Lai/koog/prompt/structure/StructuredRequest$Native;Lai/koog/prompt/structure/Structure;ILjava/lang/Object;)Lai/koog/prompt/structure/StructuredRequest$Native;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getStructure ()Lai/koog/prompt/structure/Structure;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/structure/StructuredRequestConfig {
+	public fun <init> ()V
+	public fun <init> (Lai/koog/prompt/structure/StructuredRequest;Ljava/util/Map;)V
+	public synthetic fun <init> (Lai/koog/prompt/structure/StructuredRequest;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lai/koog/prompt/structure/StructuredRequest;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Lai/koog/prompt/structure/StructuredRequest;Ljava/util/Map;)Lai/koog/prompt/structure/StructuredRequestConfig;
+	public static synthetic fun copy$default (Lai/koog/prompt/structure/StructuredRequestConfig;Lai/koog/prompt/structure/StructuredRequest;Ljava/util/Map;ILjava/lang/Object;)Lai/koog/prompt/structure/StructuredRequestConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getByProvider ()Ljava/util/Map;
+	public final fun getDefault ()Lai/koog/prompt/structure/StructuredRequest;
+	public fun hashCode ()I
+	public final fun structure (Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/Structure;
+	public fun toString ()Ljava/lang/String;
+	public final fun updatePrompt (Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/Prompt;)Lai/koog/prompt/Prompt;
+}
+
+public final class ai/koog/prompt/structure/StructuredResponse {
+	public fun <init> (Ljava/lang/Object;Lai/koog/prompt/structure/Structure;Lai/koog/prompt/message/Message$Assistant;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun component2 ()Lai/koog/prompt/structure/Structure;
+	public final fun component3 ()Lai/koog/prompt/message/Message$Assistant;
+	public final fun copy (Ljava/lang/Object;Lai/koog/prompt/structure/Structure;Lai/koog/prompt/message/Message$Assistant;)Lai/koog/prompt/structure/StructuredResponse;
+	public static synthetic fun copy$default (Lai/koog/prompt/structure/StructuredResponse;Ljava/lang/Object;Lai/koog/prompt/structure/Structure;Lai/koog/prompt/message/Message$Assistant;ILjava/lang/Object;)Lai/koog/prompt/structure/StructuredResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getData ()Ljava/lang/Object;
+	public final fun getMessage ()Lai/koog/prompt/message/Message$Assistant;
+	public final fun getStructure ()Lai/koog/prompt/structure/Structure;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/structure/TextContentBuilderBaseExtensionsKt {
+	public static final fun structure (Lai/koog/prompt/text/TextContentBuilderBase;Lai/koog/prompt/structure/Structure;Ljava/lang/Object;)V
+}
+
+public abstract interface annotation class ai/koog/prompt/structure/annotations/InternalStructuredOutputApi : java/lang/annotation/Annotation {
+}
+
+public final class ai/koog/prompt/structure/json/JsonStructure : ai/koog/prompt/structure/Structure {
+	public static final field Companion Lai/koog/prompt/structure/json/JsonStructure$Companion;
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema$JSON;Ljava/util/List;Lkotlinx/serialization/KSerializer;Lkotlinx/serialization/json/Json;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema$JSON;Ljava/util/List;Lkotlinx/serialization/KSerializer;Lkotlinx/serialization/json/Json;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun definition (Lai/koog/prompt/text/TextContentBuilderBase;)Lai/koog/prompt/text/TextContentBuilderBase;
+	public fun examples (Lai/koog/prompt/text/TextContentBuilderBase;)Lai/koog/prompt/text/TextContentBuilderBase;
+	public final fun getJson ()Lkotlinx/serialization/json/Json;
+	public final fun getSerializer ()Lkotlinx/serialization/KSerializer;
+	public fun parse (Ljava/lang/String;)Ljava/lang/Object;
+	public fun pretty (Ljava/lang/Object;)Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/structure/json/JsonStructure$Companion {
+	public final fun create (Ljava/lang/String;Lkotlinx/serialization/KSerializer;Lkotlinx/serialization/json/Json;Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator;Ljava/util/Map;Ljava/util/Set;Ljava/util/List;Lkotlin/jvm/functions/Function2;)Lai/koog/prompt/structure/json/JsonStructure;
+	public static synthetic fun create$default (Lai/koog/prompt/structure/json/JsonStructure$Companion;Ljava/lang/String;Lkotlinx/serialization/KSerializer;Lkotlinx/serialization/json/Json;Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator;Ljava/util/Map;Ljava/util/Set;Ljava/util/List;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lai/koog/prompt/structure/json/JsonStructure;
+	public final fun defaultDefinitionPrompt (Lai/koog/prompt/text/TextContentBuilderBase;Lai/koog/prompt/structure/json/JsonStructure;)Lai/koog/prompt/text/TextContentBuilderBase;
+	public final fun getDefaultJson ()Lkotlinx/serialization/json/Json;
+}
+
+public class ai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator : ai/koog/prompt/structure/json/generator/GenericJsonSchemaGenerator {
+	public static final field Default Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator$Default;
+	public fun <init> ()V
+	protected final fun asNullableType (Lkotlinx/serialization/json/JsonObject;Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	public fun generate (Lkotlinx/serialization/json/Json;Ljava/lang/String;Lkotlinx/serialization/KSerializer;Ljava/util/Map;Ljava/util/Set;)Lai/koog/prompt/params/LLMParams$Schema$JSON$Basic;
+	public synthetic fun generate (Lkotlinx/serialization/json/Json;Ljava/lang/String;Lkotlinx/serialization/KSerializer;Ljava/util/Map;Ljava/util/Set;)Lai/koog/prompt/params/LLMParams$Schema$JSON;
+	protected fun processBoolean (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processEnum (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processInteger (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processList (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processMap (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processNumber (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processObject (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processString (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+}
+
+public final class ai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator$Default : ai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator {
+}
+
+public abstract class ai/koog/prompt/structure/json/generator/GenericJsonSchemaGenerator : ai/koog/prompt/structure/json/generator/JsonSchemaGenerator {
+	public fun <init> ()V
+	protected fun process (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processBoolean (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processClassDiscriminator (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processEnum (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processInteger (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processJsonElement (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processList (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processMap (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processNumber (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processObject (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processPolymorphic (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processString (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected final fun putDescription (Lkotlinx/serialization/json/JsonObjectBuilder;Ljava/lang/String;)V
+}
+
+public final class ai/koog/prompt/structure/json/generator/JsonSchemaConsts {
+	public static final field INSTANCE Lai/koog/prompt/structure/json/generator/JsonSchemaConsts;
+}
+
+public final class ai/koog/prompt/structure/json/generator/JsonSchemaConsts$Keys {
+	public static final field ADDITIONAL_PROPERTIES Ljava/lang/String;
+	public static final field ALL_OF Ljava/lang/String;
+	public static final field ANY_OF Ljava/lang/String;
+	public static final field CONST Ljava/lang/String;
+	public static final field DEFS Ljava/lang/String;
+	public static final field DESCRIPTION Ljava/lang/String;
+	public static final field ENUM Ljava/lang/String;
+	public static final field ID Ljava/lang/String;
+	public static final field INSTANCE Lai/koog/prompt/structure/json/generator/JsonSchemaConsts$Keys;
+	public static final field ITEMS Ljava/lang/String;
+	public static final field NULLABLE Ljava/lang/String;
+	public static final field ONE_OF Ljava/lang/String;
+	public static final field PATTERN Ljava/lang/String;
+	public static final field PROPERTIES Ljava/lang/String;
+	public static final field REF Ljava/lang/String;
+	public static final field REF_PREFIX Ljava/lang/String;
+	public static final field REQUIRED Ljava/lang/String;
+	public static final field SCHEMA Ljava/lang/String;
+	public static final field TYPE Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/structure/json/generator/JsonSchemaConsts$Types {
+	public static final field ARRAY Ljava/lang/String;
+	public static final field BOOLEAN Ljava/lang/String;
+	public static final field INSTANCE Lai/koog/prompt/structure/json/generator/JsonSchemaConsts$Types;
+	public static final field INTEGER Ljava/lang/String;
+	public static final field NULL Ljava/lang/String;
+	public static final field NUMBER Ljava/lang/String;
+	public static final field OBJECT Ljava/lang/String;
+	public static final field STRING Ljava/lang/String;
+}
+
+public abstract class ai/koog/prompt/structure/json/generator/JsonSchemaGenerator {
+	public fun <init> ()V
+	public abstract fun generate (Lkotlinx/serialization/json/Json;Ljava/lang/String;Lkotlinx/serialization/KSerializer;Ljava/util/Map;Ljava/util/Set;)Lai/koog/prompt/params/LLMParams$Schema$JSON;
+	public static synthetic fun generate$default (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator;Lkotlinx/serialization/json/Json;Ljava/lang/String;Lkotlinx/serialization/KSerializer;Ljava/util/Map;Ljava/util/Set;ILjava/lang/Object;)Lai/koog/prompt/params/LLMParams$Schema$JSON;
+	protected abstract fun process (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected abstract fun processBoolean (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected abstract fun processClassDiscriminator (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected abstract fun processEnum (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected abstract fun processInteger (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected abstract fun processJsonElement (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected abstract fun processList (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected abstract fun processMap (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected abstract fun processNumber (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected abstract fun processObject (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected abstract fun processPolymorphic (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected abstract fun processString (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+}
+
+public final class ai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext {
+	public fun <init> (Lkotlinx/serialization/json/Json;Lkotlinx/serialization/descriptors/SerialDescriptor;Ljava/util/Map;Ljava/util/List;Ljava/util/Map;Ljava/util/Set;Ljava/lang/String;)V
+	public final fun component1 ()Lkotlinx/serialization/json/Json;
+	public final fun component2 ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/util/Map;
+	public final fun component6 ()Ljava/util/Set;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun copy (Lkotlinx/serialization/json/Json;Lkotlinx/serialization/descriptors/SerialDescriptor;Ljava/util/Map;Ljava/util/List;Ljava/util/Map;Ljava/util/Set;Ljava/lang/String;)Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;
+	public static synthetic fun copy$default (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;Lkotlinx/serialization/json/Json;Lkotlinx/serialization/descriptors/SerialDescriptor;Ljava/util/Map;Ljava/util/List;Ljava/util/Map;Ljava/util/Set;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCurrentDefPath ()Ljava/util/List;
+	public final fun getCurrentDescription ()Ljava/lang/String;
+	public final fun getDescriptionOverrides ()Ljava/util/Map;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun getElementDescription (I)Ljava/lang/String;
+	public final fun getExcludedProperties ()Ljava/util/Set;
+	public final fun getJson ()Lkotlinx/serialization/json/Json;
+	public final fun getProcessedTypeDefs ()Ljava/util/Map;
+	public final fun getTypeDescription ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/structure/json/generator/JsonSchemaGeneratorKt {
+	public static final fun countElements (Lkotlinx/serialization/json/JsonElement;Lkotlinx/serialization/json/JsonElement;)I
+	public static final fun getPolymorphicDescriptors (Lkotlinx/serialization/descriptors/SerialDescriptor;Lkotlinx/serialization/json/Json;)Ljava/util/List;
+}
+
+public class ai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator : ai/koog/prompt/structure/json/generator/GenericJsonSchemaGenerator {
+	public static final field Default Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator$Default;
+	public fun <init> ()V
+	protected final fun asNullableType (Lkotlinx/serialization/json/JsonObject;Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	public fun generate (Lkotlinx/serialization/json/Json;Ljava/lang/String;Lkotlinx/serialization/KSerializer;Ljava/util/Map;Ljava/util/Set;)Lai/koog/prompt/params/LLMParams$Schema$JSON$Standard;
+	public synthetic fun generate (Lkotlinx/serialization/json/Json;Ljava/lang/String;Lkotlinx/serialization/KSerializer;Ljava/util/Map;Ljava/util/Set;)Lai/koog/prompt/params/LLMParams$Schema$JSON;
+	protected fun processBoolean (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processClassDiscriminator (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processEnum (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processInteger (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processJsonElement (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processList (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processMap (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processNumber (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processObject (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processPolymorphic (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processString (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+}
+
+public final class ai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator$Default : ai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator {
+}
+
+public final class ai/koog/prompt/structure/markdown/MarkdownParserBuilder {
+	public fun <init> ()V
+	public final fun build ()Lkotlin/jvm/functions/Function2;
+	public final fun buildStreaming ()Lai/koog/prompt/structure/markdown/MarkdownParserBuilder$MarkdownStreamingParser;
+	public final fun onBullet (Lkotlin/jvm/functions/Function2;)V
+	public final fun onCodeBlock (Lkotlin/jvm/functions/Function2;)V
+	public final fun onFinishStream (Lkotlin/jvm/functions/Function2;)V
+	public final fun onHeader (ILkotlin/jvm/functions/Function2;)V
+	public final fun onLineMatching (Lkotlin/text/Regex;Lkotlin/jvm/functions/Function2;)V
+}
+
+public final class ai/koog/prompt/structure/markdown/MarkdownParserBuilder$MarkdownStreamingParser {
+	public fun <init> (Lai/koog/prompt/structure/markdown/MarkdownParserBuilder;Lkotlin/jvm/functions/Function2;)V
+	public final fun parseStream (Lkotlinx/coroutines/flow/Flow;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/structure/markdown/MarkdownParserKt {
+	public static final fun markdownParser (Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function2;
+	public static final fun markdownStreamingParser (Lkotlin/jvm/functions/Function1;)Lai/koog/prompt/structure/markdown/MarkdownParserBuilder$MarkdownStreamingParser;
+}
+
+public final class ai/koog/prompt/structure/markdown/MarkdownStructureDefinition : ai/koog/prompt/structure/StructureDefinition {
+	public static final field Companion Lai/koog/prompt/structure/markdown/MarkdownStructureDefinition$Companion;
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun definition (Lai/koog/prompt/text/TextContentBuilderBase;)Lai/koog/prompt/text/TextContentBuilderBase;
+	public final fun getExamples ()Lkotlin/jvm/functions/Function1;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getSchema ()Lkotlin/jvm/functions/Function1;
+}
+
+public final class ai/koog/prompt/structure/markdown/MarkdownStructureDefinition$Companion {
+	public final fun defaultDefinitionPrompt (Lai/koog/prompt/text/TextContentBuilderBase;Lai/koog/prompt/structure/markdown/MarkdownStructureDefinition;)Lai/koog/prompt/text/TextContentBuilderBase;
+}
+

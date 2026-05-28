@@ -1,0 +1,32 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:agents-features-chat-memory-sql>
+abstract interface ai.koog.agents.features.chatmemory.sql/SQLChatHistorySchemaMigrator { // ai.koog.agents.features.chatmemory.sql/SQLChatHistorySchemaMigrator|null[0]
+    abstract suspend fun migrate() // ai.koog.agents.features.chatmemory.sql/SQLChatHistorySchemaMigrator.migrate|migrate(){}[0]
+}
+
+abstract class ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider : ai.koog.agents.chatMemory.feature/ChatHistoryProvider { // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider|null[0]
+    constructor <init>(kotlin/String = ..., kotlin/Long? = ..., ai.koog.agents.features.chatmemory.sql/SQLChatHistorySchemaMigrator) // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider.<init>|<init>(kotlin.String;kotlin.Long?;ai.koog.agents.features.chatmemory.sql.SQLChatHistorySchemaMigrator){}[0]
+
+    final val migrator // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider.migrator|{}migrator[0]
+        final fun <get-migrator>(): ai.koog.agents.features.chatmemory.sql/SQLChatHistorySchemaMigrator // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider.migrator.<get-migrator>|<get-migrator>(){}[0]
+    final val tableName // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider.tableName|{}tableName[0]
+        final fun <get-tableName>(): kotlin/String // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider.tableName.<get-tableName>|<get-tableName>(){}[0]
+    final val ttlSeconds // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider.ttlSeconds|{}ttlSeconds[0]
+        final fun <get-ttlSeconds>(): kotlin/Long? // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider.ttlSeconds.<get-ttlSeconds>|<get-ttlSeconds>(){}[0]
+
+    abstract suspend fun cleanupExpired() // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider.cleanupExpired|cleanupExpired(){}[0]
+    abstract suspend fun deleteHistory(kotlin/String) // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider.deleteHistory|deleteHistory(kotlin.String){}[0]
+    abstract suspend fun getConversationCount(): kotlin/Long // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider.getConversationCount|getConversationCount(){}[0]
+    final fun calculateTtlTimestamp(kotlin.time/Instant): kotlin/Long? // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider.calculateTtlTimestamp|calculateTtlTimestamp(kotlin.time.Instant){}[0]
+    open suspend fun migrate() // ai.koog.agents.features.chatmemory.sql/SQLChatHistoryProvider.migrate|migrate(){}[0]
+}
+
+final object ai.koog.agents.features.chatmemory.sql/NoOpSQLChatHistorySchemaMigrator : ai.koog.agents.features.chatmemory.sql/SQLChatHistorySchemaMigrator { // ai.koog.agents.features.chatmemory.sql/NoOpSQLChatHistorySchemaMigrator|null[0]
+    final suspend fun migrate() // ai.koog.agents.features.chatmemory.sql/NoOpSQLChatHistorySchemaMigrator.migrate|migrate(){}[0]
+}

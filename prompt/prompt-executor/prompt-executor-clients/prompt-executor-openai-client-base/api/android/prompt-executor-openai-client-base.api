@@ -1,0 +1,1288 @@
+public abstract class ai/koog/prompt/executor/clients/openai/base/AbstractOpenAILLMClient : ai/koog/prompt/executor/clients/LLMClient {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/AbstractOpenAILLMClient$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/OpenAIBaseSettings;Lai/koog/http/client/KoogHttpClient;Lai/koog/utils/time/KoogClock;Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/prompt/executor/clients/openai/base/OpenAICompatibleToolDescriptorSchemaGenerator;)V
+	public synthetic fun <init> (Lai/koog/prompt/executor/clients/openai/base/OpenAIBaseSettings;Lai/koog/http/client/KoogHttpClient;Lai/koog/utils/time/KoogClock;Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/prompt/executor/clients/openai/base/OpenAICompatibleToolDescriptorSchemaGenerator;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/OpenAIBaseSettings;Lai/koog/http/client/KoogHttpClient$Factory;Ljava/lang/String;Lai/koog/utils/time/KoogClock;Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/prompt/executor/clients/openai/base/OpenAICompatibleToolDescriptorSchemaGenerator;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/OpenAIBaseSettings;Lai/koog/http/client/KoogHttpClient$Factory;Ljava/lang/String;Lai/koog/utils/time/KoogClock;Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/prompt/executor/clients/openai/base/OpenAICompatibleToolDescriptorSchemaGenerator;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/OpenAIBaseSettings;Lai/koog/http/client/KoogHttpClient$Factory;Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/prompt/executor/clients/openai/base/OpenAICompatibleToolDescriptorSchemaGenerator;)V
+	public fun close ()V
+	protected final fun convertPromptToMessages (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;)Ljava/util/List;
+	protected final fun createMetaInfo (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage;)Lai/koog/prompt/message/ResponseMetaInfo;
+	protected fun createResponseFormat (Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat;
+	protected abstract fun decodeResponse (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIBaseLLMResponse;
+	protected abstract fun decodeStreamingResponse (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIBaseLLMStreamResponse;
+	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public fun getBasicJsonSchemaGenerator ()Lai/koog/prompt/executor/clients/openai/base/structure/OpenAIBasicJsonSchemaGenerator;
+	public synthetic fun getBasicJsonSchemaGenerator ()Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator;
+	protected final fun getClock ()Lai/koog/utils/time/KoogClock;
+	protected final fun getHttpClient ()Lai/koog/http/client/KoogHttpClient;
+	protected final fun getJson ()Lkotlinx/serialization/json/Json;
+	protected final fun getLogger ()Lio/github/oshai/kotlinlogging/KLogger;
+	public fun getStandardJsonSchemaGenerator ()Lai/koog/prompt/executor/clients/openai/base/structure/OpenAIStandardJsonSchemaGenerator;
+	public synthetic fun getStandardJsonSchemaGenerator ()Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator;
+	protected abstract fun processProviderChatResponse (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIBaseLLMResponse;)Ljava/util/List;
+	protected abstract fun processStreamingResponse (Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/flow/Flow;
+	protected final fun requireCapability (Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/llm/LLMCapability;Ljava/lang/String;)V
+	public static synthetic fun requireCapability$default (Lai/koog/prompt/executor/clients/openai/base/AbstractOpenAILLMClient;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/llm/LLMCapability;Ljava/lang/String;ILjava/lang/Object;)V
+	protected abstract fun serializeProviderChatRequest (Ljava/util/List;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice;Lai/koog/prompt/params/LLMParams;Z)Ljava/lang/String;
+	protected final fun toMessageContent (Ljava/util/List;Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/executor/clients/openai/base/models/Content;
+	protected final fun toMessageResponse (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage;Ljava/lang/String;Lai/koog/prompt/message/ResponseMetaInfo;)Lai/koog/prompt/message/Message$Assistant;
+	protected final fun toOpenAIChatTool (Lai/koog/agents/core/tools/ToolDescriptor;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAITool;
+	protected final fun toOpenAIToolChoice (Lai/koog/prompt/params/LLMParams$ToolChoice;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/AbstractOpenAILLMClient$Companion {
+	public final fun createConfiguredHttpClient (Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/OpenAIBaseSettings;Lai/koog/http/client/KoogHttpClient$Factory;Ljava/lang/String;)Lai/koog/http/client/KoogHttpClient;
+}
+
+public abstract class ai/koog/prompt/executor/clients/openai/base/OpenAIBaseSettings {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getChatCompletionsPath ()Ljava/lang/String;
+	public final fun getTimeoutConfig ()Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;
+}
+
+public class ai/koog/prompt/executor/clients/openai/base/OpenAICompatibleToolDescriptorSchemaGenerator : ai/koog/agents/core/tools/serialization/ToolDescriptorSchemaGenerator {
+	public fun <init> ()V
+	public fun generate (Lai/koog/agents/core/tools/ToolDescriptor;)Lkotlinx/serialization/json/JsonObject;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/CompletionTokensDetails {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/CompletionTokensDetails$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAcceptedPredictionTokens ()Ljava/lang/Integer;
+	public final fun getAudioTokens ()Ljava/lang/Integer;
+	public final fun getReasoningTokens ()Ljava/lang/Integer;
+	public final fun getRejectedPredictionTokens ()Ljava/lang/Integer;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/CompletionTokensDetails$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/CompletionTokensDetails$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/CompletionTokensDetails;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/CompletionTokensDetails;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/CompletionTokensDetails$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/openai/base/models/Content {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/Content$Companion;
+	public abstract fun text ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/Content$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/Content$Parts : ai/koog/prompt/executor/clients/openai/base/models/Content {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/Content$Parts$Companion;
+	public static final synthetic fun box-impl (Ljava/util/List;)Lai/koog/prompt/executor/clients/openai/base/models/Content$Parts;
+	public static fun constructor-impl (Ljava/util/List;)Ljava/util/List;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/util/List;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/util/List;Ljava/util/List;)Z
+	public final fun getValue ()Ljava/util/List;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/util/List;)I
+	public fun text ()Ljava/lang/String;
+	public static fun text-impl (Ljava/util/List;)Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/util/List;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/util/List;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/Content$Parts$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/Content$Parts$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize-cRDf1T8 (Lkotlinx/serialization/encoding/Decoder;)Ljava/util/List;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize-6YJaFhM (Lkotlinx/serialization/encoding/Encoder;Ljava/util/List;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/Content$Parts$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/Content$Text : ai/koog/prompt/executor/clients/openai/base/models/Content {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/Content$Text$Companion;
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/Content$Text;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun text ()Ljava/lang/String;
+	public static fun text-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/Content$Text$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/Content$Text$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize-AAqPkz8 (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize-_L4QSKo (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/Content$Text$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/JsonSchemaObject {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/JsonSchemaObject$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSchema ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getStrict ()Ljava/lang/Boolean;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/JsonSchemaObject$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/JsonSchemaObject$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/JsonSchemaObject;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/JsonSchemaObject;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/JsonSchemaObject$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIAudio {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudio$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getData ()Ljava/lang/String;
+	public final fun getExpiresAt ()Ljava/lang/Long;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getTranscript ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIAudio$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudio$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudio;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudio;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIAudio$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioConfig {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioConfig$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioFormat;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;)V
+	public final fun getFormat ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioFormat;
+	public final fun getVoice ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioConfig$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioConfig$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioConfig;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioConfig;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioConfig$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioFormat : java/lang/Enum {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioFormat$Companion;
+	public static final field FLAC Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioFormat;
+	public static final field MP3 Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioFormat;
+	public static final field OPUS Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioFormat;
+	public static final field PCM16 Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioFormat;
+	public static final field WAV Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioFormat;
+	public static fun values ()[Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioFormat;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioFormat$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice : java/lang/Enum {
+	public static final field Alloy Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+	public static final field Ash Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+	public static final field Ballad Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice$Companion;
+	public static final field Coral Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+	public static final field Echo Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+	public static final field Fable Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+	public static final field Nova Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+	public static final field Onyx Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+	public static final field Sage Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+	public static final field Shimmer Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+	public static fun values ()[Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioVoice$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/openai/base/models/OpenAIBaseLLMRequest {
+	public abstract fun getModel ()Ljava/lang/String;
+	public abstract fun getStream ()Ljava/lang/Boolean;
+	public abstract fun getTemperature ()Ljava/lang/Double;
+	public abstract fun getTopLogprobs ()Ljava/lang/Integer;
+	public abstract fun getTopP ()Ljava/lang/Double;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/openai/base/models/OpenAIBaseLLMResponse {
+	public abstract fun getCreated ()J
+	public abstract fun getId ()Ljava/lang/String;
+	public abstract fun getModel ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/openai/base/models/OpenAIBaseLLMStreamResponse : ai/koog/prompt/executor/clients/openai/base/models/OpenAIBaseLLMResponse {
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIChoice {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoice$Companion;
+	public fun <init> (Ljava/lang/String;ILai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage;)V
+	public synthetic fun <init> (Ljava/lang/String;ILai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getFinishReason ()Ljava/lang/String;
+	public final fun getIndex ()I
+	public final fun getLogprobs ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs;
+	public final fun getMessage ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIChoice$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoice$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoice;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoice;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIChoice$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getContent ()Ljava/util/List;
+	public final fun getRefusal ()Ljava/util/List;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentLogProbs {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentLogProbs$Companion;
+	public fun <init> (Ljava/util/List;DLjava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;DLjava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getBytes ()Ljava/util/List;
+	public final fun getLogprob ()D
+	public final fun getToken ()Ljava/lang/String;
+	public final fun getTopLogprobs ()Ljava/util/List;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentLogProbs$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentLogProbs$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentLogProbs;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentLogProbs;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentLogProbs$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentTopLogProbs {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentTopLogProbs$Companion;
+	public fun <init> (Ljava/util/List;DLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/util/List;DLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getBytes ()Ljava/util/List;
+	public final fun getLogprob ()D
+	public final fun getToken ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentTopLogProbs$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentTopLogProbs$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentTopLogProbs;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentTopLogProbs;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs$ContentTopLogProbs$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Companion;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Audio : ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Audio$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$InputAudio;)V
+	public final fun getInputAudio ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$InputAudio;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Audio$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Audio$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Audio;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Audio;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Audio$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$File : ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$File$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$FileData;)V
+	public final fun getFile ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$FileData;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$File$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$File$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$File;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$File;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$File$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$FileData {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$FileData$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getFileData ()Ljava/lang/String;
+	public final fun getFileId ()Ljava/lang/String;
+	public final fun getFilename ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$FileData$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$FileData$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$FileData;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$FileData;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$FileData$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Image : ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Image$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$ImageUrl;)V
+	public final fun getImageUrl ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$ImageUrl;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Image$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Image$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Image;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Image;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Image$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$ImageUrl {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$ImageUrl$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDetail ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$ImageUrl$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$ImageUrl$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$ImageUrl;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$ImageUrl;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$ImageUrl$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$InputAudio {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$InputAudio$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getData ()Ljava/lang/String;
+	public final fun getFormat ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$InputAudio$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$InputAudio$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$InputAudio;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$InputAudio;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$InputAudio$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Text : ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Text$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getText ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Text$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Text$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Text;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Text;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIContentPart$Text$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getArguments ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Companion;
+	public abstract fun getContent ()Lai/koog/prompt/executor/clients/openai/base/models/Content;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Assistant : ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Assistant$Companion;
+	public fun <init> ()V
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/Content;Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudio;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/Content;Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudio;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAnnotations ()Ljava/util/List;
+	public final fun getAudio ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudio;
+	public fun getContent ()Lai/koog/prompt/executor/clients/openai/base/models/Content;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getReasoningContent ()Ljava/lang/String;
+	public final fun getRefusal ()Ljava/lang/String;
+	public final fun getToolCalls ()Ljava/util/List;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Assistant$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Assistant$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Assistant;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Assistant;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Assistant$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Developer : ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Developer$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/Content;Ljava/lang/String;)V
+	public synthetic fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/Content;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getContent ()Lai/koog/prompt/executor/clients/openai/base/models/Content;
+	public final fun getName ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Developer$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Developer$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Developer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Developer;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Developer$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$System : ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$System$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/Content;Ljava/lang/String;)V
+	public synthetic fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/Content;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getContent ()Lai/koog/prompt/executor/clients/openai/base/models/Content;
+	public final fun getName ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$System$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$System$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$System;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$System;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$System$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Tool : ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Tool$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/Content;Ljava/lang/String;)V
+	public fun getContent ()Lai/koog/prompt/executor/clients/openai/base/models/Content;
+	public final fun getToolCallId ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Tool$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Tool$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Tool;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Tool;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$Tool$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$User : ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$User$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/Content;Ljava/lang/String;)V
+	public synthetic fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/Content;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getContent ()Lai/koog/prompt/executor/clients/openai/base/models/Content;
+	public final fun getName ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$User$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$User$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$User;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$User;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage$User$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIModalities : java/lang/Enum {
+	public static final field Audio Lai/koog/prompt/executor/clients/openai/base/models/OpenAIModalities;
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIModalities$Companion;
+	public static final field Text Lai/koog/prompt/executor/clients/openai/base/models/OpenAIModalities;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIModalities;
+	public static fun values ()[Lai/koog/prompt/executor/clients/openai/base/models/OpenAIModalities;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIModalities$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$Companion;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonObject : ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonObject$Companion;
+	public fun <init> ()V
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonObject$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonObject$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonObject;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonObject;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonObject$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonSchema : ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonSchema$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/JsonSchemaObject;)V
+	public final fun getJsonSchema ()Lai/koog/prompt/executor/clients/openai/base/models/JsonSchemaObject;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonSchema$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonSchema$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonSchema;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonSchema;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$JsonSchema$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$Text : ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$Text$Companion;
+	public fun <init> ()V
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$Text$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$Text$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$Text;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$Text;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIResponseFormat$Text$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStaticContent {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStaticContent$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/Content;)V
+	public final fun getContent ()Lai/koog/prompt/executor/clients/openai/base/models/Content;
+	public final fun getType ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStaticContent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStaticContent$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStaticContent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStaticContent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStaticContent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamChoice {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamChoice$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamDelta;Ljava/lang/String;ILai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs;)V
+	public synthetic fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamDelta;Ljava/lang/String;ILai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDelta ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamDelta;
+	public final fun getFinishReason ()Ljava/lang/String;
+	public final fun getIndex ()I
+	public final fun getLogprobs ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIChoiceLogProbs;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamChoice$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamChoice$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamChoice;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamChoice;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamChoice$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamDelta {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamDelta$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getContent ()Ljava/lang/String;
+	public final fun getRefusal ()Ljava/lang/String;
+	public final fun getRole ()Ljava/lang/String;
+	public final fun getToolCalls ()Ljava/util/List;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamDelta$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamDelta$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamDelta;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamDelta;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamDelta$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getArguments ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamOptions {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getIncludeUsage ()Ljava/lang/Boolean;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamOptions$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamOptions$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamOptions;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamOptions;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamOptions$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamToolCall {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamToolCall$Companion;
+	public fun <init> (ILjava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction;Ljava/lang/String;)V
+	public synthetic fun <init> (ILjava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getFunction ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getIndex ()I
+	public final fun getType ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamToolCall$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamToolCall$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamToolCall;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamToolCall;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamToolCall$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAITool {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAITool$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolFunction;)V
+	public final fun getFunction ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolFunction;
+	public final fun getType ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAITool$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAITool$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAITool;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAITool;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAITool$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolCall {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolCall$Companion;
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction;)V
+	public final fun getFunction ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolCall$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolCall$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolCall;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolCall;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolCall$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Companion;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Companion {
+	public final fun function (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Function;
+	public final fun getAuto-fR-0VRQ ()Ljava/lang/String;
+	public final fun getNone-fR-0VRQ ()Ljava/lang/String;
+	public final fun getRequired-fR-0VRQ ()Ljava/lang/String;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Function : ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Function$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$FunctionName;)V
+	public final fun getFunction ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$FunctionName;
+	public final fun getType ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Function$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Function$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Function;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Function;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Function$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$FunctionName {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$FunctionName$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getName ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$FunctionName$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$FunctionName$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$FunctionName;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$FunctionName;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$FunctionName$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Mode : ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Mode$Companion;
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Mode;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Mode$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Mode$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize-UoBXSAA (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize-WER3AT4 (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolChoice$Mode$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolFunction {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolFunction$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getParameters ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getStrict ()Ljava/lang/Boolean;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolFunction$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolFunction$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolFunction;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolFunction;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolFunction$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Lai/koog/prompt/executor/clients/openai/base/models/CompletionTokensDetails;Lai/koog/prompt/executor/clients/openai/base/models/PromptTokensDetails;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Lai/koog/prompt/executor/clients/openai/base/models/CompletionTokensDetails;Lai/koog/prompt/executor/clients/openai/base/models/PromptTokensDetails;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCompletionTokens ()Ljava/lang/Integer;
+	public final fun getCompletionTokensDetails ()Lai/koog/prompt/executor/clients/openai/base/models/CompletionTokensDetails;
+	public final fun getPromptTokens ()Ljava/lang/Integer;
+	public final fun getPromptTokensDetails ()Lai/koog/prompt/executor/clients/openai/base/models/PromptTokensDetails;
+	public final fun getTotalTokens ()Ljava/lang/Integer;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$ApproximateLocation;)V
+	public final fun getApproximate ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$ApproximateLocation;
+	public final fun getType ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$ApproximateLocation {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$ApproximateLocation$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCity ()Ljava/lang/String;
+	public final fun getCountry ()Ljava/lang/String;
+	public final fun getRegion ()Ljava/lang/String;
+	public final fun getTimezone ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$ApproximateLocation$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$ApproximateLocation$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$ApproximateLocation;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$ApproximateLocation;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$ApproximateLocation$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIWebSearchOptions {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebSearchOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getSearchContextSize ()Ljava/lang/String;
+	public final fun getUserLocation ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUserLocation;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIWebSearchOptions$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebSearchOptions$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebSearchOptions;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebSearchOptions;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIWebSearchOptions$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$Citation;)V
+	public final fun getType ()Ljava/lang/String;
+	public final fun getUrlCitation ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$Citation;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$Citation {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$Citation$Companion;
+	public fun <init> (IILjava/lang/String;Ljava/lang/String;)V
+	public final fun getEndIndex ()I
+	public final fun getStartIndex ()I
+	public final fun getTitle ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$Citation$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$Citation$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$Citation;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$Citation;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$Citation$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIWebUrlCitation$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/PromptTokensDetails {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/PromptTokensDetails$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAudioTokens ()Ljava/lang/Integer;
+	public final fun getCachedTokens ()Ljava/lang/Integer;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openai/base/models/PromptTokensDetails$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/base/models/PromptTokensDetails$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openai/base/models/PromptTokensDetails;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openai/base/models/PromptTokensDetails;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/PromptTokensDetails$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort : java/lang/Enum {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort$Companion;
+	public static final field HIGH Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
+	public static final field LOW Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
+	public static final field MEDIUM Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
+	public static final field MINIMAL Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
+	public static final field NONE Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
+	public static fun values ()[Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/models/ServiceTier : java/lang/Enum {
+	public static final field AUTO Lai/koog/prompt/executor/clients/openai/base/models/ServiceTier;
+	public static final field DEFAULT Lai/koog/prompt/executor/clients/openai/base/models/ServiceTier;
+	public static final field FLEX Lai/koog/prompt/executor/clients/openai/base/models/ServiceTier;
+	public static final field PRIORITY Lai/koog/prompt/executor/clients/openai/base/models/ServiceTier;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/ServiceTier;
+	public static fun values ()[Lai/koog/prompt/executor/clients/openai/base/models/ServiceTier;
+}
+
+public class ai/koog/prompt/executor/clients/openai/base/structure/OpenAIBasicJsonSchemaGenerator : ai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator {
+	public static final field Default Lai/koog/prompt/executor/clients/openai/base/structure/OpenAIBasicJsonSchemaGenerator$Default;
+	public fun <init> ()V
+	protected fun processMap (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processObject (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/structure/OpenAIBasicJsonSchemaGenerator$Default : ai/koog/prompt/executor/clients/openai/base/structure/OpenAIBasicJsonSchemaGenerator {
+}
+
+public class ai/koog/prompt/executor/clients/openai/base/structure/OpenAIStandardJsonSchemaGenerator : ai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator {
+	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/structure/OpenAIStandardJsonSchemaGenerator$Companion;
+	public fun <init> ()V
+	public fun generate (Lkotlinx/serialization/json/Json;Ljava/lang/String;Lkotlinx/serialization/KSerializer;Ljava/util/Map;Ljava/util/Set;)Lai/koog/prompt/params/LLMParams$Schema$JSON$Standard;
+	public synthetic fun generate (Lkotlinx/serialization/json/Json;Ljava/lang/String;Lkotlinx/serialization/KSerializer;Ljava/util/Map;Ljava/util/Set;)Lai/koog/prompt/params/LLMParams$Schema$JSON;
+	protected fun processClassDiscriminator (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processList (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processMap (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processObject (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processPolymorphic (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+}
+
+public final class ai/koog/prompt/executor/clients/openai/base/structure/OpenAIStandardJsonSchemaGenerator$Companion : ai/koog/prompt/executor/clients/openai/base/structure/OpenAIStandardJsonSchemaGenerator {
+}
+

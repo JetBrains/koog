@@ -1,0 +1,72 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-cache-model>
+abstract interface ai.koog.prompt.cache.model/PromptCache { // ai.koog.prompt.cache.model/PromptCache|null[0]
+    abstract suspend fun get(ai.koog.prompt.cache.model/PromptCache.Request): ai.koog.prompt.message/Message.Assistant? // ai.koog.prompt.cache.model/PromptCache.get|get(ai.koog.prompt.cache.model.PromptCache.Request){}[0]
+    abstract suspend fun put(ai.koog.prompt.cache.model/PromptCache.Request, ai.koog.prompt.message/Message.Assistant) // ai.koog.prompt.cache.model/PromptCache.put|put(ai.koog.prompt.cache.model.PromptCache.Request;ai.koog.prompt.message.Message.Assistant){}[0]
+
+    abstract interface Factory { // ai.koog.prompt.cache.model/PromptCache.Factory|null[0]
+        abstract fun create(kotlin/String): ai.koog.prompt.cache.model/PromptCache // ai.koog.prompt.cache.model/PromptCache.Factory.create|create(kotlin.String){}[0]
+        open fun elements(kotlin/String): kotlin.collections/List<kotlin/String> // ai.koog.prompt.cache.model/PromptCache.Factory.elements|elements(kotlin.String){}[0]
+
+        abstract class Named : ai.koog.prompt.cache.model/PromptCache.Factory { // ai.koog.prompt.cache.model/PromptCache.Factory.Named|null[0]
+            constructor <init>(kotlin/String) // ai.koog.prompt.cache.model/PromptCache.Factory.Named.<init>|<init>(kotlin.String){}[0]
+
+            final val name // ai.koog.prompt.cache.model/PromptCache.Factory.Named.name|{}name[0]
+                final fun <get-name>(): kotlin/String // ai.koog.prompt.cache.model/PromptCache.Factory.Named.name.<get-name>|<get-name>(){}[0]
+
+            final fun supports(kotlin/String): kotlin/Boolean // ai.koog.prompt.cache.model/PromptCache.Factory.Named.supports|supports(kotlin.String){}[0]
+        }
+
+        final class Aggregated : ai.koog.prompt.cache.model/PromptCache.Factory { // ai.koog.prompt.cache.model/PromptCache.Factory.Aggregated|null[0]
+            constructor <init>(kotlin.collections/List<ai.koog.prompt.cache.model/PromptCache.Factory.Named>) // ai.koog.prompt.cache.model/PromptCache.Factory.Aggregated.<init>|<init>(kotlin.collections.List<ai.koog.prompt.cache.model.PromptCache.Factory.Named>){}[0]
+            constructor <init>(kotlin/Array<out ai.koog.prompt.cache.model/PromptCache.Factory.Named>...) // ai.koog.prompt.cache.model/PromptCache.Factory.Aggregated.<init>|<init>(kotlin.Array<out|ai.koog.prompt.cache.model.PromptCache.Factory.Named>...){}[0]
+
+            final fun create(kotlin/String): ai.koog.prompt.cache.model/PromptCache // ai.koog.prompt.cache.model/PromptCache.Factory.Aggregated.create|create(kotlin.String){}[0]
+        }
+    }
+
+    final class Request { // ai.koog.prompt.cache.model/PromptCache.Request|null[0]
+        final val asCacheKey // ai.koog.prompt.cache.model/PromptCache.Request.asCacheKey|{}asCacheKey[0]
+            final fun <get-asCacheKey>(): kotlin/String // ai.koog.prompt.cache.model/PromptCache.Request.asCacheKey.<get-asCacheKey>|<get-asCacheKey>(){}[0]
+        final val prompt // ai.koog.prompt.cache.model/PromptCache.Request.prompt|{}prompt[0]
+            final fun <get-prompt>(): ai.koog.prompt/Prompt // ai.koog.prompt.cache.model/PromptCache.Request.prompt.<get-prompt>|<get-prompt>(){}[0]
+        final val toolJsons // ai.koog.prompt.cache.model/PromptCache.Request.toolJsons|{}toolJsons[0]
+            final fun <get-toolJsons>(): kotlin.collections/List<kotlinx.serialization.json/JsonObject> // ai.koog.prompt.cache.model/PromptCache.Request.toolJsons.<get-toolJsons>|<get-toolJsons>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.cache.model/PromptCache.Request> { // ai.koog.prompt.cache.model/PromptCache.Request.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.cache.model/PromptCache.Request.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.cache.model/PromptCache.Request.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.cache.model/PromptCache.Request.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.cache.model/PromptCache.Request // ai.koog.prompt.cache.model/PromptCache.Request.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.cache.model/PromptCache.Request) // ai.koog.prompt.cache.model/PromptCache.Request.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.cache.model.PromptCache.Request){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.cache.model/PromptCache.Request.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.cache.model/PromptCache.Request.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun create(ai.koog.prompt/Prompt, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): ai.koog.prompt.cache.model/PromptCache.Request // ai.koog.prompt.cache.model/PromptCache.Request.Companion.create|create(ai.koog.prompt.Prompt;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.cache.model/PromptCache.Request> // ai.koog.prompt.cache.model/PromptCache.Request.Companion.serializer|serializer(){}[0]
+        }
+    }
+}
+
+final class ai.koog.prompt.cache.memory/InMemoryPromptCache : ai.koog.prompt.cache.model/PromptCache { // ai.koog.prompt.cache.memory/InMemoryPromptCache|null[0]
+    constructor <init>(kotlin/Int?) // ai.koog.prompt.cache.memory/InMemoryPromptCache.<init>|<init>(kotlin.Int?){}[0]
+
+    final suspend fun get(ai.koog.prompt.cache.model/PromptCache.Request): ai.koog.prompt.message/Message.Assistant? // ai.koog.prompt.cache.memory/InMemoryPromptCache.get|get(ai.koog.prompt.cache.model.PromptCache.Request){}[0]
+    final suspend fun put(ai.koog.prompt.cache.model/PromptCache.Request, ai.koog.prompt.message/Message.Assistant) // ai.koog.prompt.cache.memory/InMemoryPromptCache.put|put(ai.koog.prompt.cache.model.PromptCache.Request;ai.koog.prompt.message.Message.Assistant){}[0]
+
+    final object Companion : ai.koog.prompt.cache.model/PromptCache.Factory.Named { // ai.koog.prompt.cache.memory/InMemoryPromptCache.Companion|null[0]
+        final fun create(kotlin/String): ai.koog.prompt.cache.model/PromptCache // ai.koog.prompt.cache.memory/InMemoryPromptCache.Companion.create|create(kotlin.String){}[0]
+    }
+}
+
+final suspend fun (ai.koog.prompt.cache.model/PromptCache).ai.koog.prompt.cache.model/get(ai.koog.prompt/Prompt, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>, ai.koog.utils.time/KoogClock = ...): ai.koog.prompt.message/Message.Assistant? // ai.koog.prompt.cache.model/get|get@ai.koog.prompt.cache.model.PromptCache(ai.koog.prompt.Prompt;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>;ai.koog.utils.time.KoogClock){}[0]
+final suspend fun (ai.koog.prompt.cache.model/PromptCache).ai.koog.prompt.cache.model/put(ai.koog.prompt/Prompt, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>, ai.koog.prompt.message/Message.Assistant) // ai.koog.prompt.cache.model/put|put@ai.koog.prompt.cache.model.PromptCache(ai.koog.prompt.Prompt;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>;ai.koog.prompt.message.Message.Assistant){}[0]

@@ -1,0 +1,93 @@
+public final class ai/koog/agents/features/persistence/jdbc/H2JdbcPersistenceSchemaMigrator : ai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator {
+	public fun <init> (Ljavax/sql/DataSource;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/features/persistence/jdbc/H2JdbcPersistenceStorageProvider : ai/koog/agents/features/persistence/jdbc/JdbcPersistenceStorageProvider {
+	public fun <init> (Ljavax/sql/DataSource;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/Long;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract interface class ai/koog/agents/features/persistence/jdbc/JdbcPersistenceFilter {
+	public abstract fun check (Lai/koog/agents/snapshot/feature/AgentCheckpointData;)Z
+}
+
+public abstract class ai/koog/agents/features/persistence/jdbc/JdbcPersistenceStorageProvider : ai/koog/agents/features/sql/providers/SQLPersistenceStorageProvider {
+	public static final field Companion Lai/koog/agents/features/persistence/jdbc/JdbcPersistenceStorageProvider$Companion;
+	public fun <init> (Ljavax/sql/DataSource;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public fun <init> (Ljavax/sql/DataSource;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Ljava/lang/Long;)V
+	public fun <init> (Ljavax/sql/DataSource;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Ljava/lang/Long;Ljava/lang/String;)V
+	public fun <init> (Ljavax/sql/DataSource;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Ljava/lang/Long;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public synthetic fun <init> (Ljavax/sql/DataSource;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Ljava/lang/Long;Ljava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun cleanupExpired (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun cleanupExpiredBlocking ()V
+	public fun deleteAllCheckpoints (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun deleteAllCheckpointsBlocking (Ljava/lang/String;)V
+	public fun deleteCheckpoint (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun deleteCheckpointBlocking (Ljava/lang/String;Ljava/lang/String;)V
+	protected fun deserializeCheckpoint (Ljava/lang/String;)Lai/koog/agents/snapshot/feature/AgentCheckpointData;
+	public fun getCheckpointCount (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getCheckpointCountBlocking (Ljava/lang/String;)J
+	public fun getCheckpoints (Ljava/lang/String;Lai/koog/agents/features/persistence/jdbc/JdbcPersistenceFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getCheckpoints (Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getCheckpointsBlocking (Ljava/lang/String;)Ljava/util/List;
+	protected fun getCleanupExpiredSql ()Ljava/lang/String;
+	protected final fun getDataSource ()Ljavax/sql/DataSource;
+	protected fun getDeleteAllCheckpointsSql ()Ljava/lang/String;
+	protected fun getDeleteCheckpointSql ()Ljava/lang/String;
+	protected fun getGetCheckpointCountSql ()Ljava/lang/String;
+	public fun getLatestCheckpoint (Ljava/lang/String;Lai/koog/agents/features/persistence/jdbc/JdbcPersistenceFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getLatestCheckpoint (Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getLatestCheckpointBlocking (Ljava/lang/String;)Lai/koog/agents/snapshot/feature/AgentCheckpointData;
+	protected fun getLoadAllSql ()Ljava/lang/String;
+	protected fun getLoadLatestSql ()Ljava/lang/String;
+	protected abstract fun getUpsertSql ()Ljava/lang/String;
+	public final fun migrateBlocking ()V
+	public fun saveCheckpoint (Ljava/lang/String;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun saveCheckpointBlocking (Ljava/lang/String;Lai/koog/agents/snapshot/feature/AgentCheckpointData;)V
+	protected fun serializeCheckpoint (Lai/koog/agents/snapshot/feature/AgentCheckpointData;)Ljava/lang/String;
+	protected fun transaction (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/features/persistence/jdbc/JdbcPersistenceStorageProvider$Companion {
+	public final fun getDefaultJson ()Lkotlinx/serialization/json/Json;
+}
+
+public final class ai/koog/agents/features/persistence/jdbc/MySQLJdbcPersistenceSchemaMigrator : ai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator {
+	public fun <init> (Ljavax/sql/DataSource;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/features/persistence/jdbc/MySQLJdbcPersistenceStorageProvider : ai/koog/agents/features/persistence/jdbc/JdbcPersistenceStorageProvider {
+	public fun <init> (Ljavax/sql/DataSource;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/Long;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class ai/koog/agents/features/persistence/jdbc/PostgresJdbcPersistenceSchemaMigrator : ai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator {
+	public fun <init> (Ljavax/sql/DataSource;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/features/persistence/jdbc/PostgresJdbcPersistenceStorageProvider : ai/koog/agents/features/persistence/jdbc/JdbcPersistenceStorageProvider {
+	public fun <init> (Ljavax/sql/DataSource;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/Long;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Ljavax/sql/DataSource;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
