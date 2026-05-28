@@ -26,10 +26,10 @@ suspend fun main() {
         version = "1.0.0",
         url = "http://localhost:9999$ADVANCED_JOKE_AGENT_PATH",
         preferredTransport = TransportProtocol.JSONRPC,
-        additionalInterfaces = listOf(
+        supportedInterfaces = listOf(
             AgentInterface(
                 url = "http://localhost:9999$ADVANCED_JOKE_AGENT_PATH",
-                transport = TransportProtocol.JSONRPC,
+                protocolBinding = TransportProtocol.JSONRPC,
             )
         ),
         capabilities = AgentCapabilities(
