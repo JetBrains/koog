@@ -28,7 +28,7 @@ private suspend fun sayHello(
     eventProcessor.sendMessage(
         Message(
             messageId = Uuid.random().toString(),
-            role = Role.Agent,
+            role = Role.ROLE_AGENT,
             parts = listOf(TextPart("Hello World")),
             contextId = context.contextId,
             taskId = context.taskId
@@ -44,7 +44,7 @@ private suspend fun doTask(
         id = context.taskId,
         contextId = context.contextId,
         status = TaskStatus(
-            state = TaskState.Submitted,
+            state = TaskState.TASK_STATE_SUBMITTED,
             timestamp = Clock.System.now()
         ),
         history = listOf(context.params.message)
@@ -59,10 +59,10 @@ private suspend fun doTask(
             contextId = context.contextId,
             taskId = context.taskId,
             status = TaskStatus(
-                state = TaskState.Working,
+                state = TaskState.TASK_STATE_WORKING,
                 message = Message(
                     messageId = Uuid.random().toString(),
-                    role = Role.Agent,
+                    role = Role.ROLE_AGENT,
                     parts = listOf(TextPart("Working on task")),
                     contextId = context.contextId,
                     taskId = context.taskId
@@ -79,10 +79,10 @@ private suspend fun doTask(
             contextId = context.contextId,
             taskId = context.taskId,
             status = TaskStatus(
-                state = TaskState.Completed,
+                state = TaskState.TASK_STATE_COMPLETED,
                 message = Message(
                     messageId = Uuid.random().toString(),
-                    role = Role.Agent,
+                    role = Role.ROLE_AGENT,
                     parts = listOf(TextPart("Task completed")),
                     contextId = context.contextId,
                     taskId = context.taskId
@@ -102,7 +102,7 @@ private suspend fun doCancelableTask(
         id = context.taskId,
         contextId = context.contextId,
         status = TaskStatus(
-            state = TaskState.Submitted,
+            state = TaskState.TASK_STATE_SUBMITTED,
             timestamp = Clock.System.now()
         ),
         history = listOf(context.params.message)
@@ -119,7 +119,7 @@ private suspend fun doLongRunningTask(
         id = context.taskId,
         contextId = context.contextId,
         status = TaskStatus(
-            state = TaskState.Submitted,
+            state = TaskState.TASK_STATE_SUBMITTED,
             timestamp = Clock.System.now()
         ),
         history = listOf(context.params.message)
@@ -136,10 +136,10 @@ private suspend fun doLongRunningTask(
                 taskId = context.taskId,
                 contextId = context.contextId,
                 status = TaskStatus(
-                    state = TaskState.Working,
+                    state = TaskState.TASK_STATE_WORKING,
                     message = Message(
                         messageId = Uuid.random().toString(),
-                        role = Role.Agent,
+                        role = Role.ROLE_AGENT,
                         parts = listOf(TextPart("Still working $it")),
                         contextId = context.contextId,
                         taskId = context.taskId
@@ -181,7 +181,7 @@ class TestAgentExecutor : AgentExecutor {
                 eventProcessor.sendMessage(
                     Message(
                         messageId = Uuid.random().toString(),
-                        role = Role.Agent,
+                        role = Role.ROLE_AGENT,
                         parts = listOf(TextPart("Sorry, I don't understand you")),
                         contextId = context.contextId
                     )
@@ -202,10 +202,10 @@ class TestAgentExecutor : AgentExecutor {
                 contextId = context.contextId,
                 taskId = context.taskId,
                 status = TaskStatus(
-                    state = TaskState.Canceled,
+                    state = TaskState.TASK_STATE_CANCELED,
                     message = Message(
                         messageId = Uuid.random().toString(),
-                        role = Role.Agent,
+                        role = Role.ROLE_AGENT,
                         parts = listOf(TextPart("Task canceled")),
                         contextId = context.contextId,
                         taskId = context.taskId

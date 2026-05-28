@@ -109,7 +109,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
                 data = MessageSendParams(
                     message = Message(
                         messageId = Uuid.Companion.random().toString(),
-                        role = Role.User,
+                        role = Role.ROLE_USER,
                         parts = listOf(
                             TextPart("do long-running task"),
                         ),
@@ -144,9 +144,9 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
                     // Has events from `execute` - task is working
                     events.shouldForAtLeastOne {
                         it.shouldBeInstanceOf<TaskStatusUpdateEvent> {
-                            it.status.state shouldBe TaskState.Working
+                            it.status.state shouldBe TaskState.TASK_STATE_WORKING
                             it.status.message shouldNotBeNull {
-                                role shouldBe Role.Agent
+                                role shouldBe Role.ROLE_AGENT
 
                                 parts.shouldForAll {
                                     it.shouldBeInstanceOf<TextPart> {
@@ -160,9 +160,9 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
                     // Has events from `cancel` - task is canceled
                     events.shouldForAtLeastOne {
                         it.shouldBeInstanceOf<TaskStatusUpdateEvent> {
-                            it.status.state shouldBe TaskState.Canceled
+                            it.status.state shouldBe TaskState.TASK_STATE_CANCELED
                             it.status.message shouldNotBeNull {
-                                role shouldBe Role.Agent
+                                role shouldBe Role.ROLE_AGENT
                                 parts shouldBe listOf(TextPart("Task canceled"))
                             }
                         }
@@ -183,9 +183,9 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
                         it.id shouldBe taskId
                         it.contextId shouldBe "test-context"
                         it.status should {
-                            it.state shouldBe TaskState.Canceled
+                            it.state shouldBe TaskState.TASK_STATE_CANCELED
                             it.message shouldNotBeNull {
-                                role shouldBe Role.Agent
+                                role shouldBe Role.ROLE_AGENT
                                 parts shouldBe listOf(TextPart("Task canceled"))
                             }
                         }
@@ -209,7 +209,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
             data = MessageSendParams(
                 message = Message(
                     messageId = Uuid.Companion.random().toString(),
-                    role = Role.User,
+                    role = Role.ROLE_USER,
                     parts = listOf(
                         TextPart("do long-running task"),
                     ),
@@ -237,9 +237,9 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
             it.contextId shouldBe "test-context"
 
             it.status should {
-                it.state shouldBe TaskState.Working
+                it.state shouldBe TaskState.TASK_STATE_WORKING
                 it.message shouldNotBeNull {
-                    role shouldBe Role.Agent
+                    role shouldBe Role.ROLE_AGENT
 
                     parts.shouldForAll {
                         it.shouldBeInstanceOf<TextPart> {

@@ -41,7 +41,6 @@ import ai.koog.prompt.xml.xml
 import ai.koog.utils.time.KoogClock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import ai.koog.serialization.typeToken
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -156,7 +155,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
                     taskId = currentTask.id,
                     contextId = currentTask.contextId,
                     status = TaskStatus(
-                        state = TaskState.Working,
+                        state = TaskState.TASK_STATE_WORKING,
                         message = userInput,
                         timestamp = KoogClock.System.now(),
                     ),
@@ -180,7 +179,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
         withA2AAgentServer {
             val message = A2AMessage(
                 messageId = Uuid.random().toString(),
-                role = Role.Agent,
+                role = Role.ROLE_AGENT,
                 parts = listOf(
                     TextPart(classification.response)
                 ),
@@ -204,7 +203,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
                 id = context.taskId,
                 contextId = context.contextId,
                 status = TaskStatus(
-                    state = TaskState.Submitted,
+                    state = TaskState.TASK_STATE_SUBMITTED,
                     message = userInput,
                     timestamp = KoogClock.System.now(),
                 ),
@@ -250,9 +249,9 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
                 taskId = context.taskId,
                 contextId = context.contextId,
                 status = TaskStatus(
-                    state = TaskState.InputRequired,
+                    state = TaskState.TASK_STATE_INPUT_REQUIRED,
                     message = A2AMessage(
-                        role = Role.Agent,
+                        role = Role.ROLE_AGENT,
                         parts = listOf(
                             TextPart(clarification.question)
                         ),
@@ -293,7 +292,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
                 taskId = context.taskId,
                 contextId = context.contextId,
                 status = TaskStatus(
-                    state = TaskState.Completed,
+                    state = TaskState.TASK_STATE_COMPLETED,
                 ),
                 final = true,
             )

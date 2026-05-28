@@ -26,9 +26,6 @@ public data class Task(
     public val artifacts: List<Artifact>? = null,
     public val metadata: JsonObject? = null,
 ) : CommunicationEvent, TaskEvent {
-    @EncodeDefault
-    override val kind: String = "task"
-
     override val taskId: String get() = id
 }
 
@@ -56,54 +53,45 @@ public enum class TaskState(public val terminal: Boolean) {
     /**
      * The task has been submitted and is awaiting execution.
      */
-    @SerialName("submitted")
-    Submitted(terminal = false),
+    TASK_STATE_SUBMITTED(terminal = false),
 
     /**
      * The agent is actively working on the task.
      */
-    @SerialName("working")
-    Working(terminal = false),
+    TASK_STATE_WORKING(terminal = false),
 
     /**
      * The task is paused and waiting for input from the user.
      */
-    @SerialName("input-required")
-    InputRequired(terminal = false),
+    TASK_STATE_INPUT_REQUIRED(terminal = false),
 
     /**
      * The task has been successfully completed.
      */
-    @SerialName("completed")
-    Completed(terminal = true),
+    TASK_STATE_COMPLETED(terminal = true),
 
     /**
      * The task has been canceled by the user.
      */
-    @SerialName("canceled")
-    Canceled(terminal = true),
+    TASK_STATE_CANCELED(terminal = true),
 
     /**
      * The task failed due to an error during execution.
      */
-    @SerialName("failed")
-    Failed(terminal = true),
+    TASK_STATE_FAILED(terminal = true),
 
     /**
      *  The task was rejected by the agent and was not started.
      */
-    @SerialName("rejected")
-    Rejected(terminal = true),
+    TASK_STATE_REJECTED(terminal = true),
 
     /**
      * The task requires authentication to proceed.
      */
-    @SerialName("auth-required")
-    AuthRequired(terminal = false),
+    TASK_STATE_AUTH_REQUIRED(terminal = false),
 
     /*
      * The task is in an unknown or indeterminate state.
      */
-    @SerialName("unknown")
-    Unknown(terminal = false),
+    TASK_STATE_UNKNOWN(terminal = false),
 }

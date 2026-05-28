@@ -63,7 +63,7 @@ suspend fun main() {
 
         val message = Message(
             messageId = Uuid.random().toString(),
-            role = Role.User,
+            role = Role.ROLE_USER,
             parts = listOf(TextPart(request)),
             contextId = contextId,
             taskId = currentTaskId
@@ -90,7 +90,7 @@ suspend fun main() {
 
                     is TaskStatusUpdateEvent -> {
                         when (event.status.state) {
-                            TaskState.InputRequired -> {
+                            TaskState.TASK_STATE_INPUT_REQUIRED -> {
                                 val question = event.status.message?.parts
                                     ?.filterIsInstance<TextPart>()
                                     ?.joinToString("\n") { it.text }
@@ -99,7 +99,7 @@ suspend fun main() {
                                 }
                             }
 
-                            TaskState.Completed -> {
+                            TaskState.TASK_STATE_COMPLETED -> {
                                 if (artifacts.isNotEmpty()) {
                                     println("${GREEN}=== Artifacts ===$RESET")
                                     artifacts.values.forEach { artifact ->
@@ -116,7 +116,7 @@ suspend fun main() {
                                 }
                             }
 
-                            TaskState.Failed, TaskState.Canceled, TaskState.Rejected -> {
+                            TaskState.TASK_STATE_FAILED, TaskState.TASK_STATE_CANCELED, TaskState.TASK_STATE_REJECTED -> {
                                 if (event.final) {
                                     currentTaskId = null
                                     artifacts.clear()

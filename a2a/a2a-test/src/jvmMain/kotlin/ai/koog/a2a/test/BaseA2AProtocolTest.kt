@@ -162,7 +162,7 @@ abstract class BaseA2AProtocolTest {
             data = MessageSendParams(
                 message = Message(
                     messageId = Uuid.random().toString(),
-                    role = Role.User,
+                    role = Role.ROLE_USER,
                     parts = listOf(
                         TextPart("hello world"),
                     ),
@@ -177,7 +177,7 @@ abstract class BaseA2AProtocolTest {
             response.id shouldBe request.id
 
             response.data.shouldBeInstanceOf<Message> {
-                it.role shouldBe Role.Agent
+                it.role shouldBe Role.ROLE_AGENT
                 it.parts shouldBe listOf(TextPart("Hello World"))
                 it.contextId shouldBe "test-context"
             }
@@ -189,7 +189,7 @@ abstract class BaseA2AProtocolTest {
             data = MessageSendParams(
                 message = Message(
                     messageId = Uuid.random().toString(),
-                    role = Role.User,
+                    role = Role.ROLE_USER,
                     parts = listOf(
                         TextPart("do task"),
                     ),
@@ -211,14 +211,14 @@ abstract class BaseA2AProtocolTest {
         events[0].shouldBeInstanceOf<Task> { task ->
             task.contextId shouldBe "test-context"
             task.status should {
-                it.state shouldBe TaskState.Submitted
+                it.state shouldBe TaskState.TASK_STATE_SUBMITTED
             }
 
             task.history shouldNotBeNull {
                 this shouldHaveSize 1
 
                 this[0] should {
-                    it.role shouldBe Role.User
+                    it.role shouldBe Role.ROLE_USER
                     it.parts shouldBe listOf(TextPart("do task"))
                 }
             }
@@ -228,9 +228,9 @@ abstract class BaseA2AProtocolTest {
             it.contextId shouldBe "test-context"
 
             it.status should {
-                it.state shouldBe TaskState.Working
+                it.state shouldBe TaskState.TASK_STATE_WORKING
                 it.message shouldNotBeNull {
-                    role shouldBe Role.Agent
+                    role shouldBe Role.ROLE_AGENT
                     parts shouldBe listOf(TextPart("Working on task"))
                 }
             }
@@ -240,9 +240,9 @@ abstract class BaseA2AProtocolTest {
             it.contextId shouldBe "test-context"
 
             it.status should {
-                it.state shouldBe TaskState.Completed
+                it.state shouldBe TaskState.TASK_STATE_COMPLETED
                 it.message shouldNotBeNull {
-                    role shouldBe Role.Agent
+                    role shouldBe Role.ROLE_AGENT
                     parts shouldBe listOf(TextPart("Task completed"))
                 }
             }
@@ -254,7 +254,7 @@ abstract class BaseA2AProtocolTest {
             data = MessageSendParams(
                 message = Message(
                     messageId = Uuid.random().toString(),
-                    role = Role.User,
+                    role = Role.ROLE_USER,
                     parts = listOf(
                         TextPart("do task"),
                     ),
@@ -281,7 +281,7 @@ abstract class BaseA2AProtocolTest {
                     task.id shouldBe taskId
                     task.contextId shouldBe "test-context"
                     task.status should { status ->
-                        status.state shouldBe TaskState.Completed
+                        status.state shouldBe TaskState.TASK_STATE_COMPLETED
                     }
                 }
             }
@@ -292,7 +292,7 @@ abstract class BaseA2AProtocolTest {
             data = MessageSendParams(
                 message = Message(
                     messageId = Uuid.random().toString(),
-                    role = Role.User,
+                    role = Role.ROLE_USER,
                     parts = listOf(
                         TextPart("do cancelable task"),
                     ),
@@ -315,9 +315,9 @@ abstract class BaseA2AProtocolTest {
             it.id shouldBe taskId
             it.contextId shouldBe "test-context"
             it.status should {
-                it.state shouldBe TaskState.Canceled
+                it.state shouldBe TaskState.TASK_STATE_CANCELED
                 it.message shouldNotBeNull {
-                    role shouldBe Role.Agent
+                    role shouldBe Role.ROLE_AGENT
                     parts shouldBe listOf(TextPart("Task canceled"))
                 }
             }
@@ -329,7 +329,7 @@ abstract class BaseA2AProtocolTest {
             data = MessageSendParams(
                 message = Message(
                     messageId = Uuid.random().toString(),
-                    role = Role.User,
+                    role = Role.ROLE_USER,
                     parts = listOf(
                         TextPart("do long-running task"),
                     ),
@@ -365,9 +365,9 @@ abstract class BaseA2AProtocolTest {
                 it.contextId shouldBe "test-context"
 
                 it.status should {
-                    it.state shouldBe TaskState.Working
+                    it.state shouldBe TaskState.TASK_STATE_WORKING
                     it.message shouldNotBeNull {
-                        role shouldBe Role.Agent
+                        role shouldBe Role.ROLE_AGENT
 
                         parts.shouldForAll {
                             it.shouldBeInstanceOf<TextPart> {
@@ -385,7 +385,7 @@ abstract class BaseA2AProtocolTest {
             data = MessageSendParams(
                 message = Message(
                     messageId = Uuid.random().toString(),
-                    role = Role.User,
+                    role = Role.ROLE_USER,
                     parts = listOf(
                         TextPart("do long-running task"),
                     ),

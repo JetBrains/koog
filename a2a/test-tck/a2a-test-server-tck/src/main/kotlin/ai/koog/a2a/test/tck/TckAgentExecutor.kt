@@ -37,7 +37,7 @@ class TckAgentExecutor : AgentExecutor {
             eventProcessor.sendMessage(
                 Message(
                     messageId = Uuid.random().toString(),
-                    role = Role.Agent,
+                    role = Role.ROLE_AGENT,
                     parts = listOf(TextPart("Hello! Please provide a message for me to respond to.")),
                     contextId = context.contextId
                 )
@@ -63,10 +63,10 @@ class TckAgentExecutor : AgentExecutor {
                 contextId = context.contextId,
                 taskId = taskId,
                 status = TaskStatus(
-                    state = TaskState.Failed,
+                    state = TaskState.TASK_STATE_FAILED,
                     message = Message(
                         messageId = Uuid.random().toString(),
-                        role = Role.Agent,
+                        role = Role.ROLE_AGENT,
                         parts = listOf(TextPart(errorMessage)),
                         contextId = context.contextId,
                         taskId = taskId
@@ -93,7 +93,7 @@ class TckAgentExecutor : AgentExecutor {
             contextId = context.contextId,
             taskId = taskId,
             status = TaskStatus(
-                state = TaskState.Canceled,
+                state = TaskState.TASK_STATE_CANCELED,
                 timestamp = Clock.System.now()
             ),
             final = true
@@ -111,7 +111,7 @@ class TckAgentExecutor : AgentExecutor {
             id = context.taskId,
             contextId = context.contextId,
             status = TaskStatus(
-                state = TaskState.Submitted,
+                state = TaskState.TASK_STATE_SUBMITTED,
                 timestamp = Clock.System.now()
             ),
             history = listOf(userMessage)
@@ -128,7 +128,7 @@ class TckAgentExecutor : AgentExecutor {
             contextId = context.contextId,
             taskId = task.id,
             status = TaskStatus(
-                state = TaskState.Working,
+                state = TaskState.TASK_STATE_WORKING,
                 timestamp = Clock.System.now()
             ),
             final = false
@@ -162,10 +162,10 @@ class TckAgentExecutor : AgentExecutor {
             contextId = context.contextId,
             taskId = task.id,
             status = TaskStatus(
-                state = TaskState.InputRequired,
+                state = TaskState.TASK_STATE_INPUT_REQUIRED,
                 message = Message(
                     messageId = Uuid.random().toString(),
-                    role = Role.Agent,
+                    role = Role.ROLE_AGENT,
                     parts = listOf(TextPart(result)),
                     contextId = context.contextId,
                     taskId = task.id
@@ -188,7 +188,7 @@ class TckAgentExecutor : AgentExecutor {
                 taskId = context.taskId,
                 contextId = context.contextId,
                 status = TaskStatus(
-                    state = TaskState.Working,
+                    state = TaskState.TASK_STATE_WORKING,
                     timestamp = Clock.System.now(),
                     message = userMessage
                 ),
@@ -203,11 +203,11 @@ class TckAgentExecutor : AgentExecutor {
                 taskId = context.taskId,
                 contextId = context.contextId,
                 status = TaskStatus(
-                    state = TaskState.Completed,
+                    state = TaskState.TASK_STATE_COMPLETED,
                     timestamp = Clock.System.now(),
                     message = Message(
                         messageId = Uuid.random().toString(),
-                        role = Role.Agent,
+                        role = Role.ROLE_AGENT,
                         parts = listOf(TextPart("Task completed successfully!")),
                         contextId = context.contextId,
                         taskId = context.taskId

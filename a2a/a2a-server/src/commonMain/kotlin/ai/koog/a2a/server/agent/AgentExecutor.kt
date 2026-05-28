@@ -22,7 +22,7 @@ public interface AgentExecutor {
      *
      * The agent should read necessary information from the [context] and publish [TaskEvent] or [Message] events to
      * the [eventProcessor]. This method should return once the agent's execution for this request is complete or
-     * yields control (e.g., enters a [TaskState.InputRequired] state).
+     * yields control (e.g., enters a [TaskState.TASK_STATE_INPUT_REQUIRED] state).
      *
      * All events must have context id from [RequestContext.contextId] and for task events task id from [RequestContext.taskId].
      *
@@ -88,7 +88,7 @@ public interface AgentExecutor {
      * e.g., [A2ATaskNotCancelableException].
      *
      * Can also publish [TaskEvent]s to the [eventProcessor] to update the task state. Must ensure that the final
-     * task state will be [TaskState.Canceled], otherwise the task will not be considered canceled, and the requester will
+     * task state will be [TaskState.TASK_STATE_CANCELED], otherwise the task will not be considered canceled, and the requester will
      * get [A2ATaskNotCancelableException].
      *
      * **IMPORTANT**: This should execute quickly as it runs synchronously with the request.

@@ -96,7 +96,7 @@ class InMemoryTaskStorageTest {
         }
         val newMessage = createUserMessage("status-msg", "context-1", "Task completed successfully")
         val newStatus = TaskStatus(
-            state = TaskState.Completed,
+            state = TaskState.TASK_STATE_COMPLETED,
             message = newMessage,
             timestamp = Instant.parse("2023-01-01T12:00:00Z")
         )
@@ -129,7 +129,7 @@ class InMemoryTaskStorageTest {
         val statusUpdateEvent = TaskStatusUpdateEvent(
             taskId = "non-existent",
             contextId = "context-1",
-            status = TaskStatus(state = TaskState.Completed),
+            status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
             final = true
         )
 
@@ -261,7 +261,7 @@ class InMemoryTaskStorageTest {
         // Update status with a new message - history is still empty
         val firstUpdateMessage = createUserMessage("update-msg-1", "context-1", "Making progress")
         val firstUpdateStatus = TaskStatus(
-            state = TaskState.Working,
+            state = TaskState.TASK_STATE_WORKING,
             message = firstUpdateMessage,
             timestamp = Instant.parse("2023-01-01T11:00:00Z")
         )
@@ -282,7 +282,7 @@ class InMemoryTaskStorageTest {
         // Second status update - this should add the previous status message to history
         val secondUpdateMessage = createUserMessage("update-msg-2", "context-1", "Almost done")
         val secondUpdateStatus = TaskStatus(
-            state = TaskState.Working,
+            state = TaskState.TASK_STATE_WORKING,
             message = secondUpdateMessage,
             timestamp = Instant.parse("2023-01-01T12:00:00Z")
         )
@@ -303,7 +303,7 @@ class InMemoryTaskStorageTest {
         // Final status update
         val completionMessage = createUserMessage("completion-msg", "context-1", "Task completed successfully")
         val completionStatus = TaskStatus(
-            state = TaskState.Completed,
+            state = TaskState.TASK_STATE_COMPLETED,
             message = completionMessage,
             timestamp = Instant.parse("2023-01-01T13:00:00Z")
         )
@@ -328,7 +328,7 @@ class InMemoryTaskStorageTest {
         content: String
     ) = Message(
         messageId = messageId,
-        role = Role.User,
+        role = Role.ROLE_USER,
         parts = listOf(TextPart(content)),
         contextId = contextId
     )
@@ -336,7 +336,7 @@ class InMemoryTaskStorageTest {
     private fun createTask(
         id: String,
         contextId: String,
-        status: TaskStatus = TaskStatus(state = TaskState.Submitted),
+        status: TaskStatus = TaskStatus(state = TaskState.TASK_STATE_SUBMITTED),
         history: List<Message>? = null,
         artifacts: List<Artifact>? = null,
         metadata: JsonObject? = null

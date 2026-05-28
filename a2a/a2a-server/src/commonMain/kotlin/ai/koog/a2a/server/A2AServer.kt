@@ -564,7 +564,7 @@ public open class A2AServer(
                 Response(
                     data = taskStorage.get(taskParams.id, historyLength = 0, includeArtifacts = true)
                         ?.also {
-                            if (it.status.state != TaskState.Canceled) {
+                            if (it.status.state != TaskState.TASK_STATE_CANCELED) {
                                 throw A2ATaskNotCancelableException("Task '${taskParams.id}' was not canceled successfully, current state is ${it.status.state}")
                             }
                         }

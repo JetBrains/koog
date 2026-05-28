@@ -136,7 +136,7 @@ class HttpJSONRPCClientTransportTest {
 
         val testMessage = Message(
             messageId = Uuid.random().toString(),
-            role = Role.User,
+            role = Role.ROLE_USER,
             parts = listOf(TextPart("Hello, agent!")),
             taskId = "task-123"
         )
@@ -154,7 +154,7 @@ class HttpJSONRPCClientTransportTest {
             id = id,
             data = Message(
                 messageId = "msg-456",
-                role = Role.Agent,
+                role = Role.ROLE_AGENT,
                 parts = listOf(TextPart("Hello, user! How can I help you?")),
                 taskId = "task-123"
             )
@@ -194,17 +194,17 @@ class HttpJSONRPCClientTransportTest {
                 id = "task-123",
                 contextId = "context-456",
                 status = TaskStatus(
-                    state = TaskState.Working,
+                    state = TaskState.TASK_STATE_WORKING,
                     message = Message(
                         messageId = Uuid.random().toString(),
-                        role = Role.Agent,
+                        role = Role.ROLE_AGENT,
                         parts = listOf(TextPart("Working on your request..."))
                     )
                 ),
                 history = listOf(
                     Message(
                         messageId = Uuid.random().toString(),
-                        role = Role.User,
+                        role = Role.ROLE_USER,
                         parts = listOf(TextPart("Hello, agent!")),
                         taskId = "task-123"
                     )
@@ -237,10 +237,10 @@ class HttpJSONRPCClientTransportTest {
                 id = "task-123",
                 contextId = "context-456",
                 status = TaskStatus(
-                    state = TaskState.Canceled,
+                    state = TaskState.TASK_STATE_CANCELED,
                     message = Message(
                         messageId = Uuid.random().toString(),
-                        role = Role.Agent,
+                        role = Role.ROLE_AGENT,
                         parts = listOf(TextPart("Task has been canceled."))
                     )
                 )
@@ -400,7 +400,7 @@ class HttpJSONRPCClientTransportTest {
 
         val testMessage = Message(
             messageId = Uuid.random().toString(),
-            role = Role.User,
+            role = Role.ROLE_USER,
             parts = listOf(TextPart("Hello, agent!")),
             taskId = "invalid-task-id"
         )
