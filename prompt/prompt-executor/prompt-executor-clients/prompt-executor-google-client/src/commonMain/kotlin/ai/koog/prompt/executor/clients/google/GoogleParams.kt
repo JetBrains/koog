@@ -5,6 +5,23 @@ import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.json.JsonElement
 import kotlin.time.Instant
 
+/**
+ * Configuration for Google Search grounding, which allows Gemini models to ground
+ * responses with real-time web search results.
+ *
+ * @property groundingEnabled When `true`, enables grounding with Google Search.
+ *   All other properties require this to be `true`.
+ * @property groundingStartTime Optional RFC3339 timestamp (e.g. `"2025-01-01T00:00:00Z"`)
+ *   restricting search results to those published after this time.
+ *   Must be set together with [groundingEndTime].
+ * @property groundingEndTime Optional RFC3339 timestamp restricting search results to those
+ *   published before this time. Must be set together with [groundingStartTime].
+ * @property webSearch When `true`, explicitly requests web search results in addition to
+ *   the default grounding behavior.
+ * @property imageSearch When `true`, explicitly requests image search results.
+ *
+ * API reference: https://ai.google.dev/api/caching#GoogleSearch
+ */
 public data class GoogleSearchConfig(
     val groundingEnabled: Boolean = false,
     val groundingStartTime: String? = null,
