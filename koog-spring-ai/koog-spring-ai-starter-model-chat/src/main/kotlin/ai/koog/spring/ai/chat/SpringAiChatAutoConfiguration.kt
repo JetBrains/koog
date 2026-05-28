@@ -1,7 +1,7 @@
 package ai.koog.spring.ai.chat
 
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.spring.ai.common.conditions.ConditionalOnPropertyMissingOrEmpty

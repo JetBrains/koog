@@ -1,6 +1,7 @@
 package ai.koog.integration.tests
 
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import com.github.dockerjava.api.model.Bind
@@ -35,7 +36,7 @@ class OllamaTestFixture {
 
     lateinit var client: OllamaClient
         private set
-    lateinit var executor: MultiLLMPromptExecutor
+    lateinit var executor: PromptExecutor
         private set
 
     val model = OllamaModels.Alibaba.QWEN_3_5_9B

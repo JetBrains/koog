@@ -1,6 +1,6 @@
 package ai.koog.agents.core.environment
 
-import ai.koog.agents.core.CalculatorChatExecutor.testClock
+import ai.koog.agents.core.CalculatorChatExecutorBuilder.testClock
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi

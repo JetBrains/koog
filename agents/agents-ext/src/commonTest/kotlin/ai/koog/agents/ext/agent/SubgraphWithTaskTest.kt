@@ -17,6 +17,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -723,10 +724,10 @@ class SubgraphWithTaskTest {
         private val finishToolName: String,
         private val invalidArgsJson: String,
         private val validArgsJson: String,
-    ) : PromptExecutor() {
+    ) : PromptExecutorBuilder() {
         var callCount = 0
 
-        override suspend fun execute(
+        override suspend fun onExecute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
@@ -743,13 +744,11 @@ class SubgraphWithTaskTest {
             )
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
+        override fun onStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
             emptyFlow()
 
-        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
+        override suspend fun onModerate(prompt: Prompt, model: LLModel): ModerationResult =
             ModerationResult(isHarmful = false, categories = emptyMap())
-
-        override fun close() {}
     }
 
     @Test
@@ -776,7 +775,7 @@ class SubgraphWithTaskTest {
         )
 
         AIAgent(
-            promptExecutor = executor,
+            promptExecutor = executor.build(),
             strategy = strategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry.EMPTY,

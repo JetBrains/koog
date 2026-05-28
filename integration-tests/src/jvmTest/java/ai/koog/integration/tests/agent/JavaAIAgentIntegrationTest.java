@@ -19,11 +19,12 @@ import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.*;
 import ai.koog.integration.tests.utils.annotations.Retry;
 import ai.koog.prompt.Prompt;
+import ai.koog.prompt.executor.builder.MultiLLMPromptExecutorBuilder;
+import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLMCapability;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.llm.LLModel;
@@ -194,7 +195,7 @@ public class JavaAIAgentIntegrationTest extends KoogJavaTestBase {
         resourcesToClose.add(openAIClient);
         resourcesToClose.add(anthropicClient);
 
-        MultiLLMPromptExecutor executor = new MultiLLMPromptExecutor(openAIClient, anthropicClient);
+        PromptExecutor executor = new MultiLLMPromptExecutorBuilder(openAIClient, anthropicClient).build();
         List<LLMProvider> providersSeen = new CopyOnWriteArrayList<>();
 
         AIAgent<String, String> agent = AIAgent.builder()

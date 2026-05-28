@@ -6,7 +6,8 @@ package ai.koog.prompt.executor.llms.all
 import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.clients.bedrock.StaticBearerTokenProvider
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import kotlin.jvm.JvmMultifileClass
@@ -25,7 +26,7 @@ public fun simpleBedrockExecutor(
     awsSecretAccessKey: String,
     awsSessionToken: String? = null,
     settings: BedrockClientSettings = BedrockClientSettings()
-): MultiLLMPromptExecutor =
+): PromptExecutor =
     MultiLLMPromptExecutor(
         LLMProvider.Bedrock to BedrockLLMClient(
             identityProvider = StaticCredentialsProvider {
@@ -50,7 +51,7 @@ public fun simpleBedrockExecutor(
 public fun simpleBedrockExecutorWithBearerToken(
     bedrockApiKey: String,
     settings: BedrockClientSettings = BedrockClientSettings()
-): MultiLLMPromptExecutor =
+): PromptExecutor =
     MultiLLMPromptExecutor(
         LLMProvider.Bedrock to BedrockLLMClient(
             identityProvider = StaticBearerTokenProvider(bedrockApiKey),

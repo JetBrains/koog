@@ -382,7 +382,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
         <!--- INCLUDE
         import ai.koog.agents.core.agent.AIAgent
         import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
-        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+        import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
         import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
         import kotlinx.coroutines.runBlocking
         -->

@@ -3,11 +3,12 @@ package ai.koog.integration.tests.client;
 import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.TestCredentials;
 import ai.koog.prompt.Prompt;
+import ai.koog.prompt.executor.builder.MultiLLMPromptExecutorBuilder;
+import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.message.Message;
 import ai.koog.prompt.message.MessagePart;
@@ -73,12 +74,12 @@ public class LLMClientIntegrationTest extends KoogJavaTestBase {
         resourcesToClose.add((AutoCloseable) openAIClient);
         resourcesToClose.add((AutoCloseable) anthropicClient);
 
-        MultiLLMPromptExecutor executor = new MultiLLMPromptExecutor(
+        PromptExecutor executor = new MultiLLMPromptExecutorBuilder(
             Map.of(
                 LLMProvider.OpenAI, openAIClient,
                 LLMProvider.Anthropic, anthropicClient
             )
-        );
+        ).build();
 
         Prompt openAIPrompt = Prompt.builder("test-multi-openai")
             .system("You are a helpful assistant.")

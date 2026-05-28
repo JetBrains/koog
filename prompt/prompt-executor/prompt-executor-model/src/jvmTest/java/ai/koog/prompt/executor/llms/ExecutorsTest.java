@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.llms;
 
 import ai.koog.prompt.Prompt;
+import ai.koog.prompt.executor.builder.MultiLLMPromptExecutorBuilder;
 import ai.koog.prompt.executor.clients.LLMClient;
 import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
@@ -38,15 +39,15 @@ class ExecutorsTest {
 
     Iterable<PromptExecutor> promptExecutors() {
         return List.of(
-            new MultiLLMPromptExecutor(Map.of(provider, llmClient)),
-            new MultiLLMPromptExecutor(Map.of(provider, llmClient))
+            new MultiLLMPromptExecutorBuilder(Map.of(provider, llmClient)).build(),
+            new MultiLLMPromptExecutorBuilder(Map.of(provider, llmClient)).build()
         );
     }
 
     Iterable<PromptExecutor> failingPromptExecutors() {
         return List.of(
-            new MultiLLMPromptExecutor(Map.of(provider, failingClient)),
-            new MultiLLMPromptExecutor(Map.of(provider, failingClient))
+            new MultiLLMPromptExecutorBuilder(Map.of(provider, failingClient)).build(),
+            new MultiLLMPromptExecutorBuilder(Map.of(provider, failingClient)).build()
         );
     }
 

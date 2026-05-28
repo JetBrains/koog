@@ -19,8 +19,8 @@ Here is an example:
     <!--- INCLUDE
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
-    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
-    import ai.koog.prompt.executor.cached.CachedPromptExecutor
+    import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
+    import ai.koog.prompt.executor.cached.factory.CachedPromptExecutor
     import ai.koog.prompt.cache.files.FilePromptCache
     import ai.koog.prompt.message.MessagePart
     import kotlin.system.measureTimeMillis

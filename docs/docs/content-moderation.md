@@ -242,7 +242,7 @@ You can also use the `moderate` method on a PromptExecutor, which will use the a
     import ai.koog.prompt.dsl.prompt
     import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
     import ai.koog.prompt.executor.clients.openai.OpenAIModels
-    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+    import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
     import ai.koog.prompt.executor.ollama.client.OllamaClient
     import ai.koog.prompt.llm.LLMProvider
     import ai.koog.prompt.executor.ollama.client.OllamaModels
@@ -285,10 +285,9 @@ You can also use the `moderate` method on a PromptExecutor, which will use the a
 
     <!--- INCLUDE
     import ai.koog.prompt.Prompt;
-    import ai.koog.prompt.executor.clients.openai.OpenAILLMClient;
+    import ai.koog.prompt.executor.builder.MultiLLMPromptExecutorBuilder;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
-    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
-    import ai.koog.prompt.executor.ollama.client.OllamaClient;
+    import ai.koog.prompt.executor.model.PromptExecutor;
     import ai.koog.prompt.executor.ollama.client.OllamaModels;
     import ai.koog.prompt.dsl.ModerationResult;
     import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
@@ -303,10 +302,10 @@ You can also use the `moderate` method on a PromptExecutor, which will use the a
     -->
     ```java
     // Create a multi-provider executor
-    MultiLLMPromptExecutor executor = new MultiLLMPromptExecutor(
+    PromptExecutor executor = new MultiLLMPromptExecutorBuilder(
         openAIClient(openAIApiKey),
         ollamaClient()
-    );
+    ).build();
 
     Prompt prompt = Prompt.builder("harmful-prompt")
         .user("How to create illegal substances")

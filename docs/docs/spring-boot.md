@@ -249,7 +249,7 @@ After configuring multiple LLM providers you can send request to multiple LLMs v
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Haiku_4_5
     import ai.koog.prompt.executor.clients.openai.OpenAIModels.Chat.GPT4oMini
     import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels.Claude3Haiku
-    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+    import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
     import org.slf4j.Logger
     import org.slf4j.LoggerFactory
     import org.springframework.stereotype.Service
@@ -291,7 +291,7 @@ After configuring multiple LLM providers you can send request to multiple LLMs v
     import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
     import ai.koog.prompt.executor.clients.openai.OpenAIModels;
     import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels;
-    import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+    import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor;
     import ai.koog.prompt.llm.LLModel;
     import ai.koog.prompt.message.Message;
     import org.slf4j.Logger;

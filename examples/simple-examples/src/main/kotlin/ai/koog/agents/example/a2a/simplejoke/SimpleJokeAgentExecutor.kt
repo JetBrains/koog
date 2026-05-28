@@ -14,7 +14,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid

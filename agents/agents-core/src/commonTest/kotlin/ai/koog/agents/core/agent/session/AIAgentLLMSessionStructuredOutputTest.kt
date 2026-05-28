@@ -2,7 +2,7 @@
 
 package ai.koog.agents.core.agent.session
 
-import ai.koog.agents.core.CalculatorChatExecutor.testClock
+import ai.koog.agents.core.CalculatorChatExecutorBuilder.testClock
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.AgentTestBase
 import ai.koog.agents.core.annotation.InternalAgentsApi

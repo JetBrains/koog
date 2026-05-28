@@ -2,7 +2,7 @@
 
 package ai.koog.agents.core.agent.context
 
-import ai.koog.agents.core.CalculatorChatExecutor
+import ai.koog.agents.core.CalculatorChatExecutorBuilder
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
@@ -204,7 +204,7 @@ class AIAgentLLMContextConcurrencyTest {
             tool(testTool)
         }
 
-        val mockExecutor = getMockExecutor(serializer, clock = CalculatorChatExecutor.testClock) {
+        val mockExecutor = getMockExecutor(serializer, clock = CalculatorChatExecutorBuilder.testClock) {
             mockLLMAnswer("Test response").asDefaultResponse
         }
 
@@ -217,7 +217,7 @@ class AIAgentLLMContextConcurrencyTest {
             promptExecutor = mockExecutor,
             environment = createTestEnvironment(),
             config = createTestConfig(),
-            clock = CalculatorChatExecutor.testClock
+            clock = CalculatorChatExecutorBuilder.testClock
         )
     }
 }

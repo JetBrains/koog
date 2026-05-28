@@ -3,7 +3,7 @@ package ai.koog.agents.core
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
@@ -19,7 +19,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.time.Instant
 
-object CalculatorChatExecutor : PromptExecutor() {
+object CalculatorChatExecutorBuilder : PromptExecutorBuilder() {
     private val json = Json {
         ignoreUnknownKeys = true
         allowStructuredMapKeys = true
@@ -29,7 +29,7 @@ object CalculatorChatExecutor : PromptExecutor() {
 
     val testClock: KoogClock = KoogClock { Instant.parse("2023-01-01T00:00:00Z") }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
+    override suspend fun onExecute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         val input = prompt.messages.filterIsInstance<Message.User>()
             .joinToString("\n") { msg -> msg.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text } }
         val numbers = input.split(Regex("[^0-9.]")).filter { it.isNotEmpty() }.map { it.toFloat() }
@@ -56,14 +56,14 @@ object CalculatorChatExecutor : PromptExecutor() {
         }
     }
 
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> =
         flow {
             try {
-                execute(prompt, model, tools).toStreamFrames().forEach { frame -> emit(frame) }
+                onExecute(prompt, model, tools).toStreamFrames().forEach { frame -> emit(frame) }
             } catch (t: CancellationException) {
                 throw t
             } catch (t: Throwable) {
@@ -71,12 +71,10 @@ object CalculatorChatExecutor : PromptExecutor() {
             }
         }
 
-    override suspend fun moderate(
+    override suspend fun onModerate(
         prompt: Prompt,
         model: LLModel
     ): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed for CalculatorExecutor")
     }
-
-    override fun close() {}
 }

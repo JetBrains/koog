@@ -9,7 +9,8 @@ import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -91,7 +92,7 @@ class MultipleLLMPromptExecutorMockTest {
             flowOf("Gemini", " streaming", " response").map(StreamFrame::TextDelta)
     }
 
-    private lateinit var executor: MultiLLMPromptExecutor
+    private lateinit var executor: PromptExecutor
 
     @BeforeTest
     fun initializeExecutor() {

@@ -7,7 +7,7 @@ import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.TextTestScenario
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.getLLMClientForProvider
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -77,7 +77,7 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         }
     }
 
-    private val executor: MultiLLMPromptExecutor = run {
+    private val executor: PromptExecutor = run {
         val providers = Models.allCompletionModels().map { model -> Arguments.of(model) }
             .toList()
             .map { it.get().single() as LLModel }

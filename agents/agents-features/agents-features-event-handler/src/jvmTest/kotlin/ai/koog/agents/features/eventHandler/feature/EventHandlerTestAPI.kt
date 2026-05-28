@@ -46,7 +46,7 @@ fun createAgent(
 
     return AIAgent(
         id = agentId,
-        promptExecutor = executor ?: TestLLMExecutor(testClock),
+        promptExecutor = executor ?: TestLLMExecutorBuilder(testClock).build(),
         strategy = strategy,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry ?: ToolRegistry { },

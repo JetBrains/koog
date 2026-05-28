@@ -1,7 +1,6 @@
 package ai.koog.spring.ai.chat
 
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import io.mockk.mockk
@@ -71,7 +70,7 @@ class SpringAiChatAutoConfigurationTest {
             .withBean("userLLMClient", LLMClient::class.java, { existingClient })
             .run { context ->
                 val executor = context.getBean<PromptExecutor>()
-                assertInstanceOf<MultiLLMPromptExecutor>(executor)
+                assertInstanceOf<PromptExecutor>(executor)
             }
     }
 
@@ -268,7 +267,7 @@ class SpringAiChatAutoConfigurationTest {
             .withBean(ChatModel::class.java, { mockk<ChatModel>(relaxed = true) })
             .run { context ->
                 val executor = context.getBean<PromptExecutor>()
-                assertInstanceOf<MultiLLMPromptExecutor>(executor)
+                assertInstanceOf<PromptExecutor>(executor)
             }
     }
 

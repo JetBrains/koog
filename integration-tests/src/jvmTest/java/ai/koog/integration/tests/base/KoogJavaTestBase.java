@@ -9,7 +9,8 @@ import ai.koog.prompt.executor.clients.LLMClient;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactory;
 import ai.koog.prompt.executor.clients.google.GoogleClientFactory;
 import ai.koog.prompt.executor.clients.openai.OpenAIClientFactory;
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+import ai.koog.prompt.executor.builder.MultiLLMPromptExecutorBuilder;
+import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.llm.LLMProvider;
 import ai.koog.prompt.llm.LLModel;
 import kotlin.coroutines.Continuation;
@@ -45,7 +46,7 @@ public abstract class KoogJavaTestBase {
         }
     }
 
-    protected MultiLLMPromptExecutor createExecutor(LLModel model) {
+    protected PromptExecutor createExecutor(LLModel model) {
         LLMClient client;
         if (model.getProvider() == LLMProvider.OpenAI) {
             client = openAIClient(TestCredentials.INSTANCE.readTestOpenAIKeyFromEnv());
@@ -59,7 +60,7 @@ public abstract class KoogJavaTestBase {
         if (client instanceof AutoCloseable) {
             resourcesToClose.add((AutoCloseable) client);
         }
-        return new MultiLLMPromptExecutor(client);
+        return new MultiLLMPromptExecutorBuilder(client).build();
     }
 
     protected <T> T runBlocking(SuspendFunction<T> suspendFunction) {

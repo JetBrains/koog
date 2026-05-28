@@ -14,7 +14,8 @@ import ai.koog.integration.tests.utils.TestCredentials.readAwsSecretAccessKeyFro
 import ai.koog.integration.tests.utils.TestCredentials.readAwsSessionTokenFromEnv
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.factory.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.bedrockagentcore.BedrockAgentCoreClient
 import aws.sdk.kotlin.services.bedrockagentcorecontrol.BedrockAgentCoreControlClient
@@ -71,7 +72,7 @@ class AgentCoreLTMIntegrationTest {
 
     private lateinit var agentCoreClient: BedrockAgentCoreClient
     private lateinit var controlClient: BedrockAgentCoreControlClient
-    private lateinit var llmExecutor: MultiLLMPromptExecutor
+    private lateinit var llmExecutor: PromptExecutor
     private lateinit var strategies: List<DiscoveredStrategy>
 
     private val region = System.getenv("AWS_REGION") ?: "us-east-1"

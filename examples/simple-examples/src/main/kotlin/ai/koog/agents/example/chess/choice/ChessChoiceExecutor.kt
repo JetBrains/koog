@@ -14,7 +14,7 @@ import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.chess.ChessGame
 import ai.koog.agents.example.chess.Move
 import ai.koog.agents.example.chess.nodeTrimHistory
-import ai.koog.agents.ext.llm.choice.PromptExecutorWithChoiceSelection
+import ai.koog.agents.ext.llm.choice.factory.PromptExecutorWithChoiceSelection
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor

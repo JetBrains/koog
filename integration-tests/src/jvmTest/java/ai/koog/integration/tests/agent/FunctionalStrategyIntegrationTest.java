@@ -11,7 +11,7 @@ import ai.koog.integration.tests.base.KoogJavaTestBase;
 import ai.koog.integration.tests.utils.JavaUtils;
 import ai.koog.integration.tests.utils.NumberTools;
 import ai.koog.prompt.Prompt;
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+import ai.koog.prompt.executor.model.PromptExecutor;
 import ai.koog.prompt.llm.LLModel;
 import ai.koog.prompt.message.Message;
 import ai.koog.prompt.message.MessagePart;
@@ -151,7 +151,7 @@ public class FunctionalStrategyIntegrationTest extends KoogJavaTestBase {
     public void integration_Subtask(LLModel model) {
         JavaUtils.assumeAvailable(model.getProvider());
 
-        MultiLLMPromptExecutor executor = createExecutor(model);
+        PromptExecutor executor = createExecutor(model);
 
         NumberTools calculator = new NumberTools();
 

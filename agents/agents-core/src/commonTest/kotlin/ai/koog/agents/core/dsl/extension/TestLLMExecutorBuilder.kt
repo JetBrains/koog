@@ -3,7 +3,7 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorBuilder
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlin.time.Instant
 
-class TestLLMExecutor : PromptExecutor() {
+class TestLLMExecutorBuilder : PromptExecutorBuilder() {
 
     private val logger = KotlinLogging.logger {}
 
@@ -37,18 +37,11 @@ class TestLLMExecutor : PromptExecutor() {
     // Store the messages for inspection
     var messages: MutableList<Message> = mutableListOf()
 
-    // Reset the state for a new test
-    fun reset() {
-        tldrCount = 0
-        factCount = 0
-        messages = mutableListOf()
-    }
-
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
+    override suspend fun onExecute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         return handlePrompt(prompt)
     }
 
-    override fun executeStreaming(
+    override fun onStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -56,7 +49,7 @@ class TestLLMExecutor : PromptExecutor() {
         handlePrompt(prompt).toStreamFrames().forEach { emit(it) }
     }
 
-    override suspend fun moderate(
+    override suspend fun onModerate(
         prompt: Prompt,
         model: LLModel
     ): ModerationResult {
@@ -119,6 +112,4 @@ class TestLLMExecutor : PromptExecutor() {
         messages.add(response)
         return response
     }
-
-    override fun close() {}
 }
