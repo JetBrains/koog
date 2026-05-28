@@ -46,7 +46,7 @@ class SessionEventProcessorTest {
         content: String
     ) = Message(
         messageId = messageId,
-        role = Role.User,
+        role = Role.ROLE_USER,
         parts = listOf(TextPart(content)),
         contextId = contextId
     )
@@ -54,7 +54,7 @@ class SessionEventProcessorTest {
     private fun createTask(
         id: String,
         contextId: String,
-        state: TaskState = TaskState.Submitted
+        state: TaskState = TaskState.TASK_STATE_SUBMITTED
     ) = Task(
         id = id,
         contextId = contextId,
@@ -156,7 +156,7 @@ class SessionEventProcessorTest {
         val statusUpdate = TaskStatusUpdateEvent(
             taskId = taskId,
             contextId = contextId,
-            status = TaskStatus(state = TaskState.Working),
+            status = TaskStatus(state = TaskState.TASK_STATE_WORKING),
             final = false
         )
 
@@ -187,7 +187,7 @@ class SessionEventProcessorTest {
         val finalStatusUpdate = TaskStatusUpdateEvent(
             taskId = taskId,
             contextId = contextId,
-            status = TaskStatus(state = TaskState.Completed),
+            status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
             final = true
         )
         val anotherEvent = TaskArtifactUpdateEvent(
@@ -260,7 +260,7 @@ class SessionEventProcessorTest {
         val workingUpdate = TaskStatusUpdateEvent(
             taskId = taskId,
             contextId = contextId,
-            status = TaskStatus(state = TaskState.Working),
+            status = TaskStatus(state = TaskState.TASK_STATE_WORKING),
             final = false
         )
         processor.sendTaskEvent(workingUpdate)
@@ -282,7 +282,7 @@ class SessionEventProcessorTest {
         val completedUpdate = TaskStatusUpdateEvent(
             taskId = taskId,
             contextId = contextId,
-            status = TaskStatus(state = TaskState.Completed),
+            status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
             final = true
         )
         processor.sendTaskEvent(completedUpdate)
@@ -291,7 +291,7 @@ class SessionEventProcessorTest {
 
         // Verify final state
         val finalTask = taskStorage.get(taskId, includeArtifacts = true)
-        assertEquals(TaskState.Completed, finalTask?.status?.state)
+        assertEquals(TaskState.TASK_STATE_COMPLETED, finalTask?.status?.state)
         assertEquals(listOf(artifact), finalTask?.artifacts)
     }
 
@@ -363,7 +363,7 @@ class SessionEventProcessorTest {
         val workingUpdate = TaskStatusUpdateEvent(
             taskId = taskId,
             contextId = contextId,
-            status = TaskStatus(state = TaskState.Working),
+            status = TaskStatus(state = TaskState.TASK_STATE_WORKING),
             final = false
         )
 

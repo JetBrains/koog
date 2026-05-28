@@ -38,7 +38,7 @@ class MessageConvertersTest {
 
         val a2a = A2AMessage(
             messageId = "m1",
-            role = Role.User,
+            role = Role.ROLE_USER,
             parts = listOf(
                 TextPart("Hello"),
                 DataPart(json),
@@ -99,7 +99,7 @@ class MessageConvertersTest {
     fun testA2AtoKoog_Agent() {
         val a2a = A2AMessage(
             messageId = "m2",
-            role = Role.Agent,
+            role = Role.ROLE_AGENT,
             parts = listOf(TextPart("Agent says hi")),
         )
 
@@ -176,7 +176,7 @@ class MessageConvertersTest {
         val expectedBinBase64 = AttachmentContent.Binary.Bytes(bytes).asBase64()
         val expected = A2AMessage(
             messageId = "mid",
-            role = Role.User,
+            role = Role.ROLE_USER,
             parts = listOf(
                 TextPart("Hi"),
                 FilePart(FileWithBytes(bytes = expectedPlainBase64, name = "note.txt", mimeType = "text/plain")),
@@ -217,7 +217,7 @@ class MessageConvertersTest {
         )
         val expected = A2AMessage(
             messageId = "m3",
-            role = Role.Agent,
+            role = Role.ROLE_AGENT,
             parts = listOf(TextPart("Answer")),
             extensions = null,
             taskId = null,

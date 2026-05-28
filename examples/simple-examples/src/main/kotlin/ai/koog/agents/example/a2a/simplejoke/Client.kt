@@ -65,7 +65,7 @@ suspend fun main() {
 
         val message = Message(
             messageId = Uuid.random().toString(),
-            role = Role.User,
+            role = Role.ROLE_USER,
             parts = listOf(TextPart(request)),
             contextId = contextId
         )

@@ -1,7 +1,5 @@
 package ai.koog.a2a.model
 
-import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
@@ -10,11 +8,8 @@ import kotlinx.serialization.json.JsonObject
  */
 @Serializable
 public enum class Role {
-    @SerialName("user")
-    User,
-
-    @SerialName("agent")
-    Agent
+    ROLE_USER,
+    ROLE_AGENT
 }
 
 /**
@@ -40,7 +35,4 @@ public data class Message(
     public val referenceTaskIds: List<String>? = null,
     public val contextId: String? = null,
     public val metadata: JsonObject? = null,
-) : CommunicationEvent {
-    @EncodeDefault
-    override val kind: String = "message"
-}
+) : CommunicationEvent

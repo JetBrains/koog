@@ -59,7 +59,7 @@ class SessionManagerTest {
         content: String
     ) = Message(
         messageId = messageId,
-        role = Role.User,
+        role = Role.ROLE_USER,
         parts = listOf(TextPart(content)),
         contextId = contextId
     )
@@ -67,7 +67,7 @@ class SessionManagerTest {
     private fun createTask(
         id: String,
         contextId: String,
-        state: TaskState = TaskState.Submitted
+        state: TaskState = TaskState.TASK_STATE_SUBMITTED
     ) = Task(
         id = id,
         contextId = contextId,
@@ -148,7 +148,7 @@ class SessionManagerTest {
             val statusUpdate = TaskStatusUpdateEvent(
                 taskId = taskId,
                 contextId = contextId,
-                status = TaskStatus(state = TaskState.Completed),
+                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
                 final = true
             )
             eventProcessor.sendTaskEvent(statusUpdate)
@@ -192,7 +192,7 @@ class SessionManagerTest {
             val statusUpdate = TaskStatusUpdateEvent(
                 taskId = "task-1",
                 contextId = "context-1",
-                status = TaskStatus(state = TaskState.Completed),
+                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
                 final = true
             )
             eventProcessor1.sendTaskEvent(statusUpdate)
@@ -211,7 +211,7 @@ class SessionManagerTest {
             val statusUpdate = TaskStatusUpdateEvent(
                 taskId = "task-2",
                 contextId = "context-2",
-                status = TaskStatus(state = TaskState.Completed),
+                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
                 final = true
             )
             eventProcessor2.sendTaskEvent(statusUpdate)
@@ -261,7 +261,7 @@ class SessionManagerTest {
             val statusUpdate = TaskStatusUpdateEvent(
                 taskId = "task-1",
                 contextId = contextId,
-                status = TaskStatus(state = TaskState.Completed),
+                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
                 final = true
             )
             eventProcessor.sendTaskEvent(statusUpdate)
@@ -277,6 +277,6 @@ class SessionManagerTest {
         assertEquals(1, pushSender.sentNotifications.size)
         val (sentConfig, sentTask) = pushSender.sentNotifications[0]
         assertEquals(config, sentConfig)
-        assertEquals(TaskState.Completed, sentTask.status.state)
+        assertEquals(TaskState.TASK_STATE_COMPLETED, sentTask.status.state)
     }
 }

@@ -6,12 +6,7 @@ import kotlinx.serialization.Serializable
  * Base interface for events.
  */
 @Serializable(with = EventSerializer::class)
-public sealed interface Event {
-    /**
-     * The type used as discriminator.
-     */
-    public val kind: String
-}
+public sealed interface Event
 
 /**
  * Base interface for communication events, such as messages or tasks.

@@ -92,7 +92,7 @@ class InMemoryMessageStorageTest {
         content: String = "test content"
     ) = Message(
         messageId = messageId,
-        role = Role.User,
+        role = Role.ROLE_USER,
         parts = listOf(TextPart(content)),
         contextId = contextId
     )

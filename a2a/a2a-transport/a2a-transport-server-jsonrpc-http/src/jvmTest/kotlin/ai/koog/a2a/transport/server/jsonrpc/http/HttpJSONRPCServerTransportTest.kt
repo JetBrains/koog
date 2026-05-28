@@ -77,7 +77,7 @@ class HttpJSONRPCServerTransportTest {
 
         val communicationEvent = Message(
             messageId = "message-1",
-            role = Role.Agent,
+            role = Role.ROLE_AGENT,
             parts = listOf(TextPart("Response message.")),
             taskId = "task-1"
         )
@@ -85,13 +85,13 @@ class HttpJSONRPCServerTransportTest {
         val updateEvents = listOf(
             Message(
                 messageId = "message-stream-1",
-                role = Role.Agent,
+                role = Role.ROLE_AGENT,
                 parts = listOf(TextPart("Streaming response part 1")),
                 taskId = "task-1"
             ),
             Message(
                 messageId = "message-stream-2",
-                role = Role.Agent,
+                role = Role.ROLE_AGENT,
                 parts = listOf(TextPart("Streaming response part 2")),
                 taskId = "task-1"
             )
@@ -101,7 +101,7 @@ class HttpJSONRPCServerTransportTest {
             id = "task-1",
             contextId = "test-context-1",
             status = TaskStatus(
-                state = TaskState.Working
+                state = TaskState.TASK_STATE_WORKING
             )
         )
 
@@ -109,7 +109,7 @@ class HttpJSONRPCServerTransportTest {
             id = "task-1",
             contextId = "test-context-1",
             status = TaskStatus(
-                state = TaskState.Canceled
+                state = TaskState.TASK_STATE_CANCELED
             )
         )
 
@@ -357,7 +357,7 @@ class HttpJSONRPCServerTransportTest {
         val messageSendParams = MessageSendParams(
             message = Message(
                 messageId = "msg-1",
-                role = Role.User,
+                role = Role.ROLE_USER,
                 parts = listOf(TextPart("Hello, agent!")),
                 taskId = "task-1"
             )
@@ -387,7 +387,7 @@ class HttpJSONRPCServerTransportTest {
         val messageSendParams = MessageSendParams(
             message = Message(
                 messageId = "msg-1",
-                role = Role.User,
+                role = Role.ROLE_USER,
                 parts = listOf(TextPart("Hello, agent!")),
                 taskId = "task-1"
             )

@@ -49,7 +49,7 @@ public fun A2AMessage.toKoogMessage(
     val parts = parts.map { it.toKoogPart() }
 
     return when (role) {
-        Role.User -> Message.User(
+        Role.ROLE_USER -> Message.User(
             parts = parts,
             metaInfo = RequestMetaInfo(
                 timestamp = clock.now(),
@@ -57,7 +57,7 @@ public fun A2AMessage.toKoogMessage(
             ),
         )
 
-        Role.Agent -> Message.Assistant(
+        Role.ROLE_AGENT -> Message.Assistant(
             parts = parts,
             metaInfo = ResponseMetaInfo(
                 timestamp = clock.now(),
@@ -82,8 +82,8 @@ public fun Message.toA2AMessage(
     val actualMetadata = a2aMetadata ?: metaInfo.getA2AMetadata()
 
     val role = when (this) {
-        is Message.User -> Role.User
-        is Message.Assistant -> Role.Agent
+        is Message.User -> Role.ROLE_USER
+        is Message.Assistant -> Role.ROLE_AGENT
         else -> throw IllegalArgumentException("A2A can't handle this Koog message type: $this")
     }
 
