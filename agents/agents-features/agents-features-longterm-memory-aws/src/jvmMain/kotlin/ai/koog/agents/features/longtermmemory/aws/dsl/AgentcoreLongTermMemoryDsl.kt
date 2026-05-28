@@ -9,7 +9,6 @@ import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemorySt
 import ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcorePromptAugmenter
 import ai.koog.agents.longtermmemory.feature.LongTermMemory
 import ai.koog.agents.longtermmemory.retrieval.augmentation.PromptAugmenter
-import ai.koog.agents.longtermmemory.retrieval.augmentation.SystemPromptAugmenter
 import ai.koog.agents.longtermmemory.retrieval.search.SearchStrategy
 import aws.sdk.kotlin.services.bedrockagentcore.BedrockAgentCoreClient
 
@@ -74,7 +73,7 @@ public fun LongTermMemory.RetrievalSettingsBuilder.agentcore(
  * namespace, both under the same strategy id).
  *
  * The augmentation point for the merged result can be chosen via [augmenter]; it
- * defaults to [SystemPromptAugmenter].
+ * defaults to [AgentcorePromptAugmenter].
  */
 @AgentcoreLtmDsl
 public class AgentcoreRetrievalBuilder internal constructor(
@@ -88,8 +87,7 @@ public class AgentcoreRetrievalBuilder internal constructor(
      * [AgentcorePromptAugmenter], which routes each record to the appropriate augmentation
      * pathway based on its [ai.koog.agents.features.longtermmemory.aws.augmentation.AgentcoreMemoryStrategy]
      * (system message injection for SEMANTIC/PREFERENCE/EPISODES/REFLECTIONS, user message
-     * rewrite for SUMMARY). Set to a [ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter]
-     * or [SystemPromptAugmenter] to override with a strategy-agnostic augmenter.
+     * rewrite for SUMMARY).
      */
     public var augmenter: PromptAugmenter = AgentcorePromptAugmenter()
 
