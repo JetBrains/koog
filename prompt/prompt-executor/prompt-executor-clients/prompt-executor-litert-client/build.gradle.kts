@@ -17,7 +17,6 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 api(project(":prompt:prompt-llm"))
                 implementation(libs.android.litertlm)
-                implementation(libs.mcp.client)
                 implementation(libs.kotlinx.serialization.json)
             }
         }
