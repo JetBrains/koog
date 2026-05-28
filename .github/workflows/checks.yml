@@ -70,6 +70,9 @@ jobs:
       - name: Assemble with Gradle Wrapper
         run: ./gradlew assemble ktlintCheck
 
+      - name: Check ABI compatibility
+        run: ./gradlew checkLegacyAbi
+
       - name: TestClasses with Gradle Wrapper
         run: ./gradlew jvmTestClasses jsTestClasses
 
