@@ -239,7 +239,9 @@ public class AIAgentGraphContext(
      * context starts with an empty local store.
      */
     override suspend fun fork(): AIAgentGraphContextBase = copy(
-        llm = this.llm.copy(),
+        llm = this.llm.copy(
+            prompt = this.llm.prompt.copy(),
+        ),
         storage = this.storage.copy(),
         stateManager = this.stateManager.copy(),
         executionInfo = this.executionInfo.copy(),
