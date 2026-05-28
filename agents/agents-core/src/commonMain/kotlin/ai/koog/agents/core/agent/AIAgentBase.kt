@@ -112,4 +112,6 @@ public abstract class AIAgentBase<Input, Output, TContext : AIAgentContext> cons
      * @return the initialized context specific to the agent setup for the provided input and run ID.
      */
     public abstract suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): TContext
+
+    public val x: Int = 0
 }
