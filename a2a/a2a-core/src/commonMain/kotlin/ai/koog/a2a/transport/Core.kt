@@ -1,5 +1,6 @@
 package ai.koog.a2a.transport
 
+import ai.koog.a2a.serialization.RequestIdSerializer
 import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid

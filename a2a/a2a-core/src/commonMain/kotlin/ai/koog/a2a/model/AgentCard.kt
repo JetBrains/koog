@@ -1,5 +1,6 @@
 package ai.koog.a2a.model
 
+import ai.koog.a2a.serialization.SecuritySchemeSerializer
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
