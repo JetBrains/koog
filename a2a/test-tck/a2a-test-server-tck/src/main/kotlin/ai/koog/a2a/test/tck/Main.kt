@@ -54,10 +54,10 @@ suspend fun main() {
         version = "1.0.0",
         url = "http://localhost:9999/a2a",
         preferredTransport = TransportProtocol.JSONRPC,
-        additionalInterfaces = listOf(
+        supportedInterfaces = listOf(
             AgentInterface(
                 url = "http://localhost:9999/a2a",
-                transport = TransportProtocol.JSONRPC,
+                protocolBinding = TransportProtocol.JSONRPC,
             )
         ),
         capabilities = AgentCapabilities(

@@ -11,27 +11,11 @@ import kotlin.jvm.JvmInline
  * The [AgentCard] is a self-describing manifest for an agent. It provides essential metadata including the agent's
  * identity, capabilities, skills, supported communication methods, and security requirements.
  *
- * @property protocolVersion The version of the A2A protocol this agent supports. Default: "0.3.0".
- *
  * @property name A human-readable name for the agent. Examples: ["Recipe Agent"].
  *
  * @property description A human-readable description of the agent, assisting users and other agents in understanding its purpose.
  *
- *   Examples: ["Agent that helps users with recipes and cooking."].
- *
- * @property url The preferred endpoint URL for interacting with the agent. This URL MUST support the transport specified by 'preferredTransport'.
- *
- *   Examples: ["https://api.example.com/a2a/v1"].
- *
- * @property preferredTransport The transport protocol for the preferred endpoint (the main 'url' field). If not specified, defaults to 'JSONRPC'.
- *
- *   IMPORTANT: The transport specified here MUST be available at the main 'url'. This creates a binding between the main URL and its supported
- *   transport protocol. Clients should prefer this transport and URL combination when both are supported.
- *
- *   Examples: ["JSONRPC", "GRPC", "HTTP+JSON"].
- *
- * @property additionalInterfaces A list of additional supported interfaces (transport and URL combinations). This allows agents to expose multiple
- *   transports, potentially at different URLs.
+ * @property supportedInterfaces A list of supported interfaces (transport and URL combinations). The first entry is preferred.
  *
  *   Best practices:
  *   - SHOULD include all supported transports
@@ -69,41 +53,25 @@ import kotlin.jvm.JvmInline
  *
  * @property skills The set of skills, or distinct capabilities, that the agent can perform.
  *
- * @property supportsAuthenticatedExtendedCard If true, the agent can provide an extended agent card with additional details to authenticated users. Defaults to false.
- *
  * @property signatures JSON Web Signatures computed for this [AgentCard].
  */
 @Serializable
 public data class AgentCard(
-    @EncodeDefault
-    public val protocolVersion: String = "0.3.0",
     public val name: String,
     public val description: String,
-    public val url: String,
-    @EncodeDefault
-    public val preferredTransport: TransportProtocol = TransportProtocol.JSONRPC,
-    public val additionalInterfaces: List<AgentInterface>? = null,
+    public val supportedInterfaces: List<AgentInterface>,
+    public val version: String,
+    public val defaultInputModes: List<String>,
+    public val defaultOutputModes: List<String>,
+    public val skills: List<AgentSkill>,
     public val iconUrl: String? = null,
     public val provider: AgentProvider? = null,
-    public val version: String,
     public val documentationUrl: String? = null,
     public val capabilities: AgentCapabilities,
     public val securitySchemes: SecuritySchemes? = null,
     public val security: Security? = null,
-    public val defaultInputModes: List<String>,
-    public val defaultOutputModes: List<String>,
-    public val skills: List<AgentSkill>,
-    public val supportsAuthenticatedExtendedCard: Boolean? = false,
     public val signatures: List<AgentCardSignature>? = null
-) {
-    init {
-        additionalInterfaces?.let { interfaces ->
-            requireNotNull(interfaces.find { it.url == url && it.transport == preferredTransport }) {
-                "If additionalInterfaces are specified, they must include an entry matching the main 'url' and 'preferredTransport'."
-            }
-        }
-    }
-}
+)
 
 /**
  * The transport protocol for an agent.
@@ -140,14 +108,23 @@ public value class TransportProtocol(public val value: String) {
  *
  *   Examples: ["https://api.example.com/a2a/v1", "https://grpc.example.com/a2a", "https://rest.example.com/v1"].
  *
- * @property transport The transport protocol supported at this URL.
+ * @property protocolBinding The transport protocol supported at this URL.
  *
  *   Examples: ["JSONRPC", "GRPC", "HTTP+JSON"].
+ *
+ * @property tenant Optional. An opaque string used for routing requests to a specific agent
+ * or tenant when multiple agents are served behind a single A2A endpoint.
+ * When set, clients MUST include this value in the `tenant` field of all
+ * request messages sent to this interface. The server is responsible for
+ * interpreting the value and routing requests accordingly; the protocol
+ * does not define its format or semantics.
  */
 @Serializable
 public data class AgentInterface(
     public val url: String,
-    public val transport: TransportProtocol
+    public val protocolBinding: TransportProtocol,
+    public val protocolVersion: String,
+    public val tenant: String? = null,
 )
 
 /**
@@ -166,24 +143,16 @@ public data class AgentProvider(
  * Defines optional capabilities supported by an agent.
  *
  * @property streaming Indicates if the agent supports Server-Sent Events (SSE) for streaming responses.
- *
  * @property pushNotifications Indicates if the agent supports sending push notifications for asynchronous task updates.
- *
- * @property stateTransitionHistory Indicates if the agent provides a history of state transitions for a task.
- *
- * TODO: it's not clear from the specification and official Python SDK, what does this field control.
- *   It's not [Task.history], since it always should be present.
- *   There are no further mentions or usages of this field in the official sources.
- *   So currently in our implementation it does not control anything.
- *
+ * @property extendedAgentCard Indicates if the agent supports providing an extended agent card when authenticated.
  * @property extensions A list of protocol extensions supported by the agent.
  */
 @Serializable
 public data class AgentCapabilities(
     public val streaming: Boolean? = null,
     public val pushNotifications: Boolean? = null,
-    public val stateTransitionHistory: Boolean? = null,
-    public val extensions: List<AgentExtension>? = null
+    public val extensions: List<AgentExtension>? = null,
+    public val extendedAgentCard: Boolean? = null,
 )
 
 /**

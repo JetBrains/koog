@@ -74,18 +74,18 @@ class AgentCardSerializationTest {
             name = "GeoSpatial Route Planner Agent",
             description = "Provides advanced route planning, traffic analysis, and custom map generation services. This agent can calculate optimal routes, estimate travel times considering real-time traffic, and create personalized maps with points of interest.",
             url = "https://georoute-agent.example.com/a2a/v1",
-            additionalInterfaces = listOf(
+            supportedInterfaces = listOf(
                 AgentInterface(
                     url = "https://georoute-agent.example.com/a2a/v1",
-                    transport = TransportProtocol.JSONRPC
+                    protocolBinding = TransportProtocol.JSONRPC
                 ),
                 AgentInterface(
                     url = "https://georoute-agent.example.com/a2a/grpc",
-                    transport = TransportProtocol.GRPC
+                    protocolBinding = TransportProtocol.GRPC
                 ),
                 AgentInterface(
                     url = "https://georoute-agent.example.com/a2a/json",
-                    transport = TransportProtocol.HTTP_JSON_REST
+                    protocolBinding = TransportProtocol.HTTP_JSON_REST
                 )
             ),
             provider = AgentProvider(
