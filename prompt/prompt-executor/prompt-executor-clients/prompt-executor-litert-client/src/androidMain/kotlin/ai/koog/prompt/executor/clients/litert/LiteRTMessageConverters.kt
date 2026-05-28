@@ -21,6 +21,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import com.google.ai.edge.litertlm.Message as LitertMessage
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Converts a LiteRT [LitertMessage] to a koog [Message.Assistant].
@@ -32,7 +34,7 @@ import com.google.ai.edge.litertlm.Message as LitertMessage
  *
  * LiteRT [ToolCall] does not expose a stable call id, but Koog requires one to
  * correlate [MessagePart.Tool.Result] with [MessagePart.Tool.Call]. A synthetic,
- * deterministic id is therefore generated per tool call (see [syntheticToolCallId]);
+ * unique id is therefore generated per tool call (see [syntheticToolCallId]);
  * it is used only inside Koog and is dropped when converting back to LiteRT,
  * where tool responses are correlated by tool name.
  *
@@ -66,13 +68,19 @@ internal fun LitertMessage.toKoogMessage(clock: KoogClock): Message.Assistant {
 }
 
 /**
- * Builds a stable, deterministic id for a LiteRT [ToolCall] given its position
- * inside the assistant message. LiteRT does not expose call ids, so Koog
- * synthesizes one to satisfy [MessagePart.Tool.Call]/[MessagePart.Tool.Result]
- * correlation requirements. The id is not transmitted back to LiteRT.
+ * Builds a unique synthetic id for a LiteRT [ToolCall]. LiteRT does not expose
+ * call ids, so Koog synthesizes one to satisfy
+ * [MessagePart.Tool.Call]/[MessagePart.Tool.Result] correlation requirements.
+ *
+ * The id includes the tool name and its position inside the assistant message
+ * for readability/debuggability, plus a random UUID suffix to guarantee
+ * uniqueness across messages (otherwise, repeated calls to the same tool would
+ * collide on ids like `litert-<name>-0`). The id is not transmitted back to
+ * LiteRT — tool responses are correlated by tool name on the next turn.
  */
+@OptIn(ExperimentalUuidApi::class)
 private fun syntheticToolCallId(name: String, index: Int): String =
-    "litert-$name-$index"
+    "litert-$name-$index-${Uuid.random()}"
 
 /**
  * Converts a LiteRT tool-call arguments map (`Map<String, Any?>` of primitives,

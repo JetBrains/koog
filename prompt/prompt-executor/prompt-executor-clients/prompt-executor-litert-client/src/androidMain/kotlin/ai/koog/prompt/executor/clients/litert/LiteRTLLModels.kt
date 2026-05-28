@@ -19,16 +19,12 @@ public object LiteRTLLModels : LLModelDefinitions {
      * A fine-tuned Gemma variant optimized for function-calling on device.
      *
      * Model file: `mobile_actions_q8_ekv1024.litertlm`
-     * Source: https://huggingface.co/litert-community/functiongemma-270m-ft-mobile-actions/tree/main
+     * Source: https://huggingface.co/litert-community/functiongemma-270m-ft-mobile-actions
      */
     public val FunctionGemma: LLModel = LLModel(
         provider = LiteRTLLMProvider,
         id = "mobile_actions_q8_ekv1024.litertlm",
         capabilities = listOf(
-            // Supports tools, but not parallel/multiple tool-call correlation:
-            // LiteRT ToolCall has no stable id, so the LiteRT client currently
-            // supports only a single tool call per model response. See
-            // LiteRTMessageConverters.toKoogMessages for the runtime guard.
             LLMCapability.Tools,
             LLMCapability.Completion
         ),
