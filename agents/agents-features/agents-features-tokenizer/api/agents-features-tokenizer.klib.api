@@ -1,0 +1,37 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:agents-features-tokenizer>
+final class ai.koog.agents.features.tokenizer.feature/MessageTokenizer { // ai.koog.agents.features.tokenizer.feature/MessageTokenizer|null[0]
+    constructor <init>(ai.koog.prompt.tokenizer/PromptTokenizer) // ai.koog.agents.features.tokenizer.feature/MessageTokenizer.<init>|<init>(ai.koog.prompt.tokenizer.PromptTokenizer){}[0]
+
+    final val promptTokenizer // ai.koog.agents.features.tokenizer.feature/MessageTokenizer.promptTokenizer|{}promptTokenizer[0]
+        final fun <get-promptTokenizer>(): ai.koog.prompt.tokenizer/PromptTokenizer // ai.koog.agents.features.tokenizer.feature/MessageTokenizer.promptTokenizer.<get-promptTokenizer>|<get-promptTokenizer>(){}[0]
+
+    final object Feature : ai.koog.agents.core.feature/AIAgentFunctionalFeature<ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig, ai.koog.agents.features.tokenizer.feature/MessageTokenizer>, ai.koog.agents.core.feature/AIAgentGraphFeature<ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig, ai.koog.agents.features.tokenizer.feature/MessageTokenizer>, ai.koog.agents.core.feature/AIAgentPlannerFeature<ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig, ai.koog.agents.features.tokenizer.feature/MessageTokenizer> { // ai.koog.agents.features.tokenizer.feature/MessageTokenizer.Feature|null[0]
+        final val key // ai.koog.agents.features.tokenizer.feature/MessageTokenizer.Feature.key|{}key[0]
+            final fun <get-key>(): ai.koog.agents.core.agent.entity/AIAgentStorageKey<ai.koog.agents.features.tokenizer.feature/MessageTokenizer> // ai.koog.agents.features.tokenizer.feature/MessageTokenizer.Feature.key.<get-key>|<get-key>(){}[0]
+
+        final fun createInitialConfig(ai.koog.agents.core.agent.config/AIAgentConfig): ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig // ai.koog.agents.features.tokenizer.feature/MessageTokenizer.Feature.createInitialConfig|createInitialConfig(ai.koog.agents.core.agent.config.AIAgentConfig){}[0]
+        final fun install(ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig, ai.koog.agents.core.feature.pipeline/AIAgentFunctionalPipeline): ai.koog.agents.features.tokenizer.feature/MessageTokenizer // ai.koog.agents.features.tokenizer.feature/MessageTokenizer.Feature.install|install(ai.koog.agents.features.tokenizer.feature.MessageTokenizerConfig;ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline){}[0]
+        final fun install(ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig, ai.koog.agents.core.feature.pipeline/AIAgentGraphPipeline): ai.koog.agents.features.tokenizer.feature/MessageTokenizer // ai.koog.agents.features.tokenizer.feature/MessageTokenizer.Feature.install|install(ai.koog.agents.features.tokenizer.feature.MessageTokenizerConfig;ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline){}[0]
+        final fun install(ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig, ai.koog.agents.core.feature.pipeline/AIAgentPlannerPipeline): ai.koog.agents.features.tokenizer.feature/MessageTokenizer // ai.koog.agents.features.tokenizer.feature/MessageTokenizer.Feature.install|install(ai.koog.agents.features.tokenizer.feature.MessageTokenizerConfig;ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline){}[0]
+    }
+}
+
+final class ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig : ai.koog.agents.core.feature.config/FeatureConfig { // ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig|null[0]
+    constructor <init>() // ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig.<init>|<init>(){}[0]
+
+    final var enableCaching // ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig.enableCaching|{}enableCaching[0]
+        final fun <get-enableCaching>(): kotlin/Boolean // ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig.enableCaching.<get-enableCaching>|<get-enableCaching>(){}[0]
+        final fun <set-enableCaching>(kotlin/Boolean) // ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig.enableCaching.<set-enableCaching>|<set-enableCaching>(kotlin.Boolean){}[0]
+    final var tokenizer // ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig.tokenizer|{}tokenizer[0]
+        final fun <get-tokenizer>(): ai.koog.prompt.tokenizer/Tokenizer // ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig.tokenizer.<get-tokenizer>|<get-tokenizer>(){}[0]
+        final fun <set-tokenizer>(ai.koog.prompt.tokenizer/Tokenizer) // ai.koog.agents.features.tokenizer.feature/MessageTokenizerConfig.tokenizer.<set-tokenizer>|<set-tokenizer>(ai.koog.prompt.tokenizer.Tokenizer){}[0]
+}
+
+final fun (ai.koog.agents.core.agent.context/AIAgentContext).ai.koog.agents.features.tokenizer.feature/tokenizer(): ai.koog.prompt.tokenizer/PromptTokenizer // ai.koog.agents.features.tokenizer.feature/tokenizer|tokenizer@ai.koog.agents.core.agent.context.AIAgentContext(){}[0]

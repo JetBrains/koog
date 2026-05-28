@@ -1,0 +1,64 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-tokenizer>
+abstract interface ai.koog.prompt.tokenizer/PromptTokenizer { // ai.koog.prompt.tokenizer/PromptTokenizer|null[0]
+    abstract fun tokenCountFor(ai.koog.prompt.message/Message): kotlin/Int // ai.koog.prompt.tokenizer/PromptTokenizer.tokenCountFor|tokenCountFor(ai.koog.prompt.message.Message){}[0]
+    abstract fun tokenCountFor(ai.koog.prompt/Prompt): kotlin/Int // ai.koog.prompt.tokenizer/PromptTokenizer.tokenCountFor|tokenCountFor(ai.koog.prompt.Prompt){}[0]
+}
+
+abstract interface ai.koog.prompt.tokenizer/Tokenizer { // ai.koog.prompt.tokenizer/Tokenizer|null[0]
+    abstract fun countTokens(kotlin/String): kotlin/Int // ai.koog.prompt.tokenizer/Tokenizer.countTokens|countTokens(kotlin.String){}[0]
+}
+
+final class ai.koog.prompt.tokenizer.tiktoken/ByteArrayKey { // ai.koog.prompt.tokenizer.tiktoken/ByteArrayKey|null[0]
+    constructor <init>(kotlin/ByteArray) // ai.koog.prompt.tokenizer.tiktoken/ByteArrayKey.<init>|<init>(kotlin.ByteArray){}[0]
+
+    final val size // ai.koog.prompt.tokenizer.tiktoken/ByteArrayKey.size|{}size[0]
+        final fun <get-size>(): kotlin/Int // ai.koog.prompt.tokenizer.tiktoken/ByteArrayKey.size.<get-size>|<get-size>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.tokenizer.tiktoken/ByteArrayKey.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.tokenizer.tiktoken/ByteArrayKey.hashCode|hashCode(){}[0]
+    final fun range(kotlin/Int, kotlin/Int): ai.koog.prompt.tokenizer.tiktoken/ByteArrayKey // ai.koog.prompt.tokenizer.tiktoken/ByteArrayKey.range|range(kotlin.Int;kotlin.Int){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.tokenizer.tiktoken/ByteArrayKey.toString|toString(){}[0]
+}
+
+final class ai.koog.prompt.tokenizer/CachingTokenizer : ai.koog.prompt.tokenizer/PromptTokenizer { // ai.koog.prompt.tokenizer/CachingTokenizer|null[0]
+    constructor <init>(ai.koog.prompt.tokenizer/Tokenizer) // ai.koog.prompt.tokenizer/CachingTokenizer.<init>|<init>(ai.koog.prompt.tokenizer.Tokenizer){}[0]
+
+    final fun clearCache() // ai.koog.prompt.tokenizer/CachingTokenizer.clearCache|clearCache(){}[0]
+    final fun tokenCountFor(ai.koog.prompt.message/Message): kotlin/Int // ai.koog.prompt.tokenizer/CachingTokenizer.tokenCountFor|tokenCountFor(ai.koog.prompt.message.Message){}[0]
+    final fun tokenCountFor(ai.koog.prompt/Prompt): kotlin/Int // ai.koog.prompt.tokenizer/CachingTokenizer.tokenCountFor|tokenCountFor(ai.koog.prompt.Prompt){}[0]
+}
+
+final class ai.koog.prompt.tokenizer/NoTokenizer : ai.koog.prompt.tokenizer/Tokenizer { // ai.koog.prompt.tokenizer/NoTokenizer|null[0]
+    constructor <init>() // ai.koog.prompt.tokenizer/NoTokenizer.<init>|<init>(){}[0]
+
+    final fun countTokens(kotlin/String): kotlin/Int // ai.koog.prompt.tokenizer/NoTokenizer.countTokens|countTokens(kotlin.String){}[0]
+}
+
+final class ai.koog.prompt.tokenizer/OnDemandTokenizer : ai.koog.prompt.tokenizer/PromptTokenizer { // ai.koog.prompt.tokenizer/OnDemandTokenizer|null[0]
+    constructor <init>(ai.koog.prompt.tokenizer/Tokenizer) // ai.koog.prompt.tokenizer/OnDemandTokenizer.<init>|<init>(ai.koog.prompt.tokenizer.Tokenizer){}[0]
+
+    final fun tokenCountFor(ai.koog.prompt.message/Message): kotlin/Int // ai.koog.prompt.tokenizer/OnDemandTokenizer.tokenCountFor|tokenCountFor(ai.koog.prompt.message.Message){}[0]
+    final fun tokenCountFor(ai.koog.prompt/Prompt): kotlin/Int // ai.koog.prompt.tokenizer/OnDemandTokenizer.tokenCountFor|tokenCountFor(ai.koog.prompt.Prompt){}[0]
+}
+
+final class ai.koog.prompt.tokenizer/SimpleRegexBasedTokenizer : ai.koog.prompt.tokenizer/Tokenizer { // ai.koog.prompt.tokenizer/SimpleRegexBasedTokenizer|null[0]
+    constructor <init>() // ai.koog.prompt.tokenizer/SimpleRegexBasedTokenizer.<init>|<init>(){}[0]
+
+    final fun countTokens(kotlin/String): kotlin/Int // ai.koog.prompt.tokenizer/SimpleRegexBasedTokenizer.countTokens|countTokens(kotlin.String){}[0]
+}
+
+open class ai.koog.prompt.tokenizer.tiktoken/TiktokenEncoder : ai.koog.prompt.tokenizer/Tokenizer { // ai.koog.prompt.tokenizer.tiktoken/TiktokenEncoder|null[0]
+    constructor <init>(kotlin.collections/Map<ai.koog.prompt.tokenizer.tiktoken/ByteArrayKey, kotlin/Int>, kotlin.text/Regex, kotlin/Int) // ai.koog.prompt.tokenizer.tiktoken/TiktokenEncoder.<init>|<init>(kotlin.collections.Map<ai.koog.prompt.tokenizer.tiktoken.ByteArrayKey,kotlin.Int>;kotlin.text.Regex;kotlin.Int){}[0]
+
+    final fun encodeAsIds(kotlin/String): kotlin.collections/List<kotlin/Int> // ai.koog.prompt.tokenizer.tiktoken/TiktokenEncoder.encodeAsIds|encodeAsIds(kotlin.String){}[0]
+    open fun countTokens(kotlin/String): kotlin/Int // ai.koog.prompt.tokenizer.tiktoken/TiktokenEncoder.countTokens|countTokens(kotlin.String){}[0]
+}
+
+final fun (kotlin/String).ai.koog.prompt.tokenizer.tiktoken/toByteArrayKey(): ai.koog.prompt.tokenizer.tiktoken/ByteArrayKey // ai.koog.prompt.tokenizer.tiktoken/toByteArrayKey|toByteArrayKey@kotlin.String(){}[0]

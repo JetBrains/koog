@@ -1,0 +1,1324 @@
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/Attribute {
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getKey ()Ljava/lang/String;
+	public abstract fun getValue ()Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/Attribute$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/Attribute;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/CommonAttributes {
+	public static final field INSTANCE Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Error : ai/koog/agents/features/opentelemetry/attribute/Attribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Error$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Error;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Error;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Error$Type : ai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Error {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Error$Type;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Error$Type;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Error$Type;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server : ai/koog/agents/features/opentelemetry/attribute/Attribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server$Address : ai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server$Address;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server$Address;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server$Address;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAddress ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server$Port : ai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (I)Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server$Port;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server$Port;IILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/CommonAttributes$Server$Port;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getPort ()I
+	public fun getValue ()Ljava/lang/Integer;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/CustomAttribute : ai/koog/agents/features/opentelemetry/attribute/Attribute {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Object;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/CustomAttribute;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/CustomAttribute;Ljava/lang/String;Ljava/lang/Object;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/CustomAttribute;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute : ai/koog/agents/features/opentelemetry/attribute/Attribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttribute;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttribute;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes {
+	public static final field INSTANCE Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$Description : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$Description;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$Description;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$Description;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$Id : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$Id;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$Id;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$Id;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$Name : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$Name;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$Name;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Agent$Name;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Conversation : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Conversation$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Conversation;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Conversation;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Conversation$Id : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Conversation {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Conversation$Id;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Conversation$Id;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Conversation$Id;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$DataSource : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$DataSource$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$DataSource;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$DataSource;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$DataSource$Id : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$DataSource {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$DataSource$Id;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$DataSource$Id;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$DataSource$Id;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Input : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Input$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Input;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Input;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Input$Messages : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Input {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/util/List;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Input$Messages;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Input$Messages;Ljava/util/List;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Input$Messages;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getMessages ()Ljava/util/List;
+	public fun getValue ()Lai/koog/agents/utils/HiddenString;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$Name : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation {
+	public fun <init> (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;)V
+	public final fun component1 ()Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$Name;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$Name;Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$Name;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getOperation ()Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType : java/lang/Enum {
+	public static final field CHAT Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;
+	public static final field CREATE_AGENT Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;
+	public static final field EMBEDDINGS Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;
+	public static final field EXECUTE_TOOL Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;
+	public static final field GENERATE_CONTENT Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;
+	public static final field INVOKE_AGENT Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;
+	public static final field TEXT_COMPLETION Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getId ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;
+	public static fun values ()[Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Operation$OperationNameType;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$Messages : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/util/List;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$Messages;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$Messages;Ljava/util/List;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$Messages;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getMessages ()Ljava/util/List;
+	public fun getValue ()Lai/koog/agents/utils/HiddenString;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$OutputType : java/lang/Enum {
+	public static final field IMAGE Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$OutputType;
+	public static final field JSON Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$OutputType;
+	public static final field TEXT Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$OutputType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getId ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$OutputType;
+	public static fun values ()[Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$OutputType;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$Type : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output {
+	public fun <init> (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$OutputType;)V
+	public final fun component1 ()Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$OutputType;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$OutputType;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$Type;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$Type;Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$OutputType;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$Type;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getType ()Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Output$OutputType;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Provider : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Provider$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Provider;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Provider;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Provider$Name : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Provider {
+	public fun <init> (Lai/koog/prompt/llm/LLMProvider;)V
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Provider$Name;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Provider$Name;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Provider$Name;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Choice : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Choice$Count : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Choice {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (I)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Choice$Count;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Choice$Count;IILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Choice$Count;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCount ()I
+	public fun getKey ()Ljava/lang/String;
+	public fun getValue ()Ljava/lang/Integer;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Choice$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Choice;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Choice;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$FrequencyPenalty : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request {
+	public fun <init> (D)V
+	public final fun component1 ()D
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (D)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$FrequencyPenalty;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$FrequencyPenalty;DILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$FrequencyPenalty;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFrequencyPenalty ()D
+	public fun getKey ()Ljava/lang/String;
+	public fun getValue ()Ljava/lang/Double;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$MaxTokens : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (I)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$MaxTokens;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$MaxTokens;IILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$MaxTokens;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getMaxTokens ()I
+	public fun getValue ()Ljava/lang/Integer;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Model : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request {
+	public fun <init> (Lai/koog/prompt/llm/LLModel;)V
+	public final fun component1 ()Lai/koog/prompt/llm/LLModel;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Lai/koog/prompt/llm/LLModel;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Model;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Model;Lai/koog/prompt/llm/LLModel;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Model;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getModel ()Lai/koog/prompt/llm/LLModel;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$PresencePenalty : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request {
+	public fun <init> (D)V
+	public final fun component1 ()D
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (D)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$PresencePenalty;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$PresencePenalty;DILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$PresencePenalty;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getPresencePenalty ()D
+	public fun getValue ()Ljava/lang/Double;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Seed : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (I)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Seed;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Seed;IILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Seed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getSeed ()I
+	public fun getValue ()Ljava/lang/Integer;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$StopSequences : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/util/List;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$StopSequences;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$StopSequences;Ljava/util/List;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$StopSequences;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getStopSequences ()Ljava/util/List;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Temperature : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request {
+	public fun <init> (D)V
+	public final fun component1 ()D
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (D)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Temperature;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Temperature;DILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$Temperature;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getTemperature ()D
+	public fun getValue ()Ljava/lang/Double;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$TopP : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request {
+	public fun <init> (D)V
+	public final fun component1 ()D
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (D)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$TopP;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$TopP;DILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Request$TopP;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getTopP ()D
+	public fun getValue ()Ljava/lang/Double;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response;)Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType {
+	public abstract fun getId ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType$ContentFilter : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType {
+	public static final field INSTANCE Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType$ContentFilter;
+	public fun getId ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType$Custom : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType$Custom;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType$Custom;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType$Custom;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType$Length : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType {
+	public static final field INSTANCE Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType$Length;
+	public fun getId ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType$Stop : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType {
+	public static final field INSTANCE Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType$Stop;
+	public fun getId ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType$ToolCalls : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType {
+	public static final field INSTANCE Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasonType$ToolCalls;
+	public fun getId ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasons : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/util/List;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasons;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasons;Ljava/util/List;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$FinishReasons;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getReasons ()Ljava/util/List;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$Id : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$Id;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$Id;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$Id;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$Metadata : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$Metadata;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$Metadata;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$Metadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getMetadata ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$Model : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response {
+	public fun <init> (Lai/koog/prompt/llm/LLModel;)V
+	public final fun component1 ()Lai/koog/prompt/llm/LLModel;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Lai/koog/prompt/llm/LLModel;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$Model;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$Model;Lai/koog/prompt/llm/LLModel;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Response$Model;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getModel ()Lai/koog/prompt/llm/LLModel;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$SystemInstructions : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/util/List;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$SystemInstructions;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$SystemInstructions;Ljava/util/List;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$SystemInstructions;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getMessages ()Ljava/util/List;
+	public fun getValue ()Lai/koog/agents/utils/HiddenString;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$TokenType : java/lang/Enum {
+	public static final field INPUT Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$TokenType;
+	public static final field OUTPUT Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$TokenType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getStr ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$TokenType;
+	public static fun values ()[Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$TokenType;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$Type : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token {
+	public fun <init> (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$TokenType;)V
+	public final fun component1 ()Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$TokenType;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$TokenType;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$Type;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$Type;Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$TokenType;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$Type;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getType ()Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Token$TokenType;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$Arguments : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call {
+	public fun <init> (Lkotlinx/serialization/json/JsonObject;)V
+	public final fun component1 ()Lkotlinx/serialization/json/JsonObject;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Lkotlinx/serialization/json/JsonObject;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$Arguments;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$Arguments;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$Arguments;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArguments ()Lkotlinx/serialization/json/JsonObject;
+	public fun getKey ()Ljava/lang/String;
+	public fun getValue ()Lai/koog/agents/utils/HiddenString;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$Id : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$Id;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$Id;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$Id;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$Result : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call {
+	public fun <init> (Lkotlinx/serialization/json/JsonElement;)V
+	public final fun component1 ()Lkotlinx/serialization/json/JsonElement;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Lkotlinx/serialization/json/JsonElement;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$Result;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$Result;Lkotlinx/serialization/json/JsonElement;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Call$Result;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getResult ()Lkotlinx/serialization/json/JsonElement;
+	public fun getValue ()Lai/koog/agents/utils/HiddenString;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Definitions : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/util/List;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Definitions;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Definitions;Ljava/util/List;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Definitions;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getTools ()Ljava/util/List;
+	public fun getValue ()Lai/koog/agents/utils/HiddenString;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Description : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Description;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Description;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Description;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Name : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Name;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Name;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Tool$Name;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage : ai/koog/agents/features/opentelemetry/attribute/GenAIAttribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$InputTokens : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (I)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$InputTokens;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$InputTokens;IILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$InputTokens;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getTokens ()I
+	public fun getValue ()Ljava/lang/Integer;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$OutputTokens : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (I)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$OutputTokens;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$OutputTokens;IILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$OutputTokens;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getTokens ()I
+	public fun getValue ()Ljava/lang/Integer;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$TotalTokens : ai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (I)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$TotalTokens;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$TotalTokens;IILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/GenAIAttributes$Usage$TotalTokens;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getTokens ()I
+	public fun getValue ()Ljava/lang/Integer;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes {
+	public static final field INSTANCE Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes;
+	public static final field PROVIDER_NAME Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog : ai/koog/agents/features/opentelemetry/attribute/Attribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog;)Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Event : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Event$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Event;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Event;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Event$Id : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Event {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Event$Id;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Event$Id;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Event$Id;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Moderation : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Moderation$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Moderation;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Moderation;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Moderation$Result : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Moderation {
+	public fun <init> (Lai/koog/prompt/dsl/ModerationResult;)V
+	public final fun component1 ()Lai/koog/prompt/dsl/ModerationResult;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Lai/koog/prompt/dsl/ModerationResult;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Moderation$Result;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Moderation$Result;Lai/koog/prompt/dsl/ModerationResult;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Moderation$Result;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getModerationResult ()Lai/koog/prompt/dsl/ModerationResult;
+	public fun getValue ()Lai/koog/agents/utils/HiddenString;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$Id : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$Id;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$Id;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$Id;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$Input : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$Input;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$Input;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$Input;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getInput ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public fun getValue ()Lai/koog/agents/utils/HiddenString;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$Output : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$Output;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$Output;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Node$Output;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getOutput ()Ljava/lang/String;
+	public fun getValue ()Lai/koog/agents/utils/HiddenString;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Strategy : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Strategy$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Strategy;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Strategy;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Strategy$Name : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Strategy {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Strategy$Name;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Strategy$Name;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Strategy$Name;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$Id : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$Id;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$Id;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$Id;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$Input : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$Input;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$Input;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$Input;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getInput ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public fun getValue ()Lai/koog/agents/utils/HiddenString;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$Output : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$Output;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$Output;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Subgraph$Output;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getOutput ()Ljava/lang/String;
+	public fun getValue ()Lai/koog/agents/utils/HiddenString;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$Status : ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call {
+	public fun <init> (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$StatusType;)V
+	public final fun component1 ()Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$StatusType;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$StatusType;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$Status;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$Status;Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$StatusType;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$Status;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getStatus ()Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$StatusType;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$StatusType : java/lang/Enum {
+	public static final field ERROR Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$StatusType;
+	public static final field SUCCESS Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$StatusType;
+	public static final field VALIDATION_FAILED Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$StatusType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$StatusType;
+	public static fun values ()[Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$Call$StatusType;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/KoogAttributes$Koog$Tool;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/McpAttributes {
+	public static final field INSTANCE Lai/koog/agents/features/opentelemetry/attribute/McpAttributes;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp : ai/koog/agents/features/opentelemetry/attribute/Attribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp;)Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Method : ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Method$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Method;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Method;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Method$Name : ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Method {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Method$Name;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Method$Name;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Method$Name;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Protocol : ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Protocol$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Protocol;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Protocol;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Protocol$Version : ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Protocol {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Protocol$Version;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Protocol$Version;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Protocol$Version;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public final fun getVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Session : ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Session$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Session;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Session;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Session$Id : ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Session {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Session$Id;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Session$Id;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Mcp$Session$Id;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public fun getKey ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Network : ai/koog/agents/features/opentelemetry/attribute/Attribute {
+	public fun getKey ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Network$DefaultImpls {
+	public static fun concatKey (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Network;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getKey (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Network;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Network$Transport : ai/koog/agents/features/opentelemetry/attribute/McpAttributes$Network {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public fun concatKey (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Network$Transport;
+	public static synthetic fun copy$default (Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Network$Transport;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/features/opentelemetry/attribute/McpAttributes$Network$Transport;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getTransport ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/opentelemetry/feature/OpenTelemetry {
+	public static final field Feature Lai/koog/agents/features/opentelemetry/feature/OpenTelemetry$Feature;
+	public fun <init> ()V
+}
+
+public final class ai/koog/agents/features/opentelemetry/feature/OpenTelemetry$Feature : ai/koog/agents/core/feature/AIAgentFunctionalFeature, ai/koog/agents/core/feature/AIAgentGraphFeature, ai/koog/agents/core/feature/AIAgentPlannerFeature {
+	public synthetic fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/core/feature/config/FeatureConfig;
+	public fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;
+	public fun getKey ()Lai/koog/agents/core/agent/entity/AIAgentStorageKey;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentFunctionalPipeline;)Ljava/lang/Object;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Ljava/lang/Object;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;)Ljava/lang/Object;
+	public fun install (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Lai/koog/agents/core/feature/pipeline/AIAgentFunctionalPipeline;)Lai/koog/agents/features/opentelemetry/feature/OpenTelemetry;
+	public fun install (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Lai/koog/agents/features/opentelemetry/feature/OpenTelemetry;
+	public fun install (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;)Lai/koog/agents/features/opentelemetry/feature/OpenTelemetry;
+}
+
+public final class ai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig : ai/koog/agents/core/feature/config/FeatureConfig, ai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfigAPI {
+	public fun <init> ()V
+	public final fun addDatadogExporter ()V
+	public final fun addDatadogExporter (Ljava/lang/String;)V
+	public final fun addDatadogExporter (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun addDatadogExporter (Ljava/lang/String;Ljava/lang/String;Ljava/time/Duration;)V
+	public final fun addDatadogExporter (Ljava/lang/String;Ljava/lang/String;Ljava/time/Duration;Ljava/util/Map;)V
+	public static synthetic fun addDatadogExporter$default (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Ljava/time/Duration;Ljava/util/Map;ILjava/lang/Object;)V
+	public final fun addLangfuseExporter ()V
+	public final fun addLangfuseExporter (Ljava/lang/String;)V
+	public final fun addLangfuseExporter (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun addLangfuseExporter (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun addLangfuseExporter (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/time/Duration;)V
+	public final fun addLangfuseExporter (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/time/Duration;Ljava/util/List;)V
+	public static synthetic fun addLangfuseExporter$default (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/time/Duration;Ljava/util/List;ILjava/lang/Object;)V
+	public final fun addMetricExporter (Lio/opentelemetry/sdk/metrics/export/MetricExporter;Ljava/time/Duration;)V
+	public final fun addMetricExporter-HG0u8IE (Lio/opentelemetry/sdk/metrics/export/MetricExporter;J)V
+	public static synthetic fun addMetricExporter-HG0u8IE$default (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Lio/opentelemetry/sdk/metrics/export/MetricExporter;JILjava/lang/Object;)V
+	public final fun addMetricFilter (Ljava/lang/String;Ljava/util/Set;)V
+	public fun addResourceAttributes (Ljava/util/Map;)V
+	public fun addSpanAdapter (Lai/koog/agents/features/opentelemetry/integration/SpanAdapter;)V
+	public fun addSpanExporter (Lio/opentelemetry/kotlin/tracing/export/SpanExporter;)V
+	public final fun addSpanExporter (Lio/opentelemetry/sdk/trace/export/SpanExporter;)V
+	public fun addSpanProcessor (Lkotlin/jvm/functions/Function1;)V
+	public final fun addWeaveExporter ()V
+	public final fun addWeaveExporter (Ljava/lang/String;)V
+	public final fun addWeaveExporter (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun addWeaveExporter (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun addWeaveExporter (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun addWeaveExporter (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/time/Duration;)V
+	public static synthetic fun addWeaveExporter$default (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/time/Duration;ILjava/lang/Object;)V
+	public final fun getMeter ()Lio/opentelemetry/api/metrics/Meter;
+	public fun getServiceName ()Ljava/lang/String;
+	public fun getServiceNamespace ()Ljava/lang/String;
+	public fun getServiceVersion ()Ljava/lang/String;
+	public fun getTracer ()Lio/opentelemetry/kotlin/tracing/Tracer;
+	public fun isShutdownOnAgentClose ()Z
+	public fun isVerbose ()Z
+	public fun setEventFilter (Lkotlin/jvm/functions/Function1;)V
+	public fun setSdk (Lio/opentelemetry/kotlin/OpenTelemetry;)V
+	public final fun setServiceInfo (Ljava/lang/String;Ljava/lang/String;)V
+	public fun setServiceInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public fun setShutdownOnAgentClose (Z)V
+	public fun setVerbose (Z)V
+}
+
+public abstract interface class ai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfigAPI {
+	public abstract fun addResourceAttributes (Ljava/util/Map;)V
+	public abstract fun addSpanAdapter (Lai/koog/agents/features/opentelemetry/integration/SpanAdapter;)V
+	public abstract fun addSpanExporter (Lio/opentelemetry/kotlin/tracing/export/SpanExporter;)V
+	public abstract fun addSpanProcessor (Lkotlin/jvm/functions/Function1;)V
+	public abstract fun getServiceName ()Ljava/lang/String;
+	public abstract fun getServiceNamespace ()Ljava/lang/String;
+	public abstract fun getServiceVersion ()Ljava/lang/String;
+	public abstract fun getTracer ()Lio/opentelemetry/kotlin/tracing/Tracer;
+	public abstract fun isShutdownOnAgentClose ()Z
+	public abstract fun isVerbose ()Z
+	public abstract fun setSdk (Lio/opentelemetry/kotlin/OpenTelemetry;)V
+	public abstract fun setServiceInfo (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun setServiceInfo$default (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfigAPI;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public abstract fun setShutdownOnAgentClose (Z)V
+	public abstract fun setVerbose (Z)V
+}
+
+public final class ai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfigAPI$DefaultImpls {
+	public static synthetic fun setServiceInfo$default (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfigAPI;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+}
+
+public final class ai/koog/agents/features/opentelemetry/integration/GenAIAgentSpanUtilsKt {
+	public static final fun isSdkArrayPrimitive (Ljava/lang/Object;)Z
+}
+
+public abstract class ai/koog/agents/features/opentelemetry/integration/SpanAdapter {
+	public fun <init> ()V
+	public fun onBeforeSpanFinished (Lai/koog/agents/features/opentelemetry/span/GenAIAgentSpan;)V
+	public fun onBeforeSpanStarted (Lai/koog/agents/features/opentelemetry/span/GenAIAgentSpan;)V
+}
+
+public final class ai/koog/agents/features/opentelemetry/integration/datadog/DatadogKt {
+	public static final fun addDatadogExporter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;)V
+	public static final fun addDatadogExporter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;)V
+	public static final fun addDatadogExporter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun addDatadogExporter-51bEbmg (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Lkotlin/time/Duration;Ljava/util/Map;)V
+	public static synthetic fun addDatadogExporter-51bEbmg$default (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Lkotlin/time/Duration;Ljava/util/Map;ILjava/lang/Object;)V
+	public static final fun addDatadogExporter-Q2Q30fc (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Lkotlin/time/Duration;)V
+}
+
+public final class ai/koog/agents/features/opentelemetry/integration/langfuse/LangfuseKt {
+	public static final fun addLangfuseExporter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;)V
+	public static final fun addLangfuseExporter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;)V
+	public static final fun addLangfuseExporter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun addLangfuseExporter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun addLangfuseExporter-jSaE0eg (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/time/Duration;)V
+	public static final fun addLangfuseExporter-yV_PMig (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/time/Duration;Ljava/util/List;)V
+	public static synthetic fun addLangfuseExporter-yV_PMig$default (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/time/Duration;Ljava/util/List;ILjava/lang/Object;)V
+	public static final fun addLangfuseSpanAdapter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;)V
+	public static final fun addLangfuseSpanAdapter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/util/List;)V
+	public static synthetic fun addLangfuseSpanAdapter$default (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/util/List;ILjava/lang/Object;)V
+}
+
+public final class ai/koog/agents/features/opentelemetry/integration/otlp/OtlpJsonSpanExporter : io/opentelemetry/kotlin/tracing/export/SpanExporter {
+	public static final field OTLP_JSON_USER_AGENT Ljava/lang/String;
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;Lkotlin/time/Duration;Lio/ktor/client/HttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;Lkotlin/time/Duration;Lio/ktor/client/HttpClient;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun export (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun forceFlush (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun shutdown (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/features/opentelemetry/integration/otlp/OtlpSpanDataMapper {
+	public static final field INSTANCE Lai/koog/agents/features/opentelemetry/integration/otlp/OtlpSpanDataMapper;
+}
+
+public final class ai/koog/agents/features/opentelemetry/integration/weave/WeaveKt {
+	public static final fun addWeaveExporter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;)V
+	public static final fun addWeaveExporter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;)V
+	public static final fun addWeaveExporter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun addWeaveExporter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun addWeaveExporter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun addWeaveExporter-BAu0izY (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/time/Duration;)V
+	public static synthetic fun addWeaveExporter-BAu0izY$default (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/time/Duration;ILjava/lang/Object;)V
+	public static final fun addWeaveSpanAdapter (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;)V
+}
+
+public final class ai/koog/agents/features/opentelemetry/metric/adapter/ToolNameCardinalityKt {
+	public static final fun restrictToolNameCardinality (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/util/Set;Ljava/lang/String;)V
+	public static synthetic fun restrictToolNameCardinality$default (Lai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig;Ljava/util/Set;Ljava/lang/String;ILjava/lang/Object;)V
+}
+
+public final class ai/koog/agents/features/opentelemetry/span/GenAIAgentSpan {
+	public final fun addAttribute (Lai/koog/agents/features/opentelemetry/attribute/Attribute;)V
+	public final fun addAttributes (Ljava/util/List;)V
+	public final fun getAttributes ()Ljava/util/List;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getKind ()Lio/opentelemetry/kotlin/tracing/SpanKind;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Lai/koog/agents/features/opentelemetry/span/SpanType;
+	public final fun removeAttribute (Lai/koog/agents/features/opentelemetry/attribute/Attribute;)Z
+}
+
+public final class ai/koog/agents/features/opentelemetry/span/SpanType : java/lang/Enum {
+	public static final field CREATE_AGENT Lai/koog/agents/features/opentelemetry/span/SpanType;
+	public static final field EXECUTE_TOOL Lai/koog/agents/features/opentelemetry/span/SpanType;
+	public static final field INFERENCE Lai/koog/agents/features/opentelemetry/span/SpanType;
+	public static final field INVOKE_AGENT Lai/koog/agents/features/opentelemetry/span/SpanType;
+	public static final field NODE Lai/koog/agents/features/opentelemetry/span/SpanType;
+	public static final field STRATEGY Lai/koog/agents/features/opentelemetry/span/SpanType;
+	public static final field SUBGRAPH Lai/koog/agents/features/opentelemetry/span/SpanType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/agents/features/opentelemetry/span/SpanType;
+	public static fun values ()[Lai/koog/agents/features/opentelemetry/span/SpanType;
+}
+

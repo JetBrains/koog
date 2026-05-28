@@ -1,0 +1,27 @@
+public final class ai/koog/http/client/java/JavaKoogHttpClient : ai/koog/http/client/KoogHttpClient {
+	public static final field Companion Lai/koog/http/client/java/JavaKoogHttpClient$Companion;
+	public fun close ()V
+	public fun get (Ljava/lang/String;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getClientName ()Ljava/lang/String;
+	public fun lines (Ljava/lang/String;Ljava/lang/Object;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/util/Map;)Lkotlinx/coroutines/flow/Flow;
+	public fun post (Ljava/lang/String;Ljava/lang/Object;Lkotlin/reflect/KClass;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sse (Ljava/lang/String;Ljava/lang/Object;Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Ljava/util/Map;Ljava/util/Map;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class ai/koog/http/client/java/JavaKoogHttpClient$Companion {
+	public final fun getDEFAULT_REQUEST_TIMEOUT_MS ()J
+}
+
+public final class ai/koog/http/client/java/JavaKoogHttpClient$Factory : ai/koog/http/client/KoogHttpClient$Factory {
+	public fun <init> ()V
+	public fun <init> (Lio/github/oshai/kotlinlogging/KLogger;)V
+	public synthetic fun <init> (Lio/github/oshai/kotlinlogging/KLogger;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun create (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;JJJLkotlinx/serialization/json/Json;)Lai/koog/http/client/KoogHttpClient;
+	public fun create (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;JJJLkotlinx/serialization/json/Json;)Lai/koog/http/client/java/JavaKoogHttpClient;
+}
+
+public final class ai/koog/http/client/java/JavaKoogHttpClientKt {
+	public static final fun fromJavaHttpClient (Lai/koog/http/client/KoogHttpClient$Companion;Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Ljava/net/http/HttpClient;Lkotlinx/serialization/json/Json;)Lai/koog/http/client/KoogHttpClient;
+	public static synthetic fun fromJavaHttpClient$default (Lai/koog/http/client/KoogHttpClient$Companion;Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Ljava/net/http/HttpClient;Lkotlinx/serialization/json/Json;ILjava/lang/Object;)Lai/koog/http/client/KoogHttpClient;
+}
+

@@ -1,0 +1,703 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:rag-base>
+final enum class ai.koog.rag.base.storage.capability/StorageCapability : kotlin/Enum<ai.koog.rag.base.storage.capability/StorageCapability> { // ai.koog.rag.base.storage.capability/StorageCapability|null[0]
+    enum entry FILTER_EXPRESSION // ai.koog.rag.base.storage.capability/StorageCapability.FILTER_EXPRESSION|null[0]
+    enum entry HYBRID_SEARCH // ai.koog.rag.base.storage.capability/StorageCapability.HYBRID_SEARCH|null[0]
+    enum entry KEYWORD_SEARCH // ai.koog.rag.base.storage.capability/StorageCapability.KEYWORD_SEARCH|null[0]
+    enum entry NAMESPACE_ISOLATION // ai.koog.rag.base.storage.capability/StorageCapability.NAMESPACE_ISOLATION|null[0]
+    enum entry SIMILARITY_SEARCH // ai.koog.rag.base.storage.capability/StorageCapability.SIMILARITY_SEARCH|null[0]
+    enum entry VECTOR_QUERY // ai.koog.rag.base.storage.capability/StorageCapability.VECTOR_QUERY|null[0]
+
+    final val entries // ai.koog.rag.base.storage.capability/StorageCapability.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.rag.base.storage.capability/StorageCapability> // ai.koog.rag.base.storage.capability/StorageCapability.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.rag.base.storage.capability/StorageCapability // ai.koog.rag.base.storage.capability/StorageCapability.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.rag.base.storage.capability/StorageCapability> // ai.koog.rag.base.storage.capability/StorageCapability.values|values#static(){}[0]
+}
+
+final enum class ai.koog.rag.base.storage.search/ScoreMetric : kotlin/Enum<ai.koog.rag.base.storage.search/ScoreMetric> { // ai.koog.rag.base.storage.search/ScoreMetric|null[0]
+    enum entry BM25 // ai.koog.rag.base.storage.search/ScoreMetric.BM25|null[0]
+    enum entry COSINE_DISTANCE // ai.koog.rag.base.storage.search/ScoreMetric.COSINE_DISTANCE|null[0]
+    enum entry COSINE_SIMILARITY // ai.koog.rag.base.storage.search/ScoreMetric.COSINE_SIMILARITY|null[0]
+    enum entry CUSTOM // ai.koog.rag.base.storage.search/ScoreMetric.CUSTOM|null[0]
+    enum entry DOT_PRODUCT // ai.koog.rag.base.storage.search/ScoreMetric.DOT_PRODUCT|null[0]
+    enum entry EUCLIDEAN_DISTANCE // ai.koog.rag.base.storage.search/ScoreMetric.EUCLIDEAN_DISTANCE|null[0]
+    enum entry HYBRID // ai.koog.rag.base.storage.search/ScoreMetric.HYBRID|null[0]
+
+    final val entries // ai.koog.rag.base.storage.search/ScoreMetric.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.rag.base.storage.search/ScoreMetric> // ai.koog.rag.base.storage.search/ScoreMetric.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.rag.base.storage.search/ScoreMetric // ai.koog.rag.base.storage.search/ScoreMetric.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.rag.base.storage.search/ScoreMetric> // ai.koog.rag.base.storage.search/ScoreMetric.values|values#static(){}[0]
+}
+
+abstract fun interface <#A: kotlin/Any?> ai.koog.rag.base.files.filter/TraversalFilter { // ai.koog.rag.base.files.filter/TraversalFilter|null[0]
+    abstract suspend fun show(#A, ai.koog.rag.base.files/FileSystemProvider.ReadOnly<#A>): kotlin/Boolean // ai.koog.rag.base.files.filter/TraversalFilter.show|show(1:0;ai.koog.rag.base.files.FileSystemProvider.ReadOnly<1:0>){}[0]
+    open fun and(ai.koog.rag.base.files.filter/TraversalFilter<#A>): ai.koog.rag.base.files.filter/TraversalFilter<#A> // ai.koog.rag.base.files.filter/TraversalFilter.and|and(ai.koog.rag.base.files.filter.TraversalFilter<1:0>){}[0]
+    open fun or(ai.koog.rag.base.files.filter/TraversalFilter<#A>): ai.koog.rag.base.files.filter/TraversalFilter<#A> // ai.koog.rag.base.files.filter/TraversalFilter.or|or(ai.koog.rag.base.files.filter.TraversalFilter<1:0>){}[0]
+    open suspend fun hide(#A, ai.koog.rag.base.files/FileSystemProvider.ReadOnly<#A>): kotlin/Boolean // ai.koog.rag.base.files.filter/TraversalFilter.hide|hide(1:0;ai.koog.rag.base.files.FileSystemProvider.ReadOnly<1:0>){}[0]
+
+    final object Companion { // ai.koog.rag.base.files.filter/TraversalFilter.Companion|null[0]
+        final fun <#A2: kotlin/Any?> any(): ai.koog.rag.base.files.filter/TraversalFilter<#A2> // ai.koog.rag.base.files.filter/TraversalFilter.Companion.any|any(){0§<kotlin.Any?>}[0]
+        final fun <#A2: kotlin/Any?> not(ai.koog.rag.base.files.filter/TraversalFilter<#A2>): ai.koog.rag.base.files.filter/TraversalFilter<#A2> // ai.koog.rag.base.files.filter/TraversalFilter.Companion.not|not(ai.koog.rag.base.files.filter.TraversalFilter<0:0>){0§<kotlin.Any?>}[0]
+    }
+}
+
+abstract interface <#A: kotlin/Any?, #B: in ai.koog.rag.base.storage.search/SearchRequest> ai.koog.rag.base.storage/SearchStorage { // ai.koog.rag.base.storage/SearchStorage|null[0]
+    abstract suspend fun search(#B, kotlin/String? = ...): kotlin.collections/List<ai.koog.rag.base.storage.search/SearchResult<#A>> // ai.koog.rag.base.storage/SearchStorage.search|search(1:1;kotlin.String?){}[0]
+}
+
+abstract interface <#A: kotlin/Any?, #B: kotlin/Any?> ai.koog.rag.base.files/DocumentProvider { // ai.koog.rag.base.files/DocumentProvider|null[0]
+    abstract suspend fun document(#A): #B? // ai.koog.rag.base.files/DocumentProvider.document|document(1:0){}[0]
+    abstract suspend fun text(#B): kotlin/CharSequence // ai.koog.rag.base.files/DocumentProvider.text|text(1:1){}[0]
+    open suspend fun textFragment(#B, ai.koog.rag.base.files/DocumentProvider.DocumentRange): kotlin/String // ai.koog.rag.base.files/DocumentProvider.textFragment|textFragment(1:1;ai.koog.rag.base.files.DocumentProvider.DocumentRange){}[0]
+
+    abstract interface <#A1: kotlin/Any?, #B1: kotlin/Any?> Edit { // ai.koog.rag.base.files/DocumentProvider.Edit|null[0]
+        abstract suspend fun setText(#B1, kotlin/String, ai.koog.rag.base.files/DocumentProvider.DocumentRange? = ...) // ai.koog.rag.base.files/DocumentProvider.Edit.setText|setText(1:1;kotlin.String;ai.koog.rag.base.files.DocumentProvider.DocumentRange?){}[0]
+    }
+
+    final class DocumentRange { // ai.koog.rag.base.files/DocumentProvider.DocumentRange|null[0]
+        constructor <init>(ai.koog.rag.base.files/DocumentProvider.Position, ai.koog.rag.base.files/DocumentProvider.Position) // ai.koog.rag.base.files/DocumentProvider.DocumentRange.<init>|<init>(ai.koog.rag.base.files.DocumentProvider.Position;ai.koog.rag.base.files.DocumentProvider.Position){}[0]
+
+        final val end // ai.koog.rag.base.files/DocumentProvider.DocumentRange.end|{}end[0]
+            final fun <get-end>(): ai.koog.rag.base.files/DocumentProvider.Position // ai.koog.rag.base.files/DocumentProvider.DocumentRange.end.<get-end>|<get-end>(){}[0]
+        final val isMultiline // ai.koog.rag.base.files/DocumentProvider.DocumentRange.isMultiline|{}isMultiline[0]
+            final fun <get-isMultiline>(): kotlin/Boolean // ai.koog.rag.base.files/DocumentProvider.DocumentRange.isMultiline.<get-isMultiline>|<get-isMultiline>(){}[0]
+        final val lines // ai.koog.rag.base.files/DocumentProvider.DocumentRange.lines|{}lines[0]
+            final fun <get-lines>(): kotlin/Int // ai.koog.rag.base.files/DocumentProvider.DocumentRange.lines.<get-lines>|<get-lines>(){}[0]
+        final val start // ai.koog.rag.base.files/DocumentProvider.DocumentRange.start|{}start[0]
+            final fun <get-start>(): ai.koog.rag.base.files/DocumentProvider.Position // ai.koog.rag.base.files/DocumentProvider.DocumentRange.start.<get-start>|<get-start>(){}[0]
+
+        final fun component1(): ai.koog.rag.base.files/DocumentProvider.Position // ai.koog.rag.base.files/DocumentProvider.DocumentRange.component1|component1(){}[0]
+        final fun component2(): ai.koog.rag.base.files/DocumentProvider.Position // ai.koog.rag.base.files/DocumentProvider.DocumentRange.component2|component2(){}[0]
+        final fun copy(ai.koog.rag.base.files/DocumentProvider.Position = ..., ai.koog.rag.base.files/DocumentProvider.Position = ...): ai.koog.rag.base.files/DocumentProvider.DocumentRange // ai.koog.rag.base.files/DocumentProvider.DocumentRange.copy|copy(ai.koog.rag.base.files.DocumentProvider.Position;ai.koog.rag.base.files.DocumentProvider.Position){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.files/DocumentProvider.DocumentRange.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.rag.base.files/DocumentProvider.DocumentRange.hashCode|hashCode(){}[0]
+        final fun substring(kotlin/CharSequence): kotlin/String // ai.koog.rag.base.files/DocumentProvider.DocumentRange.substring|substring(kotlin.CharSequence){}[0]
+        final fun toString(): kotlin/String // ai.koog.rag.base.files/DocumentProvider.DocumentRange.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.rag.base.files/DocumentProvider.DocumentRange> { // ai.koog.rag.base.files/DocumentProvider.DocumentRange.$serializer|null[0]
+            final val descriptor // ai.koog.rag.base.files/DocumentProvider.DocumentRange.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.rag.base.files/DocumentProvider.DocumentRange.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.rag.base.files/DocumentProvider.DocumentRange.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.rag.base.files/DocumentProvider.DocumentRange // ai.koog.rag.base.files/DocumentProvider.DocumentRange.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.rag.base.files/DocumentProvider.DocumentRange) // ai.koog.rag.base.files/DocumentProvider.DocumentRange.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.rag.base.files.DocumentProvider.DocumentRange){}[0]
+        }
+
+        final object Companion { // ai.koog.rag.base.files/DocumentProvider.DocumentRange.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files/DocumentProvider.DocumentRange> // ai.koog.rag.base.files/DocumentProvider.DocumentRange.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Position : kotlin/Comparable<ai.koog.rag.base.files/DocumentProvider.Position> { // ai.koog.rag.base.files/DocumentProvider.Position|null[0]
+        constructor <init>(kotlin/Int, kotlin/Int) // ai.koog.rag.base.files/DocumentProvider.Position.<init>|<init>(kotlin.Int;kotlin.Int){}[0]
+
+        final val column // ai.koog.rag.base.files/DocumentProvider.Position.column|{}column[0]
+            final fun <get-column>(): kotlin/Int // ai.koog.rag.base.files/DocumentProvider.Position.column.<get-column>|<get-column>(){}[0]
+        final val line // ai.koog.rag.base.files/DocumentProvider.Position.line|{}line[0]
+            final fun <get-line>(): kotlin/Int // ai.koog.rag.base.files/DocumentProvider.Position.line.<get-line>|<get-line>(){}[0]
+
+        final fun compareTo(ai.koog.rag.base.files/DocumentProvider.Position): kotlin/Int // ai.koog.rag.base.files/DocumentProvider.Position.compareTo|compareTo(ai.koog.rag.base.files.DocumentProvider.Position){}[0]
+        final fun component1(): kotlin/Int // ai.koog.rag.base.files/DocumentProvider.Position.component1|component1(){}[0]
+        final fun component2(): kotlin/Int // ai.koog.rag.base.files/DocumentProvider.Position.component2|component2(){}[0]
+        final fun copy(kotlin/Int = ..., kotlin/Int = ...): ai.koog.rag.base.files/DocumentProvider.Position // ai.koog.rag.base.files/DocumentProvider.Position.copy|copy(kotlin.Int;kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.files/DocumentProvider.Position.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.rag.base.files/DocumentProvider.Position.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.rag.base.files/DocumentProvider.Position.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.rag.base.files/DocumentProvider.Position> { // ai.koog.rag.base.files/DocumentProvider.Position.$serializer|null[0]
+            final val descriptor // ai.koog.rag.base.files/DocumentProvider.Position.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.rag.base.files/DocumentProvider.Position.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.rag.base.files/DocumentProvider.Position.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.rag.base.files/DocumentProvider.Position // ai.koog.rag.base.files/DocumentProvider.Position.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.rag.base.files/DocumentProvider.Position) // ai.koog.rag.base.files/DocumentProvider.Position.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.rag.base.files.DocumentProvider.Position){}[0]
+        }
+
+        final object Companion { // ai.koog.rag.base.files/DocumentProvider.Position.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files/DocumentProvider.Position> // ai.koog.rag.base.files/DocumentProvider.Position.Companion.serializer|serializer(){}[0]
+        }
+    }
+}
+
+abstract interface <#A: kotlin/Any?> ai.koog.rag.base.storage/LookupStorage { // ai.koog.rag.base.storage/LookupStorage|null[0]
+    abstract suspend fun get(kotlin.collections/List<kotlin/String>, kotlin/String? = ...): kotlin.collections/List<#A> // ai.koog.rag.base.storage/LookupStorage.get|get(kotlin.collections.List<kotlin.String>;kotlin.String?){}[0]
+}
+
+abstract interface <#A: kotlin/Any?> ai.koog.rag.base.storage/WriteStorage { // ai.koog.rag.base.storage/WriteStorage|null[0]
+    abstract suspend fun add(kotlin.collections/List<#A>, kotlin/String? = ...): kotlin.collections/List<kotlin/String> // ai.koog.rag.base.storage/WriteStorage.add|add(kotlin.collections.List<1:0>;kotlin.String?){}[0]
+    abstract suspend fun update(kotlin.collections/Map<kotlin/String, #A>, kotlin/String? = ...): kotlin.collections/List<kotlin/String> // ai.koog.rag.base.storage/WriteStorage.update|update(kotlin.collections.Map<kotlin.String,1:0>;kotlin.String?){}[0]
+}
+
+abstract interface ai.koog.rag.base.storage.capability/CapabilityAwareStorage { // ai.koog.rag.base.storage.capability/CapabilityAwareStorage|null[0]
+    abstract val capabilities // ai.koog.rag.base.storage.capability/CapabilityAwareStorage.capabilities|{}capabilities[0]
+        abstract fun <get-capabilities>(): kotlin.collections/Set<ai.koog.rag.base.storage.capability/StorageCapability> // ai.koog.rag.base.storage.capability/CapabilityAwareStorage.capabilities.<get-capabilities>|<get-capabilities>(){}[0]
+
+    open fun supports(ai.koog.rag.base.storage.capability/StorageCapability): kotlin/Boolean // ai.koog.rag.base.storage.capability/CapabilityAwareStorage.supports|supports(ai.koog.rag.base.storage.capability.StorageCapability){}[0]
+}
+
+abstract interface ai.koog.rag.base.storage.search/HasFilterExpression { // ai.koog.rag.base.storage.search/HasFilterExpression|null[0]
+    abstract val filterExpression // ai.koog.rag.base.storage.search/HasFilterExpression.filterExpression|{}filterExpression[0]
+        abstract fun <get-filterExpression>(): kotlin/String? // ai.koog.rag.base.storage.search/HasFilterExpression.filterExpression.<get-filterExpression>|<get-filterExpression>(){}[0]
+}
+
+abstract interface ai.koog.rag.base.storage.search/HasScoreThreshold { // ai.koog.rag.base.storage.search/HasScoreThreshold|null[0]
+    abstract val minScore // ai.koog.rag.base.storage.search/HasScoreThreshold.minScore|{}minScore[0]
+        abstract fun <get-minScore>(): kotlin/Double? // ai.koog.rag.base.storage.search/HasScoreThreshold.minScore.<get-minScore>|<get-minScore>(){}[0]
+}
+
+abstract interface ai.koog.rag.base.storage.search/HasTextQuery { // ai.koog.rag.base.storage.search/HasTextQuery|null[0]
+    abstract val queryText // ai.koog.rag.base.storage.search/HasTextQuery.queryText|{}queryText[0]
+        abstract fun <get-queryText>(): kotlin/String // ai.koog.rag.base.storage.search/HasTextQuery.queryText.<get-queryText>|<get-queryText>(){}[0]
+}
+
+abstract interface ai.koog.rag.base.storage.search/SearchRequest { // ai.koog.rag.base.storage.search/SearchRequest|null[0]
+    abstract val limit // ai.koog.rag.base.storage.search/SearchRequest.limit|{}limit[0]
+        abstract fun <get-limit>(): kotlin/Int // ai.koog.rag.base.storage.search/SearchRequest.limit.<get-limit>|<get-limit>(){}[0]
+    abstract val offset // ai.koog.rag.base.storage.search/SearchRequest.offset|{}offset[0]
+        abstract fun <get-offset>(): kotlin/Int // ai.koog.rag.base.storage.search/SearchRequest.offset.<get-offset>|<get-offset>(){}[0]
+}
+
+abstract interface ai.koog.rag.base.storage/DeletionStorage { // ai.koog.rag.base.storage/DeletionStorage|null[0]
+    abstract suspend fun delete(kotlin.collections/List<kotlin/String>, kotlin/String? = ...): kotlin.collections/List<kotlin/String> // ai.koog.rag.base.storage/DeletionStorage.delete|delete(kotlin.collections.List<kotlin.String>;kotlin.String?){}[0]
+}
+
+abstract interface ai.koog.rag.base.storage/FilteringDeletionStorage : ai.koog.rag.base.storage/DeletionStorage { // ai.koog.rag.base.storage/FilteringDeletionStorage|null[0]
+    abstract suspend fun delete(kotlin/String, kotlin/String? = ...): kotlin.collections/List<kotlin/String> // ai.koog.rag.base.storage/FilteringDeletionStorage.delete|delete(kotlin.String;kotlin.String?){}[0]
+}
+
+abstract interface ai.koog.rag.base/TextDocument { // ai.koog.rag.base/TextDocument|null[0]
+    abstract val content // ai.koog.rag.base/TextDocument.content|{}content[0]
+        abstract fun <get-content>(): kotlin/String // ai.koog.rag.base/TextDocument.content.<get-content>|<get-content>(){}[0]
+    abstract val id // ai.koog.rag.base/TextDocument.id|{}id[0]
+        abstract fun <get-id>(): kotlin/String? // ai.koog.rag.base/TextDocument.id.<get-id>|<get-id>(){}[0]
+    abstract val metadata // ai.koog.rag.base/TextDocument.metadata|{}metadata[0]
+        abstract fun <get-metadata>(): kotlin.collections/Map<kotlin/String, kotlin/Any> // ai.koog.rag.base/TextDocument.metadata.<get-metadata>|<get-metadata>(){}[0]
+}
+
+sealed interface ai.koog.rag.base.files.model/FileSize { // ai.koog.rag.base.files.model/FileSize|null[0]
+    abstract fun display(): kotlin/String // ai.koog.rag.base.files.model/FileSize.display|display(){}[0]
+
+    final class Bytes : ai.koog.rag.base.files.model/FileSize { // ai.koog.rag.base.files.model/FileSize.Bytes|null[0]
+        constructor <init>(kotlin/Long) // ai.koog.rag.base.files.model/FileSize.Bytes.<init>|<init>(kotlin.Long){}[0]
+
+        final val bytes // ai.koog.rag.base.files.model/FileSize.Bytes.bytes|{}bytes[0]
+            final fun <get-bytes>(): kotlin/Long // ai.koog.rag.base.files.model/FileSize.Bytes.bytes.<get-bytes>|<get-bytes>(){}[0]
+
+        final fun component1(): kotlin/Long // ai.koog.rag.base.files.model/FileSize.Bytes.component1|component1(){}[0]
+        final fun copy(kotlin/Long = ...): ai.koog.rag.base.files.model/FileSize.Bytes // ai.koog.rag.base.files.model/FileSize.Bytes.copy|copy(kotlin.Long){}[0]
+        final fun display(): kotlin/String // ai.koog.rag.base.files.model/FileSize.Bytes.display|display(){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.files.model/FileSize.Bytes.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.rag.base.files.model/FileSize.Bytes.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.rag.base.files.model/FileSize.Bytes.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.rag.base.files.model/FileSize.Bytes> { // ai.koog.rag.base.files.model/FileSize.Bytes.$serializer|null[0]
+            final val descriptor // ai.koog.rag.base.files.model/FileSize.Bytes.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.rag.base.files.model/FileSize.Bytes.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.rag.base.files.model/FileSize.Bytes.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.rag.base.files.model/FileSize.Bytes // ai.koog.rag.base.files.model/FileSize.Bytes.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.rag.base.files.model/FileSize.Bytes) // ai.koog.rag.base.files.model/FileSize.Bytes.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.rag.base.files.model.FileSize.Bytes){}[0]
+        }
+
+        final object Companion { // ai.koog.rag.base.files.model/FileSize.Bytes.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files.model/FileSize.Bytes> // ai.koog.rag.base.files.model/FileSize.Bytes.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Lines : ai.koog.rag.base.files.model/FileSize { // ai.koog.rag.base.files.model/FileSize.Lines|null[0]
+        constructor <init>(kotlin/Int) // ai.koog.rag.base.files.model/FileSize.Lines.<init>|<init>(kotlin.Int){}[0]
+
+        final val lines // ai.koog.rag.base.files.model/FileSize.Lines.lines|{}lines[0]
+            final fun <get-lines>(): kotlin/Int // ai.koog.rag.base.files.model/FileSize.Lines.lines.<get-lines>|<get-lines>(){}[0]
+
+        final fun component1(): kotlin/Int // ai.koog.rag.base.files.model/FileSize.Lines.component1|component1(){}[0]
+        final fun copy(kotlin/Int = ...): ai.koog.rag.base.files.model/FileSize.Lines // ai.koog.rag.base.files.model/FileSize.Lines.copy|copy(kotlin.Int){}[0]
+        final fun display(): kotlin/String // ai.koog.rag.base.files.model/FileSize.Lines.display|display(){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.files.model/FileSize.Lines.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.rag.base.files.model/FileSize.Lines.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.rag.base.files.model/FileSize.Lines.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.rag.base.files.model/FileSize.Lines> { // ai.koog.rag.base.files.model/FileSize.Lines.$serializer|null[0]
+            final val descriptor // ai.koog.rag.base.files.model/FileSize.Lines.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.rag.base.files.model/FileSize.Lines.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.rag.base.files.model/FileSize.Lines.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.rag.base.files.model/FileSize.Lines // ai.koog.rag.base.files.model/FileSize.Lines.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.rag.base.files.model/FileSize.Lines) // ai.koog.rag.base.files.model/FileSize.Lines.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.rag.base.files.model.FileSize.Lines){}[0]
+        }
+
+        final object Companion { // ai.koog.rag.base.files.model/FileSize.Lines.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files.model/FileSize.Lines> // ai.koog.rag.base.files.model/FileSize.Lines.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.rag.base.files.model/FileSize.Companion|null[0]
+        final const val KIB // ai.koog.rag.base.files.model/FileSize.Companion.KIB|{}KIB[0]
+            final fun <get-KIB>(): kotlin/Long // ai.koog.rag.base.files.model/FileSize.Companion.KIB.<get-KIB>|<get-KIB>(){}[0]
+        final const val MIB // ai.koog.rag.base.files.model/FileSize.Companion.MIB|{}MIB[0]
+            final fun <get-MIB>(): kotlin/Long // ai.koog.rag.base.files.model/FileSize.Companion.MIB.<get-MIB>|<get-MIB>(){}[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files.model/FileSize> // ai.koog.rag.base.files.model/FileSize.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.rag.base.files.model/FileSize.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.koog.rag.base.files.model/FileSystemEntry { // ai.koog.rag.base.files.model/FileSystemEntry|null[0]
+    abstract val extension // ai.koog.rag.base.files.model/FileSystemEntry.extension|{}extension[0]
+        abstract fun <get-extension>(): kotlin/String? // ai.koog.rag.base.files.model/FileSystemEntry.extension.<get-extension>|<get-extension>(){}[0]
+    abstract val hidden // ai.koog.rag.base.files.model/FileSystemEntry.hidden|{}hidden[0]
+        abstract fun <get-hidden>(): kotlin/Boolean // ai.koog.rag.base.files.model/FileSystemEntry.hidden.<get-hidden>|<get-hidden>(){}[0]
+    abstract val name // ai.koog.rag.base.files.model/FileSystemEntry.name|{}name[0]
+        abstract fun <get-name>(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.name.<get-name>|<get-name>(){}[0]
+    abstract val path // ai.koog.rag.base.files.model/FileSystemEntry.path|{}path[0]
+        abstract fun <get-path>(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.path.<get-path>|<get-path>(){}[0]
+
+    abstract suspend fun visit(kotlin/Int, kotlin.coroutines/SuspendFunction1<ai.koog.rag.base.files.model/FileSystemEntry, kotlin/Unit>) // ai.koog.rag.base.files.model/FileSystemEntry.visit|visit(kotlin.Int;kotlin.coroutines.SuspendFunction1<ai.koog.rag.base.files.model.FileSystemEntry,kotlin.Unit>){}[0]
+
+    final class File : ai.koog.rag.base.files.model/FileSystemEntry { // ai.koog.rag.base.files.model/FileSystemEntry.File|null[0]
+        constructor <init>(kotlin/String, kotlin/String?, kotlin/String, kotlin/Boolean, kotlin.collections/List<ai.koog.rag.base.files.model/FileSize>, ai.koog.rag.base.files/FileMetadata.FileContentType, ai.koog.rag.base.files.model/FileSystemEntry.File.Content = ...) // ai.koog.rag.base.files.model/FileSystemEntry.File.<init>|<init>(kotlin.String;kotlin.String?;kotlin.String;kotlin.Boolean;kotlin.collections.List<ai.koog.rag.base.files.model.FileSize>;ai.koog.rag.base.files.FileMetadata.FileContentType;ai.koog.rag.base.files.model.FileSystemEntry.File.Content){}[0]
+
+        final val content // ai.koog.rag.base.files.model/FileSystemEntry.File.content|{}content[0]
+            final fun <get-content>(): ai.koog.rag.base.files.model/FileSystemEntry.File.Content // ai.koog.rag.base.files.model/FileSystemEntry.File.content.<get-content>|<get-content>(){}[0]
+        final val contentType // ai.koog.rag.base.files.model/FileSystemEntry.File.contentType|{}contentType[0]
+            final fun <get-contentType>(): ai.koog.rag.base.files/FileMetadata.FileContentType // ai.koog.rag.base.files.model/FileSystemEntry.File.contentType.<get-contentType>|<get-contentType>(){}[0]
+        final val extension // ai.koog.rag.base.files.model/FileSystemEntry.File.extension|{}extension[0]
+            final fun <get-extension>(): kotlin/String? // ai.koog.rag.base.files.model/FileSystemEntry.File.extension.<get-extension>|<get-extension>(){}[0]
+        final val hidden // ai.koog.rag.base.files.model/FileSystemEntry.File.hidden|{}hidden[0]
+            final fun <get-hidden>(): kotlin/Boolean // ai.koog.rag.base.files.model/FileSystemEntry.File.hidden.<get-hidden>|<get-hidden>(){}[0]
+        final val name // ai.koog.rag.base.files.model/FileSystemEntry.File.name|{}name[0]
+            final fun <get-name>(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.name.<get-name>|<get-name>(){}[0]
+        final val path // ai.koog.rag.base.files.model/FileSystemEntry.File.path|{}path[0]
+            final fun <get-path>(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.path.<get-path>|<get-path>(){}[0]
+        final val size // ai.koog.rag.base.files.model/FileSystemEntry.File.size|{}size[0]
+            final fun <get-size>(): kotlin.collections/List<ai.koog.rag.base.files.model/FileSize> // ai.koog.rag.base.files.model/FileSystemEntry.File.size.<get-size>|<get-size>(){}[0]
+
+        final fun component1(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.component1|component1(){}[0]
+        final fun component2(): kotlin/String? // ai.koog.rag.base.files.model/FileSystemEntry.File.component2|component2(){}[0]
+        final fun component3(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.component3|component3(){}[0]
+        final fun component4(): kotlin/Boolean // ai.koog.rag.base.files.model/FileSystemEntry.File.component4|component4(){}[0]
+        final fun component5(): kotlin.collections/List<ai.koog.rag.base.files.model/FileSize> // ai.koog.rag.base.files.model/FileSystemEntry.File.component5|component5(){}[0]
+        final fun component6(): ai.koog.rag.base.files/FileMetadata.FileContentType // ai.koog.rag.base.files.model/FileSystemEntry.File.component6|component6(){}[0]
+        final fun component7(): ai.koog.rag.base.files.model/FileSystemEntry.File.Content // ai.koog.rag.base.files.model/FileSystemEntry.File.component7|component7(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/String? = ..., kotlin/String = ..., kotlin/Boolean = ..., kotlin.collections/List<ai.koog.rag.base.files.model/FileSize> = ..., ai.koog.rag.base.files/FileMetadata.FileContentType = ..., ai.koog.rag.base.files.model/FileSystemEntry.File.Content = ...): ai.koog.rag.base.files.model/FileSystemEntry.File // ai.koog.rag.base.files.model/FileSystemEntry.File.copy|copy(kotlin.String;kotlin.String?;kotlin.String;kotlin.Boolean;kotlin.collections.List<ai.koog.rag.base.files.model.FileSize>;ai.koog.rag.base.files.FileMetadata.FileContentType;ai.koog.rag.base.files.model.FileSystemEntry.File.Content){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.files.model/FileSystemEntry.File.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.rag.base.files.model/FileSystemEntry.File.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.toString|toString(){}[0]
+        final suspend fun visit(kotlin/Int, kotlin.coroutines/SuspendFunction1<ai.koog.rag.base.files.model/FileSystemEntry, kotlin/Unit>) // ai.koog.rag.base.files.model/FileSystemEntry.File.visit|visit(kotlin.Int;kotlin.coroutines.SuspendFunction1<ai.koog.rag.base.files.model.FileSystemEntry,kotlin.Unit>){}[0]
+
+        sealed interface Content { // ai.koog.rag.base.files.model/FileSystemEntry.File.Content|null[0]
+            final class Excerpt : ai.koog.rag.base.files.model/FileSystemEntry.File.Content { // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt|null[0]
+                constructor <init>(kotlin.collections/List<ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet>) // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.<init>|<init>(kotlin.collections.List<ai.koog.rag.base.files.model.FileSystemEntry.File.Content.Excerpt.Snippet>){}[0]
+                constructor <init>(kotlin/Array<out ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet>...) // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.<init>|<init>(kotlin.Array<out|ai.koog.rag.base.files.model.FileSystemEntry.File.Content.Excerpt.Snippet>...){}[0]
+
+                final val snippets // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.snippets|{}snippets[0]
+                    final fun <get-snippets>(): kotlin.collections/List<ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet> // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.snippets.<get-snippets>|<get-snippets>(){}[0]
+
+                final fun component1(): kotlin.collections/List<ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet> // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.component1|component1(){}[0]
+                final fun copy(kotlin.collections/List<ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet> = ...): ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.copy|copy(kotlin.collections.List<ai.koog.rag.base.files.model.FileSystemEntry.File.Content.Excerpt.Snippet>){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.toString|toString(){}[0]
+
+                final class Snippet { // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet|null[0]
+                    constructor <init>(kotlin/String, ai.koog.rag.base.files/DocumentProvider.DocumentRange) // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.<init>|<init>(kotlin.String;ai.koog.rag.base.files.DocumentProvider.DocumentRange){}[0]
+
+                    final val range // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.range|{}range[0]
+                        final fun <get-range>(): ai.koog.rag.base.files/DocumentProvider.DocumentRange // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.range.<get-range>|<get-range>(){}[0]
+                    final val text // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.text|{}text[0]
+                        final fun <get-text>(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.text.<get-text>|<get-text>(){}[0]
+
+                    final fun component1(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.component1|component1(){}[0]
+                    final fun component2(): ai.koog.rag.base.files/DocumentProvider.DocumentRange // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.component2|component2(){}[0]
+                    final fun copy(kotlin/String = ..., ai.koog.rag.base.files/DocumentProvider.DocumentRange = ...): ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.copy|copy(kotlin.String;ai.koog.rag.base.files.DocumentProvider.DocumentRange){}[0]
+                    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.equals|equals(kotlin.Any?){}[0]
+                    final fun hashCode(): kotlin/Int // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.hashCode|hashCode(){}[0]
+                    final fun toString(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.toString|toString(){}[0]
+
+                    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet> { // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.$serializer|null[0]
+                        final val descriptor // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.$serializer.descriptor|{}descriptor[0]
+                            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.$serializer.childSerializers|childSerializers(){}[0]
+                        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet) // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.rag.base.files.model.FileSystemEntry.File.Content.Excerpt.Snippet){}[0]
+                    }
+
+                    final object Companion { // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.Companion|null[0]
+                        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet> // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Snippet.Companion.serializer|serializer(){}[0]
+                    }
+                }
+
+                final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt> { // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.$serializer|null[0]
+                    final val descriptor // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.$serializer.descriptor|{}descriptor[0]
+                        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                    final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.$serializer.childSerializers|childSerializers(){}[0]
+                    final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                    final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt) // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.rag.base.files.model.FileSystemEntry.File.Content.Excerpt){}[0]
+                }
+
+                final object Companion { // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Companion|null[0]
+                    final val $childSerializers // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Companion.$childSerializers|{}$childSerializers[0]
+
+                    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt> // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Excerpt.Companion.serializer|serializer(){}[0]
+                }
+            }
+
+            final class Text : ai.koog.rag.base.files.model/FileSystemEntry.File.Content { // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text|null[0]
+                constructor <init>(kotlin/String) // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.<init>|<init>(kotlin.String){}[0]
+
+                final val text // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.text|{}text[0]
+                    final fun <get-text>(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.text.<get-text>|<get-text>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.toString|toString(){}[0]
+
+                final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text> { // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.$serializer|null[0]
+                    final val descriptor // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.$serializer.descriptor|{}descriptor[0]
+                        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                    final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.$serializer.childSerializers|childSerializers(){}[0]
+                    final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                    final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text) // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.rag.base.files.model.FileSystemEntry.File.Content.Text){}[0]
+                }
+
+                final object Companion { // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.Companion|null[0]
+                    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text> // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Text.Companion.serializer|serializer(){}[0]
+                }
+            }
+
+            final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Companion|null[0]
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files.model/FileSystemEntry.File.Content> // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Companion.serializer|serializer(){}[0]
+                final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+            }
+
+            final object None : ai.koog.rag.base.files.model/FileSystemEntry.File.Content, kotlinx.serialization.internal/SerializerFactory { // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.None|null[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.None.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.None.hashCode|hashCode(){}[0]
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files.model/FileSystemEntry.File.Content.None> // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.None.serializer|serializer(){}[0]
+                final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.None.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+                final fun toString(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.File.Content.None.toString|toString(){}[0]
+            }
+        }
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.rag.base.files.model/FileSystemEntry.File> { // ai.koog.rag.base.files.model/FileSystemEntry.File.$serializer|null[0]
+            final val descriptor // ai.koog.rag.base.files.model/FileSystemEntry.File.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.rag.base.files.model/FileSystemEntry.File.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.rag.base.files.model/FileSystemEntry.File.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.rag.base.files.model/FileSystemEntry.File // ai.koog.rag.base.files.model/FileSystemEntry.File.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.rag.base.files.model/FileSystemEntry.File) // ai.koog.rag.base.files.model/FileSystemEntry.File.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.rag.base.files.model.FileSystemEntry.File){}[0]
+        }
+
+        final object Companion { // ai.koog.rag.base.files.model/FileSystemEntry.File.Companion|null[0]
+            final val $childSerializers // ai.koog.rag.base.files.model/FileSystemEntry.File.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files.model/FileSystemEntry.File> // ai.koog.rag.base.files.model/FileSystemEntry.File.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Folder : ai.koog.rag.base.files.model/FileSystemEntry { // ai.koog.rag.base.files.model/FileSystemEntry.Folder|null[0]
+        constructor <init>(kotlin/String, kotlin/String, kotlin/Boolean, kotlin.collections/List<ai.koog.rag.base.files.model/FileSystemEntry>? = ...) // ai.koog.rag.base.files.model/FileSystemEntry.Folder.<init>|<init>(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.collections.List<ai.koog.rag.base.files.model.FileSystemEntry>?){}[0]
+
+        final val entries // ai.koog.rag.base.files.model/FileSystemEntry.Folder.entries|{}entries[0]
+            final fun <get-entries>(): kotlin.collections/List<ai.koog.rag.base.files.model/FileSystemEntry>? // ai.koog.rag.base.files.model/FileSystemEntry.Folder.entries.<get-entries>|<get-entries>(){}[0]
+        final val extension // ai.koog.rag.base.files.model/FileSystemEntry.Folder.extension|{}extension[0]
+            final fun <get-extension>(): kotlin/String? // ai.koog.rag.base.files.model/FileSystemEntry.Folder.extension.<get-extension>|<get-extension>(){}[0]
+        final val hidden // ai.koog.rag.base.files.model/FileSystemEntry.Folder.hidden|{}hidden[0]
+            final fun <get-hidden>(): kotlin/Boolean // ai.koog.rag.base.files.model/FileSystemEntry.Folder.hidden.<get-hidden>|<get-hidden>(){}[0]
+        final val name // ai.koog.rag.base.files.model/FileSystemEntry.Folder.name|{}name[0]
+            final fun <get-name>(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.Folder.name.<get-name>|<get-name>(){}[0]
+        final val path // ai.koog.rag.base.files.model/FileSystemEntry.Folder.path|{}path[0]
+            final fun <get-path>(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.Folder.path.<get-path>|<get-path>(){}[0]
+
+        final fun component1(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.Folder.component1|component1(){}[0]
+        final fun component2(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.Folder.component2|component2(){}[0]
+        final fun component3(): kotlin/Boolean // ai.koog.rag.base.files.model/FileSystemEntry.Folder.component3|component3(){}[0]
+        final fun component4(): kotlin.collections/List<ai.koog.rag.base.files.model/FileSystemEntry>? // ai.koog.rag.base.files.model/FileSystemEntry.Folder.component4|component4(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/Boolean = ..., kotlin.collections/List<ai.koog.rag.base.files.model/FileSystemEntry>? = ...): ai.koog.rag.base.files.model/FileSystemEntry.Folder // ai.koog.rag.base.files.model/FileSystemEntry.Folder.copy|copy(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.collections.List<ai.koog.rag.base.files.model.FileSystemEntry>?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.files.model/FileSystemEntry.Folder.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.rag.base.files.model/FileSystemEntry.Folder.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.rag.base.files.model/FileSystemEntry.Folder.toString|toString(){}[0]
+        final suspend fun visit(kotlin/Int, kotlin.coroutines/SuspendFunction1<ai.koog.rag.base.files.model/FileSystemEntry, kotlin/Unit>) // ai.koog.rag.base.files.model/FileSystemEntry.Folder.visit|visit(kotlin.Int;kotlin.coroutines.SuspendFunction1<ai.koog.rag.base.files.model.FileSystemEntry,kotlin.Unit>){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.rag.base.files.model/FileSystemEntry.Folder> { // ai.koog.rag.base.files.model/FileSystemEntry.Folder.$serializer|null[0]
+            final val descriptor // ai.koog.rag.base.files.model/FileSystemEntry.Folder.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.rag.base.files.model/FileSystemEntry.Folder.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.rag.base.files.model/FileSystemEntry.Folder.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.rag.base.files.model/FileSystemEntry.Folder // ai.koog.rag.base.files.model/FileSystemEntry.Folder.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.rag.base.files.model/FileSystemEntry.Folder) // ai.koog.rag.base.files.model/FileSystemEntry.Folder.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.rag.base.files.model.FileSystemEntry.Folder){}[0]
+        }
+
+        final object Companion { // ai.koog.rag.base.files.model/FileSystemEntry.Folder.Companion|null[0]
+            final val $childSerializers // ai.koog.rag.base.files.model/FileSystemEntry.Folder.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files.model/FileSystemEntry.Folder> // ai.koog.rag.base.files.model/FileSystemEntry.Folder.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.rag.base.files.model/FileSystemEntry.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files.model/FileSystemEntry> // ai.koog.rag.base.files.model/FileSystemEntry.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.rag.base.files.model/FileSystemEntry.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final class <#A: kotlin/Any?, #B: kotlin/Any?> ai.koog.rag.base/DocumentWithPayload { // ai.koog.rag.base/DocumentWithPayload|null[0]
+    constructor <init>(#A, #B) // ai.koog.rag.base/DocumentWithPayload.<init>|<init>(1:0;1:1){}[0]
+
+    final val document // ai.koog.rag.base/DocumentWithPayload.document|{}document[0]
+        final fun <get-document>(): #A // ai.koog.rag.base/DocumentWithPayload.document.<get-document>|<get-document>(){}[0]
+    final val payload // ai.koog.rag.base/DocumentWithPayload.payload|{}payload[0]
+        final fun <get-payload>(): #B // ai.koog.rag.base/DocumentWithPayload.payload.<get-payload>|<get-payload>(){}[0]
+
+    final fun component1(): #A // ai.koog.rag.base/DocumentWithPayload.component1|component1(){}[0]
+    final fun component2(): #B // ai.koog.rag.base/DocumentWithPayload.component2|component2(){}[0]
+    final fun copy(#A = ..., #B = ...): ai.koog.rag.base/DocumentWithPayload<#A, #B> // ai.koog.rag.base/DocumentWithPayload.copy|copy(1:0;1:1){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base/DocumentWithPayload.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.rag.base/DocumentWithPayload.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.rag.base/DocumentWithPayload.toString|toString(){}[0]
+}
+
+final class <#A: kotlin/Any?> ai.koog.rag.base.storage.search/SearchResult { // ai.koog.rag.base.storage.search/SearchResult|null[0]
+    constructor <init>(#A, ai.koog.rag.base.storage.search/Score, kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ...) // ai.koog.rag.base.storage.search/SearchResult.<init>|<init>(1:0;ai.koog.rag.base.storage.search.Score;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?){}[0]
+
+    final val document // ai.koog.rag.base.storage.search/SearchResult.document|{}document[0]
+        final fun <get-document>(): #A // ai.koog.rag.base.storage.search/SearchResult.document.<get-document>|<get-document>(){}[0]
+    final val id // ai.koog.rag.base.storage.search/SearchResult.id|{}id[0]
+        final fun <get-id>(): kotlin/String? // ai.koog.rag.base.storage.search/SearchResult.id.<get-id>|<get-id>(){}[0]
+    final val metadata // ai.koog.rag.base.storage.search/SearchResult.metadata|{}metadata[0]
+        final fun <get-metadata>(): kotlinx.serialization.json/JsonObject? // ai.koog.rag.base.storage.search/SearchResult.metadata.<get-metadata>|<get-metadata>(){}[0]
+    final val namespace // ai.koog.rag.base.storage.search/SearchResult.namespace|{}namespace[0]
+        final fun <get-namespace>(): kotlin/String? // ai.koog.rag.base.storage.search/SearchResult.namespace.<get-namespace>|<get-namespace>(){}[0]
+    final val score // ai.koog.rag.base.storage.search/SearchResult.score|{}score[0]
+        final fun <get-score>(): ai.koog.rag.base.storage.search/Score // ai.koog.rag.base.storage.search/SearchResult.score.<get-score>|<get-score>(){}[0]
+
+    final fun component1(): #A // ai.koog.rag.base.storage.search/SearchResult.component1|component1(){}[0]
+    final fun component2(): ai.koog.rag.base.storage.search/Score // ai.koog.rag.base.storage.search/SearchResult.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // ai.koog.rag.base.storage.search/SearchResult.component3|component3(){}[0]
+    final fun component4(): kotlinx.serialization.json/JsonObject? // ai.koog.rag.base.storage.search/SearchResult.component4|component4(){}[0]
+    final fun component5(): kotlin/String? // ai.koog.rag.base.storage.search/SearchResult.component5|component5(){}[0]
+    final fun copy(#A = ..., ai.koog.rag.base.storage.search/Score = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ...): ai.koog.rag.base.storage.search/SearchResult<#A> // ai.koog.rag.base.storage.search/SearchResult.copy|copy(1:0;ai.koog.rag.base.storage.search.Score;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.storage.search/SearchResult.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.rag.base.storage.search/SearchResult.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.rag.base.storage.search/SearchResult.toString|toString(){}[0]
+}
+
+final class ai.koog.rag.base.files.filter/GlobPattern { // ai.koog.rag.base.files.filter/GlobPattern|null[0]
+    constructor <init>(kotlin/String, kotlin/Boolean = ...) // ai.koog.rag.base.files.filter/GlobPattern.<init>|<init>(kotlin.String;kotlin.Boolean){}[0]
+
+    final fun matches(kotlin/String): kotlin/Boolean // ai.koog.rag.base.files.filter/GlobPattern.matches|matches(kotlin.String){}[0]
+
+    final object Companion { // ai.koog.rag.base.files.filter/GlobPattern.Companion|null[0]
+        final val ANY // ai.koog.rag.base.files.filter/GlobPattern.Companion.ANY|{}ANY[0]
+            final fun <get-ANY>(): ai.koog.rag.base.files.filter/GlobPattern // ai.koog.rag.base.files.filter/GlobPattern.Companion.ANY.<get-ANY>|<get-ANY>(){}[0]
+    }
+}
+
+final class ai.koog.rag.base.files/FileMetadata { // ai.koog.rag.base.files/FileMetadata|null[0]
+    constructor <init>(ai.koog.rag.base.files/FileMetadata.FileType, kotlin/Boolean) // ai.koog.rag.base.files/FileMetadata.<init>|<init>(ai.koog.rag.base.files.FileMetadata.FileType;kotlin.Boolean){}[0]
+
+    final val hidden // ai.koog.rag.base.files/FileMetadata.hidden|{}hidden[0]
+        final fun <get-hidden>(): kotlin/Boolean // ai.koog.rag.base.files/FileMetadata.hidden.<get-hidden>|<get-hidden>(){}[0]
+    final val type // ai.koog.rag.base.files/FileMetadata.type|{}type[0]
+        final fun <get-type>(): ai.koog.rag.base.files/FileMetadata.FileType // ai.koog.rag.base.files/FileMetadata.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): ai.koog.rag.base.files/FileMetadata.FileType // ai.koog.rag.base.files/FileMetadata.component1|component1(){}[0]
+    final fun component2(): kotlin/Boolean // ai.koog.rag.base.files/FileMetadata.component2|component2(){}[0]
+    final fun copy(ai.koog.rag.base.files/FileMetadata.FileType = ..., kotlin/Boolean = ...): ai.koog.rag.base.files/FileMetadata // ai.koog.rag.base.files/FileMetadata.copy|copy(ai.koog.rag.base.files.FileMetadata.FileType;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.files/FileMetadata.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.rag.base.files/FileMetadata.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.rag.base.files/FileMetadata.toString|toString(){}[0]
+
+    final enum class FileContentType : kotlin/Enum<ai.koog.rag.base.files/FileMetadata.FileContentType> { // ai.koog.rag.base.files/FileMetadata.FileContentType|null[0]
+        enum entry Binary // ai.koog.rag.base.files/FileMetadata.FileContentType.Binary|null[0]
+        enum entry Text // ai.koog.rag.base.files/FileMetadata.FileContentType.Text|null[0]
+
+        final val display // ai.koog.rag.base.files/FileMetadata.FileContentType.display|{}display[0]
+            final fun <get-display>(): kotlin/String // ai.koog.rag.base.files/FileMetadata.FileContentType.display.<get-display>|<get-display>(){}[0]
+        final val entries // ai.koog.rag.base.files/FileMetadata.FileContentType.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.rag.base.files/FileMetadata.FileContentType> // ai.koog.rag.base.files/FileMetadata.FileContentType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+        final fun valueOf(kotlin/String): ai.koog.rag.base.files/FileMetadata.FileContentType // ai.koog.rag.base.files/FileMetadata.FileContentType.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<ai.koog.rag.base.files/FileMetadata.FileContentType> // ai.koog.rag.base.files/FileMetadata.FileContentType.values|values#static(){}[0]
+    }
+
+    final enum class FileType : kotlin/Enum<ai.koog.rag.base.files/FileMetadata.FileType> { // ai.koog.rag.base.files/FileMetadata.FileType|null[0]
+        enum entry Directory // ai.koog.rag.base.files/FileMetadata.FileType.Directory|null[0]
+        enum entry File // ai.koog.rag.base.files/FileMetadata.FileType.File|null[0]
+
+        final val entries // ai.koog.rag.base.files/FileMetadata.FileType.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.rag.base.files/FileMetadata.FileType> // ai.koog.rag.base.files/FileMetadata.FileType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+        final fun valueOf(kotlin/String): ai.koog.rag.base.files/FileMetadata.FileType // ai.koog.rag.base.files/FileMetadata.FileType.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<ai.koog.rag.base.files/FileMetadata.FileType> // ai.koog.rag.base.files/FileMetadata.FileType.values|values#static(){}[0]
+    }
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.rag.base.files/FileMetadata> { // ai.koog.rag.base.files/FileMetadata.$serializer|null[0]
+        final val descriptor // ai.koog.rag.base.files/FileMetadata.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.rag.base.files/FileMetadata.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.rag.base.files/FileMetadata.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.rag.base.files/FileMetadata // ai.koog.rag.base.files/FileMetadata.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.rag.base.files/FileMetadata) // ai.koog.rag.base.files/FileMetadata.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.rag.base.files.FileMetadata){}[0]
+    }
+
+    final object Companion { // ai.koog.rag.base.files/FileMetadata.Companion|null[0]
+        final val $childSerializers // ai.koog.rag.base.files/FileMetadata.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.rag.base.files/FileMetadata> // ai.koog.rag.base.files/FileMetadata.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.rag.base.storage.search/HybridSearchRequest : ai.koog.rag.base.storage.search/HasFilterExpression, ai.koog.rag.base.storage.search/HasScoreThreshold, ai.koog.rag.base.storage.search/HasTextQuery, ai.koog.rag.base.storage.search/SearchRequest { // ai.koog.rag.base.storage.search/HybridSearchRequest|null[0]
+    constructor <init>(kotlin/String, kotlin/Double = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Double? = ..., kotlin/String? = ...) // ai.koog.rag.base.storage.search/HybridSearchRequest.<init>|<init>(kotlin.String;kotlin.Double;kotlin.Int;kotlin.Int;kotlin.Double?;kotlin.String?){}[0]
+
+    final val alpha // ai.koog.rag.base.storage.search/HybridSearchRequest.alpha|{}alpha[0]
+        final fun <get-alpha>(): kotlin/Double // ai.koog.rag.base.storage.search/HybridSearchRequest.alpha.<get-alpha>|<get-alpha>(){}[0]
+    final val filterExpression // ai.koog.rag.base.storage.search/HybridSearchRequest.filterExpression|{}filterExpression[0]
+        final fun <get-filterExpression>(): kotlin/String? // ai.koog.rag.base.storage.search/HybridSearchRequest.filterExpression.<get-filterExpression>|<get-filterExpression>(){}[0]
+    final val limit // ai.koog.rag.base.storage.search/HybridSearchRequest.limit|{}limit[0]
+        final fun <get-limit>(): kotlin/Int // ai.koog.rag.base.storage.search/HybridSearchRequest.limit.<get-limit>|<get-limit>(){}[0]
+    final val minScore // ai.koog.rag.base.storage.search/HybridSearchRequest.minScore|{}minScore[0]
+        final fun <get-minScore>(): kotlin/Double? // ai.koog.rag.base.storage.search/HybridSearchRequest.minScore.<get-minScore>|<get-minScore>(){}[0]
+    final val offset // ai.koog.rag.base.storage.search/HybridSearchRequest.offset|{}offset[0]
+        final fun <get-offset>(): kotlin/Int // ai.koog.rag.base.storage.search/HybridSearchRequest.offset.<get-offset>|<get-offset>(){}[0]
+    final val queryText // ai.koog.rag.base.storage.search/HybridSearchRequest.queryText|{}queryText[0]
+        final fun <get-queryText>(): kotlin/String // ai.koog.rag.base.storage.search/HybridSearchRequest.queryText.<get-queryText>|<get-queryText>(){}[0]
+
+    final fun component1(): kotlin/String // ai.koog.rag.base.storage.search/HybridSearchRequest.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // ai.koog.rag.base.storage.search/HybridSearchRequest.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // ai.koog.rag.base.storage.search/HybridSearchRequest.component3|component3(){}[0]
+    final fun component4(): kotlin/Int // ai.koog.rag.base.storage.search/HybridSearchRequest.component4|component4(){}[0]
+    final fun component5(): kotlin/Double? // ai.koog.rag.base.storage.search/HybridSearchRequest.component5|component5(){}[0]
+    final fun component6(): kotlin/String? // ai.koog.rag.base.storage.search/HybridSearchRequest.component6|component6(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Double = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Double? = ..., kotlin/String? = ...): ai.koog.rag.base.storage.search/HybridSearchRequest // ai.koog.rag.base.storage.search/HybridSearchRequest.copy|copy(kotlin.String;kotlin.Double;kotlin.Int;kotlin.Int;kotlin.Double?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.storage.search/HybridSearchRequest.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.rag.base.storage.search/HybridSearchRequest.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.rag.base.storage.search/HybridSearchRequest.toString|toString(){}[0]
+}
+
+final class ai.koog.rag.base.storage.search/KeywordSearchRequest : ai.koog.rag.base.storage.search/HasFilterExpression, ai.koog.rag.base.storage.search/HasScoreThreshold, ai.koog.rag.base.storage.search/HasTextQuery, ai.koog.rag.base.storage.search/SearchRequest { // ai.koog.rag.base.storage.search/KeywordSearchRequest|null[0]
+    constructor <init>(kotlin/String, kotlin/Int = ..., kotlin/Int = ..., kotlin/Double? = ..., kotlin/String? = ...) // ai.koog.rag.base.storage.search/KeywordSearchRequest.<init>|<init>(kotlin.String;kotlin.Int;kotlin.Int;kotlin.Double?;kotlin.String?){}[0]
+
+    final val filterExpression // ai.koog.rag.base.storage.search/KeywordSearchRequest.filterExpression|{}filterExpression[0]
+        final fun <get-filterExpression>(): kotlin/String? // ai.koog.rag.base.storage.search/KeywordSearchRequest.filterExpression.<get-filterExpression>|<get-filterExpression>(){}[0]
+    final val limit // ai.koog.rag.base.storage.search/KeywordSearchRequest.limit|{}limit[0]
+        final fun <get-limit>(): kotlin/Int // ai.koog.rag.base.storage.search/KeywordSearchRequest.limit.<get-limit>|<get-limit>(){}[0]
+    final val minScore // ai.koog.rag.base.storage.search/KeywordSearchRequest.minScore|{}minScore[0]
+        final fun <get-minScore>(): kotlin/Double? // ai.koog.rag.base.storage.search/KeywordSearchRequest.minScore.<get-minScore>|<get-minScore>(){}[0]
+    final val offset // ai.koog.rag.base.storage.search/KeywordSearchRequest.offset|{}offset[0]
+        final fun <get-offset>(): kotlin/Int // ai.koog.rag.base.storage.search/KeywordSearchRequest.offset.<get-offset>|<get-offset>(){}[0]
+    final val queryText // ai.koog.rag.base.storage.search/KeywordSearchRequest.queryText|{}queryText[0]
+        final fun <get-queryText>(): kotlin/String // ai.koog.rag.base.storage.search/KeywordSearchRequest.queryText.<get-queryText>|<get-queryText>(){}[0]
+
+    final fun component1(): kotlin/String // ai.koog.rag.base.storage.search/KeywordSearchRequest.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // ai.koog.rag.base.storage.search/KeywordSearchRequest.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // ai.koog.rag.base.storage.search/KeywordSearchRequest.component3|component3(){}[0]
+    final fun component4(): kotlin/Double? // ai.koog.rag.base.storage.search/KeywordSearchRequest.component4|component4(){}[0]
+    final fun component5(): kotlin/String? // ai.koog.rag.base.storage.search/KeywordSearchRequest.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Double? = ..., kotlin/String? = ...): ai.koog.rag.base.storage.search/KeywordSearchRequest // ai.koog.rag.base.storage.search/KeywordSearchRequest.copy|copy(kotlin.String;kotlin.Int;kotlin.Int;kotlin.Double?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.storage.search/KeywordSearchRequest.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.rag.base.storage.search/KeywordSearchRequest.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.rag.base.storage.search/KeywordSearchRequest.toString|toString(){}[0]
+}
+
+final class ai.koog.rag.base.storage.search/Score { // ai.koog.rag.base.storage.search/Score|null[0]
+    constructor <init>(kotlin/Double, ai.koog.rag.base.storage.search/ScoreMetric) // ai.koog.rag.base.storage.search/Score.<init>|<init>(kotlin.Double;ai.koog.rag.base.storage.search.ScoreMetric){}[0]
+
+    final val metric // ai.koog.rag.base.storage.search/Score.metric|{}metric[0]
+        final fun <get-metric>(): ai.koog.rag.base.storage.search/ScoreMetric // ai.koog.rag.base.storage.search/Score.metric.<get-metric>|<get-metric>(){}[0]
+    final val value // ai.koog.rag.base.storage.search/Score.value|{}value[0]
+        final fun <get-value>(): kotlin/Double // ai.koog.rag.base.storage.search/Score.value.<get-value>|<get-value>(){}[0]
+
+    final fun component1(): kotlin/Double // ai.koog.rag.base.storage.search/Score.component1|component1(){}[0]
+    final fun component2(): ai.koog.rag.base.storage.search/ScoreMetric // ai.koog.rag.base.storage.search/Score.component2|component2(){}[0]
+    final fun copy(kotlin/Double = ..., ai.koog.rag.base.storage.search/ScoreMetric = ...): ai.koog.rag.base.storage.search/Score // ai.koog.rag.base.storage.search/Score.copy|copy(kotlin.Double;ai.koog.rag.base.storage.search.ScoreMetric){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.storage.search/Score.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.rag.base.storage.search/Score.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.rag.base.storage.search/Score.toString|toString(){}[0]
+}
+
+final class ai.koog.rag.base.storage.search/SimilaritySearchRequest : ai.koog.rag.base.storage.search/HasFilterExpression, ai.koog.rag.base.storage.search/HasScoreThreshold, ai.koog.rag.base.storage.search/HasTextQuery, ai.koog.rag.base.storage.search/SearchRequest { // ai.koog.rag.base.storage.search/SimilaritySearchRequest|null[0]
+    constructor <init>(kotlin/String, kotlin/Int = ..., kotlin/Int = ..., kotlin/Double? = ..., kotlin/String? = ...) // ai.koog.rag.base.storage.search/SimilaritySearchRequest.<init>|<init>(kotlin.String;kotlin.Int;kotlin.Int;kotlin.Double?;kotlin.String?){}[0]
+
+    final val filterExpression // ai.koog.rag.base.storage.search/SimilaritySearchRequest.filterExpression|{}filterExpression[0]
+        final fun <get-filterExpression>(): kotlin/String? // ai.koog.rag.base.storage.search/SimilaritySearchRequest.filterExpression.<get-filterExpression>|<get-filterExpression>(){}[0]
+    final val limit // ai.koog.rag.base.storage.search/SimilaritySearchRequest.limit|{}limit[0]
+        final fun <get-limit>(): kotlin/Int // ai.koog.rag.base.storage.search/SimilaritySearchRequest.limit.<get-limit>|<get-limit>(){}[0]
+    final val minScore // ai.koog.rag.base.storage.search/SimilaritySearchRequest.minScore|{}minScore[0]
+        final fun <get-minScore>(): kotlin/Double? // ai.koog.rag.base.storage.search/SimilaritySearchRequest.minScore.<get-minScore>|<get-minScore>(){}[0]
+    final val offset // ai.koog.rag.base.storage.search/SimilaritySearchRequest.offset|{}offset[0]
+        final fun <get-offset>(): kotlin/Int // ai.koog.rag.base.storage.search/SimilaritySearchRequest.offset.<get-offset>|<get-offset>(){}[0]
+    final val queryText // ai.koog.rag.base.storage.search/SimilaritySearchRequest.queryText|{}queryText[0]
+        final fun <get-queryText>(): kotlin/String // ai.koog.rag.base.storage.search/SimilaritySearchRequest.queryText.<get-queryText>|<get-queryText>(){}[0]
+
+    final fun component1(): kotlin/String // ai.koog.rag.base.storage.search/SimilaritySearchRequest.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // ai.koog.rag.base.storage.search/SimilaritySearchRequest.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // ai.koog.rag.base.storage.search/SimilaritySearchRequest.component3|component3(){}[0]
+    final fun component4(): kotlin/Double? // ai.koog.rag.base.storage.search/SimilaritySearchRequest.component4|component4(){}[0]
+    final fun component5(): kotlin/String? // ai.koog.rag.base.storage.search/SimilaritySearchRequest.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Double? = ..., kotlin/String? = ...): ai.koog.rag.base.storage.search/SimilaritySearchRequest // ai.koog.rag.base.storage.search/SimilaritySearchRequest.copy|copy(kotlin.String;kotlin.Int;kotlin.Int;kotlin.Double?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.rag.base.storage.search/SimilaritySearchRequest.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.rag.base.storage.search/SimilaritySearchRequest.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.rag.base.storage.search/SimilaritySearchRequest.toString|toString(){}[0]
+}
+
+final object ai.koog.rag.base.files.filter/PathFilters { // ai.koog.rag.base.files.filter/PathFilters|null[0]
+    final fun <#A1: kotlin/Any?> byRoot(#A1): ai.koog.rag.base.files.filter/TraversalFilter<#A1> // ai.koog.rag.base.files.filter/PathFilters.byRoot|byRoot(0:0){0§<kotlin.Any?>}[0]
+}
+
+final object ai.koog.rag.base.files/FileSystemProvider { // ai.koog.rag.base.files/FileSystemProvider|null[0]
+    abstract interface <#A1: kotlin/Any?> ReadOnly { // ai.koog.rag.base.files/FileSystemProvider.ReadOnly|null[0]
+        abstract fun extension(#A1): kotlin/String // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.extension|extension(1:0){}[0]
+        abstract fun fromAbsolutePathString(kotlin/String): #A1 // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.fromAbsolutePathString|fromAbsolutePathString(kotlin.String){}[0]
+        abstract fun joinPath(#A1, kotlin/Array<out kotlin/String>...): #A1 // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.joinPath|joinPath(1:0;kotlin.Array<out|kotlin.String>...){}[0]
+        abstract fun name(#A1): kotlin/String // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.name|name(1:0){}[0]
+        abstract fun parent(#A1): #A1? // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.parent|parent(1:0){}[0]
+        abstract fun relativize(#A1, #A1): kotlin/String? // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.relativize|relativize(1:0;1:0){}[0]
+        abstract fun toAbsolutePathString(#A1): kotlin/String // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.toAbsolutePathString|toAbsolutePathString(1:0){}[0]
+        abstract suspend fun exists(#A1): kotlin/Boolean // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.exists|exists(1:0){}[0]
+        abstract suspend fun getFileContentType(#A1): ai.koog.rag.base.files/FileMetadata.FileContentType // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.getFileContentType|getFileContentType(1:0){}[0]
+        abstract suspend fun inputStream(#A1): kotlinx.io/Source // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.inputStream|inputStream(1:0){}[0]
+        abstract suspend fun list(#A1): kotlin.collections/List<#A1> // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.list|list(1:0){}[0]
+        abstract suspend fun metadata(#A1): ai.koog.rag.base.files/FileMetadata? // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.metadata|metadata(1:0){}[0]
+        abstract suspend fun readBytes(#A1): kotlin/ByteArray // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.readBytes|readBytes(1:0){}[0]
+        abstract suspend fun size(#A1): kotlin/Long // ai.koog.rag.base.files/FileSystemProvider.ReadOnly.size|size(1:0){}[0]
+    }
+
+    abstract interface <#A1: kotlin/Any?> ReadWrite : ai.koog.rag.base.files/FileSystemProvider.ReadOnly<#A1> { // ai.koog.rag.base.files/FileSystemProvider.ReadWrite|null[0]
+        abstract suspend fun copy(#A1, #A1) // ai.koog.rag.base.files/FileSystemProvider.ReadWrite.copy|copy(1:0;1:0){}[0]
+        abstract suspend fun create(#A1, ai.koog.rag.base.files/FileMetadata.FileType) // ai.koog.rag.base.files/FileSystemProvider.ReadWrite.create|create(1:0;ai.koog.rag.base.files.FileMetadata.FileType){}[0]
+        abstract suspend fun delete(#A1) // ai.koog.rag.base.files/FileSystemProvider.ReadWrite.delete|delete(1:0){}[0]
+        abstract suspend fun move(#A1, #A1) // ai.koog.rag.base.files/FileSystemProvider.ReadWrite.move|move(1:0;1:0){}[0]
+        abstract suspend fun outputStream(#A1, kotlin/Boolean = ...): kotlinx.io/Sink // ai.koog.rag.base.files/FileSystemProvider.ReadWrite.outputStream|outputStream(1:0;kotlin.Boolean){}[0]
+        abstract suspend fun writeBytes(#A1, kotlin/ByteArray) // ai.koog.rag.base.files/FileSystemProvider.ReadWrite.writeBytes|writeBytes(1:0;kotlin.ByteArray){}[0]
+    }
+}
+
+final fun (kotlin/Int).ai.koog.rag.base.files/toPosition(kotlin/CharSequence): ai.koog.rag.base.files/DocumentProvider.Position // ai.koog.rag.base.files/toPosition|toPosition@kotlin.Int(kotlin.CharSequence){}[0]
+final fun <#A: kotlin/Any?, #B: ai.koog.rag.base.storage.search/SearchRequest> (ai.koog.rag.base.storage/SearchStorage<#A, #B>).ai.koog.rag.base.storage/searchAsFlow(#B, kotlin/String? = ...): kotlinx.coroutines.flow/Flow<ai.koog.rag.base.storage.search/SearchResult<#A>> // ai.koog.rag.base.storage/searchAsFlow|searchAsFlow@ai.koog.rag.base.storage.SearchStorage<0:0,0:1>(0:1;kotlin.String?){0§<kotlin.Any?>;1§<ai.koog.rag.base.storage.search.SearchRequest>}[0]
+final fun <#A: kotlin/Any?> (ai.koog.rag.base.files/FileSystemProvider.ReadOnly<#A>).ai.koog.rag.base.files/filter(ai.koog.rag.base.files.filter/TraversalFilter<#A>): ai.koog.rag.base.files/FileSystemProvider.ReadOnly<#A> // ai.koog.rag.base.files/filter|filter@ai.koog.rag.base.files.FileSystemProvider.ReadOnly<0:0>(ai.koog.rag.base.files.filter.TraversalFilter<0:0>){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.koog.rag.base.files/FileSystemProvider.ReadWrite<#A>).ai.koog.rag.base.files/filter(ai.koog.rag.base.files.filter/TraversalFilter<#A>): ai.koog.rag.base.files/FileSystemProvider.ReadWrite<#A> // ai.koog.rag.base.files/filter|filter@ai.koog.rag.base.files.FileSystemProvider.ReadWrite<0:0>(ai.koog.rag.base.files.filter.TraversalFilter<0:0>){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> ai.koog.rag.base.files.model/buildFolderEntry(ai.koog.rag.base.files/FileSystemProvider.ReadOnly<#A>, #A, ai.koog.rag.base.files/FileMetadata, kotlin.collections/List<ai.koog.rag.base.files.model/FileSystemEntry>?): ai.koog.rag.base.files.model/FileSystemEntry.Folder // ai.koog.rag.base.files.model/buildFolderEntry|buildFolderEntry(ai.koog.rag.base.files.FileSystemProvider.ReadOnly<0:0>;0:0;ai.koog.rag.base.files.FileMetadata;kotlin.collections.List<ai.koog.rag.base.files.model.FileSystemEntry>?){0§<kotlin.Any?>}[0]
+final fun ai.koog.rag.base.files/extendRangeByLines(kotlin/CharSequence, ai.koog.rag.base.files/DocumentProvider.DocumentRange, kotlin/Int = ..., kotlin/Int = ...): ai.koog.rag.base.files/DocumentProvider.DocumentRange // ai.koog.rag.base.files/extendRangeByLines|extendRangeByLines(kotlin.CharSequence;ai.koog.rag.base.files.DocumentProvider.DocumentRange;kotlin.Int;kotlin.Int){}[0]
+final suspend fun <#A: kotlin/Any?, #B: kotlin/Any?> (ai.koog.rag.base.files/FileSystemProvider.ReadOnly<#A>).ai.koog.rag.base.files/readText(#A, ai.koog.rag.base.files/DocumentProvider<#A, #B>?): kotlin/String // ai.koog.rag.base.files/readText|readText@ai.koog.rag.base.files.FileSystemProvider.ReadOnly<0:0>(0:0;ai.koog.rag.base.files.DocumentProvider<0:0,0:1>?){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+final suspend fun <#A: kotlin/Any?> (ai.koog.rag.base.files/FileSystemProvider.ReadOnly<#A>).ai.koog.rag.base.files/readText(#A): kotlin/String // ai.koog.rag.base.files/readText|readText@ai.koog.rag.base.files.FileSystemProvider.ReadOnly<0:0>(0:0){0§<kotlin.Any?>}[0]
+final suspend fun <#A: kotlin/Any?> (ai.koog.rag.base.files/FileSystemProvider.ReadWrite<#A>).ai.koog.rag.base.files/createDirectory(#A) // ai.koog.rag.base.files/createDirectory|createDirectory@ai.koog.rag.base.files.FileSystemProvider.ReadWrite<0:0>(0:0){0§<kotlin.Any?>}[0]
+final suspend fun <#A: kotlin/Any?> (ai.koog.rag.base.files/FileSystemProvider.ReadWrite<#A>).ai.koog.rag.base.files/createFile(#A) // ai.koog.rag.base.files/createFile|createFile@ai.koog.rag.base.files.FileSystemProvider.ReadWrite<0:0>(0:0){0§<kotlin.Any?>}[0]
+final suspend fun <#A: kotlin/Any?> (ai.koog.rag.base.files/FileSystemProvider.ReadWrite<#A>).ai.koog.rag.base.files/writeText(#A, kotlin/String) // ai.koog.rag.base.files/writeText|writeText@ai.koog.rag.base.files.FileSystemProvider.ReadWrite<0:0>(0:0;kotlin.String){0§<kotlin.Any?>}[0]
+final suspend fun <#A: kotlin/Any?> ai.koog.rag.base.files.model/buildFileEntry(ai.koog.rag.base.files/FileSystemProvider.ReadOnly<#A>, #A, ai.koog.rag.base.files/FileMetadata): ai.koog.rag.base.files.model/FileSystemEntry.File // ai.koog.rag.base.files.model/buildFileEntry|buildFileEntry(ai.koog.rag.base.files.FileSystemProvider.ReadOnly<0:0>;0:0;ai.koog.rag.base.files.FileMetadata){0§<kotlin.Any?>}[0]
+final suspend fun <#A: kotlin/Any?> ai.koog.rag.base.files.model/buildFileSize(ai.koog.rag.base.files/FileSystemProvider.ReadOnly<#A>, #A, ai.koog.rag.base.files/FileMetadata.FileContentType? = ...): kotlin.collections/List<ai.koog.rag.base.files.model/FileSize> // ai.koog.rag.base.files.model/buildFileSize|buildFileSize(ai.koog.rag.base.files.FileSystemProvider.ReadOnly<0:0>;0:0;ai.koog.rag.base.files.FileMetadata.FileContentType?){0§<kotlin.Any?>}[0]
+final suspend fun <#A: kotlin/Any?> ai.koog.rag.base.files.model/buildFileSystemEntry(ai.koog.rag.base.files/FileSystemProvider.ReadOnly<#A>, #A, ai.koog.rag.base.files/FileMetadata): ai.koog.rag.base.files.model/FileSystemEntry // ai.koog.rag.base.files.model/buildFileSystemEntry|buildFileSystemEntry(ai.koog.rag.base.files.FileSystemProvider.ReadOnly<0:0>;0:0;ai.koog.rag.base.files.FileMetadata){0§<kotlin.Any?>}[0]

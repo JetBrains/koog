@@ -1,0 +1,30 @@
+public final class ai/koog/agents/features/tokenizer/feature/MessageTokenizer {
+	public static final field Feature Lai/koog/agents/features/tokenizer/feature/MessageTokenizer$Feature;
+	public fun <init> (Lai/koog/prompt/tokenizer/PromptTokenizer;)V
+	public final fun getPromptTokenizer ()Lai/koog/prompt/tokenizer/PromptTokenizer;
+}
+
+public final class ai/koog/agents/features/tokenizer/feature/MessageTokenizer$Feature : ai/koog/agents/core/feature/AIAgentFunctionalFeature, ai/koog/agents/core/feature/AIAgentGraphFeature, ai/koog/agents/core/feature/AIAgentPlannerFeature {
+	public synthetic fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/core/feature/config/FeatureConfig;
+	public fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/features/tokenizer/feature/MessageTokenizerConfig;
+	public fun getKey ()Lai/koog/agents/core/agent/entity/AIAgentStorageKey;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentFunctionalPipeline;)Ljava/lang/Object;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Ljava/lang/Object;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;)Ljava/lang/Object;
+	public fun install (Lai/koog/agents/features/tokenizer/feature/MessageTokenizerConfig;Lai/koog/agents/core/feature/pipeline/AIAgentFunctionalPipeline;)Lai/koog/agents/features/tokenizer/feature/MessageTokenizer;
+	public fun install (Lai/koog/agents/features/tokenizer/feature/MessageTokenizerConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Lai/koog/agents/features/tokenizer/feature/MessageTokenizer;
+	public fun install (Lai/koog/agents/features/tokenizer/feature/MessageTokenizerConfig;Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;)Lai/koog/agents/features/tokenizer/feature/MessageTokenizer;
+}
+
+public final class ai/koog/agents/features/tokenizer/feature/MessageTokenizerConfig : ai/koog/agents/core/feature/config/FeatureConfig {
+	public fun <init> ()V
+	public final fun getEnableCaching ()Z
+	public final fun getTokenizer ()Lai/koog/prompt/tokenizer/Tokenizer;
+	public final fun setEnableCaching (Z)V
+	public final fun setTokenizer (Lai/koog/prompt/tokenizer/Tokenizer;)V
+}
+
+public final class ai/koog/agents/features/tokenizer/feature/MessageTokenizerKt {
+	public static final fun tokenizer (Lai/koog/agents/core/agent/context/AIAgentContext;)Lai/koog/prompt/tokenizer/PromptTokenizer;
+}
+

@@ -1,0 +1,29 @@
+public final class ai/koog/http/client/ktor/KtorKoogHttpClient : ai/koog/http/client/KoogHttpClient {
+	public fun <init> (Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Lio/ktor/client/HttpClient;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Lio/ktor/client/HttpClient;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public fun get (Ljava/lang/String;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getClientName ()Ljava/lang/String;
+	public final fun getKtorClient ()Lio/ktor/client/HttpClient;
+	public fun lines (Ljava/lang/String;Ljava/lang/Object;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/util/Map;)Lkotlinx/coroutines/flow/Flow;
+	public fun post (Ljava/lang/String;Ljava/lang/Object;Lkotlin/reflect/KClass;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sse (Ljava/lang/String;Ljava/lang/Object;Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Ljava/util/Map;Ljava/util/Map;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class ai/koog/http/client/ktor/KtorKoogHttpClient$Factory : ai/koog/http/client/KoogHttpClient$Factory {
+	public fun <init> ()V
+	public fun <init> (Lio/ktor/client/HttpClient;)V
+	public fun <init> (Lio/ktor/client/HttpClient;Z)V
+	public fun <init> (Lio/ktor/client/HttpClient;ZLio/github/oshai/kotlinlogging/KLogger;)V
+	public synthetic fun <init> (Lio/ktor/client/HttpClient;ZLio/github/oshai/kotlinlogging/KLogger;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun create (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;JJJLkotlinx/serialization/json/Json;)Lai/koog/http/client/KoogHttpClient;
+	public fun create (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;JJJLkotlinx/serialization/json/Json;)Lai/koog/http/client/ktor/KtorKoogHttpClient;
+}
+
+public final class ai/koog/http/client/ktor/KtorKoogHttpClientKt {
+	public static final fun fromKtorClient (Lai/koog/http/client/KoogHttpClient$Companion;Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;)Lai/koog/http/client/KoogHttpClient;
+	public static final fun fromKtorClient (Lai/koog/http/client/KoogHttpClient$Companion;Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Lio/ktor/client/HttpClient;)Lai/koog/http/client/KoogHttpClient;
+	public static final fun fromKtorClient (Lai/koog/http/client/KoogHttpClient$Companion;Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Lio/ktor/client/HttpClient;Lkotlin/jvm/functions/Function1;)Lai/koog/http/client/KoogHttpClient;
+	public static synthetic fun fromKtorClient$default (Lai/koog/http/client/KoogHttpClient$Companion;Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Lio/ktor/client/HttpClient;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/koog/http/client/KoogHttpClient;
+}
+

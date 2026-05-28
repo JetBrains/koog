@@ -1,0 +1,1281 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:agents-features-opentelemetry>
+final enum class ai.koog.agents.features.opentelemetry.span/SpanType : kotlin/Enum<ai.koog.agents.features.opentelemetry.span/SpanType> { // ai.koog.agents.features.opentelemetry.span/SpanType|null[0]
+    enum entry CREATE_AGENT // ai.koog.agents.features.opentelemetry.span/SpanType.CREATE_AGENT|null[0]
+    enum entry EXECUTE_TOOL // ai.koog.agents.features.opentelemetry.span/SpanType.EXECUTE_TOOL|null[0]
+    enum entry INFERENCE // ai.koog.agents.features.opentelemetry.span/SpanType.INFERENCE|null[0]
+    enum entry INVOKE_AGENT // ai.koog.agents.features.opentelemetry.span/SpanType.INVOKE_AGENT|null[0]
+    enum entry NODE // ai.koog.agents.features.opentelemetry.span/SpanType.NODE|null[0]
+    enum entry STRATEGY // ai.koog.agents.features.opentelemetry.span/SpanType.STRATEGY|null[0]
+    enum entry SUBGRAPH // ai.koog.agents.features.opentelemetry.span/SpanType.SUBGRAPH|null[0]
+
+    final val entries // ai.koog.agents.features.opentelemetry.span/SpanType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.agents.features.opentelemetry.span/SpanType> // ai.koog.agents.features.opentelemetry.span/SpanType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.agents.features.opentelemetry.span/SpanType // ai.koog.agents.features.opentelemetry.span/SpanType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.agents.features.opentelemetry.span/SpanType> // ai.koog.agents.features.opentelemetry.span/SpanType.values|values#static(){}[0]
+}
+
+abstract interface ai.koog.agents.features.opentelemetry.attribute/Attribute { // ai.koog.agents.features.opentelemetry.attribute/Attribute|null[0]
+    abstract val key // ai.koog.agents.features.opentelemetry.attribute/Attribute.key|{}key[0]
+        abstract fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/Attribute.key.<get-key>|<get-key>(){}[0]
+    abstract val value // ai.koog.agents.features.opentelemetry.attribute/Attribute.value|{}value[0]
+        abstract fun <get-value>(): kotlin/Any // ai.koog.agents.features.opentelemetry.attribute/Attribute.value.<get-value>|<get-value>(){}[0]
+
+    open fun (kotlin/String).concatKey(kotlin/String): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/Attribute.concatKey|concatKey@kotlin.String(kotlin.String){}[0]
+}
+
+abstract interface ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI { // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI|null[0]
+    abstract val isShutdownOnAgentClose // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.isShutdownOnAgentClose|{}isShutdownOnAgentClose[0]
+        abstract fun <get-isShutdownOnAgentClose>(): kotlin/Boolean // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.isShutdownOnAgentClose.<get-isShutdownOnAgentClose>|<get-isShutdownOnAgentClose>(){}[0]
+    abstract val isVerbose // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.isVerbose|{}isVerbose[0]
+        abstract fun <get-isVerbose>(): kotlin/Boolean // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.isVerbose.<get-isVerbose>|<get-isVerbose>(){}[0]
+    abstract val serviceName // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.serviceName|{}serviceName[0]
+        abstract fun <get-serviceName>(): kotlin/String // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.serviceName.<get-serviceName>|<get-serviceName>(){}[0]
+    abstract val serviceNamespace // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.serviceNamespace|{}serviceNamespace[0]
+        abstract fun <get-serviceNamespace>(): kotlin/String? // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.serviceNamespace.<get-serviceNamespace>|<get-serviceNamespace>(){}[0]
+    abstract val serviceVersion // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.serviceVersion|{}serviceVersion[0]
+        abstract fun <get-serviceVersion>(): kotlin/String // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.serviceVersion.<get-serviceVersion>|<get-serviceVersion>(){}[0]
+    abstract val tracer // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.tracer|{}tracer[0]
+        abstract fun <get-tracer>(): io.opentelemetry.kotlin.tracing/Tracer // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.tracer.<get-tracer>|<get-tracer>(){}[0]
+
+    abstract fun addResourceAttributes(kotlin.collections/Map<kotlin/String, kotlin/Any>) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.addResourceAttributes|addResourceAttributes(kotlin.collections.Map<kotlin.String,kotlin.Any>){}[0]
+    abstract fun addSpanAdapter(ai.koog.agents.features.opentelemetry.integration/SpanAdapter) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.addSpanAdapter|addSpanAdapter(ai.koog.agents.features.opentelemetry.integration.SpanAdapter){}[0]
+    abstract fun addSpanExporter(io.opentelemetry.kotlin.tracing.export/SpanExporter) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.addSpanExporter|addSpanExporter(io.opentelemetry.kotlin.tracing.export.SpanExporter){}[0]
+    abstract fun addSpanProcessor(kotlin/Function1<io.opentelemetry.kotlin.init/TraceExportConfigDsl, io.opentelemetry.kotlin.tracing.export/SpanProcessor>) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.addSpanProcessor|addSpanProcessor(kotlin.Function1<io.opentelemetry.kotlin.init.TraceExportConfigDsl,io.opentelemetry.kotlin.tracing.export.SpanProcessor>){}[0]
+    abstract fun setSdk(io.opentelemetry.kotlin/OpenTelemetry) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.setSdk|setSdk(io.opentelemetry.kotlin.OpenTelemetry){}[0]
+    abstract fun setServiceInfo(kotlin/String, kotlin/String, kotlin/String? = ...) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.setServiceInfo|setServiceInfo(kotlin.String;kotlin.String;kotlin.String?){}[0]
+    abstract fun setShutdownOnAgentClose(kotlin/Boolean) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.setShutdownOnAgentClose|setShutdownOnAgentClose(kotlin.Boolean){}[0]
+    abstract fun setVerbose(kotlin/Boolean) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI.setVerbose|setVerbose(kotlin.Boolean){}[0]
+}
+
+sealed interface ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute : ai.koog.agents.features.opentelemetry.attribute/Attribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute|null[0]
+    open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute.key|{}key[0]
+        open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute.key.<get-key>|<get-key>(){}[0]
+}
+
+abstract class ai.koog.agents.features.opentelemetry.integration/SpanAdapter { // ai.koog.agents.features.opentelemetry.integration/SpanAdapter|null[0]
+    constructor <init>() // ai.koog.agents.features.opentelemetry.integration/SpanAdapter.<init>|<init>(){}[0]
+
+    open fun onBeforeSpanFinished(ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan) // ai.koog.agents.features.opentelemetry.integration/SpanAdapter.onBeforeSpanFinished|onBeforeSpanFinished(ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan){}[0]
+    open fun onBeforeSpanStarted(ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan) // ai.koog.agents.features.opentelemetry.integration/SpanAdapter.onBeforeSpanStarted|onBeforeSpanStarted(ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan){}[0]
+}
+
+final class ai.koog.agents.features.opentelemetry.attribute/CustomAttribute : ai.koog.agents.features.opentelemetry.attribute/Attribute { // ai.koog.agents.features.opentelemetry.attribute/CustomAttribute|null[0]
+    constructor <init>(kotlin/String, kotlin/Any) // ai.koog.agents.features.opentelemetry.attribute/CustomAttribute.<init>|<init>(kotlin.String;kotlin.Any){}[0]
+
+    final val key // ai.koog.agents.features.opentelemetry.attribute/CustomAttribute.key|{}key[0]
+        final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CustomAttribute.key.<get-key>|<get-key>(){}[0]
+    final val value // ai.koog.agents.features.opentelemetry.attribute/CustomAttribute.value|{}value[0]
+        final fun <get-value>(): kotlin/Any // ai.koog.agents.features.opentelemetry.attribute/CustomAttribute.value.<get-value>|<get-value>(){}[0]
+
+    final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CustomAttribute.component1|component1(){}[0]
+    final fun component2(): kotlin/Any // ai.koog.agents.features.opentelemetry.attribute/CustomAttribute.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Any = ...): ai.koog.agents.features.opentelemetry.attribute/CustomAttribute // ai.koog.agents.features.opentelemetry.attribute/CustomAttribute.copy|copy(kotlin.String;kotlin.Any){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/CustomAttribute.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/CustomAttribute.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CustomAttribute.toString|toString(){}[0]
+}
+
+final class ai.koog.agents.features.opentelemetry.feature/OpenTelemetry { // ai.koog.agents.features.opentelemetry.feature/OpenTelemetry|null[0]
+    constructor <init>() // ai.koog.agents.features.opentelemetry.feature/OpenTelemetry.<init>|<init>(){}[0]
+
+    final object Feature : ai.koog.agents.core.feature/AIAgentFunctionalFeature<ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig, ai.koog.agents.features.opentelemetry.feature/OpenTelemetry>, ai.koog.agents.core.feature/AIAgentGraphFeature<ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig, ai.koog.agents.features.opentelemetry.feature/OpenTelemetry>, ai.koog.agents.core.feature/AIAgentPlannerFeature<ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig, ai.koog.agents.features.opentelemetry.feature/OpenTelemetry> { // ai.koog.agents.features.opentelemetry.feature/OpenTelemetry.Feature|null[0]
+        final val key // ai.koog.agents.features.opentelemetry.feature/OpenTelemetry.Feature.key|{}key[0]
+            final fun <get-key>(): ai.koog.agents.core.agent.entity/AIAgentStorageKey<ai.koog.agents.features.opentelemetry.feature/OpenTelemetry> // ai.koog.agents.features.opentelemetry.feature/OpenTelemetry.Feature.key.<get-key>|<get-key>(){}[0]
+
+        final fun createInitialConfig(ai.koog.agents.core.agent.config/AIAgentConfig): ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig // ai.koog.agents.features.opentelemetry.feature/OpenTelemetry.Feature.createInitialConfig|createInitialConfig(ai.koog.agents.core.agent.config.AIAgentConfig){}[0]
+        final fun install(ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig, ai.koog.agents.core.feature.pipeline/AIAgentFunctionalPipeline): ai.koog.agents.features.opentelemetry.feature/OpenTelemetry // ai.koog.agents.features.opentelemetry.feature/OpenTelemetry.Feature.install|install(ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig;ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline){}[0]
+        final fun install(ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig, ai.koog.agents.core.feature.pipeline/AIAgentGraphPipeline): ai.koog.agents.features.opentelemetry.feature/OpenTelemetry // ai.koog.agents.features.opentelemetry.feature/OpenTelemetry.Feature.install|install(ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig;ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline){}[0]
+        final fun install(ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig, ai.koog.agents.core.feature.pipeline/AIAgentPlannerPipeline): ai.koog.agents.features.opentelemetry.feature/OpenTelemetry // ai.koog.agents.features.opentelemetry.feature/OpenTelemetry.Feature.install|install(ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig;ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline){}[0]
+    }
+}
+
+final class ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig : ai.koog.agents.core.feature.config/FeatureConfig, ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfigAPI { // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig|null[0]
+    constructor <init>() // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.<init>|<init>(){}[0]
+
+    final val isShutdownOnAgentClose // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.isShutdownOnAgentClose|{}isShutdownOnAgentClose[0]
+        final fun <get-isShutdownOnAgentClose>(): kotlin/Boolean // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.isShutdownOnAgentClose.<get-isShutdownOnAgentClose>|<get-isShutdownOnAgentClose>(){}[0]
+    final val isVerbose // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.isVerbose|{}isVerbose[0]
+        final fun <get-isVerbose>(): kotlin/Boolean // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.isVerbose.<get-isVerbose>|<get-isVerbose>(){}[0]
+    final val serviceName // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.serviceName|{}serviceName[0]
+        final fun <get-serviceName>(): kotlin/String // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.serviceName.<get-serviceName>|<get-serviceName>(){}[0]
+    final val serviceNamespace // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.serviceNamespace|{}serviceNamespace[0]
+        final fun <get-serviceNamespace>(): kotlin/String? // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.serviceNamespace.<get-serviceNamespace>|<get-serviceNamespace>(){}[0]
+    final val serviceVersion // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.serviceVersion|{}serviceVersion[0]
+        final fun <get-serviceVersion>(): kotlin/String // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.serviceVersion.<get-serviceVersion>|<get-serviceVersion>(){}[0]
+    final val tracer // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.tracer|{}tracer[0]
+        final fun <get-tracer>(): io.opentelemetry.kotlin.tracing/Tracer // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.tracer.<get-tracer>|<get-tracer>(){}[0]
+
+    final fun addResourceAttributes(kotlin.collections/Map<kotlin/String, kotlin/Any>) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.addResourceAttributes|addResourceAttributes(kotlin.collections.Map<kotlin.String,kotlin.Any>){}[0]
+    final fun addSpanAdapter(ai.koog.agents.features.opentelemetry.integration/SpanAdapter) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.addSpanAdapter|addSpanAdapter(ai.koog.agents.features.opentelemetry.integration.SpanAdapter){}[0]
+    final fun addSpanExporter(io.opentelemetry.kotlin.tracing.export/SpanExporter) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.addSpanExporter|addSpanExporter(io.opentelemetry.kotlin.tracing.export.SpanExporter){}[0]
+    final fun addSpanProcessor(kotlin/Function1<io.opentelemetry.kotlin.init/TraceExportConfigDsl, io.opentelemetry.kotlin.tracing.export/SpanProcessor>) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.addSpanProcessor|addSpanProcessor(kotlin.Function1<io.opentelemetry.kotlin.init.TraceExportConfigDsl,io.opentelemetry.kotlin.tracing.export.SpanProcessor>){}[0]
+    final fun setEventFilter(kotlin/Function1<ai.koog.agents.core.feature.handler/AgentLifecycleEventContext, kotlin/Boolean>) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.setEventFilter|setEventFilter(kotlin.Function1<ai.koog.agents.core.feature.handler.AgentLifecycleEventContext,kotlin.Boolean>){}[0]
+    final fun setSdk(io.opentelemetry.kotlin/OpenTelemetry) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.setSdk|setSdk(io.opentelemetry.kotlin.OpenTelemetry){}[0]
+    final fun setServiceInfo(kotlin/String, kotlin/String, kotlin/String?) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.setServiceInfo|setServiceInfo(kotlin.String;kotlin.String;kotlin.String?){}[0]
+    final fun setShutdownOnAgentClose(kotlin/Boolean) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.setShutdownOnAgentClose|setShutdownOnAgentClose(kotlin.Boolean){}[0]
+    final fun setVerbose(kotlin/Boolean) // ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig.setVerbose|setVerbose(kotlin.Boolean){}[0]
+}
+
+final class ai.koog.agents.features.opentelemetry.integration.otlp/OtlpJsonSpanExporter : io.opentelemetry.kotlin.tracing.export/SpanExporter { // ai.koog.agents.features.opentelemetry.integration.otlp/OtlpJsonSpanExporter|null[0]
+    constructor <init>(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.time/Duration? = ..., io.ktor.client/HttpClient? = ...) // ai.koog.agents.features.opentelemetry.integration.otlp/OtlpJsonSpanExporter.<init>|<init>(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.time.Duration?;io.ktor.client.HttpClient?){}[0]
+
+    final suspend fun export(kotlin.collections/List<io.opentelemetry.kotlin.tracing.data/SpanData>): io.opentelemetry.kotlin.export/OperationResultCode // ai.koog.agents.features.opentelemetry.integration.otlp/OtlpJsonSpanExporter.export|export(kotlin.collections.List<io.opentelemetry.kotlin.tracing.data.SpanData>){}[0]
+    final suspend fun forceFlush(): io.opentelemetry.kotlin.export/OperationResultCode // ai.koog.agents.features.opentelemetry.integration.otlp/OtlpJsonSpanExporter.forceFlush|forceFlush(){}[0]
+    final suspend fun shutdown(): io.opentelemetry.kotlin.export/OperationResultCode // ai.koog.agents.features.opentelemetry.integration.otlp/OtlpJsonSpanExporter.shutdown|shutdown(){}[0]
+}
+
+final class ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan { // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan|null[0]
+    final val attributes // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.attributes|{}attributes[0]
+        final fun <get-attributes>(): kotlin.collections/List<ai.koog.agents.features.opentelemetry.attribute/Attribute> // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.attributes.<get-attributes>|<get-attributes>(){}[0]
+    final val id // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.id.<get-id>|<get-id>(){}[0]
+    final val kind // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.kind|{}kind[0]
+        final fun <get-kind>(): io.opentelemetry.kotlin.tracing/SpanKind // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.kind.<get-kind>|<get-kind>(){}[0]
+    final val name // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.name.<get-name>|<get-name>(){}[0]
+    final val type // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.type|{}type[0]
+        final fun <get-type>(): ai.koog.agents.features.opentelemetry.span/SpanType // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.type.<get-type>|<get-type>(){}[0]
+
+    final fun addAttribute(ai.koog.agents.features.opentelemetry.attribute/Attribute) // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.addAttribute|addAttribute(ai.koog.agents.features.opentelemetry.attribute.Attribute){}[0]
+    final fun addAttributes(kotlin.collections/List<ai.koog.agents.features.opentelemetry.attribute/Attribute>) // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.addAttributes|addAttributes(kotlin.collections.List<ai.koog.agents.features.opentelemetry.attribute.Attribute>){}[0]
+    final fun removeAttribute(ai.koog.agents.features.opentelemetry.attribute/Attribute): kotlin/Boolean // ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan.removeAttribute|removeAttribute(ai.koog.agents.features.opentelemetry.attribute.Attribute){}[0]
+}
+
+final object ai.koog.agents.features.opentelemetry.attribute/CommonAttributes { // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes|null[0]
+    sealed interface Error : ai.koog.agents.features.opentelemetry.attribute/Attribute { // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.key.<get-key>|<get-key>(){}[0]
+
+        final class Type : ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error { // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type|null[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type.<init>|<init>(kotlin.String){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type.key.<get-key>|<get-key>(){}[0]
+            final val type // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type.type|{}type[0]
+                final fun <get-type>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type.type.<get-type>|<get-type>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Error.Type.toString|toString(){}[0]
+        }
+    }
+
+    sealed interface Server : ai.koog.agents.features.opentelemetry.attribute/Attribute { // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.key.<get-key>|<get-key>(){}[0]
+
+        final class Address : ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server { // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address|null[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address.<init>|<init>(kotlin.String){}[0]
+
+            final val address // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address.address|{}address[0]
+                final fun <get-address>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address.address.<get-address>|<get-address>(){}[0]
+            final val key // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address.key.<get-key>|<get-key>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Address.toString|toString(){}[0]
+        }
+
+        final class Port : ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server { // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port|null[0]
+            constructor <init>(kotlin/Int) // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port.<init>|<init>(kotlin.Int){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port.key.<get-key>|<get-key>(){}[0]
+            final val port // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port.port|{}port[0]
+                final fun <get-port>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port.port.<get-port>|<get-port>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port.value|{}value[0]
+                final fun <get-value>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port.component1|component1(){}[0]
+            final fun copy(kotlin/Int = ...): ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port.copy|copy(kotlin.Int){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/CommonAttributes.Server.Port.toString|toString(){}[0]
+        }
+    }
+}
+
+final object ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes|null[0]
+    sealed interface Agent : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.key.<get-key>|<get-key>(){}[0]
+
+        final class Description : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description|null[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description.<init>|<init>(kotlin.String){}[0]
+
+            final val description // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description.description|{}description[0]
+                final fun <get-description>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description.description.<get-description>|<get-description>(){}[0]
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description.key.<get-key>|<get-key>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Description.toString|toString(){}[0]
+        }
+
+        final class Id : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id|null[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id.<init>|<init>(kotlin.String){}[0]
+
+            final val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id.id|{}id[0]
+                final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id.id.<get-id>|<get-id>(){}[0]
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id.key.<get-key>|<get-key>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Id.toString|toString(){}[0]
+        }
+
+        final class Name : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name|null[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name.<init>|<init>(kotlin.String){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name.key.<get-key>|<get-key>(){}[0]
+            final val name // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name.name|{}name[0]
+                final fun <get-name>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name.name.<get-name>|<get-name>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Agent.Name.toString|toString(){}[0]
+        }
+    }
+
+    sealed interface Conversation : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.key.<get-key>|<get-key>(){}[0]
+
+        final class Id : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id|null[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id.<init>|<init>(kotlin.String){}[0]
+
+            final val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id.id|{}id[0]
+                final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id.id.<get-id>|<get-id>(){}[0]
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id.key.<get-key>|<get-key>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Conversation.Id.toString|toString(){}[0]
+        }
+    }
+
+    sealed interface DataSource : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.key.<get-key>|<get-key>(){}[0]
+
+        final class Id : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id|null[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id.<init>|<init>(kotlin.String){}[0]
+
+            final val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id.id|{}id[0]
+                final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id.id.<get-id>|<get-id>(){}[0]
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id.key.<get-key>|<get-key>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.DataSource.Id.toString|toString(){}[0]
+        }
+    }
+
+    sealed interface Input : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.key.<get-key>|<get-key>(){}[0]
+
+        final class Messages : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages|null[0]
+            constructor <init>(kotlin.collections/List<ai.koog.prompt.message/Message>) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages.<init>|<init>(kotlin.collections.List<ai.koog.prompt.message.Message>){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages.key.<get-key>|<get-key>(){}[0]
+            final val messages // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages.messages|{}messages[0]
+                final fun <get-messages>(): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages.messages.<get-messages>|<get-messages>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages.value|{}value[0]
+                final fun <get-value>(): ai.koog.agents.utils/HiddenString // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages.component1|component1(){}[0]
+            final fun copy(kotlin.collections/List<ai.koog.prompt.message/Message> = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages.copy|copy(kotlin.collections.List<ai.koog.prompt.message.Message>){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Input.Messages.toString|toString(){}[0]
+        }
+    }
+
+    sealed interface Operation : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.key.<get-key>|<get-key>(){}[0]
+
+        final enum class OperationNameType : kotlin/Enum<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType> { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType|null[0]
+            enum entry CHAT // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.CHAT|null[0]
+            enum entry CREATE_AGENT // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.CREATE_AGENT|null[0]
+            enum entry EMBEDDINGS // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.EMBEDDINGS|null[0]
+            enum entry EXECUTE_TOOL // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.EXECUTE_TOOL|null[0]
+            enum entry GENERATE_CONTENT // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.GENERATE_CONTENT|null[0]
+            enum entry INVOKE_AGENT // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.INVOKE_AGENT|null[0]
+            enum entry TEXT_COMPLETION // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.TEXT_COMPLETION|null[0]
+
+            final val entries // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.entries|#static{}entries[0]
+                final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.entries.<get-entries>|<get-entries>#static(){}[0]
+            final val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.id|{}id[0]
+                final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.id.<get-id>|<get-id>(){}[0]
+
+            final fun valueOf(kotlin/String): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.valueOf|valueOf#static(kotlin.String){}[0]
+            final fun values(): kotlin/Array<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType.values|values#static(){}[0]
+        }
+
+        final class Name : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name|null[0]
+            constructor <init>(ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name.<init>|<init>(ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Operation.OperationNameType){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name.key.<get-key>|<get-key>(){}[0]
+            final val operation // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name.operation|{}operation[0]
+                final fun <get-operation>(): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name.operation.<get-operation>|<get-operation>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name.component1|component1(){}[0]
+            final fun copy(ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.OperationNameType = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name.copy|copy(ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Operation.OperationNameType){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Operation.Name.toString|toString(){}[0]
+        }
+    }
+
+    sealed interface Output : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.key.<get-key>|<get-key>(){}[0]
+
+        final enum class OutputType : kotlin/Enum<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType> { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType|null[0]
+            enum entry IMAGE // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType.IMAGE|null[0]
+            enum entry JSON // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType.JSON|null[0]
+            enum entry TEXT // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType.TEXT|null[0]
+
+            final val entries // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType.entries|#static{}entries[0]
+                final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType.entries.<get-entries>|<get-entries>#static(){}[0]
+            final val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType.id|{}id[0]
+                final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType.id.<get-id>|<get-id>(){}[0]
+
+            final fun valueOf(kotlin/String): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType.valueOf|valueOf#static(kotlin.String){}[0]
+            final fun values(): kotlin/Array<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType.values|values#static(){}[0]
+        }
+
+        final class Messages : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages|null[0]
+            constructor <init>(kotlin.collections/List<ai.koog.prompt.message/Message>) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages.<init>|<init>(kotlin.collections.List<ai.koog.prompt.message.Message>){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages.key.<get-key>|<get-key>(){}[0]
+            final val messages // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages.messages|{}messages[0]
+                final fun <get-messages>(): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages.messages.<get-messages>|<get-messages>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages.value|{}value[0]
+                final fun <get-value>(): ai.koog.agents.utils/HiddenString // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages.component1|component1(){}[0]
+            final fun copy(kotlin.collections/List<ai.koog.prompt.message/Message> = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages.copy|copy(kotlin.collections.List<ai.koog.prompt.message.Message>){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Messages.toString|toString(){}[0]
+        }
+
+        final class Type : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type|null[0]
+            constructor <init>(ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type.<init>|<init>(ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Output.OutputType){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type.key.<get-key>|<get-key>(){}[0]
+            final val type // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type.type|{}type[0]
+                final fun <get-type>(): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type.type.<get-type>|<get-type>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type.component1|component1(){}[0]
+            final fun copy(ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.OutputType = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type.copy|copy(ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Output.OutputType){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Output.Type.toString|toString(){}[0]
+        }
+    }
+
+    sealed interface Provider : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.key.<get-key>|<get-key>(){}[0]
+
+        final class Name : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name|null[0]
+            constructor <init>(ai.koog.prompt.llm/LLMProvider) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name.<init>|<init>(ai.koog.prompt.llm.LLMProvider){}[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name.<init>|<init>(kotlin.String){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name.key.<get-key>|<get-key>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Provider.Name.toString|toString(){}[0]
+        }
+    }
+
+    sealed interface Request : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.key.<get-key>|<get-key>(){}[0]
+
+        sealed interface Choice : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice|null[0]
+            open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.key|{}key[0]
+                open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.key.<get-key>|<get-key>(){}[0]
+
+            final class Count : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count|null[0]
+                constructor <init>(kotlin/Int) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count.<init>|<init>(kotlin.Int){}[0]
+
+                final val count // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count.count|{}count[0]
+                    final fun <get-count>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count.count.<get-count>|<get-count>(){}[0]
+                final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count.key.<get-key>|<get-key>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count.value|{}value[0]
+                    final fun <get-value>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count.component1|component1(){}[0]
+                final fun copy(kotlin/Int = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count.copy|copy(kotlin.Int){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Choice.Count.toString|toString(){}[0]
+            }
+        }
+
+        final class FrequencyPenalty : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty|null[0]
+            constructor <init>(kotlin/Double) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty.<init>|<init>(kotlin.Double){}[0]
+
+            final val frequencyPenalty // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty.frequencyPenalty|{}frequencyPenalty[0]
+                final fun <get-frequencyPenalty>(): kotlin/Double // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty.frequencyPenalty.<get-frequencyPenalty>|<get-frequencyPenalty>(){}[0]
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty.key.<get-key>|<get-key>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty.value|{}value[0]
+                final fun <get-value>(): kotlin/Double // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/Double // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty.component1|component1(){}[0]
+            final fun copy(kotlin/Double = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty.copy|copy(kotlin.Double){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.FrequencyPenalty.toString|toString(){}[0]
+        }
+
+        final class MaxTokens : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens|null[0]
+            constructor <init>(kotlin/Int) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens.<init>|<init>(kotlin.Int){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens.key.<get-key>|<get-key>(){}[0]
+            final val maxTokens // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens.maxTokens|{}maxTokens[0]
+                final fun <get-maxTokens>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens.maxTokens.<get-maxTokens>|<get-maxTokens>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens.value|{}value[0]
+                final fun <get-value>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens.component1|component1(){}[0]
+            final fun copy(kotlin/Int = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens.copy|copy(kotlin.Int){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.MaxTokens.toString|toString(){}[0]
+        }
+
+        final class Model : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model|null[0]
+            constructor <init>(ai.koog.prompt.llm/LLModel) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model.<init>|<init>(ai.koog.prompt.llm.LLModel){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model.key.<get-key>|<get-key>(){}[0]
+            final val model // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model.model|{}model[0]
+                final fun <get-model>(): ai.koog.prompt.llm/LLModel // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model.model.<get-model>|<get-model>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): ai.koog.prompt.llm/LLModel // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model.component1|component1(){}[0]
+            final fun copy(ai.koog.prompt.llm/LLModel = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model.copy|copy(ai.koog.prompt.llm.LLModel){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Model.toString|toString(){}[0]
+        }
+
+        final class PresencePenalty : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty|null[0]
+            constructor <init>(kotlin/Double) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty.<init>|<init>(kotlin.Double){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty.key.<get-key>|<get-key>(){}[0]
+            final val presencePenalty // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty.presencePenalty|{}presencePenalty[0]
+                final fun <get-presencePenalty>(): kotlin/Double // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty.presencePenalty.<get-presencePenalty>|<get-presencePenalty>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty.value|{}value[0]
+                final fun <get-value>(): kotlin/Double // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/Double // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty.component1|component1(){}[0]
+            final fun copy(kotlin/Double = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty.copy|copy(kotlin.Double){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.PresencePenalty.toString|toString(){}[0]
+        }
+
+        final class Seed : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed|null[0]
+            constructor <init>(kotlin/Int) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed.<init>|<init>(kotlin.Int){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed.key.<get-key>|<get-key>(){}[0]
+            final val seed // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed.seed|{}seed[0]
+                final fun <get-seed>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed.seed.<get-seed>|<get-seed>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed.value|{}value[0]
+                final fun <get-value>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed.component1|component1(){}[0]
+            final fun copy(kotlin/Int = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed.copy|copy(kotlin.Int){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Seed.toString|toString(){}[0]
+        }
+
+        final class StopSequences : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences|null[0]
+            constructor <init>(kotlin.collections/List<kotlin/String>) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences.<init>|<init>(kotlin.collections.List<kotlin.String>){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences.key.<get-key>|<get-key>(){}[0]
+            final val stopSequences // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences.stopSequences|{}stopSequences[0]
+                final fun <get-stopSequences>(): kotlin.collections/List<kotlin/String> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences.stopSequences.<get-stopSequences>|<get-stopSequences>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences.value|{}value[0]
+                final fun <get-value>(): kotlin.collections/List<kotlin/String> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin.collections/List<kotlin/String> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences.component1|component1(){}[0]
+            final fun copy(kotlin.collections/List<kotlin/String> = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences.copy|copy(kotlin.collections.List<kotlin.String>){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.StopSequences.toString|toString(){}[0]
+        }
+
+        final class Temperature : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature|null[0]
+            constructor <init>(kotlin/Double) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature.<init>|<init>(kotlin.Double){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature.key.<get-key>|<get-key>(){}[0]
+            final val temperature // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature.temperature|{}temperature[0]
+                final fun <get-temperature>(): kotlin/Double // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature.temperature.<get-temperature>|<get-temperature>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature.value|{}value[0]
+                final fun <get-value>(): kotlin/Double // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/Double // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature.component1|component1(){}[0]
+            final fun copy(kotlin/Double = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature.copy|copy(kotlin.Double){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.Temperature.toString|toString(){}[0]
+        }
+
+        final class TopP : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP|null[0]
+            constructor <init>(kotlin/Double) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP.<init>|<init>(kotlin.Double){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP.key.<get-key>|<get-key>(){}[0]
+            final val topP // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP.topP|{}topP[0]
+                final fun <get-topP>(): kotlin/Double // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP.topP.<get-topP>|<get-topP>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP.value|{}value[0]
+                final fun <get-value>(): kotlin/Double // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/Double // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP.component1|component1(){}[0]
+            final fun copy(kotlin/Double = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP.copy|copy(kotlin.Double){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Request.TopP.toString|toString(){}[0]
+        }
+    }
+
+    sealed interface Response : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.key.<get-key>|<get-key>(){}[0]
+
+        sealed interface FinishReasonType { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType|null[0]
+            abstract val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.id|{}id[0]
+                abstract fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.id.<get-id>|<get-id>(){}[0]
+
+            final class Custom : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Custom|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Custom.<init>|<init>(kotlin.String){}[0]
+
+                final val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Custom.id|{}id[0]
+                    final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Custom.id.<get-id>|<get-id>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Custom.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Custom // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Custom.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Custom.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Custom.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Custom.toString|toString(){}[0]
+            }
+
+            final object ContentFilter : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.ContentFilter|null[0]
+                final val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.ContentFilter.id|{}id[0]
+                    final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.ContentFilter.id.<get-id>|<get-id>(){}[0]
+            }
+
+            final object Length : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Length|null[0]
+                final val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Length.id|{}id[0]
+                    final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Length.id.<get-id>|<get-id>(){}[0]
+            }
+
+            final object Stop : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Stop|null[0]
+                final val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Stop.id|{}id[0]
+                    final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.Stop.id.<get-id>|<get-id>(){}[0]
+            }
+
+            final object ToolCalls : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.ToolCalls|null[0]
+                final val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.ToolCalls.id|{}id[0]
+                    final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType.ToolCalls.id.<get-id>|<get-id>(){}[0]
+            }
+        }
+
+        final class FinishReasons : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons|null[0]
+            constructor <init>(kotlin.collections/List<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType>) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons.<init>|<init>(kotlin.collections.List<ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Response.FinishReasonType>){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons.key.<get-key>|<get-key>(){}[0]
+            final val reasons // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons.reasons|{}reasons[0]
+                final fun <get-reasons>(): kotlin.collections/List<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons.reasons.<get-reasons>|<get-reasons>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons.value|{}value[0]
+                final fun <get-value>(): kotlin.collections/List<kotlin/String> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin.collections/List<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons.component1|component1(){}[0]
+            final fun copy(kotlin.collections/List<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasonType> = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons.copy|copy(kotlin.collections.List<ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Response.FinishReasonType>){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.FinishReasons.toString|toString(){}[0]
+        }
+
+        final class Id : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id|null[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id.<init>|<init>(kotlin.String){}[0]
+
+            final val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id.id|{}id[0]
+                final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id.id.<get-id>|<get-id>(){}[0]
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id.key.<get-key>|<get-key>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Id.toString|toString(){}[0]
+        }
+
+        final class Metadata : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata|null[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata.<init>|<init>(kotlin.String){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata.key.<get-key>|<get-key>(){}[0]
+            final val metadata // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata.metadata|{}metadata[0]
+                final fun <get-metadata>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata.metadata.<get-metadata>|<get-metadata>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Metadata.toString|toString(){}[0]
+        }
+
+        final class Model : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model|null[0]
+            constructor <init>(ai.koog.prompt.llm/LLModel) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model.<init>|<init>(ai.koog.prompt.llm.LLModel){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model.key.<get-key>|<get-key>(){}[0]
+            final val model // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model.model|{}model[0]
+                final fun <get-model>(): ai.koog.prompt.llm/LLModel // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model.model.<get-model>|<get-model>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): ai.koog.prompt.llm/LLModel // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model.component1|component1(){}[0]
+            final fun copy(ai.koog.prompt.llm/LLModel = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model.copy|copy(ai.koog.prompt.llm.LLModel){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Response.Model.toString|toString(){}[0]
+        }
+    }
+
+    sealed interface Token : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.key.<get-key>|<get-key>(){}[0]
+
+        final enum class TokenType : kotlin/Enum<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType> { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType|null[0]
+            enum entry INPUT // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType.INPUT|null[0]
+            enum entry OUTPUT // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType.OUTPUT|null[0]
+
+            final val entries // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType.entries|#static{}entries[0]
+                final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType.entries.<get-entries>|<get-entries>#static(){}[0]
+            final val str // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType.str|{}str[0]
+                final fun <get-str>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType.str.<get-str>|<get-str>(){}[0]
+
+            final fun valueOf(kotlin/String): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType.valueOf|valueOf#static(kotlin.String){}[0]
+            final fun values(): kotlin/Array<ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType.values|values#static(){}[0]
+        }
+
+        final class Type : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type|null[0]
+            constructor <init>(ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type.<init>|<init>(ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Token.TokenType){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type.key.<get-key>|<get-key>(){}[0]
+            final val type // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type.type|{}type[0]
+                final fun <get-type>(): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type.type.<get-type>|<get-type>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type.component1|component1(){}[0]
+            final fun copy(ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.TokenType = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type.copy|copy(ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes.Token.TokenType){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Token.Type.toString|toString(){}[0]
+        }
+    }
+
+    sealed interface Tool : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.key.<get-key>|<get-key>(){}[0]
+
+        sealed interface Call : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call|null[0]
+            open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.key|{}key[0]
+                open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.key.<get-key>|<get-key>(){}[0]
+
+            final class Arguments : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments|null[0]
+                constructor <init>(kotlinx.serialization.json/JsonObject) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments.<init>|<init>(kotlinx.serialization.json.JsonObject){}[0]
+
+                final val arguments // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments.arguments|{}arguments[0]
+                    final fun <get-arguments>(): kotlinx.serialization.json/JsonObject // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments.arguments.<get-arguments>|<get-arguments>(){}[0]
+                final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments.key.<get-key>|<get-key>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments.value|{}value[0]
+                    final fun <get-value>(): ai.koog.agents.utils/HiddenString // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlinx.serialization.json/JsonObject // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments.component1|component1(){}[0]
+                final fun copy(kotlinx.serialization.json/JsonObject = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments.copy|copy(kotlinx.serialization.json.JsonObject){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Arguments.toString|toString(){}[0]
+            }
+
+            final class Id : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id.<init>|<init>(kotlin.String){}[0]
+
+                final val id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id.id|{}id[0]
+                    final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id.id.<get-id>|<get-id>(){}[0]
+                final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id.key.<get-key>|<get-key>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id.value|{}value[0]
+                    final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Id.toString|toString(){}[0]
+            }
+
+            final class Result : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result|null[0]
+                constructor <init>(kotlinx.serialization.json/JsonElement) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result.<init>|<init>(kotlinx.serialization.json.JsonElement){}[0]
+
+                final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result.key.<get-key>|<get-key>(){}[0]
+                final val result // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result.result|{}result[0]
+                    final fun <get-result>(): kotlinx.serialization.json/JsonElement // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result.result.<get-result>|<get-result>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result.value|{}value[0]
+                    final fun <get-value>(): ai.koog.agents.utils/HiddenString // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlinx.serialization.json/JsonElement // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result.component1|component1(){}[0]
+                final fun copy(kotlinx.serialization.json/JsonElement = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result.copy|copy(kotlinx.serialization.json.JsonElement){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Call.Result.toString|toString(){}[0]
+            }
+        }
+
+        final class Definitions : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions|null[0]
+            constructor <init>(kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions.<init>|<init>(kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions.key.<get-key>|<get-key>(){}[0]
+            final val tools // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions.tools|{}tools[0]
+                final fun <get-tools>(): kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions.tools.<get-tools>|<get-tools>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions.value|{}value[0]
+                final fun <get-value>(): ai.koog.agents.utils/HiddenString // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions.component1|component1(){}[0]
+            final fun copy(kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor> = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions.copy|copy(kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Definitions.toString|toString(){}[0]
+        }
+
+        final class Description : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description|null[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description.<init>|<init>(kotlin.String){}[0]
+
+            final val description // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description.description|{}description[0]
+                final fun <get-description>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description.description.<get-description>|<get-description>(){}[0]
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description.key.<get-key>|<get-key>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Description.toString|toString(){}[0]
+        }
+
+        final class Name : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name|null[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name.<init>|<init>(kotlin.String){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name.key.<get-key>|<get-key>(){}[0]
+            final val name // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name.name|{}name[0]
+                final fun <get-name>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name.name.<get-name>|<get-name>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Tool.Name.toString|toString(){}[0]
+        }
+    }
+
+    sealed interface Usage : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.key.<get-key>|<get-key>(){}[0]
+
+        final class InputTokens : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens|null[0]
+            constructor <init>(kotlin/Int) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens.<init>|<init>(kotlin.Int){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens.key.<get-key>|<get-key>(){}[0]
+            final val tokens // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens.tokens|{}tokens[0]
+                final fun <get-tokens>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens.tokens.<get-tokens>|<get-tokens>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens.value|{}value[0]
+                final fun <get-value>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens.component1|component1(){}[0]
+            final fun copy(kotlin/Int = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens.copy|copy(kotlin.Int){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.InputTokens.toString|toString(){}[0]
+        }
+
+        final class OutputTokens : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens|null[0]
+            constructor <init>(kotlin/Int) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens.<init>|<init>(kotlin.Int){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens.key.<get-key>|<get-key>(){}[0]
+            final val tokens // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens.tokens|{}tokens[0]
+                final fun <get-tokens>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens.tokens.<get-tokens>|<get-tokens>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens.value|{}value[0]
+                final fun <get-value>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens.component1|component1(){}[0]
+            final fun copy(kotlin/Int = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens.copy|copy(kotlin.Int){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.OutputTokens.toString|toString(){}[0]
+        }
+
+        final class TotalTokens : ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens|null[0]
+            constructor <init>(kotlin/Int) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens.<init>|<init>(kotlin.Int){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens.key.<get-key>|<get-key>(){}[0]
+            final val tokens // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens.tokens|{}tokens[0]
+                final fun <get-tokens>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens.tokens.<get-tokens>|<get-tokens>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens.value|{}value[0]
+                final fun <get-value>(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens.component1|component1(){}[0]
+            final fun copy(kotlin/Int = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens.copy|copy(kotlin.Int){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.Usage.TotalTokens.toString|toString(){}[0]
+        }
+    }
+
+    final class SystemInstructions : ai.koog.agents.features.opentelemetry.attribute/GenAIAttribute { // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions|null[0]
+        constructor <init>(kotlin.collections/List<ai.koog.prompt.message/Message.System>) // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions.<init>|<init>(kotlin.collections.List<ai.koog.prompt.message.Message.System>){}[0]
+
+        final val key // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions.key|{}key[0]
+            final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions.key.<get-key>|<get-key>(){}[0]
+        final val messages // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions.messages|{}messages[0]
+            final fun <get-messages>(): kotlin.collections/List<ai.koog.prompt.message/Message.System> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions.messages.<get-messages>|<get-messages>(){}[0]
+        final val value // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions.value|{}value[0]
+            final fun <get-value>(): ai.koog.agents.utils/HiddenString // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions.value.<get-value>|<get-value>(){}[0]
+
+        final fun component1(): kotlin.collections/List<ai.koog.prompt.message/Message.System> // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions.component1|component1(){}[0]
+        final fun copy(kotlin.collections/List<ai.koog.prompt.message/Message.System> = ...): ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions.copy|copy(kotlin.collections.List<ai.koog.prompt.message.Message.System>){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/GenAIAttributes.SystemInstructions.toString|toString(){}[0]
+    }
+}
+
+final object ai.koog.agents.features.opentelemetry.attribute/KoogAttributes { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes|null[0]
+    final const val PROVIDER_NAME // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.PROVIDER_NAME|{}PROVIDER_NAME[0]
+        final fun <get-PROVIDER_NAME>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.PROVIDER_NAME.<get-PROVIDER_NAME>|<get-PROVIDER_NAME>(){}[0]
+
+    sealed interface Koog : ai.koog.agents.features.opentelemetry.attribute/Attribute { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.key.<get-key>|<get-key>(){}[0]
+
+        sealed interface Event : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event|null[0]
+            open val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.key|{}key[0]
+                open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.key.<get-key>|<get-key>(){}[0]
+
+            final class Id : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id.<init>|<init>(kotlin.String){}[0]
+
+                final val id // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id.id|{}id[0]
+                    final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id.id.<get-id>|<get-id>(){}[0]
+                final val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id.key.<get-key>|<get-key>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id.value|{}value[0]
+                    final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Event.Id.toString|toString(){}[0]
+            }
+        }
+
+        sealed interface Moderation : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation|null[0]
+            open val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.key|{}key[0]
+                open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.key.<get-key>|<get-key>(){}[0]
+
+            final class Result : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result|null[0]
+                constructor <init>(ai.koog.prompt.dsl/ModerationResult) // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result.<init>|<init>(ai.koog.prompt.dsl.ModerationResult){}[0]
+
+                final val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result.key.<get-key>|<get-key>(){}[0]
+                final val moderationResult // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result.moderationResult|{}moderationResult[0]
+                    final fun <get-moderationResult>(): ai.koog.prompt.dsl/ModerationResult // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result.moderationResult.<get-moderationResult>|<get-moderationResult>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result.value|{}value[0]
+                    final fun <get-value>(): ai.koog.agents.utils/HiddenString // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): ai.koog.prompt.dsl/ModerationResult // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result.component1|component1(){}[0]
+                final fun copy(ai.koog.prompt.dsl/ModerationResult = ...): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result.copy|copy(ai.koog.prompt.dsl.ModerationResult){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Moderation.Result.toString|toString(){}[0]
+            }
+        }
+
+        sealed interface Node : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node|null[0]
+            open val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.key|{}key[0]
+                open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.key.<get-key>|<get-key>(){}[0]
+
+            final class Id : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id.<init>|<init>(kotlin.String){}[0]
+
+                final val id // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id.id|{}id[0]
+                    final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id.id.<get-id>|<get-id>(){}[0]
+                final val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id.key.<get-key>|<get-key>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id.value|{}value[0]
+                    final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Id.toString|toString(){}[0]
+            }
+
+            final class Input : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input.<init>|<init>(kotlin.String){}[0]
+
+                final val input // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input.input|{}input[0]
+                    final fun <get-input>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input.input.<get-input>|<get-input>(){}[0]
+                final val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input.key.<get-key>|<get-key>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input.value|{}value[0]
+                    final fun <get-value>(): ai.koog.agents.utils/HiddenString // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Input.toString|toString(){}[0]
+            }
+
+            final class Output : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output.<init>|<init>(kotlin.String){}[0]
+
+                final val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output.key.<get-key>|<get-key>(){}[0]
+                final val output // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output.output|{}output[0]
+                    final fun <get-output>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output.output.<get-output>|<get-output>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output.value|{}value[0]
+                    final fun <get-value>(): ai.koog.agents.utils/HiddenString // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Node.Output.toString|toString(){}[0]
+            }
+        }
+
+        sealed interface Strategy : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy|null[0]
+            open val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.key|{}key[0]
+                open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.key.<get-key>|<get-key>(){}[0]
+
+            final class Name : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name.<init>|<init>(kotlin.String){}[0]
+
+                final val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name.key.<get-key>|<get-key>(){}[0]
+                final val name // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name.name|{}name[0]
+                    final fun <get-name>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name.name.<get-name>|<get-name>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name.value|{}value[0]
+                    final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Strategy.Name.toString|toString(){}[0]
+            }
+        }
+
+        sealed interface Subgraph : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph|null[0]
+            open val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.key|{}key[0]
+                open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.key.<get-key>|<get-key>(){}[0]
+
+            final class Id : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id.<init>|<init>(kotlin.String){}[0]
+
+                final val id // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id.id|{}id[0]
+                    final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id.id.<get-id>|<get-id>(){}[0]
+                final val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id.key.<get-key>|<get-key>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id.value|{}value[0]
+                    final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Id.toString|toString(){}[0]
+            }
+
+            final class Input : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input.<init>|<init>(kotlin.String){}[0]
+
+                final val input // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input.input|{}input[0]
+                    final fun <get-input>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input.input.<get-input>|<get-input>(){}[0]
+                final val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input.key.<get-key>|<get-key>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input.value|{}value[0]
+                    final fun <get-value>(): ai.koog.agents.utils/HiddenString // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Input.toString|toString(){}[0]
+            }
+
+            final class Output : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output.<init>|<init>(kotlin.String){}[0]
+
+                final val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output.key.<get-key>|<get-key>(){}[0]
+                final val output // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output.output|{}output[0]
+                    final fun <get-output>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output.output.<get-output>|<get-output>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output.value|{}value[0]
+                    final fun <get-value>(): ai.koog.agents.utils/HiddenString // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Subgraph.Output.toString|toString(){}[0]
+            }
+        }
+
+        sealed interface Tool : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool|null[0]
+            open val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.key|{}key[0]
+                open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.key.<get-key>|<get-key>(){}[0]
+
+            sealed interface Call : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call|null[0]
+                open val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.key|{}key[0]
+                    open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.key.<get-key>|<get-key>(){}[0]
+
+                final enum class StatusType : kotlin/Enum<ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType> { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType|null[0]
+                    enum entry ERROR // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType.ERROR|null[0]
+                    enum entry SUCCESS // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType.SUCCESS|null[0]
+                    enum entry VALIDATION_FAILED // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType.VALIDATION_FAILED|null[0]
+
+                    final val entries // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType.entries|#static{}entries[0]
+                        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType> // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType.entries.<get-entries>|<get-entries>#static(){}[0]
+                    final val value // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType.value|{}value[0]
+                        final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType.value.<get-value>|<get-value>(){}[0]
+
+                    final fun valueOf(kotlin/String): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType.valueOf|valueOf#static(kotlin.String){}[0]
+                    final fun values(): kotlin/Array<ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType> // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType.values|values#static(){}[0]
+                }
+
+                final class Status : ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call { // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status|null[0]
+                    constructor <init>(ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType) // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status.<init>|<init>(ai.koog.agents.features.opentelemetry.attribute.KoogAttributes.Koog.Tool.Call.StatusType){}[0]
+
+                    final val key // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status.key|{}key[0]
+                        final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status.key.<get-key>|<get-key>(){}[0]
+                    final val status // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status.status|{}status[0]
+                        final fun <get-status>(): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status.status.<get-status>|<get-status>(){}[0]
+                    final val value // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status.value|{}value[0]
+                        final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status.value.<get-value>|<get-value>(){}[0]
+
+                    final fun component1(): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status.component1|component1(){}[0]
+                    final fun copy(ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.StatusType = ...): ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status.copy|copy(ai.koog.agents.features.opentelemetry.attribute.KoogAttributes.Koog.Tool.Call.StatusType){}[0]
+                    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status.equals|equals(kotlin.Any?){}[0]
+                    final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status.hashCode|hashCode(){}[0]
+                    final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/KoogAttributes.Koog.Tool.Call.Status.toString|toString(){}[0]
+                }
+            }
+        }
+    }
+}
+
+final object ai.koog.agents.features.opentelemetry.attribute/McpAttributes { // ai.koog.agents.features.opentelemetry.attribute/McpAttributes|null[0]
+    sealed interface Mcp : ai.koog.agents.features.opentelemetry.attribute/Attribute { // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.key.<get-key>|<get-key>(){}[0]
+
+        sealed interface Method : ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp { // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method|null[0]
+            open val key // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.key|{}key[0]
+                open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.key.<get-key>|<get-key>(){}[0]
+
+            final class Name : ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method { // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name.<init>|<init>(kotlin.String){}[0]
+
+                final val key // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name.key.<get-key>|<get-key>(){}[0]
+                final val name // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name.name|{}name[0]
+                    final fun <get-name>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name.name.<get-name>|<get-name>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name.value|{}value[0]
+                    final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Method.Name.toString|toString(){}[0]
+            }
+        }
+
+        sealed interface Protocol : ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp { // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol|null[0]
+            open val key // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.key|{}key[0]
+                open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.key.<get-key>|<get-key>(){}[0]
+
+            final class Version : ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol { // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version.<init>|<init>(kotlin.String){}[0]
+
+                final val key // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version.key.<get-key>|<get-key>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version.value|{}value[0]
+                    final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version.value.<get-value>|<get-value>(){}[0]
+                final val version // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version.version|{}version[0]
+                    final fun <get-version>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version.version.<get-version>|<get-version>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Protocol.Version.toString|toString(){}[0]
+            }
+        }
+
+        sealed interface Session : ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp { // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session|null[0]
+            open val key // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.key|{}key[0]
+                open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.key.<get-key>|<get-key>(){}[0]
+
+            final class Id : ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session { // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id|null[0]
+                constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id.<init>|<init>(kotlin.String){}[0]
+
+                final val id // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id.id|{}id[0]
+                    final fun <get-id>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id.id.<get-id>|<get-id>(){}[0]
+                final val key // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id.key|{}key[0]
+                    final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id.key.<get-key>|<get-key>(){}[0]
+                final val value // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id.value|{}value[0]
+                    final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id.component1|component1(){}[0]
+                final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id.copy|copy(kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Mcp.Session.Id.toString|toString(){}[0]
+            }
+        }
+    }
+
+    sealed interface Network : ai.koog.agents.features.opentelemetry.attribute/Attribute { // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network|null[0]
+        open val key // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.key|{}key[0]
+            open fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.key.<get-key>|<get-key>(){}[0]
+
+        final class Transport : ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network { // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport|null[0]
+            constructor <init>(kotlin/String) // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport.<init>|<init>(kotlin.String){}[0]
+
+            final val key // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport.key|{}key[0]
+                final fun <get-key>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport.key.<get-key>|<get-key>(){}[0]
+            final val transport // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport.transport|{}transport[0]
+                final fun <get-transport>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport.transport.<get-transport>|<get-transport>(){}[0]
+            final val value // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport.value|{}value[0]
+                final fun <get-value>(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport.value.<get-value>|<get-value>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.agents.features.opentelemetry.attribute/McpAttributes.Network.Transport.toString|toString(){}[0]
+        }
+    }
+}
+
+final object ai.koog.agents.features.opentelemetry.integration.otlp/OtlpSpanDataMapper // ai.koog.agents.features.opentelemetry.integration.otlp/OtlpSpanDataMapper|null[0]
+
+final val ai.koog.agents.features.opentelemetry.integration/isSdkArrayPrimitive // ai.koog.agents.features.opentelemetry.integration/isSdkArrayPrimitive|@kotlin.Any{}isSdkArrayPrimitive[0]
+    final fun (kotlin/Any).<get-isSdkArrayPrimitive>(): kotlin/Boolean // ai.koog.agents.features.opentelemetry.integration/isSdkArrayPrimitive.<get-isSdkArrayPrimitive>|<get-isSdkArrayPrimitive>@kotlin.Any(){}[0]
+
+final fun (ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig).ai.koog.agents.features.opentelemetry.integration.datadog/addDatadogExporter(kotlin/String? = ..., kotlin/String? = ..., kotlin.time/Duration? = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ...) // ai.koog.agents.features.opentelemetry.integration.datadog/addDatadogExporter|addDatadogExporter@ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig(kotlin.String?;kotlin.String?;kotlin.time.Duration?;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
+final fun (ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig).ai.koog.agents.features.opentelemetry.integration.langfuse/addLangfuseExporter(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.time/Duration? = ..., kotlin.collections/List<ai.koog.agents.features.opentelemetry.attribute/CustomAttribute>? = ...) // ai.koog.agents.features.opentelemetry.integration.langfuse/addLangfuseExporter|addLangfuseExporter@ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.time.Duration?;kotlin.collections.List<ai.koog.agents.features.opentelemetry.attribute.CustomAttribute>?){}[0]
+final fun (ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig).ai.koog.agents.features.opentelemetry.integration.langfuse/addLangfuseSpanAdapter(kotlin.collections/List<ai.koog.agents.features.opentelemetry.attribute/CustomAttribute>? = ...) // ai.koog.agents.features.opentelemetry.integration.langfuse/addLangfuseSpanAdapter|addLangfuseSpanAdapter@ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig(kotlin.collections.List<ai.koog.agents.features.opentelemetry.attribute.CustomAttribute>?){}[0]
+final fun (ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig).ai.koog.agents.features.opentelemetry.integration.weave/addWeaveExporter(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.time/Duration? = ...) // ai.koog.agents.features.opentelemetry.integration.weave/addWeaveExporter|addWeaveExporter@ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.time.Duration?){}[0]
+final fun (ai.koog.agents.features.opentelemetry.feature/OpenTelemetryConfig).ai.koog.agents.features.opentelemetry.integration.weave/addWeaveSpanAdapter() // ai.koog.agents.features.opentelemetry.integration.weave/addWeaveSpanAdapter|addWeaveSpanAdapter@ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig(){}[0]
+final inline fun <#A: reified ai.koog.agents.features.opentelemetry.attribute/Attribute> (ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan).ai.koog.agents.features.opentelemetry.integration/replaceAttributes(kotlin/Function2<ai.koog.agents.features.opentelemetry.span/GenAIAgentSpan, #A, ai.koog.agents.features.opentelemetry.attribute/Attribute>) // ai.koog.agents.features.opentelemetry.integration/replaceAttributes|replaceAttributes@ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan(kotlin.Function2<ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan,0:0,ai.koog.agents.features.opentelemetry.attribute.Attribute>){0§<ai.koog.agents.features.opentelemetry.attribute.Attribute>}[0]
