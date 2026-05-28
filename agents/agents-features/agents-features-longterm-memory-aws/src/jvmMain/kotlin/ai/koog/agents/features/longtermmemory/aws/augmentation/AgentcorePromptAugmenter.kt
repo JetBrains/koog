@@ -23,8 +23,7 @@ import ai.koog.rag.base.storage.search.SearchResult
  *   are appended to the last user message as an additional [MessagePart.Text] part.
  *
  * If no system message exists in the prompt, one is created. If no user message exists when
- * handling [AgentcoreMemoryStrategy.SUMMARY] records, the summaries fall back to system-message
- * augmentation.
+ * handling [AgentcoreMemoryStrategy.SUMMARY] records, the prompt will be returned unchanged.
  *
  * @param contextPrefix Header text prepended to SEMANTIC/PREFERENCE context blocks.
  *   Defaults to [PromptAugmenter.DEFAULT_CONTEXT_PREFIX].
