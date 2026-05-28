@@ -26,3 +26,8 @@ afterEvaluate {
         }
     }
 }
+
+// Wire ABI check into the check lifecycle so CI runs it automatically.
+tasks.named("check") {
+    dependsOn(tasks.matching { it.name == "checkLegacyAbi" })
+}
