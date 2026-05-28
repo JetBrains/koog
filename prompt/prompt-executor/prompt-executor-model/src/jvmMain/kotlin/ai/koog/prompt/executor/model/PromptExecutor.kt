@@ -14,11 +14,13 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.concurrency.runBlockingReentrant
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.jdk9.asPublisher
 import java.util.concurrent.Flow.Publisher
 
 @Suppress("MissingKDocForPublicAPI")
 public actual abstract class PromptExecutor actual constructor() : PromptExecutorAPI {
+
     /**
      * Executes a given prompt using the specified LLM and tools, returning a list of responses from the model.
      *

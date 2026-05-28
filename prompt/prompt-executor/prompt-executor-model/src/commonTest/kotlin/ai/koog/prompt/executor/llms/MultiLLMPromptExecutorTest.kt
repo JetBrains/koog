@@ -31,7 +31,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model)
+        val response = executor.execute(prompt = prompt, resolvedModel = model)
         val textPart = assertIs<MessagePart.Text>(response.parts.single())
         assertEquals("OpenAI response", textPart.text)
     }
@@ -50,7 +50,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model)
+        val response = executor.execute(prompt = prompt, resolvedModel = model)
         val textPart = assertIs<MessagePart.Text>(response.parts.single())
         assertEquals("Anthropic response", textPart.text)
     }
@@ -69,7 +69,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model)
+        val response = executor.execute(prompt = prompt, resolvedModel = model)
         val textPart = assertIs<MessagePart.Text>(response.parts.single())
 
         assertEquals("Google response", textPart.text)
@@ -161,7 +161,7 @@ class MultiLLMPromptExecutorTest {
         }
 
         assertFailsWith<IllegalArgumentException>("Should throw IllegalArgumentException for unsupported provider") {
-            executor.execute(prompt = prompt, model = model)
+            executor.execute(prompt = prompt, resolvedModel = model)
         }
     }
 
