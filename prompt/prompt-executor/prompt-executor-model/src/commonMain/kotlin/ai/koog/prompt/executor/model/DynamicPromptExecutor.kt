@@ -21,7 +21,8 @@ import kotlinx.coroutines.flow.flow
  * once per call and subclasses cannot bypass it.
  *
  * Subclasses must implement [resolveModel] together with [execute], [executeStreaming],
- * [executeMultipleChoices], and [moderate] taking a [ResolvedModel].
+ * [executeMultipleChoices], and [moderate] taking a [ResolvedModel]. Inside those overrides,
+ * do not delegate to the [LLModel] overloads — they are finalized to re-enter resolution and will recurse.
  */
 public abstract class DynamicPromptExecutor : PromptExecutor() {
 
@@ -106,7 +107,7 @@ public abstract class DynamicPromptExecutor : PromptExecutor() {
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = flow {
-        emitAll(executeStreaming(prompt, resolveModel(model, PromptExecutorOperation.Stream), tools))
+        emitAll(executeStreaming(prompt, resolveModel(model, PromptExecutorOperation.Streaming), tools))
     }
 
     /**

@@ -126,7 +126,7 @@ public class ContextualPromptExecutor(
         var effectiveModel: LLModel = model
 
         return flow {
-            val resolvedModel = executor.resolveModel(model, PromptExecutorOperation.Stream)
+            val resolvedModel = executor.resolveModel(model, PromptExecutorOperation.Streaming)
             effectiveModel = resolvedModel.effectiveModel
 
             val promptBeforeInterceptors = context.llm.prompt // because onLLMStreamingStarting might change it

@@ -48,7 +48,7 @@ public class CachedPromptExecutor(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> =
         flow {
-            val resolvedModel = nested.resolveModel(model, PromptExecutorOperation.Stream)
+            val resolvedModel = nested.resolveModel(model, PromptExecutorOperation.Streaming)
             getOrPut(prompt, tools, resolvedModel).toStreamFrames().forEach { emit(it) }
         }
 
