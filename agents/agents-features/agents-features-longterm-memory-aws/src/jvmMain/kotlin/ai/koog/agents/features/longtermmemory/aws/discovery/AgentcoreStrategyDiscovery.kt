@@ -171,17 +171,41 @@ public class AgentcoreStrategyDiscovery(
             return
         }
         val table = buildString {
-            append('\n').append("  Strategy discovery for AgentCore memory '").append(memoryId).append("':").append('\n')
-            append("  ").append("TYPE".padEnd(20)).append(' ').append("STRATEGY ID".padEnd(45))
-                .append(' ').append("REFLECTIONS").append('\n')
-            append("  ").append("-".repeat(80)).append('\n')
+            append('\n')
+            append("  Strategy discovery for AgentCore memory '")
+            append(memoryId)
+            append("':")
+            append('\n')
+            append("  ")
+            append("TYPE".padEnd(20))
+            append(' ')
+            append("STRATEGY ID".padEnd(45))
+            append(' ')
+            append("REFLECTIONS")
+            append('\n')
+            append("  ")
+            append("-".repeat(80))
+            append('\n')
             for (ds in discovered) {
                 val refl = if (ds.reflectionsNamespaces.isEmpty()) "no" else "yes"
-                append("  ").append(ds.type.name.padEnd(20)).append(' ').append(ds.strategyId.padEnd(45))
-                    .append(' ').append(refl).append('\n')
+                append("  ")
+                append(ds.type.name.padEnd(20))
+                append(' ')
+                append(ds.strategyId.padEnd(45))
+                append(' ')
+                append(refl)
+                append('\n')
             }
-            append("  ").append(discovered.size).append(" usable / ").append(total).append(" total")
-            if (skipped > 0) append(" (").append(skipped).append(" skipped)")
+            append("  ")
+            append(discovered.size)
+            append(" usable / ")
+            append(total)
+            append(" total")
+            if (skipped > 0) {
+                append(" (")
+                append(skipped)
+                append(" skipped)")
+            }
         }
         logger.info(table)
     }
