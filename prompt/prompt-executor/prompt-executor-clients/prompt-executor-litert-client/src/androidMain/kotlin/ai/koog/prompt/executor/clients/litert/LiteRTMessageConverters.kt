@@ -20,9 +20,9 @@ import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import com.google.ai.edge.litertlm.Message as LitertMessage
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import com.google.ai.edge.litertlm.Message as LitertMessage
 
 /**
  * Converts a LiteRT [LitertMessage] to a koog [Message.Assistant].
