@@ -1,5 +1,6 @@
-package ai.koog.a2a.transport
+package ai.koog.a2a.serialization
 
+import ai.koog.a2a.transport.RequestId
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.SerialDescriptor

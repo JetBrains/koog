@@ -1,5 +1,8 @@
 package ai.koog.a2a.model
 
+import ai.koog.a2a.serialization.CommunicationEventSerializer
+import ai.koog.a2a.serialization.EventSerializer
+import ai.koog.a2a.serialization.TaskEventSerializer
 import kotlinx.serialization.Serializable
 
 /**

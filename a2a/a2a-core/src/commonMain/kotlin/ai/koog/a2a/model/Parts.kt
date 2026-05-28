@@ -1,5 +1,8 @@
 package ai.koog.a2a.model
 
+import ai.koog.a2a.serialization.ByteArrayAsBase64Serializer
+import ai.koog.a2a.serialization.FileSerializer
+import ai.koog.a2a.serialization.PartSerializer
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -10,9 +13,14 @@ import kotlinx.serialization.json.JsonObject
 @Serializable(with = PartSerializer::class)
 public sealed interface Part {
     /**
-     * The type of the part, used as discriminator.
+     * Filename for the file
      */
-    public val kind: String
+    public val filename: String?
+
+    /**
+     * The `media_type` (MIME type) of the part content (e.g., "text/plain", "application/json", "image/png").
+     */
+    public val mediaType: String?
 
     /**
      * Optional metadata associated with this part.
@@ -28,65 +36,57 @@ public sealed interface Part {
 @Serializable
 public data class TextPart(
     public val text: String,
+    override val filename: String? = null,
+    override val mediaType: String? = null,
+    override val metadata: JsonObject? = null,
+) : Part
+
+/**
+ * Represents a file part with content provided as bytes.
+ *
+ * @property raw The raw bytes of the file content.
+ */
+@Serializable
+public data class FileBytesPart(
+    @Serializable(with = ByteArrayAsBase64Serializer::class)
+    public val raw: ByteArray,
+    override val filename: String? = null,
+    override val mediaType: String? = null,
     override val metadata: JsonObject? = null,
 ) : Part {
-    @EncodeDefault
-    override val kind: String = "text"
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is FileBytesPart) return false
+
+        if (!raw.contentEquals(other.raw)) return false
+        if (filename != other.filename) return false
+        if (mediaType != other.mediaType) return false
+        if (metadata != other.metadata) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = raw.contentHashCode()
+        result = 31 * result + (filename?.hashCode() ?: 0)
+        result = 31 * result + (mediaType?.hashCode() ?: 0)
+        result = 31 * result + (metadata?.hashCode() ?: 0)
+        return result
+    }
 }
 
 /**
- * Represents a file part. The file content can be provided either directly as bytes or as a URI.
+ * Represents a file part with content provided as a URL.
  *
- * @property file The file content.
+ * @property url The URL pointing to the file's content.
  */
 @Serializable
-public data class FilePart(
-    public val file: File,
+public data class FileUrlPart(
+    public val url: String,
+    override val filename: String? = null,
+    override val mediaType: String? = null,
     override val metadata: JsonObject? = null,
-) : Part {
-    @EncodeDefault
-    override val kind: String = "file"
-}
-
-/**
- * Represents a file within a part.
- */
-@Serializable(with = FileSerializer::class)
-public sealed interface File {
-    /**
-     * An optional name for the file (e.g., "document.pdf").
-     */
-    public val name: String?
-
-    /**
-     * An optional MIME type of the file (e.g., "application/pdf").
-     */
-    public val mimeType: String?
-}
-
-/**
- * Represents a file with its content provided directly as a base64-encoded string.
- *
- * @property bytes The base64-encoded content of the file.
- */
-@Serializable
-public data class FileWithBytes(
-    public val bytes: String,
-    override val name: String? = null,
-    override val mimeType: String? = null,
-) : File
-
-/**
- * Represents a file with its content located at a specific URI.
- *
- * @property uri A URL pointing to the file's content.
- */
-@Serializable
-public data class FileWithUri(
-    public val uri: String,
-    override val name: String? = null,
-    override val mimeType: String? = null,
-) : File
+) : Part
 
 /**
  * Represents a structured data part (e.g., JSON).
@@ -96,8 +96,7 @@ public data class FileWithUri(
 @Serializable
 public data class DataPart(
     public val data: JsonObject,
+    override val filename: String? = null,
+    override val mediaType: String? = null,
     override val metadata: JsonObject? = null,
-) : Part {
-    @EncodeDefault
-    override val kind: String = "data"
-}
+) : Part
