@@ -20,6 +20,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
 
@@ -58,6 +59,23 @@ class BedrockAmazonNovaSerializationTest {
         assertNotNull(request.inferenceConfig)
         assertEquals(MAX_TOKENS_DEFAULT, request.inferenceConfig.maxTokens)
         assertEquals(temperature, request.inferenceConfig.temperature)
+    }
+
+    /**
+     * Regression: Bedrock's Nova API rejects requests whose `system` field is an empty array
+     * with `Malformed input request: #/system: expected minimum item count: 1, found: 0`. The
+     * serializer must therefore set `system` to `null` (not an empty list) when the prompt
+     * has no system message, so that `Json { explicitNulls = false }` omits the field on the
+     * wire. The `.takeIf { it.isNotEmpty() }` guard that produces this `null` was lost during
+     * the Message-architecture refactor (#1919) and restored by this fix.
+     */
+    @Test
+    fun `createNovaRequest sets system to null when prompt has no system message`() {
+        val prompt = Prompt.build("test") { user(userMessage) }
+
+        val request = BedrockAmazonNovaSerialization.createNovaRequest(prompt, model, emptyList())
+
+        assertNull(request.system)
     }
 
     @Test
