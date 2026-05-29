@@ -46,6 +46,8 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class EventHandlerTest {
 
@@ -709,6 +711,91 @@ class EventHandlerTest {
 
         assertEquals(expectedEvents.size, actualEvents.size)
         assertContentEquals(expectedEvents, actualEvents)
+    }
+
+    @Test
+    fun `test event handler reports effective model in OnLLMCallCompleted`() = runTest {
+        val eventsCollector = TestEventsCollector()
+
+        val requestedModel = OpenAIModels.Chat.GPT4o
+        val effectiveModel = AnthropicModels.Sonnet_4_5
+
+        val strategy = strategy<String, String>("model-resolution-strategy") {
+            val llmCallNode by nodeLLMRequest("test LLM call")
+            edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
+            edge(llmCallNode forwardTo nodeFinish transformed { "Done" })
+        }
+
+        createAgent(
+            strategy = strategy,
+            model = requestedModel,
+            executor = ModelResolvingTestExecutor(testClock, effectiveModel),
+            installFeatures = {
+                install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
+            }
+        ).use { agent ->
+            agent.run("Hello, world!!!", null)
+        }
+
+        val llmCallCompletedEvents = eventsCollector.collectedEvents.filter {
+            it.startsWith("OnLLMCallCompleted")
+        }
+        assertEquals(1, llmCallCompletedEvents.size)
+        llmCallCompletedEvents.forEach { event ->
+            assertTrue(
+                event.contains("model: ${effectiveModel.eventString}"),
+                "Expected effective model in event but got: $event"
+            )
+            assertFalse(
+                event.contains(requestedModel.eventString),
+                "Did not expect requested model in event but got: $event"
+            )
+        }
+    }
+
+    @Test
+    fun `test event handler reports effective model in OnLLMStreaming events`() = runTest {
+        val eventsCollector = TestEventsCollector()
+
+        val requestedModel = OpenAIModels.Chat.GPT4o
+        val effectiveModel = AnthropicModels.Sonnet_4_5
+
+        val strategyName = "model-resolution-streaming-strategy"
+        val strategy = strategy<String, String>(strategyName) {
+            val streamAndCollect by nodeLLMRequestStreaming("stream-and-collect")
+            edge(nodeStart forwardTo streamAndCollect)
+            edge(
+                streamAndCollect forwardTo nodeFinish transformed { messages ->
+                    messages.collectText()
+                }
+            )
+        }
+
+        createAgent(
+            strategy = strategy,
+            model = requestedModel,
+            executor = ModelResolvingTestExecutor(testClock, effectiveModel),
+            installFeatures = {
+                install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
+            }
+        ).use { agent ->
+            agent.run("Hello, world!!!", null)
+        }
+
+        val streamingModelEvents = eventsCollector.collectedEvents.filter {
+            it.startsWith("OnLLMStreamingStarting") || it.startsWith("OnLLMStreamingCompleted")
+        }
+        assertEquals(2, streamingModelEvents.size)
+        streamingModelEvents.forEach { event ->
+            assertTrue(
+                event.contains("model: ${effectiveModel.eventString}"),
+                "Expected effective model in event but got: $event"
+            )
+            assertFalse(
+                event.contains(requestedModel.eventString),
+                "Did not expect requested model in event but got: $event"
+            )
+        }
     }
 
     @Test

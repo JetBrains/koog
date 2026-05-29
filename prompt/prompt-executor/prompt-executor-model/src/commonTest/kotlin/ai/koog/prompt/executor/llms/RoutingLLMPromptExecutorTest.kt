@@ -5,6 +5,9 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.ModelResolutionException
+import ai.koog.prompt.executor.model.PromptExecutorOperation
+import ai.koog.prompt.executor.model.ResolvedModel
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.MessagePart
@@ -81,7 +84,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When, Then
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ModelResolutionException> {
             executor.execute(prompt, AnthropicModels.Sonnet_4)
         }
     }
@@ -134,7 +137,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When, Then
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ModelResolutionException> {
             executor.executeStreaming(prompt, AnthropicModels.Sonnet_4).collect()
         }
     }
@@ -183,7 +186,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When, Then
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ModelResolutionException> {
             executor.executeMultipleChoices(prompt, AnthropicModels.Sonnet_4, emptyList())
         }
     }
@@ -232,7 +235,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When, Then
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ModelResolutionException> {
             executor.moderate(prompt, AnthropicModels.Sonnet_4)
         }
     }
@@ -325,5 +328,52 @@ class RoutingLLMPromptExecutorTest {
 
         assertTrue(googleClient.wasClosed())
         assertTrue(openAIClient.wasClosed())
+    }
+
+    @Test
+    fun testResolveModelReturnsRequestedWhenProviderInRouter() = runTest {
+        val executor = RoutingLLMPromptExecutor(SimpleTestRouter(MockLLMClient(provider = LLMProvider.OpenAI)))
+        val requested = OpenAIModels.Chat.GPT4o
+
+        assertEquals(
+            ResolvedModel(requested),
+            executor.resolveModel(requested, PromptExecutorOperation.Execute)
+        )
+    }
+
+    @Test
+    fun testResolveModelUsesFallbackWhenProviderUnknown() = runTest {
+        val fallbackModel = OpenAIModels.Chat.GPT4o
+        val executor = RoutingLLMPromptExecutor(
+            clientRouter = SimpleTestRouter(MockLLMClient(provider = LLMProvider.OpenAI)),
+            fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(fallbackModel = fallbackModel),
+        )
+
+        assertEquals(
+            ResolvedModel(fallbackModel),
+            executor.resolveModel(AnthropicModels.Sonnet_4, PromptExecutorOperation.Execute)
+        )
+    }
+
+    @Test
+    fun testResolveModelThrowsWhenNoClientAndNoFallback() = runTest {
+        val executor = RoutingLLMPromptExecutor(SimpleTestRouter(MockLLMClient(provider = LLMProvider.OpenAI)))
+        val requested = AnthropicModels.Sonnet_4
+
+        assertFailsWith<ModelResolutionException> {
+            executor.resolveModel(requested, PromptExecutorOperation.Execute)
+        }
+    }
+
+    @Test
+    fun testConstructorFailsWhenFallbackProviderNotInRouter() {
+        val router = SimpleTestRouter(MockLLMClient(provider = LLMProvider.OpenAI))
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
+            fallbackModel = GoogleModels.Gemini2_5Flash,
+        )
+
+        assertFailsWith<IllegalStateException> {
+            RoutingLLMPromptExecutor(clientRouter = router, fallback = fallback)
+        }
     }
 }

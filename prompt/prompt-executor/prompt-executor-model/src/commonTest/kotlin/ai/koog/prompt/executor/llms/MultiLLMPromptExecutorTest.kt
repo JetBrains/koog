@@ -4,6 +4,9 @@ import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.ModelResolutionException
+import ai.koog.prompt.executor.model.PromptExecutorOperation
+import ai.koog.prompt.executor.model.ResolvedModel
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.streaming.filterTextOnly
@@ -14,6 +17,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class MultiLLMPromptExecutorTest {
 
@@ -31,7 +35,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, resolvedModel = model)
+        val response = executor.execute(prompt = prompt, model = model)
         val textPart = assertIs<MessagePart.Text>(response.parts.single())
         assertEquals("OpenAI response", textPart.text)
     }
@@ -50,7 +54,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, resolvedModel = model)
+        val response = executor.execute(prompt = prompt, model = model)
         val textPart = assertIs<MessagePart.Text>(response.parts.single())
         assertEquals("Anthropic response", textPart.text)
     }
@@ -69,7 +73,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, resolvedModel = model)
+        val response = executor.execute(prompt = prompt, model = model)
         val textPart = assertIs<MessagePart.Text>(response.parts.single())
 
         assertEquals("Google response", textPart.text)
@@ -160,8 +164,8 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        assertFailsWith<IllegalArgumentException>("Should throw IllegalArgumentException for unsupported provider") {
-            executor.execute(prompt = prompt, resolvedModel = model)
+        assertFailsWith<ModelResolutionException> {
+            executor.execute(prompt = prompt, model = model)
         }
     }
 
@@ -174,8 +178,49 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        assertFailsWith<IllegalArgumentException>("Should throw IllegalArgumentException for unsupported provider") {
+        assertFailsWith<ModelResolutionException> {
             executor.executeStreaming(prompt, model).collect()
+        }
+    }
+
+    @Test
+    fun testResolveModelReturnsRequestedWhenProviderRegistered() = runTest {
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to MockLLMClient(provider = LLMProvider.OpenAI),
+            LLMProvider.Anthropic to MockLLMClient(provider = LLMProvider.Anthropic),
+        )
+        val requested = OpenAIModels.Chat.GPT4o
+
+        assertEquals(
+            ResolvedModel(requested),
+            executor.resolveModel(requested, PromptExecutorOperation.Execute)
+        )
+    }
+
+    @Test
+    fun testResolveModelUsesFallbackWhenProviderUnregistered() = runTest {
+        val fallbackModel = OpenAIModels.Chat.GPT4o
+        val executor = MultiLLMPromptExecutor(
+            llmClients = mapOf(LLMProvider.OpenAI to MockLLMClient(provider = LLMProvider.OpenAI)),
+            fallback = MultiLLMPromptExecutor.FallbackPromptExecutorSettings(
+                fallbackProvider = LLMProvider.OpenAI,
+                fallbackModel = fallbackModel,
+            ),
+        )
+
+        assertEquals(
+            ResolvedModel(fallbackModel),
+            executor.resolveModel(AnthropicModels.Opus_4_6, PromptExecutorOperation.Execute)
+        )
+    }
+
+    @Test
+    fun testResolveModelThrowsWhenNoClientAndNoFallback() = runTest {
+        val executor = MultiLLMPromptExecutor(MockLLMClient(provider = LLMProvider.OpenAI))
+        val requested = AnthropicModels.Opus_4_6
+
+        assertFailsWith<ModelResolutionException> {
+            executor.resolveModel(requested, PromptExecutorOperation.Execute)
         }
     }
 }

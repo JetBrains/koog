@@ -137,7 +137,7 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
      * client for the model's provider, falling back to [FallbackPromptExecutorSettings.fallbackModel]
      * when no direct client matches.
      *
-     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
+     * @throws ModelResolutionException If no client is found for the model's provider and no fallback settings are configured.
      */
     override suspend fun resolveModel(
         requestedModel: LLModel,
