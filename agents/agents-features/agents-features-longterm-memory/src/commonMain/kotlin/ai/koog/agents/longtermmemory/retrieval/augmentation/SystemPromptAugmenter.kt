@@ -14,7 +14,7 @@ import ai.koog.rag.base.storage.search.SearchResult
  * The original system message is replaced with a copy that:
  * - preserves its [Message.metaInfo] and [Message.id],
  * - preserves all existing parts (text, attachments, etc.),
- * - gains two extra [MessagePart.Text] entries at the end: a separator and the formatted context.
+ * - gains an extra [MessagePart.Text] entry at the end with formatted context.
  *
  * If the prompt contains no [Message.System], or the formatted context is blank, or the relevant
  * context list is empty, the original prompt is returned unchanged.

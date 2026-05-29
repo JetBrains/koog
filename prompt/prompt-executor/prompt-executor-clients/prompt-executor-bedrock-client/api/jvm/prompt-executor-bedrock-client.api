@@ -1,0 +1,802 @@
+public abstract interface class ai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod {
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod$Converse : ai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod$Converse;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod$InvokeModel : ai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod$InvokeModel;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/bedrock/BedrockCacheControl : ai/koog/prompt/message/CacheControl {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/BedrockCacheControl$Companion;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockCacheControl$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockCacheControl$Default : ai/koog/prompt/executor/clients/bedrock/BedrockCacheControl {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockCacheControl$Default;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockCacheControl$FiveMinutes : ai/koog/prompt/executor/clients/bedrock/BedrockCacheControl {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockCacheControl$FiveMinutes;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockCacheControl$OneHour : ai/koog/prompt/executor/clients/bedrock/BedrockCacheControl {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockCacheControl$OneHour;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockClientSettings {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;Ljava/lang/String;Lai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod;IZLai/koog/prompt/executor/clients/bedrock/BedrockGuardrailsSettings;Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;Ljava/lang/String;Lai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod;IZLai/koog/prompt/executor/clients/bedrock/BedrockGuardrailsSettings;Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getApiMethod ()Lai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod;
+	public final fun getEnableLogging ()Z
+	public final fun getEndpointUrl ()Ljava/lang/String;
+	public final fun getFallbackModelFamily ()Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies;
+	public final fun getMaxRetries ()I
+	public final fun getModerationGuardrailsSettings ()Lai/koog/prompt/executor/clients/bedrock/BedrockGuardrailsSettings;
+	public final fun getRegion ()Ljava/lang/String;
+	public final fun getTimeoutConfig ()Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockGuardrailsSettings {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getGuardrailIdentifier ()Ljava/lang/String;
+	public final fun getGuardrailVersion ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes : java/lang/Enum {
+	public static final field AF Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes;
+	public static final field AP Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes;
+	public static final field CA Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes;
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes$Companion;
+	public static final field EU Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes;
+	public static final field GLOBAL Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes;
+	public static final field IL Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes;
+	public static final field ME Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes;
+	public static final field MX Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes;
+	public static final field SA Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes;
+	public static final field US Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getPrefix ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes;
+	public static fun values ()[Lai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockInferencePrefixes$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockLLMClient : ai/koog/prompt/executor/clients/LLMClient {
+	public fun <init> (Laws/sdk/kotlin/services/bedrockruntime/BedrockRuntimeClient;)V
+	public fun <init> (Laws/sdk/kotlin/services/bedrockruntime/BedrockRuntimeClient;Lai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod;)V
+	public fun <init> (Laws/sdk/kotlin/services/bedrockruntime/BedrockRuntimeClient;Lai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod;Lai/koog/prompt/executor/clients/bedrock/BedrockGuardrailsSettings;)V
+	public fun <init> (Laws/sdk/kotlin/services/bedrockruntime/BedrockRuntimeClient;Lai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod;Lai/koog/prompt/executor/clients/bedrock/BedrockGuardrailsSettings;Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies;)V
+	public fun <init> (Laws/sdk/kotlin/services/bedrockruntime/BedrockRuntimeClient;Lai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod;Lai/koog/prompt/executor/clients/bedrock/BedrockGuardrailsSettings;Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies;Lai/koog/utils/time/KoogClock;)V
+	public synthetic fun <init> (Laws/sdk/kotlin/services/bedrockruntime/BedrockRuntimeClient;Lai/koog/prompt/executor/clients/bedrock/BedrockAPIMethod;Lai/koog/prompt/executor/clients/bedrock/BedrockGuardrailsSettings;Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies;Lai/koog/utils/time/KoogClock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Laws/smithy/kotlin/runtime/identity/IdentityProvider;Lai/koog/prompt/executor/clients/bedrock/BedrockClientSettings;Lai/koog/utils/time/KoogClock;)V
+	public synthetic fun <init> (Laws/smithy/kotlin/runtime/identity/IdentityProvider;Lai/koog/prompt/executor/clients/bedrock/BedrockClientSettings;Lai/koog/utils/time/KoogClock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public fun embed (Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun embed (Ljava/util/List;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public fun llmProvider ()Lai/koog/prompt/llm/LLMProvider;
+	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModel {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/BedrockModel$Companion;
+	public fun <init> (Lai/koog/prompt/llm/LLModel;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lai/koog/prompt/llm/LLModel;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lai/koog/prompt/llm/LLModel;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Lai/koog/prompt/llm/LLModel;Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/executor/clients/bedrock/BedrockModel;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/BedrockModel;Lai/koog/prompt/llm/LLModel;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/BedrockModel;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEffectiveModel ()Lai/koog/prompt/llm/LLModel;
+	public final fun getEffectiveModelId ()Ljava/lang/String;
+	public final fun getInferenceProfilePrefix ()Ljava/lang/String;
+	public final fun getModel ()Lai/koog/prompt/llm/LLModel;
+	public final fun getModelId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/BedrockModel$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModel$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/BedrockModel;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/BedrockModel;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModel$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDisplay ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$AmazonNova : ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$AmazonNova;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$AnthropicClaude : ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$AnthropicClaude;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$Cohere : ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$Cohere;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$GoogleGemma : ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$GoogleGemma;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$Meta : ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$Meta;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$MiniMax : ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$MiniMax;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$MoonshotKimi : ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$MoonshotKimi;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$OpenAI : ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$OpenAI;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$TitanEmbedding : ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$TitanEmbedding;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModels : ai/koog/prompt/executor/clients/LLModelDefinitions {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModels;
+	public fun addCustomModel (Lai/koog/prompt/llm/LLModel;)V
+	public final fun getAmazonNovaLite ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAmazonNovaMicro ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAmazonNovaPremier ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAmazonNovaPro ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaude41Opus ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaude45Opus ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaude46Opus ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaude47Opus ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaude4Opus ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaude4Sonnet ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaude4_5Haiku ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaude4_5Sonnet ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaude4_6Sonnet ()Lai/koog/prompt/llm/LLModel;
+	public final fun getGoogleGemma3_12BIt ()Lai/koog/prompt/llm/LLModel;
+	public final fun getGoogleGemma3_27BIt ()Lai/koog/prompt/llm/LLModel;
+	public final fun getGoogleGemma3_4BIt ()Lai/koog/prompt/llm/LLModel;
+	public final fun getMetaLlama3_0_70BInstruct ()Lai/koog/prompt/llm/LLModel;
+	public final fun getMetaLlama3_0_8BInstruct ()Lai/koog/prompt/llm/LLModel;
+	public final fun getMetaLlama3_1_405BInstruct ()Lai/koog/prompt/llm/LLModel;
+	public final fun getMetaLlama3_1_70BInstruct ()Lai/koog/prompt/llm/LLModel;
+	public final fun getMetaLlama3_1_8BInstruct ()Lai/koog/prompt/llm/LLModel;
+	public final fun getMetaLlama3_2_11BInstruct ()Lai/koog/prompt/llm/LLModel;
+	public final fun getMetaLlama3_2_1BInstruct ()Lai/koog/prompt/llm/LLModel;
+	public final fun getMetaLlama3_2_3BInstruct ()Lai/koog/prompt/llm/LLModel;
+	public final fun getMetaLlama3_2_90BInstruct ()Lai/koog/prompt/llm/LLModel;
+	public final fun getMetaLlama3_3_70BInstruct ()Lai/koog/prompt/llm/LLModel;
+	public final fun getMiniMaxM2_5 ()Lai/koog/prompt/llm/LLModel;
+	public fun getModels ()Ljava/util/List;
+	public final fun getMoonshotKimiK2Thinking ()Lai/koog/prompt/llm/LLModel;
+	public final fun getMoonshotKimiK2_5 ()Lai/koog/prompt/llm/LLModel;
+	public final fun getOpenAIGptOss120B ()Lai/koog/prompt/llm/LLModel;
+	public final fun getOpenAIGptOss20B ()Lai/koog/prompt/llm/LLModel;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModels$Embeddings {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModels$Embeddings;
+	public final fun getAmazonTitanEmbedText ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAmazonTitanEmbedTextV2 ()Lai/koog/prompt/llm/LLModel;
+	public final fun getCohereEmbedEnglishV3 ()Lai/koog/prompt/llm/LLModel;
+	public final fun getCohereEmbedMultilingualV3 ()Lai/koog/prompt/llm/LLModel;
+	public final fun getCohereEmbedV4 ()Lai/koog/prompt/llm/LLModel;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockModelsKt {
+	public static final fun withInferenceProfile (Lai/koog/prompt/llm/LLModel;Ljava/lang/String;)Lai/koog/prompt/llm/LLModel;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockRegions : java/lang/Enum {
+	public static final field AF_SOUTH_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_EAST_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_EAST_2 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_NORTHEAST_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_NORTHEAST_2 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_NORTHEAST_3 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_SOUTHEAST_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_SOUTHEAST_2 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_SOUTHEAST_3 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_SOUTHEAST_4 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_SOUTHEAST_5 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_SOUTHEAST_7 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_SOUTH_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field AP_SOUTH_2 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field CA_CENTRAL_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field CA_WEST_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/BedrockRegions$Companion;
+	public static final field EU_CENTRAL_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field EU_CENTRAL_2 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field EU_NORTH_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field EU_NORTH_2 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field EU_WEST_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field EU_WEST_2 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field EU_WEST_3 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field IL_CENTRAL_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field ME_CENTRAL_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field ME_SOUTH_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field MX_CENTRAL_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field SA_EAST_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field US_EAST_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field US_EAST_2 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field US_WEST_1 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static final field US_WEST_2 Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getRegionCode ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+	public static fun values ()[Lai/koog/prompt/executor/clients/bedrock/BedrockRegions;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/BedrockRegions$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/StaticBearerTokenProvider : aws/smithy/kotlin/runtime/http/auth/BearerTokenProvider {
+	public fun <init> (Ljava/lang/String;)V
+	public fun resolve (Laws/smithy/kotlin/runtime/collections/Attributes;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/converse/BedrockConverseParams : ai/koog/prompt/params/LLMParams {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/util/List;Laws/sdk/kotlin/services/bedrockruntime/model/PerformanceConfiguration;Ljava/util/Map;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/util/List;Laws/sdk/kotlin/services/bedrockruntime/model/PerformanceConfiguration;Ljava/util/Map;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun copy (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;)Lai/koog/prompt/executor/clients/bedrock/converse/BedrockConverseParams;
+	public synthetic fun copy (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;)Lai/koog/prompt/params/LLMParams;
+	public final fun copy (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/util/List;Laws/sdk/kotlin/services/bedrockruntime/model/PerformanceConfiguration;Ljava/util/Map;Ljava/util/Map;)Lai/koog/prompt/executor/clients/bedrock/converse/BedrockConverseParams;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/converse/BedrockConverseParams;Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/util/List;Laws/sdk/kotlin/services/bedrockruntime/model/PerformanceConfiguration;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/converse/BedrockConverseParams;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPerformanceConfig ()Laws/sdk/kotlin/services/bedrockruntime/model/PerformanceConfiguration;
+	public final fun getPromptVariables ()Ljava/util/Map;
+	public final fun getRequestMetadata ()Ljava/util/Map;
+	public final fun getStopSequences ()Ljava/util/List;
+	public final fun getTopP ()Ljava/lang/Double;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModel {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModel$Companion;
+	public static final field MAX_TOKENS_DEFAULT I
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;ILjava/lang/String;Ljava/lang/Double;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice;Lkotlinx/serialization/json/JsonObject;)V
+	public synthetic fun <init> (Ljava/lang/String;ILjava/lang/String;Ljava/lang/Double;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice;Lkotlinx/serialization/json/JsonObject;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice;
+	public final fun component8 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun copy (Ljava/lang/String;ILjava/lang/String;Ljava/lang/Double;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice;Lkotlinx/serialization/json/JsonObject;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModel;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModel;Ljava/lang/String;ILjava/lang/String;Ljava/lang/Double;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModel;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnthropicVersion ()Ljava/lang/String;
+	public final fun getMaxTokens ()I
+	public final fun getMessages ()Ljava/util/List;
+	public final fun getOutputConfig ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getSystem ()Ljava/lang/String;
+	public final fun getTemperature ()Ljava/lang/Double;
+	public final fun getToolChoice ()Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice;
+	public final fun getTools ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModel$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModel$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModel;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModel;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModel$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Companion;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Text : ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Text$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getText ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Text$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Text$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Text;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Text;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Text$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Thinking : ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Thinking$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Thinking;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Thinking;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Thinking;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSignature ()Ljava/lang/String;
+	public final fun getThinking ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Thinking$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Thinking$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Thinking;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Thinking;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$Thinking$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolCall : ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolCall$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)V
+	public final fun getId ()Ljava/lang/String;
+	public final fun getInput ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getName ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolCall$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolCall$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolCall;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolCall;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolCall$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolResult : ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolResult$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Z)V
+	public final fun getContent ()Ljava/lang/String;
+	public final fun getToolUseId ()Ljava/lang/String;
+	public final fun isError ()Z
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolResult$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolResult;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolResult;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolResult$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$Companion;
+	public abstract fun getContent ()Ljava/util/List;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$Assistant : ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$Assistant$Companion;
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$Assistant;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$Assistant;Ljava/util/List;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$Assistant;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$Assistant$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$Assistant$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$Assistant;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$Assistant;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$Assistant$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$User : ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$User$Companion;
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$User;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$User;Ljava/util/List;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$User;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$User$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$User$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$User;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$User;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelMessage$User$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelTool {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelTool$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelTool;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelTool;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelTool;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getInputSchema ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelTool$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelTool$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelTool;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelTool;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelTool$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelToolResultContent {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelToolResultContent;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelToolResultContent;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelToolResultContent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Ljava/lang/String;
+	public final fun getToolUseId ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicResponse {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicResponse$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicResponse;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicResponse;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Ljava/util/List;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getModel ()Ljava/lang/String;
+	public final fun getRole ()Ljava/lang/String;
+	public final fun getStopReason ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public final fun getUsage ()Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicToolChoice$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage$Companion;
+	public fun <init> (II)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun copy (II)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage;IIILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getInputTokens ()I
+	public final fun getOutputTokens ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicUsage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaRequest {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaRequest$Companion;
+	public fun <init> (Ljava/lang/String;ILjava/lang/Double;)V
+	public synthetic fun <init> (Ljava/lang/String;ILjava/lang/Double;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/lang/Double;
+	public final fun copy (Ljava/lang/String;ILjava/lang/Double;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaRequest;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaRequest;Ljava/lang/String;ILjava/lang/Double;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxGenLen ()I
+	public final fun getPrompt ()Ljava/lang/String;
+	public final fun getTemperature ()Ljava/lang/Double;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaRequest;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaRequest;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaResponse {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaResponse$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun component3 ()Ljava/lang/Integer;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaResponse;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaResponse;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGeneration ()Ljava/lang/String;
+	public final fun getGenerationTokenCount ()Ljava/lang/Integer;
+	public final fun getPromptTokenCount ()Ljava/lang/Integer;
+	public final fun getStopReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaStreamChunk {
+	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaStreamChunk$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun component3 ()Ljava/lang/Integer;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaStreamChunk;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaStreamChunk;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaStreamChunk;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGeneration ()Ljava/lang/String;
+	public final fun getGenerationTokenCount ()Ljava/lang/Integer;
+	public final fun getPromptTokenCount ()Ljava/lang/Integer;
+	public final fun getStopReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaStreamChunk$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaStreamChunk$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaStreamChunk;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaStreamChunk;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/meta/LlamaStreamChunk$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+

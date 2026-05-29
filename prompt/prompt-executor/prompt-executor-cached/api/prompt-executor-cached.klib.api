@@ -1,0 +1,19 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-executor-cached>
+final class ai.koog.prompt.executor.cached/CachedPromptExecutor : ai.koog.prompt.executor.model/PromptExecutor { // ai.koog.prompt.executor.cached/CachedPromptExecutor|null[0]
+    constructor <init>(ai.koog.prompt.cache.model/PromptCache, ai.koog.prompt.executor.model/PromptExecutor, ai.koog.utils.time/KoogClock = ...) // ai.koog.prompt.executor.cached/CachedPromptExecutor.<init>|<init>(ai.koog.prompt.cache.model.PromptCache;ai.koog.prompt.executor.model.PromptExecutor;ai.koog.utils.time.KoogClock){}[0]
+
+    final fun close() // ai.koog.prompt.executor.cached/CachedPromptExecutor.close|close(){}[0]
+    final fun executeStreaming(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.executor.cached/CachedPromptExecutor.executeStreaming|executeStreaming(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    final fun getBasicJsonSchemaGenerator(ai.koog.prompt.llm/LLModel): ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator // ai.koog.prompt.executor.cached/CachedPromptExecutor.getBasicJsonSchemaGenerator|getBasicJsonSchemaGenerator(ai.koog.prompt.llm.LLModel){}[0]
+    final fun getStandardJsonSchemaGenerator(ai.koog.prompt.llm/LLModel): ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator // ai.koog.prompt.executor.cached/CachedPromptExecutor.getStandardJsonSchemaGenerator|getStandardJsonSchemaGenerator(ai.koog.prompt.llm.LLModel){}[0]
+    final suspend fun execute(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.executor.cached/CachedPromptExecutor.execute|execute(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    final suspend fun models(): kotlin.collections/List<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.cached/CachedPromptExecutor.models|models(){}[0]
+    final suspend fun moderate(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): ai.koog.prompt.dsl/ModerationResult // ai.koog.prompt.executor.cached/CachedPromptExecutor.moderate|moderate(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+}

@@ -1,0 +1,242 @@
+public final class ai/koog/prompt/executor/clients/ConnectionTimeoutConfig {
+	public fun <init> ()V
+	public fun <init> (JJJ)V
+	public synthetic fun <init> (JJJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun copy (JJJ)Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;JJJILjava/lang/Object;)Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConnectTimeoutMillis ()J
+	public final fun getRequestTimeoutMillis ()J
+	public final fun getSocketTimeoutMillis ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface annotation class ai/koog/prompt/executor/clients/InternalLLMClientApi : java/lang/annotation/Annotation {
+}
+
+public abstract class ai/koog/prompt/executor/clients/LLMClient : ai/koog/prompt/executor/clients/LLMEmbeddingProvider, ai/koog/prompt/executor/clients/LLMClientAPI {
+	public fun <init> ()V
+	public final fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/message/Message$Assistant;
+	public final fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lai/koog/prompt/message/Message$Assistant;
+	public static synthetic fun execute$default (Lai/koog/prompt/executor/clients/LLMClient;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;ILjava/lang/Object;)Lai/koog/prompt/message/Message$Assistant;
+	public final fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;)Ljava/util/List;
+	public final fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Ljava/util/List;
+	public synthetic fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun executeMultipleChoices$default (Lai/koog/prompt/executor/clients/LLMClient;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;ILjava/lang/Object;)Ljava/util/List;
+	public final fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;)Ljava/util/concurrent/Flow$Publisher;
+	public synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;)Lkotlinx/coroutines/flow/Flow;
+	public final fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Ljava/util/concurrent/Flow$Publisher;
+	public synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun executeStreaming$default (Lai/koog/prompt/executor/clients/LLMClient;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;ILjava/lang/Object;)Ljava/util/concurrent/Flow$Publisher;
+	public fun getBasicJsonSchemaGenerator ()Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator;
+	public fun getClientName ()Ljava/lang/String;
+	public fun getStandardJsonSchemaGenerator ()Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator;
+	public final fun models ()Ljava/util/List;
+	public synthetic fun models (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/dsl/ModerationResult;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/LLMClientAPI : java/lang/AutoCloseable {
+	public abstract synthetic fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun execute$default (Lai/koog/prompt/executor/clients/LLMClientAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun executeMultipleChoices$default (Lai/koog/prompt/executor/clients/LLMClientAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;)Lkotlinx/coroutines/flow/Flow;
+	public synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public fun getBasicJsonSchemaGenerator ()Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator;
+	public fun getClientName ()Ljava/lang/String;
+	public fun getStandardJsonSchemaGenerator ()Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator;
+	public abstract fun llmProvider ()Lai/koog/prompt/llm/LLMProvider;
+	public synthetic fun models (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract synthetic fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/executor/clients/LLMClientAPI$DefaultImpls {
+	public static synthetic fun execute$default (Lai/koog/prompt/executor/clients/LLMClientAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun executeMultipleChoices (Lai/koog/prompt/executor/clients/LLMClientAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun executeMultipleChoices$default (Lai/koog/prompt/executor/clients/LLMClientAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun executeStreaming (Lai/koog/prompt/executor/clients/LLMClientAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun executeStreaming (Lai/koog/prompt/executor/clients/LLMClientAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public static fun getBasicJsonSchemaGenerator (Lai/koog/prompt/executor/clients/LLMClientAPI;)Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator;
+	public static fun getClientName (Lai/koog/prompt/executor/clients/LLMClientAPI;)Ljava/lang/String;
+	public static fun getStandardJsonSchemaGenerator (Lai/koog/prompt/executor/clients/LLMClientAPI;)Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator;
+	public static synthetic fun models (Lai/koog/prompt/executor/clients/LLMClientAPI;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/executor/clients/LLMClientException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract class ai/koog/prompt/executor/clients/LLMEmbeddingProvider : ai/koog/prompt/executor/clients/LLMEmbeddingProviderAPI {
+	public fun <init> ()V
+	public final fun embed (Ljava/lang/String;Lai/koog/prompt/llm/LLModel;)Ljava/util/List;
+	public synthetic fun embed (Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun embed (Ljava/util/List;Lai/koog/prompt/llm/LLModel;)Ljava/util/List;
+	public synthetic fun embed (Ljava/util/List;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/LLMEmbeddingProviderAPI {
+	public synthetic fun embed (Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun embed (Ljava/util/List;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/executor/clients/LLMEmbeddingProviderAPI$DefaultImpls {
+	public static synthetic fun embed (Lai/koog/prompt/executor/clients/LLMEmbeddingProviderAPI;Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun embed (Lai/koog/prompt/executor/clients/LLMEmbeddingProviderAPI;Ljava/util/List;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/LLModelDefinitions {
+	public abstract fun addCustomModel (Lai/koog/prompt/llm/LLModel;)V
+	public abstract fun getModels ()Ljava/util/List;
+}
+
+public final class ai/koog/prompt/executor/clients/LLModelDefinitionsExtKt {
+	public static final fun allModelsIn (Ljava/lang/Object;)Ljava/util/List;
+	public static final fun list (Lai/koog/prompt/executor/clients/LLModelDefinitions;Ljava/util/List;)Ljava/util/List;
+	public static synthetic fun list$default (Lai/koog/prompt/executor/clients/LLModelDefinitions;Ljava/util/List;ILjava/lang/Object;)Ljava/util/List;
+}
+
+public final class ai/koog/prompt/executor/clients/LLModelDefinitionsKt {
+	public static final fun modelsById (Lai/koog/prompt/executor/clients/LLModelDefinitions;)Ljava/util/Map;
+}
+
+public final class ai/koog/prompt/executor/clients/retry/DefaultRetryAfterExtractor : ai/koog/prompt/executor/clients/retry/RetryAfterExtractor {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/retry/DefaultRetryAfterExtractor;
+	public fun extract-LV8wdWc (Ljava/lang/String;)Lkotlin/time/Duration;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/retry/RetryAfterExtractor {
+	public abstract fun extract-LV8wdWc (Ljava/lang/String;)Lkotlin/time/Duration;
+}
+
+public final class ai/koog/prompt/executor/clients/retry/RetryConfig {
+	public static final field AGGRESSIVE Lai/koog/prompt/executor/clients/retry/RetryConfig;
+	public static final field CONSERVATIVE Lai/koog/prompt/executor/clients/retry/RetryConfig;
+	public static final field Companion Lai/koog/prompt/executor/clients/retry/RetryConfig$Companion;
+	public static final field DEFAULT Lai/koog/prompt/executor/clients/retry/RetryConfig;
+	public static final field DEFAULT_PATTERNS Ljava/util/List;
+	public static final field DISABLED Lai/koog/prompt/executor/clients/retry/RetryConfig;
+	public static final field PRODUCTION Lai/koog/prompt/executor/clients/retry/RetryConfig;
+	public synthetic fun <init> (IJJDDLjava/util/List;Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (IJJDDLjava/util/List;Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2-UwyO8pc ()J
+	public final fun component3-UwyO8pc ()J
+	public final fun component4 ()D
+	public final fun component5 ()D
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;
+	public final fun copy-G6guFE4 (IJJDDLjava/util/List;Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;)Lai/koog/prompt/executor/clients/retry/RetryConfig;
+	public static synthetic fun copy-G6guFE4$default (Lai/koog/prompt/executor/clients/retry/RetryConfig;IJJDDLjava/util/List;Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/retry/RetryConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackoffMultiplier ()D
+	public final fun getInitialDelay-UwyO8pc ()J
+	public final fun getJitterFactor ()D
+	public final fun getMaxAttempts ()I
+	public final fun getMaxDelay-UwyO8pc ()J
+	public final fun getRetryAfterExtractor ()Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;
+	public final fun getRetryablePatterns ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/retry/RetryConfig$Companion {
+}
+
+public final class ai/koog/prompt/executor/clients/retry/RetryConfigBuilder {
+	public fun <init> ()V
+	public final fun backoffMultiplier (D)Lai/koog/prompt/executor/clients/retry/RetryConfigBuilder;
+	public final fun build ()Lai/koog/prompt/executor/clients/retry/RetryConfig;
+	public final fun initialDelay (Ljava/time/Duration;)Lai/koog/prompt/executor/clients/retry/RetryConfigBuilder;
+	public final fun initialDelay-LRDsOJo (J)Lai/koog/prompt/executor/clients/retry/RetryConfigBuilder;
+	public final fun jitterFactor (D)Lai/koog/prompt/executor/clients/retry/RetryConfigBuilder;
+	public final fun maxAttempts (I)Lai/koog/prompt/executor/clients/retry/RetryConfigBuilder;
+	public final fun maxDelay (Ljava/time/Duration;)Lai/koog/prompt/executor/clients/retry/RetryConfigBuilder;
+	public final fun maxDelay-LRDsOJo (J)Lai/koog/prompt/executor/clients/retry/RetryConfigBuilder;
+	public final fun retryAfterExtractor (Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;)Lai/koog/prompt/executor/clients/retry/RetryConfigBuilder;
+	public final fun retryablePatterns (Ljava/util/List;)Lai/koog/prompt/executor/clients/retry/RetryConfigBuilder;
+}
+
+public final class ai/koog/prompt/executor/clients/retry/RetryConfigBuilderKt {
+	public static final fun builder (Lai/koog/prompt/executor/clients/retry/RetryConfig$Companion;)Lai/koog/prompt/executor/clients/retry/RetryConfigBuilder;
+}
+
+public abstract class ai/koog/prompt/executor/clients/retry/RetryablePattern {
+	public abstract fun matches (Ljava/lang/String;)Z
+}
+
+public final class ai/koog/prompt/executor/clients/retry/RetryablePattern$Custom : ai/koog/prompt/executor/clients/retry/RetryablePattern {
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public fun matches (Ljava/lang/String;)Z
+}
+
+public final class ai/koog/prompt/executor/clients/retry/RetryablePattern$Keyword : ai/koog/prompt/executor/clients/retry/RetryablePattern {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/prompt/executor/clients/retry/RetryablePattern$Keyword;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/retry/RetryablePattern$Keyword;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/retry/RetryablePattern$Keyword;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeyword ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun matches (Ljava/lang/String;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/retry/RetryablePattern$Regex : ai/koog/prompt/executor/clients/retry/RetryablePattern {
+	public fun <init> (Lkotlin/text/Regex;)V
+	public final fun component1 ()Lkotlin/text/Regex;
+	public final fun copy (Lkotlin/text/Regex;)Lai/koog/prompt/executor/clients/retry/RetryablePattern$Regex;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/retry/RetryablePattern$Regex;Lkotlin/text/Regex;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/retry/RetryablePattern$Regex;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPattern ()Lkotlin/text/Regex;
+	public fun hashCode ()I
+	public fun matches (Ljava/lang/String;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/retry/RetryablePattern$Status : ai/koog/prompt/executor/clients/retry/RetryablePattern {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lai/koog/prompt/executor/clients/retry/RetryablePattern$Status;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/retry/RetryablePattern$Status;IILjava/lang/Object;)Lai/koog/prompt/executor/clients/retry/RetryablePattern$Status;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()I
+	public fun hashCode ()I
+	public fun matches (Ljava/lang/String;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/retry/RetryingLLMClient : ai/koog/prompt/executor/clients/LLMClient {
+	public fun <init> (Lai/koog/prompt/executor/clients/LLMClient;)V
+	public fun <init> (Lai/koog/prompt/executor/clients/LLMClient;Lai/koog/prompt/executor/clients/retry/RetryConfig;)V
+	public synthetic fun <init> (Lai/koog/prompt/executor/clients/LLMClient;Lai/koog/prompt/executor/clients/retry/RetryConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public fun embed (Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun embed (Ljava/util/List;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public fun getBasicJsonSchemaGenerator ()Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator;
+	public fun getStandardJsonSchemaGenerator ()Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator;
+	public fun llmProvider ()Lai/koog/prompt/llm/LLMProvider;
+	public fun models (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/executor/clients/retry/RetryingLLMClientKt {
+	public static final fun toRetryingClient (Lai/koog/prompt/executor/clients/LLMClient;Lai/koog/prompt/executor/clients/retry/RetryConfig;)Lai/koog/prompt/executor/clients/retry/RetryingLLMClient;
+	public static synthetic fun toRetryingClient$default (Lai/koog/prompt/executor/clients/LLMClient;Lai/koog/prompt/executor/clients/retry/RetryConfig;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/retry/RetryingLLMClient;
+}
+
+public abstract class ai/koog/prompt/executor/clients/serialization/AdditionalPropertiesFlatteningSerializer : kotlinx/serialization/json/JsonTransformingSerializer {
+	public fun <init> (Lkotlinx/serialization/KSerializer;Ljava/lang/String;)V
+	public synthetic fun <init> (Lkotlinx/serialization/KSerializer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	protected fun transformDeserialize (Lkotlinx/serialization/json/JsonElement;)Lkotlinx/serialization/json/JsonElement;
+	protected fun transformSerialize (Lkotlinx/serialization/json/JsonElement;)Lkotlinx/serialization/json/JsonElement;
+}
+

@@ -28,6 +28,7 @@ kotlin {
         jvmMain {
             dependencies {
                 api(libs.aws.sdk.kotlin.bedrockagentcore)
+                api(libs.aws.sdk.kotlin.bedrockagentcorecontrol)
             }
         }
 

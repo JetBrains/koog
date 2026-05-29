@@ -209,6 +209,28 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.utils.Models#latestModels")
+    override fun integration_testAssistantMultiPartRoundTrip(model: LLModel) {
+        assumeTrue(
+            model.provider != LLMProvider.Bedrock,
+            "When Bedrock LLM client is used with InvokeModel API, only text messages are supported."
+        )
+
+        super.integration_testAssistantMultiPartRoundTrip(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.utils.Models#latestModels")
+    override fun integration_testToolCallResultCorrelationById(model: LLModel) {
+        assumeTrue(
+            model.provider != LLMProvider.Bedrock,
+            "When Bedrock LLM client is used with InvokeModel API, only text messages are supported."
+        )
+
+        super.integration_testToolCallResultCorrelationById(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.utils.Models#latestModels")
     override fun integration_testMarkdownStructuredDataStreaming(model: LLModel) {
         super.integration_testMarkdownStructuredDataStreaming(model)
     }
@@ -251,6 +273,17 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         )
 
         super.integration_testUrlBasedAttachment(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.utils.Models#latestModels")
+    override fun integration_testAttachmentTextRoundTrip(model: LLModel) {
+        assumeTrue(
+            model.provider != LLMProvider.Bedrock,
+            "When Bedrock LLM client is used with InvokeModel API, only text messages are supported."
+        )
+
+        super.integration_testAttachmentTextRoundTrip(model)
     }
 
     @ParameterizedTest
@@ -323,6 +356,18 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("ai.koog.integration.tests.utils.Models#reasoningCapableModels")
     override fun integration_testReasoningMultiStep(model: LLModel) {
         super.integration_testReasoningMultiStep(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.utils.Models#reasoningCapableModels")
+    override fun integration_testReasoningPreservationRoundTrip(model: LLModel) {
+        super.integration_testReasoningPreservationRoundTrip(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.utils.Models#reasoningCapableModels")
+    override fun integration_testEncryptedReasoningRoundTrip(model: LLModel) {
+        super.integration_testEncryptedReasoningRoundTrip(model)
     }
 
     @ParameterizedTest

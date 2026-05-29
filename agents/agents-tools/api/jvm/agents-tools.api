@@ -1,0 +1,339 @@
+public abstract class ai/koog/agents/core/tools/SimpleTool : ai/koog/agents/core/tools/Tool {
+	public fun <init> (Lai/koog/serialization/TypeToken;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun encodeResultToString (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Ljava/lang/String;
+	public fun encodeResultToString (Ljava/lang/String;Lai/koog/serialization/JSONSerializer;)Ljava/lang/String;
+}
+
+public abstract class ai/koog/agents/core/tools/Tool : ai/koog/agents/core/tools/ToolBase {
+	public fun <init> (Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/tools/ToolDescriptor;Ljava/util/Map;)V
+	public synthetic fun <init> (Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/tools/ToolDescriptor;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Ljava/lang/String;Ljava/lang/String;Lkotlinx/schema/generator/json/JsonSchemaConfig;)V
+	public synthetic fun <init> (Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Ljava/lang/String;Ljava/lang/String;Lkotlinx/schema/generator/json/JsonSchemaConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun execute (Ljava/lang/Object;Lai/koog/agents/core/tools/ToolCallMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun execute (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class ai/koog/agents/core/tools/ToolBase {
+	public fun <init> (Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/tools/ToolDescriptor;Ljava/util/Map;)V
+	public synthetic fun <init> (Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/tools/ToolDescriptor;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Ljava/lang/String;Ljava/lang/String;Lkotlinx/schema/generator/json/JsonSchemaConfig;)V
+	public synthetic fun <init> (Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Ljava/lang/String;Ljava/lang/String;Lkotlinx/schema/generator/json/JsonSchemaConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun decodeArgs (Lai/koog/serialization/JSONObject;Lai/koog/serialization/JSONSerializer;)Ljava/lang/Object;
+	public fun decodeResult (Lai/koog/serialization/JSONElement;Lai/koog/serialization/JSONSerializer;)Ljava/lang/Object;
+	public fun encodeArgs (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Lai/koog/serialization/JSONObject;
+	public final fun encodeArgsToString (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Ljava/lang/String;
+	public final fun encodeArgsToStringUnsafe (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Ljava/lang/String;
+	public final fun encodeArgsUnsafe (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Lai/koog/serialization/JSONObject;
+	public fun encodeResult (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Lai/koog/serialization/JSONElement;
+	public fun encodeResultToString (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Ljava/lang/String;
+	public final fun encodeResultToStringUnsafe (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Ljava/lang/String;
+	public abstract fun execute (Ljava/lang/Object;Lai/koog/agents/core/tools/ToolCallMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getArgsType ()Lai/koog/serialization/TypeToken;
+	public final fun getDescriptor ()Lai/koog/agents/core/tools/ToolDescriptor;
+	public final fun getMetadata ()Ljava/util/Map;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getResultType ()Lai/koog/serialization/TypeToken;
+}
+
+public final class ai/koog/agents/core/tools/ToolCallMetadata : java/util/Map, kotlin/jvm/internal/markers/KMappedMarker {
+	public static final field Companion Lai/koog/agents/core/tools/ToolCallMetadata$Companion;
+	public fun <init> (Ljava/util/Map;)V
+	public fun clear ()V
+	public synthetic fun compute (Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;
+	public fun compute (Ljava/lang/String;Ljava/util/function/BiFunction;)Ljava/lang/Object;
+	public synthetic fun computeIfAbsent (Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object;
+	public fun computeIfAbsent (Ljava/lang/String;Ljava/util/function/Function;)Ljava/lang/Object;
+	public synthetic fun computeIfPresent (Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;
+	public fun computeIfPresent (Ljava/lang/String;Ljava/util/function/BiFunction;)Ljava/lang/Object;
+	public final fun containsKey (Ljava/lang/Object;)Z
+	public fun containsKey (Ljava/lang/String;)Z
+	public fun containsValue (Ljava/lang/Object;)Z
+	public final fun entrySet ()Ljava/util/Set;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun get (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun get (Ljava/lang/String;)Ljava/lang/Object;
+	public fun getEntries ()Ljava/util/Set;
+	public fun getKeys ()Ljava/util/Set;
+	public fun getSize ()I
+	public fun getValues ()Ljava/util/Collection;
+	public fun hashCode ()I
+	public fun isEmpty ()Z
+	public final fun keySet ()Ljava/util/Set;
+	public synthetic fun merge (Ljava/lang/Object;Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;
+	public fun merge (Ljava/lang/String;Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;
+	public final fun plus (Lai/koog/agents/core/tools/ToolCallMetadata;)Lai/koog/agents/core/tools/ToolCallMetadata;
+	public final fun plus (Ljava/util/Map;)Lai/koog/agents/core/tools/ToolCallMetadata;
+	public synthetic fun put (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun put (Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun putAll (Ljava/util/Map;)V
+	public synthetic fun putIfAbsent (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun putIfAbsent (Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun remove (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun remove (Ljava/lang/Object;Ljava/lang/Object;)Z
+	public synthetic fun replace (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun replace (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z
+	public fun replace (Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun replace (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Z
+	public fun replaceAll (Ljava/util/function/BiFunction;)V
+	public final fun size ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun values ()Ljava/util/Collection;
+}
+
+public final class ai/koog/agents/core/tools/ToolCallMetadata$Companion {
+	public final fun getEMPTY ()Lai/koog/agents/core/tools/ToolCallMetadata;
+	public final fun of ([Lkotlin/Pair;)Lai/koog/agents/core/tools/ToolCallMetadata;
+}
+
+public class ai/koog/agents/core/tools/ToolDescriptor {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/message/CacheControl;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/message/CacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/message/CacheControl;)Lai/koog/agents/core/tools/ToolDescriptor;
+	public static synthetic fun copy$default (Lai/koog/agents/core/tools/ToolDescriptor;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)Lai/koog/agents/core/tools/ToolDescriptor;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCacheControl ()Lai/koog/prompt/message/CacheControl;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getOptionalParameters ()Ljava/util/List;
+	public final fun getRequiredParameters ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun withCacheControl (Lai/koog/prompt/message/CacheControl;)Lai/koog/agents/core/tools/ToolDescriptor;
+}
+
+public abstract class ai/koog/agents/core/tools/ToolException : java/lang/Exception {
+	public static final field Companion Lai/koog/agents/core/tools/ToolException$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getMessage ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/koog/agents/core/tools/ToolException;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/koog/agents/core/tools/ToolException$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/core/tools/ToolException$ValidationFailure : ai/koog/agents/core/tools/ToolException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class ai/koog/agents/core/tools/ToolExceptionKt {
+	public static final fun fail (Ljava/lang/String;)Ljava/lang/Void;
+	public static final fun validate (ZLkotlin/jvm/functions/Function0;)V
+	public static final fun validateNotNull (Ljava/lang/Object;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/core/tools/ToolParameterDescriptor {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/tools/ToolParameterType;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lai/koog/agents/core/tools/ToolParameterType;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/tools/ToolParameterType;)Lai/koog/agents/core/tools/ToolParameterDescriptor;
+	public static synthetic fun copy$default (Lai/koog/agents/core/tools/ToolParameterDescriptor;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/tools/ToolParameterType;ILjava/lang/Object;)Lai/koog/agents/core/tools/ToolParameterDescriptor;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Lai/koog/agents/core/tools/ToolParameterType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class ai/koog/agents/core/tools/ToolParameterType {
+	public static final field Companion Lai/koog/agents/core/tools/ToolParameterType$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getName ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/tools/ToolParameterType$AnyOf : ai/koog/agents/core/tools/ToolParameterType {
+	public fun <init> ([Lai/koog/agents/core/tools/ToolParameterDescriptor;)V
+	public final fun component1 ()[Lai/koog/agents/core/tools/ToolParameterDescriptor;
+	public final fun copy ([Lai/koog/agents/core/tools/ToolParameterDescriptor;)Lai/koog/agents/core/tools/ToolParameterType$AnyOf;
+	public static synthetic fun copy$default (Lai/koog/agents/core/tools/ToolParameterType$AnyOf;[Lai/koog/agents/core/tools/ToolParameterDescriptor;ILjava/lang/Object;)Lai/koog/agents/core/tools/ToolParameterType$AnyOf;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTypes ()[Lai/koog/agents/core/tools/ToolParameterDescriptor;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/tools/ToolParameterType$Boolean : ai/koog/agents/core/tools/ToolParameterType {
+	public static final field INSTANCE Lai/koog/agents/core/tools/ToolParameterType$Boolean;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/tools/ToolParameterType$Companion {
+	public final fun Enum (Lkotlin/enums/EnumEntries;)Lai/koog/agents/core/tools/ToolParameterType$Enum;
+	public final fun Enum ([Ljava/lang/Enum;)Lai/koog/agents/core/tools/ToolParameterType$Enum;
+}
+
+public final class ai/koog/agents/core/tools/ToolParameterType$Enum : ai/koog/agents/core/tools/ToolParameterType {
+	public fun <init> ([Ljava/lang/String;)V
+	public final fun component1 ()[Ljava/lang/String;
+	public final fun copy ([Ljava/lang/String;)Lai/koog/agents/core/tools/ToolParameterType$Enum;
+	public static synthetic fun copy$default (Lai/koog/agents/core/tools/ToolParameterType$Enum;[Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/core/tools/ToolParameterType$Enum;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEntries ()[Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/tools/ToolParameterType$Float : ai/koog/agents/core/tools/ToolParameterType {
+	public static final field INSTANCE Lai/koog/agents/core/tools/ToolParameterType$Float;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/tools/ToolParameterType$Integer : ai/koog/agents/core/tools/ToolParameterType {
+	public static final field INSTANCE Lai/koog/agents/core/tools/ToolParameterType$Integer;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/tools/ToolParameterType$List : ai/koog/agents/core/tools/ToolParameterType {
+	public fun <init> (Lai/koog/agents/core/tools/ToolParameterType;)V
+	public final fun component1 ()Lai/koog/agents/core/tools/ToolParameterType;
+	public final fun copy (Lai/koog/agents/core/tools/ToolParameterType;)Lai/koog/agents/core/tools/ToolParameterType$List;
+	public static synthetic fun copy$default (Lai/koog/agents/core/tools/ToolParameterType$List;Lai/koog/agents/core/tools/ToolParameterType;ILjava/lang/Object;)Lai/koog/agents/core/tools/ToolParameterType$List;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getItemsType ()Lai/koog/agents/core/tools/ToolParameterType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/tools/ToolParameterType$Null : ai/koog/agents/core/tools/ToolParameterType {
+	public static final field INSTANCE Lai/koog/agents/core/tools/ToolParameterType$Null;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/tools/ToolParameterType$Object : ai/koog/agents/core/tools/ToolParameterType {
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/lang/Boolean;Lai/koog/agents/core/tools/ToolParameterType;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Ljava/lang/Boolean;Lai/koog/agents/core/tools/ToolParameterType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/lang/Boolean;
+	public final fun component4 ()Lai/koog/agents/core/tools/ToolParameterType;
+	public final fun copy (Ljava/util/List;Ljava/util/List;Ljava/lang/Boolean;Lai/koog/agents/core/tools/ToolParameterType;)Lai/koog/agents/core/tools/ToolParameterType$Object;
+	public static synthetic fun copy$default (Lai/koog/agents/core/tools/ToolParameterType$Object;Ljava/util/List;Ljava/util/List;Ljava/lang/Boolean;Lai/koog/agents/core/tools/ToolParameterType;ILjava/lang/Object;)Lai/koog/agents/core/tools/ToolParameterType$Object;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdditionalProperties ()Ljava/lang/Boolean;
+	public final fun getAdditionalPropertiesType ()Lai/koog/agents/core/tools/ToolParameterType;
+	public final fun getProperties ()Ljava/util/List;
+	public final fun getRequiredProperties ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/tools/ToolParameterType$String : ai/koog/agents/core/tools/ToolParameterType {
+	public static final field INSTANCE Lai/koog/agents/core/tools/ToolParameterType$String;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/tools/ToolRegistry {
+	public static final field Companion Lai/koog/agents/core/tools/ToolRegistry$Companion;
+	public fun <init> ()V
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public final fun add (Lai/koog/agents/core/tools/ToolBase;)V
+	public final fun addAll ([Lai/koog/agents/core/tools/ToolBase;)V
+	public static final fun builder ()Lai/koog/agents/core/tools/ToolRegistryBuilder;
+	public final fun getTool (Ljava/lang/String;)Lai/koog/agents/core/tools/ToolBase;
+	public final fun getToolOrNull (Ljava/lang/String;)Lai/koog/agents/core/tools/ToolBase;
+	public final fun getTools ()Ljava/util/List;
+	public final fun plus (Lai/koog/agents/core/tools/ToolRegistry;)Lai/koog/agents/core/tools/ToolRegistry;
+}
+
+public final class ai/koog/agents/core/tools/ToolRegistry$Companion {
+	public final fun builder ()Lai/koog/agents/core/tools/ToolRegistryBuilder;
+	public final fun getEMPTY ()Lai/koog/agents/core/tools/ToolRegistry;
+}
+
+public final class ai/koog/agents/core/tools/ToolRegistryBuilder {
+	public fun <init> ()V
+	public final fun build ()Lai/koog/agents/core/tools/ToolRegistry;
+	public final fun tool (Lai/koog/agents/core/tools/ToolBase;)Lai/koog/agents/core/tools/ToolRegistryBuilder;
+	public final fun tool (Ljava/lang/reflect/Method;)Lai/koog/agents/core/tools/ToolRegistryBuilder;
+	public final fun tool (Ljava/lang/reflect/Method;Ljava/lang/Object;)Lai/koog/agents/core/tools/ToolRegistryBuilder;
+	public final fun tool (Ljava/lang/reflect/Method;Ljava/lang/Object;Ljava/lang/String;)Lai/koog/agents/core/tools/ToolRegistryBuilder;
+	public final fun tool (Ljava/lang/reflect/Method;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)Lai/koog/agents/core/tools/ToolRegistryBuilder;
+	public final fun tool (Lkotlin/reflect/KFunction;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)Lai/koog/agents/core/tools/ToolRegistryBuilder;
+	public static synthetic fun tool$default (Lai/koog/agents/core/tools/ToolRegistryBuilder;Ljava/lang/reflect/Method;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/core/tools/ToolRegistryBuilder;
+	public static synthetic fun tool$default (Lai/koog/agents/core/tools/ToolRegistryBuilder;Lkotlin/reflect/KFunction;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/core/tools/ToolRegistryBuilder;
+	public final fun tools (Lai/koog/agents/core/tools/reflect/ToolSet;)Lai/koog/agents/core/tools/ToolRegistryBuilder;
+	public final fun tools (Ljava/util/List;)Lai/koog/agents/core/tools/ToolRegistryBuilder;
+}
+
+public abstract interface annotation class ai/koog/agents/core/tools/annotations/InternalAgentToolsApi : java/lang/annotation/Annotation {
+}
+
+public abstract interface annotation class ai/koog/agents/core/tools/annotations/LLMDescription : java/lang/annotation/Annotation {
+	public abstract fun value ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/agents/core/tools/annotations/LLMDescription$Impl : ai/koog/agents/core/tools/annotations/LLMDescription {
+	public fun <init> (Ljava/lang/String;)V
+	public final synthetic fun value ()Ljava/lang/String;
+}
+
+public abstract interface annotation class ai/koog/agents/core/tools/annotations/Tool : java/lang/annotation/Annotation {
+	public abstract fun customName ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/tools/reflect/ToolFromCallable : ai/koog/agents/core/tools/Tool {
+	public fun <init> (Lkotlin/reflect/KCallable;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lkotlin/reflect/KCallable;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun decodeArgs (Lai/koog/serialization/JSONObject;Lai/koog/serialization/JSONSerializer;)Lai/koog/agents/core/tools/reflect/ToolFromCallable$Args;
+	public synthetic fun decodeArgs (Lai/koog/serialization/JSONObject;Lai/koog/serialization/JSONSerializer;)Ljava/lang/Object;
+	public fun decodeResult (Lai/koog/serialization/JSONElement;Lai/koog/serialization/JSONSerializer;)Ljava/lang/Object;
+	public fun encodeArgs (Lai/koog/agents/core/tools/reflect/ToolFromCallable$Args;Lai/koog/serialization/JSONSerializer;)Lai/koog/serialization/JSONObject;
+	public synthetic fun encodeArgs (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Lai/koog/serialization/JSONObject;
+	public fun encodeResult (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Lai/koog/serialization/JSONElement;
+	public fun execute (Lai/koog/agents/core/tools/reflect/ToolFromCallable$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun execute (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getCallable ()Lkotlin/reflect/KCallable;
+	public final fun getThisRef ()Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/core/tools/reflect/ToolFromCallable$Args {
+	public fun <init> (Ljava/util/Map;)V
+	public final fun getParameters ()Ljava/util/Map;
+}
+
+public final class ai/koog/agents/core/tools/reflect/ToolFromCallableExtensionsKt {
+	public static final fun asTool (Lkotlin/reflect/KFunction;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)Lai/koog/agents/core/tools/reflect/ToolFromCallable;
+	public static synthetic fun asTool$default (Lkotlin/reflect/KFunction;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/core/tools/reflect/ToolFromCallable;
+	public static final fun asTools (Lkotlin/reflect/KClass;Ljava/lang/Object;)Ljava/util/List;
+	public static synthetic fun asTools$default (Lkotlin/reflect/KClass;Ljava/lang/Object;ILjava/lang/Object;)Ljava/util/List;
+}
+
+public abstract interface class ai/koog/agents/core/tools/reflect/ToolSet {
+	public fun asTools ()Ljava/util/List;
+	public fun getName ()Ljava/lang/String;
+	public fun getTool (Ljava/lang/String;)Lai/koog/agents/core/tools/reflect/ToolFromCallable;
+}
+
+public final class ai/koog/agents/core/tools/reflect/ToolSet$DefaultImpls {
+	public static fun asTools (Lai/koog/agents/core/tools/reflect/ToolSet;)Ljava/util/List;
+	public static fun getName (Lai/koog/agents/core/tools/reflect/ToolSet;)Ljava/lang/String;
+	public static fun getTool (Lai/koog/agents/core/tools/reflect/ToolSet;Ljava/lang/String;)Lai/koog/agents/core/tools/reflect/ToolFromCallable;
+}
+
+public final class ai/koog/agents/core/tools/reflect/java/JavaToolFromCallableExtensionsKt {
+	public static final fun asTools (Ljava/lang/Class;Ljava/lang/Object;)Ljava/util/List;
+	public static synthetic fun asTools$default (Ljava/lang/Class;Ljava/lang/Object;ILjava/lang/Object;)Ljava/util/List;
+}
+
+public final class ai/koog/agents/core/tools/schema/SchemaGenerator_jvmCommonKt {
+	public static final fun getJsonSchema (Lai/koog/serialization/TypeToken;Lkotlinx/schema/generator/json/JsonSchemaConfig;)Lkotlinx/schema/json/JsonSchema;
+	public static synthetic fun getJsonSchema$default (Lai/koog/serialization/TypeToken;Lkotlinx/schema/generator/json/JsonSchemaConfig;ILjava/lang/Object;)Lkotlinx/schema/json/JsonSchema;
+}
+
+public abstract interface class ai/koog/agents/core/tools/serialization/ToolDescriptorSchemaGenerator {
+	public abstract fun generate (Lai/koog/agents/core/tools/ToolDescriptor;)Lkotlinx/serialization/json/JsonObject;
+}
+

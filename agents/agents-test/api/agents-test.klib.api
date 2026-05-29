@@ -1,0 +1,844 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:agents-test>
+abstract interface ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase : ai.koog.agents.core.dsl.builder/BaseBuilder<ai.koog.agents.core.agent.context/AIAgentContext> { // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase|null[0]
+    abstract var agentInput // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.agentInput|{}agentInput[0]
+        abstract fun <get-agentInput>(): kotlin/Any? // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.agentInput.<get-agentInput>|<get-agentInput>(){}[0]
+        abstract fun <set-agentInput>(kotlin/Any?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.agentInput.<set-agentInput>|<set-agentInput>(kotlin.Any?){}[0]
+    abstract var agentInputType // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.agentInputType|{}agentInputType[0]
+        abstract fun <get-agentInputType>(): ai.koog.serialization/TypeToken? // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.agentInputType.<get-agentInputType>|<get-agentInputType>(){}[0]
+        abstract fun <set-agentInputType>(ai.koog.serialization/TypeToken?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.agentInputType.<set-agentInputType>|<set-agentInputType>(ai.koog.serialization.TypeToken?){}[0]
+    abstract var config // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.config|{}config[0]
+        abstract fun <get-config>(): ai.koog.agents.core.agent.config/AIAgentConfig? // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.config.<get-config>|<get-config>(){}[0]
+        abstract fun <set-config>(ai.koog.agents.core.agent.config/AIAgentConfig?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.config.<set-config>|<set-config>(ai.koog.agents.core.agent.config.AIAgentConfig?){}[0]
+    abstract var environment // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.environment|{}environment[0]
+        abstract fun <get-environment>(): ai.koog.agents.core.environment/AIAgentEnvironment? // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.environment.<get-environment>|<get-environment>(){}[0]
+        abstract fun <set-environment>(ai.koog.agents.core.environment/AIAgentEnvironment?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.environment.<set-environment>|<set-environment>(ai.koog.agents.core.environment.AIAgentEnvironment?){}[0]
+    abstract var executionInfo // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.executionInfo|{}executionInfo[0]
+        abstract fun <get-executionInfo>(): ai.koog.agents.core.agent.execution/AgentExecutionInfo? // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.executionInfo.<get-executionInfo>|<get-executionInfo>(){}[0]
+        abstract fun <set-executionInfo>(ai.koog.agents.core.agent.execution/AgentExecutionInfo?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.executionInfo.<set-executionInfo>|<set-executionInfo>(ai.koog.agents.core.agent.execution.AgentExecutionInfo?){}[0]
+    abstract var llm // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.llm|{}llm[0]
+        abstract fun <get-llm>(): ai.koog.agents.core.agent.context/AIAgentLLMContext? // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.llm.<get-llm>|<get-llm>(){}[0]
+        abstract fun <set-llm>(ai.koog.agents.core.agent.context/AIAgentLLMContext?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.llm.<set-llm>|<set-llm>(ai.koog.agents.core.agent.context.AIAgentLLMContext?){}[0]
+    abstract var runId // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.runId|{}runId[0]
+        abstract fun <get-runId>(): kotlin/String? // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.runId.<get-runId>|<get-runId>(){}[0]
+        abstract fun <set-runId>(kotlin/String?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.runId.<set-runId>|<set-runId>(kotlin.String?){}[0]
+    abstract var stateManager // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.stateManager|{}stateManager[0]
+        abstract fun <get-stateManager>(): ai.koog.agents.core.agent.entity/AIAgentStateManager? // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.stateManager.<get-stateManager>|<get-stateManager>(){}[0]
+        abstract fun <set-stateManager>(ai.koog.agents.core.agent.entity/AIAgentStateManager?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.stateManager.<set-stateManager>|<set-stateManager>(ai.koog.agents.core.agent.entity.AIAgentStateManager?){}[0]
+    abstract var storage // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.storage|{}storage[0]
+        abstract fun <get-storage>(): ai.koog.agents.core.agent.entity/AIAgentStorage? // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.storage.<get-storage>|<get-storage>(){}[0]
+        abstract fun <set-storage>(ai.koog.agents.core.agent.entity/AIAgentStorage?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.storage.<set-storage>|<set-storage>(ai.koog.agents.core.agent.entity.AIAgentStorage?){}[0]
+    abstract var strategyName // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.strategyName|{}strategyName[0]
+        abstract fun <get-strategyName>(): kotlin/String? // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.strategyName.<get-strategyName>|<get-strategyName>(){}[0]
+        abstract fun <set-strategyName>(kotlin/String?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.strategyName.<set-strategyName>|<set-strategyName>(kotlin.String?){}[0]
+
+    abstract fun build(): ai.koog.agents.core.agent.context/AIAgentContext // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.build|build(){}[0]
+    abstract fun copy(ai.koog.agents.core.environment/AIAgentEnvironment? = ..., kotlin/Any? = ..., ai.koog.serialization/TypeToken? = ..., ai.koog.agents.core.agent.config/AIAgentConfig? = ..., ai.koog.agents.core.agent.context/AIAgentLLMContext? = ..., ai.koog.agents.core.agent.entity/AIAgentStateManager? = ..., ai.koog.agents.core.agent.entity/AIAgentStorage? = ..., kotlin/String? = ..., kotlin/String? = ..., ai.koog.agents.core.agent.execution/AgentExecutionInfo? = ...): ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase // ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase.copy|copy(ai.koog.agents.core.environment.AIAgentEnvironment?;kotlin.Any?;ai.koog.serialization.TypeToken?;ai.koog.agents.core.agent.config.AIAgentConfig?;ai.koog.agents.core.agent.context.AIAgentLLMContext?;ai.koog.agents.core.agent.entity.AIAgentStateManager?;ai.koog.agents.core.agent.entity.AIAgentStorage?;kotlin.String?;kotlin.String?;ai.koog.agents.core.agent.execution.AgentExecutionInfo?){}[0]
+}
+
+sealed interface ai.koog.agents.testing.feature/AssertionResult { // ai.koog.agents.testing.feature/AssertionResult|null[0]
+    final class False : ai.koog.agents.testing.feature/AssertionResult { // ai.koog.agents.testing.feature/AssertionResult.False|null[0]
+        constructor <init>(kotlin/String) // ai.koog.agents.testing.feature/AssertionResult.False.<init>|<init>(kotlin.String){}[0]
+
+        final val message // ai.koog.agents.testing.feature/AssertionResult.False.message|{}message[0]
+            final fun <get-message>(): kotlin/String // ai.koog.agents.testing.feature/AssertionResult.False.message.<get-message>|<get-message>(){}[0]
+    }
+
+    final class NotEqual : ai.koog.agents.testing.feature/AssertionResult { // ai.koog.agents.testing.feature/AssertionResult.NotEqual|null[0]
+        constructor <init>(kotlin/Any?, kotlin/Any?, kotlin/String) // ai.koog.agents.testing.feature/AssertionResult.NotEqual.<init>|<init>(kotlin.Any?;kotlin.Any?;kotlin.String){}[0]
+
+        final val actual // ai.koog.agents.testing.feature/AssertionResult.NotEqual.actual|{}actual[0]
+            final fun <get-actual>(): kotlin/Any? // ai.koog.agents.testing.feature/AssertionResult.NotEqual.actual.<get-actual>|<get-actual>(){}[0]
+        final val expected // ai.koog.agents.testing.feature/AssertionResult.NotEqual.expected|{}expected[0]
+            final fun <get-expected>(): kotlin/Any? // ai.koog.agents.testing.feature/AssertionResult.NotEqual.expected.<get-expected>|<get-expected>(){}[0]
+        final val message // ai.koog.agents.testing.feature/AssertionResult.NotEqual.message|{}message[0]
+            final fun <get-message>(): kotlin/String // ai.koog.agents.testing.feature/AssertionResult.NotEqual.message.<get-message>|<get-message>(){}[0]
+    }
+}
+
+final class <#A: kotlin/Any?, #B: kotlin/Any?> ai.koog.agents.testing.feature/EdgeAssertion { // ai.koog.agents.testing.feature/EdgeAssertion|null[0]
+    constructor <init>(ai.koog.agents.testing.feature/NodeReference<#A, #B>, ai.koog.agents.core.agent.context/AIAgentGraphContextBase, #B, ai.koog.agents.testing.feature/NodeReference<*, *>) // ai.koog.agents.testing.feature/EdgeAssertion.<init>|<init>(ai.koog.agents.testing.feature.NodeReference<1:0,1:1>;ai.koog.agents.core.agent.context.AIAgentGraphContextBase;1:1;ai.koog.agents.testing.feature.NodeReference<*,*>){}[0]
+
+    final val context // ai.koog.agents.testing.feature/EdgeAssertion.context|{}context[0]
+        final fun <get-context>(): ai.koog.agents.core.agent.context/AIAgentGraphContextBase // ai.koog.agents.testing.feature/EdgeAssertion.context.<get-context>|<get-context>(){}[0]
+    final val expectedNode // ai.koog.agents.testing.feature/EdgeAssertion.expectedNode|{}expectedNode[0]
+        final fun <get-expectedNode>(): ai.koog.agents.testing.feature/NodeReference<*, *> // ai.koog.agents.testing.feature/EdgeAssertion.expectedNode.<get-expectedNode>|<get-expectedNode>(){}[0]
+    final val node // ai.koog.agents.testing.feature/EdgeAssertion.node|{}node[0]
+        final fun <get-node>(): ai.koog.agents.testing.feature/NodeReference<#A, #B> // ai.koog.agents.testing.feature/EdgeAssertion.node.<get-node>|<get-node>(){}[0]
+    final val output // ai.koog.agents.testing.feature/EdgeAssertion.output|{}output[0]
+        final fun <get-output>(): #B // ai.koog.agents.testing.feature/EdgeAssertion.output.<get-output>|<get-output>(){}[0]
+
+    final fun component1(): ai.koog.agents.testing.feature/NodeReference<#A, #B> // ai.koog.agents.testing.feature/EdgeAssertion.component1|component1(){}[0]
+    final fun component2(): ai.koog.agents.core.agent.context/AIAgentGraphContextBase // ai.koog.agents.testing.feature/EdgeAssertion.component2|component2(){}[0]
+    final fun component3(): #B // ai.koog.agents.testing.feature/EdgeAssertion.component3|component3(){}[0]
+    final fun component4(): ai.koog.agents.testing.feature/NodeReference<*, *> // ai.koog.agents.testing.feature/EdgeAssertion.component4|component4(){}[0]
+    final fun copy(ai.koog.agents.testing.feature/NodeReference<#A, #B> = ..., ai.koog.agents.core.agent.context/AIAgentGraphContextBase = ..., #B = ..., ai.koog.agents.testing.feature/NodeReference<*, *> = ...): ai.koog.agents.testing.feature/EdgeAssertion<#A, #B> // ai.koog.agents.testing.feature/EdgeAssertion.copy|copy(ai.koog.agents.testing.feature.NodeReference<1:0,1:1>;ai.koog.agents.core.agent.context.AIAgentGraphContextBase;1:1;ai.koog.agents.testing.feature.NodeReference<*,*>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.testing.feature/EdgeAssertion.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.testing.feature/EdgeAssertion.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.testing.feature/EdgeAssertion.toString|toString(){}[0]
+}
+
+final class <#A: kotlin/Any?, #B: kotlin/Any?> ai.koog.agents.testing.feature/NodeOutputAssertion { // ai.koog.agents.testing.feature/NodeOutputAssertion|null[0]
+    constructor <init>(ai.koog.agents.testing.feature/NodeReference<#A, #B>, ai.koog.agents.testing.tools/DummyAIAgentContext, #A, #B) // ai.koog.agents.testing.feature/NodeOutputAssertion.<init>|<init>(ai.koog.agents.testing.feature.NodeReference<1:0,1:1>;ai.koog.agents.testing.tools.DummyAIAgentContext;1:0;1:1){}[0]
+
+    final val context // ai.koog.agents.testing.feature/NodeOutputAssertion.context|{}context[0]
+        final fun <get-context>(): ai.koog.agents.testing.tools/DummyAIAgentContext // ai.koog.agents.testing.feature/NodeOutputAssertion.context.<get-context>|<get-context>(){}[0]
+    final val expectedOutput // ai.koog.agents.testing.feature/NodeOutputAssertion.expectedOutput|{}expectedOutput[0]
+        final fun <get-expectedOutput>(): #B // ai.koog.agents.testing.feature/NodeOutputAssertion.expectedOutput.<get-expectedOutput>|<get-expectedOutput>(){}[0]
+    final val input // ai.koog.agents.testing.feature/NodeOutputAssertion.input|{}input[0]
+        final fun <get-input>(): #A // ai.koog.agents.testing.feature/NodeOutputAssertion.input.<get-input>|<get-input>(){}[0]
+    final val node // ai.koog.agents.testing.feature/NodeOutputAssertion.node|{}node[0]
+        final fun <get-node>(): ai.koog.agents.testing.feature/NodeReference<#A, #B> // ai.koog.agents.testing.feature/NodeOutputAssertion.node.<get-node>|<get-node>(){}[0]
+
+    final fun component1(): ai.koog.agents.testing.feature/NodeReference<#A, #B> // ai.koog.agents.testing.feature/NodeOutputAssertion.component1|component1(){}[0]
+    final fun component2(): ai.koog.agents.testing.tools/DummyAIAgentContext // ai.koog.agents.testing.feature/NodeOutputAssertion.component2|component2(){}[0]
+    final fun component3(): #A // ai.koog.agents.testing.feature/NodeOutputAssertion.component3|component3(){}[0]
+    final fun component4(): #B // ai.koog.agents.testing.feature/NodeOutputAssertion.component4|component4(){}[0]
+    final fun copy(ai.koog.agents.testing.feature/NodeReference<#A, #B> = ..., ai.koog.agents.testing.tools/DummyAIAgentContext = ..., #A = ..., #B = ...): ai.koog.agents.testing.feature/NodeOutputAssertion<#A, #B> // ai.koog.agents.testing.feature/NodeOutputAssertion.copy|copy(ai.koog.agents.testing.feature.NodeReference<1:0,1:1>;ai.koog.agents.testing.tools.DummyAIAgentContext;1:0;1:1){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.testing.feature/NodeOutputAssertion.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.testing.feature/NodeOutputAssertion.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.testing.feature/NodeOutputAssertion.toString|toString(){}[0]
+}
+
+final class <#A: kotlin/Any?, #B: kotlin/Any?> ai.koog.agents.testing.tools/ToolCondition { // ai.koog.agents.testing.tools/ToolCondition|null[0]
+    constructor <init>(ai.koog.agents.core.tools/Tool<#A, #B>, ai.koog.serialization/JSONSerializer, kotlin.coroutines/SuspendFunction1<#A, kotlin/Boolean>, kotlin.coroutines/SuspendFunction1<#A, #B>) // ai.koog.agents.testing.tools/ToolCondition.<init>|<init>(ai.koog.agents.core.tools.Tool<1:0,1:1>;ai.koog.serialization.JSONSerializer;kotlin.coroutines.SuspendFunction1<1:0,kotlin.Boolean>;kotlin.coroutines.SuspendFunction1<1:0,1:1>){}[0]
+
+    final val argsCondition // ai.koog.agents.testing.tools/ToolCondition.argsCondition|{}argsCondition[0]
+        final fun <get-argsCondition>(): kotlin.coroutines/SuspendFunction1<#A, kotlin/Boolean> // ai.koog.agents.testing.tools/ToolCondition.argsCondition.<get-argsCondition>|<get-argsCondition>(){}[0]
+    final val produceResult // ai.koog.agents.testing.tools/ToolCondition.produceResult|{}produceResult[0]
+        final fun <get-produceResult>(): kotlin.coroutines/SuspendFunction1<#A, #B> // ai.koog.agents.testing.tools/ToolCondition.produceResult.<get-produceResult>|<get-produceResult>(){}[0]
+    final val serializer // ai.koog.agents.testing.tools/ToolCondition.serializer|{}serializer[0]
+        final fun <get-serializer>(): ai.koog.serialization/JSONSerializer // ai.koog.agents.testing.tools/ToolCondition.serializer.<get-serializer>|<get-serializer>(){}[0]
+    final val tool // ai.koog.agents.testing.tools/ToolCondition.tool|{}tool[0]
+        final fun <get-tool>(): ai.koog.agents.core.tools/Tool<#A, #B> // ai.koog.agents.testing.tools/ToolCondition.tool.<get-tool>|<get-tool>(){}[0]
+}
+
+final class ai.koog.agents.testing.client/CapturingLLMClient : ai.koog.prompt.executor.clients/LLMClient { // ai.koog.agents.testing.client/CapturingLLMClient|null[0]
+    constructor <init>(ai.koog.prompt.message/Message.Assistant? = ..., kotlin.collections/List<ai.koog.prompt.streaming/StreamFrame> = ..., kotlin.collections/List<ai.koog.prompt.message/Message.Assistant>? = ..., ai.koog.prompt.dsl/ModerationResult = ..., kotlin.collections/List<kotlin/Double> = ..., kotlin.collections/List<kotlin.collections/List<kotlin/Double>> = ..., ai.koog.prompt.llm/LLMProvider = ...) // ai.koog.agents.testing.client/CapturingLLMClient.<init>|<init>(ai.koog.prompt.message.Message.Assistant?;kotlin.collections.List<ai.koog.prompt.streaming.StreamFrame>;kotlin.collections.List<ai.koog.prompt.message.Message.Assistant>?;ai.koog.prompt.dsl.ModerationResult;kotlin.collections.List<kotlin.Double>;kotlin.collections.List<kotlin.collections.List<kotlin.Double>>;ai.koog.prompt.llm.LLMProvider){}[0]
+
+    final var lastBatchEmbeddingInput // ai.koog.agents.testing.client/CapturingLLMClient.lastBatchEmbeddingInput|{}lastBatchEmbeddingInput[0]
+        final fun <get-lastBatchEmbeddingInput>(): kotlin.collections/List<kotlin/String>? // ai.koog.agents.testing.client/CapturingLLMClient.lastBatchEmbeddingInput.<get-lastBatchEmbeddingInput>|<get-lastBatchEmbeddingInput>(){}[0]
+        final fun <set-lastBatchEmbeddingInput>(kotlin.collections/List<kotlin/String>?) // ai.koog.agents.testing.client/CapturingLLMClient.lastBatchEmbeddingInput.<set-lastBatchEmbeddingInput>|<set-lastBatchEmbeddingInput>(kotlin.collections.List<kotlin.String>?){}[0]
+    final var lastBatchEmbeddingModel // ai.koog.agents.testing.client/CapturingLLMClient.lastBatchEmbeddingModel|{}lastBatchEmbeddingModel[0]
+        final fun <get-lastBatchEmbeddingModel>(): ai.koog.prompt.llm/LLModel? // ai.koog.agents.testing.client/CapturingLLMClient.lastBatchEmbeddingModel.<get-lastBatchEmbeddingModel>|<get-lastBatchEmbeddingModel>(){}[0]
+        final fun <set-lastBatchEmbeddingModel>(ai.koog.prompt.llm/LLModel?) // ai.koog.agents.testing.client/CapturingLLMClient.lastBatchEmbeddingModel.<set-lastBatchEmbeddingModel>|<set-lastBatchEmbeddingModel>(ai.koog.prompt.llm.LLModel?){}[0]
+    final var lastChoicesModel // ai.koog.agents.testing.client/CapturingLLMClient.lastChoicesModel|{}lastChoicesModel[0]
+        final fun <get-lastChoicesModel>(): ai.koog.prompt.llm/LLModel? // ai.koog.agents.testing.client/CapturingLLMClient.lastChoicesModel.<get-lastChoicesModel>|<get-lastChoicesModel>(){}[0]
+        final fun <set-lastChoicesModel>(ai.koog.prompt.llm/LLModel?) // ai.koog.agents.testing.client/CapturingLLMClient.lastChoicesModel.<set-lastChoicesModel>|<set-lastChoicesModel>(ai.koog.prompt.llm.LLModel?){}[0]
+    final var lastChoicesPrompt // ai.koog.agents.testing.client/CapturingLLMClient.lastChoicesPrompt|{}lastChoicesPrompt[0]
+        final fun <get-lastChoicesPrompt>(): ai.koog.prompt/Prompt? // ai.koog.agents.testing.client/CapturingLLMClient.lastChoicesPrompt.<get-lastChoicesPrompt>|<get-lastChoicesPrompt>(){}[0]
+        final fun <set-lastChoicesPrompt>(ai.koog.prompt/Prompt?) // ai.koog.agents.testing.client/CapturingLLMClient.lastChoicesPrompt.<set-lastChoicesPrompt>|<set-lastChoicesPrompt>(ai.koog.prompt.Prompt?){}[0]
+    final var lastChoicesTools // ai.koog.agents.testing.client/CapturingLLMClient.lastChoicesTools|{}lastChoicesTools[0]
+        final fun <get-lastChoicesTools>(): kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>? // ai.koog.agents.testing.client/CapturingLLMClient.lastChoicesTools.<get-lastChoicesTools>|<get-lastChoicesTools>(){}[0]
+        final fun <set-lastChoicesTools>(kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>?) // ai.koog.agents.testing.client/CapturingLLMClient.lastChoicesTools.<set-lastChoicesTools>|<set-lastChoicesTools>(kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>?){}[0]
+    final var lastEmbeddingModel // ai.koog.agents.testing.client/CapturingLLMClient.lastEmbeddingModel|{}lastEmbeddingModel[0]
+        final fun <get-lastEmbeddingModel>(): ai.koog.prompt.llm/LLModel? // ai.koog.agents.testing.client/CapturingLLMClient.lastEmbeddingModel.<get-lastEmbeddingModel>|<get-lastEmbeddingModel>(){}[0]
+        final fun <set-lastEmbeddingModel>(ai.koog.prompt.llm/LLModel?) // ai.koog.agents.testing.client/CapturingLLMClient.lastEmbeddingModel.<set-lastEmbeddingModel>|<set-lastEmbeddingModel>(ai.koog.prompt.llm.LLModel?){}[0]
+    final var lastEmbeddingText // ai.koog.agents.testing.client/CapturingLLMClient.lastEmbeddingText|{}lastEmbeddingText[0]
+        final fun <get-lastEmbeddingText>(): kotlin/String? // ai.koog.agents.testing.client/CapturingLLMClient.lastEmbeddingText.<get-lastEmbeddingText>|<get-lastEmbeddingText>(){}[0]
+        final fun <set-lastEmbeddingText>(kotlin/String?) // ai.koog.agents.testing.client/CapturingLLMClient.lastEmbeddingText.<set-lastEmbeddingText>|<set-lastEmbeddingText>(kotlin.String?){}[0]
+    final var lastExecutedModel // ai.koog.agents.testing.client/CapturingLLMClient.lastExecutedModel|{}lastExecutedModel[0]
+        final fun <get-lastExecutedModel>(): ai.koog.prompt.llm/LLModel? // ai.koog.agents.testing.client/CapturingLLMClient.lastExecutedModel.<get-lastExecutedModel>|<get-lastExecutedModel>(){}[0]
+        final fun <set-lastExecutedModel>(ai.koog.prompt.llm/LLModel?) // ai.koog.agents.testing.client/CapturingLLMClient.lastExecutedModel.<set-lastExecutedModel>|<set-lastExecutedModel>(ai.koog.prompt.llm.LLModel?){}[0]
+    final var lastExecutedPrompt // ai.koog.agents.testing.client/CapturingLLMClient.lastExecutedPrompt|{}lastExecutedPrompt[0]
+        final fun <get-lastExecutedPrompt>(): ai.koog.prompt/Prompt? // ai.koog.agents.testing.client/CapturingLLMClient.lastExecutedPrompt.<get-lastExecutedPrompt>|<get-lastExecutedPrompt>(){}[0]
+        final fun <set-lastExecutedPrompt>(ai.koog.prompt/Prompt?) // ai.koog.agents.testing.client/CapturingLLMClient.lastExecutedPrompt.<set-lastExecutedPrompt>|<set-lastExecutedPrompt>(ai.koog.prompt.Prompt?){}[0]
+    final var lastExecutedTools // ai.koog.agents.testing.client/CapturingLLMClient.lastExecutedTools|{}lastExecutedTools[0]
+        final fun <get-lastExecutedTools>(): kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>? // ai.koog.agents.testing.client/CapturingLLMClient.lastExecutedTools.<get-lastExecutedTools>|<get-lastExecutedTools>(){}[0]
+        final fun <set-lastExecutedTools>(kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>?) // ai.koog.agents.testing.client/CapturingLLMClient.lastExecutedTools.<set-lastExecutedTools>|<set-lastExecutedTools>(kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>?){}[0]
+    final var lastModerationModel // ai.koog.agents.testing.client/CapturingLLMClient.lastModerationModel|{}lastModerationModel[0]
+        final fun <get-lastModerationModel>(): ai.koog.prompt.llm/LLModel? // ai.koog.agents.testing.client/CapturingLLMClient.lastModerationModel.<get-lastModerationModel>|<get-lastModerationModel>(){}[0]
+        final fun <set-lastModerationModel>(ai.koog.prompt.llm/LLModel?) // ai.koog.agents.testing.client/CapturingLLMClient.lastModerationModel.<set-lastModerationModel>|<set-lastModerationModel>(ai.koog.prompt.llm.LLModel?){}[0]
+    final var lastModerationPrompt // ai.koog.agents.testing.client/CapturingLLMClient.lastModerationPrompt|{}lastModerationPrompt[0]
+        final fun <get-lastModerationPrompt>(): ai.koog.prompt/Prompt? // ai.koog.agents.testing.client/CapturingLLMClient.lastModerationPrompt.<get-lastModerationPrompt>|<get-lastModerationPrompt>(){}[0]
+        final fun <set-lastModerationPrompt>(ai.koog.prompt/Prompt?) // ai.koog.agents.testing.client/CapturingLLMClient.lastModerationPrompt.<set-lastModerationPrompt>|<set-lastModerationPrompt>(ai.koog.prompt.Prompt?){}[0]
+    final var lastStreamingModel // ai.koog.agents.testing.client/CapturingLLMClient.lastStreamingModel|{}lastStreamingModel[0]
+        final fun <get-lastStreamingModel>(): ai.koog.prompt.llm/LLModel? // ai.koog.agents.testing.client/CapturingLLMClient.lastStreamingModel.<get-lastStreamingModel>|<get-lastStreamingModel>(){}[0]
+        final fun <set-lastStreamingModel>(ai.koog.prompt.llm/LLModel?) // ai.koog.agents.testing.client/CapturingLLMClient.lastStreamingModel.<set-lastStreamingModel>|<set-lastStreamingModel>(ai.koog.prompt.llm.LLModel?){}[0]
+    final var lastStreamingPrompt // ai.koog.agents.testing.client/CapturingLLMClient.lastStreamingPrompt|{}lastStreamingPrompt[0]
+        final fun <get-lastStreamingPrompt>(): ai.koog.prompt/Prompt? // ai.koog.agents.testing.client/CapturingLLMClient.lastStreamingPrompt.<get-lastStreamingPrompt>|<get-lastStreamingPrompt>(){}[0]
+        final fun <set-lastStreamingPrompt>(ai.koog.prompt/Prompt?) // ai.koog.agents.testing.client/CapturingLLMClient.lastStreamingPrompt.<set-lastStreamingPrompt>|<set-lastStreamingPrompt>(ai.koog.prompt.Prompt?){}[0]
+
+    final fun close() // ai.koog.agents.testing.client/CapturingLLMClient.close|close(){}[0]
+    final fun executeStreaming(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.agents.testing.client/CapturingLLMClient.executeStreaming|executeStreaming(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    final fun llmProvider(): ai.koog.prompt.llm/LLMProvider // ai.koog.agents.testing.client/CapturingLLMClient.llmProvider|llmProvider(){}[0]
+    final suspend fun embed(kotlin.collections/List<kotlin/String>, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin.collections/List<kotlin/Double>> // ai.koog.agents.testing.client/CapturingLLMClient.embed|embed(kotlin.collections.List<kotlin.String>;ai.koog.prompt.llm.LLModel){}[0]
+    final suspend fun embed(kotlin/String, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin/Double> // ai.koog.agents.testing.client/CapturingLLMClient.embed|embed(kotlin.String;ai.koog.prompt.llm.LLModel){}[0]
+    final suspend fun execute(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): ai.koog.prompt.message/Message.Assistant // ai.koog.agents.testing.client/CapturingLLMClient.execute|execute(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    final suspend fun executeMultipleChoices(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.koog.prompt.message/Message.Assistant> // ai.koog.agents.testing.client/CapturingLLMClient.executeMultipleChoices|executeMultipleChoices(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    final suspend fun moderate(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): ai.koog.prompt.dsl/ModerationResult // ai.koog.agents.testing.client/CapturingLLMClient.moderate|moderate(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+}
+
+final class ai.koog.agents.testing.feature/GraphAssertions { // ai.koog.agents.testing.feature/GraphAssertions|null[0]
+    constructor <init>(kotlin/String, ai.koog.agents.testing.feature/NodeReference.Start<*>, ai.koog.agents.testing.feature/NodeReference.Finish<*>, kotlin.collections/Map<kotlin/String, ai.koog.agents.testing.feature/NodeReference<*, *>>, kotlin.collections/List<ai.koog.agents.testing.feature/NodeOutputAssertion<*, *>>, kotlin.collections/List<ai.koog.agents.testing.feature/EdgeAssertion<*, *>>, kotlin.collections/List<ai.koog.agents.testing.feature/UnconditionalEdgeAssertion>, kotlin.collections/List<ai.koog.agents.testing.feature/ReachabilityAssertion>, kotlin.collections/MutableList<ai.koog.agents.testing.feature/SubGraphAssertions>) // ai.koog.agents.testing.feature/GraphAssertions.<init>|<init>(kotlin.String;ai.koog.agents.testing.feature.NodeReference.Start<*>;ai.koog.agents.testing.feature.NodeReference.Finish<*>;kotlin.collections.Map<kotlin.String,ai.koog.agents.testing.feature.NodeReference<*,*>>;kotlin.collections.List<ai.koog.agents.testing.feature.NodeOutputAssertion<*,*>>;kotlin.collections.List<ai.koog.agents.testing.feature.EdgeAssertion<*,*>>;kotlin.collections.List<ai.koog.agents.testing.feature.UnconditionalEdgeAssertion>;kotlin.collections.List<ai.koog.agents.testing.feature.ReachabilityAssertion>;kotlin.collections.MutableList<ai.koog.agents.testing.feature.SubGraphAssertions>){}[0]
+
+    final val edgeAssertions // ai.koog.agents.testing.feature/GraphAssertions.edgeAssertions|{}edgeAssertions[0]
+        final fun <get-edgeAssertions>(): kotlin.collections/List<ai.koog.agents.testing.feature/EdgeAssertion<*, *>> // ai.koog.agents.testing.feature/GraphAssertions.edgeAssertions.<get-edgeAssertions>|<get-edgeAssertions>(){}[0]
+    final val finish // ai.koog.agents.testing.feature/GraphAssertions.finish|{}finish[0]
+        final fun <get-finish>(): ai.koog.agents.testing.feature/NodeReference.Finish<*> // ai.koog.agents.testing.feature/GraphAssertions.finish.<get-finish>|<get-finish>(){}[0]
+    final val name // ai.koog.agents.testing.feature/GraphAssertions.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.koog.agents.testing.feature/GraphAssertions.name.<get-name>|<get-name>(){}[0]
+    final val nodeOutputAssertions // ai.koog.agents.testing.feature/GraphAssertions.nodeOutputAssertions|{}nodeOutputAssertions[0]
+        final fun <get-nodeOutputAssertions>(): kotlin.collections/List<ai.koog.agents.testing.feature/NodeOutputAssertion<*, *>> // ai.koog.agents.testing.feature/GraphAssertions.nodeOutputAssertions.<get-nodeOutputAssertions>|<get-nodeOutputAssertions>(){}[0]
+    final val nodes // ai.koog.agents.testing.feature/GraphAssertions.nodes|{}nodes[0]
+        final fun <get-nodes>(): kotlin.collections/Map<kotlin/String, ai.koog.agents.testing.feature/NodeReference<*, *>> // ai.koog.agents.testing.feature/GraphAssertions.nodes.<get-nodes>|<get-nodes>(){}[0]
+    final val reachabilityAssertions // ai.koog.agents.testing.feature/GraphAssertions.reachabilityAssertions|{}reachabilityAssertions[0]
+        final fun <get-reachabilityAssertions>(): kotlin.collections/List<ai.koog.agents.testing.feature/ReachabilityAssertion> // ai.koog.agents.testing.feature/GraphAssertions.reachabilityAssertions.<get-reachabilityAssertions>|<get-reachabilityAssertions>(){}[0]
+    final val start // ai.koog.agents.testing.feature/GraphAssertions.start|{}start[0]
+        final fun <get-start>(): ai.koog.agents.testing.feature/NodeReference.Start<*> // ai.koog.agents.testing.feature/GraphAssertions.start.<get-start>|<get-start>(){}[0]
+    final val subgraphAssertions // ai.koog.agents.testing.feature/GraphAssertions.subgraphAssertions|{}subgraphAssertions[0]
+        final fun <get-subgraphAssertions>(): kotlin.collections/MutableList<ai.koog.agents.testing.feature/SubGraphAssertions> // ai.koog.agents.testing.feature/GraphAssertions.subgraphAssertions.<get-subgraphAssertions>|<get-subgraphAssertions>(){}[0]
+    final val unconditionalEdgeAssertions // ai.koog.agents.testing.feature/GraphAssertions.unconditionalEdgeAssertions|{}unconditionalEdgeAssertions[0]
+        final fun <get-unconditionalEdgeAssertions>(): kotlin.collections/List<ai.koog.agents.testing.feature/UnconditionalEdgeAssertion> // ai.koog.agents.testing.feature/GraphAssertions.unconditionalEdgeAssertions.<get-unconditionalEdgeAssertions>|<get-unconditionalEdgeAssertions>(){}[0]
+
+    final fun component1(): kotlin/String // ai.koog.agents.testing.feature/GraphAssertions.component1|component1(){}[0]
+    final fun component2(): ai.koog.agents.testing.feature/NodeReference.Start<*> // ai.koog.agents.testing.feature/GraphAssertions.component2|component2(){}[0]
+    final fun component3(): ai.koog.agents.testing.feature/NodeReference.Finish<*> // ai.koog.agents.testing.feature/GraphAssertions.component3|component3(){}[0]
+    final fun component4(): kotlin.collections/Map<kotlin/String, ai.koog.agents.testing.feature/NodeReference<*, *>> // ai.koog.agents.testing.feature/GraphAssertions.component4|component4(){}[0]
+    final fun component5(): kotlin.collections/List<ai.koog.agents.testing.feature/NodeOutputAssertion<*, *>> // ai.koog.agents.testing.feature/GraphAssertions.component5|component5(){}[0]
+    final fun component6(): kotlin.collections/List<ai.koog.agents.testing.feature/EdgeAssertion<*, *>> // ai.koog.agents.testing.feature/GraphAssertions.component6|component6(){}[0]
+    final fun component7(): kotlin.collections/List<ai.koog.agents.testing.feature/UnconditionalEdgeAssertion> // ai.koog.agents.testing.feature/GraphAssertions.component7|component7(){}[0]
+    final fun component8(): kotlin.collections/List<ai.koog.agents.testing.feature/ReachabilityAssertion> // ai.koog.agents.testing.feature/GraphAssertions.component8|component8(){}[0]
+    final fun component9(): kotlin.collections/MutableList<ai.koog.agents.testing.feature/SubGraphAssertions> // ai.koog.agents.testing.feature/GraphAssertions.component9|component9(){}[0]
+    final fun copy(kotlin/String = ..., ai.koog.agents.testing.feature/NodeReference.Start<*> = ..., ai.koog.agents.testing.feature/NodeReference.Finish<*> = ..., kotlin.collections/Map<kotlin/String, ai.koog.agents.testing.feature/NodeReference<*, *>> = ..., kotlin.collections/List<ai.koog.agents.testing.feature/NodeOutputAssertion<*, *>> = ..., kotlin.collections/List<ai.koog.agents.testing.feature/EdgeAssertion<*, *>> = ..., kotlin.collections/List<ai.koog.agents.testing.feature/UnconditionalEdgeAssertion> = ..., kotlin.collections/List<ai.koog.agents.testing.feature/ReachabilityAssertion> = ..., kotlin.collections/MutableList<ai.koog.agents.testing.feature/SubGraphAssertions> = ...): ai.koog.agents.testing.feature/GraphAssertions // ai.koog.agents.testing.feature/GraphAssertions.copy|copy(kotlin.String;ai.koog.agents.testing.feature.NodeReference.Start<*>;ai.koog.agents.testing.feature.NodeReference.Finish<*>;kotlin.collections.Map<kotlin.String,ai.koog.agents.testing.feature.NodeReference<*,*>>;kotlin.collections.List<ai.koog.agents.testing.feature.NodeOutputAssertion<*,*>>;kotlin.collections.List<ai.koog.agents.testing.feature.EdgeAssertion<*,*>>;kotlin.collections.List<ai.koog.agents.testing.feature.UnconditionalEdgeAssertion>;kotlin.collections.List<ai.koog.agents.testing.feature.ReachabilityAssertion>;kotlin.collections.MutableList<ai.koog.agents.testing.feature.SubGraphAssertions>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.testing.feature/GraphAssertions.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.testing.feature/GraphAssertions.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.testing.feature/GraphAssertions.toString|toString(){}[0]
+}
+
+final class ai.koog.agents.testing.feature/ReachabilityAssertion { // ai.koog.agents.testing.feature/ReachabilityAssertion|null[0]
+    constructor <init>(ai.koog.agents.testing.feature/NodeReference<*, *>, ai.koog.agents.testing.feature/NodeReference<*, *>) // ai.koog.agents.testing.feature/ReachabilityAssertion.<init>|<init>(ai.koog.agents.testing.feature.NodeReference<*,*>;ai.koog.agents.testing.feature.NodeReference<*,*>){}[0]
+
+    final val from // ai.koog.agents.testing.feature/ReachabilityAssertion.from|{}from[0]
+        final fun <get-from>(): ai.koog.agents.testing.feature/NodeReference<*, *> // ai.koog.agents.testing.feature/ReachabilityAssertion.from.<get-from>|<get-from>(){}[0]
+    final val to // ai.koog.agents.testing.feature/ReachabilityAssertion.to|{}to[0]
+        final fun <get-to>(): ai.koog.agents.testing.feature/NodeReference<*, *> // ai.koog.agents.testing.feature/ReachabilityAssertion.to.<get-to>|<get-to>(){}[0]
+
+    final fun component1(): ai.koog.agents.testing.feature/NodeReference<*, *> // ai.koog.agents.testing.feature/ReachabilityAssertion.component1|component1(){}[0]
+    final fun component2(): ai.koog.agents.testing.feature/NodeReference<*, *> // ai.koog.agents.testing.feature/ReachabilityAssertion.component2|component2(){}[0]
+    final fun copy(ai.koog.agents.testing.feature/NodeReference<*, *> = ..., ai.koog.agents.testing.feature/NodeReference<*, *> = ...): ai.koog.agents.testing.feature/ReachabilityAssertion // ai.koog.agents.testing.feature/ReachabilityAssertion.copy|copy(ai.koog.agents.testing.feature.NodeReference<*,*>;ai.koog.agents.testing.feature.NodeReference<*,*>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.testing.feature/ReachabilityAssertion.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.testing.feature/ReachabilityAssertion.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.testing.feature/ReachabilityAssertion.toString|toString(){}[0]
+}
+
+final class ai.koog.agents.testing.feature/SubGraphAssertions { // ai.koog.agents.testing.feature/SubGraphAssertions|null[0]
+    constructor <init>(ai.koog.agents.testing.feature/NodeReference.SubgraphNode<*, *>, ai.koog.agents.testing.feature/GraphAssertions) // ai.koog.agents.testing.feature/SubGraphAssertions.<init>|<init>(ai.koog.agents.testing.feature.NodeReference.SubgraphNode<*,*>;ai.koog.agents.testing.feature.GraphAssertions){}[0]
+
+    final val graphAssertions // ai.koog.agents.testing.feature/SubGraphAssertions.graphAssertions|{}graphAssertions[0]
+        final fun <get-graphAssertions>(): ai.koog.agents.testing.feature/GraphAssertions // ai.koog.agents.testing.feature/SubGraphAssertions.graphAssertions.<get-graphAssertions>|<get-graphAssertions>(){}[0]
+    final val subgraphRef // ai.koog.agents.testing.feature/SubGraphAssertions.subgraphRef|{}subgraphRef[0]
+        final fun <get-subgraphRef>(): ai.koog.agents.testing.feature/NodeReference.SubgraphNode<*, *> // ai.koog.agents.testing.feature/SubGraphAssertions.subgraphRef.<get-subgraphRef>|<get-subgraphRef>(){}[0]
+
+    final fun component1(): ai.koog.agents.testing.feature/NodeReference.SubgraphNode<*, *> // ai.koog.agents.testing.feature/SubGraphAssertions.component1|component1(){}[0]
+    final fun component2(): ai.koog.agents.testing.feature/GraphAssertions // ai.koog.agents.testing.feature/SubGraphAssertions.component2|component2(){}[0]
+    final fun copy(ai.koog.agents.testing.feature/NodeReference.SubgraphNode<*, *> = ..., ai.koog.agents.testing.feature/GraphAssertions = ...): ai.koog.agents.testing.feature/SubGraphAssertions // ai.koog.agents.testing.feature/SubGraphAssertions.copy|copy(ai.koog.agents.testing.feature.NodeReference.SubgraphNode<*,*>;ai.koog.agents.testing.feature.GraphAssertions){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.testing.feature/SubGraphAssertions.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.testing.feature/SubGraphAssertions.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.testing.feature/SubGraphAssertions.toString|toString(){}[0]
+}
+
+final class ai.koog.agents.testing.feature/Testing { // ai.koog.agents.testing.feature/Testing|null[0]
+    constructor <init>() // ai.koog.agents.testing.feature/Testing.<init>|<init>(){}[0]
+
+    final class Config : ai.koog.agents.core.feature.config/FeatureConfig { // ai.koog.agents.testing.feature/Testing.Config|null[0]
+        constructor <init>(ai.koog.serialization/JSONSerializer) // ai.koog.agents.testing.feature/Testing.Config.<init>|<init>(ai.koog.serialization.JSONSerializer){}[0]
+
+        final var clock // ai.koog.agents.testing.feature/Testing.Config.clock|{}clock[0]
+            final fun <get-clock>(): ai.koog.utils.time/KoogClock // ai.koog.agents.testing.feature/Testing.Config.clock.<get-clock>|<get-clock>(){}[0]
+            final fun <set-clock>(ai.koog.utils.time/KoogClock) // ai.koog.agents.testing.feature/Testing.Config.clock.<set-clock>|<set-clock>(ai.koog.utils.time.KoogClock){}[0]
+        final var enableGraphTesting // ai.koog.agents.testing.feature/Testing.Config.enableGraphTesting|{}enableGraphTesting[0]
+            final fun <get-enableGraphTesting>(): kotlin/Boolean // ai.koog.agents.testing.feature/Testing.Config.enableGraphTesting.<get-enableGraphTesting>|<get-enableGraphTesting>(){}[0]
+            final fun <set-enableGraphTesting>(kotlin/Boolean) // ai.koog.agents.testing.feature/Testing.Config.enableGraphTesting.<set-enableGraphTesting>|<set-enableGraphTesting>(kotlin.Boolean){}[0]
+        final var tokenizer // ai.koog.agents.testing.feature/Testing.Config.tokenizer|{}tokenizer[0]
+            final fun <get-tokenizer>(): ai.koog.prompt.tokenizer/Tokenizer? // ai.koog.agents.testing.feature/Testing.Config.tokenizer.<get-tokenizer>|<get-tokenizer>(){}[0]
+            final fun <set-tokenizer>(ai.koog.prompt.tokenizer/Tokenizer?) // ai.koog.agents.testing.feature/Testing.Config.tokenizer.<set-tokenizer>|<set-tokenizer>(ai.koog.prompt.tokenizer.Tokenizer?){}[0]
+
+        final fun <#A2: kotlin/Any?, #B2: kotlin/Any?> verifyStrategy(kotlin/String, kotlin/Function1<ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<#A2, #B2>, kotlin/Unit>) // ai.koog.agents.testing.feature/Testing.Config.verifyStrategy|verifyStrategy(kotlin.String;kotlin.Function1<ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<0:0,0:1>,kotlin.Unit>){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+        final fun handleAssertion(kotlin/Function1<ai.koog.agents.testing.feature/AssertionResult, kotlin/Unit>) // ai.koog.agents.testing.feature/Testing.Config.handleAssertion|handleAssertion(kotlin.Function1<ai.koog.agents.testing.feature.AssertionResult,kotlin.Unit>){}[0]
+
+        final class <#A2: kotlin/Any?, #B2: kotlin/Any?> SubgraphAssertionsBuilder { // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder|null[0]
+            constructor <init>(ai.koog.agents.testing.feature/NodeReference.SubgraphNode<#A2, #B2>, ai.koog.utils.time/KoogClock, ai.koog.prompt.tokenizer/Tokenizer?, ai.koog.serialization/JSONSerializer) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.<init>|<init>(ai.koog.agents.testing.feature.NodeReference.SubgraphNode<1:0,1:1>;ai.koog.utils.time.KoogClock;ai.koog.prompt.tokenizer.Tokenizer?;ai.koog.serialization.JSONSerializer){}[0]
+
+            final fun <#A3: kotlin/Any?, #B3: kotlin/Any?> assertNodeByName(kotlin/String): ai.koog.agents.testing.feature/NodeReference.NamedNode<#A3, #B3> // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.assertNodeByName|assertNodeByName(kotlin.String){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+            final fun <#A3: kotlin/Any?, #B3: kotlin/Any?> assertSubgraphByName(kotlin/String): ai.koog.agents.testing.feature/NodeReference.SubgraphNode<#A3, #B3> // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.assertSubgraphByName|assertSubgraphByName(kotlin.String){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+            final fun <#A3: kotlin/Any?, #B3: kotlin/Any?> verifySubgraph(ai.koog.agents.testing.feature/NodeReference.SubgraphNode<#A3, #B3>, kotlin/Function1<ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<#A3, #B3>, kotlin/Unit> = ...) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.verifySubgraph|verifySubgraph(ai.koog.agents.testing.feature.NodeReference.SubgraphNode<0:0,0:1>;kotlin.Function1<ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<0:0,0:1>,kotlin.Unit>){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+            final fun assertEdges(kotlin/Function1<ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder, kotlin/Unit>) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.assertEdges|assertEdges(kotlin.Function1<ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder,kotlin.Unit>){}[0]
+            final fun assertNodes(kotlin/Function1<ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder, kotlin/Unit>) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.assertNodes|assertNodes(kotlin.Function1<ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder,kotlin.Unit>){}[0]
+            final fun assertReachable(ai.koog.agents.testing.feature/NodeReference<*, *>, ai.koog.agents.testing.feature/NodeReference<*, *>) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.assertReachable|assertReachable(ai.koog.agents.testing.feature.NodeReference<*,*>;ai.koog.agents.testing.feature.NodeReference<*,*>){}[0]
+            final fun finishNode(): ai.koog.agents.testing.feature/NodeReference.Finish<#B2> // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.finishNode|finishNode(){}[0]
+            final fun startNode(): ai.koog.agents.testing.feature/NodeReference.Start<#A2> // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.startNode|startNode(){}[0]
+
+            final class EdgeAssertionsBuilder : ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase { // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder|null[0]
+                constructor <init>(ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<*, *>, ai.koog.agents.testing.tools/AIAgentContextMockBuilder = ...) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.<init>|<init>(ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<*,*>;ai.koog.agents.testing.tools.AIAgentContextMockBuilder){}[0]
+
+                final val assertions // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.assertions|{}assertions[0]
+                    final fun <get-assertions>(): kotlin.collections/MutableList<ai.koog.agents.testing.feature/EdgeAssertion<*, *>> // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.assertions.<get-assertions>|<get-assertions>(){}[0]
+                final val unconditionalEdgeAssertions // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.unconditionalEdgeAssertions|{}unconditionalEdgeAssertions[0]
+                    final fun <get-unconditionalEdgeAssertions>(): kotlin.collections/MutableList<ai.koog.agents.testing.feature/UnconditionalEdgeAssertion> // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.unconditionalEdgeAssertions.<get-unconditionalEdgeAssertions>|<get-unconditionalEdgeAssertions>(){}[0]
+
+                final var agentInput // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.agentInput|{}agentInput[0]
+                    final fun <get-agentInput>(): kotlin/Any? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.agentInput.<get-agentInput>|<get-agentInput>(){}[0]
+                    final fun <set-agentInput>(kotlin/Any?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.agentInput.<set-agentInput>|<set-agentInput>(kotlin.Any?){}[0]
+                final var agentInputType // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.agentInputType|{}agentInputType[0]
+                    final fun <get-agentInputType>(): ai.koog.serialization/TypeToken? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.agentInputType.<get-agentInputType>|<get-agentInputType>(){}[0]
+                    final fun <set-agentInputType>(ai.koog.serialization/TypeToken?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.agentInputType.<set-agentInputType>|<set-agentInputType>(ai.koog.serialization.TypeToken?){}[0]
+                final var config // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.config|{}config[0]
+                    final fun <get-config>(): ai.koog.agents.core.agent.config/AIAgentConfig? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.config.<get-config>|<get-config>(){}[0]
+                    final fun <set-config>(ai.koog.agents.core.agent.config/AIAgentConfig?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.config.<set-config>|<set-config>(ai.koog.agents.core.agent.config.AIAgentConfig?){}[0]
+                final var environment // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.environment|{}environment[0]
+                    final fun <get-environment>(): ai.koog.agents.core.environment/AIAgentEnvironment? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.environment.<get-environment>|<get-environment>(){}[0]
+                    final fun <set-environment>(ai.koog.agents.core.environment/AIAgentEnvironment?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.environment.<set-environment>|<set-environment>(ai.koog.agents.core.environment.AIAgentEnvironment?){}[0]
+                final var executionInfo // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.executionInfo|{}executionInfo[0]
+                    final fun <get-executionInfo>(): ai.koog.agents.core.agent.execution/AgentExecutionInfo? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.executionInfo.<get-executionInfo>|<get-executionInfo>(){}[0]
+                    final fun <set-executionInfo>(ai.koog.agents.core.agent.execution/AgentExecutionInfo?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.executionInfo.<set-executionInfo>|<set-executionInfo>(ai.koog.agents.core.agent.execution.AgentExecutionInfo?){}[0]
+                final var llm // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.llm|{}llm[0]
+                    final fun <get-llm>(): ai.koog.agents.core.agent.context/AIAgentLLMContext? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.llm.<get-llm>|<get-llm>(){}[0]
+                    final fun <set-llm>(ai.koog.agents.core.agent.context/AIAgentLLMContext?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.llm.<set-llm>|<set-llm>(ai.koog.agents.core.agent.context.AIAgentLLMContext?){}[0]
+                final var runId // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.runId|{}runId[0]
+                    final fun <get-runId>(): kotlin/String? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.runId.<get-runId>|<get-runId>(){}[0]
+                    final fun <set-runId>(kotlin/String?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.runId.<set-runId>|<set-runId>(kotlin.String?){}[0]
+                final var stateManager // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.stateManager|{}stateManager[0]
+                    final fun <get-stateManager>(): ai.koog.agents.core.agent.entity/AIAgentStateManager? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.stateManager.<get-stateManager>|<get-stateManager>(){}[0]
+                    final fun <set-stateManager>(ai.koog.agents.core.agent.entity/AIAgentStateManager?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.stateManager.<set-stateManager>|<set-stateManager>(ai.koog.agents.core.agent.entity.AIAgentStateManager?){}[0]
+                final var storage // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.storage|{}storage[0]
+                    final fun <get-storage>(): ai.koog.agents.core.agent.entity/AIAgentStorage? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.storage.<get-storage>|<get-storage>(){}[0]
+                    final fun <set-storage>(ai.koog.agents.core.agent.entity/AIAgentStorage?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.storage.<set-storage>|<set-storage>(ai.koog.agents.core.agent.entity.AIAgentStorage?){}[0]
+                final var strategyName // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.strategyName|{}strategyName[0]
+                    final fun <get-strategyName>(): kotlin/String? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.strategyName.<get-strategyName>|<get-strategyName>(){}[0]
+                    final fun <set-strategyName>(kotlin/String?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.strategyName.<set-strategyName>|<set-strategyName>(kotlin.String?){}[0]
+
+                final fun (ai.koog.agents.testing.feature/NodeReference<*, *>).alwaysGoesTo(ai.koog.agents.testing.feature/NodeReference<*, *>) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.alwaysGoesTo|alwaysGoesTo@ai.koog.agents.testing.feature.NodeReference<*,*>(ai.koog.agents.testing.feature.NodeReference<*,*>){}[0]
+                final fun <#A4: kotlin/Any?, #B4: kotlin/Any?> (ai.koog.agents.testing.feature/NodeReference<#A4, #B4>).withOutput(#B4): ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair<#A4, #B4> // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.withOutput|withOutput@ai.koog.agents.testing.feature.NodeReference<0:0,0:1>(0:1){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+                final fun build(): ai.koog.agents.core.agent.context/AIAgentContext // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.build|build(){}[0]
+                final fun copy(ai.koog.agents.core.environment/AIAgentEnvironment?, kotlin/Any?, ai.koog.serialization/TypeToken?, ai.koog.agents.core.agent.config/AIAgentConfig?, ai.koog.agents.core.agent.context/AIAgentLLMContext?, ai.koog.agents.core.agent.entity/AIAgentStateManager?, ai.koog.agents.core.agent.entity/AIAgentStorage?, kotlin/String?, kotlin/String?, ai.koog.agents.core.agent.execution/AgentExecutionInfo?): ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.copy|copy(ai.koog.agents.core.environment.AIAgentEnvironment?;kotlin.Any?;ai.koog.serialization.TypeToken?;ai.koog.agents.core.agent.config.AIAgentConfig?;ai.koog.agents.core.agent.context.AIAgentLLMContext?;ai.koog.agents.core.agent.entity.AIAgentStateManager?;ai.koog.agents.core.agent.entity.AIAgentStorage?;kotlin.String?;kotlin.String?;ai.koog.agents.core.agent.execution.AgentExecutionInfo?){}[0]
+                final fun withContext(kotlin/Function1<ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder, kotlin/Unit>) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.withContext|withContext(kotlin.Function1<ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder,kotlin.Unit>){}[0]
+
+                final inner class <#A4: kotlin/Any?, #B4: kotlin/Any?> EdgeOutputPair { // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair|null[0]
+                    constructor <init>(ai.koog.agents.testing.feature/NodeReference<#A4, #B4>, #B4) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair.<init>|<init>(ai.koog.agents.testing.feature.NodeReference<1:0,1:1>;1:1){}[0]
+
+                    final val node // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair.node|{}node[0]
+                        final fun <get-node>(): ai.koog.agents.testing.feature/NodeReference<#A4, #B4> // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair.node.<get-node>|<get-node>(){}[0]
+                    final val output // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair.output|{}output[0]
+                        final fun <get-output>(): #B4 // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair.output.<get-output>|<get-output>(){}[0]
+
+                    final fun goesTo(ai.koog.agents.testing.feature/NodeReference<*, *>) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair.goesTo|goesTo(ai.koog.agents.testing.feature.NodeReference<*,*>){}[0]
+                }
+            }
+
+            final class NodeOutputAssertionsBuilder : ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase { // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder|null[0]
+                constructor <init>(ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<*, *>, ai.koog.agents.testing.tools/AIAgentContextMockBuilder = ...) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.<init>|<init>(ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<*,*>;ai.koog.agents.testing.tools.AIAgentContextMockBuilder){}[0]
+
+                final val assertions // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.assertions|{}assertions[0]
+                    final fun <get-assertions>(): kotlin.collections/MutableList<ai.koog.agents.testing.feature/NodeOutputAssertion<*, *>> // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.assertions.<get-assertions>|<get-assertions>(){}[0]
+
+                final var agentInput // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.agentInput|{}agentInput[0]
+                    final fun <get-agentInput>(): kotlin/Any? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.agentInput.<get-agentInput>|<get-agentInput>(){}[0]
+                    final fun <set-agentInput>(kotlin/Any?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.agentInput.<set-agentInput>|<set-agentInput>(kotlin.Any?){}[0]
+                final var agentInputType // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.agentInputType|{}agentInputType[0]
+                    final fun <get-agentInputType>(): ai.koog.serialization/TypeToken? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.agentInputType.<get-agentInputType>|<get-agentInputType>(){}[0]
+                    final fun <set-agentInputType>(ai.koog.serialization/TypeToken?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.agentInputType.<set-agentInputType>|<set-agentInputType>(ai.koog.serialization.TypeToken?){}[0]
+                final var config // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.config|{}config[0]
+                    final fun <get-config>(): ai.koog.agents.core.agent.config/AIAgentConfig? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.config.<get-config>|<get-config>(){}[0]
+                    final fun <set-config>(ai.koog.agents.core.agent.config/AIAgentConfig?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.config.<set-config>|<set-config>(ai.koog.agents.core.agent.config.AIAgentConfig?){}[0]
+                final var environment // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.environment|{}environment[0]
+                    final fun <get-environment>(): ai.koog.agents.core.environment/AIAgentEnvironment? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.environment.<get-environment>|<get-environment>(){}[0]
+                    final fun <set-environment>(ai.koog.agents.core.environment/AIAgentEnvironment?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.environment.<set-environment>|<set-environment>(ai.koog.agents.core.environment.AIAgentEnvironment?){}[0]
+                final var executionInfo // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.executionInfo|{}executionInfo[0]
+                    final fun <get-executionInfo>(): ai.koog.agents.core.agent.execution/AgentExecutionInfo? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.executionInfo.<get-executionInfo>|<get-executionInfo>(){}[0]
+                    final fun <set-executionInfo>(ai.koog.agents.core.agent.execution/AgentExecutionInfo?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.executionInfo.<set-executionInfo>|<set-executionInfo>(ai.koog.agents.core.agent.execution.AgentExecutionInfo?){}[0]
+                final var llm // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.llm|{}llm[0]
+                    final fun <get-llm>(): ai.koog.agents.core.agent.context/AIAgentLLMContext? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.llm.<get-llm>|<get-llm>(){}[0]
+                    final fun <set-llm>(ai.koog.agents.core.agent.context/AIAgentLLMContext?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.llm.<set-llm>|<set-llm>(ai.koog.agents.core.agent.context.AIAgentLLMContext?){}[0]
+                final var runId // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.runId|{}runId[0]
+                    final fun <get-runId>(): kotlin/String? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.runId.<get-runId>|<get-runId>(){}[0]
+                    final fun <set-runId>(kotlin/String?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.runId.<set-runId>|<set-runId>(kotlin.String?){}[0]
+                final var stateManager // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.stateManager|{}stateManager[0]
+                    final fun <get-stateManager>(): ai.koog.agents.core.agent.entity/AIAgentStateManager? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.stateManager.<get-stateManager>|<get-stateManager>(){}[0]
+                    final fun <set-stateManager>(ai.koog.agents.core.agent.entity/AIAgentStateManager?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.stateManager.<set-stateManager>|<set-stateManager>(ai.koog.agents.core.agent.entity.AIAgentStateManager?){}[0]
+                final var storage // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.storage|{}storage[0]
+                    final fun <get-storage>(): ai.koog.agents.core.agent.entity/AIAgentStorage? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.storage.<get-storage>|<get-storage>(){}[0]
+                    final fun <set-storage>(ai.koog.agents.core.agent.entity/AIAgentStorage?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.storage.<set-storage>|<set-storage>(ai.koog.agents.core.agent.entity.AIAgentStorage?){}[0]
+                final var strategyName // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.strategyName|{}strategyName[0]
+                    final fun <get-strategyName>(): kotlin/String? // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.strategyName.<get-strategyName>|<get-strategyName>(){}[0]
+                    final fun <set-strategyName>(kotlin/String?) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.strategyName.<set-strategyName>|<set-strategyName>(kotlin.String?){}[0]
+
+                final fun <#A4: kotlin/Any?, #B4: kotlin/Any?> (ai.koog.agents.testing.feature/NodeReference<#A4, #B4>).withInput(#A4): ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair<#A4, #B4> // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.withInput|withInput@ai.koog.agents.testing.feature.NodeReference<0:0,0:1>(0:0){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+                final fun build(): ai.koog.agents.core.agent.context/AIAgentContext // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.build|build(){}[0]
+                final fun copy(ai.koog.agents.core.environment/AIAgentEnvironment?, kotlin/Any?, ai.koog.serialization/TypeToken?, ai.koog.agents.core.agent.config/AIAgentConfig?, ai.koog.agents.core.agent.context/AIAgentLLMContext?, ai.koog.agents.core.agent.entity/AIAgentStateManager?, ai.koog.agents.core.agent.entity/AIAgentStorage?, kotlin/String?, kotlin/String?, ai.koog.agents.core.agent.execution/AgentExecutionInfo?): ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.copy|copy(ai.koog.agents.core.environment.AIAgentEnvironment?;kotlin.Any?;ai.koog.serialization.TypeToken?;ai.koog.agents.core.agent.config.AIAgentConfig?;ai.koog.agents.core.agent.context.AIAgentLLMContext?;ai.koog.agents.core.agent.entity.AIAgentStateManager?;ai.koog.agents.core.agent.entity.AIAgentStorage?;kotlin.String?;kotlin.String?;ai.koog.agents.core.agent.execution.AgentExecutionInfo?){}[0]
+                final fun withContext(kotlin/Function1<ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder, kotlin/Unit>) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.withContext|withContext(kotlin.Function1<ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder,kotlin.Unit>){}[0]
+
+                final inner class <#A4: kotlin/Any?, #B4: kotlin/Any?> NodeOutputPair { // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair|null[0]
+                    constructor <init>(ai.koog.agents.testing.feature/NodeReference<#A4, #B4>, #A4) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair.<init>|<init>(ai.koog.agents.testing.feature.NodeReference<1:0,1:1>;1:0){}[0]
+
+                    final val input // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair.input|{}input[0]
+                        final fun <get-input>(): #A4 // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair.input.<get-input>|<get-input>(){}[0]
+                    final val node // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair.node|{}node[0]
+                        final fun <get-node>(): ai.koog.agents.testing.feature/NodeReference<#A4, #B4> // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair.node.<get-node>|<get-node>(){}[0]
+
+                    final fun outputs(#B4) // ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair.outputs|outputs(1:1){}[0]
+                }
+            }
+        }
+    }
+
+    final object Feature : ai.koog.agents.core.feature/AIAgentGraphFeature<ai.koog.agents.testing.feature/Testing.Config, ai.koog.agents.testing.feature/Testing> { // ai.koog.agents.testing.feature/Testing.Feature|null[0]
+        final val key // ai.koog.agents.testing.feature/Testing.Feature.key|{}key[0]
+            final fun <get-key>(): ai.koog.agents.core.agent.entity/AIAgentStorageKey<ai.koog.agents.testing.feature/Testing> // ai.koog.agents.testing.feature/Testing.Feature.key.<get-key>|<get-key>(){}[0]
+
+        final fun createInitialConfig(ai.koog.agents.core.agent.config/AIAgentConfig): ai.koog.agents.testing.feature/Testing.Config // ai.koog.agents.testing.feature/Testing.Feature.createInitialConfig|createInitialConfig(ai.koog.agents.core.agent.config.AIAgentConfig){}[0]
+        final fun install(ai.koog.agents.testing.feature/Testing.Config, ai.koog.agents.core.feature.pipeline/AIAgentGraphPipeline): ai.koog.agents.testing.feature/Testing // ai.koog.agents.testing.feature/Testing.Feature.install|install(ai.koog.agents.testing.feature.Testing.Config;ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline){}[0]
+    }
+}
+
+final class ai.koog.agents.testing.feature/UnconditionalEdgeAssertion { // ai.koog.agents.testing.feature/UnconditionalEdgeAssertion|null[0]
+    constructor <init>(ai.koog.agents.testing.feature/NodeReference<*, *>, ai.koog.agents.testing.feature/NodeReference<*, *>) // ai.koog.agents.testing.feature/UnconditionalEdgeAssertion.<init>|<init>(ai.koog.agents.testing.feature.NodeReference<*,*>;ai.koog.agents.testing.feature.NodeReference<*,*>){}[0]
+
+    final val expectedNode // ai.koog.agents.testing.feature/UnconditionalEdgeAssertion.expectedNode|{}expectedNode[0]
+        final fun <get-expectedNode>(): ai.koog.agents.testing.feature/NodeReference<*, *> // ai.koog.agents.testing.feature/UnconditionalEdgeAssertion.expectedNode.<get-expectedNode>|<get-expectedNode>(){}[0]
+    final val node // ai.koog.agents.testing.feature/UnconditionalEdgeAssertion.node|{}node[0]
+        final fun <get-node>(): ai.koog.agents.testing.feature/NodeReference<*, *> // ai.koog.agents.testing.feature/UnconditionalEdgeAssertion.node.<get-node>|<get-node>(){}[0]
+
+    final fun component1(): ai.koog.agents.testing.feature/NodeReference<*, *> // ai.koog.agents.testing.feature/UnconditionalEdgeAssertion.component1|component1(){}[0]
+    final fun component2(): ai.koog.agents.testing.feature/NodeReference<*, *> // ai.koog.agents.testing.feature/UnconditionalEdgeAssertion.component2|component2(){}[0]
+    final fun copy(ai.koog.agents.testing.feature/NodeReference<*, *> = ..., ai.koog.agents.testing.feature/NodeReference<*, *> = ...): ai.koog.agents.testing.feature/UnconditionalEdgeAssertion // ai.koog.agents.testing.feature/UnconditionalEdgeAssertion.copy|copy(ai.koog.agents.testing.feature.NodeReference<*,*>;ai.koog.agents.testing.feature.NodeReference<*,*>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.testing.feature/UnconditionalEdgeAssertion.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.testing.feature/UnconditionalEdgeAssertion.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.testing.feature/UnconditionalEdgeAssertion.toString|toString(){}[0]
+}
+
+final class ai.koog.agents.testing.tools/AIAgentContextMockBuilder : ai.koog.agents.testing.tools/AIAgentContextMockBuilderBase { // ai.koog.agents.testing.tools/AIAgentContextMockBuilder|null[0]
+    constructor <init>() // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.<init>|<init>(){}[0]
+
+    final var agentInput // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.agentInput|{}agentInput[0]
+        final fun <get-agentInput>(): kotlin/Any? // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.agentInput.<get-agentInput>|<get-agentInput>(){}[0]
+        final fun <set-agentInput>(kotlin/Any?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.agentInput.<set-agentInput>|<set-agentInput>(kotlin.Any?){}[0]
+    final var agentInputType // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.agentInputType|{}agentInputType[0]
+        final fun <get-agentInputType>(): ai.koog.serialization/TypeToken? // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.agentInputType.<get-agentInputType>|<get-agentInputType>(){}[0]
+        final fun <set-agentInputType>(ai.koog.serialization/TypeToken?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.agentInputType.<set-agentInputType>|<set-agentInputType>(ai.koog.serialization.TypeToken?){}[0]
+    final var config // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.config|{}config[0]
+        final fun <get-config>(): ai.koog.agents.core.agent.config/AIAgentConfig? // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.config.<get-config>|<get-config>(){}[0]
+        final fun <set-config>(ai.koog.agents.core.agent.config/AIAgentConfig?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.config.<set-config>|<set-config>(ai.koog.agents.core.agent.config.AIAgentConfig?){}[0]
+    final var environment // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.environment|{}environment[0]
+        final fun <get-environment>(): ai.koog.agents.core.environment/AIAgentEnvironment? // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.environment.<get-environment>|<get-environment>(){}[0]
+        final fun <set-environment>(ai.koog.agents.core.environment/AIAgentEnvironment?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.environment.<set-environment>|<set-environment>(ai.koog.agents.core.environment.AIAgentEnvironment?){}[0]
+    final var executionInfo // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.executionInfo|{}executionInfo[0]
+        final fun <get-executionInfo>(): ai.koog.agents.core.agent.execution/AgentExecutionInfo? // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.executionInfo.<get-executionInfo>|<get-executionInfo>(){}[0]
+        final fun <set-executionInfo>(ai.koog.agents.core.agent.execution/AgentExecutionInfo?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.executionInfo.<set-executionInfo>|<set-executionInfo>(ai.koog.agents.core.agent.execution.AgentExecutionInfo?){}[0]
+    final var llm // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.llm|{}llm[0]
+        final fun <get-llm>(): ai.koog.agents.core.agent.context/AIAgentLLMContext? // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.llm.<get-llm>|<get-llm>(){}[0]
+        final fun <set-llm>(ai.koog.agents.core.agent.context/AIAgentLLMContext?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.llm.<set-llm>|<set-llm>(ai.koog.agents.core.agent.context.AIAgentLLMContext?){}[0]
+    final var runId // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.runId|{}runId[0]
+        final fun <get-runId>(): kotlin/String? // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.runId.<get-runId>|<get-runId>(){}[0]
+        final fun <set-runId>(kotlin/String?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.runId.<set-runId>|<set-runId>(kotlin.String?){}[0]
+    final var stateManager // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.stateManager|{}stateManager[0]
+        final fun <get-stateManager>(): ai.koog.agents.core.agent.entity/AIAgentStateManager? // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.stateManager.<get-stateManager>|<get-stateManager>(){}[0]
+        final fun <set-stateManager>(ai.koog.agents.core.agent.entity/AIAgentStateManager?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.stateManager.<set-stateManager>|<set-stateManager>(ai.koog.agents.core.agent.entity.AIAgentStateManager?){}[0]
+    final var storage // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.storage|{}storage[0]
+        final fun <get-storage>(): ai.koog.agents.core.agent.entity/AIAgentStorage? // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.storage.<get-storage>|<get-storage>(){}[0]
+        final fun <set-storage>(ai.koog.agents.core.agent.entity/AIAgentStorage?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.storage.<set-storage>|<set-storage>(ai.koog.agents.core.agent.entity.AIAgentStorage?){}[0]
+    final var strategyName // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.strategyName|{}strategyName[0]
+        final fun <get-strategyName>(): kotlin/String? // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.strategyName.<get-strategyName>|<get-strategyName>(){}[0]
+        final fun <set-strategyName>(kotlin/String?) // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.strategyName.<set-strategyName>|<set-strategyName>(kotlin.String?){}[0]
+
+    final fun build(): ai.koog.agents.testing.tools/DummyAIAgentContext // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.build|build(){}[0]
+    final fun copy(ai.koog.agents.core.environment/AIAgentEnvironment?, kotlin/Any?, ai.koog.serialization/TypeToken?, ai.koog.agents.core.agent.config/AIAgentConfig?, ai.koog.agents.core.agent.context/AIAgentLLMContext?, ai.koog.agents.core.agent.entity/AIAgentStateManager?, ai.koog.agents.core.agent.entity/AIAgentStorage?, kotlin/String?, kotlin/String?, ai.koog.agents.core.agent.execution/AgentExecutionInfo?): ai.koog.agents.testing.tools/AIAgentContextMockBuilder // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.copy|copy(ai.koog.agents.core.environment.AIAgentEnvironment?;kotlin.Any?;ai.koog.serialization.TypeToken?;ai.koog.agents.core.agent.config.AIAgentConfig?;ai.koog.agents.core.agent.context.AIAgentLLMContext?;ai.koog.agents.core.agent.entity.AIAgentStateManager?;ai.koog.agents.core.agent.entity.AIAgentStorage?;kotlin.String?;kotlin.String?;ai.koog.agents.core.agent.execution.AgentExecutionInfo?){}[0]
+
+    final class <#A1: kotlin/Any> ProxyHandler { // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.ProxyHandler|null[0]
+        constructor <init>(kotlin/String) // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.ProxyHandler.<init>|<init>(kotlin.String){}[0]
+
+        final fun createProxy(): #A1 // ai.koog.agents.testing.tools/AIAgentContextMockBuilder.ProxyHandler.createProxy|createProxy(){}[0]
+    }
+}
+
+final class ai.koog.agents.testing.tools/DummyAIAgentContext : ai.koog.agents.core.agent.context/AIAgentGraphContextBase { // ai.koog.agents.testing.tools/DummyAIAgentContext|null[0]
+    constructor <init>(ai.koog.agents.testing.tools/AIAgentContextMockBuilder, kotlin/String = ...) // ai.koog.agents.testing.tools/DummyAIAgentContext.<init>|<init>(ai.koog.agents.testing.tools.AIAgentContextMockBuilder;kotlin.String){}[0]
+
+    final val agentId // ai.koog.agents.testing.tools/DummyAIAgentContext.agentId|{}agentId[0]
+        final fun <get-agentId>(): kotlin/String // ai.koog.agents.testing.tools/DummyAIAgentContext.agentId.<get-agentId>|<get-agentId>(){}[0]
+    final val agentInput // ai.koog.agents.testing.tools/DummyAIAgentContext.agentInput|{}agentInput[0]
+        final fun <get-agentInput>(): kotlin/Any // ai.koog.agents.testing.tools/DummyAIAgentContext.agentInput.<get-agentInput>|<get-agentInput>(){}[0]
+    final val agentInputType // ai.koog.agents.testing.tools/DummyAIAgentContext.agentInputType|{}agentInputType[0]
+        final fun <get-agentInputType>(): ai.koog.serialization/TypeToken // ai.koog.agents.testing.tools/DummyAIAgentContext.agentInputType.<get-agentInputType>|<get-agentInputType>(){}[0]
+    final val config // ai.koog.agents.testing.tools/DummyAIAgentContext.config|{}config[0]
+        final fun <get-config>(): ai.koog.agents.core.agent.config/AIAgentConfig // ai.koog.agents.testing.tools/DummyAIAgentContext.config.<get-config>|<get-config>(){}[0]
+    final val environment // ai.koog.agents.testing.tools/DummyAIAgentContext.environment|{}environment[0]
+        final fun <get-environment>(): ai.koog.agents.core.environment/AIAgentEnvironment // ai.koog.agents.testing.tools/DummyAIAgentContext.environment.<get-environment>|<get-environment>(){}[0]
+    final val isEnvironmentDefined // ai.koog.agents.testing.tools/DummyAIAgentContext.isEnvironmentDefined|{}isEnvironmentDefined[0]
+        final fun <get-isEnvironmentDefined>(): kotlin/Boolean // ai.koog.agents.testing.tools/DummyAIAgentContext.isEnvironmentDefined.<get-isEnvironmentDefined>|<get-isEnvironmentDefined>(){}[0]
+    final val isLLMDefined // ai.koog.agents.testing.tools/DummyAIAgentContext.isLLMDefined|{}isLLMDefined[0]
+        final fun <get-isLLMDefined>(): kotlin/Boolean // ai.koog.agents.testing.tools/DummyAIAgentContext.isLLMDefined.<get-isLLMDefined>|<get-isLLMDefined>(){}[0]
+    final val llm // ai.koog.agents.testing.tools/DummyAIAgentContext.llm|{}llm[0]
+        final fun <get-llm>(): ai.koog.agents.core.agent.context/AIAgentLLMContext // ai.koog.agents.testing.tools/DummyAIAgentContext.llm.<get-llm>|<get-llm>(){}[0]
+    final val parentContext // ai.koog.agents.testing.tools/DummyAIAgentContext.parentContext|{}parentContext[0]
+        final fun <get-parentContext>(): ai.koog.agents.core.agent.context/AIAgentGraphContextBase? // ai.koog.agents.testing.tools/DummyAIAgentContext.parentContext.<get-parentContext>|<get-parentContext>(){}[0]
+    final val pipeline // ai.koog.agents.testing.tools/DummyAIAgentContext.pipeline|{}pipeline[0]
+        final fun <get-pipeline>(): ai.koog.agents.core.feature.pipeline/AIAgentGraphPipeline // ai.koog.agents.testing.tools/DummyAIAgentContext.pipeline.<get-pipeline>|<get-pipeline>(){}[0]
+    final val runId // ai.koog.agents.testing.tools/DummyAIAgentContext.runId|{}runId[0]
+        final fun <get-runId>(): kotlin/String // ai.koog.agents.testing.tools/DummyAIAgentContext.runId.<get-runId>|<get-runId>(){}[0]
+    final val stateManager // ai.koog.agents.testing.tools/DummyAIAgentContext.stateManager|{}stateManager[0]
+        final fun <get-stateManager>(): ai.koog.agents.core.agent.entity/AIAgentStateManager // ai.koog.agents.testing.tools/DummyAIAgentContext.stateManager.<get-stateManager>|<get-stateManager>(){}[0]
+    final val storage // ai.koog.agents.testing.tools/DummyAIAgentContext.storage|{}storage[0]
+        final fun <get-storage>(): ai.koog.agents.core.agent.entity/AIAgentStorage // ai.koog.agents.testing.tools/DummyAIAgentContext.storage.<get-storage>|<get-storage>(){}[0]
+    final val strategyName // ai.koog.agents.testing.tools/DummyAIAgentContext.strategyName|{}strategyName[0]
+        final fun <get-strategyName>(): kotlin/String // ai.koog.agents.testing.tools/DummyAIAgentContext.strategyName.<get-strategyName>|<get-strategyName>(){}[0]
+
+    final var executionInfo // ai.koog.agents.testing.tools/DummyAIAgentContext.executionInfo|{}executionInfo[0]
+        final fun <get-executionInfo>(): ai.koog.agents.core.agent.execution/AgentExecutionInfo // ai.koog.agents.testing.tools/DummyAIAgentContext.executionInfo.<get-executionInfo>|<get-executionInfo>(){}[0]
+        final fun <set-executionInfo>(ai.koog.agents.core.agent.execution/AgentExecutionInfo) // ai.koog.agents.testing.tools/DummyAIAgentContext.executionInfo.<set-executionInfo>|<set-executionInfo>(ai.koog.agents.core.agent.execution.AgentExecutionInfo){}[0]
+
+    final fun copy(ai.koog.agents.core.environment/AIAgentEnvironment, kotlin/String, kotlin/Any?, ai.koog.serialization/TypeToken, ai.koog.agents.core.agent.config/AIAgentConfig, ai.koog.agents.core.agent.context/AIAgentLLMContext, ai.koog.agents.core.agent.entity/AIAgentStateManager, ai.koog.agents.core.agent.entity/AIAgentStorage, kotlin/String, kotlin/String, ai.koog.agents.core.feature.pipeline/AIAgentGraphPipeline, ai.koog.agents.core.agent.execution/AgentExecutionInfo, ai.koog.agents.core.agent.context/AIAgentGraphContextBase?): ai.koog.agents.core.agent.context/AIAgentGraphContextBase // ai.koog.agents.testing.tools/DummyAIAgentContext.copy|copy(ai.koog.agents.core.environment.AIAgentEnvironment;kotlin.String;kotlin.Any?;ai.koog.serialization.TypeToken;ai.koog.agents.core.agent.config.AIAgentConfig;ai.koog.agents.core.agent.context.AIAgentLLMContext;ai.koog.agents.core.agent.entity.AIAgentStateManager;ai.koog.agents.core.agent.entity.AIAgentStorage;kotlin.String;kotlin.String;ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline;ai.koog.agents.core.agent.execution.AgentExecutionInfo;ai.koog.agents.core.agent.context.AIAgentGraphContextBase?){}[0]
+    final suspend fun fork(): ai.koog.agents.core.agent.context/AIAgentGraphContextBase // ai.koog.agents.testing.tools/DummyAIAgentContext.fork|fork(){}[0]
+    final suspend fun replace(ai.koog.agents.core.agent.context/AIAgentContext) // ai.koog.agents.testing.tools/DummyAIAgentContext.replace|replace(ai.koog.agents.core.agent.context.AIAgentContext){}[0]
+}
+
+final class ai.koog.agents.testing.tools/DummyTool : ai.koog.agents.core.tools/SimpleTool<ai.koog.agents.testing.tools/DummyTool.Args> { // ai.koog.agents.testing.tools/DummyTool|null[0]
+    constructor <init>() // ai.koog.agents.testing.tools/DummyTool.<init>|<init>(){}[0]
+
+    final val result // ai.koog.agents.testing.tools/DummyTool.result|{}result[0]
+        final fun <get-result>(): kotlin/String // ai.koog.agents.testing.tools/DummyTool.result.<get-result>|<get-result>(){}[0]
+
+    final suspend fun execute(ai.koog.agents.testing.tools/DummyTool.Args): kotlin/String // ai.koog.agents.testing.tools/DummyTool.execute|execute(ai.koog.agents.testing.tools.DummyTool.Args){}[0]
+
+    final class Args { // ai.koog.agents.testing.tools/DummyTool.Args|null[0]
+        constructor <init>(kotlin/String = ...) // ai.koog.agents.testing.tools/DummyTool.Args.<init>|<init>(kotlin.String){}[0]
+
+        final val dummy // ai.koog.agents.testing.tools/DummyTool.Args.dummy|{}dummy[0]
+            final fun <get-dummy>(): kotlin/String // ai.koog.agents.testing.tools/DummyTool.Args.dummy.<get-dummy>|<get-dummy>(){}[0]
+
+        final fun component1(): kotlin/String // ai.koog.agents.testing.tools/DummyTool.Args.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.koog.agents.testing.tools/DummyTool.Args // ai.koog.agents.testing.tools/DummyTool.Args.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.testing.tools/DummyTool.Args.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.testing.tools/DummyTool.Args.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.testing.tools/DummyTool.Args.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.agents.testing.tools/DummyTool.Args> { // ai.koog.agents.testing.tools/DummyTool.Args.$serializer|null[0]
+            final val descriptor // ai.koog.agents.testing.tools/DummyTool.Args.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.agents.testing.tools/DummyTool.Args.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.agents.testing.tools/DummyTool.Args.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.agents.testing.tools/DummyTool.Args // ai.koog.agents.testing.tools/DummyTool.Args.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.agents.testing.tools/DummyTool.Args) // ai.koog.agents.testing.tools/DummyTool.Args.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.agents.testing.tools.DummyTool.Args){}[0]
+        }
+
+        final object Companion { // ai.koog.agents.testing.tools/DummyTool.Args.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.agents.testing.tools/DummyTool.Args> // ai.koog.agents.testing.tools/DummyTool.Args.Companion.serializer|serializer(){}[0]
+        }
+    }
+}
+
+final class ai.koog.agents.testing.tools/MockEnvironment : ai.koog.agents.core.environment/AIAgentEnvironment { // ai.koog.agents.testing.tools/MockEnvironment|null[0]
+    constructor <init>(ai.koog.agents.core.tools/ToolRegistry, ai.koog.prompt.executor.model/PromptExecutor, ai.koog.serialization/JSONSerializer, ai.koog.agents.core.environment/AIAgentEnvironment? = ...) // ai.koog.agents.testing.tools/MockEnvironment.<init>|<init>(ai.koog.agents.core.tools.ToolRegistry;ai.koog.prompt.executor.model.PromptExecutor;ai.koog.serialization.JSONSerializer;ai.koog.agents.core.environment.AIAgentEnvironment?){}[0]
+
+    final suspend fun executeTool(ai.koog.prompt.message/MessagePart.Tool.Call): ai.koog.agents.core.environment/ReceivedToolResult // ai.koog.agents.testing.tools/MockEnvironment.executeTool|executeTool(ai.koog.prompt.message.MessagePart.Tool.Call){}[0]
+    final suspend fun executeTools(kotlin.collections/List<ai.koog.prompt.message/MessagePart.Tool.Call>): kotlin.collections/List<ai.koog.agents.core.environment/ReceivedToolResult> // ai.koog.agents.testing.tools/MockEnvironment.executeTools|executeTools(kotlin.collections.List<ai.koog.prompt.message.MessagePart.Tool.Call>){}[0]
+    final suspend fun reportProblem(kotlin/Throwable) // ai.koog.agents.testing.tools/MockEnvironment.reportProblem|reportProblem(kotlin.Throwable){}[0]
+}
+
+final class ai.koog.agents.testing.tools/MockExecutorBuilder { // ai.koog.agents.testing.tools/MockExecutorBuilder|null[0]
+    final fun build(): ai.koog.prompt.executor.model/PromptExecutor // ai.koog.agents.testing.tools/MockExecutorBuilder.build|build(){}[0]
+    final fun clock(ai.koog.utils.time/KoogClock): ai.koog.agents.testing.tools/MockExecutorBuilder // ai.koog.agents.testing.tools/MockExecutorBuilder.clock|clock(ai.koog.utils.time.KoogClock){}[0]
+    final fun handleLastAssistantMessage(kotlin/Boolean): ai.koog.agents.testing.tools/MockExecutorBuilder // ai.koog.agents.testing.tools/MockExecutorBuilder.handleLastAssistantMessage|handleLastAssistantMessage(kotlin.Boolean){}[0]
+    final fun mockLLMAnswer(kotlin/String): ai.koog.agents.testing.tools/MockExecutorBuilder.MockLLMAnswerBuilder // ai.koog.agents.testing.tools/MockExecutorBuilder.mockLLMAnswer|mockLLMAnswer(kotlin.String){}[0]
+    final fun tokenizer(ai.koog.prompt.tokenizer/Tokenizer): ai.koog.agents.testing.tools/MockExecutorBuilder // ai.koog.agents.testing.tools/MockExecutorBuilder.tokenizer|tokenizer(ai.koog.prompt.tokenizer.Tokenizer){}[0]
+
+    final class MockLLMAnswerBuilder { // ai.koog.agents.testing.tools/MockExecutorBuilder.MockLLMAnswerBuilder|null[0]
+        final fun asDefaultResponse(): ai.koog.agents.testing.tools/MockExecutorBuilder // ai.koog.agents.testing.tools/MockExecutorBuilder.MockLLMAnswerBuilder.asDefaultResponse|asDefaultResponse(){}[0]
+        final fun onCondition(kotlin/Function1<kotlin/String, kotlin/Boolean>): ai.koog.agents.testing.tools/MockExecutorBuilder // ai.koog.agents.testing.tools/MockExecutorBuilder.MockLLMAnswerBuilder.onCondition|onCondition(kotlin.Function1<kotlin.String,kotlin.Boolean>){}[0]
+        final fun onRequestContains(kotlin/String): ai.koog.agents.testing.tools/MockExecutorBuilder // ai.koog.agents.testing.tools/MockExecutorBuilder.MockLLMAnswerBuilder.onRequestContains|onRequestContains(kotlin.String){}[0]
+        final fun onRequestEquals(kotlin/String): ai.koog.agents.testing.tools/MockExecutorBuilder // ai.koog.agents.testing.tools/MockExecutorBuilder.MockLLMAnswerBuilder.onRequestEquals|onRequestEquals(kotlin.String){}[0]
+    }
+}
+
+final class ai.koog.agents.testing.tools/MockExecutorDSLBuilder { // ai.koog.agents.testing.tools/MockExecutorDSLBuilder|null[0]
+    constructor <init>(ai.koog.utils.time/KoogClock, ai.koog.serialization/JSONSerializer, ai.koog.prompt.tokenizer/Tokenizer? = ...) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.<init>|<init>(ai.koog.utils.time.KoogClock;ai.koog.serialization.JSONSerializer;ai.koog.prompt.tokenizer.Tokenizer?){}[0]
+
+    final var handleLastAssistantMessage // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.handleLastAssistantMessage|{}handleLastAssistantMessage[0]
+        final fun <get-handleLastAssistantMessage>(): kotlin/Boolean // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.handleLastAssistantMessage.<get-handleLastAssistantMessage>|<get-handleLastAssistantMessage>(){}[0]
+        final fun <set-handleLastAssistantMessage>(kotlin/Boolean) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.handleLastAssistantMessage.<set-handleLastAssistantMessage>|<set-handleLastAssistantMessage>(kotlin.Boolean){}[0]
+
+    final fun (kotlin/String).onCondition(kotlin/Function1<kotlin/String, kotlin/Boolean>): ai.koog.agents.testing.tools/MockExecutorDSLBuilder // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.onCondition|onCondition@kotlin.String(kotlin.Function1<kotlin.String,kotlin.Boolean>){}[0]
+    final fun (kotlin/String).onUserRequestContains(kotlin/String): ai.koog.agents.testing.tools/MockExecutorDSLBuilder // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.onUserRequestContains|onUserRequestContains@kotlin.String(kotlin.String){}[0]
+    final fun (kotlin/String).onUserRequestEquals(kotlin/String): ai.koog.agents.testing.tools/MockExecutorDSLBuilder // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.onUserRequestEquals|onUserRequestEquals@kotlin.String(kotlin.String){}[0]
+    final fun <#A1: kotlin/Any?, #B1: kotlin/Any?> addToolAction(ai.koog.agents.core.tools/Tool<#A1, #B1>, kotlin.coroutines/SuspendFunction1<#A1, kotlin/Boolean> = ..., kotlin.coroutines/SuspendFunction1<#A1, #B1>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.addToolAction|addToolAction(ai.koog.agents.core.tools.Tool<0:0,0:1>;kotlin.coroutines.SuspendFunction1<0:0,kotlin.Boolean>;kotlin.coroutines.SuspendFunction1<0:0,0:1>){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?, #B1: kotlin/Any?> mockTool(ai.koog.agents.core.tools/Tool<#A1, #B1>): ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver<#A1, #B1> // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.mockTool|mockTool(ai.koog.agents.core.tools.Tool<0:0,0:1>){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> (ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver<#A1, ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult>).alwaysTells(kotlin.coroutines/SuspendFunction0<kotlin/String>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.alwaysTells|alwaysTells@ai.koog.agents.testing.tools.MockExecutorDSLBuilder.MockToolReceiver<0:0,ai.koog.agents.testing.tools.MockExecutorDSLBuilder.TextToolResult>(kotlin.coroutines.SuspendFunction0<kotlin.String>){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> (ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver<#A1, ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult>).doesStr(kotlin.coroutines/SuspendFunction0<kotlin/String>): ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver.MockToolResponseBuilder<#A1, ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult> // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.doesStr|doesStr@ai.koog.agents.testing.tools.MockExecutorDSLBuilder.MockToolReceiver<0:0,ai.koog.agents.testing.tools.MockExecutorDSLBuilder.TextToolResult>(kotlin.coroutines.SuspendFunction0<kotlin.String>){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> (ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver<#A1, kotlin/String>).alwaysReturns(kotlin/String) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.alwaysReturns|alwaysReturns@ai.koog.agents.testing.tools.MockExecutorDSLBuilder.MockToolReceiver<0:0,kotlin.String>(kotlin.String){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> (ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver<#A1, kotlin/String>).alwaysTells(kotlin.coroutines/SuspendFunction0<kotlin/String>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.alwaysTells|alwaysTells@ai.koog.agents.testing.tools.MockExecutorDSLBuilder.MockToolReceiver<0:0,kotlin.String>(kotlin.coroutines.SuspendFunction0<kotlin.String>){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> addLLMAnswerConditionalMatches(kotlin/Function1<kotlin/String, kotlin/Boolean>, ai.koog.agents.core.tools/Tool<#A1, *>, #A1) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.addLLMAnswerConditionalMatches|addLLMAnswerConditionalMatches(kotlin.Function1<kotlin.String,kotlin.Boolean>;ai.koog.agents.core.tools.Tool<0:0,*>;0:0){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> addLLMAnswerConditionalMatches(kotlin/Function1<kotlin/String, kotlin/Boolean>, kotlin.collections/List<kotlin/Pair<ai.koog.agents.core.tools/Tool<#A1, *>, #A1>>, kotlin.collections/List<kotlin/String>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.addLLMAnswerConditionalMatches|addLLMAnswerConditionalMatches(kotlin.Function1<kotlin.String,kotlin.Boolean>;kotlin.collections.List<kotlin.Pair<ai.koog.agents.core.tools.Tool<0:0,*>,0:0>>;kotlin.collections.List<kotlin.String>){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> addLLMAnswerExactPattern(kotlin/String, ai.koog.agents.core.tools/Tool<#A1, *>, #A1, kotlin/String?) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.addLLMAnswerExactPattern|addLLMAnswerExactPattern(kotlin.String;ai.koog.agents.core.tools.Tool<0:0,*>;0:0;kotlin.String?){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> addLLMAnswerExactPattern(kotlin/String, kotlin.collections/List<kotlin/Pair<ai.koog.agents.core.tools/Tool<#A1, *>, #A1>>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.addLLMAnswerExactPattern|addLLMAnswerExactPattern(kotlin.String;kotlin.collections.List<kotlin.Pair<ai.koog.agents.core.tools.Tool<0:0,*>,0:0>>){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> addLLMAnswerExactPattern(kotlin/String, kotlin.collections/List<kotlin/Pair<ai.koog.agents.core.tools/Tool<#A1, *>, #A1>>, kotlin.collections/List<kotlin/String>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.addLLMAnswerExactPattern|addLLMAnswerExactPattern(kotlin.String;kotlin.collections.List<kotlin.Pair<ai.koog.agents.core.tools.Tool<0:0,*>,0:0>>;kotlin.collections.List<kotlin.String>){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> addLLMAnswerPartialPattern(kotlin/String, ai.koog.agents.core.tools/Tool<#A1, *>, #A1) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.addLLMAnswerPartialPattern|addLLMAnswerPartialPattern(kotlin.String;ai.koog.agents.core.tools.Tool<0:0,*>;0:0){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> addLLMAnswerPartialPattern(kotlin/String, kotlin.collections/List<kotlin/Pair<ai.koog.agents.core.tools/Tool<#A1, *>, #A1>>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.addLLMAnswerPartialPattern|addLLMAnswerPartialPattern(kotlin.String;kotlin.collections.List<kotlin.Pair<ai.koog.agents.core.tools.Tool<0:0,*>,0:0>>){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> addLLMAnswerPartialPattern(kotlin/String, kotlin.collections/List<kotlin/Pair<ai.koog.agents.core.tools/Tool<#A1, *>, #A1>>, kotlin.collections/List<kotlin/String>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.addLLMAnswerPartialPattern|addLLMAnswerPartialPattern(kotlin.String;kotlin.collections.List<kotlin.Pair<ai.koog.agents.core.tools.Tool<0:0,*>,0:0>>;kotlin.collections.List<kotlin.String>){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> mockLLMMixedResponse(kotlin.collections/List<kotlin/Pair<ai.koog.agents.core.tools/Tool<#A1, *>, #A1>>, kotlin.collections/List<kotlin/String>): ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MixedResultsReceiver<#A1> // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.mockLLMMixedResponse|mockLLMMixedResponse(kotlin.collections.List<kotlin.Pair<ai.koog.agents.core.tools.Tool<0:0,*>,0:0>>;kotlin.collections.List<kotlin.String>){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> mockLLMToolCall(ai.koog.agents.core.tools/Tool<#A1, *>, #A1, kotlin/String? = ...): ai.koog.agents.testing.tools/MockExecutorDSLBuilder.ToolCallReceiver<#A1> // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.mockLLMToolCall|mockLLMToolCall(ai.koog.agents.core.tools.Tool<0:0,*>;0:0;kotlin.String?){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> mockLLMToolCall(kotlin.collections/List<kotlin/Pair<ai.koog.agents.core.tools/Tool<#A1, *>, #A1>>): ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MultiToolCallReceiver<#A1> // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.mockLLMToolCall|mockLLMToolCall(kotlin.collections.List<kotlin.Pair<ai.koog.agents.core.tools.Tool<0:0,*>,0:0>>){0§<kotlin.Any?>}[0]
+    final fun addModerationResponseExactPattern(kotlin/String, ai.koog.prompt.dsl/ModerationResult) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.addModerationResponseExactPattern|addModerationResponseExactPattern(kotlin.String;ai.koog.prompt.dsl.ModerationResult){}[0]
+    final fun addModerationResponsePartialPattern(kotlin/String, ai.koog.prompt.dsl/ModerationResult) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.addModerationResponsePartialPattern|addModerationResponsePartialPattern(kotlin.String;ai.koog.prompt.dsl.ModerationResult){}[0]
+    final fun build(): ai.koog.prompt.executor.model/PromptExecutor // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.build|build(){}[0]
+    final fun mockLLMAnswer(kotlin/String): ai.koog.agents.testing.tools/DefaultResponseReceiver // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.mockLLMAnswer|mockLLMAnswer(kotlin.String){}[0]
+    final fun mockLLMStream(kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame>): ai.koog.agents.testing.tools/StreamResponseReceiver // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.mockLLMStream|mockLLMStream(kotlinx.coroutines.flow.Flow<ai.koog.prompt.streaming.StreamFrame>){}[0]
+    final fun setDefaultModerationResponse(ai.koog.prompt.dsl/ModerationResult) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.setDefaultModerationResponse|setDefaultModerationResponse(ai.koog.prompt.dsl.ModerationResult){}[0]
+    final fun setDefaultResponse(kotlin/String) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.setDefaultResponse|setDefaultResponse(kotlin.String){}[0]
+    final fun setDefaultStreamResponse(kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.setDefaultStreamResponse|setDefaultStreamResponse(kotlinx.coroutines.flow.Flow<ai.koog.prompt.streaming.StreamFrame>){}[0]
+
+    final class <#A1: kotlin/Any?, #B1: kotlin/Any?> MockToolReceiver { // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver|null[0]
+        constructor <init>(ai.koog.agents.core.tools/Tool<#A1, #B1>, ai.koog.agents.testing.tools/MockExecutorDSLBuilder) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver.<init>|<init>(ai.koog.agents.core.tools.Tool<1:0,1:1>;ai.koog.agents.testing.tools.MockExecutorDSLBuilder){}[0]
+
+        final fun alwaysDoes(kotlin.coroutines/SuspendFunction0<#B1>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver.alwaysDoes|alwaysDoes(kotlin.coroutines.SuspendFunction0<1:1>){}[0]
+        final fun alwaysReturns(#B1) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver.alwaysReturns|alwaysReturns(1:1){}[0]
+        final fun does(kotlin.coroutines/SuspendFunction0<#B1>): ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver.MockToolResponseBuilder<#A1, #B1> // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver.does|does(kotlin.coroutines.SuspendFunction0<1:1>){}[0]
+        final fun returns(#B1): ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver.MockToolResponseBuilder<#A1, #B1> // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver.returns|returns(1:1){}[0]
+
+        final class <#A2: kotlin/Any?, #B2: kotlin/Any?> MockToolResponseBuilder { // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver.MockToolResponseBuilder|null[0]
+            constructor <init>(ai.koog.agents.core.tools/Tool<#A2, #B2>, kotlin.coroutines/SuspendFunction0<#B2>, ai.koog.agents.testing.tools/MockExecutorDSLBuilder) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver.MockToolResponseBuilder.<init>|<init>(ai.koog.agents.core.tools.Tool<1:0,1:1>;kotlin.coroutines.SuspendFunction0<1:1>;ai.koog.agents.testing.tools.MockExecutorDSLBuilder){}[0]
+
+            final fun onArguments(#A2) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver.MockToolResponseBuilder.onArguments|onArguments(1:0){}[0]
+            final fun onArgumentsMatching(kotlin.coroutines/SuspendFunction1<#A2, kotlin/Boolean>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MockToolReceiver.MockToolResponseBuilder.onArgumentsMatching|onArgumentsMatching(kotlin.coroutines.SuspendFunction1<1:0,kotlin.Boolean>){}[0]
+        }
+    }
+
+    final class <#A1: kotlin/Any?> MixedResultsReceiver { // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MixedResultsReceiver|null[0]
+        constructor <init>(kotlin.collections/List<kotlin/Pair<ai.koog.agents.core.tools/Tool<#A1, *>, #A1>>, kotlin.collections/List<kotlin/String>, ai.koog.agents.testing.tools/MockExecutorDSLBuilder) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MixedResultsReceiver.<init>|<init>(kotlin.collections.List<kotlin.Pair<ai.koog.agents.core.tools.Tool<1:0,*>,1:0>>;kotlin.collections.List<kotlin.String>;ai.koog.agents.testing.tools.MockExecutorDSLBuilder){}[0]
+
+        final fun onCondition(kotlin/Function1<kotlin/String, kotlin/Boolean>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MixedResultsReceiver.onCondition|onCondition(kotlin.Function1<kotlin.String,kotlin.Boolean>){}[0]
+        final fun onRequestContains(kotlin/String): kotlin/String // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MixedResultsReceiver.onRequestContains|onRequestContains(kotlin.String){}[0]
+        final fun onRequestEquals(kotlin/String): kotlin/String // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MixedResultsReceiver.onRequestEquals|onRequestEquals(kotlin.String){}[0]
+    }
+
+    final class <#A1: kotlin/Any?> MultiToolCallReceiver { // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MultiToolCallReceiver|null[0]
+        constructor <init>(kotlin.collections/List<kotlin/Pair<ai.koog.agents.core.tools/Tool<#A1, *>, #A1>>, ai.koog.agents.testing.tools/MockExecutorDSLBuilder) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MultiToolCallReceiver.<init>|<init>(kotlin.collections.List<kotlin.Pair<ai.koog.agents.core.tools.Tool<1:0,*>,1:0>>;ai.koog.agents.testing.tools.MockExecutorDSLBuilder){}[0]
+
+        final fun onRequestContains(kotlin/String): kotlin/String // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MultiToolCallReceiver.onRequestContains|onRequestContains(kotlin.String){}[0]
+        final fun onRequestEquals(kotlin/String): kotlin/String // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.MultiToolCallReceiver.onRequestEquals|onRequestEquals(kotlin.String){}[0]
+    }
+
+    final class <#A1: kotlin/Any?> ToolCallReceiver { // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.ToolCallReceiver|null[0]
+        constructor <init>(ai.koog.agents.core.tools/Tool<#A1, *>, #A1, kotlin/String?, ai.koog.agents.testing.tools/MockExecutorDSLBuilder) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.ToolCallReceiver.<init>|<init>(ai.koog.agents.core.tools.Tool<1:0,*>;1:0;kotlin.String?;ai.koog.agents.testing.tools.MockExecutorDSLBuilder){}[0]
+
+        final fun onCondition(kotlin/Function1<kotlin/String, kotlin/Boolean>) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.ToolCallReceiver.onCondition|onCondition(kotlin.Function1<kotlin.String,kotlin.Boolean>){}[0]
+        final fun onRequestContains(kotlin/String): kotlin/String // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.ToolCallReceiver.onRequestContains|onRequestContains(kotlin.String){}[0]
+        final fun onRequestEquals(kotlin/String): kotlin/String // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.ToolCallReceiver.onRequestEquals|onRequestEquals(kotlin.String){}[0]
+    }
+
+    final class TextToolResult { // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult|null[0]
+        constructor <init>(kotlin/String) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.<init>|<init>(kotlin.String){}[0]
+
+        final val text // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.text|{}text[0]
+            final fun <get-text>(): kotlin/String // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.text.<get-text>|<get-text>(){}[0]
+
+        final fun component1(): kotlin/String // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult> { // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.$serializer|null[0]
+            final val descriptor // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult) // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.agents.testing.tools.MockExecutorDSLBuilder.TextToolResult){}[0]
+        }
+
+        final object Companion { // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult> // ai.koog.agents.testing.tools/MockExecutorDSLBuilder.TextToolResult.Companion.serializer|serializer(){}[0]
+        }
+    }
+}
+
+final class ai.koog.agents.testing.tools/MockPromptExecutor : ai.koog.prompt.executor.model/PromptExecutor { // ai.koog.agents.testing.tools/MockPromptExecutor|null[0]
+    final fun close() // ai.koog.agents.testing.tools/MockPromptExecutor.close|close(){}[0]
+    final fun executeStreaming(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.agents.testing.tools/MockPromptExecutor.executeStreaming|executeStreaming(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    final suspend fun execute(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): ai.koog.prompt.message/Message.Assistant // ai.koog.agents.testing.tools/MockPromptExecutor.execute|execute(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    final suspend fun moderate(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): ai.koog.prompt.dsl/ModerationResult // ai.koog.agents.testing.tools/MockPromptExecutor.moderate|moderate(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+
+    final object Companion { // ai.koog.agents.testing.tools/MockPromptExecutor.Companion|null[0]
+        final fun builder(ai.koog.serialization/JSONSerializer): ai.koog.agents.testing.tools/MockExecutorBuilder // ai.koog.agents.testing.tools/MockPromptExecutor.Companion.builder|builder(ai.koog.serialization.JSONSerializer){}[0]
+    }
+}
+
+final class ai.koog.agents.testing.tools/RandomNumberTool : ai.koog.agents.core.tools/Tool<ai.koog.agents.testing.tools/RandomNumberTool.Args, kotlin/Int> { // ai.koog.agents.testing.tools/RandomNumberTool|null[0]
+    constructor <init>() // ai.koog.agents.testing.tools/RandomNumberTool.<init>|<init>(){}[0]
+
+    final var last // ai.koog.agents.testing.tools/RandomNumberTool.last|{}last[0]
+        final fun <get-last>(): kotlin/Int? // ai.koog.agents.testing.tools/RandomNumberTool.last.<get-last>|<get-last>(){}[0]
+        final fun <set-last>(kotlin/Int?) // ai.koog.agents.testing.tools/RandomNumberTool.last.<set-last>|<set-last>(kotlin.Int?){}[0]
+
+    final suspend fun execute(ai.koog.agents.testing.tools/RandomNumberTool.Args): kotlin/Int // ai.koog.agents.testing.tools/RandomNumberTool.execute|execute(ai.koog.agents.testing.tools.RandomNumberTool.Args){}[0]
+
+    final class Args { // ai.koog.agents.testing.tools/RandomNumberTool.Args|null[0]
+        constructor <init>(kotlin/Int? = ...) // ai.koog.agents.testing.tools/RandomNumberTool.Args.<init>|<init>(kotlin.Int?){}[0]
+
+        final val seed // ai.koog.agents.testing.tools/RandomNumberTool.Args.seed|{}seed[0]
+            final fun <get-seed>(): kotlin/Int? // ai.koog.agents.testing.tools/RandomNumberTool.Args.seed.<get-seed>|<get-seed>(){}[0]
+
+        final fun component1(): kotlin/Int? // ai.koog.agents.testing.tools/RandomNumberTool.Args.component1|component1(){}[0]
+        final fun copy(kotlin/Int? = ...): ai.koog.agents.testing.tools/RandomNumberTool.Args // ai.koog.agents.testing.tools/RandomNumberTool.Args.copy|copy(kotlin.Int?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.testing.tools/RandomNumberTool.Args.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.testing.tools/RandomNumberTool.Args.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.testing.tools/RandomNumberTool.Args.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.agents.testing.tools/RandomNumberTool.Args> { // ai.koog.agents.testing.tools/RandomNumberTool.Args.$serializer|null[0]
+            final val descriptor // ai.koog.agents.testing.tools/RandomNumberTool.Args.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.agents.testing.tools/RandomNumberTool.Args.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.agents.testing.tools/RandomNumberTool.Args.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.agents.testing.tools/RandomNumberTool.Args // ai.koog.agents.testing.tools/RandomNumberTool.Args.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.agents.testing.tools/RandomNumberTool.Args) // ai.koog.agents.testing.tools/RandomNumberTool.Args.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.agents.testing.tools.RandomNumberTool.Args){}[0]
+        }
+
+        final object Companion { // ai.koog.agents.testing.tools/RandomNumberTool.Args.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.agents.testing.tools/RandomNumberTool.Args> // ai.koog.agents.testing.tools/RandomNumberTool.Args.Companion.serializer|serializer(){}[0]
+        }
+    }
+}
+
+final class ai.koog.agents.testing.tools/StreamResponseReceiver { // ai.koog.agents.testing.tools/StreamResponseReceiver|null[0]
+    constructor <init>(kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame>, ai.koog.agents.testing.tools/MockExecutorDSLBuilder) // ai.koog.agents.testing.tools/StreamResponseReceiver.<init>|<init>(kotlinx.coroutines.flow.Flow<ai.koog.prompt.streaming.StreamFrame>;ai.koog.agents.testing.tools.MockExecutorDSLBuilder){}[0]
+
+    final val asDefaultResponse // ai.koog.agents.testing.tools/StreamResponseReceiver.asDefaultResponse|{}asDefaultResponse[0]
+        final fun <get-asDefaultResponse>(): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.agents.testing.tools/StreamResponseReceiver.asDefaultResponse.<get-asDefaultResponse>|<get-asDefaultResponse>(){}[0]
+
+    final fun onRequestContains(kotlin/String): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.agents.testing.tools/StreamResponseReceiver.onRequestContains|onRequestContains(kotlin.String){}[0]
+    final fun onRequestEquals(kotlin/String): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.agents.testing.tools/StreamResponseReceiver.onRequestEquals|onRequestEquals(kotlin.String){}[0]
+}
+
+final class ai.koog.agents.testing.tools/TestBlankTool : ai.koog.agents.core.tools/Tool<ai.koog.agents.testing.tools/TestBlankTool.Args, kotlin/String> { // ai.koog.agents.testing.tools/TestBlankTool|null[0]
+    constructor <init>(kotlin/String? = ...) // ai.koog.agents.testing.tools/TestBlankTool.<init>|<init>(kotlin.String?){}[0]
+
+    final suspend fun execute(ai.koog.agents.testing.tools/TestBlankTool.Args): kotlin/String // ai.koog.agents.testing.tools/TestBlankTool.execute|execute(ai.koog.agents.testing.tools.TestBlankTool.Args){}[0]
+
+    final class Args { // ai.koog.agents.testing.tools/TestBlankTool.Args|null[0]
+        constructor <init>(kotlin/String = ...) // ai.koog.agents.testing.tools/TestBlankTool.Args.<init>|<init>(kotlin.String){}[0]
+
+        final val args // ai.koog.agents.testing.tools/TestBlankTool.Args.args|{}args[0]
+            final fun <get-args>(): kotlin/String // ai.koog.agents.testing.tools/TestBlankTool.Args.args.<get-args>|<get-args>(){}[0]
+
+        final fun component1(): kotlin/String // ai.koog.agents.testing.tools/TestBlankTool.Args.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.koog.agents.testing.tools/TestBlankTool.Args // ai.koog.agents.testing.tools/TestBlankTool.Args.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.testing.tools/TestBlankTool.Args.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.testing.tools/TestBlankTool.Args.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.testing.tools/TestBlankTool.Args.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.agents.testing.tools/TestBlankTool.Args> { // ai.koog.agents.testing.tools/TestBlankTool.Args.$serializer|null[0]
+            final val descriptor // ai.koog.agents.testing.tools/TestBlankTool.Args.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.agents.testing.tools/TestBlankTool.Args.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.agents.testing.tools/TestBlankTool.Args.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.agents.testing.tools/TestBlankTool.Args // ai.koog.agents.testing.tools/TestBlankTool.Args.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.agents.testing.tools/TestBlankTool.Args) // ai.koog.agents.testing.tools/TestBlankTool.Args.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.agents.testing.tools.TestBlankTool.Args){}[0]
+        }
+
+        final object Companion { // ai.koog.agents.testing.tools/TestBlankTool.Args.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.agents.testing.tools/TestBlankTool.Args> // ai.koog.agents.testing.tools/TestBlankTool.Args.Companion.serializer|serializer(){}[0]
+        }
+    }
+}
+
+open class ai.koog.agents.testing.tools/DefaultResponseReceiver { // ai.koog.agents.testing.tools/DefaultResponseReceiver|null[0]
+    constructor <init>(kotlin/String, ai.koog.agents.testing.tools/MockExecutorDSLBuilder) // ai.koog.agents.testing.tools/DefaultResponseReceiver.<init>|<init>(kotlin.String;ai.koog.agents.testing.tools.MockExecutorDSLBuilder){}[0]
+
+    final val asDefaultResponse // ai.koog.agents.testing.tools/DefaultResponseReceiver.asDefaultResponse|{}asDefaultResponse[0]
+        final fun <get-asDefaultResponse>(): kotlin/String // ai.koog.agents.testing.tools/DefaultResponseReceiver.asDefaultResponse.<get-asDefaultResponse>|<get-asDefaultResponse>(){}[0]
+
+    final fun onCondition(kotlin/Function1<kotlin/String, kotlin/Boolean>): kotlin/String // ai.koog.agents.testing.tools/DefaultResponseReceiver.onCondition|onCondition(kotlin.Function1<kotlin.String,kotlin.Boolean>){}[0]
+    final fun onRequestContains(kotlin/String): kotlin/String // ai.koog.agents.testing.tools/DefaultResponseReceiver.onRequestContains|onRequestContains(kotlin.String){}[0]
+    final fun onRequestEquals(kotlin/String): kotlin/String // ai.koog.agents.testing.tools/DefaultResponseReceiver.onRequestEquals|onRequestEquals(kotlin.String){}[0]
+}
+
+sealed class <#A: kotlin/Any?, #B: kotlin/Any?> ai.koog.agents.testing.feature/NodeReference { // ai.koog.agents.testing.feature/NodeReference|null[0]
+    abstract fun resolve(ai.koog.agents.core.agent.entity/AIAgentSubgraphBase<*, *>): ai.koog.agents.core.agent.entity/AIAgentNodeBase<#A, #B> // ai.koog.agents.testing.feature/NodeReference.resolve|resolve(ai.koog.agents.core.agent.entity.AIAgentSubgraphBase<*,*>){}[0]
+
+    final class <#A1: kotlin/Any?, #B1: kotlin/Any?> Strategy : ai.koog.agents.testing.feature/NodeReference.SubgraphNode<#A1, #B1> { // ai.koog.agents.testing.feature/NodeReference.Strategy|null[0]
+        constructor <init>(kotlin/String) // ai.koog.agents.testing.feature/NodeReference.Strategy.<init>|<init>(kotlin.String){}[0]
+
+        final fun resolve(ai.koog.agents.core.agent.entity/AIAgentSubgraphBase<*, *>): ai.koog.agents.core.agent.entity/AIAgentGraphStrategyBase<#A1, #B1> // ai.koog.agents.testing.feature/NodeReference.Strategy.resolve|resolve(ai.koog.agents.core.agent.entity.AIAgentSubgraphBase<*,*>){}[0]
+    }
+
+    final class <#A1: kotlin/Any?> Finish : ai.koog.agents.testing.feature/NodeReference<#A1, #A1> { // ai.koog.agents.testing.feature/NodeReference.Finish|null[0]
+        constructor <init>() // ai.koog.agents.testing.feature/NodeReference.Finish.<init>|<init>(){}[0]
+
+        final fun resolve(ai.koog.agents.core.agent.entity/AIAgentSubgraphBase<*, *>): ai.koog.agents.core.agent.entity/AIAgentNodeBase<#A1, #A1> // ai.koog.agents.testing.feature/NodeReference.Finish.resolve|resolve(ai.koog.agents.core.agent.entity.AIAgentSubgraphBase<*,*>){}[0]
+    }
+
+    final class <#A1: kotlin/Any?> Start : ai.koog.agents.testing.feature/NodeReference<#A1, #A1> { // ai.koog.agents.testing.feature/NodeReference.Start|null[0]
+        constructor <init>() // ai.koog.agents.testing.feature/NodeReference.Start.<init>|<init>(){}[0]
+
+        final fun resolve(ai.koog.agents.core.agent.entity/AIAgentSubgraphBase<*, *>): ai.koog.agents.core.agent.entity/AIAgentNodeBase<#A1, #A1> // ai.koog.agents.testing.feature/NodeReference.Start.resolve|resolve(ai.koog.agents.core.agent.entity.AIAgentSubgraphBase<*,*>){}[0]
+    }
+
+    open class <#A1: kotlin/Any?, #B1: kotlin/Any?> NamedNode : ai.koog.agents.testing.feature/NodeReference<#A1, #B1> { // ai.koog.agents.testing.feature/NodeReference.NamedNode|null[0]
+        constructor <init>(kotlin/String) // ai.koog.agents.testing.feature/NodeReference.NamedNode.<init>|<init>(kotlin.String){}[0]
+
+        final val name // ai.koog.agents.testing.feature/NodeReference.NamedNode.name|{}name[0]
+            final fun <get-name>(): kotlin/String // ai.koog.agents.testing.feature/NodeReference.NamedNode.name.<get-name>|<get-name>(){}[0]
+
+        open fun resolve(ai.koog.agents.core.agent.entity/AIAgentSubgraphBase<*, *>): ai.koog.agents.core.agent.entity/AIAgentNodeBase<#A1, #B1> // ai.koog.agents.testing.feature/NodeReference.NamedNode.resolve|resolve(ai.koog.agents.core.agent.entity.AIAgentSubgraphBase<*,*>){}[0]
+    }
+
+    open class <#A1: kotlin/Any?, #B1: kotlin/Any?> SubgraphNode : ai.koog.agents.testing.feature/NodeReference.NamedNode<#A1, #B1> { // ai.koog.agents.testing.feature/NodeReference.SubgraphNode|null[0]
+        constructor <init>(kotlin/String) // ai.koog.agents.testing.feature/NodeReference.SubgraphNode.<init>|<init>(kotlin.String){}[0]
+
+        open fun resolve(ai.koog.agents.core.agent.entity/AIAgentSubgraphBase<*, *>): ai.koog.agents.core.agent.entity/AIAgentSubgraphBase<#A1, #B1> // ai.koog.agents.testing.feature/NodeReference.SubgraphNode.resolve|resolve(ai.koog.agents.core.agent.entity.AIAgentSubgraphBase<*,*>){}[0]
+    }
+}
+
+final object ai.koog.agents.testing.tools/TestFinishTool : ai.koog.agents.core.tools/Tool<ai.koog.agents.testing.tools/TestFinishTool.Args, kotlin/String> { // ai.koog.agents.testing.tools/TestFinishTool|null[0]
+    final suspend fun execute(ai.koog.agents.testing.tools/TestFinishTool.Args): kotlin/String // ai.koog.agents.testing.tools/TestFinishTool.execute|execute(ai.koog.agents.testing.tools.TestFinishTool.Args){}[0]
+
+    final class Args { // ai.koog.agents.testing.tools/TestFinishTool.Args|null[0]
+        constructor <init>(kotlin/String = ...) // ai.koog.agents.testing.tools/TestFinishTool.Args.<init>|<init>(kotlin.String){}[0]
+
+        final val output // ai.koog.agents.testing.tools/TestFinishTool.Args.output|{}output[0]
+            final fun <get-output>(): kotlin/String // ai.koog.agents.testing.tools/TestFinishTool.Args.output.<get-output>|<get-output>(){}[0]
+
+        final fun component1(): kotlin/String // ai.koog.agents.testing.tools/TestFinishTool.Args.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.koog.agents.testing.tools/TestFinishTool.Args // ai.koog.agents.testing.tools/TestFinishTool.Args.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.testing.tools/TestFinishTool.Args.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.testing.tools/TestFinishTool.Args.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.testing.tools/TestFinishTool.Args.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.agents.testing.tools/TestFinishTool.Args> { // ai.koog.agents.testing.tools/TestFinishTool.Args.$serializer|null[0]
+            final val descriptor // ai.koog.agents.testing.tools/TestFinishTool.Args.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.agents.testing.tools/TestFinishTool.Args.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.agents.testing.tools/TestFinishTool.Args.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.agents.testing.tools/TestFinishTool.Args // ai.koog.agents.testing.tools/TestFinishTool.Args.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.agents.testing.tools/TestFinishTool.Args) // ai.koog.agents.testing.tools/TestFinishTool.Args.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.agents.testing.tools.TestFinishTool.Args){}[0]
+        }
+
+        final object Companion { // ai.koog.agents.testing.tools/TestFinishTool.Args.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.agents.testing.tools/TestFinishTool.Args> // ai.koog.agents.testing.tools/TestFinishTool.Args.Companion.serializer|serializer(){}[0]
+        }
+    }
+}
+
+final fun (ai.koog.agents.core.agent/GraphAIAgent.FeatureContext).ai.koog.agents.testing.feature/withTesting(kotlin/Function1<ai.koog.agents.testing.feature/Testing.Config, kotlin/Unit> = ...) // ai.koog.agents.testing.feature/withTesting|withTesting@ai.koog.agents.core.agent.GraphAIAgent.FeatureContext(kotlin.Function1<ai.koog.agents.testing.feature.Testing.Config,kotlin.Unit>){}[0]
+final fun (ai.koog.agents.testing.feature/Testing.Config).ai.koog.agents.testing.feature/graph(kotlin/Function1<ai.koog.agents.testing.feature/Testing.Config, kotlin/Unit>) // ai.koog.agents.testing.feature/graph|graph@ai.koog.agents.testing.feature.Testing.Config(kotlin.Function1<ai.koog.agents.testing.feature.Testing.Config,kotlin.Unit>){}[0]
+final fun (ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<*, *>).ai.koog.agents.testing.feature/assistantMessage(kotlin/String, kotlin/String? = ...): ai.koog.prompt.message/Message.Assistant // ai.koog.agents.testing.feature/assistantMessage|assistantMessage@ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<*,*>(kotlin.String;kotlin.String?){}[0]
+final fun (ai.koog.agents.testing.tools/MockExecutorDSLBuilder).ai.koog.agents.testing.tools/mockLLMAnswer(kotlin/String): ai.koog.agents.testing.tools/DefaultResponseReceiver // ai.koog.agents.testing.tools/mockLLMAnswer|mockLLMAnswer@ai.koog.agents.testing.tools.MockExecutorDSLBuilder(kotlin.String){}[0]
+final fun (ai.koog.agents.testing.tools/MockExecutorDSLBuilder).ai.koog.agents.testing.tools/mockLLMStream(kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame>): ai.koog.agents.testing.tools/StreamResponseReceiver // ai.koog.agents.testing.tools/mockLLMStream|mockLLMStream@ai.koog.agents.testing.tools.MockExecutorDSLBuilder(kotlinx.coroutines.flow.Flow<ai.koog.prompt.streaming.StreamFrame>){}[0]
+final fun (kotlin.collections/List<ai.koog.agents.core.feature.message/FeatureMessage>).ai.koog.agents.testing.feature.message/findNodeEvents(kotlin/String): kotlin.collections/List<ai.koog.agents.core.feature.model.events/NodeExecutionStartingEvent> // ai.koog.agents.testing.feature.message/findNodeEvents|findNodeEvents@kotlin.collections.List<ai.koog.agents.core.feature.message.FeatureMessage>(kotlin.String){}[0]
+final fun (kotlin.collections/List<ai.koog.agents.core.feature.message/FeatureMessage>).ai.koog.agents.testing.feature.message/singleNodeEvent(kotlin/String): ai.koog.agents.core.feature.model.events/NodeExecutionStartingEvent // ai.koog.agents.testing.feature.message/singleNodeEvent|singleNodeEvent@kotlin.collections.List<ai.koog.agents.core.feature.message.FeatureMessage>(kotlin.String){}[0]
+final fun <#A: kotlin/Any?, #B: kotlin/Any?> (ai.koog.agents.core.agent/GraphAIAgent.FeatureContext).ai.koog.agents.testing.feature/testGraph(kotlin/String, kotlin/Function1<ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<#A, #B>, kotlin/Unit>) // ai.koog.agents.testing.feature/testGraph|testGraph@ai.koog.agents.core.agent.GraphAIAgent.FeatureContext(kotlin.String;kotlin.Function1<ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<0:0,0:1>,kotlin.Unit>){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?, #B: kotlin/Any?> (ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<*, *>).ai.koog.agents.testing.feature/toolResult(ai.koog.agents.core.tools/Tool<#A, #B>, #A, #B): ai.koog.agents.core.environment/ReceivedToolResult // ai.koog.agents.testing.feature/toolResult|toolResult@ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<*,*>(ai.koog.agents.core.tools.Tool<0:0,0:1>;0:0;0:1){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<*, *>).ai.koog.agents.testing.feature/assistantMessage(ai.koog.agents.core.tools/Tool<#A, *>, #A, kotlin/String? = ...): ai.koog.prompt.message/Message.Assistant // ai.koog.agents.testing.feature/assistantMessage|assistantMessage@ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<*,*>(ai.koog.agents.core.tools.Tool<0:0,*>;0:0;kotlin.String?){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<*, *>).ai.koog.agents.testing.feature/toolCallMessagePart(ai.koog.agents.core.tools/Tool<#A, *>, #A): ai.koog.prompt.message/MessagePart.Tool.Call // ai.koog.agents.testing.feature/toolCallMessagePart|toolCallMessagePart@ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<*,*>(ai.koog.agents.core.tools.Tool<0:0,*>;0:0){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.koog.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<*, *>).ai.koog.agents.testing.feature/toolResult(ai.koog.agents.core.tools/SimpleTool<#A>, #A, kotlin/String): ai.koog.agents.core.environment/ReceivedToolResult // ai.koog.agents.testing.feature/toolResult|toolResult@ai.koog.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<*,*>(ai.koog.agents.core.tools.SimpleTool<0:0>;0:0;kotlin.String){0§<kotlin.Any?>}[0]
+final fun ai.koog.agents.testing.agent/agentExecutionInfo(kotlin/Array<out kotlin/String>...): ai.koog.agents.core.agent.execution/AgentExecutionInfo // ai.koog.agents.testing.agent/agentExecutionInfo|agentExecutionInfo(kotlin.Array<out|kotlin.String>...){}[0]
+final fun ai.koog.agents.testing.agent/agentExecutionPath(kotlin/Array<out kotlin/String>...): kotlin/String // ai.koog.agents.testing.agent/agentExecutionPath|agentExecutionPath(kotlin.Array<out|kotlin.String>...){}[0]
+final fun ai.koog.agents.testing.tools/getMockExecutor(ai.koog.serialization/JSONSerializer = ..., ai.koog.utils.time/KoogClock = ..., ai.koog.prompt.tokenizer/Tokenizer? = ..., kotlin/Boolean = ..., kotlin/Function1<ai.koog.agents.testing.tools/MockExecutorDSLBuilder, kotlin/Unit>): ai.koog.prompt.executor.model/PromptExecutor // ai.koog.agents.testing.tools/getMockExecutor|getMockExecutor(ai.koog.serialization.JSONSerializer;ai.koog.utils.time.KoogClock;ai.koog.prompt.tokenizer.Tokenizer?;kotlin.Boolean;kotlin.Function1<ai.koog.agents.testing.tools.MockExecutorDSLBuilder,kotlin.Unit>){}[0]
+final inline fun <#A: reified ai.koog.agents.core.feature.message/FeatureMessage> (kotlin.collections/List<ai.koog.agents.core.feature.message/FeatureMessage>).ai.koog.agents.testing.feature.message/findEvents(): kotlin.collections/List<#A> // ai.koog.agents.testing.feature.message/findEvents|findEvents@kotlin.collections.List<ai.koog.agents.core.feature.message.FeatureMessage>(){0§<ai.koog.agents.core.feature.message.FeatureMessage>}[0]
+final inline fun <#A: reified ai.koog.agents.core.feature.message/FeatureMessage> (kotlin.collections/List<ai.koog.agents.core.feature.message/FeatureMessage>).ai.koog.agents.testing.feature.message/singleEvent(): #A // ai.koog.agents.testing.feature.message/singleEvent|singleEvent@kotlin.collections.List<ai.koog.agents.core.feature.message.FeatureMessage>(){0§<ai.koog.agents.core.feature.message.FeatureMessage>}[0]

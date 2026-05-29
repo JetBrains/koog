@@ -1,0 +1,768 @@
+public final class ai/koog/agents/testing/agent/AgentExecutionKt {
+	public static final fun agentExecutionInfo ([Ljava/lang/String;)Lai/koog/agents/core/agent/execution/AgentExecutionInfo;
+	public static final fun agentExecutionPath ([Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/client/CapturingLLMClient : ai/koog/prompt/executor/clients/LLMClient {
+	public fun <init> ()V
+	public fun <init> (Lai/koog/prompt/message/Message$Assistant;)V
+	public fun <init> (Lai/koog/prompt/message/Message$Assistant;Ljava/util/List;)V
+	public fun <init> (Lai/koog/prompt/message/Message$Assistant;Ljava/util/List;Ljava/util/List;)V
+	public fun <init> (Lai/koog/prompt/message/Message$Assistant;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/dsl/ModerationResult;)V
+	public fun <init> (Lai/koog/prompt/message/Message$Assistant;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/dsl/ModerationResult;Ljava/util/List;)V
+	public fun <init> (Lai/koog/prompt/message/Message$Assistant;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/dsl/ModerationResult;Ljava/util/List;Ljava/util/List;)V
+	public fun <init> (Lai/koog/prompt/message/Message$Assistant;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/dsl/ModerationResult;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/llm/LLMProvider;)V
+	public synthetic fun <init> (Lai/koog/prompt/message/Message$Assistant;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/dsl/ModerationResult;Ljava/util/List;Ljava/util/List;Lai/koog/prompt/llm/LLMProvider;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public fun embed (Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun embed (Ljava/util/List;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public final fun getLastBatchEmbeddingInput ()Ljava/util/List;
+	public final fun getLastBatchEmbeddingModel ()Lai/koog/prompt/llm/LLModel;
+	public final fun getLastChoicesModel ()Lai/koog/prompt/llm/LLModel;
+	public final fun getLastChoicesPrompt ()Lai/koog/prompt/Prompt;
+	public final fun getLastChoicesTools ()Ljava/util/List;
+	public final fun getLastEmbeddingModel ()Lai/koog/prompt/llm/LLModel;
+	public final fun getLastEmbeddingText ()Ljava/lang/String;
+	public final fun getLastExecutedModel ()Lai/koog/prompt/llm/LLModel;
+	public final fun getLastExecutedPrompt ()Lai/koog/prompt/Prompt;
+	public final fun getLastExecutedTools ()Ljava/util/List;
+	public final fun getLastModerationModel ()Lai/koog/prompt/llm/LLModel;
+	public final fun getLastModerationPrompt ()Lai/koog/prompt/Prompt;
+	public final fun getLastStreamingModel ()Lai/koog/prompt/llm/LLModel;
+	public final fun getLastStreamingPrompt ()Lai/koog/prompt/Prompt;
+	public fun llmProvider ()Lai/koog/prompt/llm/LLMProvider;
+	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setLastBatchEmbeddingInput (Ljava/util/List;)V
+	public final fun setLastBatchEmbeddingModel (Lai/koog/prompt/llm/LLModel;)V
+	public final fun setLastChoicesModel (Lai/koog/prompt/llm/LLModel;)V
+	public final fun setLastChoicesPrompt (Lai/koog/prompt/Prompt;)V
+	public final fun setLastChoicesTools (Ljava/util/List;)V
+	public final fun setLastEmbeddingModel (Lai/koog/prompt/llm/LLModel;)V
+	public final fun setLastEmbeddingText (Ljava/lang/String;)V
+	public final fun setLastExecutedModel (Lai/koog/prompt/llm/LLModel;)V
+	public final fun setLastExecutedPrompt (Lai/koog/prompt/Prompt;)V
+	public final fun setLastExecutedTools (Ljava/util/List;)V
+	public final fun setLastModerationModel (Lai/koog/prompt/llm/LLModel;)V
+	public final fun setLastModerationPrompt (Lai/koog/prompt/Prompt;)V
+	public final fun setLastStreamingModel (Lai/koog/prompt/llm/LLModel;)V
+	public final fun setLastStreamingPrompt (Lai/koog/prompt/Prompt;)V
+}
+
+public final class ai/koog/agents/testing/feature/ApiKt {
+	public static final fun graph (Lai/koog/agents/testing/feature/Testing$Config;Lkotlin/jvm/functions/Function1;)V
+	public static final fun testGraph (Lai/koog/agents/core/agent/GraphAIAgent$FeatureContext;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+}
+
+public abstract interface class ai/koog/agents/testing/feature/AssertionResult {
+}
+
+public final class ai/koog/agents/testing/feature/AssertionResult$False : ai/koog/agents/testing/feature/AssertionResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getMessage ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/feature/AssertionResult$NotEqual : ai/koog/agents/testing/feature/AssertionResult {
+	public fun <init> (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;)V
+	public final fun getActual ()Ljava/lang/Object;
+	public final fun getExpected ()Ljava/lang/Object;
+	public final fun getMessage ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/feature/EdgeAssertion {
+	public fun <init> (Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Ljava/lang/Object;Lai/koog/agents/testing/feature/NodeReference;)V
+	public final fun component1 ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun component2 ()Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;
+	public final fun component3 ()Ljava/lang/Object;
+	public final fun component4 ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun copy (Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Ljava/lang/Object;Lai/koog/agents/testing/feature/NodeReference;)Lai/koog/agents/testing/feature/EdgeAssertion;
+	public static synthetic fun copy$default (Lai/koog/agents/testing/feature/EdgeAssertion;Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Ljava/lang/Object;Lai/koog/agents/testing/feature/NodeReference;ILjava/lang/Object;)Lai/koog/agents/testing/feature/EdgeAssertion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContext ()Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;
+	public final fun getExpectedNode ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun getNode ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun getOutput ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/feature/GraphAssertions {
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/testing/feature/NodeReference$Start;Lai/koog/agents/testing/feature/NodeReference$Finish;Ljava/util/Map;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/koog/agents/testing/feature/NodeReference$Start;
+	public final fun component3 ()Lai/koog/agents/testing/feature/NodeReference$Finish;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/util/List;
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Lai/koog/agents/testing/feature/NodeReference$Start;Lai/koog/agents/testing/feature/NodeReference$Finish;Ljava/util/Map;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lai/koog/agents/testing/feature/GraphAssertions;
+	public static synthetic fun copy$default (Lai/koog/agents/testing/feature/GraphAssertions;Ljava/lang/String;Lai/koog/agents/testing/feature/NodeReference$Start;Lai/koog/agents/testing/feature/NodeReference$Finish;Ljava/util/Map;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lai/koog/agents/testing/feature/GraphAssertions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEdgeAssertions ()Ljava/util/List;
+	public final fun getFinish ()Lai/koog/agents/testing/feature/NodeReference$Finish;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getNodeOutputAssertions ()Ljava/util/List;
+	public final fun getNodes ()Ljava/util/Map;
+	public final fun getReachabilityAssertions ()Ljava/util/List;
+	public final fun getStart ()Lai/koog/agents/testing/feature/NodeReference$Start;
+	public final fun getSubgraphAssertions ()Ljava/util/List;
+	public final fun getUnconditionalEdgeAssertions ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/feature/NodeOutputAssertion {
+	public fun <init> (Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/testing/tools/DummyAIAgentContext;Ljava/lang/Object;Ljava/lang/Object;)V
+	public final fun component1 ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun component2 ()Lai/koog/agents/testing/tools/DummyAIAgentContext;
+	public final fun component3 ()Ljava/lang/Object;
+	public final fun component4 ()Ljava/lang/Object;
+	public final fun copy (Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/testing/tools/DummyAIAgentContext;Ljava/lang/Object;Ljava/lang/Object;)Lai/koog/agents/testing/feature/NodeOutputAssertion;
+	public static synthetic fun copy$default (Lai/koog/agents/testing/feature/NodeOutputAssertion;Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/testing/tools/DummyAIAgentContext;Ljava/lang/Object;Ljava/lang/Object;ILjava/lang/Object;)Lai/koog/agents/testing/feature/NodeOutputAssertion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContext ()Lai/koog/agents/testing/tools/DummyAIAgentContext;
+	public final fun getExpectedOutput ()Ljava/lang/Object;
+	public final fun getInput ()Ljava/lang/Object;
+	public final fun getNode ()Lai/koog/agents/testing/feature/NodeReference;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class ai/koog/agents/testing/feature/NodeReference {
+	public abstract fun resolve (Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;)Lai/koog/agents/core/agent/entity/AIAgentNodeBase;
+}
+
+public final class ai/koog/agents/testing/feature/NodeReference$Finish : ai/koog/agents/testing/feature/NodeReference {
+	public fun <init> ()V
+	public fun resolve (Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;)Lai/koog/agents/core/agent/entity/AIAgentNodeBase;
+}
+
+public class ai/koog/agents/testing/feature/NodeReference$NamedNode : ai/koog/agents/testing/feature/NodeReference {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getName ()Ljava/lang/String;
+	public fun resolve (Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;)Lai/koog/agents/core/agent/entity/AIAgentNodeBase;
+}
+
+public final class ai/koog/agents/testing/feature/NodeReference$Start : ai/koog/agents/testing/feature/NodeReference {
+	public fun <init> ()V
+	public fun resolve (Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;)Lai/koog/agents/core/agent/entity/AIAgentNodeBase;
+}
+
+public final class ai/koog/agents/testing/feature/NodeReference$Strategy : ai/koog/agents/testing/feature/NodeReference$SubgraphNode {
+	public fun <init> (Ljava/lang/String;)V
+	public fun resolve (Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;)Lai/koog/agents/core/agent/entity/AIAgentGraphStrategyBase;
+	public synthetic fun resolve (Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;)Lai/koog/agents/core/agent/entity/AIAgentNodeBase;
+	public synthetic fun resolve (Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;)Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;
+}
+
+public class ai/koog/agents/testing/feature/NodeReference$SubgraphNode : ai/koog/agents/testing/feature/NodeReference$NamedNode {
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun resolve (Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;)Lai/koog/agents/core/agent/entity/AIAgentNodeBase;
+	public fun resolve (Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;)Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;
+}
+
+public final class ai/koog/agents/testing/feature/ReachabilityAssertion {
+	public fun <init> (Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/testing/feature/NodeReference;)V
+	public final fun component1 ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun component2 ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun copy (Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/testing/feature/NodeReference;)Lai/koog/agents/testing/feature/ReachabilityAssertion;
+	public static synthetic fun copy$default (Lai/koog/agents/testing/feature/ReachabilityAssertion;Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/testing/feature/NodeReference;ILjava/lang/Object;)Lai/koog/agents/testing/feature/ReachabilityAssertion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFrom ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun getTo ()Lai/koog/agents/testing/feature/NodeReference;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/feature/SubGraphAssertions {
+	public fun <init> (Lai/koog/agents/testing/feature/NodeReference$SubgraphNode;Lai/koog/agents/testing/feature/GraphAssertions;)V
+	public final fun component1 ()Lai/koog/agents/testing/feature/NodeReference$SubgraphNode;
+	public final fun component2 ()Lai/koog/agents/testing/feature/GraphAssertions;
+	public final fun copy (Lai/koog/agents/testing/feature/NodeReference$SubgraphNode;Lai/koog/agents/testing/feature/GraphAssertions;)Lai/koog/agents/testing/feature/SubGraphAssertions;
+	public static synthetic fun copy$default (Lai/koog/agents/testing/feature/SubGraphAssertions;Lai/koog/agents/testing/feature/NodeReference$SubgraphNode;Lai/koog/agents/testing/feature/GraphAssertions;ILjava/lang/Object;)Lai/koog/agents/testing/feature/SubGraphAssertions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGraphAssertions ()Lai/koog/agents/testing/feature/GraphAssertions;
+	public final fun getSubgraphRef ()Lai/koog/agents/testing/feature/NodeReference$SubgraphNode;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/feature/Testing {
+	public static final field Feature Lai/koog/agents/testing/feature/Testing$Feature;
+	public fun <init> ()V
+}
+
+public final class ai/koog/agents/testing/feature/Testing$Config : ai/koog/agents/core/feature/config/FeatureConfig {
+	public fun <init> (Lai/koog/serialization/JSONSerializer;)V
+	public final fun getClock ()Lai/koog/utils/time/KoogClock;
+	public final fun getEnableGraphTesting ()Z
+	public final fun getTokenizer ()Lai/koog/prompt/tokenizer/Tokenizer;
+	public final fun handleAssertion (Lkotlin/jvm/functions/Function1;)V
+	public final fun setClock (Lai/koog/utils/time/KoogClock;)V
+	public final fun setEnableGraphTesting (Z)V
+	public final fun setTokenizer (Lai/koog/prompt/tokenizer/Tokenizer;)V
+	public final fun verifyStrategy (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class ai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder {
+	public fun <init> (Lai/koog/agents/testing/feature/NodeReference$SubgraphNode;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/tokenizer/Tokenizer;Lai/koog/serialization/JSONSerializer;)V
+	public final fun assertEdges (Lkotlin/jvm/functions/Function1;)V
+	public final fun assertNodeByName (Ljava/lang/String;)Lai/koog/agents/testing/feature/NodeReference$NamedNode;
+	public final fun assertNodes (Lkotlin/jvm/functions/Function1;)V
+	public final fun assertReachable (Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/testing/feature/NodeReference;)V
+	public final fun assertSubgraphByName (Ljava/lang/String;)Lai/koog/agents/testing/feature/NodeReference$SubgraphNode;
+	public final fun finishNode ()Lai/koog/agents/testing/feature/NodeReference$Finish;
+	public final fun startNode ()Lai/koog/agents/testing/feature/NodeReference$Start;
+	public final fun verifySubgraph (Lai/koog/agents/testing/feature/NodeReference$SubgraphNode;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun verifySubgraph$default (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/koog/agents/testing/feature/NodeReference$SubgraphNode;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+}
+
+public final class ai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$EdgeAssertionsBuilder : ai/koog/agents/testing/tools/AIAgentContextMockBuilderBase {
+	public fun <init> (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/koog/agents/testing/tools/AIAgentContextMockBuilder;)V
+	public synthetic fun <init> (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/koog/agents/testing/tools/AIAgentContextMockBuilder;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun alwaysGoesTo (Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/testing/feature/NodeReference;)V
+	public fun build ()Lai/koog/agents/core/agent/context/AIAgentContext;
+	public synthetic fun build ()Ljava/lang/Object;
+	public fun copy (Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;)Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$EdgeAssertionsBuilder;
+	public synthetic fun copy (Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;)Lai/koog/agents/testing/tools/AIAgentContextMockBuilderBase;
+	public fun getAgentInput ()Ljava/lang/Object;
+	public fun getAgentInputType ()Lai/koog/serialization/TypeToken;
+	public final fun getAssertions ()Ljava/util/List;
+	public fun getConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
+	public fun getEnvironment ()Lai/koog/agents/core/environment/AIAgentEnvironment;
+	public fun getExecutionInfo ()Lai/koog/agents/core/agent/execution/AgentExecutionInfo;
+	public fun getLlm ()Lai/koog/agents/core/agent/context/AIAgentLLMContext;
+	public fun getRunId ()Ljava/lang/String;
+	public fun getStateManager ()Lai/koog/agents/core/agent/entity/AIAgentStateManager;
+	public fun getStorage ()Lai/koog/agents/core/agent/entity/AIAgentStorage;
+	public fun getStrategyName ()Ljava/lang/String;
+	public final fun getUnconditionalEdgeAssertions ()Ljava/util/List;
+	public fun setAgentInput (Ljava/lang/Object;)V
+	public fun setAgentInputType (Lai/koog/serialization/TypeToken;)V
+	public fun setConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)V
+	public fun setEnvironment (Lai/koog/agents/core/environment/AIAgentEnvironment;)V
+	public fun setExecutionInfo (Lai/koog/agents/core/agent/execution/AgentExecutionInfo;)V
+	public fun setLlm (Lai/koog/agents/core/agent/context/AIAgentLLMContext;)V
+	public fun setRunId (Ljava/lang/String;)V
+	public fun setStateManager (Lai/koog/agents/core/agent/entity/AIAgentStateManager;)V
+	public fun setStorage (Lai/koog/agents/core/agent/entity/AIAgentStorage;)V
+	public fun setStrategyName (Ljava/lang/String;)V
+	public final fun withContext (Lkotlin/jvm/functions/Function1;)V
+	public final fun withOutput (Lai/koog/agents/testing/feature/NodeReference;Ljava/lang/Object;)Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$EdgeAssertionsBuilder$EdgeOutputPair;
+}
+
+public final class ai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$EdgeAssertionsBuilder$EdgeOutputPair {
+	public fun <init> (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$EdgeAssertionsBuilder;Lai/koog/agents/testing/feature/NodeReference;Ljava/lang/Object;)V
+	public final fun getNode ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun getOutput ()Ljava/lang/Object;
+	public final fun goesTo (Lai/koog/agents/testing/feature/NodeReference;)V
+}
+
+public final class ai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$NodeOutputAssertionsBuilder : ai/koog/agents/testing/tools/AIAgentContextMockBuilderBase {
+	public fun <init> (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/koog/agents/testing/tools/AIAgentContextMockBuilder;)V
+	public synthetic fun <init> (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/koog/agents/testing/tools/AIAgentContextMockBuilder;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun build ()Lai/koog/agents/core/agent/context/AIAgentContext;
+	public synthetic fun build ()Ljava/lang/Object;
+	public fun copy (Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;)Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$NodeOutputAssertionsBuilder;
+	public synthetic fun copy (Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;)Lai/koog/agents/testing/tools/AIAgentContextMockBuilderBase;
+	public fun getAgentInput ()Ljava/lang/Object;
+	public fun getAgentInputType ()Lai/koog/serialization/TypeToken;
+	public final fun getAssertions ()Ljava/util/List;
+	public fun getConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
+	public fun getEnvironment ()Lai/koog/agents/core/environment/AIAgentEnvironment;
+	public fun getExecutionInfo ()Lai/koog/agents/core/agent/execution/AgentExecutionInfo;
+	public fun getLlm ()Lai/koog/agents/core/agent/context/AIAgentLLMContext;
+	public fun getRunId ()Ljava/lang/String;
+	public fun getStateManager ()Lai/koog/agents/core/agent/entity/AIAgentStateManager;
+	public fun getStorage ()Lai/koog/agents/core/agent/entity/AIAgentStorage;
+	public fun getStrategyName ()Ljava/lang/String;
+	public fun setAgentInput (Ljava/lang/Object;)V
+	public fun setAgentInputType (Lai/koog/serialization/TypeToken;)V
+	public fun setConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)V
+	public fun setEnvironment (Lai/koog/agents/core/environment/AIAgentEnvironment;)V
+	public fun setExecutionInfo (Lai/koog/agents/core/agent/execution/AgentExecutionInfo;)V
+	public fun setLlm (Lai/koog/agents/core/agent/context/AIAgentLLMContext;)V
+	public fun setRunId (Ljava/lang/String;)V
+	public fun setStateManager (Lai/koog/agents/core/agent/entity/AIAgentStateManager;)V
+	public fun setStorage (Lai/koog/agents/core/agent/entity/AIAgentStorage;)V
+	public fun setStrategyName (Ljava/lang/String;)V
+	public final fun withContext (Lkotlin/jvm/functions/Function1;)V
+	public final fun withInput (Lai/koog/agents/testing/feature/NodeReference;Ljava/lang/Object;)Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$NodeOutputAssertionsBuilder$NodeOutputPair;
+}
+
+public final class ai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$NodeOutputAssertionsBuilder$NodeOutputPair {
+	public fun <init> (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$NodeOutputAssertionsBuilder;Lai/koog/agents/testing/feature/NodeReference;Ljava/lang/Object;)V
+	public final fun getInput ()Ljava/lang/Object;
+	public final fun getNode ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun outputs (Ljava/lang/Object;)V
+}
+
+public final class ai/koog/agents/testing/feature/Testing$Feature : ai/koog/agents/core/feature/AIAgentGraphFeature {
+	public synthetic fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/core/feature/config/FeatureConfig;
+	public fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/testing/feature/Testing$Config;
+	public fun getKey ()Lai/koog/agents/core/agent/entity/AIAgentStorageKey;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Ljava/lang/Object;
+	public fun install (Lai/koog/agents/testing/feature/Testing$Config;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Lai/koog/agents/testing/feature/Testing;
+}
+
+public final class ai/koog/agents/testing/feature/TestingFeatureKt {
+	public static final fun assistantMessage (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/koog/agents/core/tools/Tool;Ljava/lang/Object;Ljava/lang/String;)Lai/koog/prompt/message/Message$Assistant;
+	public static final fun assistantMessage (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/message/Message$Assistant;
+	public static synthetic fun assistantMessage$default (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/koog/agents/core/tools/Tool;Ljava/lang/Object;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/message/Message$Assistant;
+	public static synthetic fun assistantMessage$default (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/message/Message$Assistant;
+	public static final fun toolCallMessagePart (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/koog/agents/core/tools/Tool;Ljava/lang/Object;)Lai/koog/prompt/message/MessagePart$Tool$Call;
+	public static final fun toolResult (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/koog/agents/core/tools/SimpleTool;Ljava/lang/Object;Ljava/lang/String;)Lai/koog/agents/core/environment/ReceivedToolResult;
+	public static final fun toolResult (Lai/koog/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/koog/agents/core/tools/Tool;Ljava/lang/Object;Ljava/lang/Object;)Lai/koog/agents/core/environment/ReceivedToolResult;
+	public static final fun withTesting (Lai/koog/agents/core/agent/GraphAIAgent$FeatureContext;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun withTesting$default (Lai/koog/agents/core/agent/GraphAIAgent$FeatureContext;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+}
+
+public final class ai/koog/agents/testing/feature/UnconditionalEdgeAssertion {
+	public fun <init> (Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/testing/feature/NodeReference;)V
+	public final fun component1 ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun component2 ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun copy (Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/testing/feature/NodeReference;)Lai/koog/agents/testing/feature/UnconditionalEdgeAssertion;
+	public static synthetic fun copy$default (Lai/koog/agents/testing/feature/UnconditionalEdgeAssertion;Lai/koog/agents/testing/feature/NodeReference;Lai/koog/agents/testing/feature/NodeReference;ILjava/lang/Object;)Lai/koog/agents/testing/feature/UnconditionalEdgeAssertion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getExpectedNode ()Lai/koog/agents/testing/feature/NodeReference;
+	public final fun getNode ()Lai/koog/agents/testing/feature/NodeReference;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/feature/message/FeatureMessageAssertionsKt {
+	public static final fun findNodeEvents (Ljava/util/List;Ljava/lang/String;)Ljava/util/List;
+	public static final fun singleNodeEvent (Ljava/util/List;Ljava/lang/String;)Lai/koog/agents/core/feature/model/events/NodeExecutionStartingEvent;
+}
+
+public final class ai/koog/agents/testing/network/NetUtil {
+	public static final field INSTANCE Lai/koog/agents/testing/network/NetUtil;
+	public final fun findAvailablePort ()I
+	public final fun isPortAvailable (I)Z
+}
+
+public final class ai/koog/agents/testing/tools/AIAgentContextMockBuilder : ai/koog/agents/testing/tools/AIAgentContextMockBuilderBase {
+	public fun <init> ()V
+	public synthetic fun build ()Lai/koog/agents/core/agent/context/AIAgentContext;
+	public fun build ()Lai/koog/agents/testing/tools/DummyAIAgentContext;
+	public synthetic fun build ()Ljava/lang/Object;
+	public fun copy (Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;)Lai/koog/agents/testing/tools/AIAgentContextMockBuilder;
+	public synthetic fun copy (Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;)Lai/koog/agents/testing/tools/AIAgentContextMockBuilderBase;
+	public fun getAgentInput ()Ljava/lang/Object;
+	public fun getAgentInputType ()Lai/koog/serialization/TypeToken;
+	public fun getConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
+	public fun getEnvironment ()Lai/koog/agents/core/environment/AIAgentEnvironment;
+	public fun getExecutionInfo ()Lai/koog/agents/core/agent/execution/AgentExecutionInfo;
+	public fun getLlm ()Lai/koog/agents/core/agent/context/AIAgentLLMContext;
+	public fun getRunId ()Ljava/lang/String;
+	public fun getStateManager ()Lai/koog/agents/core/agent/entity/AIAgentStateManager;
+	public fun getStorage ()Lai/koog/agents/core/agent/entity/AIAgentStorage;
+	public fun getStrategyName ()Ljava/lang/String;
+	public fun setAgentInput (Ljava/lang/Object;)V
+	public fun setAgentInputType (Lai/koog/serialization/TypeToken;)V
+	public fun setConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)V
+	public fun setEnvironment (Lai/koog/agents/core/environment/AIAgentEnvironment;)V
+	public fun setExecutionInfo (Lai/koog/agents/core/agent/execution/AgentExecutionInfo;)V
+	public fun setLlm (Lai/koog/agents/core/agent/context/AIAgentLLMContext;)V
+	public fun setRunId (Ljava/lang/String;)V
+	public fun setStateManager (Lai/koog/agents/core/agent/entity/AIAgentStateManager;)V
+	public fun setStorage (Lai/koog/agents/core/agent/entity/AIAgentStorage;)V
+	public fun setStrategyName (Ljava/lang/String;)V
+}
+
+public final class ai/koog/agents/testing/tools/AIAgentContextMockBuilder$ProxyHandler {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun createProxy ()Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/agents/testing/tools/AIAgentContextMockBuilderBase : ai/koog/agents/core/dsl/builder/BaseBuilder {
+	public abstract fun build ()Lai/koog/agents/core/agent/context/AIAgentContext;
+	public abstract fun copy (Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;)Lai/koog/agents/testing/tools/AIAgentContextMockBuilderBase;
+	public static synthetic fun copy$default (Lai/koog/agents/testing/tools/AIAgentContextMockBuilderBase;Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;ILjava/lang/Object;)Lai/koog/agents/testing/tools/AIAgentContextMockBuilderBase;
+	public abstract fun getAgentInput ()Ljava/lang/Object;
+	public abstract fun getAgentInputType ()Lai/koog/serialization/TypeToken;
+	public abstract fun getConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
+	public abstract fun getEnvironment ()Lai/koog/agents/core/environment/AIAgentEnvironment;
+	public abstract fun getExecutionInfo ()Lai/koog/agents/core/agent/execution/AgentExecutionInfo;
+	public abstract fun getLlm ()Lai/koog/agents/core/agent/context/AIAgentLLMContext;
+	public abstract fun getRunId ()Ljava/lang/String;
+	public abstract fun getStateManager ()Lai/koog/agents/core/agent/entity/AIAgentStateManager;
+	public abstract fun getStorage ()Lai/koog/agents/core/agent/entity/AIAgentStorage;
+	public abstract fun getStrategyName ()Ljava/lang/String;
+	public abstract fun setAgentInput (Ljava/lang/Object;)V
+	public abstract fun setAgentInputType (Lai/koog/serialization/TypeToken;)V
+	public abstract fun setConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)V
+	public abstract fun setEnvironment (Lai/koog/agents/core/environment/AIAgentEnvironment;)V
+	public abstract fun setExecutionInfo (Lai/koog/agents/core/agent/execution/AgentExecutionInfo;)V
+	public abstract fun setLlm (Lai/koog/agents/core/agent/context/AIAgentLLMContext;)V
+	public abstract fun setRunId (Ljava/lang/String;)V
+	public abstract fun setStateManager (Lai/koog/agents/core/agent/entity/AIAgentStateManager;)V
+	public abstract fun setStorage (Lai/koog/agents/core/agent/entity/AIAgentStorage;)V
+	public abstract fun setStrategyName (Ljava/lang/String;)V
+}
+
+public final class ai/koog/agents/testing/tools/AIAgentContextMockBuilderBase$DefaultImpls {
+	public static synthetic fun copy$default (Lai/koog/agents/testing/tools/AIAgentContextMockBuilderBase;Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;ILjava/lang/Object;)Lai/koog/agents/testing/tools/AIAgentContextMockBuilderBase;
+}
+
+public class ai/koog/agents/testing/tools/DefaultResponseReceiver {
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;)V
+	public final fun getAsDefaultResponse ()Ljava/lang/String;
+	public final fun onCondition (Lkotlin/jvm/functions/Function1;)Ljava/lang/String;
+	public final fun onRequestContains (Ljava/lang/String;)Ljava/lang/String;
+	public final fun onRequestEquals (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/tools/DummyAIAgentContext : ai/koog/agents/core/agent/context/AIAgentGraphContextBase {
+	public fun <init> (Lai/koog/agents/testing/tools/AIAgentContextMockBuilder;Ljava/lang/String;)V
+	public synthetic fun <init> (Lai/koog/agents/testing/tools/AIAgentContextMockBuilder;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun copy (Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/String;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;)Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;
+	public fun fork (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getAgentId ()Ljava/lang/String;
+	public fun getAgentInput ()Ljava/lang/Object;
+	public fun getAgentInputType ()Lai/koog/serialization/TypeToken;
+	public fun getConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
+	public fun getEnvironment ()Lai/koog/agents/core/environment/AIAgentEnvironment;
+	public fun getExecutionInfo ()Lai/koog/agents/core/agent/execution/AgentExecutionInfo;
+	public fun getLlm ()Lai/koog/agents/core/agent/context/AIAgentLLMContext;
+	public synthetic fun getParentContext ()Lai/koog/agents/core/agent/context/AIAgentContext;
+	public fun getParentContext ()Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;
+	public fun getPipeline ()Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;
+	public synthetic fun getPipeline ()Lai/koog/agents/core/feature/pipeline/AIAgentPipeline;
+	public fun getRunId ()Ljava/lang/String;
+	public fun getStateManager ()Lai/koog/agents/core/agent/entity/AIAgentStateManager;
+	public fun getStorage ()Lai/koog/agents/core/agent/entity/AIAgentStorage;
+	public fun getStrategyName ()Ljava/lang/String;
+	public final fun isEnvironmentDefined ()Z
+	public final fun isLLMDefined ()Z
+	public fun replace (Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setExecutionInfo (Lai/koog/agents/core/agent/execution/AgentExecutionInfo;)V
+}
+
+public final class ai/koog/agents/testing/tools/DummyTool : ai/koog/agents/core/tools/SimpleTool {
+	public fun <init> ()V
+	public fun execute (Lai/koog/agents/testing/tools/DummyTool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun execute (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getResult ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/tools/DummyTool$Args {
+	public static final field Companion Lai/koog/agents/testing/tools/DummyTool$Args$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/testing/tools/DummyTool$Args;
+	public static synthetic fun copy$default (Lai/koog/agents/testing/tools/DummyTool$Args;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/testing/tools/DummyTool$Args;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDummy ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/agents/testing/tools/DummyTool$Args$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/agents/testing/tools/DummyTool$Args$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/agents/testing/tools/DummyTool$Args;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/agents/testing/tools/DummyTool$Args;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/testing/tools/DummyTool$Args$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/testing/tools/MockEnvironment : ai/koog/agents/core/environment/AIAgentEnvironment {
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/serialization/JSONSerializer;Lai/koog/agents/core/environment/AIAgentEnvironment;)V
+	public synthetic fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/serialization/JSONSerializer;Lai/koog/agents/core/environment/AIAgentEnvironment;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun executeTool (Lai/koog/prompt/message/MessagePart$Tool$Call;Lai/koog/agents/core/tools/ToolCallMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeTool (Lai/koog/prompt/message/MessagePart$Tool$Call;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeTools (Ljava/util/List;Lai/koog/agents/core/tools/ToolCallMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeTools (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun reportProblem (Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/testing/tools/MockExecutorBuilder {
+	public final fun build ()Lai/koog/prompt/executor/model/PromptExecutor;
+	public final fun clock (Lai/koog/utils/time/KoogClock;)Lai/koog/agents/testing/tools/MockExecutorBuilder;
+	public final fun handleLastAssistantMessage (Z)Lai/koog/agents/testing/tools/MockExecutorBuilder;
+	public final fun mockLLMAnswer (Ljava/lang/String;)Lai/koog/agents/testing/tools/MockExecutorBuilder$MockLLMAnswerBuilder;
+	public final fun tokenizer (Lai/koog/prompt/tokenizer/Tokenizer;)Lai/koog/agents/testing/tools/MockExecutorBuilder;
+}
+
+public final class ai/koog/agents/testing/tools/MockExecutorBuilder$MockLLMAnswerBuilder {
+	public final fun asDefaultResponse ()Lai/koog/agents/testing/tools/MockExecutorBuilder;
+	public final fun onCondition (Lkotlin/jvm/functions/Function1;)Lai/koog/agents/testing/tools/MockExecutorBuilder;
+	public final fun onRequestContains (Ljava/lang/String;)Lai/koog/agents/testing/tools/MockExecutorBuilder;
+	public final fun onRequestEquals (Ljava/lang/String;)Lai/koog/agents/testing/tools/MockExecutorBuilder;
+}
+
+public final class ai/koog/agents/testing/tools/MockExecutorDSLBuilder {
+	public fun <init> (Lai/koog/utils/time/KoogClock;Lai/koog/serialization/JSONSerializer;Lai/koog/prompt/tokenizer/Tokenizer;)V
+	public synthetic fun <init> (Lai/koog/utils/time/KoogClock;Lai/koog/serialization/JSONSerializer;Lai/koog/prompt/tokenizer/Tokenizer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun addLLMAnswerConditionalMatches (Lkotlin/jvm/functions/Function1;Lai/koog/agents/core/tools/Tool;Ljava/lang/Object;)V
+	public final fun addLLMAnswerConditionalMatches (Lkotlin/jvm/functions/Function1;Ljava/util/List;Ljava/util/List;)V
+	public final fun addLLMAnswerExactPattern (Ljava/lang/String;Lai/koog/agents/core/tools/Tool;Ljava/lang/Object;Ljava/lang/String;)V
+	public final fun addLLMAnswerExactPattern (Ljava/lang/String;Ljava/util/List;)V
+	public final fun addLLMAnswerExactPattern (Ljava/lang/String;Ljava/util/List;Ljava/util/List;)V
+	public final fun addLLMAnswerPartialPattern (Ljava/lang/String;Lai/koog/agents/core/tools/Tool;Ljava/lang/Object;)V
+	public final fun addLLMAnswerPartialPattern (Ljava/lang/String;Ljava/util/List;)V
+	public final fun addLLMAnswerPartialPattern (Ljava/lang/String;Ljava/util/List;Ljava/util/List;)V
+	public final fun addModerationResponseExactPattern (Ljava/lang/String;Lai/koog/prompt/dsl/ModerationResult;)V
+	public final fun addModerationResponsePartialPattern (Ljava/lang/String;Lai/koog/prompt/dsl/ModerationResult;)V
+	public final fun addToolAction (Lai/koog/agents/core/tools/Tool;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)V
+	public static synthetic fun addToolAction$default (Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;Lai/koog/agents/core/tools/Tool;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
+	public final fun alwaysReturns (Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$MockToolReceiver;Ljava/lang/String;)V
+	public final fun alwaysTells (Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$MockToolReceiver;Lkotlin/jvm/functions/Function1;)V
+	public final fun alwaysTellsText (Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$MockToolReceiver;Lkotlin/jvm/functions/Function1;)V
+	public final fun build ()Lai/koog/prompt/executor/model/PromptExecutor;
+	public final fun doesStr (Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$MockToolReceiver;Lkotlin/jvm/functions/Function1;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$MockToolReceiver$MockToolResponseBuilder;
+	public final fun getHandleLastAssistantMessage ()Z
+	public final fun mockLLMAnswer (Ljava/lang/String;)Lai/koog/agents/testing/tools/DefaultResponseReceiver;
+	public final fun mockLLMMixedResponse (Ljava/util/List;Ljava/util/List;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$MixedResultsReceiver;
+	public final fun mockLLMStream (Lkotlinx/coroutines/flow/Flow;)Lai/koog/agents/testing/tools/StreamResponseReceiver;
+	public final fun mockLLMToolCall (Lai/koog/agents/core/tools/Tool;Ljava/lang/Object;Ljava/lang/String;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$ToolCallReceiver;
+	public final fun mockLLMToolCall (Ljava/util/List;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$MultiToolCallReceiver;
+	public static synthetic fun mockLLMToolCall$default (Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;Lai/koog/agents/core/tools/Tool;Ljava/lang/Object;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$ToolCallReceiver;
+	public final fun mockTool (Lai/koog/agents/core/tools/Tool;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$MockToolReceiver;
+	public final fun onCondition (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;
+	public final fun onUserRequestContains (Ljava/lang/String;Ljava/lang/String;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;
+	public final fun onUserRequestEquals (Ljava/lang/String;Ljava/lang/String;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;
+	public final fun setDefaultModerationResponse (Lai/koog/prompt/dsl/ModerationResult;)V
+	public final fun setDefaultResponse (Ljava/lang/String;)V
+	public final fun setDefaultStreamResponse (Lkotlinx/coroutines/flow/Flow;)V
+	public final fun setHandleLastAssistantMessage (Z)V
+}
+
+public final class ai/koog/agents/testing/tools/MockExecutorDSLBuilder$MixedResultsReceiver {
+	public fun <init> (Ljava/util/List;Ljava/util/List;Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;)V
+	public final fun onCondition (Lkotlin/jvm/functions/Function1;)V
+	public final fun onRequestContains (Ljava/lang/String;)Ljava/lang/String;
+	public final fun onRequestEquals (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/tools/MockExecutorDSLBuilder$MockToolReceiver {
+	public fun <init> (Lai/koog/agents/core/tools/Tool;Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;)V
+	public final fun alwaysDoes (Lkotlin/jvm/functions/Function1;)V
+	public final fun alwaysReturns (Ljava/lang/Object;)V
+	public final fun does (Lkotlin/jvm/functions/Function1;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$MockToolReceiver$MockToolResponseBuilder;
+	public final fun returns (Ljava/lang/Object;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$MockToolReceiver$MockToolResponseBuilder;
+}
+
+public final class ai/koog/agents/testing/tools/MockExecutorDSLBuilder$MockToolReceiver$MockToolResponseBuilder {
+	public fun <init> (Lai/koog/agents/core/tools/Tool;Lkotlin/jvm/functions/Function1;Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;)V
+	public final fun onArguments (Ljava/lang/Object;)V
+	public final fun onArgumentsMatching (Lkotlin/jvm/functions/Function2;)V
+}
+
+public final class ai/koog/agents/testing/tools/MockExecutorDSLBuilder$MultiToolCallReceiver {
+	public fun <init> (Ljava/util/List;Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;)V
+	public final fun onRequestContains (Ljava/lang/String;)Ljava/lang/String;
+	public final fun onRequestEquals (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/tools/MockExecutorDSLBuilder$TextToolResult {
+	public static final field Companion Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$TextToolResult$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$TextToolResult;
+	public static synthetic fun copy$default (Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$TextToolResult;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$TextToolResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/agents/testing/tools/MockExecutorDSLBuilder$TextToolResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$TextToolResult$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$TextToolResult;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$TextToolResult;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/testing/tools/MockExecutorDSLBuilder$TextToolResult$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/testing/tools/MockExecutorDSLBuilder$ToolCallReceiver {
+	public fun <init> (Lai/koog/agents/core/tools/Tool;Ljava/lang/Object;Ljava/lang/String;Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;)V
+	public final fun onCondition (Lkotlin/jvm/functions/Function1;)V
+	public final fun onRequestContains (Ljava/lang/String;)Ljava/lang/String;
+	public final fun onRequestEquals (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/testing/tools/MockExecutorDSLBuilderKt {
+	public static final fun getMockExecutor (Lai/koog/serialization/JSONSerializer;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/tokenizer/Tokenizer;ZLkotlin/jvm/functions/Function1;)Lai/koog/prompt/executor/model/PromptExecutor;
+	public static synthetic fun getMockExecutor$default (Lai/koog/serialization/JSONSerializer;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/tokenizer/Tokenizer;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/koog/prompt/executor/model/PromptExecutor;
+	public static final fun mockLLMAnswer (Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;Ljava/lang/String;)Lai/koog/agents/testing/tools/DefaultResponseReceiver;
+	public static final fun mockLLMStream (Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;Lkotlinx/coroutines/flow/Flow;)Lai/koog/agents/testing/tools/StreamResponseReceiver;
+}
+
+public final class ai/koog/agents/testing/tools/MockExecutorDSLBuilder_jvmKt {
+	public static final fun mockLLMToolCall (Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;Lkotlin/reflect/KFunction;[Ljava/lang/Object;Ljava/lang/String;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$ToolCallReceiver;
+	public static synthetic fun mockLLMToolCall$default (Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;Lkotlin/reflect/KFunction;[Ljava/lang/Object;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/testing/tools/MockExecutorDSLBuilder$ToolCallReceiver;
+	public static final fun mockTool (Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;Lkotlin/reflect/KFunction;)Lai/koog/agents/testing/tools/MockToolFromCallableReceiver;
+}
+
+public final class ai/koog/agents/testing/tools/MockPromptExecutor : ai/koog/prompt/executor/model/PromptExecutor {
+	public static final field Companion Lai/koog/agents/testing/tools/MockPromptExecutor$Companion;
+	public static final fun builder (Lai/koog/serialization/JSONSerializer;)Lai/koog/agents/testing/tools/MockExecutorBuilder;
+	public fun close ()V
+	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/testing/tools/MockPromptExecutor$Companion {
+	public final fun builder (Lai/koog/serialization/JSONSerializer;)Lai/koog/agents/testing/tools/MockExecutorBuilder;
+}
+
+public final class ai/koog/agents/testing/tools/MockToolFromCallableReceiver {
+	public fun <init> (Lkotlin/reflect/KFunction;Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;)V
+	public final fun alwaysDoes (Lkotlin/jvm/functions/Function1;)V
+	public final fun alwaysReturns (Ljava/lang/Object;)V
+	public final fun does (Lkotlin/jvm/functions/Function1;)Lai/koog/agents/testing/tools/MockToolFromCallableReceiver$MockToolFromCallableResponseBuilder;
+	public final fun returns (Ljava/lang/Object;)Lai/koog/agents/testing/tools/MockToolFromCallableReceiver$MockToolFromCallableResponseBuilder;
+}
+
+public final class ai/koog/agents/testing/tools/MockToolFromCallableReceiver$MockToolFromCallableResponseBuilder {
+	public fun <init> (Lkotlin/reflect/KFunction;Lkotlin/jvm/functions/Function1;Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;)V
+	public final fun onArguments ([Ljava/lang/Object;)V
+	public final fun onArgumentsMatching (Lkotlin/jvm/functions/Function2;)V
+}
+
+public final class ai/koog/agents/testing/tools/RandomNumberTool : ai/koog/agents/core/tools/Tool {
+	public fun <init> ()V
+	public fun execute (Lai/koog/agents/testing/tools/RandomNumberTool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun execute (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getLast ()Ljava/lang/Integer;
+	public final fun setLast (Ljava/lang/Integer;)V
+}
+
+public final class ai/koog/agents/testing/tools/RandomNumberTool$Args {
+	public static final field Companion Lai/koog/agents/testing/tools/RandomNumberTool$Args$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun copy (Ljava/lang/Integer;)Lai/koog/agents/testing/tools/RandomNumberTool$Args;
+	public static synthetic fun copy$default (Lai/koog/agents/testing/tools/RandomNumberTool$Args;Ljava/lang/Integer;ILjava/lang/Object;)Lai/koog/agents/testing/tools/RandomNumberTool$Args;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSeed ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/agents/testing/tools/RandomNumberTool$Args$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/agents/testing/tools/RandomNumberTool$Args$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/agents/testing/tools/RandomNumberTool$Args;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/agents/testing/tools/RandomNumberTool$Args;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/testing/tools/RandomNumberTool$Args$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/testing/tools/StreamResponseReceiver {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lai/koog/agents/testing/tools/MockExecutorDSLBuilder;)V
+	public final fun getAsDefaultResponse ()Lkotlinx/coroutines/flow/Flow;
+	public final fun onRequestContains (Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public final fun onRequestEquals (Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class ai/koog/agents/testing/tools/TestBlankTool : ai/koog/agents/core/tools/Tool {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun execute (Lai/koog/agents/testing/tools/TestBlankTool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun execute (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/testing/tools/TestBlankTool$Args {
+	public static final field Companion Lai/koog/agents/testing/tools/TestBlankTool$Args$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/testing/tools/TestBlankTool$Args;
+	public static synthetic fun copy$default (Lai/koog/agents/testing/tools/TestBlankTool$Args;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/testing/tools/TestBlankTool$Args;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArgs ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/agents/testing/tools/TestBlankTool$Args$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/agents/testing/tools/TestBlankTool$Args$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/agents/testing/tools/TestBlankTool$Args;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/agents/testing/tools/TestBlankTool$Args;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/testing/tools/TestBlankTool$Args$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/testing/tools/TestFinishTool : ai/koog/agents/core/tools/Tool {
+	public static final field INSTANCE Lai/koog/agents/testing/tools/TestFinishTool;
+	public fun execute (Lai/koog/agents/testing/tools/TestFinishTool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun execute (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/testing/tools/TestFinishTool$Args {
+	public static final field Companion Lai/koog/agents/testing/tools/TestFinishTool$Args$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/agents/testing/tools/TestFinishTool$Args;
+	public static synthetic fun copy$default (Lai/koog/agents/testing/tools/TestFinishTool$Args;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/testing/tools/TestFinishTool$Args;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOutput ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/agents/testing/tools/TestFinishTool$Args$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/agents/testing/tools/TestFinishTool$Args$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/agents/testing/tools/TestFinishTool$Args;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/agents/testing/tools/TestFinishTool$Args;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/testing/tools/TestFinishTool$Args$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/testing/tools/ToolCondition {
+	public fun <init> (Lai/koog/agents/core/tools/Tool;Lai/koog/serialization/JSONSerializer;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)V
+	public final fun getArgsCondition ()Lkotlin/jvm/functions/Function2;
+	public final fun getProduceResult ()Lkotlin/jvm/functions/Function2;
+	public final fun getSerializer ()Lai/koog/serialization/JSONSerializer;
+	public final fun getTool ()Lai/koog/agents/core/tools/Tool;
+}
+

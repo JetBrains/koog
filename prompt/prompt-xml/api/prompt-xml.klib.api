@@ -1,0 +1,35 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Alias: ios => [iosArm64, iosSimulatorArm64, iosX64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-xml>
+final class ai.koog.prompt.xml/XmlContentBuilder : ai.koog.prompt.text/TextContentBuilder { // ai.koog.prompt.xml/XmlContentBuilder|null[0]
+    constructor <init>(kotlin/Boolean) // ai.koog.prompt.xml/XmlContentBuilder.<init>|<init>(kotlin.Boolean){}[0]
+
+    final fun (kotlin/String).unaryPlus() // ai.koog.prompt.xml/XmlContentBuilder.unaryPlus|unaryPlus@kotlin.String(){}[0]
+    final fun cdata(kotlin/String) // ai.koog.prompt.xml/XmlContentBuilder.cdata|cdata(kotlin.String){}[0]
+    final fun comment(kotlin/String) // ai.koog.prompt.xml/XmlContentBuilder.comment|comment(kotlin.String){}[0]
+    final fun doctype(kotlin/String, kotlin/String? = ..., kotlin/String? = ...) // ai.koog.prompt.xml/XmlContentBuilder.doctype|doctype(kotlin.String;kotlin.String?;kotlin.String?){}[0]
+    final fun processingInstruction(kotlin/String, kotlin/String) // ai.koog.prompt.xml/XmlContentBuilder.processingInstruction|processingInstruction(kotlin.String;kotlin.String){}[0]
+    final fun xmlDeclaration(kotlin/String = ..., kotlin/String = ..., kotlin/Boolean? = ...) // ai.koog.prompt.xml/XmlContentBuilder.xmlDeclaration|xmlDeclaration(kotlin.String;kotlin.String;kotlin.Boolean?){}[0]
+
+    // Targets: [ios, wasmJs]
+    final fun selfClosingTag(kotlin/String, kotlin.collections/HashMap<kotlin/String, kotlin/String> = ...) // ai.koog.prompt.xml/XmlContentBuilder.selfClosingTag|selfClosingTag(kotlin.String;kotlin.collections.HashMap<kotlin.String,kotlin.String>){}[0]
+
+    // Targets: [ios, wasmJs]
+    final fun tag(kotlin/String, kotlin.collections/HashMap<kotlin/String, kotlin/String> = ..., kotlin/Function1<ai.koog.prompt.xml/XmlContentBuilder, kotlin/Unit> = ...) // ai.koog.prompt.xml/XmlContentBuilder.tag|tag(kotlin.String;kotlin.collections.HashMap<kotlin.String,kotlin.String>;kotlin.Function1<ai.koog.prompt.xml.XmlContentBuilder,kotlin.Unit>){}[0]
+
+    // Targets: [js]
+    final fun selfClosingTag(kotlin/String, kotlin.collections/LinkedHashMap<kotlin/String, kotlin/String> = ...) // ai.koog.prompt.xml/XmlContentBuilder.selfClosingTag|selfClosingTag(kotlin.String;kotlin.collections.LinkedHashMap<kotlin.String,kotlin.String>){}[0]
+
+    // Targets: [js]
+    final fun tag(kotlin/String, kotlin.collections/LinkedHashMap<kotlin/String, kotlin/String> = ..., kotlin/Function1<ai.koog.prompt.xml/XmlContentBuilder, kotlin/Unit> = ...) // ai.koog.prompt.xml/XmlContentBuilder.tag|tag(kotlin.String;kotlin.collections.LinkedHashMap<kotlin.String,kotlin.String>;kotlin.Function1<ai.koog.prompt.xml.XmlContentBuilder,kotlin.Unit>){}[0]
+}
+
+final fun ai.koog.prompt.xml/xml(kotlin/Boolean = ..., kotlin/Function1<ai.koog.prompt.xml/XmlContentBuilder, kotlin/Unit>): kotlin/String // ai.koog.prompt.xml/xml|xml(kotlin.Boolean;kotlin.Function1<ai.koog.prompt.xml.XmlContentBuilder,kotlin.Unit>){}[0]
+final inline fun (ai.koog.prompt.text/TextContentBuilderBase<*>).ai.koog.prompt.xml/xml(kotlin/Boolean = ..., kotlin/Function1<ai.koog.prompt.xml/XmlContentBuilder, kotlin/Unit>) // ai.koog.prompt.xml/xml|xml@ai.koog.prompt.text.TextContentBuilderBase<*>(kotlin.Boolean;kotlin.Function1<ai.koog.prompt.xml.XmlContentBuilder,kotlin.Unit>){}[0]
+final inline fun (kotlin.text/StringBuilder).ai.koog.prompt.xml/xml(kotlin/Boolean = ..., kotlin/Function1<ai.koog.prompt.xml/XmlContentBuilder, kotlin/Unit>) // ai.koog.prompt.xml/xml|xml@kotlin.text.StringBuilder(kotlin.Boolean;kotlin.Function1<ai.koog.prompt.xml.XmlContentBuilder,kotlin.Unit>){}[0]

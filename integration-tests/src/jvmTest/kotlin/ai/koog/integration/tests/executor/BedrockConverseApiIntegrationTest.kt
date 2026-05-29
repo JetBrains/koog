@@ -249,6 +249,18 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("allCompletionModels")
+    override fun integration_testAssistantMultiPartRoundTrip(model: LLModel) {
+        super.integration_testAssistantMultiPartRoundTrip(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("allCompletionModels")
+    override fun integration_testToolCallResultCorrelationById(model: LLModel) {
+        super.integration_testToolCallResultCorrelationById(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("allCompletionModels")
     override fun integration_testMarkdownStructuredDataStreaming(model: LLModel) {
         super.integration_testMarkdownStructuredDataStreaming(model)
     }
@@ -282,6 +294,12 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("allCompletionModels")
     override fun integration_testUrlBasedAttachment(model: LLModel) {
         super.integration_testUrlBasedAttachment(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("allCompletionModels")
+    override fun integration_testAttachmentTextRoundTrip(model: LLModel) {
+        super.integration_testAttachmentTextRoundTrip(model)
     }
 
     @ParameterizedTest
@@ -324,6 +342,12 @@ class BedrockConverseApiIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("reasoningCapableModels")
     override fun integration_testReasoningMultiStep(model: LLModel) {
         super.integration_testReasoningMultiStep(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("reasoningCapableModels")
+    override fun integration_testReasoningPreservationRoundTrip(model: LLModel) {
+        super.integration_testReasoningPreservationRoundTrip(model)
     }
 
     @ParameterizedTest

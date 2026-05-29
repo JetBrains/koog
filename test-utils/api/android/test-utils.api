@@ -1,0 +1,21 @@
+public final class ai/koog/test/utils/CapturingKoogHttpClient : ai/koog/http/client/KoogHttpClient {
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public fun close ()V
+	public fun get (Ljava/lang/String;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getClientName ()Ljava/lang/String;
+	public final fun getLastPath ()Ljava/lang/String;
+	public final fun getLastRequest ()Ljava/lang/Object;
+	public fun lines (Ljava/lang/String;Ljava/lang/Object;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/util/Map;)Lkotlinx/coroutines/flow/Flow;
+	public fun post (Ljava/lang/String;Ljava/lang/Object;Lkotlin/reflect/KClass;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setLastPath (Ljava/lang/String;)V
+	public final fun setLastRequest (Ljava/lang/Object;)V
+	public fun sse (Ljava/lang/String;Ljava/lang/Object;Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Ljava/util/Map;Ljava/util/Map;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class ai/koog/test/utils/SerializationHelpersKt {
+	public static final fun getTestJson ()Lkotlinx/serialization/json/Json;
+	public static final fun getTestJsonIgnoreUnknown ()Lkotlinx/serialization/json/Json;
+	public static final fun runWithBothJsonConfigurations (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static final fun testJsonConfigurations ()Ljava/util/List;
+}
+

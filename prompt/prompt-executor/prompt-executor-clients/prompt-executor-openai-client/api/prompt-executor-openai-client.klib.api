@@ -1,0 +1,457 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-executor-openai-client>
+final enum class ai.koog.prompt.executor.clients.openai.models/OpenAIInclude : kotlin/Enum<ai.koog.prompt.executor.clients.openai.models/OpenAIInclude> { // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude|null[0]
+    enum entry CODE_INTERPRETER_CALL_OUTPUTS // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.CODE_INTERPRETER_CALL_OUTPUTS|null[0]
+    enum entry COMPUTER_CALL_OUTPUT_IMAGE_URL // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.COMPUTER_CALL_OUTPUT_IMAGE_URL|null[0]
+    enum entry FILE_SEARCH_CALL_RESULTS // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.FILE_SEARCH_CALL_RESULTS|null[0]
+    enum entry INPUT_IMAGE_URL // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.INPUT_IMAGE_URL|null[0]
+    enum entry OUTPUT_TEXT_LOGPROBS // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.OUTPUT_TEXT_LOGPROBS|null[0]
+    enum entry REASONING_ENCRYPTED_CONTENT // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.REASONING_ENCRYPTED_CONTENT|null[0]
+    enum entry WEB_SEARCH_CALL_ACTION_SOURCES // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.WEB_SEARCH_CALL_ACTION_SOURCES|null[0]
+
+    final val entries // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.openai.models/OpenAIInclude> // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.prompt.executor.clients.openai.models/OpenAIInclude // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.prompt.executor.clients.openai.models/OpenAIInclude> // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.models/OpenAIInclude> // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.models/OpenAIInclude.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class ai.koog.prompt.executor.clients.openai.models/ReasoningSummary : kotlin/Enum<ai.koog.prompt.executor.clients.openai.models/ReasoningSummary> { // ai.koog.prompt.executor.clients.openai.models/ReasoningSummary|null[0]
+    enum entry AUTO // ai.koog.prompt.executor.clients.openai.models/ReasoningSummary.AUTO|null[0]
+    enum entry CONCISE // ai.koog.prompt.executor.clients.openai.models/ReasoningSummary.CONCISE|null[0]
+    enum entry DETAILED // ai.koog.prompt.executor.clients.openai.models/ReasoningSummary.DETAILED|null[0]
+
+    final val entries // ai.koog.prompt.executor.clients.openai.models/ReasoningSummary.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.openai.models/ReasoningSummary> // ai.koog.prompt.executor.clients.openai.models/ReasoningSummary.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.prompt.executor.clients.openai.models/ReasoningSummary // ai.koog.prompt.executor.clients.openai.models/ReasoningSummary.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.prompt.executor.clients.openai.models/ReasoningSummary> // ai.koog.prompt.executor.clients.openai.models/ReasoningSummary.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.models/ReasoningSummary.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.models/ReasoningSummary> // ai.koog.prompt.executor.clients.openai.models/ReasoningSummary.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.models/ReasoningSummary.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class ai.koog.prompt.executor.clients.openai.models/TextVerbosity : kotlin/Enum<ai.koog.prompt.executor.clients.openai.models/TextVerbosity> { // ai.koog.prompt.executor.clients.openai.models/TextVerbosity|null[0]
+    enum entry HIGH // ai.koog.prompt.executor.clients.openai.models/TextVerbosity.HIGH|null[0]
+    enum entry LOW // ai.koog.prompt.executor.clients.openai.models/TextVerbosity.LOW|null[0]
+    enum entry MEDIUM // ai.koog.prompt.executor.clients.openai.models/TextVerbosity.MEDIUM|null[0]
+
+    final val entries // ai.koog.prompt.executor.clients.openai.models/TextVerbosity.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.openai.models/TextVerbosity> // ai.koog.prompt.executor.clients.openai.models/TextVerbosity.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.prompt.executor.clients.openai.models/TextVerbosity // ai.koog.prompt.executor.clients.openai.models/TextVerbosity.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.prompt.executor.clients.openai.models/TextVerbosity> // ai.koog.prompt.executor.clients.openai.models/TextVerbosity.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.models/TextVerbosity.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.models/TextVerbosity> // ai.koog.prompt.executor.clients.openai.models/TextVerbosity.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.models/TextVerbosity.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class ai.koog.prompt.executor.clients.openai.models/Truncation : kotlin/Enum<ai.koog.prompt.executor.clients.openai.models/Truncation> { // ai.koog.prompt.executor.clients.openai.models/Truncation|null[0]
+    enum entry AUTO // ai.koog.prompt.executor.clients.openai.models/Truncation.AUTO|null[0]
+    enum entry DISABLED // ai.koog.prompt.executor.clients.openai.models/Truncation.DISABLED|null[0]
+
+    final val entries // ai.koog.prompt.executor.clients.openai.models/Truncation.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.openai.models/Truncation> // ai.koog.prompt.executor.clients.openai.models/Truncation.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.prompt.executor.clients.openai.models/Truncation // ai.koog.prompt.executor.clients.openai.models/Truncation.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.prompt.executor.clients.openai.models/Truncation> // ai.koog.prompt.executor.clients.openai.models/Truncation.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.models/Truncation.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.models/Truncation> // ai.koog.prompt.executor.clients.openai.models/Truncation.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.models/Truncation.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion { // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion|null[0]
+    final val value // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.value|{}value[0]
+        final fun <get-value>(): kotlin/String // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.value.<get-value>|<get-value>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.toString|toString(){}[0]
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion|null[0]
+        final val V2022_12_01 // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2022_12_01|{}V2022_12_01[0]
+            final fun <get-V2022_12_01>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2022_12_01.<get-V2022_12_01>|<get-V2022_12_01>(){}[0]
+        final val V2023_05_15 // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2023_05_15|{}V2023_05_15[0]
+            final fun <get-V2023_05_15>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2023_05_15.<get-V2023_05_15>|<get-V2023_05_15>(){}[0]
+        final val V2023_06_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2023_06_01_PREVIEW|{}V2023_06_01_PREVIEW[0]
+            final fun <get-V2023_06_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2023_06_01_PREVIEW.<get-V2023_06_01_PREVIEW>|<get-V2023_06_01_PREVIEW>(){}[0]
+        final val V2023_07_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2023_07_01_PREVIEW|{}V2023_07_01_PREVIEW[0]
+            final fun <get-V2023_07_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2023_07_01_PREVIEW.<get-V2023_07_01_PREVIEW>|<get-V2023_07_01_PREVIEW>(){}[0]
+        final val V2024_02_01 // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_02_01|{}V2024_02_01[0]
+            final fun <get-V2024_02_01>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_02_01.<get-V2024_02_01>|<get-V2024_02_01>(){}[0]
+        final val V2024_02_15_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_02_15_PREVIEW|{}V2024_02_15_PREVIEW[0]
+            final fun <get-V2024_02_15_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_02_15_PREVIEW.<get-V2024_02_15_PREVIEW>|<get-V2024_02_15_PREVIEW>(){}[0]
+        final val V2024_03_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_03_01_PREVIEW|{}V2024_03_01_PREVIEW[0]
+            final fun <get-V2024_03_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_03_01_PREVIEW.<get-V2024_03_01_PREVIEW>|<get-V2024_03_01_PREVIEW>(){}[0]
+        final val V2024_04_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_04_01_PREVIEW|{}V2024_04_01_PREVIEW[0]
+            final fun <get-V2024_04_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_04_01_PREVIEW.<get-V2024_04_01_PREVIEW>|<get-V2024_04_01_PREVIEW>(){}[0]
+        final val V2024_05_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_05_01_PREVIEW|{}V2024_05_01_PREVIEW[0]
+            final fun <get-V2024_05_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_05_01_PREVIEW.<get-V2024_05_01_PREVIEW>|<get-V2024_05_01_PREVIEW>(){}[0]
+        final val V2024_06_01 // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_06_01|{}V2024_06_01[0]
+            final fun <get-V2024_06_01>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_06_01.<get-V2024_06_01>|<get-V2024_06_01>(){}[0]
+        final val V2024_07_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_07_01_PREVIEW|{}V2024_07_01_PREVIEW[0]
+            final fun <get-V2024_07_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_07_01_PREVIEW.<get-V2024_07_01_PREVIEW>|<get-V2024_07_01_PREVIEW>(){}[0]
+        final val V2024_08_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_08_01_PREVIEW|{}V2024_08_01_PREVIEW[0]
+            final fun <get-V2024_08_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_08_01_PREVIEW.<get-V2024_08_01_PREVIEW>|<get-V2024_08_01_PREVIEW>(){}[0]
+        final val V2024_09_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_09_01_PREVIEW|{}V2024_09_01_PREVIEW[0]
+            final fun <get-V2024_09_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_09_01_PREVIEW.<get-V2024_09_01_PREVIEW>|<get-V2024_09_01_PREVIEW>(){}[0]
+        final val V2024_10_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_10_01_PREVIEW|{}V2024_10_01_PREVIEW[0]
+            final fun <get-V2024_10_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_10_01_PREVIEW.<get-V2024_10_01_PREVIEW>|<get-V2024_10_01_PREVIEW>(){}[0]
+        final val V2024_10_21 // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_10_21|{}V2024_10_21[0]
+            final fun <get-V2024_10_21>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_10_21.<get-V2024_10_21>|<get-V2024_10_21>(){}[0]
+        final val V2024_12_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_12_01_PREVIEW|{}V2024_12_01_PREVIEW[0]
+            final fun <get-V2024_12_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2024_12_01_PREVIEW.<get-V2024_12_01_PREVIEW>|<get-V2024_12_01_PREVIEW>(){}[0]
+        final val V2025_01_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2025_01_01_PREVIEW|{}V2025_01_01_PREVIEW[0]
+            final fun <get-V2025_01_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2025_01_01_PREVIEW.<get-V2025_01_01_PREVIEW>|<get-V2025_01_01_PREVIEW>(){}[0]
+        final val V2025_02_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2025_02_01_PREVIEW|{}V2025_02_01_PREVIEW[0]
+            final fun <get-V2025_02_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2025_02_01_PREVIEW.<get-V2025_02_01_PREVIEW>|<get-V2025_02_01_PREVIEW>(){}[0]
+        final val V2025_03_01_PREVIEW // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2025_03_01_PREVIEW|{}V2025_03_01_PREVIEW[0]
+            final fun <get-V2025_03_01_PREVIEW>(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.V2025_03_01_PREVIEW.<get-V2025_03_01_PREVIEW>|<get-V2025_03_01_PREVIEW>(){}[0]
+
+        final fun fromString(kotlin/String): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.fromString|fromString(kotlin.String){}[0]
+        final fun latestPreviewVersion(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.latestPreviewVersion|latestPreviewVersion(){}[0]
+        final fun latestStableVersion(): ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion.Companion.latestStableVersion|latestStableVersion(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse : ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMResponse { // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse|null[0]
+    constructor <init>(kotlin.collections/List<ai.koog.prompt.executor.clients.openai.models/OpenAIChoice>, kotlin/Long, kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/String, ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage? = ...) // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.<init>|<init>(kotlin.collections.List<ai.koog.prompt.executor.clients.openai.models.OpenAIChoice>;kotlin.Long;kotlin.String;kotlin.String;kotlin.String?;kotlin.String?;kotlin.String;ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage?){}[0]
+
+    final val choices // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.choices|{}choices[0]
+        final fun <get-choices>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.models/OpenAIChoice> // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.choices.<get-choices>|<get-choices>(){}[0]
+    final val created // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.created|{}created[0]
+        final fun <get-created>(): kotlin/Long // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.created.<get-created>|<get-created>(){}[0]
+    final val id // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.id.<get-id>|<get-id>(){}[0]
+    final val model // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.model|{}model[0]
+        final fun <get-model>(): kotlin/String // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.model.<get-model>|<get-model>(){}[0]
+    final val objectType // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.objectType|{}objectType[0]
+        final fun <get-objectType>(): kotlin/String // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.objectType.<get-objectType>|<get-objectType>(){}[0]
+    final val serviceTier // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.serviceTier|{}serviceTier[0]
+        final fun <get-serviceTier>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.serviceTier.<get-serviceTier>|<get-serviceTier>(){}[0]
+    final val systemFingerprint // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.systemFingerprint|{}systemFingerprint[0]
+        final fun <get-systemFingerprint>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.systemFingerprint.<get-systemFingerprint>|<get-systemFingerprint>(){}[0]
+    final val usage // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.usage|{}usage[0]
+        final fun <get-usage>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage? // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.usage.<get-usage>|<get-usage>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse> { // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse) // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionResponse){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse> // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse : ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMStreamResponse { // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse|null[0]
+    constructor <init>(kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice>, kotlin/Long, kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/String, ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage? = ...) // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.<init>|<init>(kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamChoice>;kotlin.Long;kotlin.String;kotlin.String;kotlin.String?;kotlin.String?;kotlin.String;ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage?){}[0]
+
+    final val choices // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.choices|{}choices[0]
+        final fun <get-choices>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice> // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.choices.<get-choices>|<get-choices>(){}[0]
+    final val created // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.created|{}created[0]
+        final fun <get-created>(): kotlin/Long // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.created.<get-created>|<get-created>(){}[0]
+    final val id // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.id.<get-id>|<get-id>(){}[0]
+    final val model // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.model|{}model[0]
+        final fun <get-model>(): kotlin/String // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.model.<get-model>|<get-model>(){}[0]
+    final val objectType // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.objectType|{}objectType[0]
+        final fun <get-objectType>(): kotlin/String // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.objectType.<get-objectType>|<get-objectType>(){}[0]
+    final val serviceTier // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.serviceTier|{}serviceTier[0]
+        final fun <get-serviceTier>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.serviceTier.<get-serviceTier>|<get-serviceTier>(){}[0]
+    final val systemFingerprint // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.systemFingerprint|{}systemFingerprint[0]
+        final fun <get-systemFingerprint>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.systemFingerprint.<get-systemFingerprint>|<get-systemFingerprint>(){}[0]
+    final val usage // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.usage|{}usage[0]
+        final fun <get-usage>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage? // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.usage.<get-usage>|<get-usage>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse> { // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse) // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamResponse){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse> // ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.models/OpenAIChoice { // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice|null[0]
+    constructor <init>(kotlin/String, kotlin/Int, ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs? = ..., ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage) // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.<init>|<init>(kotlin.String;kotlin.Int;ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs?;ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage){}[0]
+
+    final val finishReason // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.finishReason|{}finishReason[0]
+        final fun <get-finishReason>(): kotlin/String // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.finishReason.<get-finishReason>|<get-finishReason>(){}[0]
+    final val index // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.index|{}index[0]
+        final fun <get-index>(): kotlin/Int // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.index.<get-index>|<get-index>(){}[0]
+    final val logprobs // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.logprobs|{}logprobs[0]
+        final fun <get-logprobs>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs? // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.logprobs.<get-logprobs>|<get-logprobs>(){}[0]
+    final val message // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.message|{}message[0]
+        final fun <get-message>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.message.<get-message>|<get-message>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.models/OpenAIChoice> { // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.models/OpenAIChoice // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.models/OpenAIChoice) // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.models.OpenAIChoice){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.models/OpenAIChoice> // ai.koog.prompt.executor.clients.openai.models/OpenAIChoice.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.models/ReasoningConfig { // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort? = ..., ai.koog.prompt.executor.clients.openai.models/ReasoningSummary? = ...) // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort?;ai.koog.prompt.executor.clients.openai.models.ReasoningSummary?){}[0]
+
+    final val effort // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.effort|{}effort[0]
+        final fun <get-effort>(): ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort? // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.effort.<get-effort>|<get-effort>(){}[0]
+    final val summary // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.summary|{}summary[0]
+        final fun <get-summary>(): ai.koog.prompt.executor.clients.openai.models/ReasoningSummary? // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.summary.<get-summary>|<get-summary>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.models/ReasoningConfig> { // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.models/ReasoningConfig // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.models/ReasoningConfig) // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.models.ReasoningConfig){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.models/ReasoningConfig> // ai.koog.prompt.executor.clients.openai.models/ReasoningConfig.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai/OpenAIChatParams : ai.koog.prompt.executor.clients.openai/OpenAIParams, ai.koog.prompt.params/LLMParams { // ai.koog.prompt.executor.clients.openai/OpenAIChatParams|null[0]
+    constructor <init>(kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., ai.koog.prompt.params/LLMParams.Schema? = ..., ai.koog.prompt.params/LLMParams.ToolChoice? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? = ..., kotlin/Double? = ..., kotlin/Double? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlin/String? = ..., ai.koog.prompt.executor.clients.openai.base.models/ServiceTier? = ..., kotlin/Boolean? = ..., ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig? = ..., kotlin/Boolean? = ..., ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/Int? = ..., kotlin/Double? = ..., ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions? = ...) // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.<init>|<init>(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?;kotlin.Double?;kotlin.Double?;kotlin.Boolean?;kotlin.String?;kotlin.String?;ai.koog.prompt.executor.clients.openai.base.models.ServiceTier?;kotlin.Boolean?;ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig?;kotlin.Boolean?;ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort?;kotlin.collections.List<kotlin.String>?;kotlin.Int?;kotlin.Double?;ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebSearchOptions?){}[0]
+
+    final val audio // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.audio|{}audio[0]
+        final fun <get-audio>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.audio.<get-audio>|<get-audio>(){}[0]
+    final val frequencyPenalty // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.frequencyPenalty|{}frequencyPenalty[0]
+        final fun <get-frequencyPenalty>(): kotlin/Double? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.frequencyPenalty.<get-frequencyPenalty>|<get-frequencyPenalty>(){}[0]
+    final val logprobs // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.logprobs|{}logprobs[0]
+        final fun <get-logprobs>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.logprobs.<get-logprobs>|<get-logprobs>(){}[0]
+    final val parallelToolCalls // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.parallelToolCalls|{}parallelToolCalls[0]
+        final fun <get-parallelToolCalls>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.parallelToolCalls.<get-parallelToolCalls>|<get-parallelToolCalls>(){}[0]
+    final val presencePenalty // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.presencePenalty|{}presencePenalty[0]
+        final fun <get-presencePenalty>(): kotlin/Double? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.presencePenalty.<get-presencePenalty>|<get-presencePenalty>(){}[0]
+    final val promptCacheKey // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.promptCacheKey|{}promptCacheKey[0]
+        final fun <get-promptCacheKey>(): kotlin/String? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.promptCacheKey.<get-promptCacheKey>|<get-promptCacheKey>(){}[0]
+    final val reasoningEffort // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.reasoningEffort|{}reasoningEffort[0]
+        final fun <get-reasoningEffort>(): ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.reasoningEffort.<get-reasoningEffort>|<get-reasoningEffort>(){}[0]
+    final val safetyIdentifier // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.safetyIdentifier|{}safetyIdentifier[0]
+        final fun <get-safetyIdentifier>(): kotlin/String? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.safetyIdentifier.<get-safetyIdentifier>|<get-safetyIdentifier>(){}[0]
+    final val serviceTier // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.serviceTier|{}serviceTier[0]
+        final fun <get-serviceTier>(): ai.koog.prompt.executor.clients.openai.base.models/ServiceTier? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.serviceTier.<get-serviceTier>|<get-serviceTier>(){}[0]
+    final val stop // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.stop|{}stop[0]
+        final fun <get-stop>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.stop.<get-stop>|<get-stop>(){}[0]
+    final val store // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.store|{}store[0]
+        final fun <get-store>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.store.<get-store>|<get-store>(){}[0]
+    final val topLogprobs // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.topLogprobs|{}topLogprobs[0]
+        final fun <get-topLogprobs>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.topLogprobs.<get-topLogprobs>|<get-topLogprobs>(){}[0]
+    final val topP // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.topP|{}topP[0]
+        final fun <get-topP>(): kotlin/Double? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.topP.<get-topP>|<get-topP>(){}[0]
+    final val webSearchOptions // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.webSearchOptions|{}webSearchOptions[0]
+        final fun <get-webSearchOptions>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions? // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.webSearchOptions.<get-webSearchOptions>|<get-webSearchOptions>(){}[0]
+
+    final fun copy(kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., ai.koog.prompt.params/LLMParams.Schema? = ..., ai.koog.prompt.params/LLMParams.ToolChoice? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? = ..., kotlin/Double? = ..., kotlin/Double? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlin/String? = ..., ai.koog.prompt.executor.clients.openai.base.models/ServiceTier? = ..., kotlin/Boolean? = ..., ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig? = ..., kotlin/Boolean? = ..., ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/Int? = ..., kotlin/Double? = ..., ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions? = ...): ai.koog.prompt.executor.clients.openai/OpenAIChatParams // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.copy|copy(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?;kotlin.Double?;kotlin.Double?;kotlin.Boolean?;kotlin.String?;kotlin.String?;ai.koog.prompt.executor.clients.openai.base.models.ServiceTier?;kotlin.Boolean?;ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig?;kotlin.Boolean?;ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort?;kotlin.collections.List<kotlin.String>?;kotlin.Int?;kotlin.Double?;ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebSearchOptions?){}[0]
+    final fun copy(kotlin/Double?, kotlin/Int?, kotlin/Int?, kotlin/String?, ai.koog.prompt.params/LLMParams.Schema?, ai.koog.prompt.params/LLMParams.ToolChoice?, kotlin/String?, kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>?): ai.koog.prompt.executor.clients.openai/OpenAIChatParams // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.copy|copy(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.openai/OpenAIChatParams.toString|toString(){}[0]
+}
+
+final class ai.koog.prompt.executor.clients.openai/OpenAIClientSettings : ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings { // ai.koog.prompt.executor.clients.openai/OpenAIClientSettings|null[0]
+    constructor <init>(kotlin/String = ..., ai.koog.prompt.executor.clients/ConnectionTimeoutConfig = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ...) // ai.koog.prompt.executor.clients.openai/OpenAIClientSettings.<init>|<init>(kotlin.String;ai.koog.prompt.executor.clients.ConnectionTimeoutConfig;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String){}[0]
+
+    final val embeddingsPath // ai.koog.prompt.executor.clients.openai/OpenAIClientSettings.embeddingsPath|{}embeddingsPath[0]
+        final fun <get-embeddingsPath>(): kotlin/String // ai.koog.prompt.executor.clients.openai/OpenAIClientSettings.embeddingsPath.<get-embeddingsPath>|<get-embeddingsPath>(){}[0]
+    final val modelsPath // ai.koog.prompt.executor.clients.openai/OpenAIClientSettings.modelsPath|{}modelsPath[0]
+        final fun <get-modelsPath>(): kotlin/String // ai.koog.prompt.executor.clients.openai/OpenAIClientSettings.modelsPath.<get-modelsPath>|<get-modelsPath>(){}[0]
+    final val moderationsPath // ai.koog.prompt.executor.clients.openai/OpenAIClientSettings.moderationsPath|{}moderationsPath[0]
+        final fun <get-moderationsPath>(): kotlin/String // ai.koog.prompt.executor.clients.openai/OpenAIClientSettings.moderationsPath.<get-moderationsPath>|<get-moderationsPath>(){}[0]
+    final val responsesAPIPath // ai.koog.prompt.executor.clients.openai/OpenAIClientSettings.responsesAPIPath|{}responsesAPIPath[0]
+        final fun <get-responsesAPIPath>(): kotlin/String // ai.koog.prompt.executor.clients.openai/OpenAIClientSettings.responsesAPIPath.<get-responsesAPIPath>|<get-responsesAPIPath>(){}[0]
+}
+
+final class ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams : ai.koog.prompt.executor.clients.openai/OpenAIParams, ai.koog.prompt.params/LLMParams { // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams|null[0]
+    constructor <init>(kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., ai.koog.prompt.params/LLMParams.Schema? = ..., ai.koog.prompt.params/LLMParams.ToolChoice? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? = ..., kotlin/Boolean? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.openai.models/OpenAIInclude>? = ..., kotlin/Int? = ..., kotlin/Boolean? = ..., ai.koog.prompt.executor.clients.openai.models/ReasoningConfig? = ..., ai.koog.prompt.executor.clients.openai.models/Truncation? = ..., kotlin/String? = ..., kotlin/String? = ..., ai.koog.prompt.executor.clients.openai.base.models/ServiceTier? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ..., kotlin/Int? = ..., kotlin/Double? = ...) // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.<init>|<init>(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?;kotlin.Boolean?;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.models.OpenAIInclude>?;kotlin.Int?;kotlin.Boolean?;ai.koog.prompt.executor.clients.openai.models.ReasoningConfig?;ai.koog.prompt.executor.clients.openai.models.Truncation?;kotlin.String?;kotlin.String?;ai.koog.prompt.executor.clients.openai.base.models.ServiceTier?;kotlin.Boolean?;kotlin.Boolean?;kotlin.Int?;kotlin.Double?){}[0]
+
+    final val background // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.background|{}background[0]
+        final fun <get-background>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.background.<get-background>|<get-background>(){}[0]
+    final val include // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.include|{}include[0]
+        final fun <get-include>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.models/OpenAIInclude>? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.include.<get-include>|<get-include>(){}[0]
+    final val logprobs // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.logprobs|{}logprobs[0]
+        final fun <get-logprobs>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.logprobs.<get-logprobs>|<get-logprobs>(){}[0]
+    final val maxToolCalls // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.maxToolCalls|{}maxToolCalls[0]
+        final fun <get-maxToolCalls>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.maxToolCalls.<get-maxToolCalls>|<get-maxToolCalls>(){}[0]
+    final val parallelToolCalls // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.parallelToolCalls|{}parallelToolCalls[0]
+        final fun <get-parallelToolCalls>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.parallelToolCalls.<get-parallelToolCalls>|<get-parallelToolCalls>(){}[0]
+    final val promptCacheKey // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.promptCacheKey|{}promptCacheKey[0]
+        final fun <get-promptCacheKey>(): kotlin/String? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.promptCacheKey.<get-promptCacheKey>|<get-promptCacheKey>(){}[0]
+    final val reasoning // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.reasoning|{}reasoning[0]
+        final fun <get-reasoning>(): ai.koog.prompt.executor.clients.openai.models/ReasoningConfig? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.reasoning.<get-reasoning>|<get-reasoning>(){}[0]
+    final val safetyIdentifier // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.safetyIdentifier|{}safetyIdentifier[0]
+        final fun <get-safetyIdentifier>(): kotlin/String? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.safetyIdentifier.<get-safetyIdentifier>|<get-safetyIdentifier>(){}[0]
+    final val serviceTier // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.serviceTier|{}serviceTier[0]
+        final fun <get-serviceTier>(): ai.koog.prompt.executor.clients.openai.base.models/ServiceTier? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.serviceTier.<get-serviceTier>|<get-serviceTier>(){}[0]
+    final val store // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.store|{}store[0]
+        final fun <get-store>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.store.<get-store>|<get-store>(){}[0]
+    final val topLogprobs // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.topLogprobs|{}topLogprobs[0]
+        final fun <get-topLogprobs>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.topLogprobs.<get-topLogprobs>|<get-topLogprobs>(){}[0]
+    final val topP // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.topP|{}topP[0]
+        final fun <get-topP>(): kotlin/Double? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.topP.<get-topP>|<get-topP>(){}[0]
+    final val truncation // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.truncation|{}truncation[0]
+        final fun <get-truncation>(): ai.koog.prompt.executor.clients.openai.models/Truncation? // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.truncation.<get-truncation>|<get-truncation>(){}[0]
+
+    final fun copy(kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., ai.koog.prompt.params/LLMParams.Schema? = ..., ai.koog.prompt.params/LLMParams.ToolChoice? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? = ..., kotlin/Boolean? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.openai.models/OpenAIInclude>? = ..., kotlin/Int? = ..., kotlin/Boolean? = ..., ai.koog.prompt.executor.clients.openai.models/ReasoningConfig? = ..., ai.koog.prompt.executor.clients.openai.models/Truncation? = ..., kotlin/String? = ..., kotlin/String? = ..., ai.koog.prompt.executor.clients.openai.base.models/ServiceTier? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ..., kotlin/Int? = ..., kotlin/Double? = ...): ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.copy|copy(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?;kotlin.Boolean?;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.models.OpenAIInclude>?;kotlin.Int?;kotlin.Boolean?;ai.koog.prompt.executor.clients.openai.models.ReasoningConfig?;ai.koog.prompt.executor.clients.openai.models.Truncation?;kotlin.String?;kotlin.String?;ai.koog.prompt.executor.clients.openai.base.models.ServiceTier?;kotlin.Boolean?;kotlin.Boolean?;kotlin.Int?;kotlin.Double?){}[0]
+    final fun copy(kotlin/Double?, kotlin/Int?, kotlin/Int?, kotlin/String?, ai.koog.prompt.params/LLMParams.Schema?, ai.koog.prompt.params/LLMParams.ToolChoice?, kotlin/String?, kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>?): ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.copy|copy(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.openai/OpenAIResponsesParams.toString|toString(){}[0]
+}
+
+open class ai.koog.prompt.executor.clients.openai/OpenAILLMClient : ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient<ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse, ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse> { // ai.koog.prompt.executor.clients.openai/OpenAILLMClient|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients.openai/OpenAIClientSettings = ..., ai.koog.http.client/KoogHttpClient, ai.koog.utils.time/KoogClock = ..., ai.koog.prompt.executor.clients.openai.base/OpenAICompatibleToolDescriptorSchemaGenerator = ...) // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.<init>|<init>(ai.koog.prompt.executor.clients.openai.OpenAIClientSettings;ai.koog.http.client.KoogHttpClient;ai.koog.utils.time.KoogClock;ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator){}[0]
+    constructor <init>(kotlin/String, ai.koog.prompt.executor.clients.openai/OpenAIClientSettings = ..., ai.koog.http.client/KoogHttpClient.Factory, ai.koog.utils.time/KoogClock = ..., ai.koog.prompt.executor.clients.openai.base/OpenAICompatibleToolDescriptorSchemaGenerator = ...) // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.<init>|<init>(kotlin.String;ai.koog.prompt.executor.clients.openai.OpenAIClientSettings;ai.koog.http.client.KoogHttpClient.Factory;ai.koog.utils.time.KoogClock;ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator){}[0]
+
+    open val clientName // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.clientName|{}clientName[0]
+        open fun <get-clientName>(): kotlin/String // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.clientName.<get-clientName>|<get-clientName>(){}[0]
+
+    open fun decodeResponse(kotlin/String): ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.decodeResponse|decodeResponse(kotlin.String){}[0]
+    open fun decodeStreamingResponse(kotlin/String): ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.decodeStreamingResponse|decodeStreamingResponse(kotlin.String){}[0]
+    open fun executeStreaming(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.executeStreaming|executeStreaming(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    open fun llmProvider(): ai.koog.prompt.llm/LLMProvider // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.llmProvider|llmProvider(){}[0]
+    open fun processProviderChatResponse(ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionResponse): kotlin.collections/List<ai.koog.prompt.message/Message.Assistant> // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.processProviderChatResponse|processProviderChatResponse(ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionResponse){}[0]
+    open fun processStreamingResponse(kotlinx.coroutines.flow/Flow<ai.koog.prompt.executor.clients.openai.models/OpenAIChatCompletionStreamResponse>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.processStreamingResponse|processStreamingResponse(kotlinx.coroutines.flow.Flow<ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamResponse>){}[0]
+    open fun serializeProviderChatRequest(kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage>, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAITool>?, ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice?, ai.koog.prompt.params/LLMParams, kotlin/Boolean): kotlin/String // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.serializeProviderChatRequest|serializeProviderChatRequest(kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage>;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAITool>?;ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice?;ai.koog.prompt.params.LLMParams;kotlin.Boolean){}[0]
+    open suspend fun embed(kotlin.collections/List<kotlin/String>, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin.collections/List<kotlin/Double>> // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.embed|embed(kotlin.collections.List<kotlin.String>;ai.koog.prompt.llm.LLModel){}[0]
+    open suspend fun embed(kotlin/String, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin/Double> // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.embed|embed(kotlin.String;ai.koog.prompt.llm.LLModel){}[0]
+    open suspend fun execute(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.execute|execute(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    open suspend fun executeMultipleChoices(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.koog.prompt.message/Message.Assistant> // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.executeMultipleChoices|executeMultipleChoices(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    open suspend fun models(): kotlin.collections/List<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.models|models(){}[0]
+    open suspend fun moderate(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): ai.koog.prompt.dsl/ModerationResult // ai.koog.prompt.executor.clients.openai/OpenAILLMClient.moderate|moderate(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+}
+
+final object ai.koog.prompt.executor.clients.openai/OpenAIModels : ai.koog.prompt.executor.clients/LLModelDefinitions { // ai.koog.prompt.executor.clients.openai/OpenAIModels|null[0]
+    final val models // ai.koog.prompt.executor.clients.openai/OpenAIModels.models|{}models[0]
+        final fun <get-models>(): kotlin.collections/List<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.clients.openai/OpenAIModels.models.<get-models>|<get-models>(){}[0]
+
+    final fun addCustomModel(ai.koog.prompt.llm/LLModel) // ai.koog.prompt.executor.clients.openai/OpenAIModels.addCustomModel|addCustomModel(ai.koog.prompt.llm.LLModel){}[0]
+
+    final object Audio { // ai.koog.prompt.executor.clients.openai/OpenAIModels.Audio|null[0]
+        final val GPT4oAudio // ai.koog.prompt.executor.clients.openai/OpenAIModels.Audio.GPT4oAudio|{}GPT4oAudio[0]
+            final fun <get-GPT4oAudio>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Audio.GPT4oAudio.<get-GPT4oAudio>|<get-GPT4oAudio>(){}[0]
+        final val GPT4oMiniAudio // ai.koog.prompt.executor.clients.openai/OpenAIModels.Audio.GPT4oMiniAudio|{}GPT4oMiniAudio[0]
+            final fun <get-GPT4oMiniAudio>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Audio.GPT4oMiniAudio.<get-GPT4oMiniAudio>|<get-GPT4oMiniAudio>(){}[0]
+        final val GptAudio // ai.koog.prompt.executor.clients.openai/OpenAIModels.Audio.GptAudio|{}GptAudio[0]
+            final fun <get-GptAudio>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Audio.GptAudio.<get-GptAudio>|<get-GptAudio>(){}[0]
+    }
+
+    final object Chat { // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat|null[0]
+        final val GPT4_1 // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4_1|{}GPT4_1[0]
+            final fun <get-GPT4_1>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4_1.<get-GPT4_1>|<get-GPT4_1>(){}[0]
+        final val GPT4_1Mini // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4_1Mini|{}GPT4_1Mini[0]
+            final fun <get-GPT4_1Mini>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4_1Mini.<get-GPT4_1Mini>|<get-GPT4_1Mini>(){}[0]
+        final val GPT4_1Nano // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4_1Nano|{}GPT4_1Nano[0]
+            final fun <get-GPT4_1Nano>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4_1Nano.<get-GPT4_1Nano>|<get-GPT4_1Nano>(){}[0]
+        final val GPT4o // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4o|{}GPT4o[0]
+            final fun <get-GPT4o>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4o.<get-GPT4o>|<get-GPT4o>(){}[0]
+        final val GPT4oMini // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4oMini|{}GPT4oMini[0]
+            final fun <get-GPT4oMini>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4oMini.<get-GPT4oMini>|<get-GPT4oMini>(){}[0]
+        final val GPT5 // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5|{}GPT5[0]
+            final fun <get-GPT5>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5.<get-GPT5>|<get-GPT5>(){}[0]
+        final val GPT5Codex // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5Codex|{}GPT5Codex[0]
+            final fun <get-GPT5Codex>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5Codex.<get-GPT5Codex>|<get-GPT5Codex>(){}[0]
+        final val GPT5Mini // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5Mini|{}GPT5Mini[0]
+            final fun <get-GPT5Mini>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5Mini.<get-GPT5Mini>|<get-GPT5Mini>(){}[0]
+        final val GPT5Nano // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5Nano|{}GPT5Nano[0]
+            final fun <get-GPT5Nano>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5Nano.<get-GPT5Nano>|<get-GPT5Nano>(){}[0]
+        final val GPT5Pro // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5Pro|{}GPT5Pro[0]
+            final fun <get-GPT5Pro>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5Pro.<get-GPT5Pro>|<get-GPT5Pro>(){}[0]
+        final val GPT5_1 // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_1|{}GPT5_1[0]
+            final fun <get-GPT5_1>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_1.<get-GPT5_1>|<get-GPT5_1>(){}[0]
+        final val GPT5_1Codex // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_1Codex|{}GPT5_1Codex[0]
+            final fun <get-GPT5_1Codex>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_1Codex.<get-GPT5_1Codex>|<get-GPT5_1Codex>(){}[0]
+        final val GPT5_1CodexMax // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_1CodexMax|{}GPT5_1CodexMax[0]
+            final fun <get-GPT5_1CodexMax>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_1CodexMax.<get-GPT5_1CodexMax>|<get-GPT5_1CodexMax>(){}[0]
+        final val GPT5_2 // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_2|{}GPT5_2[0]
+            final fun <get-GPT5_2>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_2.<get-GPT5_2>|<get-GPT5_2>(){}[0]
+        final val GPT5_2Codex // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_2Codex|{}GPT5_2Codex[0]
+            final fun <get-GPT5_2Codex>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_2Codex.<get-GPT5_2Codex>|<get-GPT5_2Codex>(){}[0]
+        final val GPT5_2Pro // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_2Pro|{}GPT5_2Pro[0]
+            final fun <get-GPT5_2Pro>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_2Pro.<get-GPT5_2Pro>|<get-GPT5_2Pro>(){}[0]
+        final val GPT5_3Codex // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_3Codex|{}GPT5_3Codex[0]
+            final fun <get-GPT5_3Codex>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_3Codex.<get-GPT5_3Codex>|<get-GPT5_3Codex>(){}[0]
+        final val GPT5_4 // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_4|{}GPT5_4[0]
+            final fun <get-GPT5_4>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_4.<get-GPT5_4>|<get-GPT5_4>(){}[0]
+        final val GPT5_4Mini // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_4Mini|{}GPT5_4Mini[0]
+            final fun <get-GPT5_4Mini>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_4Mini.<get-GPT5_4Mini>|<get-GPT5_4Mini>(){}[0]
+        final val GPT5_4Nano // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_4Nano|{}GPT5_4Nano[0]
+            final fun <get-GPT5_4Nano>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_4Nano.<get-GPT5_4Nano>|<get-GPT5_4Nano>(){}[0]
+        final val GPT5_4Pro // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_4Pro|{}GPT5_4Pro[0]
+            final fun <get-GPT5_4Pro>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_4Pro.<get-GPT5_4Pro>|<get-GPT5_4Pro>(){}[0]
+        final val GPT5_5 // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_5|{}GPT5_5[0]
+            final fun <get-GPT5_5>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_5.<get-GPT5_5>|<get-GPT5_5>(){}[0]
+        final val GPT5_5Pro // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_5Pro|{}GPT5_5Pro[0]
+            final fun <get-GPT5_5Pro>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.GPT5_5Pro.<get-GPT5_5Pro>|<get-GPT5_5Pro>(){}[0]
+        final val O1 // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.O1|{}O1[0]
+            final fun <get-O1>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.O1.<get-O1>|<get-O1>(){}[0]
+        final val O3 // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.O3|{}O3[0]
+            final fun <get-O3>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.O3.<get-O3>|<get-O3>(){}[0]
+        final val O3Mini // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.O3Mini|{}O3Mini[0]
+            final fun <get-O3Mini>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.O3Mini.<get-O3Mini>|<get-O3Mini>(){}[0]
+        final val O4Mini // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.O4Mini|{}O4Mini[0]
+            final fun <get-O4Mini>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Chat.O4Mini.<get-O4Mini>|<get-O4Mini>(){}[0]
+    }
+
+    final object Embeddings { // ai.koog.prompt.executor.clients.openai/OpenAIModels.Embeddings|null[0]
+        final val TextEmbedding3Large // ai.koog.prompt.executor.clients.openai/OpenAIModels.Embeddings.TextEmbedding3Large|{}TextEmbedding3Large[0]
+            final fun <get-TextEmbedding3Large>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Embeddings.TextEmbedding3Large.<get-TextEmbedding3Large>|<get-TextEmbedding3Large>(){}[0]
+        final val TextEmbedding3Small // ai.koog.prompt.executor.clients.openai/OpenAIModels.Embeddings.TextEmbedding3Small|{}TextEmbedding3Small[0]
+            final fun <get-TextEmbedding3Small>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Embeddings.TextEmbedding3Small.<get-TextEmbedding3Small>|<get-TextEmbedding3Small>(){}[0]
+        final val TextEmbeddingAda002 // ai.koog.prompt.executor.clients.openai/OpenAIModels.Embeddings.TextEmbeddingAda002|{}TextEmbeddingAda002[0]
+            final fun <get-TextEmbeddingAda002>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Embeddings.TextEmbeddingAda002.<get-TextEmbeddingAda002>|<get-TextEmbeddingAda002>(){}[0]
+    }
+
+    final object Moderation { // ai.koog.prompt.executor.clients.openai/OpenAIModels.Moderation|null[0]
+        final val Omni // ai.koog.prompt.executor.clients.openai/OpenAIModels.Moderation.Omni|{}Omni[0]
+            final fun <get-Omni>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openai/OpenAIModels.Moderation.Omni.<get-Omni>|<get-Omni>(){}[0]
+    }
+}
+
+final fun ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIClientSettings(kotlin/String, ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion, ai.koog.prompt.executor.clients/ConnectionTimeoutConfig = ...): ai.koog.prompt.executor.clients.openai/OpenAIClientSettings // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIClientSettings|AzureOpenAIClientSettings(kotlin.String;ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIServiceVersion;ai.koog.prompt.executor.clients.ConnectionTimeoutConfig){}[0]
+final fun ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIClientSettings(kotlin/String, kotlin/String, ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIServiceVersion, ai.koog.prompt.executor.clients/ConnectionTimeoutConfig = ...): ai.koog.prompt.executor.clients.openai/OpenAIClientSettings // ai.koog.prompt.executor.clients.openai.azure/AzureOpenAIClientSettings|AzureOpenAIClientSettings(kotlin.String;kotlin.String;ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIServiceVersion;ai.koog.prompt.executor.clients.ConnectionTimeoutConfig){}[0]
