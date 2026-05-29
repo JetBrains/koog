@@ -1,5 +1,6 @@
 package ai.koog.a2a.server.notifications
 
+import ai.koog.a2a.consts.A2AHeaders
 import ai.koog.a2a.model.PushNotificationConfig
 import ai.koog.a2a.model.Task
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -9,7 +10,6 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.utils.io.core.Closeable
 import kotlinx.serialization.json.Json
 
 /**
@@ -20,7 +20,7 @@ import kotlinx.serialization.json.Json
 public class SimplePushNotificationSender(
     baseHttpClient: HttpClient,
     json: Json = Json,
-) : PushNotificationSender, Closeable {
+) : PushNotificationSender, AutoCloseable {
     private companion object {
         private val logger = KotlinLogging.logger {}
     }
@@ -49,7 +49,7 @@ public class SimplePushNotificationSender(
                 }
 
                 config.token?.let { token ->
-                    headers[PushNotificationSender.A2A_NOTIFICATION_TOKEN_HEADER] = token
+                    headers[A2AHeaders.X_A2A_NOTIFICATION_TOKEN] = token
                 }
 
                 setBody(task)

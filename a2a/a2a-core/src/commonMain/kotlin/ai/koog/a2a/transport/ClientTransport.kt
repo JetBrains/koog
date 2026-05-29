@@ -15,7 +15,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 
 /**
- * Client transport making requests to [A2A protocol methods](https://a2a-protocol.org/latest/specification/#7-protocol-rpc-methods)
+ * Client transport making requests to [A2A protocol methods](https://a2a-protocol.org/v0.3.0/specification/#7-protocol-rpc-methods)
  * and handling responses from the server.
  *
  * Client transport must handle error responses from the server and convert them to appropriate [A2AException]
@@ -27,7 +27,7 @@ import kotlinx.serialization.SerializationException
  */
 public interface ClientTransport : AutoCloseable {
     /**
-     * Calls [agent/getAuthenticatedExtendedCard](https://a2a-protocol.org/latest/specification/#710-agentgetauthenticatedextendedcard)
+     * Calls [agent/getAuthenticatedExtendedCard](https://a2a-protocol.org/v0.3.0/specification/#710-agentgetauthenticatedextendedcard)
      *
      * @throws A2AException if server returned an error.
      */
@@ -37,7 +37,7 @@ public interface ClientTransport : AutoCloseable {
     ): Response<AgentCard>
 
     /**
-     * Calls [message/send](https://a2a-protocol.org/latest/specification/#71-messagesend).
+     * Calls [message/send](https://a2a-protocol.org/v0.3.0/specification/#71-messagesend).
      *
      * @throws A2AException if server returned an error.
      */
@@ -47,7 +47,7 @@ public interface ClientTransport : AutoCloseable {
     ): Response<CommunicationEvent>
 
     /**
-     * Calls [message/stream](https://a2a-protocol.org/latest/specification/#72-messagestream)
+     * Calls [message/stream](https://a2a-protocol.org/v0.3.0/specification/#72-messagestream)
      *
      * @throws A2AException if server returned an error.
      */
@@ -57,7 +57,7 @@ public interface ClientTransport : AutoCloseable {
     ): Flow<Response<Event>>
 
     /**
-     * Calls [tasks/get](https://a2a-protocol.org/latest/specification/#73-tasksget)
+     * Calls [tasks/get](https://a2a-protocol.org/v0.3.0/specification/#73-tasksget)
      *
      * @throws A2AException if server returned an error.
      */
@@ -67,7 +67,7 @@ public interface ClientTransport : AutoCloseable {
     ): Response<Task>
 
     /**
-     * Calls [tasks/cancel](https://a2a-protocol.org/latest/specification/#74-taskscancel)
+     * Calls [tasks/cancel](https://a2a-protocol.org/v0.3.0/specification/#74-taskscancel)
      *
      * @throws A2AException if server returned an error.
      */
@@ -77,7 +77,7 @@ public interface ClientTransport : AutoCloseable {
     ): Response<Task>
 
     /**
-     * Calls [tasks/resubscribe](https://a2a-protocol.org/latest/specification/#79-tasksresubscribe)
+     * Calls [tasks/resubscribe](https://a2a-protocol.org/v0.3.0/specification/#79-tasksresubscribe)
      *
      * @throws A2AException if server returned an error.
      */
@@ -87,7 +87,7 @@ public interface ClientTransport : AutoCloseable {
     ): Flow<Response<Event>>
 
     /**
-     * Calls [tasks/pushNotificationConfig/set](https://a2a-protocol.org/latest/specification/#75-taskspushnotificationconfigset)
+     * Calls [tasks/pushNotificationConfig/set](https://a2a-protocol.org/v0.3.0/specification/#75-taskspushnotificationconfigset)
      *
      * @throws A2AException if server returned an error.
      */
@@ -97,7 +97,7 @@ public interface ClientTransport : AutoCloseable {
     ): Response<TaskPushNotificationConfig>
 
     /**
-     * Calls [tasks/pushNotificationConfig/get](https://a2a-protocol.org/latest/specification/#76-taskspushnotificationconfigget)
+     * Calls [tasks/pushNotificationConfig/get](https://a2a-protocol.org/v0.3.0/specification/#76-taskspushnotificationconfigget)
      *
      * @throws A2AException if server returned an error.
      */
@@ -107,7 +107,7 @@ public interface ClientTransport : AutoCloseable {
     ): Response<TaskPushNotificationConfig>
 
     /**
-     * Calls [tasks/pushNotificationConfig/list](https://a2a-protocol.org/latest/specification/#77-taskspushnotificationconfiglist)
+     * Calls [tasks/pushNotificationConfig/list](https://a2a-protocol.org/v0.3.0/specification/#77-taskspushnotificationconfiglist)
      *
      * @throws A2AException if server returned an error.
      */
@@ -117,7 +117,7 @@ public interface ClientTransport : AutoCloseable {
     ): Response<List<TaskPushNotificationConfig>>
 
     /**
-     * Calls [tasks/pushNotificationConfig/delete](https://a2a-protocol.org/latest/specification/#78-taskspushnotificationconfigdelete)
+     * Calls [tasks/pushNotificationConfig/delete](https://a2a-protocol.org/v0.3.0/specification/#78-taskspushnotificationconfigdelete)
      *
      * @throws A2AException if server returned an error.
      */
