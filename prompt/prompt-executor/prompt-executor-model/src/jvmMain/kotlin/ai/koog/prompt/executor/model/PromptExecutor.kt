@@ -14,7 +14,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.annotations.InternalKoogUtils
 import ai.koog.utils.concurrency.runBlockingReentrant
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.jdk9.asPublisher
 import java.util.concurrent.Flow.Publisher
 
