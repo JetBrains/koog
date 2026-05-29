@@ -110,6 +110,29 @@ public class ChatMemoryConfig : FeatureConfig() {
         addPreProcessor(FilterMessagesPreProcessor(predicate))
         return this
     }
+
+    /**
+     * Adds a [DropSystemMessagesPreProcessor] that removes system messages from stored history.
+     *
+     * The system prompt is owned by the live agent and re-applied on each agent creation, so it is
+     * usually redundant to persist. [ChatMemory] always keeps the live agent's system prompt and
+     * ignores any system messages in loaded history regardless of this setting, so adding this
+     * preprocessor only affects what is written to the [ChatHistoryProvider].
+     *
+     * Example:
+     * ```kotlin
+     * installChatMemory {
+     *     chatHistoryProvider = MyChatHistoryProvider()
+     *     dropSystemMessages()
+     * }
+     * ```
+     *
+     * @return This [ChatMemoryConfig] instance for fluent chaining.
+     */
+    public fun dropSystemMessages(): ChatMemoryConfig {
+        addPreProcessor(DropSystemMessagesPreProcessor())
+        return this
+    }
 }
 
 /**
