@@ -1,0 +1,199 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-executor-ollama-client>
+abstract interface ai.koog.prompt.executor.ollama.client/ContextWindowStrategy { // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy|null[0]
+    abstract fun computeContextLength(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): kotlin/Long? // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.computeContextLength|computeContextLength(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+
+    final object Companion { // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion|null[0]
+        final class FitPrompt : ai.koog.prompt.executor.ollama.client/ContextWindowStrategy { // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt|null[0]
+            constructor <init>(ai.koog.prompt.tokenizer/PromptTokenizer? = ..., kotlin/Long = ..., kotlin/Long? = ..., kotlin/Long? = ...) // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.<init>|<init>(ai.koog.prompt.tokenizer.PromptTokenizer?;kotlin.Long;kotlin.Long?;kotlin.Long?){}[0]
+
+            final val contextChunkSize // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.contextChunkSize|{}contextChunkSize[0]
+                final fun <get-contextChunkSize>(): kotlin/Long // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.contextChunkSize.<get-contextChunkSize>|<get-contextChunkSize>(){}[0]
+            final val maximumChunkCount // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.maximumChunkCount|{}maximumChunkCount[0]
+                final fun <get-maximumChunkCount>(): kotlin/Long? // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.maximumChunkCount.<get-maximumChunkCount>|<get-maximumChunkCount>(){}[0]
+            final val minimumChunkCount // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.minimumChunkCount|{}minimumChunkCount[0]
+                final fun <get-minimumChunkCount>(): kotlin/Long? // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.minimumChunkCount.<get-minimumChunkCount>|<get-minimumChunkCount>(){}[0]
+            final val promptTokenizer // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.promptTokenizer|{}promptTokenizer[0]
+                final fun <get-promptTokenizer>(): ai.koog.prompt.tokenizer/PromptTokenizer? // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.promptTokenizer.<get-promptTokenizer>|<get-promptTokenizer>(){}[0]
+
+            final fun component1(): ai.koog.prompt.tokenizer/PromptTokenizer? // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.component1|component1(){}[0]
+            final fun component2(): kotlin/Long // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.component2|component2(){}[0]
+            final fun component3(): kotlin/Long? // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.component3|component3(){}[0]
+            final fun component4(): kotlin/Long? // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.component4|component4(){}[0]
+            final fun computeContextLength(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): kotlin/Long? // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.computeContextLength|computeContextLength(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+            final fun copy(ai.koog.prompt.tokenizer/PromptTokenizer? = ..., kotlin/Long = ..., kotlin/Long? = ..., kotlin/Long? = ...): ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.copy|copy(ai.koog.prompt.tokenizer.PromptTokenizer?;kotlin.Long;kotlin.Long?;kotlin.Long?){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.FitPrompt.toString|toString(){}[0]
+        }
+
+        final class Fixed : ai.koog.prompt.executor.ollama.client/ContextWindowStrategy { // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.Fixed|null[0]
+            constructor <init>(kotlin/Long) // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.Fixed.<init>|<init>(kotlin.Long){}[0]
+
+            final val contextLength // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.Fixed.contextLength|{}contextLength[0]
+                final fun <get-contextLength>(): kotlin/Long // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.Fixed.contextLength.<get-contextLength>|<get-contextLength>(){}[0]
+
+            final fun component1(): kotlin/Long // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.Fixed.component1|component1(){}[0]
+            final fun computeContextLength(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): kotlin/Long // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.Fixed.computeContextLength|computeContextLength(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+            final fun copy(kotlin/Long = ...): ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.Fixed // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.Fixed.copy|copy(kotlin.Long){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.Fixed.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.Fixed.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.Fixed.toString|toString(){}[0]
+        }
+
+        final object None : ai.koog.prompt.executor.ollama.client/ContextWindowStrategy { // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.None|null[0]
+            final fun computeContextLength(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): kotlin/Long? // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.None.computeContextLength|computeContextLength(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.None.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.None.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.prompt.executor.ollama.client/ContextWindowStrategy.Companion.None.toString|toString(){}[0]
+        }
+    }
+}
+
+final class ai.koog.prompt.executor.ollama.client/OllamaClient : ai.koog.prompt.executor.clients/LLMClient { // ai.koog.prompt.executor.ollama.client/OllamaClient|null[0]
+    constructor <init>(ai.koog.http.client/KoogHttpClient, ai.koog.utils.time/KoogClock = ..., ai.koog.prompt.executor.ollama.client/ContextWindowStrategy = ..., ai.koog.agents.core.tools.serialization/ToolDescriptorSchemaGenerator = ...) // ai.koog.prompt.executor.ollama.client/OllamaClient.<init>|<init>(ai.koog.http.client.KoogHttpClient;ai.koog.utils.time.KoogClock;ai.koog.prompt.executor.ollama.client.ContextWindowStrategy;ai.koog.agents.core.tools.serialization.ToolDescriptorSchemaGenerator){}[0]
+    constructor <init>(ai.koog.http.client/KoogHttpClient.Factory, kotlin/String = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., ai.koog.prompt.executor.clients/ConnectionTimeoutConfig = ..., ai.koog.utils.time/KoogClock = ..., ai.koog.prompt.executor.ollama.client/ContextWindowStrategy = ..., ai.koog.agents.core.tools.serialization/ToolDescriptorSchemaGenerator = ...) // ai.koog.prompt.executor.ollama.client/OllamaClient.<init>|<init>(ai.koog.http.client.KoogHttpClient.Factory;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;ai.koog.prompt.executor.clients.ConnectionTimeoutConfig;ai.koog.utils.time.KoogClock;ai.koog.prompt.executor.ollama.client.ContextWindowStrategy;ai.koog.agents.core.tools.serialization.ToolDescriptorSchemaGenerator){}[0]
+
+    final fun close() // ai.koog.prompt.executor.ollama.client/OllamaClient.close|close(){}[0]
+    final fun executeStreaming(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.executor.ollama.client/OllamaClient.executeStreaming|executeStreaming(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    final fun llmProvider(): ai.koog.prompt.llm/LLMProvider // ai.koog.prompt.executor.ollama.client/OllamaClient.llmProvider|llmProvider(){}[0]
+    final suspend fun embed(kotlin.collections/List<kotlin/String>, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin.collections/List<kotlin/Double>> // ai.koog.prompt.executor.ollama.client/OllamaClient.embed|embed(kotlin.collections.List<kotlin.String>;ai.koog.prompt.llm.LLModel){}[0]
+    final suspend fun embed(kotlin/String, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin/Double> // ai.koog.prompt.executor.ollama.client/OllamaClient.embed|embed(kotlin.String;ai.koog.prompt.llm.LLModel){}[0]
+    final suspend fun execute(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.executor.ollama.client/OllamaClient.execute|execute(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    final suspend fun getModelOrNull(kotlin/String, kotlin/Boolean = ...): ai.koog.prompt.executor.ollama.client/OllamaModelCard? // ai.koog.prompt.executor.ollama.client/OllamaClient.getModelOrNull|getModelOrNull(kotlin.String;kotlin.Boolean){}[0]
+    final suspend fun getModels(): kotlin.collections/List<ai.koog.prompt.executor.ollama.client/OllamaModelCard> // ai.koog.prompt.executor.ollama.client/OllamaClient.getModels|getModels(){}[0]
+    final suspend fun moderate(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): ai.koog.prompt.dsl/ModerationResult // ai.koog.prompt.executor.ollama.client/OllamaClient.moderate|moderate(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+
+    final object Companion { // ai.koog.prompt.executor.ollama.client/OllamaClient.Companion|null[0]
+        final const val DEFAULT_BASE_URL // ai.koog.prompt.executor.ollama.client/OllamaClient.Companion.DEFAULT_BASE_URL|{}DEFAULT_BASE_URL[0]
+            final fun <get-DEFAULT_BASE_URL>(): kotlin/String // ai.koog.prompt.executor.ollama.client/OllamaClient.Companion.DEFAULT_BASE_URL.<get-DEFAULT_BASE_URL>|<get-DEFAULT_BASE_URL>(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.ollama.client/OllamaModelCard { // ai.koog.prompt.executor.ollama.client/OllamaModelCard|null[0]
+    final val capabilities // ai.koog.prompt.executor.ollama.client/OllamaModelCard.capabilities|{}capabilities[0]
+        final fun <get-capabilities>(): kotlin.collections/List<ai.koog.prompt.llm/LLMCapability> // ai.koog.prompt.executor.ollama.client/OllamaModelCard.capabilities.<get-capabilities>|<get-capabilities>(){}[0]
+    final val contextLength // ai.koog.prompt.executor.ollama.client/OllamaModelCard.contextLength|{}contextLength[0]
+        final fun <get-contextLength>(): kotlin/Long? // ai.koog.prompt.executor.ollama.client/OllamaModelCard.contextLength.<get-contextLength>|<get-contextLength>(){}[0]
+    final val embeddingLength // ai.koog.prompt.executor.ollama.client/OllamaModelCard.embeddingLength|{}embeddingLength[0]
+        final fun <get-embeddingLength>(): kotlin/Long? // ai.koog.prompt.executor.ollama.client/OllamaModelCard.embeddingLength.<get-embeddingLength>|<get-embeddingLength>(){}[0]
+    final val families // ai.koog.prompt.executor.ollama.client/OllamaModelCard.families|{}families[0]
+        final fun <get-families>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.executor.ollama.client/OllamaModelCard.families.<get-families>|<get-families>(){}[0]
+    final val family // ai.koog.prompt.executor.ollama.client/OllamaModelCard.family|{}family[0]
+        final fun <get-family>(): kotlin/String // ai.koog.prompt.executor.ollama.client/OllamaModelCard.family.<get-family>|<get-family>(){}[0]
+    final val name // ai.koog.prompt.executor.ollama.client/OllamaModelCard.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.koog.prompt.executor.ollama.client/OllamaModelCard.name.<get-name>|<get-name>(){}[0]
+    final val parameterCount // ai.koog.prompt.executor.ollama.client/OllamaModelCard.parameterCount|{}parameterCount[0]
+        final fun <get-parameterCount>(): kotlin/Long? // ai.koog.prompt.executor.ollama.client/OllamaModelCard.parameterCount.<get-parameterCount>|<get-parameterCount>(){}[0]
+    final val quantizationLevel // ai.koog.prompt.executor.ollama.client/OllamaModelCard.quantizationLevel|{}quantizationLevel[0]
+        final fun <get-quantizationLevel>(): kotlin/String? // ai.koog.prompt.executor.ollama.client/OllamaModelCard.quantizationLevel.<get-quantizationLevel>|<get-quantizationLevel>(){}[0]
+    final val size // ai.koog.prompt.executor.ollama.client/OllamaModelCard.size|{}size[0]
+        final fun <get-size>(): kotlin/Long // ai.koog.prompt.executor.ollama.client/OllamaModelCard.size.<get-size>|<get-size>(){}[0]
+}
+
+final class ai.koog.prompt.executor.ollama.client/OllamaParams : ai.koog.prompt.params/LLMParams { // ai.koog.prompt.executor.ollama.client/OllamaParams|null[0]
+    constructor <init>(kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., ai.koog.prompt.params/LLMParams.Schema? = ..., ai.koog.prompt.params/LLMParams.ToolChoice? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? = ..., kotlin/Boolean? = ...) // ai.koog.prompt.executor.ollama.client/OllamaParams.<init>|<init>(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?;kotlin.Boolean?){}[0]
+
+    final val think // ai.koog.prompt.executor.ollama.client/OllamaParams.think|{}think[0]
+        final fun <get-think>(): kotlin/Boolean? // ai.koog.prompt.executor.ollama.client/OllamaParams.think.<get-think>|<get-think>(){}[0]
+
+    final fun copy(kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., ai.koog.prompt.params/LLMParams.Schema? = ..., ai.koog.prompt.params/LLMParams.ToolChoice? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? = ..., kotlin/Boolean? = ...): ai.koog.prompt.executor.ollama.client/OllamaParams // ai.koog.prompt.executor.ollama.client/OllamaParams.copy|copy(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?;kotlin.Boolean?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.ollama.client/OllamaParams.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.ollama.client/OllamaParams.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.executor.ollama.client/OllamaParams.toString|toString(){}[0]
+}
+
+final class ai.koog.prompt.executor.ollama.tools.json/OllamaToolDescriptorSchemaGenerator : ai.koog.agents.core.tools.serialization/ToolDescriptorSchemaGenerator { // ai.koog.prompt.executor.ollama.tools.json/OllamaToolDescriptorSchemaGenerator|null[0]
+    constructor <init>() // ai.koog.prompt.executor.ollama.tools.json/OllamaToolDescriptorSchemaGenerator.<init>|<init>(){}[0]
+
+    final fun generate(ai.koog.agents.core.tools/ToolDescriptor): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.ollama.tools.json/OllamaToolDescriptorSchemaGenerator.generate|generate(ai.koog.agents.core.tools.ToolDescriptor){}[0]
+}
+
+final object ai.koog.prompt.executor.ollama.client/OllamaCustomModelConverters { // ai.koog.prompt.executor.ollama.client/OllamaCustomModelConverters|null[0]
+    final fun qwq(kotlin/String): kotlin/String // ai.koog.prompt.executor.ollama.client/OllamaCustomModelConverters.qwq|qwq(kotlin.String){}[0]
+}
+
+final object ai.koog.prompt.executor.ollama.client/OllamaModels : ai.koog.prompt.executor.clients/LLModelDefinitions { // ai.koog.prompt.executor.ollama.client/OllamaModels|null[0]
+    final val models // ai.koog.prompt.executor.ollama.client/OllamaModels.models|{}models[0]
+        final fun <get-models>(): kotlin.collections/List<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.ollama.client/OllamaModels.models.<get-models>|<get-models>(){}[0]
+
+    final fun addCustomModel(ai.koog.prompt.llm/LLModel) // ai.koog.prompt.executor.ollama.client/OllamaModels.addCustomModel|addCustomModel(ai.koog.prompt.llm.LLModel){}[0]
+
+    final object Alibaba { // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba|null[0]
+        final val QWEN_2_5_05B // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba.QWEN_2_5_05B|{}QWEN_2_5_05B[0]
+            final fun <get-QWEN_2_5_05B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba.QWEN_2_5_05B.<get-QWEN_2_5_05B>|<get-QWEN_2_5_05B>(){}[0]
+        final val QWEN_3_06B // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba.QWEN_3_06B|{}QWEN_3_06B[0]
+            final fun <get-QWEN_3_06B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba.QWEN_3_06B.<get-QWEN_3_06B>|<get-QWEN_3_06B>(){}[0]
+        final val QWEN_3_5_9B // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba.QWEN_3_5_9B|{}QWEN_3_5_9B[0]
+            final fun <get-QWEN_3_5_9B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba.QWEN_3_5_9B.<get-QWEN_3_5_9B>|<get-QWEN_3_5_9B>(){}[0]
+        final val QWEN_CODER_2_5_32B // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba.QWEN_CODER_2_5_32B|{}QWEN_CODER_2_5_32B[0]
+            final fun <get-QWEN_CODER_2_5_32B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba.QWEN_CODER_2_5_32B.<get-QWEN_CODER_2_5_32B>|<get-QWEN_CODER_2_5_32B>(){}[0]
+        final val QWQ // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba.QWQ|{}QWQ[0]
+            final fun <get-QWQ>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba.QWQ.<get-QWQ>|<get-QWQ>(){}[0]
+        final val QWQ_32B // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba.QWQ_32B|{}QWQ_32B[0]
+            final fun <get-QWQ_32B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Alibaba.QWQ_32B.<get-QWQ_32B>|<get-QWQ_32B>(){}[0]
+    }
+
+    final object DeepSeek { // ai.koog.prompt.executor.ollama.client/OllamaModels.DeepSeek|null[0]
+        final val DEEPSEEK_R1_DISTILL_LLAMA_1_5B // ai.koog.prompt.executor.ollama.client/OllamaModels.DeepSeek.DEEPSEEK_R1_DISTILL_LLAMA_1_5B|{}DEEPSEEK_R1_DISTILL_LLAMA_1_5B[0]
+            final fun <get-DEEPSEEK_R1_DISTILL_LLAMA_1_5B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.DeepSeek.DEEPSEEK_R1_DISTILL_LLAMA_1_5B.<get-DEEPSEEK_R1_DISTILL_LLAMA_1_5B>|<get-DEEPSEEK_R1_DISTILL_LLAMA_1_5B>(){}[0]
+    }
+
+    final object Embeddings { // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings|null[0]
+        final val ALL_MINI_LM // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.ALL_MINI_LM|{}ALL_MINI_LM[0]
+            final fun <get-ALL_MINI_LM>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.ALL_MINI_LM.<get-ALL_MINI_LM>|<get-ALL_MINI_LM>(){}[0]
+        final val BGE_LARGE // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.BGE_LARGE|{}BGE_LARGE[0]
+            final fun <get-BGE_LARGE>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.BGE_LARGE.<get-BGE_LARGE>|<get-BGE_LARGE>(){}[0]
+        final val MULTILINGUAL_E5 // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.MULTILINGUAL_E5|{}MULTILINGUAL_E5[0]
+            final fun <get-MULTILINGUAL_E5>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.MULTILINGUAL_E5.<get-MULTILINGUAL_E5>|<get-MULTILINGUAL_E5>(){}[0]
+        final val MXBAI_EMBED_LARGE // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.MXBAI_EMBED_LARGE|{}MXBAI_EMBED_LARGE[0]
+            final fun <get-MXBAI_EMBED_LARGE>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.MXBAI_EMBED_LARGE.<get-MXBAI_EMBED_LARGE>|<get-MXBAI_EMBED_LARGE>(){}[0]
+        final val NOMIC_EMBED_TEXT // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.NOMIC_EMBED_TEXT|{}NOMIC_EMBED_TEXT[0]
+            final fun <get-NOMIC_EMBED_TEXT>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.NOMIC_EMBED_TEXT.<get-NOMIC_EMBED_TEXT>|<get-NOMIC_EMBED_TEXT>(){}[0]
+    }
+
+    final object Granite { // ai.koog.prompt.executor.ollama.client/OllamaModels.Granite|null[0]
+        final val GRANITE_3_2_VISION // ai.koog.prompt.executor.ollama.client/OllamaModels.Granite.GRANITE_3_2_VISION|{}GRANITE_3_2_VISION[0]
+            final fun <get-GRANITE_3_2_VISION>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Granite.GRANITE_3_2_VISION.<get-GRANITE_3_2_VISION>|<get-GRANITE_3_2_VISION>(){}[0]
+    }
+
+    final object Groq { // ai.koog.prompt.executor.ollama.client/OllamaModels.Groq|null[0]
+        final val LLAMA_3_GROK_TOOL_USE_70B // ai.koog.prompt.executor.ollama.client/OllamaModels.Groq.LLAMA_3_GROK_TOOL_USE_70B|{}LLAMA_3_GROK_TOOL_USE_70B[0]
+            final fun <get-LLAMA_3_GROK_TOOL_USE_70B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Groq.LLAMA_3_GROK_TOOL_USE_70B.<get-LLAMA_3_GROK_TOOL_USE_70B>|<get-LLAMA_3_GROK_TOOL_USE_70B>(){}[0]
+        final val LLAMA_3_GROK_TOOL_USE_8B // ai.koog.prompt.executor.ollama.client/OllamaModels.Groq.LLAMA_3_GROK_TOOL_USE_8B|{}LLAMA_3_GROK_TOOL_USE_8B[0]
+            final fun <get-LLAMA_3_GROK_TOOL_USE_8B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Groq.LLAMA_3_GROK_TOOL_USE_8B.<get-LLAMA_3_GROK_TOOL_USE_8B>|<get-LLAMA_3_GROK_TOOL_USE_8B>(){}[0]
+    }
+
+    final object Meta { // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta|null[0]
+        final val LLAMA_3_2 // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta.LLAMA_3_2|{}LLAMA_3_2[0]
+            final fun <get-LLAMA_3_2>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta.LLAMA_3_2.<get-LLAMA_3_2>|<get-LLAMA_3_2>(){}[0]
+        final val LLAMA_3_2_3B // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta.LLAMA_3_2_3B|{}LLAMA_3_2_3B[0]
+            final fun <get-LLAMA_3_2_3B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta.LLAMA_3_2_3B.<get-LLAMA_3_2_3B>|<get-LLAMA_3_2_3B>(){}[0]
+        final val LLAMA_4 // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta.LLAMA_4|{}LLAMA_4[0]
+            final fun <get-LLAMA_4>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta.LLAMA_4.<get-LLAMA_4>|<get-LLAMA_4>(){}[0]
+        final val LLAMA_4_LATEST // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta.LLAMA_4_LATEST|{}LLAMA_4_LATEST[0]
+            final fun <get-LLAMA_4_LATEST>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta.LLAMA_4_LATEST.<get-LLAMA_4_LATEST>|<get-LLAMA_4_LATEST>(){}[0]
+        final val LLAMA_4_SCOUT // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta.LLAMA_4_SCOUT|{}LLAMA_4_SCOUT[0]
+            final fun <get-LLAMA_4_SCOUT>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta.LLAMA_4_SCOUT.<get-LLAMA_4_SCOUT>|<get-LLAMA_4_SCOUT>(){}[0]
+        final val LLAMA_GUARD_3 // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta.LLAMA_GUARD_3|{}LLAMA_GUARD_3[0]
+            final fun <get-LLAMA_GUARD_3>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Meta.LLAMA_GUARD_3.<get-LLAMA_GUARD_3>|<get-LLAMA_GUARD_3>(){}[0]
+    }
+
+    final object OpenAI { // ai.koog.prompt.executor.ollama.client/OllamaModels.OpenAI|null[0]
+        final val GPT_OSS_20B // ai.koog.prompt.executor.ollama.client/OllamaModels.OpenAI.GPT_OSS_20B|{}GPT_OSS_20B[0]
+            final fun <get-GPT_OSS_20B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.OpenAI.GPT_OSS_20B.<get-GPT_OSS_20B>|<get-GPT_OSS_20B>(){}[0]
+    }
+}
+
+final val ai.koog.prompt.executor.ollama.client/nameWithoutTag // ai.koog.prompt.executor.ollama.client/nameWithoutTag|@ai.koog.prompt.executor.ollama.client.OllamaModelCard{}nameWithoutTag[0]
+    final fun (ai.koog.prompt.executor.ollama.client/OllamaModelCard).<get-nameWithoutTag>(): kotlin/String // ai.koog.prompt.executor.ollama.client/nameWithoutTag.<get-nameWithoutTag>|<get-nameWithoutTag>@ai.koog.prompt.executor.ollama.client.OllamaModelCard(){}[0]
+
+final fun (ai.koog.prompt.executor.ollama.client/OllamaModelCard).ai.koog.prompt.executor.ollama.client/toLLModel(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/toLLModel|toLLModel@ai.koog.prompt.executor.ollama.client.OllamaModelCard(){}[0]
+final fun (kotlin.collections/List<ai.koog.prompt.executor.ollama.client/OllamaModelCard>).ai.koog.prompt.executor.ollama.client/findBestSuitedModels(kotlin/String? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin/Long? = ..., kotlin.collections/List<ai.koog.prompt.llm/LLMCapability>? = ...): kotlin.collections/List<ai.koog.prompt.executor.ollama.client/OllamaModelCard> // ai.koog.prompt.executor.ollama.client/findBestSuitedModels|findBestSuitedModels@kotlin.collections.List<ai.koog.prompt.executor.ollama.client.OllamaModelCard>(kotlin.String?;kotlin.Long?;kotlin.Long?;kotlin.Long?;kotlin.Long?;kotlin.collections.List<ai.koog.prompt.llm.LLMCapability>?){}[0]
+final fun (kotlin.collections/List<ai.koog.prompt.executor.ollama.client/OllamaModelCard>).ai.koog.prompt.executor.ollama.client/findByNameOrNull(kotlin/String): ai.koog.prompt.executor.ollama.client/OllamaModelCard? // ai.koog.prompt.executor.ollama.client/findByNameOrNull|findByNameOrNull@kotlin.collections.List<ai.koog.prompt.executor.ollama.client.OllamaModelCard>(kotlin.String){}[0]

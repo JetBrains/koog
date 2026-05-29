@@ -1,0 +1,57 @@
+public abstract interface class ai/koog/agents/chatMemory/feature/ChatHistoryProvider {
+	public abstract fun load (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun store (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/chatMemory/feature/ChatMemory {
+	public static final field Feature Lai/koog/agents/chatMemory/feature/ChatMemory$Feature;
+	public fun <init> ()V
+}
+
+public final class ai/koog/agents/chatMemory/feature/ChatMemory$Feature : ai/koog/agents/core/feature/AIAgentFunctionalFeature, ai/koog/agents/core/feature/AIAgentGraphFeature, ai/koog/agents/core/feature/AIAgentPlannerFeature {
+	public fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/chatMemory/feature/ChatMemoryConfig;
+	public synthetic fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/core/feature/config/FeatureConfig;
+	public fun getKey ()Lai/koog/agents/core/agent/entity/AIAgentStorageKey;
+	public fun install (Lai/koog/agents/chatMemory/feature/ChatMemoryConfig;Lai/koog/agents/core/feature/pipeline/AIAgentFunctionalPipeline;)Lai/koog/agents/chatMemory/feature/ChatMemory;
+	public fun install (Lai/koog/agents/chatMemory/feature/ChatMemoryConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Lai/koog/agents/chatMemory/feature/ChatMemory;
+	public fun install (Lai/koog/agents/chatMemory/feature/ChatMemoryConfig;Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;)Lai/koog/agents/chatMemory/feature/ChatMemory;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentFunctionalPipeline;)Ljava/lang/Object;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Ljava/lang/Object;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/chatMemory/feature/ChatMemoryConfig : ai/koog/agents/core/feature/config/FeatureConfig {
+	public fun <init> ()V
+	public final fun addPreProcessor (Lai/koog/agents/chatMemory/feature/ChatMemoryPreProcessor;)Lai/koog/agents/chatMemory/feature/ChatMemoryConfig;
+	public final fun chatHistoryProvider (Lai/koog/agents/chatMemory/feature/ChatHistoryProvider;)Lai/koog/agents/chatMemory/feature/ChatMemoryConfig;
+	public final fun filterMessages (Lai/koog/agents/chatMemory/feature/MessageFilter;)Lai/koog/agents/chatMemory/feature/ChatMemoryConfig;
+	public final fun getChatHistoryProvider ()Lai/koog/agents/chatMemory/feature/ChatHistoryProvider;
+	public final fun getPreprocessors ()Ljava/util/List;
+	public final fun setChatHistoryProvider (Lai/koog/agents/chatMemory/feature/ChatHistoryProvider;)V
+	public final fun windowSize (I)Lai/koog/agents/chatMemory/feature/ChatMemoryConfig;
+}
+
+public abstract interface class ai/koog/agents/chatMemory/feature/ChatMemoryPreProcessor {
+	public abstract fun preprocess (Ljava/util/List;)Ljava/util/List;
+}
+
+public final class ai/koog/agents/chatMemory/feature/FilterMessagesPreProcessor : ai/koog/agents/chatMemory/feature/ChatMemoryPreProcessor {
+	public fun <init> (Lai/koog/agents/chatMemory/feature/MessageFilter;)V
+	public fun preprocess (Ljava/util/List;)Ljava/util/List;
+}
+
+public final class ai/koog/agents/chatMemory/feature/InMemoryChatHistoryProvider : ai/koog/agents/chatMemory/feature/ChatHistoryProvider {
+	public fun <init> ()V
+	public fun load (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun store (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/agents/chatMemory/feature/MessageFilter {
+	public abstract fun test (Lai/koog/prompt/message/Message;)Z
+}
+
+public final class ai/koog/agents/chatMemory/feature/WindowSizePreProcessor : ai/koog/agents/chatMemory/feature/ChatMemoryPreProcessor {
+	public fun <init> (I)V
+	public fun preprocess (Ljava/util/List;)Ljava/util/List;
+}
+

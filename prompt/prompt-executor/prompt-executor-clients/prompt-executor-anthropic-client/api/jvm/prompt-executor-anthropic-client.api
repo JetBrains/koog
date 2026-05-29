@@ -1,0 +1,947 @@
+public abstract interface class ai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl : ai/koog/prompt/message/CacheControl {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl$Companion;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl$Default : ai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl$Default;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl$OneHour : ai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl$OneHour;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/AnthropicClientFactory {
+	public static final fun anthropicClient (Ljava/lang/String;)Lai/koog/prompt/executor/clients/anthropic/AnthropicLLMClient;
+	public static final fun anthropicClient (Ljava/lang/String;Lai/koog/prompt/executor/clients/anthropic/AnthropicClientSettings;)Lai/koog/prompt/executor/clients/anthropic/AnthropicLLMClient;
+	public static final fun anthropicClient (Ljava/lang/String;Lai/koog/prompt/executor/clients/anthropic/AnthropicClientSettings;Lai/koog/utils/time/KoogClock;)Lai/koog/prompt/executor/clients/anthropic/AnthropicLLMClient;
+	public static synthetic fun anthropicClient$default (Ljava/lang/String;Lai/koog/prompt/executor/clients/anthropic/AnthropicClientSettings;Lai/koog/utils/time/KoogClock;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/AnthropicLLMClient;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/AnthropicClientSettings {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;)V
+	public synthetic fun <init> (Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getApiVersion ()Ljava/lang/String;
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getMessagesPath ()Ljava/lang/String;
+	public final fun getModelVersionsMap ()Ljava/util/Map;
+	public final fun getModelsPath ()Ljava/lang/String;
+	public final fun getTimeoutConfig ()Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;
+}
+
+public class ai/koog/prompt/executor/clients/anthropic/AnthropicLLMClient : ai/koog/prompt/executor/clients/LLMClient {
+	public fun <init> (Lai/koog/http/client/KoogHttpClient;)V
+	public fun <init> (Lai/koog/prompt/executor/clients/anthropic/AnthropicClientSettings;Lai/koog/http/client/KoogHttpClient;)V
+	public fun <init> (Lai/koog/prompt/executor/clients/anthropic/AnthropicClientSettings;Lai/koog/http/client/KoogHttpClient;Lai/koog/utils/time/KoogClock;)V
+	public synthetic fun <init> (Lai/koog/prompt/executor/clients/anthropic/AnthropicClientSettings;Lai/koog/http/client/KoogHttpClient;Lai/koog/utils/time/KoogClock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/http/client/KoogHttpClient$Factory;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/anthropic/AnthropicClientSettings;Lai/koog/http/client/KoogHttpClient$Factory;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/anthropic/AnthropicClientSettings;Lai/koog/http/client/KoogHttpClient$Factory;Lai/koog/utils/time/KoogClock;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/anthropic/AnthropicClientSettings;Lai/koog/http/client/KoogHttpClient$Factory;Lai/koog/utils/time/KoogClock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public fun embed (Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun embed (Ljava/util/List;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public fun getBasicJsonSchemaGenerator ()Lai/koog/prompt/executor/clients/anthropic/structure/AnthropicBasicJsonSchemaGenerator;
+	public synthetic fun getBasicJsonSchemaGenerator ()Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator;
+	public fun getClientName ()Ljava/lang/String;
+	protected final fun getHttpClient ()Lai/koog/http/client/KoogHttpClient;
+	public fun getStandardJsonSchemaGenerator ()Lai/koog/prompt/executor/clients/anthropic/structure/AnthropicStandardJsonSchemaGenerator;
+	public synthetic fun getStandardJsonSchemaGenerator ()Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator;
+	public fun llmProvider ()Lai/koog/prompt/llm/LLMProvider;
+	public fun models (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/AnthropicModels : ai/koog/prompt/executor/clients/LLModelDefinitions {
+	public static final field Haiku_4_5 Lai/koog/prompt/llm/LLModel;
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/AnthropicModels;
+	public static final field Opus_4 Lai/koog/prompt/llm/LLModel;
+	public static final field Opus_4_1 Lai/koog/prompt/llm/LLModel;
+	public static final field Opus_4_5 Lai/koog/prompt/llm/LLModel;
+	public static final field Opus_4_6 Lai/koog/prompt/llm/LLModel;
+	public static final field Opus_4_7 Lai/koog/prompt/llm/LLModel;
+	public static final field Sonnet_4 Lai/koog/prompt/llm/LLModel;
+	public static final field Sonnet_4_5 Lai/koog/prompt/llm/LLModel;
+	public static final field Sonnet_4_6 Lai/koog/prompt/llm/LLModel;
+	public fun addCustomModel (Lai/koog/prompt/llm/LLModel;)V
+	public fun getModels ()Ljava/util/List;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/AnthropicParams : ai/koog/prompt/params/LLMParams {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicServiceTier;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking;Lai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl;)V
+	public synthetic fun <init> (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicServiceTier;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking;Lai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun copy (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;)Lai/koog/prompt/executor/clients/anthropic/AnthropicParams;
+	public synthetic fun copy (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;)Lai/koog/prompt/params/LLMParams;
+	public final fun copy (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicServiceTier;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking;Lai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl;)Lai/koog/prompt/executor/clients/anthropic/AnthropicParams;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/AnthropicParams;Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/lang/Integer;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicServiceTier;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking;Lai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/AnthropicParams;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCacheControl ()Lai/koog/prompt/executor/clients/anthropic/AnthropicCacheControl;
+	public final fun getContainer ()Ljava/lang/String;
+	public final fun getMcpServers ()Ljava/util/List;
+	public final fun getServiceTier ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicServiceTier;
+	public final fun getStopSequences ()Ljava/util/List;
+	public final fun getThinking ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking;
+	public final fun getTopK ()Ljava/lang/Integer;
+	public final fun getTopP ()Ljava/lang/Double;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl$Ephemeral : ai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl$Ephemeral$Companion;
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-Wo-pjM4 ()Ljava/lang/String;
+	public final fun copy-Py2KR-o (Ljava/lang/String;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl$Ephemeral;
+	public static synthetic fun copy-Py2KR-o$default (Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl$Ephemeral;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl$Ephemeral;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTtl-Wo-pjM4 ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl$Ephemeral$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl$Ephemeral$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl$Ephemeral;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl$Ephemeral;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl$Ephemeral$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Document : ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Document$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;)V
+	public synthetic fun <init> (Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource;
+	public final fun component2 ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;
+	public final fun copy (Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Document;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Document;Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Document;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCacheControl ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;
+	public final fun getSource ()Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Document$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Document$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Document;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Document;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Document$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Image : ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Image$Companion;
+	public fun <init> (Lai/koog/prompt/executor/clients/anthropic/models/ImageSource;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;)V
+	public synthetic fun <init> (Lai/koog/prompt/executor/clients/anthropic/models/ImageSource;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lai/koog/prompt/executor/clients/anthropic/models/ImageSource;
+	public final fun component2 ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;
+	public final fun copy (Lai/koog/prompt/executor/clients/anthropic/models/ImageSource;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Image;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Image;Lai/koog/prompt/executor/clients/anthropic/models/ImageSource;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Image;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCacheControl ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;
+	public final fun getSource ()Lai/koog/prompt/executor/clients/anthropic/models/ImageSource;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Image$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Image$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Image;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Image;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Image$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Text : ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Text$Companion;
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;
+	public final fun copy (Ljava/lang/String;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Text;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Text;Ljava/lang/String;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Text;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCacheControl ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Text$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Text$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Text;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Text;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Text$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Thinking : ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Thinking$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Thinking;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Thinking;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Thinking;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSignature ()Ljava/lang/String;
+	public final fun getThinking ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Thinking$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Thinking$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Thinking;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Thinking;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$Thinking$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolResult : ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolResult$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZLai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZLai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun component4 ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZLai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolResult;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolResult;Ljava/lang/String;Ljava/lang/String;ZLai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCacheControl ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;
+	public final fun getContent ()Ljava/lang/String;
+	public final fun getToolUseId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isError ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolResult$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolResult;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolResult;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolResult$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolUse : ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolUse$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component4 ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolUse;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolUse;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolUse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCacheControl ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicCacheControl;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getInput ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolUse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolUse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolUse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolUse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicContent$ToolUse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicMCPServerURLDefinition {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMCPServerURLDefinition$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolConfiguration;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolConfiguration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAuthorizationToken ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getToolConfiguration ()Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolConfiguration;
+	public final fun getType ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicMCPServerURLDefinition$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMCPServerURLDefinition$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMCPServerURLDefinition;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMCPServerURLDefinition;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicMCPServerURLDefinition$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$Assistant : ai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$Assistant$Companion;
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$Assistant;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$Assistant;Ljava/util/List;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$Assistant;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$Assistant$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$Assistant$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$Assistant;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$Assistant;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$Assistant$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$User : ai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$User$Companion;
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$User;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$User;Ljava/util/List;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$User;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$User$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$User$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$User;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$User;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicMessage$User$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicMessageRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessageRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessageRequest;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicMessageRequest;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicMessageRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputConfig$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputConfig$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputConfig;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputConfig;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputConfig$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputFormat$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputFormat$JsonSchema : ai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputFormat {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputFormat$JsonSchema$Companion;
+	public fun <init> (Lkotlinx/serialization/json/JsonObject;)V
+	public final fun component1 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun copy (Lkotlinx/serialization/json/JsonObject;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputFormat$JsonSchema;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputFormat$JsonSchema;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputFormat$JsonSchema;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSchema ()Lkotlinx/serialization/json/JsonObject;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputFormat$JsonSchema$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputFormat$JsonSchema$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputFormat$JsonSchema;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputFormat$JsonSchema;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicOutputFormat$JsonSchema$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicServiceTier : java/lang/Enum {
+	public static final field AUTO Lai/koog/prompt/executor/clients/anthropic/models/AnthropicServiceTier;
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicServiceTier$Companion;
+	public static final field STANDARD_ONLY Lai/koog/prompt/executor/clients/anthropic/models/AnthropicServiceTier;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicServiceTier;
+	public static fun values ()[Lai/koog/prompt/executor/clients/anthropic/models/AnthropicServiceTier;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicServiceTier$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamDelta$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamDelta$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamDelta;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamDelta;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamDelta$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamDeltaContentType : java/lang/Enum {
+	public static final field INPUT_JSON_DELTA Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamDeltaContentType;
+	public static final field TEXT_DELTA Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamDeltaContentType;
+	public static final field THINKING_DELTA Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamDeltaContentType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamDeltaContentType;
+	public static fun values ()[Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamDeltaContentType;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamError$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamError$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamError;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamError;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamError$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamEventType : java/lang/Enum {
+	public static final field CONTENT_BLOCK_DELTA Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamEventType;
+	public static final field CONTENT_BLOCK_START Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamEventType;
+	public static final field CONTENT_BLOCK_STOP Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamEventType;
+	public static final field ERROR Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamEventType;
+	public static final field MESSAGE_DELTA Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamEventType;
+	public static final field MESSAGE_START Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamEventType;
+	public static final field MESSAGE_STOP Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamEventType;
+	public static final field PING Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamEventType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamEventType;
+	public static fun values ()[Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamEventType;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicStreamResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Companion;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Disabled : ai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Disabled$Companion;
+	public fun <init> ()V
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Disabled$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Disabled$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Disabled;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Disabled;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Disabled$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Enabled : ai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Enabled$Companion;
+	public fun <init> (I)V
+	public final fun getBudgetTokens ()I
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Enabled$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Enabled$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Enabled;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Enabled;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicThinking$Enabled$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicTool$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicTool$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicTool;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicTool;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicTool$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Any : ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Any;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Auto : ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Auto;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$None : ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$None;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Tool : ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Tool$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Tool;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Tool;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Tool;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Tool$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Tool$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Tool;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Tool;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolChoice$Tool$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolConfiguration {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolConfiguration$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAllowedTools ()Ljava/util/List;
+	public final fun getEnabled ()Ljava/lang/Boolean;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolConfiguration$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolConfiguration$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolConfiguration;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolConfiguration;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolConfiguration$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolSchema$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolSchema$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolSchema;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicToolSchema;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicToolSchema$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/AnthropicUsage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/AnthropicUsage$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/AnthropicUsage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/AnthropicUsage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/AnthropicUsage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/CacheTtl$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/CacheTtl$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun deserialize-e6dsIh4 (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public final fun serialize-Rk0vHsM (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/CacheTtl$Companion {
+	public final fun getOneHour--etuJlA ()Ljava/lang/String;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Base64 : ai/koog/prompt/executor/clients/anthropic/models/DocumentSource {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Base64$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Base64;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Base64;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Base64;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getData ()Ljava/lang/String;
+	public final fun getMediaType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Base64$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Base64$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Base64;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Base64;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Base64$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/DocumentSource$PlainText : ai/koog/prompt/executor/clients/anthropic/models/DocumentSource {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$PlainText$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$PlainText;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$PlainText;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$PlainText;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getData ()Ljava/lang/String;
+	public final fun getMediaType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/DocumentSource$PlainText$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$PlainText$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$PlainText;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$PlainText;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/DocumentSource$PlainText$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Url : ai/koog/prompt/executor/clients/anthropic/models/DocumentSource {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Url$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Url;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Url;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Url;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Url$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Url$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Url;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Url;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/DocumentSource$Url$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/ImageSource$Base64 : ai/koog/prompt/executor/clients/anthropic/models/ImageSource {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Base64$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Base64;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Base64;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Base64;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getData ()Ljava/lang/String;
+	public final fun getMediaType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/ImageSource$Base64$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Base64$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Base64;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Base64;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/ImageSource$Base64$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/ImageSource$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/ImageSource$Url : ai/koog/prompt/executor/clients/anthropic/models/ImageSource {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Url$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Url;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Url;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Url;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/ImageSource$Url$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Url$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Url;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/ImageSource$Url;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/ImageSource$Url$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/anthropic/models/SystemAnthropicMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/models/SystemAnthropicMessage$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/anthropic/models/SystemAnthropicMessage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/anthropic/models/SystemAnthropicMessage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/models/SystemAnthropicMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public class ai/koog/prompt/executor/clients/anthropic/structure/AnthropicBasicJsonSchemaGenerator : ai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/structure/AnthropicBasicJsonSchemaGenerator$Companion;
+	public fun <init> ()V
+	protected fun processMap (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processObject (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/structure/AnthropicBasicJsonSchemaGenerator$Companion : ai/koog/prompt/executor/clients/anthropic/structure/AnthropicBasicJsonSchemaGenerator {
+}
+
+public class ai/koog/prompt/executor/clients/anthropic/structure/AnthropicStandardJsonSchemaGenerator : ai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator {
+	public static final field Companion Lai/koog/prompt/executor/clients/anthropic/structure/AnthropicStandardJsonSchemaGenerator$Companion;
+	public fun <init> ()V
+	public fun generate (Lkotlinx/serialization/json/Json;Ljava/lang/String;Lkotlinx/serialization/KSerializer;Ljava/util/Map;Ljava/util/Set;)Lai/koog/prompt/params/LLMParams$Schema$JSON$Standard;
+	public synthetic fun generate (Lkotlinx/serialization/json/Json;Ljava/lang/String;Lkotlinx/serialization/KSerializer;Ljava/util/Map;Ljava/util/Set;)Lai/koog/prompt/params/LLMParams$Schema$JSON;
+	protected fun processClassDiscriminator (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processMap (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processObject (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+	protected fun processPolymorphic (Lai/koog/prompt/structure/json/generator/JsonSchemaGenerator$GenerationContext;)Lkotlinx/serialization/json/JsonObject;
+}
+
+public final class ai/koog/prompt/executor/clients/anthropic/structure/AnthropicStandardJsonSchemaGenerator$Companion : ai/koog/prompt/executor/clients/anthropic/structure/AnthropicStandardJsonSchemaGenerator {
+}
+

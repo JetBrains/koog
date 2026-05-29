@@ -1,0 +1,19 @@
+public abstract class ai/koog/serialization/JSONElementSerializationTestBase {
+	public fun <init> ()V
+	public abstract fun getSerializer ()Lai/koog/serialization/JSONSerializer;
+	public fun testJSONArrayEmpty ()V
+	public fun testJSONArrayWithPrimitives ()V
+	public fun testJSONElementArray ()V
+	public fun testJSONElementNestedStructure ()V
+	public fun testJSONLiteralBoolean ()V
+	public fun testJSONLiteralNumber ()V
+	public fun testJSONLiteralString ()V
+	public fun testJSONNull ()V
+	public fun testJSONObjectEmpty ()V
+	public fun testJSONObjectWithPrimitives ()V
+	public fun testJSONPrimitiveNull ()V
+	public fun testJSONPrimitiveString ()V
+	public fun testJSONUnquotedPrimitive ()V
+	public fun testRoundTripSerialization ()V
+}
+

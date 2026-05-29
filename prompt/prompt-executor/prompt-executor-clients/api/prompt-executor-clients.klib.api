@@ -1,0 +1,201 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-executor-clients>
+open annotation class ai.koog.prompt.executor.clients/InternalLLMClientApi : kotlin/Annotation { // ai.koog.prompt.executor.clients/InternalLLMClientApi|null[0]
+    constructor <init>() // ai.koog.prompt.executor.clients/InternalLLMClientApi.<init>|<init>(){}[0]
+}
+
+abstract fun interface ai.koog.prompt.executor.clients.retry/RetryAfterExtractor { // ai.koog.prompt.executor.clients.retry/RetryAfterExtractor|null[0]
+    abstract fun extract(kotlin/String): kotlin.time/Duration? // ai.koog.prompt.executor.clients.retry/RetryAfterExtractor.extract|extract(kotlin.String){}[0]
+}
+
+abstract interface ai.koog.prompt.executor.clients/LLMClientAPI : kotlin/AutoCloseable { // ai.koog.prompt.executor.clients/LLMClientAPI|null[0]
+    open val clientName // ai.koog.prompt.executor.clients/LLMClientAPI.clientName|{}clientName[0]
+        open fun <get-clientName>(): kotlin/String // ai.koog.prompt.executor.clients/LLMClientAPI.clientName.<get-clientName>|<get-clientName>(){}[0]
+
+    abstract fun llmProvider(): ai.koog.prompt.llm/LLMProvider // ai.koog.prompt.executor.clients/LLMClientAPI.llmProvider|llmProvider(){}[0]
+    abstract suspend fun execute(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor> = ...): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.executor.clients/LLMClientAPI.execute|execute(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    abstract suspend fun moderate(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): ai.koog.prompt.dsl/ModerationResult // ai.koog.prompt.executor.clients/LLMClientAPI.moderate|moderate(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+    open fun executeStreaming(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.executor.clients/LLMClientAPI.executeStreaming|executeStreaming(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+    open fun executeStreaming(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.executor.clients/LLMClientAPI.executeStreaming|executeStreaming(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    open fun getBasicJsonSchemaGenerator(): ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator // ai.koog.prompt.executor.clients/LLMClientAPI.getBasicJsonSchemaGenerator|getBasicJsonSchemaGenerator(){}[0]
+    open fun getStandardJsonSchemaGenerator(): ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator // ai.koog.prompt.executor.clients/LLMClientAPI.getStandardJsonSchemaGenerator|getStandardJsonSchemaGenerator(){}[0]
+    open suspend fun executeMultipleChoices(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor> = ...): kotlin.collections/List<ai.koog.prompt.message/Message.Assistant> // ai.koog.prompt.executor.clients/LLMClientAPI.executeMultipleChoices|executeMultipleChoices(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    open suspend fun models(): kotlin.collections/List<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.clients/LLMClientAPI.models|models(){}[0]
+}
+
+abstract interface ai.koog.prompt.executor.clients/LLMEmbeddingProviderAPI { // ai.koog.prompt.executor.clients/LLMEmbeddingProviderAPI|null[0]
+    open suspend fun embed(kotlin.collections/List<kotlin/String>, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin.collections/List<kotlin/Double>> // ai.koog.prompt.executor.clients/LLMEmbeddingProviderAPI.embed|embed(kotlin.collections.List<kotlin.String>;ai.koog.prompt.llm.LLModel){}[0]
+    open suspend fun embed(kotlin/String, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin/Double> // ai.koog.prompt.executor.clients/LLMEmbeddingProviderAPI.embed|embed(kotlin.String;ai.koog.prompt.llm.LLModel){}[0]
+}
+
+abstract interface ai.koog.prompt.executor.clients/LLModelDefinitions { // ai.koog.prompt.executor.clients/LLModelDefinitions|null[0]
+    abstract val models // ai.koog.prompt.executor.clients/LLModelDefinitions.models|{}models[0]
+        abstract fun <get-models>(): kotlin.collections/List<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.clients/LLModelDefinitions.models.<get-models>|<get-models>(){}[0]
+
+    abstract fun addCustomModel(ai.koog.prompt.llm/LLModel) // ai.koog.prompt.executor.clients/LLModelDefinitions.addCustomModel|addCustomModel(ai.koog.prompt.llm.LLModel){}[0]
+}
+
+abstract class <#A: kotlin/Any?> ai.koog.prompt.executor.clients.serialization/AdditionalPropertiesFlatteningSerializer : kotlinx.serialization.json/JsonTransformingSerializer<#A> { // ai.koog.prompt.executor.clients.serialization/AdditionalPropertiesFlatteningSerializer|null[0]
+    constructor <init>(kotlinx.serialization/KSerializer<#A>, kotlin/String = ...) // ai.koog.prompt.executor.clients.serialization/AdditionalPropertiesFlatteningSerializer.<init>|<init>(kotlinx.serialization.KSerializer<1:0>;kotlin.String){}[0]
+
+    open fun transformDeserialize(kotlinx.serialization.json/JsonElement): kotlinx.serialization.json/JsonElement // ai.koog.prompt.executor.clients.serialization/AdditionalPropertiesFlatteningSerializer.transformDeserialize|transformDeserialize(kotlinx.serialization.json.JsonElement){}[0]
+    open fun transformSerialize(kotlinx.serialization.json/JsonElement): kotlinx.serialization.json/JsonElement // ai.koog.prompt.executor.clients.serialization/AdditionalPropertiesFlatteningSerializer.transformSerialize|transformSerialize(kotlinx.serialization.json.JsonElement){}[0]
+}
+
+abstract class ai.koog.prompt.executor.clients/LLMClient : ai.koog.prompt.executor.clients/LLMClientAPI, ai.koog.prompt.executor.clients/LLMEmbeddingProviderAPI { // ai.koog.prompt.executor.clients/LLMClient|null[0]
+    constructor <init>() // ai.koog.prompt.executor.clients/LLMClient.<init>|<init>(){}[0]
+}
+
+abstract class ai.koog.prompt.executor.clients/LLMEmbeddingProvider : ai.koog.prompt.executor.clients/LLMEmbeddingProviderAPI { // ai.koog.prompt.executor.clients/LLMEmbeddingProvider|null[0]
+    constructor <init>() // ai.koog.prompt.executor.clients/LLMEmbeddingProvider.<init>|<init>(){}[0]
+}
+
+final class ai.koog.prompt.executor.clients.retry/RetryConfig { // ai.koog.prompt.executor.clients.retry/RetryConfig|null[0]
+    constructor <init>(kotlin/Int = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.retry/RetryablePattern> = ..., ai.koog.prompt.executor.clients.retry/RetryAfterExtractor? = ...) // ai.koog.prompt.executor.clients.retry/RetryConfig.<init>|<init>(kotlin.Int;kotlin.time.Duration;kotlin.time.Duration;kotlin.Double;kotlin.Double;kotlin.collections.List<ai.koog.prompt.executor.clients.retry.RetryablePattern>;ai.koog.prompt.executor.clients.retry.RetryAfterExtractor?){}[0]
+
+    final val backoffMultiplier // ai.koog.prompt.executor.clients.retry/RetryConfig.backoffMultiplier|{}backoffMultiplier[0]
+        final fun <get-backoffMultiplier>(): kotlin/Double // ai.koog.prompt.executor.clients.retry/RetryConfig.backoffMultiplier.<get-backoffMultiplier>|<get-backoffMultiplier>(){}[0]
+    final val initialDelay // ai.koog.prompt.executor.clients.retry/RetryConfig.initialDelay|{}initialDelay[0]
+        final fun <get-initialDelay>(): kotlin.time/Duration // ai.koog.prompt.executor.clients.retry/RetryConfig.initialDelay.<get-initialDelay>|<get-initialDelay>(){}[0]
+    final val jitterFactor // ai.koog.prompt.executor.clients.retry/RetryConfig.jitterFactor|{}jitterFactor[0]
+        final fun <get-jitterFactor>(): kotlin/Double // ai.koog.prompt.executor.clients.retry/RetryConfig.jitterFactor.<get-jitterFactor>|<get-jitterFactor>(){}[0]
+    final val maxAttempts // ai.koog.prompt.executor.clients.retry/RetryConfig.maxAttempts|{}maxAttempts[0]
+        final fun <get-maxAttempts>(): kotlin/Int // ai.koog.prompt.executor.clients.retry/RetryConfig.maxAttempts.<get-maxAttempts>|<get-maxAttempts>(){}[0]
+    final val maxDelay // ai.koog.prompt.executor.clients.retry/RetryConfig.maxDelay|{}maxDelay[0]
+        final fun <get-maxDelay>(): kotlin.time/Duration // ai.koog.prompt.executor.clients.retry/RetryConfig.maxDelay.<get-maxDelay>|<get-maxDelay>(){}[0]
+    final val retryAfterExtractor // ai.koog.prompt.executor.clients.retry/RetryConfig.retryAfterExtractor|{}retryAfterExtractor[0]
+        final fun <get-retryAfterExtractor>(): ai.koog.prompt.executor.clients.retry/RetryAfterExtractor? // ai.koog.prompt.executor.clients.retry/RetryConfig.retryAfterExtractor.<get-retryAfterExtractor>|<get-retryAfterExtractor>(){}[0]
+    final val retryablePatterns // ai.koog.prompt.executor.clients.retry/RetryConfig.retryablePatterns|{}retryablePatterns[0]
+        final fun <get-retryablePatterns>(): kotlin.collections/List<ai.koog.prompt.executor.clients.retry/RetryablePattern> // ai.koog.prompt.executor.clients.retry/RetryConfig.retryablePatterns.<get-retryablePatterns>|<get-retryablePatterns>(){}[0]
+
+    final fun component1(): kotlin/Int // ai.koog.prompt.executor.clients.retry/RetryConfig.component1|component1(){}[0]
+    final fun component2(): kotlin.time/Duration // ai.koog.prompt.executor.clients.retry/RetryConfig.component2|component2(){}[0]
+    final fun component3(): kotlin.time/Duration // ai.koog.prompt.executor.clients.retry/RetryConfig.component3|component3(){}[0]
+    final fun component4(): kotlin/Double // ai.koog.prompt.executor.clients.retry/RetryConfig.component4|component4(){}[0]
+    final fun component5(): kotlin/Double // ai.koog.prompt.executor.clients.retry/RetryConfig.component5|component5(){}[0]
+    final fun component6(): kotlin.collections/List<ai.koog.prompt.executor.clients.retry/RetryablePattern> // ai.koog.prompt.executor.clients.retry/RetryConfig.component6|component6(){}[0]
+    final fun component7(): ai.koog.prompt.executor.clients.retry/RetryAfterExtractor? // ai.koog.prompt.executor.clients.retry/RetryConfig.component7|component7(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.retry/RetryablePattern> = ..., ai.koog.prompt.executor.clients.retry/RetryAfterExtractor? = ...): ai.koog.prompt.executor.clients.retry/RetryConfig // ai.koog.prompt.executor.clients.retry/RetryConfig.copy|copy(kotlin.Int;kotlin.time.Duration;kotlin.time.Duration;kotlin.Double;kotlin.Double;kotlin.collections.List<ai.koog.prompt.executor.clients.retry.RetryablePattern>;ai.koog.prompt.executor.clients.retry.RetryAfterExtractor?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.retry/RetryConfig.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.retry/RetryConfig.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.retry/RetryConfig.toString|toString(){}[0]
+
+    final object Companion { // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion|null[0]
+        final val AGGRESSIVE // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.AGGRESSIVE|{}AGGRESSIVE[0]
+            final fun <get-AGGRESSIVE>(): ai.koog.prompt.executor.clients.retry/RetryConfig // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.AGGRESSIVE.<get-AGGRESSIVE>|<get-AGGRESSIVE>(){}[0]
+        final val CONSERVATIVE // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.CONSERVATIVE|{}CONSERVATIVE[0]
+            final fun <get-CONSERVATIVE>(): ai.koog.prompt.executor.clients.retry/RetryConfig // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.CONSERVATIVE.<get-CONSERVATIVE>|<get-CONSERVATIVE>(){}[0]
+        final val DEFAULT // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DEFAULT|{}DEFAULT[0]
+            final fun <get-DEFAULT>(): ai.koog.prompt.executor.clients.retry/RetryConfig // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DEFAULT.<get-DEFAULT>|<get-DEFAULT>(){}[0]
+        final val DEFAULT_PATTERNS // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DEFAULT_PATTERNS|{}DEFAULT_PATTERNS[0]
+            final fun <get-DEFAULT_PATTERNS>(): kotlin.collections/List<ai.koog.prompt.executor.clients.retry/RetryablePattern> // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DEFAULT_PATTERNS.<get-DEFAULT_PATTERNS>|<get-DEFAULT_PATTERNS>(){}[0]
+        final val DISABLED // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DISABLED|{}DISABLED[0]
+            final fun <get-DISABLED>(): ai.koog.prompt.executor.clients.retry/RetryConfig // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DISABLED.<get-DISABLED>|<get-DISABLED>(){}[0]
+        final val PRODUCTION // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.PRODUCTION|{}PRODUCTION[0]
+            final fun <get-PRODUCTION>(): ai.koog.prompt.executor.clients.retry/RetryConfig // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.PRODUCTION.<get-PRODUCTION>|<get-PRODUCTION>(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.retry/RetryingLLMClient : ai.koog.prompt.executor.clients/LLMClient { // ai.koog.prompt.executor.clients.retry/RetryingLLMClient|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients/LLMClient, ai.koog.prompt.executor.clients.retry/RetryConfig = ...) // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.<init>|<init>(ai.koog.prompt.executor.clients.LLMClient;ai.koog.prompt.executor.clients.retry.RetryConfig){}[0]
+
+    final fun close() // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.close|close(){}[0]
+    final fun executeStreaming(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.executeStreaming|executeStreaming(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    final fun getBasicJsonSchemaGenerator(): ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.getBasicJsonSchemaGenerator|getBasicJsonSchemaGenerator(){}[0]
+    final fun getStandardJsonSchemaGenerator(): ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.getStandardJsonSchemaGenerator|getStandardJsonSchemaGenerator(){}[0]
+    final fun llmProvider(): ai.koog.prompt.llm/LLMProvider // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.llmProvider|llmProvider(){}[0]
+    final suspend fun embed(kotlin.collections/List<kotlin/String>, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin.collections/List<kotlin/Double>> // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.embed|embed(kotlin.collections.List<kotlin.String>;ai.koog.prompt.llm.LLModel){}[0]
+    final suspend fun embed(kotlin/String, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin/Double> // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.embed|embed(kotlin.String;ai.koog.prompt.llm.LLModel){}[0]
+    final suspend fun execute(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.execute|execute(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    final suspend fun executeMultipleChoices(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.koog.prompt.message/Message.Assistant> // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.executeMultipleChoices|executeMultipleChoices(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    final suspend fun models(): kotlin.collections/List<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.models|models(){}[0]
+    final suspend fun moderate(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): ai.koog.prompt.dsl/ModerationResult // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.moderate|moderate(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+}
+
+final class ai.koog.prompt.executor.clients/ConnectionTimeoutConfig { // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig|null[0]
+    constructor <init>(kotlin/Long = ..., kotlin/Long = ..., kotlin/Long = ...) // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.<init>|<init>(kotlin.Long;kotlin.Long;kotlin.Long){}[0]
+
+    final val connectTimeoutMillis // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.connectTimeoutMillis|{}connectTimeoutMillis[0]
+        final fun <get-connectTimeoutMillis>(): kotlin/Long // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.connectTimeoutMillis.<get-connectTimeoutMillis>|<get-connectTimeoutMillis>(){}[0]
+    final val requestTimeoutMillis // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.requestTimeoutMillis|{}requestTimeoutMillis[0]
+        final fun <get-requestTimeoutMillis>(): kotlin/Long // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.requestTimeoutMillis.<get-requestTimeoutMillis>|<get-requestTimeoutMillis>(){}[0]
+    final val socketTimeoutMillis // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.socketTimeoutMillis|{}socketTimeoutMillis[0]
+        final fun <get-socketTimeoutMillis>(): kotlin/Long // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.socketTimeoutMillis.<get-socketTimeoutMillis>|<get-socketTimeoutMillis>(){}[0]
+
+    final fun component1(): kotlin/Long // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.component2|component2(){}[0]
+    final fun component3(): kotlin/Long // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.component3|component3(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/Long = ..., kotlin/Long = ...): ai.koog.prompt.executor.clients/ConnectionTimeoutConfig // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.copy|copy(kotlin.Long;kotlin.Long;kotlin.Long){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig.toString|toString(){}[0]
+}
+
+final class ai.koog.prompt.executor.clients/LLMClientException : kotlin/Exception { // ai.koog.prompt.executor.clients/LLMClientException|null[0]
+    constructor <init>(kotlin/String, kotlin/String? = ..., kotlin/Throwable? = ...) // ai.koog.prompt.executor.clients/LLMClientException.<init>|<init>(kotlin.String;kotlin.String?;kotlin.Throwable?){}[0]
+}
+
+sealed class ai.koog.prompt.executor.clients.retry/RetryablePattern { // ai.koog.prompt.executor.clients.retry/RetryablePattern|null[0]
+    abstract fun matches(kotlin/String): kotlin/Boolean // ai.koog.prompt.executor.clients.retry/RetryablePattern.matches|matches(kotlin.String){}[0]
+
+    final class Custom : ai.koog.prompt.executor.clients.retry/RetryablePattern { // ai.koog.prompt.executor.clients.retry/RetryablePattern.Custom|null[0]
+        constructor <init>(kotlin/Function1<kotlin/String, kotlin/Boolean>) // ai.koog.prompt.executor.clients.retry/RetryablePattern.Custom.<init>|<init>(kotlin.Function1<kotlin.String,kotlin.Boolean>){}[0]
+
+        final fun matches(kotlin/String): kotlin/Boolean // ai.koog.prompt.executor.clients.retry/RetryablePattern.Custom.matches|matches(kotlin.String){}[0]
+    }
+
+    final class Keyword : ai.koog.prompt.executor.clients.retry/RetryablePattern { // ai.koog.prompt.executor.clients.retry/RetryablePattern.Keyword|null[0]
+        constructor <init>(kotlin/String) // ai.koog.prompt.executor.clients.retry/RetryablePattern.Keyword.<init>|<init>(kotlin.String){}[0]
+
+        final val keyword // ai.koog.prompt.executor.clients.retry/RetryablePattern.Keyword.keyword|{}keyword[0]
+            final fun <get-keyword>(): kotlin/String // ai.koog.prompt.executor.clients.retry/RetryablePattern.Keyword.keyword.<get-keyword>|<get-keyword>(){}[0]
+
+        final fun component1(): kotlin/String // ai.koog.prompt.executor.clients.retry/RetryablePattern.Keyword.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.koog.prompt.executor.clients.retry/RetryablePattern.Keyword // ai.koog.prompt.executor.clients.retry/RetryablePattern.Keyword.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.retry/RetryablePattern.Keyword.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.retry/RetryablePattern.Keyword.hashCode|hashCode(){}[0]
+        final fun matches(kotlin/String): kotlin/Boolean // ai.koog.prompt.executor.clients.retry/RetryablePattern.Keyword.matches|matches(kotlin.String){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.retry/RetryablePattern.Keyword.toString|toString(){}[0]
+    }
+
+    final class Regex : ai.koog.prompt.executor.clients.retry/RetryablePattern { // ai.koog.prompt.executor.clients.retry/RetryablePattern.Regex|null[0]
+        constructor <init>(kotlin.text/Regex) // ai.koog.prompt.executor.clients.retry/RetryablePattern.Regex.<init>|<init>(kotlin.text.Regex){}[0]
+
+        final val pattern // ai.koog.prompt.executor.clients.retry/RetryablePattern.Regex.pattern|{}pattern[0]
+            final fun <get-pattern>(): kotlin.text/Regex // ai.koog.prompt.executor.clients.retry/RetryablePattern.Regex.pattern.<get-pattern>|<get-pattern>(){}[0]
+
+        final fun component1(): kotlin.text/Regex // ai.koog.prompt.executor.clients.retry/RetryablePattern.Regex.component1|component1(){}[0]
+        final fun copy(kotlin.text/Regex = ...): ai.koog.prompt.executor.clients.retry/RetryablePattern.Regex // ai.koog.prompt.executor.clients.retry/RetryablePattern.Regex.copy|copy(kotlin.text.Regex){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.retry/RetryablePattern.Regex.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.retry/RetryablePattern.Regex.hashCode|hashCode(){}[0]
+        final fun matches(kotlin/String): kotlin/Boolean // ai.koog.prompt.executor.clients.retry/RetryablePattern.Regex.matches|matches(kotlin.String){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.retry/RetryablePattern.Regex.toString|toString(){}[0]
+    }
+
+    final class Status : ai.koog.prompt.executor.clients.retry/RetryablePattern { // ai.koog.prompt.executor.clients.retry/RetryablePattern.Status|null[0]
+        constructor <init>(kotlin/Int) // ai.koog.prompt.executor.clients.retry/RetryablePattern.Status.<init>|<init>(kotlin.Int){}[0]
+
+        final val code // ai.koog.prompt.executor.clients.retry/RetryablePattern.Status.code|{}code[0]
+            final fun <get-code>(): kotlin/Int // ai.koog.prompt.executor.clients.retry/RetryablePattern.Status.code.<get-code>|<get-code>(){}[0]
+
+        final fun component1(): kotlin/Int // ai.koog.prompt.executor.clients.retry/RetryablePattern.Status.component1|component1(){}[0]
+        final fun copy(kotlin/Int = ...): ai.koog.prompt.executor.clients.retry/RetryablePattern.Status // ai.koog.prompt.executor.clients.retry/RetryablePattern.Status.copy|copy(kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.retry/RetryablePattern.Status.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.retry/RetryablePattern.Status.hashCode|hashCode(){}[0]
+        final fun matches(kotlin/String): kotlin/Boolean // ai.koog.prompt.executor.clients.retry/RetryablePattern.Status.matches|matches(kotlin.String){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.retry/RetryablePattern.Status.toString|toString(){}[0]
+    }
+}
+
+final object ai.koog.prompt.executor.clients.retry/DefaultRetryAfterExtractor : ai.koog.prompt.executor.clients.retry/RetryAfterExtractor { // ai.koog.prompt.executor.clients.retry/DefaultRetryAfterExtractor|null[0]
+    final fun extract(kotlin/String): kotlin.time/Duration? // ai.koog.prompt.executor.clients.retry/DefaultRetryAfterExtractor.extract|extract(kotlin.String){}[0]
+}
+
+final fun (ai.koog.prompt.executor.clients/LLMClient).ai.koog.prompt.executor.clients.retry/toRetryingClient(ai.koog.prompt.executor.clients.retry/RetryConfig = ...): ai.koog.prompt.executor.clients.retry/RetryingLLMClient // ai.koog.prompt.executor.clients.retry/toRetryingClient|toRetryingClient@ai.koog.prompt.executor.clients.LLMClient(ai.koog.prompt.executor.clients.retry.RetryConfig){}[0]
+final fun (ai.koog.prompt.executor.clients/LLModelDefinitions).ai.koog.prompt.executor.clients/modelsById(): kotlin.collections/Map<kotlin/String, ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.clients/modelsById|modelsById@ai.koog.prompt.executor.clients.LLModelDefinitions(){}[0]

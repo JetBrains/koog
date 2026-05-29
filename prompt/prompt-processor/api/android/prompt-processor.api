@@ -1,0 +1,105 @@
+public final class ai/koog/prompt/processor/LLMBasedToolCallFixProcessor : ai/koog/prompt/processor/ToolJsonFixProcessor {
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;)V
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;)V
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;Lai/koog/prompt/processor/ResponseProcessor;)V
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/String;)V
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;)V
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)V
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;I)V
+	public synthetic fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun process (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lai/koog/serialization/JSONSerializer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/processor/ManualToolCallFixProcessor : ai/koog/prompt/processor/ToolJsonFixProcessor {
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;)V
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;)V
+	public synthetic fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun process (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lai/koog/serialization/JSONSerializer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/processor/PromptExecutorExtensionKt {
+	public static final fun executeProcessed (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/processor/ResponseProcessorConfig;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun executeProcessed$default (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/processor/ResponseProcessorConfig;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class ai/koog/prompt/processor/ResponseProcessor {
+	public fun <init> ()V
+	public final fun plus (Lai/koog/prompt/processor/ResponseProcessor;)Lai/koog/prompt/processor/ResponseProcessor;
+	public abstract fun process (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lai/koog/serialization/JSONSerializer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/processor/ResponseProcessor$Chain : ai/koog/prompt/processor/ResponseProcessor {
+	public fun <init> ([Lai/koog/prompt/processor/ResponseProcessor;)V
+	public fun process (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lai/koog/serialization/JSONSerializer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/processor/ResponseProcessorConfig {
+	public fun <init> (Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/serialization/JSONSerializer;)V
+	public final fun getResponseProcessor ()Lai/koog/prompt/processor/ResponseProcessor;
+	public final fun getSerializer ()Lai/koog/serialization/JSONSerializer;
+}
+
+public final class ai/koog/prompt/processor/ToolCallJsonConfig {
+	public static final field Companion Lai/koog/prompt/processor/ToolCallJsonConfig$Companion;
+	public fun <init> ()V
+	public fun <init> (Lkotlinx/serialization/json/Json;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/Json;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getArgsJsonKeys ()Ljava/util/List;
+	public final fun getIdJsonKeys ()Ljava/util/List;
+	public final fun getJson ()Lkotlinx/serialization/json/Json;
+	public final fun getNameJsonKeys ()Ljava/util/List;
+}
+
+public final class ai/koog/prompt/processor/ToolCallJsonConfig$Companion {
+	public final fun getDefaultArgsJsonKeys ()Ljava/util/List;
+	public final fun getDefaultIdJsonKeys ()Ljava/util/List;
+	public final fun getDefaultJson ()Lkotlinx/serialization/json/Json;
+	public final fun getDefaultNameJsonKeys ()Ljava/util/List;
+}
+
+public abstract class ai/koog/prompt/processor/ToolJsonFixProcessor : ai/koog/prompt/processor/ResponseProcessor {
+	public fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;)V
+	public synthetic fun <init> (Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/processor/ToolCallJsonConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	protected final fun extractToolCall (Ljava/lang/String;)Lai/koog/prompt/message/MessagePart$Tool$Call;
+	protected final fun fixJsonString (Ljava/lang/String;)Ljava/lang/String;
+	protected final fun getKeyPattern (Ljava/util/List;)Ljava/lang/String;
+	protected final fun getToolCallDeserializer ()Lkotlinx/serialization/DeserializationStrategy;
+	protected final fun getToolCallJsonConfig ()Lai/koog/prompt/processor/ToolCallJsonConfig;
+	protected final fun getToolName (Ljava/lang/String;)Ljava/lang/String;
+	protected final fun getToolRegistry ()Lai/koog/agents/core/tools/ToolRegistry;
+}
+
+protected final class ai/koog/prompt/processor/ToolJsonFixProcessor$ToolCall {
+	public static final field Companion Lai/koog/prompt/processor/ToolJsonFixProcessor$ToolCall$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)Lai/koog/prompt/processor/ToolJsonFixProcessor$ToolCall;
+	public static synthetic fun copy$default (Lai/koog/prompt/processor/ToolJsonFixProcessor$ToolCall;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lai/koog/prompt/processor/ToolJsonFixProcessor$ToolCall;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArguments ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getTool ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/processor/ToolJsonFixProcessor$ToolCall$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/processor/ToolJsonFixProcessor$ToolCall$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/processor/ToolJsonFixProcessor$ToolCall;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/processor/ToolJsonFixProcessor$ToolCall;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/processor/ToolJsonFixProcessor$ToolCall$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+

@@ -1,0 +1,1595 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-model>
+open annotation class ai.koog.prompt.annotations/InternalPromptAPI : kotlin/Annotation { // ai.koog.prompt.annotations/InternalPromptAPI|null[0]
+    constructor <init>() // ai.koog.prompt.annotations/InternalPromptAPI.<init>|<init>(){}[0]
+}
+
+open annotation class ai.koog.prompt.dsl/PromptDSL : kotlin/Annotation { // ai.koog.prompt.dsl/PromptDSL|null[0]
+    constructor <init>() // ai.koog.prompt.dsl/PromptDSL.<init>|<init>(){}[0]
+}
+
+abstract interface ai.koog.prompt.message/CacheControl // ai.koog.prompt.message/CacheControl|null[0]
+
+sealed interface ai.koog.prompt.message/AttachmentContent { // ai.koog.prompt.message/AttachmentContent|null[0]
+    sealed interface Binary : ai.koog.prompt.message/AttachmentContent { // ai.koog.prompt.message/AttachmentContent.Binary|null[0]
+        abstract fun asBase64(): kotlin/String // ai.koog.prompt.message/AttachmentContent.Binary.asBase64|asBase64(){}[0]
+        abstract fun asBytes(): kotlin/ByteArray // ai.koog.prompt.message/AttachmentContent.Binary.asBytes|asBytes(){}[0]
+
+        final class Base64 : ai.koog.prompt.message/AttachmentContent.Binary { // ai.koog.prompt.message/AttachmentContent.Binary.Base64|null[0]
+            constructor <init>(kotlin/String) // ai.koog.prompt.message/AttachmentContent.Binary.Base64.<init>|<init>(kotlin.String){}[0]
+
+            final val base64 // ai.koog.prompt.message/AttachmentContent.Binary.Base64.base64|{}base64[0]
+                final fun <get-base64>(): kotlin/String // ai.koog.prompt.message/AttachmentContent.Binary.Base64.base64.<get-base64>|<get-base64>(){}[0]
+
+            final fun asBase64(): kotlin/String // ai.koog.prompt.message/AttachmentContent.Binary.Base64.asBase64|asBase64(){}[0]
+            final fun asBytes(): kotlin/ByteArray // ai.koog.prompt.message/AttachmentContent.Binary.Base64.asBytes|asBytes(){}[0]
+            final fun component1(): kotlin/String // ai.koog.prompt.message/AttachmentContent.Binary.Base64.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.prompt.message/AttachmentContent.Binary.Base64 // ai.koog.prompt.message/AttachmentContent.Binary.Base64.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/AttachmentContent.Binary.Base64.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.prompt.message/AttachmentContent.Binary.Base64.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.prompt.message/AttachmentContent.Binary.Base64.toString|toString(){}[0]
+
+            final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/AttachmentContent.Binary.Base64> { // ai.koog.prompt.message/AttachmentContent.Binary.Base64.$serializer|null[0]
+                final val descriptor // ai.koog.prompt.message/AttachmentContent.Binary.Base64.$serializer.descriptor|{}descriptor[0]
+                    final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/AttachmentContent.Binary.Base64.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/AttachmentContent.Binary.Base64.$serializer.childSerializers|childSerializers(){}[0]
+                final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/AttachmentContent.Binary.Base64 // ai.koog.prompt.message/AttachmentContent.Binary.Base64.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/AttachmentContent.Binary.Base64) // ai.koog.prompt.message/AttachmentContent.Binary.Base64.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.AttachmentContent.Binary.Base64){}[0]
+            }
+
+            final object Companion { // ai.koog.prompt.message/AttachmentContent.Binary.Base64.Companion|null[0]
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/AttachmentContent.Binary.Base64> // ai.koog.prompt.message/AttachmentContent.Binary.Base64.Companion.serializer|serializer(){}[0]
+            }
+        }
+
+        final class Bytes : ai.koog.prompt.message/AttachmentContent.Binary { // ai.koog.prompt.message/AttachmentContent.Binary.Bytes|null[0]
+            constructor <init>(kotlin/ByteArray) // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.<init>|<init>(kotlin.ByteArray){}[0]
+
+            final val data // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.data|{}data[0]
+                final fun <get-data>(): kotlin/ByteArray // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.data.<get-data>|<get-data>(){}[0]
+
+            final fun asBase64(): kotlin/String // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.asBase64|asBase64(){}[0]
+            final fun asBytes(): kotlin/ByteArray // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.asBytes|asBytes(){}[0]
+            final fun component1(): kotlin/ByteArray // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.component1|component1(){}[0]
+            final fun copy(kotlin/ByteArray = ...): ai.koog.prompt.message/AttachmentContent.Binary.Bytes // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.copy|copy(kotlin.ByteArray){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.toString|toString(){}[0]
+
+            final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/AttachmentContent.Binary.Bytes> { // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.$serializer|null[0]
+                final val descriptor // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.$serializer.descriptor|{}descriptor[0]
+                    final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.$serializer.childSerializers|childSerializers(){}[0]
+                final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/AttachmentContent.Binary.Bytes // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/AttachmentContent.Binary.Bytes) // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.AttachmentContent.Binary.Bytes){}[0]
+            }
+
+            final object Companion { // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.Companion|null[0]
+                final val $childSerializers // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.Companion.$childSerializers|{}$childSerializers[0]
+
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/AttachmentContent.Binary.Bytes> // ai.koog.prompt.message/AttachmentContent.Binary.Bytes.Companion.serializer|serializer(){}[0]
+            }
+        }
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/AttachmentContent.Binary.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/AttachmentContent.Binary> // ai.koog.prompt.message/AttachmentContent.Binary.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/AttachmentContent.Binary.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    final class PlainText : ai.koog.prompt.message/AttachmentContent { // ai.koog.prompt.message/AttachmentContent.PlainText|null[0]
+        constructor <init>(kotlin/String) // ai.koog.prompt.message/AttachmentContent.PlainText.<init>|<init>(kotlin.String){}[0]
+
+        final val text // ai.koog.prompt.message/AttachmentContent.PlainText.text|{}text[0]
+            final fun <get-text>(): kotlin/String // ai.koog.prompt.message/AttachmentContent.PlainText.text.<get-text>|<get-text>(){}[0]
+
+        final fun component1(): kotlin/String // ai.koog.prompt.message/AttachmentContent.PlainText.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.koog.prompt.message/AttachmentContent.PlainText // ai.koog.prompt.message/AttachmentContent.PlainText.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/AttachmentContent.PlainText.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.message/AttachmentContent.PlainText.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.message/AttachmentContent.PlainText.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/AttachmentContent.PlainText> { // ai.koog.prompt.message/AttachmentContent.PlainText.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.message/AttachmentContent.PlainText.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/AttachmentContent.PlainText.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/AttachmentContent.PlainText.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/AttachmentContent.PlainText // ai.koog.prompt.message/AttachmentContent.PlainText.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/AttachmentContent.PlainText) // ai.koog.prompt.message/AttachmentContent.PlainText.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.AttachmentContent.PlainText){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.message/AttachmentContent.PlainText.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/AttachmentContent.PlainText> // ai.koog.prompt.message/AttachmentContent.PlainText.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class URL : ai.koog.prompt.message/AttachmentContent { // ai.koog.prompt.message/AttachmentContent.URL|null[0]
+        constructor <init>(kotlin/String) // ai.koog.prompt.message/AttachmentContent.URL.<init>|<init>(kotlin.String){}[0]
+
+        final val url // ai.koog.prompt.message/AttachmentContent.URL.url|{}url[0]
+            final fun <get-url>(): kotlin/String // ai.koog.prompt.message/AttachmentContent.URL.url.<get-url>|<get-url>(){}[0]
+
+        final fun component1(): kotlin/String // ai.koog.prompt.message/AttachmentContent.URL.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.koog.prompt.message/AttachmentContent.URL // ai.koog.prompt.message/AttachmentContent.URL.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/AttachmentContent.URL.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.message/AttachmentContent.URL.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.message/AttachmentContent.URL.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/AttachmentContent.URL> { // ai.koog.prompt.message/AttachmentContent.URL.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.message/AttachmentContent.URL.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/AttachmentContent.URL.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/AttachmentContent.URL.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/AttachmentContent.URL // ai.koog.prompt.message/AttachmentContent.URL.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/AttachmentContent.URL) // ai.koog.prompt.message/AttachmentContent.URL.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.AttachmentContent.URL){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.message/AttachmentContent.URL.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/AttachmentContent.URL> // ai.koog.prompt.message/AttachmentContent.URL.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/AttachmentContent.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/AttachmentContent> // ai.koog.prompt.message/AttachmentContent.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/AttachmentContent.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.koog.prompt.message/AttachmentSource { // ai.koog.prompt.message/AttachmentSource|null[0]
+    abstract val content // ai.koog.prompt.message/AttachmentSource.content|{}content[0]
+        abstract fun <get-content>(): ai.koog.prompt.message/AttachmentContent // ai.koog.prompt.message/AttachmentSource.content.<get-content>|<get-content>(){}[0]
+    abstract val fileName // ai.koog.prompt.message/AttachmentSource.fileName|{}fileName[0]
+        abstract fun <get-fileName>(): kotlin/String? // ai.koog.prompt.message/AttachmentSource.fileName.<get-fileName>|<get-fileName>(){}[0]
+    abstract val format // ai.koog.prompt.message/AttachmentSource.format|{}format[0]
+        abstract fun <get-format>(): kotlin/String // ai.koog.prompt.message/AttachmentSource.format.<get-format>|<get-format>(){}[0]
+    abstract val mimeType // ai.koog.prompt.message/AttachmentSource.mimeType|{}mimeType[0]
+        abstract fun <get-mimeType>(): kotlin/String // ai.koog.prompt.message/AttachmentSource.mimeType.<get-mimeType>|<get-mimeType>(){}[0]
+
+    final class Audio : ai.koog.prompt.message/AttachmentSource { // ai.koog.prompt.message/AttachmentSource.Audio|null[0]
+        constructor <init>(ai.koog.prompt.message/AttachmentContent, kotlin/String, kotlin/String = ..., kotlin/String? = ...) // ai.koog.prompt.message/AttachmentSource.Audio.<init>|<init>(ai.koog.prompt.message.AttachmentContent;kotlin.String;kotlin.String;kotlin.String?){}[0]
+
+        final val content // ai.koog.prompt.message/AttachmentSource.Audio.content|{}content[0]
+            final fun <get-content>(): ai.koog.prompt.message/AttachmentContent // ai.koog.prompt.message/AttachmentSource.Audio.content.<get-content>|<get-content>(){}[0]
+        final val fileName // ai.koog.prompt.message/AttachmentSource.Audio.fileName|{}fileName[0]
+            final fun <get-fileName>(): kotlin/String? // ai.koog.prompt.message/AttachmentSource.Audio.fileName.<get-fileName>|<get-fileName>(){}[0]
+        final val format // ai.koog.prompt.message/AttachmentSource.Audio.format|{}format[0]
+            final fun <get-format>(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Audio.format.<get-format>|<get-format>(){}[0]
+        final val mimeType // ai.koog.prompt.message/AttachmentSource.Audio.mimeType|{}mimeType[0]
+            final fun <get-mimeType>(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Audio.mimeType.<get-mimeType>|<get-mimeType>(){}[0]
+
+        final fun component1(): ai.koog.prompt.message/AttachmentContent // ai.koog.prompt.message/AttachmentSource.Audio.component1|component1(){}[0]
+        final fun component2(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Audio.component2|component2(){}[0]
+        final fun component3(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Audio.component3|component3(){}[0]
+        final fun component4(): kotlin/String? // ai.koog.prompt.message/AttachmentSource.Audio.component4|component4(){}[0]
+        final fun copy(ai.koog.prompt.message/AttachmentContent = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String? = ...): ai.koog.prompt.message/AttachmentSource.Audio // ai.koog.prompt.message/AttachmentSource.Audio.copy|copy(ai.koog.prompt.message.AttachmentContent;kotlin.String;kotlin.String;kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/AttachmentSource.Audio.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.message/AttachmentSource.Audio.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Audio.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/AttachmentSource.Audio> { // ai.koog.prompt.message/AttachmentSource.Audio.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.message/AttachmentSource.Audio.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/AttachmentSource.Audio.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/AttachmentSource.Audio.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/AttachmentSource.Audio // ai.koog.prompt.message/AttachmentSource.Audio.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/AttachmentSource.Audio) // ai.koog.prompt.message/AttachmentSource.Audio.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.AttachmentSource.Audio){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.message/AttachmentSource.Audio.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.message/AttachmentSource.Audio.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/AttachmentSource.Audio> // ai.koog.prompt.message/AttachmentSource.Audio.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class File : ai.koog.prompt.message/AttachmentSource { // ai.koog.prompt.message/AttachmentSource.File|null[0]
+        constructor <init>(ai.koog.prompt.message/AttachmentContent, kotlin/String, kotlin/String, kotlin/String? = ...) // ai.koog.prompt.message/AttachmentSource.File.<init>|<init>(ai.koog.prompt.message.AttachmentContent;kotlin.String;kotlin.String;kotlin.String?){}[0]
+
+        final val content // ai.koog.prompt.message/AttachmentSource.File.content|{}content[0]
+            final fun <get-content>(): ai.koog.prompt.message/AttachmentContent // ai.koog.prompt.message/AttachmentSource.File.content.<get-content>|<get-content>(){}[0]
+        final val fileName // ai.koog.prompt.message/AttachmentSource.File.fileName|{}fileName[0]
+            final fun <get-fileName>(): kotlin/String? // ai.koog.prompt.message/AttachmentSource.File.fileName.<get-fileName>|<get-fileName>(){}[0]
+        final val format // ai.koog.prompt.message/AttachmentSource.File.format|{}format[0]
+            final fun <get-format>(): kotlin/String // ai.koog.prompt.message/AttachmentSource.File.format.<get-format>|<get-format>(){}[0]
+        final val mimeType // ai.koog.prompt.message/AttachmentSource.File.mimeType|{}mimeType[0]
+            final fun <get-mimeType>(): kotlin/String // ai.koog.prompt.message/AttachmentSource.File.mimeType.<get-mimeType>|<get-mimeType>(){}[0]
+
+        final fun component1(): ai.koog.prompt.message/AttachmentContent // ai.koog.prompt.message/AttachmentSource.File.component1|component1(){}[0]
+        final fun component2(): kotlin/String // ai.koog.prompt.message/AttachmentSource.File.component2|component2(){}[0]
+        final fun component3(): kotlin/String // ai.koog.prompt.message/AttachmentSource.File.component3|component3(){}[0]
+        final fun component4(): kotlin/String? // ai.koog.prompt.message/AttachmentSource.File.component4|component4(){}[0]
+        final fun copy(ai.koog.prompt.message/AttachmentContent = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String? = ...): ai.koog.prompt.message/AttachmentSource.File // ai.koog.prompt.message/AttachmentSource.File.copy|copy(ai.koog.prompt.message.AttachmentContent;kotlin.String;kotlin.String;kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/AttachmentSource.File.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.message/AttachmentSource.File.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.message/AttachmentSource.File.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/AttachmentSource.File> { // ai.koog.prompt.message/AttachmentSource.File.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.message/AttachmentSource.File.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/AttachmentSource.File.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/AttachmentSource.File.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/AttachmentSource.File // ai.koog.prompt.message/AttachmentSource.File.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/AttachmentSource.File) // ai.koog.prompt.message/AttachmentSource.File.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.AttachmentSource.File){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.message/AttachmentSource.File.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.message/AttachmentSource.File.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/AttachmentSource.File> // ai.koog.prompt.message/AttachmentSource.File.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Image : ai.koog.prompt.message/AttachmentSource { // ai.koog.prompt.message/AttachmentSource.Image|null[0]
+        constructor <init>(ai.koog.prompt.message/AttachmentContent, kotlin/String, kotlin/String = ..., kotlin/String? = ...) // ai.koog.prompt.message/AttachmentSource.Image.<init>|<init>(ai.koog.prompt.message.AttachmentContent;kotlin.String;kotlin.String;kotlin.String?){}[0]
+
+        final val content // ai.koog.prompt.message/AttachmentSource.Image.content|{}content[0]
+            final fun <get-content>(): ai.koog.prompt.message/AttachmentContent // ai.koog.prompt.message/AttachmentSource.Image.content.<get-content>|<get-content>(){}[0]
+        final val fileName // ai.koog.prompt.message/AttachmentSource.Image.fileName|{}fileName[0]
+            final fun <get-fileName>(): kotlin/String? // ai.koog.prompt.message/AttachmentSource.Image.fileName.<get-fileName>|<get-fileName>(){}[0]
+        final val format // ai.koog.prompt.message/AttachmentSource.Image.format|{}format[0]
+            final fun <get-format>(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Image.format.<get-format>|<get-format>(){}[0]
+        final val mimeType // ai.koog.prompt.message/AttachmentSource.Image.mimeType|{}mimeType[0]
+            final fun <get-mimeType>(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Image.mimeType.<get-mimeType>|<get-mimeType>(){}[0]
+
+        final fun component1(): ai.koog.prompt.message/AttachmentContent // ai.koog.prompt.message/AttachmentSource.Image.component1|component1(){}[0]
+        final fun component2(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Image.component2|component2(){}[0]
+        final fun component3(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Image.component3|component3(){}[0]
+        final fun component4(): kotlin/String? // ai.koog.prompt.message/AttachmentSource.Image.component4|component4(){}[0]
+        final fun copy(ai.koog.prompt.message/AttachmentContent = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String? = ...): ai.koog.prompt.message/AttachmentSource.Image // ai.koog.prompt.message/AttachmentSource.Image.copy|copy(ai.koog.prompt.message.AttachmentContent;kotlin.String;kotlin.String;kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/AttachmentSource.Image.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.message/AttachmentSource.Image.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Image.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/AttachmentSource.Image> { // ai.koog.prompt.message/AttachmentSource.Image.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.message/AttachmentSource.Image.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/AttachmentSource.Image.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/AttachmentSource.Image.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/AttachmentSource.Image // ai.koog.prompt.message/AttachmentSource.Image.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/AttachmentSource.Image) // ai.koog.prompt.message/AttachmentSource.Image.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.AttachmentSource.Image){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.message/AttachmentSource.Image.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.message/AttachmentSource.Image.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/AttachmentSource.Image> // ai.koog.prompt.message/AttachmentSource.Image.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Video : ai.koog.prompt.message/AttachmentSource { // ai.koog.prompt.message/AttachmentSource.Video|null[0]
+        constructor <init>(ai.koog.prompt.message/AttachmentContent, kotlin/String, kotlin/String = ..., kotlin/String? = ...) // ai.koog.prompt.message/AttachmentSource.Video.<init>|<init>(ai.koog.prompt.message.AttachmentContent;kotlin.String;kotlin.String;kotlin.String?){}[0]
+
+        final val content // ai.koog.prompt.message/AttachmentSource.Video.content|{}content[0]
+            final fun <get-content>(): ai.koog.prompt.message/AttachmentContent // ai.koog.prompt.message/AttachmentSource.Video.content.<get-content>|<get-content>(){}[0]
+        final val fileName // ai.koog.prompt.message/AttachmentSource.Video.fileName|{}fileName[0]
+            final fun <get-fileName>(): kotlin/String? // ai.koog.prompt.message/AttachmentSource.Video.fileName.<get-fileName>|<get-fileName>(){}[0]
+        final val format // ai.koog.prompt.message/AttachmentSource.Video.format|{}format[0]
+            final fun <get-format>(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Video.format.<get-format>|<get-format>(){}[0]
+        final val mimeType // ai.koog.prompt.message/AttachmentSource.Video.mimeType|{}mimeType[0]
+            final fun <get-mimeType>(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Video.mimeType.<get-mimeType>|<get-mimeType>(){}[0]
+
+        final fun component1(): ai.koog.prompt.message/AttachmentContent // ai.koog.prompt.message/AttachmentSource.Video.component1|component1(){}[0]
+        final fun component2(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Video.component2|component2(){}[0]
+        final fun component3(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Video.component3|component3(){}[0]
+        final fun component4(): kotlin/String? // ai.koog.prompt.message/AttachmentSource.Video.component4|component4(){}[0]
+        final fun copy(ai.koog.prompt.message/AttachmentContent = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String? = ...): ai.koog.prompt.message/AttachmentSource.Video // ai.koog.prompt.message/AttachmentSource.Video.copy|copy(ai.koog.prompt.message.AttachmentContent;kotlin.String;kotlin.String;kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/AttachmentSource.Video.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.message/AttachmentSource.Video.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.message/AttachmentSource.Video.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/AttachmentSource.Video> { // ai.koog.prompt.message/AttachmentSource.Video.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.message/AttachmentSource.Video.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/AttachmentSource.Video.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/AttachmentSource.Video.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/AttachmentSource.Video // ai.koog.prompt.message/AttachmentSource.Video.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/AttachmentSource.Video) // ai.koog.prompt.message/AttachmentSource.Video.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.AttachmentSource.Video){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.message/AttachmentSource.Video.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.message/AttachmentSource.Video.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/AttachmentSource.Video> // ai.koog.prompt.message/AttachmentSource.Video.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/AttachmentSource.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/AttachmentSource> // ai.koog.prompt.message/AttachmentSource.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/AttachmentSource.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.koog.prompt.message/Message { // ai.koog.prompt.message/Message|null[0]
+    abstract val id // ai.koog.prompt.message/Message.id|{}id[0]
+        abstract fun <get-id>(): kotlin/String? // ai.koog.prompt.message/Message.id.<get-id>|<get-id>(){}[0]
+    abstract val metaInfo // ai.koog.prompt.message/Message.metaInfo|{}metaInfo[0]
+        abstract fun <get-metaInfo>(): ai.koog.prompt.message/MessageMetaInfo // ai.koog.prompt.message/Message.metaInfo.<get-metaInfo>|<get-metaInfo>(){}[0]
+    abstract val parts // ai.koog.prompt.message/Message.parts|{}parts[0]
+        abstract fun <get-parts>(): kotlin.collections/List<ai.koog.prompt.message/MessagePart> // ai.koog.prompt.message/Message.parts.<get-parts>|<get-parts>(){}[0]
+    abstract val role // ai.koog.prompt.message/Message.role|{}role[0]
+        abstract fun <get-role>(): ai.koog.prompt.message/Message.Role // ai.koog.prompt.message/Message.role.<get-role>|<get-role>(){}[0]
+
+    open fun textContent(): kotlin/String // ai.koog.prompt.message/Message.textContent|textContent(){}[0]
+    open fun textContent(kotlin/String): kotlin/String // ai.koog.prompt.message/Message.textContent|textContent(kotlin.String){}[0]
+
+    final enum class Role : kotlin/Enum<ai.koog.prompt.message/Message.Role> { // ai.koog.prompt.message/Message.Role|null[0]
+        enum entry Assistant // ai.koog.prompt.message/Message.Role.Assistant|null[0]
+        enum entry System // ai.koog.prompt.message/Message.Role.System|null[0]
+        enum entry User // ai.koog.prompt.message/Message.Role.User|null[0]
+
+        final val entries // ai.koog.prompt.message/Message.Role.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.message/Message.Role> // ai.koog.prompt.message/Message.Role.entries.<get-entries>|<get-entries>#static(){}[0]
+
+        final fun valueOf(kotlin/String): ai.koog.prompt.message/Message.Role // ai.koog.prompt.message/Message.Role.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<ai.koog.prompt.message/Message.Role> // ai.koog.prompt.message/Message.Role.values|values#static(){}[0]
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/Message.Role.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/Message.Role> // ai.koog.prompt.message/Message.Role.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/Message.Role.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    final class Assistant : ai.koog.prompt.message/Message { // ai.koog.prompt.message/Message.Assistant|null[0]
+        constructor <init>(ai.koog.prompt.message/MessagePart.ResponsePart, ai.koog.prompt.message/ResponseMetaInfo, kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ...) // ai.koog.prompt.message/Message.Assistant.<init>|<init>(ai.koog.prompt.message.MessagePart.ResponsePart;ai.koog.prompt.message.ResponseMetaInfo;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?){}[0]
+        constructor <init>(kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart>, ai.koog.prompt.message/ResponseMetaInfo, kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ...) // ai.koog.prompt.message/Message.Assistant.<init>|<init>(kotlin.collections.List<ai.koog.prompt.message.MessagePart.ResponsePart>;ai.koog.prompt.message.ResponseMetaInfo;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?){}[0]
+        constructor <init>(kotlin/String, ai.koog.prompt.message/ResponseMetaInfo, kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ...) // ai.koog.prompt.message/Message.Assistant.<init>|<init>(kotlin.String;ai.koog.prompt.message.ResponseMetaInfo;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?){}[0]
+
+        final val finishReason // ai.koog.prompt.message/Message.Assistant.finishReason|{}finishReason[0]
+            final fun <get-finishReason>(): kotlin/String? // ai.koog.prompt.message/Message.Assistant.finishReason.<get-finishReason>|<get-finishReason>(){}[0]
+        final val id // ai.koog.prompt.message/Message.Assistant.id|{}id[0]
+            final fun <get-id>(): kotlin/String? // ai.koog.prompt.message/Message.Assistant.id.<get-id>|<get-id>(){}[0]
+        final val metaInfo // ai.koog.prompt.message/Message.Assistant.metaInfo|{}metaInfo[0]
+            final fun <get-metaInfo>(): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.message/Message.Assistant.metaInfo.<get-metaInfo>|<get-metaInfo>(){}[0]
+        final val parts // ai.koog.prompt.message/Message.Assistant.parts|{}parts[0]
+            final fun <get-parts>(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart> // ai.koog.prompt.message/Message.Assistant.parts.<get-parts>|<get-parts>(){}[0]
+        final val rawResponse // ai.koog.prompt.message/Message.Assistant.rawResponse|{}rawResponse[0]
+            final fun <get-rawResponse>(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.message/Message.Assistant.rawResponse.<get-rawResponse>|<get-rawResponse>(){}[0]
+        final val role // ai.koog.prompt.message/Message.Assistant.role|{}role[0]
+            final fun <get-role>(): ai.koog.prompt.message/Message.Role // ai.koog.prompt.message/Message.Assistant.role.<get-role>|<get-role>(){}[0]
+
+        final fun component1(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart> // ai.koog.prompt.message/Message.Assistant.component1|component1(){}[0]
+        final fun component2(): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.message/Message.Assistant.component2|component2(){}[0]
+        final fun component3(): kotlin/String? // ai.koog.prompt.message/Message.Assistant.component3|component3(){}[0]
+        final fun component4(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.message/Message.Assistant.component4|component4(){}[0]
+        final fun component5(): kotlin/String? // ai.koog.prompt.message/Message.Assistant.component5|component5(){}[0]
+        final fun copy(kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart> = ..., ai.koog.prompt.message/ResponseMetaInfo = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ...): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.message/Message.Assistant.copy|copy(kotlin.collections.List<ai.koog.prompt.message.MessagePart.ResponsePart>;ai.koog.prompt.message.ResponseMetaInfo;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/Message.Assistant.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.message/Message.Assistant.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.message/Message.Assistant.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/Message.Assistant> { // ai.koog.prompt.message/Message.Assistant.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.message/Message.Assistant.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/Message.Assistant.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/Message.Assistant.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.message/Message.Assistant.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/Message.Assistant) // ai.koog.prompt.message/Message.Assistant.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.Message.Assistant){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.message/Message.Assistant.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.message/Message.Assistant.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/Message.Assistant> // ai.koog.prompt.message/Message.Assistant.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class System : ai.koog.prompt.message/Message { // ai.koog.prompt.message/Message.System|null[0]
+        constructor <init>(ai.koog.prompt.message/MessagePart.Text, ai.koog.prompt.message/RequestMetaInfo, kotlin/String? = ...) // ai.koog.prompt.message/Message.System.<init>|<init>(ai.koog.prompt.message.MessagePart.Text;ai.koog.prompt.message.RequestMetaInfo;kotlin.String?){}[0]
+        constructor <init>(kotlin.collections/List<ai.koog.prompt.message/MessagePart.Text>, ai.koog.prompt.message/RequestMetaInfo, kotlin/String? = ...) // ai.koog.prompt.message/Message.System.<init>|<init>(kotlin.collections.List<ai.koog.prompt.message.MessagePart.Text>;ai.koog.prompt.message.RequestMetaInfo;kotlin.String?){}[0]
+        constructor <init>(kotlin/String, ai.koog.prompt.message/RequestMetaInfo, ai.koog.prompt.message/CacheControl? = ..., kotlin/String? = ...) // ai.koog.prompt.message/Message.System.<init>|<init>(kotlin.String;ai.koog.prompt.message.RequestMetaInfo;ai.koog.prompt.message.CacheControl?;kotlin.String?){}[0]
+
+        final val id // ai.koog.prompt.message/Message.System.id|{}id[0]
+            final fun <get-id>(): kotlin/String? // ai.koog.prompt.message/Message.System.id.<get-id>|<get-id>(){}[0]
+        final val metaInfo // ai.koog.prompt.message/Message.System.metaInfo|{}metaInfo[0]
+            final fun <get-metaInfo>(): ai.koog.prompt.message/RequestMetaInfo // ai.koog.prompt.message/Message.System.metaInfo.<get-metaInfo>|<get-metaInfo>(){}[0]
+        final val parts // ai.koog.prompt.message/Message.System.parts|{}parts[0]
+            final fun <get-parts>(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.Text> // ai.koog.prompt.message/Message.System.parts.<get-parts>|<get-parts>(){}[0]
+        final val role // ai.koog.prompt.message/Message.System.role|{}role[0]
+            final fun <get-role>(): ai.koog.prompt.message/Message.Role // ai.koog.prompt.message/Message.System.role.<get-role>|<get-role>(){}[0]
+
+        final fun component1(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.Text> // ai.koog.prompt.message/Message.System.component1|component1(){}[0]
+        final fun component2(): ai.koog.prompt.message/RequestMetaInfo // ai.koog.prompt.message/Message.System.component2|component2(){}[0]
+        final fun component3(): kotlin/String? // ai.koog.prompt.message/Message.System.component3|component3(){}[0]
+        final fun copy(kotlin.collections/List<ai.koog.prompt.message/MessagePart.Text> = ..., ai.koog.prompt.message/RequestMetaInfo = ..., kotlin/String? = ...): ai.koog.prompt.message/Message.System // ai.koog.prompt.message/Message.System.copy|copy(kotlin.collections.List<ai.koog.prompt.message.MessagePart.Text>;ai.koog.prompt.message.RequestMetaInfo;kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/Message.System.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.message/Message.System.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.message/Message.System.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/Message.System> { // ai.koog.prompt.message/Message.System.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.message/Message.System.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/Message.System.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/Message.System.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/Message.System // ai.koog.prompt.message/Message.System.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/Message.System) // ai.koog.prompt.message/Message.System.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.Message.System){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.message/Message.System.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.message/Message.System.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/Message.System> // ai.koog.prompt.message/Message.System.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class User : ai.koog.prompt.message/Message { // ai.koog.prompt.message/Message.User|null[0]
+        constructor <init>(ai.koog.prompt.message/MessagePart.RequestPart, ai.koog.prompt.message/RequestMetaInfo, kotlin/String? = ...) // ai.koog.prompt.message/Message.User.<init>|<init>(ai.koog.prompt.message.MessagePart.RequestPart;ai.koog.prompt.message.RequestMetaInfo;kotlin.String?){}[0]
+        constructor <init>(kotlin.collections/List<ai.koog.prompt.message/MessagePart.RequestPart>, ai.koog.prompt.message/RequestMetaInfo, kotlin/String? = ...) // ai.koog.prompt.message/Message.User.<init>|<init>(kotlin.collections.List<ai.koog.prompt.message.MessagePart.RequestPart>;ai.koog.prompt.message.RequestMetaInfo;kotlin.String?){}[0]
+        constructor <init>(kotlin/String, ai.koog.prompt.message/RequestMetaInfo, ai.koog.prompt.message/CacheControl? = ..., kotlin/String? = ...) // ai.koog.prompt.message/Message.User.<init>|<init>(kotlin.String;ai.koog.prompt.message.RequestMetaInfo;ai.koog.prompt.message.CacheControl?;kotlin.String?){}[0]
+
+        final val id // ai.koog.prompt.message/Message.User.id|{}id[0]
+            final fun <get-id>(): kotlin/String? // ai.koog.prompt.message/Message.User.id.<get-id>|<get-id>(){}[0]
+        final val metaInfo // ai.koog.prompt.message/Message.User.metaInfo|{}metaInfo[0]
+            final fun <get-metaInfo>(): ai.koog.prompt.message/RequestMetaInfo // ai.koog.prompt.message/Message.User.metaInfo.<get-metaInfo>|<get-metaInfo>(){}[0]
+        final val parts // ai.koog.prompt.message/Message.User.parts|{}parts[0]
+            final fun <get-parts>(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.RequestPart> // ai.koog.prompt.message/Message.User.parts.<get-parts>|<get-parts>(){}[0]
+        final val role // ai.koog.prompt.message/Message.User.role|{}role[0]
+            final fun <get-role>(): ai.koog.prompt.message/Message.Role // ai.koog.prompt.message/Message.User.role.<get-role>|<get-role>(){}[0]
+
+        final fun component1(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.RequestPart> // ai.koog.prompt.message/Message.User.component1|component1(){}[0]
+        final fun component2(): ai.koog.prompt.message/RequestMetaInfo // ai.koog.prompt.message/Message.User.component2|component2(){}[0]
+        final fun component3(): kotlin/String? // ai.koog.prompt.message/Message.User.component3|component3(){}[0]
+        final fun copy(kotlin.collections/List<ai.koog.prompt.message/MessagePart.RequestPart> = ..., ai.koog.prompt.message/RequestMetaInfo = ..., kotlin/String? = ...): ai.koog.prompt.message/Message.User // ai.koog.prompt.message/Message.User.copy|copy(kotlin.collections.List<ai.koog.prompt.message.MessagePart.RequestPart>;ai.koog.prompt.message.RequestMetaInfo;kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/Message.User.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.message/Message.User.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.message/Message.User.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/Message.User> { // ai.koog.prompt.message/Message.User.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.message/Message.User.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/Message.User.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/Message.User.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/Message.User // ai.koog.prompt.message/Message.User.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/Message.User) // ai.koog.prompt.message/Message.User.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.Message.User){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.message/Message.User.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.message/Message.User.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/Message.User> // ai.koog.prompt.message/Message.User.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/Message.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/Message> // ai.koog.prompt.message/Message.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/Message.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.koog.prompt.message/MessageMetaInfo { // ai.koog.prompt.message/MessageMetaInfo|null[0]
+    abstract val metadata // ai.koog.prompt.message/MessageMetaInfo.metadata|{}metadata[0]
+        abstract fun <get-metadata>(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.message/MessageMetaInfo.metadata.<get-metadata>|<get-metadata>(){}[0]
+    abstract val timestamp // ai.koog.prompt.message/MessageMetaInfo.timestamp|{}timestamp[0]
+        abstract fun <get-timestamp>(): kotlin.time/Instant // ai.koog.prompt.message/MessageMetaInfo.timestamp.<get-timestamp>|<get-timestamp>(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/MessageMetaInfo.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessageMetaInfo> // ai.koog.prompt.message/MessageMetaInfo.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/MessageMetaInfo.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/MessagePart|null[0]
+    sealed interface ContentPart : ai.koog.prompt.message/MessagePart.RequestPart, ai.koog.prompt.message/MessagePart.ResponsePart { // ai.koog.prompt.message/MessagePart.ContentPart|null[0]
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/MessagePart.ContentPart.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.ContentPart> // ai.koog.prompt.message/MessagePart.ContentPart.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/MessagePart.ContentPart.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    sealed interface RequestPart : ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/MessagePart.RequestPart|null[0]
+        abstract val cacheControl // ai.koog.prompt.message/MessagePart.RequestPart.cacheControl|{}cacheControl[0]
+            abstract fun <get-cacheControl>(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.RequestPart.cacheControl.<get-cacheControl>|<get-cacheControl>(){}[0]
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/MessagePart.RequestPart.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.RequestPart> // ai.koog.prompt.message/MessagePart.RequestPart.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/MessagePart.RequestPart.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    sealed interface ResponsePart : ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/MessagePart.ResponsePart|null[0]
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/MessagePart.ResponsePart.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.ResponsePart> // ai.koog.prompt.message/MessagePart.ResponsePart.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/MessagePart.ResponsePart.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    sealed interface Tool : ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/MessagePart.Tool|null[0]
+        abstract val tool // ai.koog.prompt.message/MessagePart.Tool.tool|{}tool[0]
+            abstract fun <get-tool>(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.tool.<get-tool>|<get-tool>(){}[0]
+
+        final class Call : ai.koog.prompt.message/MessagePart.ResponsePart, ai.koog.prompt.message/MessagePart.Tool { // ai.koog.prompt.message/MessagePart.Tool.Call|null[0]
+            constructor <init>(kotlin/String? = ..., kotlin/String, kotlin/String) // ai.koog.prompt.message/MessagePart.Tool.Call.<init>|<init>(kotlin.String?;kotlin.String;kotlin.String){}[0]
+            constructor <init>(kotlin/String? = ..., kotlin/String, kotlinx.serialization.json/JsonObject) // ai.koog.prompt.message/MessagePart.Tool.Call.<init>|<init>(kotlin.String?;kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+
+            final val args // ai.koog.prompt.message/MessagePart.Tool.Call.args|{}args[0]
+                final fun <get-args>(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Call.args.<get-args>|<get-args>(){}[0]
+            final val argsJson // ai.koog.prompt.message/MessagePart.Tool.Call.argsJson|{}argsJson[0]
+                final fun <get-argsJson>(): kotlinx.serialization.json/JsonObject // ai.koog.prompt.message/MessagePart.Tool.Call.argsJson.<get-argsJson>|<get-argsJson>(){}[0]
+            final val id // ai.koog.prompt.message/MessagePart.Tool.Call.id|{}id[0]
+                final fun <get-id>(): kotlin/String? // ai.koog.prompt.message/MessagePart.Tool.Call.id.<get-id>|<get-id>(){}[0]
+            final val tool // ai.koog.prompt.message/MessagePart.Tool.Call.tool|{}tool[0]
+                final fun <get-tool>(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Call.tool.<get-tool>|<get-tool>(){}[0]
+
+            final fun component1(): kotlin/String? // ai.koog.prompt.message/MessagePart.Tool.Call.component1|component1(){}[0]
+            final fun component2(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Call.component2|component2(){}[0]
+            final fun component3(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Call.component3|component3(){}[0]
+            final fun copy(kotlin/String? = ..., kotlin/String = ..., kotlin/String = ...): ai.koog.prompt.message/MessagePart.Tool.Call // ai.koog.prompt.message/MessagePart.Tool.Call.copy|copy(kotlin.String?;kotlin.String;kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Tool.Call.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.prompt.message/MessagePart.Tool.Call.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Call.toString|toString(){}[0]
+
+            final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/MessagePart.Tool.Call> { // ai.koog.prompt.message/MessagePart.Tool.Call.$serializer|null[0]
+                final val descriptor // ai.koog.prompt.message/MessagePart.Tool.Call.$serializer.descriptor|{}descriptor[0]
+                    final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/MessagePart.Tool.Call.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/MessagePart.Tool.Call.$serializer.childSerializers|childSerializers(){}[0]
+                final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/MessagePart.Tool.Call // ai.koog.prompt.message/MessagePart.Tool.Call.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/MessagePart.Tool.Call) // ai.koog.prompt.message/MessagePart.Tool.Call.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.MessagePart.Tool.Call){}[0]
+            }
+
+            final object Companion { // ai.koog.prompt.message/MessagePart.Tool.Call.Companion|null[0]
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.Tool.Call> // ai.koog.prompt.message/MessagePart.Tool.Call.Companion.serializer|serializer(){}[0]
+            }
+        }
+
+        final class Result : ai.koog.prompt.message/MessagePart.RequestPart, ai.koog.prompt.message/MessagePart.Tool { // ai.koog.prompt.message/MessagePart.Tool.Result|null[0]
+            constructor <init>(kotlin/String? = ..., kotlin/String, kotlin/String, kotlin/Boolean = ...) // ai.koog.prompt.message/MessagePart.Tool.Result.<init>|<init>(kotlin.String?;kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+
+            final val cacheControl // ai.koog.prompt.message/MessagePart.Tool.Result.cacheControl|{}cacheControl[0]
+                final fun <get-cacheControl>(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Tool.Result.cacheControl.<get-cacheControl>|<get-cacheControl>(){}[0]
+            final val id // ai.koog.prompt.message/MessagePart.Tool.Result.id|{}id[0]
+                final fun <get-id>(): kotlin/String? // ai.koog.prompt.message/MessagePart.Tool.Result.id.<get-id>|<get-id>(){}[0]
+            final val isError // ai.koog.prompt.message/MessagePart.Tool.Result.isError|{}isError[0]
+                final fun <get-isError>(): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Tool.Result.isError.<get-isError>|<get-isError>(){}[0]
+            final val output // ai.koog.prompt.message/MessagePart.Tool.Result.output|{}output[0]
+                final fun <get-output>(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Result.output.<get-output>|<get-output>(){}[0]
+            final val tool // ai.koog.prompt.message/MessagePart.Tool.Result.tool|{}tool[0]
+                final fun <get-tool>(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Result.tool.<get-tool>|<get-tool>(){}[0]
+
+            final fun component1(): kotlin/String? // ai.koog.prompt.message/MessagePart.Tool.Result.component1|component1(){}[0]
+            final fun component2(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Result.component2|component2(){}[0]
+            final fun component3(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Result.component3|component3(){}[0]
+            final fun component4(): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Tool.Result.component4|component4(){}[0]
+            final fun copy(kotlin/String? = ..., kotlin/String = ..., kotlin/String = ..., kotlin/Boolean = ...): ai.koog.prompt.message/MessagePart.Tool.Result // ai.koog.prompt.message/MessagePart.Tool.Result.copy|copy(kotlin.String?;kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Tool.Result.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.prompt.message/MessagePart.Tool.Result.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Result.toString|toString(){}[0]
+
+            final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/MessagePart.Tool.Result> { // ai.koog.prompt.message/MessagePart.Tool.Result.$serializer|null[0]
+                final val descriptor // ai.koog.prompt.message/MessagePart.Tool.Result.$serializer.descriptor|{}descriptor[0]
+                    final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/MessagePart.Tool.Result.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/MessagePart.Tool.Result.$serializer.childSerializers|childSerializers(){}[0]
+                final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/MessagePart.Tool.Result // ai.koog.prompt.message/MessagePart.Tool.Result.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/MessagePart.Tool.Result) // ai.koog.prompt.message/MessagePart.Tool.Result.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.MessagePart.Tool.Result){}[0]
+            }
+
+            final object Companion { // ai.koog.prompt.message/MessagePart.Tool.Result.Companion|null[0]
+                final val $childSerializers // ai.koog.prompt.message/MessagePart.Tool.Result.Companion.$childSerializers|{}$childSerializers[0]
+
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.Tool.Result> // ai.koog.prompt.message/MessagePart.Tool.Result.Companion.serializer|serializer(){}[0]
+            }
+        }
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/MessagePart.Tool.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.Tool> // ai.koog.prompt.message/MessagePart.Tool.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/MessagePart.Tool.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    final class Attachment : ai.koog.prompt.message/MessagePart.ContentPart { // ai.koog.prompt.message/MessagePart.Attachment|null[0]
+        constructor <init>(ai.koog.prompt.message/AttachmentSource, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.message/MessagePart.Attachment.<init>|<init>(ai.koog.prompt.message.AttachmentSource;ai.koog.prompt.message.CacheControl?){}[0]
+
+        final val cacheControl // ai.koog.prompt.message/MessagePart.Attachment.cacheControl|{}cacheControl[0]
+            final fun <get-cacheControl>(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Attachment.cacheControl.<get-cacheControl>|<get-cacheControl>(){}[0]
+        final val source // ai.koog.prompt.message/MessagePart.Attachment.source|{}source[0]
+            final fun <get-source>(): ai.koog.prompt.message/AttachmentSource // ai.koog.prompt.message/MessagePart.Attachment.source.<get-source>|<get-source>(){}[0]
+
+        final fun component1(): ai.koog.prompt.message/AttachmentSource // ai.koog.prompt.message/MessagePart.Attachment.component1|component1(){}[0]
+        final fun component2(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Attachment.component2|component2(){}[0]
+        final fun copy(ai.koog.prompt.message/AttachmentSource = ..., ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.message/MessagePart.Attachment // ai.koog.prompt.message/MessagePart.Attachment.copy|copy(ai.koog.prompt.message.AttachmentSource;ai.koog.prompt.message.CacheControl?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Attachment.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.message/MessagePart.Attachment.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.message/MessagePart.Attachment.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/MessagePart.Attachment> { // ai.koog.prompt.message/MessagePart.Attachment.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.message/MessagePart.Attachment.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/MessagePart.Attachment.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/MessagePart.Attachment.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/MessagePart.Attachment // ai.koog.prompt.message/MessagePart.Attachment.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/MessagePart.Attachment) // ai.koog.prompt.message/MessagePart.Attachment.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.MessagePart.Attachment){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.message/MessagePart.Attachment.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.message/MessagePart.Attachment.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.Attachment> // ai.koog.prompt.message/MessagePart.Attachment.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Reasoning : ai.koog.prompt.message/MessagePart.ResponsePart { // ai.koog.prompt.message/MessagePart.Reasoning|null[0]
+        constructor <init>(kotlin.collections/List<kotlin/String>, kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/String? = ...) // ai.koog.prompt.message/MessagePart.Reasoning.<init>|<init>(kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.String?){}[0]
+        constructor <init>(kotlin/String, kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/String? = ...) // ai.koog.prompt.message/MessagePart.Reasoning.<init>|<init>(kotlin.String;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.String?){}[0]
+
+        final val content // ai.koog.prompt.message/MessagePart.Reasoning.content|{}content[0]
+            final fun <get-content>(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.message/MessagePart.Reasoning.content.<get-content>|<get-content>(){}[0]
+        final val encrypted // ai.koog.prompt.message/MessagePart.Reasoning.encrypted|{}encrypted[0]
+            final fun <get-encrypted>(): kotlin/String? // ai.koog.prompt.message/MessagePart.Reasoning.encrypted.<get-encrypted>|<get-encrypted>(){}[0]
+        final val id // ai.koog.prompt.message/MessagePart.Reasoning.id|{}id[0]
+            final fun <get-id>(): kotlin/String? // ai.koog.prompt.message/MessagePart.Reasoning.id.<get-id>|<get-id>(){}[0]
+        final val summary // ai.koog.prompt.message/MessagePart.Reasoning.summary|{}summary[0]
+            final fun <get-summary>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.message/MessagePart.Reasoning.summary.<get-summary>|<get-summary>(){}[0]
+
+        final fun component1(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.message/MessagePart.Reasoning.component1|component1(){}[0]
+        final fun component2(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.message/MessagePart.Reasoning.component2|component2(){}[0]
+        final fun component3(): kotlin/String? // ai.koog.prompt.message/MessagePart.Reasoning.component3|component3(){}[0]
+        final fun component4(): kotlin/String? // ai.koog.prompt.message/MessagePart.Reasoning.component4|component4(){}[0]
+        final fun copy(kotlin.collections/List<kotlin/String> = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/String? = ...): ai.koog.prompt.message/MessagePart.Reasoning // ai.koog.prompt.message/MessagePart.Reasoning.copy|copy(kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Reasoning.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.message/MessagePart.Reasoning.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.message/MessagePart.Reasoning.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/MessagePart.Reasoning> { // ai.koog.prompt.message/MessagePart.Reasoning.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.message/MessagePart.Reasoning.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/MessagePart.Reasoning.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/MessagePart.Reasoning.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/MessagePart.Reasoning // ai.koog.prompt.message/MessagePart.Reasoning.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/MessagePart.Reasoning) // ai.koog.prompt.message/MessagePart.Reasoning.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.MessagePart.Reasoning){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.message/MessagePart.Reasoning.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.message/MessagePart.Reasoning.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.Reasoning> // ai.koog.prompt.message/MessagePart.Reasoning.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Text : ai.koog.prompt.message/MessagePart.ContentPart { // ai.koog.prompt.message/MessagePart.Text|null[0]
+        constructor <init>(kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.message/MessagePart.Text.<init>|<init>(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
+
+        final val cacheControl // ai.koog.prompt.message/MessagePart.Text.cacheControl|{}cacheControl[0]
+            final fun <get-cacheControl>(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Text.cacheControl.<get-cacheControl>|<get-cacheControl>(){}[0]
+        final val text // ai.koog.prompt.message/MessagePart.Text.text|{}text[0]
+            final fun <get-text>(): kotlin/String // ai.koog.prompt.message/MessagePart.Text.text.<get-text>|<get-text>(){}[0]
+
+        final fun component1(): kotlin/String // ai.koog.prompt.message/MessagePart.Text.component1|component1(){}[0]
+        final fun component2(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Text.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.message/MessagePart.Text // ai.koog.prompt.message/MessagePart.Text.copy|copy(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Text.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.message/MessagePart.Text.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.message/MessagePart.Text.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/MessagePart.Text> { // ai.koog.prompt.message/MessagePart.Text.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.message/MessagePart.Text.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/MessagePart.Text.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/MessagePart.Text.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/MessagePart.Text // ai.koog.prompt.message/MessagePart.Text.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/MessagePart.Text) // ai.koog.prompt.message/MessagePart.Text.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.MessagePart.Text){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.message/MessagePart.Text.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.message/MessagePart.Text.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.Text> // ai.koog.prompt.message/MessagePart.Text.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/MessagePart.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart> // ai.koog.prompt.message/MessagePart.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/MessagePart.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.koog.prompt.streaming/StreamFrame { // ai.koog.prompt.streaming/StreamFrame|null[0]
+    sealed interface CompleteFrame : ai.koog.prompt.streaming/StreamFrame { // ai.koog.prompt.streaming/StreamFrame.CompleteFrame|null[0]
+        abstract val index // ai.koog.prompt.streaming/StreamFrame.CompleteFrame.index|{}index[0]
+            abstract fun <get-index>(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.CompleteFrame.index.<get-index>|<get-index>(){}[0]
+    }
+
+    sealed interface DeltaFrame : ai.koog.prompt.streaming/StreamFrame { // ai.koog.prompt.streaming/StreamFrame.DeltaFrame|null[0]
+        abstract val index // ai.koog.prompt.streaming/StreamFrame.DeltaFrame.index|{}index[0]
+            abstract fun <get-index>(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.DeltaFrame.index.<get-index>|<get-index>(){}[0]
+    }
+
+    final class End : ai.koog.prompt.streaming/StreamFrame { // ai.koog.prompt.streaming/StreamFrame.End|null[0]
+        constructor <init>(kotlin/String? = ..., ai.koog.prompt.message/ResponseMetaInfo = ...) // ai.koog.prompt.streaming/StreamFrame.End.<init>|<init>(kotlin.String?;ai.koog.prompt.message.ResponseMetaInfo){}[0]
+
+        final val finishReason // ai.koog.prompt.streaming/StreamFrame.End.finishReason|{}finishReason[0]
+            final fun <get-finishReason>(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.End.finishReason.<get-finishReason>|<get-finishReason>(){}[0]
+        final val metaInfo // ai.koog.prompt.streaming/StreamFrame.End.metaInfo|{}metaInfo[0]
+            final fun <get-metaInfo>(): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.streaming/StreamFrame.End.metaInfo.<get-metaInfo>|<get-metaInfo>(){}[0]
+
+        final fun component1(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.End.component1|component1(){}[0]
+        final fun component2(): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.streaming/StreamFrame.End.component2|component2(){}[0]
+        final fun copy(kotlin/String? = ..., ai.koog.prompt.message/ResponseMetaInfo = ...): ai.koog.prompt.streaming/StreamFrame.End // ai.koog.prompt.streaming/StreamFrame.End.copy|copy(kotlin.String?;ai.koog.prompt.message.ResponseMetaInfo){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.streaming/StreamFrame.End.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.streaming/StreamFrame.End.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.End.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.streaming/StreamFrame.End> { // ai.koog.prompt.streaming/StreamFrame.End.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.streaming/StreamFrame.End.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.streaming/StreamFrame.End.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.streaming/StreamFrame.End.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.streaming/StreamFrame.End // ai.koog.prompt.streaming/StreamFrame.End.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.streaming/StreamFrame.End) // ai.koog.prompt.streaming/StreamFrame.End.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.streaming.StreamFrame.End){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.streaming/StreamFrame.End.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.streaming/StreamFrame.End> // ai.koog.prompt.streaming/StreamFrame.End.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class ReasoningComplete : ai.koog.prompt.streaming/StreamFrame, ai.koog.prompt.streaming/StreamFrame.CompleteFrame { // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete|null[0]
+        constructor <init>(kotlin/String?, kotlin.collections/List<kotlin/String>, kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.<init>|<init>(kotlin.String?;kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.Int?){}[0]
+
+        final val content // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.content|{}content[0]
+            final fun <get-content>(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.content.<get-content>|<get-content>(){}[0]
+        final val encrypted // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.encrypted|{}encrypted[0]
+            final fun <get-encrypted>(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.encrypted.<get-encrypted>|<get-encrypted>(){}[0]
+        final val id // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.id|{}id[0]
+            final fun <get-id>(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.id.<get-id>|<get-id>(){}[0]
+        final val index // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.index|{}index[0]
+            final fun <get-index>(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.index.<get-index>|<get-index>(){}[0]
+        final val summary // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.summary|{}summary[0]
+            final fun <get-summary>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.summary.<get-summary>|<get-summary>(){}[0]
+
+        final fun component1(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.component1|component1(){}[0]
+        final fun component2(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.component2|component2(){}[0]
+        final fun component3(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.component3|component3(){}[0]
+        final fun component4(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.component4|component4(){}[0]
+        final fun component5(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.component5|component5(){}[0]
+        final fun copy(kotlin/String? = ..., kotlin.collections/List<kotlin/String> = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/Int? = ...): ai.koog.prompt.streaming/StreamFrame.ReasoningComplete // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.copy|copy(kotlin.String?;kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.Int?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.streaming/StreamFrame.ReasoningComplete> { // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.streaming/StreamFrame.ReasoningComplete // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.streaming/StreamFrame.ReasoningComplete) // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.streaming.StreamFrame.ReasoningComplete){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.streaming/StreamFrame.ReasoningComplete> // ai.koog.prompt.streaming/StreamFrame.ReasoningComplete.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class ReasoningDelta : ai.koog.prompt.streaming/StreamFrame, ai.koog.prompt.streaming/StreamFrame.DeltaFrame { // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
+
+        final val id // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.id|{}id[0]
+            final fun <get-id>(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.id.<get-id>|<get-id>(){}[0]
+        final val index // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.index|{}index[0]
+            final fun <get-index>(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.index.<get-index>|<get-index>(){}[0]
+        final val summary // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.summary|{}summary[0]
+            final fun <get-summary>(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.summary.<get-summary>|<get-summary>(){}[0]
+        final val text // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.text|{}text[0]
+            final fun <get-text>(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.text.<get-text>|<get-text>(){}[0]
+
+        final fun component1(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.component1|component1(){}[0]
+        final fun component2(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.component2|component2(){}[0]
+        final fun component3(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.component3|component3(){}[0]
+        final fun component4(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.component4|component4(){}[0]
+        final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...): ai.koog.prompt.streaming/StreamFrame.ReasoningDelta // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.copy|copy(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.streaming/StreamFrame.ReasoningDelta> { // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.streaming/StreamFrame.ReasoningDelta // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.streaming/StreamFrame.ReasoningDelta) // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.streaming.StreamFrame.ReasoningDelta){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.streaming/StreamFrame.ReasoningDelta> // ai.koog.prompt.streaming/StreamFrame.ReasoningDelta.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class TextComplete : ai.koog.prompt.streaming/StreamFrame, ai.koog.prompt.streaming/StreamFrame.CompleteFrame { // ai.koog.prompt.streaming/StreamFrame.TextComplete|null[0]
+        constructor <init>(kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrame.TextComplete.<init>|<init>(kotlin.String;kotlin.Int?){}[0]
+
+        final val index // ai.koog.prompt.streaming/StreamFrame.TextComplete.index|{}index[0]
+            final fun <get-index>(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.TextComplete.index.<get-index>|<get-index>(){}[0]
+        final val text // ai.koog.prompt.streaming/StreamFrame.TextComplete.text|{}text[0]
+            final fun <get-text>(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.TextComplete.text.<get-text>|<get-text>(){}[0]
+
+        final fun component1(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.TextComplete.component1|component1(){}[0]
+        final fun component2(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.TextComplete.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/Int? = ...): ai.koog.prompt.streaming/StreamFrame.TextComplete // ai.koog.prompt.streaming/StreamFrame.TextComplete.copy|copy(kotlin.String;kotlin.Int?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.streaming/StreamFrame.TextComplete.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.streaming/StreamFrame.TextComplete.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.TextComplete.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.streaming/StreamFrame.TextComplete> { // ai.koog.prompt.streaming/StreamFrame.TextComplete.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.streaming/StreamFrame.TextComplete.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.streaming/StreamFrame.TextComplete.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.streaming/StreamFrame.TextComplete.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.streaming/StreamFrame.TextComplete // ai.koog.prompt.streaming/StreamFrame.TextComplete.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.streaming/StreamFrame.TextComplete) // ai.koog.prompt.streaming/StreamFrame.TextComplete.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.streaming.StreamFrame.TextComplete){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.streaming/StreamFrame.TextComplete.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.streaming/StreamFrame.TextComplete> // ai.koog.prompt.streaming/StreamFrame.TextComplete.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class TextDelta : ai.koog.prompt.streaming/StreamFrame, ai.koog.prompt.streaming/StreamFrame.DeltaFrame { // ai.koog.prompt.streaming/StreamFrame.TextDelta|null[0]
+        constructor <init>(kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrame.TextDelta.<init>|<init>(kotlin.String;kotlin.Int?){}[0]
+
+        final val index // ai.koog.prompt.streaming/StreamFrame.TextDelta.index|{}index[0]
+            final fun <get-index>(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.TextDelta.index.<get-index>|<get-index>(){}[0]
+        final val text // ai.koog.prompt.streaming/StreamFrame.TextDelta.text|{}text[0]
+            final fun <get-text>(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.TextDelta.text.<get-text>|<get-text>(){}[0]
+
+        final fun component1(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.TextDelta.component1|component1(){}[0]
+        final fun component2(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.TextDelta.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/Int? = ...): ai.koog.prompt.streaming/StreamFrame.TextDelta // ai.koog.prompt.streaming/StreamFrame.TextDelta.copy|copy(kotlin.String;kotlin.Int?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.streaming/StreamFrame.TextDelta.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.streaming/StreamFrame.TextDelta.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.TextDelta.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.streaming/StreamFrame.TextDelta> { // ai.koog.prompt.streaming/StreamFrame.TextDelta.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.streaming/StreamFrame.TextDelta.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.streaming/StreamFrame.TextDelta.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.streaming/StreamFrame.TextDelta.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.streaming/StreamFrame.TextDelta // ai.koog.prompt.streaming/StreamFrame.TextDelta.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.streaming/StreamFrame.TextDelta) // ai.koog.prompt.streaming/StreamFrame.TextDelta.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.streaming.StreamFrame.TextDelta){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.streaming/StreamFrame.TextDelta.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.streaming/StreamFrame.TextDelta> // ai.koog.prompt.streaming/StreamFrame.TextDelta.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class ToolCallComplete : ai.koog.prompt.streaming/StreamFrame, ai.koog.prompt.streaming/StreamFrame.CompleteFrame { // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete|null[0]
+        constructor <init>(kotlin/String?, kotlin/String, kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.<init>|<init>(kotlin.String?;kotlin.String;kotlin.String;kotlin.Int?){}[0]
+
+        final val content // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.content|{}content[0]
+            final fun <get-content>(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.content.<get-content>|<get-content>(){}[0]
+        final val contentJson // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.contentJson|{}contentJson[0]
+            final fun <get-contentJson>(): kotlinx.serialization.json/JsonObject // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.contentJson.<get-contentJson>|<get-contentJson>(){}[0]
+        final val contentJsonResult // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.contentJsonResult|{}contentJsonResult[0]
+            final fun <get-contentJsonResult>(): kotlin/Result<kotlinx.serialization.json/JsonObject> // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.contentJsonResult.<get-contentJsonResult>|<get-contentJsonResult>(){}[0]
+        final val id // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.id|{}id[0]
+            final fun <get-id>(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.id.<get-id>|<get-id>(){}[0]
+        final val index // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.index|{}index[0]
+            final fun <get-index>(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.index.<get-index>|<get-index>(){}[0]
+        final val name // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.name|{}name[0]
+            final fun <get-name>(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.name.<get-name>|<get-name>(){}[0]
+
+        final fun component1(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.component1|component1(){}[0]
+        final fun component2(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.component2|component2(){}[0]
+        final fun component3(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.component3|component3(){}[0]
+        final fun component4(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.component4|component4(){}[0]
+        final fun copy(kotlin/String? = ..., kotlin/String = ..., kotlin/String = ..., kotlin/Int? = ...): ai.koog.prompt.streaming/StreamFrame.ToolCallComplete // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.copy|copy(kotlin.String?;kotlin.String;kotlin.String;kotlin.Int?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.streaming/StreamFrame.ToolCallComplete> { // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.streaming/StreamFrame.ToolCallComplete // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.streaming/StreamFrame.ToolCallComplete) // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.streaming.StreamFrame.ToolCallComplete){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.streaming/StreamFrame.ToolCallComplete> // ai.koog.prompt.streaming/StreamFrame.ToolCallComplete.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class ToolCallDelta : ai.koog.prompt.streaming/StreamFrame, ai.koog.prompt.streaming/StreamFrame.DeltaFrame { // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta|null[0]
+        constructor <init>(kotlin/String?, kotlin/String?, kotlin/String?, kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
+
+        final val content // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.content|{}content[0]
+            final fun <get-content>(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.content.<get-content>|<get-content>(){}[0]
+        final val id // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.id|{}id[0]
+            final fun <get-id>(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.id.<get-id>|<get-id>(){}[0]
+        final val index // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.index|{}index[0]
+            final fun <get-index>(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.index.<get-index>|<get-index>(){}[0]
+        final val name // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.name|{}name[0]
+            final fun <get-name>(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.name.<get-name>|<get-name>(){}[0]
+
+        final fun component1(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.component1|component1(){}[0]
+        final fun component2(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.component2|component2(){}[0]
+        final fun component3(): kotlin/String? // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.component3|component3(){}[0]
+        final fun component4(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.component4|component4(){}[0]
+        final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...): ai.koog.prompt.streaming/StreamFrame.ToolCallDelta // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.copy|copy(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.streaming/StreamFrame.ToolCallDelta> { // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.streaming/StreamFrame.ToolCallDelta // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.streaming/StreamFrame.ToolCallDelta) // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.streaming.StreamFrame.ToolCallDelta){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.streaming/StreamFrame.ToolCallDelta> // ai.koog.prompt.streaming/StreamFrame.ToolCallDelta.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.streaming/StreamFrame.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.streaming/StreamFrame.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.streaming/StreamFrame.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+abstract class <#A: kotlin/Any?> ai.koog.prompt.dsl/ContentPartsBuilderBase : ai.koog.prompt.text/TextContentBuilderBase<#A> { // ai.koog.prompt.dsl/ContentPartsBuilderBase|null[0]
+    constructor <init>() // ai.koog.prompt.dsl/ContentPartsBuilderBase.<init>|<init>(){}[0]
+
+    final val contentParts // ai.koog.prompt.dsl/ContentPartsBuilderBase.contentParts|{}contentParts[0]
+        final fun <get-contentParts>(): kotlin.collections/MutableList<ai.koog.prompt.message/MessagePart.ContentPart> // ai.koog.prompt.dsl/ContentPartsBuilderBase.contentParts.<get-contentParts>|<get-contentParts>(){}[0]
+
+    final fun attachment(ai.koog.prompt.message/AttachmentSource, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.attachment|attachment(ai.koog.prompt.message.AttachmentSource;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun audio(ai.koog.prompt.message/AttachmentSource.Audio, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.audio|audio(ai.koog.prompt.message.AttachmentSource.Audio;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun audio(kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.audio|audio(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun audio(kotlinx.io.files/Path, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.audio|audio(kotlinx.io.files.Path;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun binaryFile(kotlinx.io.files/Path, kotlin/String) // ai.koog.prompt.dsl/ContentPartsBuilderBase.binaryFile|binaryFile(kotlinx.io.files.Path;kotlin.String){}[0]
+    final fun file(ai.koog.prompt.message/AttachmentSource.File, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.file|file(ai.koog.prompt.message.AttachmentSource.File;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun file(kotlin/String, kotlin/String) // ai.koog.prompt.dsl/ContentPartsBuilderBase.file|file(kotlin.String;kotlin.String){}[0]
+    final fun flushTextBuilder() // ai.koog.prompt.dsl/ContentPartsBuilderBase.flushTextBuilder|flushTextBuilder(){}[0]
+    final fun image(ai.koog.prompt.message/AttachmentSource.Image, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.image|image(ai.koog.prompt.message.AttachmentSource.Image;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun image(kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.image|image(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun image(kotlinx.io.files/Path, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.image|image(kotlinx.io.files.Path;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun part(ai.koog.prompt.message/MessagePart.ContentPart) // ai.koog.prompt.dsl/ContentPartsBuilderBase.part|part(ai.koog.prompt.message.MessagePart.ContentPart){}[0]
+    final fun text(ai.koog.prompt.message/CacheControl? = ..., kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit>) // ai.koog.prompt.dsl/ContentPartsBuilderBase.text|text(ai.koog.prompt.message.CacheControl?;kotlin.Function1<ai.koog.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
+    final fun text(kotlin/String, ai.koog.prompt.message/CacheControl) // ai.koog.prompt.dsl/ContentPartsBuilderBase.text|text(kotlin.String;ai.koog.prompt.message.CacheControl){}[0]
+    final fun textFile(kotlinx.io.files/Path, kotlin/String) // ai.koog.prompt.dsl/ContentPartsBuilderBase.textFile|textFile(kotlinx.io.files.Path;kotlin.String){}[0]
+    final fun video(ai.koog.prompt.message/AttachmentSource.Video, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.video|video(ai.koog.prompt.message.AttachmentSource.Video;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun video(kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.video|video(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun video(kotlinx.io.files/Path, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.video|video(kotlinx.io.files.Path;ai.koog.prompt.message.CacheControl?){}[0]
+}
+
+abstract class <#A: kotlin/Any?> ai.koog.prompt.text/BuilderBase { // ai.koog.prompt.text/BuilderBase|null[0]
+    constructor <init>() // ai.koog.prompt.text/BuilderBase.<init>|<init>(){}[0]
+
+    abstract fun build(): #A // ai.koog.prompt.text/BuilderBase.build|build(){}[0]
+}
+
+abstract class <#A: kotlin/Any?> ai.koog.prompt.text/TextContentBuilderBase : ai.koog.prompt.text/BuilderBase<#A> { // ai.koog.prompt.text/TextContentBuilderBase|null[0]
+    constructor <init>() // ai.koog.prompt.text/TextContentBuilderBase.<init>|<init>(){}[0]
+
+    final val caret // ai.koog.prompt.text/TextContentBuilderBase.caret|{}caret[0]
+        final fun <get-caret>(): ai.koog.prompt.text/TextContentBuilderBase.Caret // ai.koog.prompt.text/TextContentBuilderBase.caret.<get-caret>|<get-caret>(){}[0]
+    final val textBuilder // ai.koog.prompt.text/TextContentBuilderBase.textBuilder|{}textBuilder[0]
+        final fun <get-textBuilder>(): kotlin.text/StringBuilder // ai.koog.prompt.text/TextContentBuilderBase.textBuilder.<get-textBuilder>|<get-textBuilder>(){}[0]
+
+    final fun br() // ai.koog.prompt.text/TextContentBuilderBase.br|br(){}[0]
+    final fun newline() // ai.koog.prompt.text/TextContentBuilderBase.newline|newline(){}[0]
+    final fun padding(kotlin/String, kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit>) // ai.koog.prompt.text/TextContentBuilderBase.padding|padding(kotlin.String;kotlin.Function1<ai.koog.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
+    final fun textWithNewLine(kotlin/String) // ai.koog.prompt.text/TextContentBuilderBase.textWithNewLine|textWithNewLine(kotlin.String){}[0]
+    open fun (kotlin/String).not() // ai.koog.prompt.text/TextContentBuilderBase.not|not@kotlin.String(){}[0]
+    open fun (kotlin/String).unaryPlus() // ai.koog.prompt.text/TextContentBuilderBase.unaryPlus|unaryPlus@kotlin.String(){}[0]
+    open fun text(kotlin/String) // ai.koog.prompt.text/TextContentBuilderBase.text|text(kotlin.String){}[0]
+
+    final class Caret { // ai.koog.prompt.text/TextContentBuilderBase.Caret|null[0]
+        constructor <init>(kotlin/Int, kotlin/Int) // ai.koog.prompt.text/TextContentBuilderBase.Caret.<init>|<init>(kotlin.Int;kotlin.Int){}[0]
+
+        final val line // ai.koog.prompt.text/TextContentBuilderBase.Caret.line|{}line[0]
+            final fun <get-line>(): kotlin/Int // ai.koog.prompt.text/TextContentBuilderBase.Caret.line.<get-line>|<get-line>(){}[0]
+        final val offset // ai.koog.prompt.text/TextContentBuilderBase.Caret.offset|{}offset[0]
+            final fun <get-offset>(): kotlin/Int // ai.koog.prompt.text/TextContentBuilderBase.Caret.offset.<get-offset>|<get-offset>(){}[0]
+
+        final fun component1(): kotlin/Int // ai.koog.prompt.text/TextContentBuilderBase.Caret.component1|component1(){}[0]
+        final fun component2(): kotlin/Int // ai.koog.prompt.text/TextContentBuilderBase.Caret.component2|component2(){}[0]
+        final fun copy(kotlin/Int = ..., kotlin/Int = ...): ai.koog.prompt.text/TextContentBuilderBase.Caret // ai.koog.prompt.text/TextContentBuilderBase.Caret.copy|copy(kotlin.Int;kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.text/TextContentBuilderBase.Caret.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.text/TextContentBuilderBase.Caret.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.text/TextContentBuilderBase.Caret.toString|toString(){}[0]
+    }
+}
+
+final class ai.koog.prompt.dsl/ModerationCategoryResult { // ai.koog.prompt.dsl/ModerationCategoryResult|null[0]
+    constructor <init>(kotlin/Boolean, kotlin/Double? = ..., kotlin.collections/List<ai.koog.prompt.dsl/ModerationResult.InputType> = ...) // ai.koog.prompt.dsl/ModerationCategoryResult.<init>|<init>(kotlin.Boolean;kotlin.Double?;kotlin.collections.List<ai.koog.prompt.dsl.ModerationResult.InputType>){}[0]
+
+    final val appliedInputTypes // ai.koog.prompt.dsl/ModerationCategoryResult.appliedInputTypes|{}appliedInputTypes[0]
+        final fun <get-appliedInputTypes>(): kotlin.collections/List<ai.koog.prompt.dsl/ModerationResult.InputType> // ai.koog.prompt.dsl/ModerationCategoryResult.appliedInputTypes.<get-appliedInputTypes>|<get-appliedInputTypes>(){}[0]
+    final val confidenceScore // ai.koog.prompt.dsl/ModerationCategoryResult.confidenceScore|{}confidenceScore[0]
+        final fun <get-confidenceScore>(): kotlin/Double? // ai.koog.prompt.dsl/ModerationCategoryResult.confidenceScore.<get-confidenceScore>|<get-confidenceScore>(){}[0]
+    final val detected // ai.koog.prompt.dsl/ModerationCategoryResult.detected|{}detected[0]
+        final fun <get-detected>(): kotlin/Boolean // ai.koog.prompt.dsl/ModerationCategoryResult.detected.<get-detected>|<get-detected>(){}[0]
+
+    final fun component1(): kotlin/Boolean // ai.koog.prompt.dsl/ModerationCategoryResult.component1|component1(){}[0]
+    final fun component2(): kotlin/Double? // ai.koog.prompt.dsl/ModerationCategoryResult.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/List<ai.koog.prompt.dsl/ModerationResult.InputType> // ai.koog.prompt.dsl/ModerationCategoryResult.component3|component3(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin/Double? = ..., kotlin.collections/List<ai.koog.prompt.dsl/ModerationResult.InputType> = ...): ai.koog.prompt.dsl/ModerationCategoryResult // ai.koog.prompt.dsl/ModerationCategoryResult.copy|copy(kotlin.Boolean;kotlin.Double?;kotlin.collections.List<ai.koog.prompt.dsl.ModerationResult.InputType>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.dsl/ModerationCategoryResult.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.dsl/ModerationCategoryResult.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.dsl/ModerationCategoryResult.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.dsl/ModerationCategoryResult> { // ai.koog.prompt.dsl/ModerationCategoryResult.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.dsl/ModerationCategoryResult.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.dsl/ModerationCategoryResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.dsl/ModerationCategoryResult.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.dsl/ModerationCategoryResult // ai.koog.prompt.dsl/ModerationCategoryResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.dsl/ModerationCategoryResult) // ai.koog.prompt.dsl/ModerationCategoryResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.dsl.ModerationCategoryResult){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.dsl/ModerationCategoryResult.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.dsl/ModerationCategoryResult.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.dsl/ModerationCategoryResult> // ai.koog.prompt.dsl/ModerationCategoryResult.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.dsl/ModerationResult { // ai.koog.prompt.dsl/ModerationResult|null[0]
+    constructor <init>(kotlin/Boolean, kotlin.collections/Map<ai.koog.prompt.dsl/ModerationCategory, ai.koog.prompt.dsl/ModerationCategoryResult>) // ai.koog.prompt.dsl/ModerationResult.<init>|<init>(kotlin.Boolean;kotlin.collections.Map<ai.koog.prompt.dsl.ModerationCategory,ai.koog.prompt.dsl.ModerationCategoryResult>){}[0]
+
+    final val categories // ai.koog.prompt.dsl/ModerationResult.categories|{}categories[0]
+        final fun <get-categories>(): kotlin.collections/Map<ai.koog.prompt.dsl/ModerationCategory, ai.koog.prompt.dsl/ModerationCategoryResult> // ai.koog.prompt.dsl/ModerationResult.categories.<get-categories>|<get-categories>(){}[0]
+    final val isHarmful // ai.koog.prompt.dsl/ModerationResult.isHarmful|{}isHarmful[0]
+        final fun <get-isHarmful>(): kotlin/Boolean // ai.koog.prompt.dsl/ModerationResult.isHarmful.<get-isHarmful>|<get-isHarmful>(){}[0]
+    final val violatedCategories // ai.koog.prompt.dsl/ModerationResult.violatedCategories|{}violatedCategories[0]
+        final fun <get-violatedCategories>(): kotlin.collections/List<ai.koog.prompt.dsl/ModerationCategory> // ai.koog.prompt.dsl/ModerationResult.violatedCategories.<get-violatedCategories>|<get-violatedCategories>(){}[0]
+
+    final fun component1(): kotlin/Boolean // ai.koog.prompt.dsl/ModerationResult.component1|component1(){}[0]
+    final fun component2(): kotlin.collections/Map<ai.koog.prompt.dsl/ModerationCategory, ai.koog.prompt.dsl/ModerationCategoryResult> // ai.koog.prompt.dsl/ModerationResult.component2|component2(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin.collections/Map<ai.koog.prompt.dsl/ModerationCategory, ai.koog.prompt.dsl/ModerationCategoryResult> = ...): ai.koog.prompt.dsl/ModerationResult // ai.koog.prompt.dsl/ModerationResult.copy|copy(kotlin.Boolean;kotlin.collections.Map<ai.koog.prompt.dsl.ModerationCategory,ai.koog.prompt.dsl.ModerationCategoryResult>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.dsl/ModerationResult.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.dsl/ModerationResult.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.dsl/ModerationResult.toString|toString(){}[0]
+    final fun violatesAll(kotlin/Array<out ai.koog.prompt.dsl/ModerationCategory>...): kotlin/Boolean // ai.koog.prompt.dsl/ModerationResult.violatesAll|violatesAll(kotlin.Array<out|ai.koog.prompt.dsl.ModerationCategory>...){}[0]
+    final fun violatesCategory(ai.koog.prompt.dsl/ModerationCategory): kotlin/Boolean // ai.koog.prompt.dsl/ModerationResult.violatesCategory|violatesCategory(ai.koog.prompt.dsl.ModerationCategory){}[0]
+    final fun violatesOneOf(kotlin/Array<out ai.koog.prompt.dsl/ModerationCategory>...): kotlin/Boolean // ai.koog.prompt.dsl/ModerationResult.violatesOneOf|violatesOneOf(kotlin.Array<out|ai.koog.prompt.dsl.ModerationCategory>...){}[0]
+
+    final enum class InputType : kotlin/Enum<ai.koog.prompt.dsl/ModerationResult.InputType> { // ai.koog.prompt.dsl/ModerationResult.InputType|null[0]
+        enum entry IMAGE // ai.koog.prompt.dsl/ModerationResult.InputType.IMAGE|null[0]
+        enum entry TEXT // ai.koog.prompt.dsl/ModerationResult.InputType.TEXT|null[0]
+
+        final val entries // ai.koog.prompt.dsl/ModerationResult.InputType.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.dsl/ModerationResult.InputType> // ai.koog.prompt.dsl/ModerationResult.InputType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+        final fun valueOf(kotlin/String): ai.koog.prompt.dsl/ModerationResult.InputType // ai.koog.prompt.dsl/ModerationResult.InputType.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<ai.koog.prompt.dsl/ModerationResult.InputType> // ai.koog.prompt.dsl/ModerationResult.InputType.values|values#static(){}[0]
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.dsl/ModerationResult.InputType.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.dsl/ModerationResult.InputType> // ai.koog.prompt.dsl/ModerationResult.InputType.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.dsl/ModerationResult.InputType.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.dsl/ModerationResult> { // ai.koog.prompt.dsl/ModerationResult.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.dsl/ModerationResult.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.dsl/ModerationResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.dsl/ModerationResult.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.dsl/ModerationResult // ai.koog.prompt.dsl/ModerationResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.dsl/ModerationResult) // ai.koog.prompt.dsl/ModerationResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.dsl.ModerationResult){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.dsl/ModerationResult.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.dsl/ModerationResult.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.dsl/ModerationResult> // ai.koog.prompt.dsl/ModerationResult.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.dsl/PromptBuilder { // ai.koog.prompt.dsl/PromptBuilder|null[0]
+    final fun assistant(kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart>, kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.assistant|assistant(kotlin.collections.List<ai.koog.prompt.message.MessagePart.ResponsePart>;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?){}[0]
+    final fun assistant(kotlin/Function1<ai.koog.prompt.dsl/ResponseMessagePartsBuilder, kotlin/Unit>): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.assistant|assistant(kotlin.Function1<ai.koog.prompt.dsl.ResponseMessagePartsBuilder,kotlin.Unit>){}[0]
+    final fun assistant(kotlin/String): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.assistant|assistant(kotlin.String){}[0]
+    final fun assistant(kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ..., kotlin/Function1<ai.koog.prompt.dsl/ResponseMessagePartsBuilder, kotlin/Unit>): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.assistant|assistant(kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?;kotlin.Function1<ai.koog.prompt.dsl.ResponseMessagePartsBuilder,kotlin.Unit>){}[0]
+    final fun build(): ai.koog.prompt/Prompt // ai.koog.prompt.dsl/PromptBuilder.build|build(){}[0]
+    final fun message(ai.koog.prompt.message/Message): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.message|message(ai.koog.prompt.message.Message){}[0]
+    final fun messages(kotlin.collections/List<ai.koog.prompt.message/Message>): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.messages|messages(kotlin.collections.List<ai.koog.prompt.message.Message>){}[0]
+    final fun reasoning(ai.koog.prompt.message/MessagePart.Reasoning): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.reasoning|reasoning(ai.koog.prompt.message.MessagePart.Reasoning){}[0]
+    final fun reasoning(kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.reasoning|reasoning(kotlin.String;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+    final fun system(ai.koog.prompt.message/CacheControl? = ..., kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit>): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.system|system(ai.koog.prompt.message.CacheControl?;kotlin.Function1<ai.koog.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
+    final fun system(kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit>): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.system|system(kotlin.Function1<ai.koog.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
+    final fun system(kotlin/String, ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.system|system(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun toolCall(ai.koog.prompt.message/MessagePart.Tool.Call): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolCall|toolCall(ai.koog.prompt.message.MessagePart.Tool.Call){}[0]
+    final fun toolCall(kotlin/String, kotlin/String, kotlin/String? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolCall|toolCall(kotlin.String;kotlin.String;kotlin.String?){}[0]
+    final fun toolCall(kotlin/String, kotlinx.serialization.json/JsonObject, kotlin/String? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolCall|toolCall(kotlin.String;kotlinx.serialization.json.JsonObject;kotlin.String?){}[0]
+    final fun toolResult(ai.koog.prompt.message/MessagePart.Tool.Result): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolResult|toolResult(ai.koog.prompt.message.MessagePart.Tool.Result){}[0]
+    final fun toolResult(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/Boolean = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolResult|toolResult(kotlin.String;kotlin.String;kotlin.String?;kotlin.Boolean){}[0]
+    final fun user(kotlin.collections/List<ai.koog.prompt.message/MessagePart.RequestPart>): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.user|user(kotlin.collections.List<ai.koog.prompt.message.MessagePart.RequestPart>){}[0]
+    final fun user(kotlin/Function1<ai.koog.prompt.dsl/RequestMessagePartsBuilder, kotlin/Unit>): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.user|user(kotlin.Function1<ai.koog.prompt.dsl.RequestMessagePartsBuilder,kotlin.Unit>){}[0]
+    final fun user(kotlin/String, ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.user|user(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
+}
+
+final class ai.koog.prompt.dsl/RequestMessagePartsBuilder : ai.koog.prompt.dsl/ContentPartsBuilderBase<kotlin.collections/List<ai.koog.prompt.message/MessagePart.RequestPart>> { // ai.koog.prompt.dsl/RequestMessagePartsBuilder|null[0]
+    constructor <init>() // ai.koog.prompt.dsl/RequestMessagePartsBuilder.<init>|<init>(){}[0]
+
+    final fun build(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.RequestPart> // ai.koog.prompt.dsl/RequestMessagePartsBuilder.build|build(){}[0]
+    final fun toolResult(ai.koog.prompt.message/MessagePart.Tool.Result) // ai.koog.prompt.dsl/RequestMessagePartsBuilder.toolResult|toolResult(ai.koog.prompt.message.MessagePart.Tool.Result){}[0]
+    final fun toolResult(kotlin/String? = ..., kotlin/String, kotlin/String, kotlin/Boolean = ...) // ai.koog.prompt.dsl/RequestMessagePartsBuilder.toolResult|toolResult(kotlin.String?;kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+}
+
+final class ai.koog.prompt.dsl/ResponseMessagePartsBuilder : ai.koog.prompt.text/TextContentBuilderBase<kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart>> { // ai.koog.prompt.dsl/ResponseMessagePartsBuilder|null[0]
+    constructor <init>() // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.<init>|<init>(){}[0]
+
+    final fun build(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart> // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.build|build(){}[0]
+    final fun reasoning(ai.koog.prompt.message/MessagePart.Reasoning) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.reasoning|reasoning(ai.koog.prompt.message.MessagePart.Reasoning){}[0]
+    final fun reasoning(kotlin/String? = ..., kotlin/String, kotlin/String? = ..., kotlin/String? = ...) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.reasoning|reasoning(kotlin.String?;kotlin.String;kotlin.String?;kotlin.String?){}[0]
+    final fun toolCall(ai.koog.prompt.message/MessagePart.Tool.Call) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.toolCall|toolCall(ai.koog.prompt.message.MessagePart.Tool.Call){}[0]
+    final fun toolCall(kotlin/String? = ..., kotlin/String, kotlin/String) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.toolCall|toolCall(kotlin.String?;kotlin.String;kotlin.String){}[0]
+    final fun toolCall(kotlin/String? = ..., kotlin/String, kotlinx.serialization.json/JsonObject) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.toolCall|toolCall(kotlin.String?;kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+}
+
+final class ai.koog.prompt.message/RequestMetaInfo : ai.koog.prompt.message/MessageMetaInfo { // ai.koog.prompt.message/RequestMetaInfo|null[0]
+    constructor <init>(kotlin.time/Instant, kotlinx.serialization.json/JsonObject? = ...) // ai.koog.prompt.message/RequestMetaInfo.<init>|<init>(kotlin.time.Instant;kotlinx.serialization.json.JsonObject?){}[0]
+
+    final val metadata // ai.koog.prompt.message/RequestMetaInfo.metadata|{}metadata[0]
+        final fun <get-metadata>(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.message/RequestMetaInfo.metadata.<get-metadata>|<get-metadata>(){}[0]
+    final val timestamp // ai.koog.prompt.message/RequestMetaInfo.timestamp|{}timestamp[0]
+        final fun <get-timestamp>(): kotlin.time/Instant // ai.koog.prompt.message/RequestMetaInfo.timestamp.<get-timestamp>|<get-timestamp>(){}[0]
+
+    final fun component1(): kotlin.time/Instant // ai.koog.prompt.message/RequestMetaInfo.component1|component1(){}[0]
+    final fun component2(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.message/RequestMetaInfo.component2|component2(){}[0]
+    final fun copy(kotlin.time/Instant = ..., kotlinx.serialization.json/JsonObject? = ...): ai.koog.prompt.message/RequestMetaInfo // ai.koog.prompt.message/RequestMetaInfo.copy|copy(kotlin.time.Instant;kotlinx.serialization.json.JsonObject?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/RequestMetaInfo.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.message/RequestMetaInfo.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.message/RequestMetaInfo.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/RequestMetaInfo> { // ai.koog.prompt.message/RequestMetaInfo.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.message/RequestMetaInfo.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/RequestMetaInfo.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/RequestMetaInfo.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/RequestMetaInfo // ai.koog.prompt.message/RequestMetaInfo.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/RequestMetaInfo) // ai.koog.prompt.message/RequestMetaInfo.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.RequestMetaInfo){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.message/RequestMetaInfo.Companion|null[0]
+        final val Empty // ai.koog.prompt.message/RequestMetaInfo.Companion.Empty|{}Empty[0]
+            final fun <get-Empty>(): ai.koog.prompt.message/RequestMetaInfo // ai.koog.prompt.message/RequestMetaInfo.Companion.Empty.<get-Empty>|<get-Empty>(){}[0]
+
+        final fun create(ai.koog.utils.time/KoogClock): ai.koog.prompt.message/RequestMetaInfo // ai.koog.prompt.message/RequestMetaInfo.Companion.create|create(ai.koog.utils.time.KoogClock){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/RequestMetaInfo> // ai.koog.prompt.message/RequestMetaInfo.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.message/ResponseMetaInfo : ai.koog.prompt.message/MessageMetaInfo { // ai.koog.prompt.message/ResponseMetaInfo|null[0]
+    constructor <init>(kotlin.time/Instant, kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ...) // ai.koog.prompt.message/ResponseMetaInfo.<init>|<init>(kotlin.time.Instant;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.String?;kotlinx.serialization.json.JsonObject?){}[0]
+
+    final val inputTokensCount // ai.koog.prompt.message/ResponseMetaInfo.inputTokensCount|{}inputTokensCount[0]
+        final fun <get-inputTokensCount>(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.inputTokensCount.<get-inputTokensCount>|<get-inputTokensCount>(){}[0]
+    final val metadata // ai.koog.prompt.message/ResponseMetaInfo.metadata|{}metadata[0]
+        final fun <get-metadata>(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.message/ResponseMetaInfo.metadata.<get-metadata>|<get-metadata>(){}[0]
+    final val modelId // ai.koog.prompt.message/ResponseMetaInfo.modelId|{}modelId[0]
+        final fun <get-modelId>(): kotlin/String? // ai.koog.prompt.message/ResponseMetaInfo.modelId.<get-modelId>|<get-modelId>(){}[0]
+    final val outputTokensCount // ai.koog.prompt.message/ResponseMetaInfo.outputTokensCount|{}outputTokensCount[0]
+        final fun <get-outputTokensCount>(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.outputTokensCount.<get-outputTokensCount>|<get-outputTokensCount>(){}[0]
+    final val timestamp // ai.koog.prompt.message/ResponseMetaInfo.timestamp|{}timestamp[0]
+        final fun <get-timestamp>(): kotlin.time/Instant // ai.koog.prompt.message/ResponseMetaInfo.timestamp.<get-timestamp>|<get-timestamp>(){}[0]
+    final val totalTokensCount // ai.koog.prompt.message/ResponseMetaInfo.totalTokensCount|{}totalTokensCount[0]
+        final fun <get-totalTokensCount>(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.totalTokensCount.<get-totalTokensCount>|<get-totalTokensCount>(){}[0]
+
+    final fun component1(): kotlin.time/Instant // ai.koog.prompt.message/ResponseMetaInfo.component1|component1(){}[0]
+    final fun component2(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.component2|component2(){}[0]
+    final fun component3(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.component3|component3(){}[0]
+    final fun component4(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.component4|component4(){}[0]
+    final fun component5(): kotlin/String? // ai.koog.prompt.message/ResponseMetaInfo.component5|component5(){}[0]
+    final fun component6(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.message/ResponseMetaInfo.component6|component6(){}[0]
+    final fun copy(kotlin.time/Instant = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ...): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.message/ResponseMetaInfo.copy|copy(kotlin.time.Instant;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.String?;kotlinx.serialization.json.JsonObject?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/ResponseMetaInfo.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.message/ResponseMetaInfo.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.message/ResponseMetaInfo.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/ResponseMetaInfo> { // ai.koog.prompt.message/ResponseMetaInfo.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.message/ResponseMetaInfo.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/ResponseMetaInfo.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/ResponseMetaInfo.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.message/ResponseMetaInfo.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/ResponseMetaInfo) // ai.koog.prompt.message/ResponseMetaInfo.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.ResponseMetaInfo){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.message/ResponseMetaInfo.Companion|null[0]
+        final val Empty // ai.koog.prompt.message/ResponseMetaInfo.Companion.Empty|{}Empty[0]
+            final fun <get-Empty>(): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.message/ResponseMetaInfo.Companion.Empty.<get-Empty>|<get-Empty>(){}[0]
+
+        final fun create(ai.koog.utils.time/KoogClock, kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ...): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.message/ResponseMetaInfo.Companion.create|create(ai.koog.utils.time.KoogClock;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.String?;kotlinx.serialization.json.JsonObject?){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/ResponseMetaInfo> // ai.koog.prompt.message/ResponseMetaInfo.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.streaming/IncompleteStreamException : kotlin/Exception { // ai.koog.prompt.streaming/IncompleteStreamException|null[0]
+    constructor <init>(kotlin/String = ..., kotlin/Throwable? = ...) // ai.koog.prompt.streaming/IncompleteStreamException.<init>|<init>(kotlin.String;kotlin.Throwable?){}[0]
+}
+
+final class ai.koog.prompt.streaming/StreamFrameFlowBuilder { // ai.koog.prompt.streaming/StreamFrameFlowBuilder|null[0]
+    constructor <init>(kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.<init>|<init>(kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>){}[0]
+
+    final suspend fun emitEnd(kotlin/String? = ..., ai.koog.prompt.message/ResponseMetaInfo? = ...) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.emitEnd|emitEnd(kotlin.String?;ai.koog.prompt.message.ResponseMetaInfo?){}[0]
+    final suspend fun emitReasoningDelta(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.emitReasoningDelta|emitReasoningDelta(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
+    final suspend fun emitTextDelta(kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.emitTextDelta|emitTextDelta(kotlin.String;kotlin.Int?){}[0]
+    final suspend fun emitToolCallDelta(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.emitToolCallDelta|emitToolCallDelta(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
+    final suspend fun tryEmitPendingReasoning() // ai.koog.prompt.streaming/StreamFrameFlowBuilder.tryEmitPendingReasoning|tryEmitPendingReasoning(){}[0]
+    final suspend fun tryEmitPendingText() // ai.koog.prompt.streaming/StreamFrameFlowBuilder.tryEmitPendingText|tryEmitPendingText(){}[0]
+    final suspend fun tryEmitPendingToolCall() // ai.koog.prompt.streaming/StreamFrameFlowBuilder.tryEmitPendingToolCall|tryEmitPendingToolCall(){}[0]
+}
+
+final class ai.koog.prompt/Prompt { // ai.koog.prompt/Prompt|null[0]
+    constructor <init>(kotlin.collections/List<ai.koog.prompt.message/Message>, kotlin/String, ai.koog.prompt.params/LLMParams = ...) // ai.koog.prompt/Prompt.<init>|<init>(kotlin.collections.List<ai.koog.prompt.message.Message>;kotlin.String;ai.koog.prompt.params.LLMParams){}[0]
+
+    final val id // ai.koog.prompt/Prompt.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.prompt/Prompt.id.<get-id>|<get-id>(){}[0]
+    final val latestTokenUsage // ai.koog.prompt/Prompt.latestTokenUsage|{}latestTokenUsage[0]
+        final fun <get-latestTokenUsage>(): kotlin/Int // ai.koog.prompt/Prompt.latestTokenUsage.<get-latestTokenUsage>|<get-latestTokenUsage>(){}[0]
+    final val messages // ai.koog.prompt/Prompt.messages|{}messages[0]
+        final fun <get-messages>(): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.prompt/Prompt.messages.<get-messages>|<get-messages>(){}[0]
+    final val params // ai.koog.prompt/Prompt.params|{}params[0]
+        final fun <get-params>(): ai.koog.prompt.params/LLMParams // ai.koog.prompt/Prompt.params.<get-params>|<get-params>(){}[0]
+    final val totalTimeSpent // ai.koog.prompt/Prompt.totalTimeSpent|{}totalTimeSpent[0]
+        final fun <get-totalTimeSpent>(): kotlin.time/Duration // ai.koog.prompt/Prompt.totalTimeSpent.<get-totalTimeSpent>|<get-totalTimeSpent>(){}[0]
+
+    final fun component1(): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.prompt/Prompt.component1|component1(){}[0]
+    final fun component2(): kotlin/String // ai.koog.prompt/Prompt.component2|component2(){}[0]
+    final fun component3(): ai.koog.prompt.params/LLMParams // ai.koog.prompt/Prompt.component3|component3(){}[0]
+    final fun copy(kotlin.collections/List<ai.koog.prompt.message/Message> = ..., kotlin/String = ..., ai.koog.prompt.params/LLMParams = ...): ai.koog.prompt/Prompt // ai.koog.prompt/Prompt.copy|copy(kotlin.collections.List<ai.koog.prompt.message.Message>;kotlin.String;ai.koog.prompt.params.LLMParams){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt/Prompt.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt/Prompt.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt/Prompt.toString|toString(){}[0]
+    final fun withMessages(kotlin/Function1<kotlin.collections/List<ai.koog.prompt.message/Message>, kotlin.collections/List<ai.koog.prompt.message/Message>>): ai.koog.prompt/Prompt // ai.koog.prompt/Prompt.withMessages|withMessages(kotlin.Function1<kotlin.collections.List<ai.koog.prompt.message.Message>,kotlin.collections.List<ai.koog.prompt.message.Message>>){}[0]
+    final fun withParams(ai.koog.prompt.params/LLMParams): ai.koog.prompt/Prompt // ai.koog.prompt/Prompt.withParams|withParams(ai.koog.prompt.params.LLMParams){}[0]
+    final fun withUpdatedParams(kotlin/Function1<ai.koog.prompt/Prompt.LLMParamsUpdateContext, kotlin/Unit>): ai.koog.prompt/Prompt // ai.koog.prompt/Prompt.withUpdatedParams|withUpdatedParams(kotlin.Function1<ai.koog.prompt.Prompt.LLMParamsUpdateContext,kotlin.Unit>){}[0]
+
+    final class LLMParamsUpdateContext { // ai.koog.prompt/Prompt.LLMParamsUpdateContext|null[0]
+        final var schema // ai.koog.prompt/Prompt.LLMParamsUpdateContext.schema|{}schema[0]
+            final fun <get-schema>(): ai.koog.prompt.params/LLMParams.Schema? // ai.koog.prompt/Prompt.LLMParamsUpdateContext.schema.<get-schema>|<get-schema>(){}[0]
+            final fun <set-schema>(ai.koog.prompt.params/LLMParams.Schema?) // ai.koog.prompt/Prompt.LLMParamsUpdateContext.schema.<set-schema>|<set-schema>(ai.koog.prompt.params.LLMParams.Schema?){}[0]
+        final var speculation // ai.koog.prompt/Prompt.LLMParamsUpdateContext.speculation|{}speculation[0]
+            final fun <get-speculation>(): kotlin/String? // ai.koog.prompt/Prompt.LLMParamsUpdateContext.speculation.<get-speculation>|<get-speculation>(){}[0]
+            final fun <set-speculation>(kotlin/String?) // ai.koog.prompt/Prompt.LLMParamsUpdateContext.speculation.<set-speculation>|<set-speculation>(kotlin.String?){}[0]
+        final var temperature // ai.koog.prompt/Prompt.LLMParamsUpdateContext.temperature|{}temperature[0]
+            final fun <get-temperature>(): kotlin/Double? // ai.koog.prompt/Prompt.LLMParamsUpdateContext.temperature.<get-temperature>|<get-temperature>(){}[0]
+            final fun <set-temperature>(kotlin/Double?) // ai.koog.prompt/Prompt.LLMParamsUpdateContext.temperature.<set-temperature>|<set-temperature>(kotlin.Double?){}[0]
+        final var toolChoice // ai.koog.prompt/Prompt.LLMParamsUpdateContext.toolChoice|{}toolChoice[0]
+            final fun <get-toolChoice>(): ai.koog.prompt.params/LLMParams.ToolChoice? // ai.koog.prompt/Prompt.LLMParamsUpdateContext.toolChoice.<get-toolChoice>|<get-toolChoice>(){}[0]
+            final fun <set-toolChoice>(ai.koog.prompt.params/LLMParams.ToolChoice?) // ai.koog.prompt/Prompt.LLMParamsUpdateContext.toolChoice.<set-toolChoice>|<set-toolChoice>(ai.koog.prompt.params.LLMParams.ToolChoice?){}[0]
+        final var user // ai.koog.prompt/Prompt.LLMParamsUpdateContext.user|{}user[0]
+            final fun <get-user>(): kotlin/String? // ai.koog.prompt/Prompt.LLMParamsUpdateContext.user.<get-user>|<get-user>(){}[0]
+            final fun <set-user>(kotlin/String?) // ai.koog.prompt/Prompt.LLMParamsUpdateContext.user.<set-user>|<set-user>(kotlin.String?){}[0]
+
+        final fun toParams(): ai.koog.prompt.params/LLMParams // ai.koog.prompt/Prompt.LLMParamsUpdateContext.toParams|toParams(){}[0]
+    }
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt/Prompt> { // ai.koog.prompt/Prompt.$serializer|null[0]
+        final val descriptor // ai.koog.prompt/Prompt.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt/Prompt.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt/Prompt.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt/Prompt // ai.koog.prompt/Prompt.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt/Prompt) // ai.koog.prompt/Prompt.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.Prompt){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt/Prompt.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt/Prompt.Companion.$childSerializers|{}$childSerializers[0]
+        final val Empty // ai.koog.prompt/Prompt.Companion.Empty|{}Empty[0]
+            final fun <get-Empty>(): ai.koog.prompt/Prompt // ai.koog.prompt/Prompt.Companion.Empty.<get-Empty>|<get-Empty>(){}[0]
+
+        final fun build(ai.koog.prompt/Prompt, ai.koog.utils.time/KoogClock = ..., kotlin/Function1<ai.koog.prompt.dsl/PromptBuilder, kotlin/Unit>): ai.koog.prompt/Prompt // ai.koog.prompt/Prompt.Companion.build|build(ai.koog.prompt.Prompt;ai.koog.utils.time.KoogClock;kotlin.Function1<ai.koog.prompt.dsl.PromptBuilder,kotlin.Unit>){}[0]
+        final fun build(kotlin/String, ai.koog.prompt.params/LLMParams = ..., ai.koog.utils.time/KoogClock = ..., kotlin/Function1<ai.koog.prompt.dsl/PromptBuilder, kotlin/Unit>): ai.koog.prompt/Prompt // ai.koog.prompt/Prompt.Companion.build|build(kotlin.String;ai.koog.prompt.params.LLMParams;ai.koog.utils.time.KoogClock;kotlin.Function1<ai.koog.prompt.dsl.PromptBuilder,kotlin.Unit>){}[0]
+        final fun builder(kotlin/String, ai.koog.utils.time/KoogClock = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt/Prompt.Companion.builder|builder(kotlin.String;ai.koog.utils.time.KoogClock){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt/Prompt> // ai.koog.prompt/Prompt.Companion.serializer|serializer(){}[0]
+    }
+}
+
+open class ai.koog.prompt.dsl/ContentMessagePartsBuilder : ai.koog.prompt.dsl/ContentPartsBuilderBase<kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart>> { // ai.koog.prompt.dsl/ContentMessagePartsBuilder|null[0]
+    constructor <init>() // ai.koog.prompt.dsl/ContentMessagePartsBuilder.<init>|<init>(){}[0]
+
+    open fun build(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart> // ai.koog.prompt.dsl/ContentMessagePartsBuilder.build|build(){}[0]
+}
+
+open class ai.koog.prompt.dsl/ModerationCategory { // ai.koog.prompt.dsl/ModerationCategory|null[0]
+    constructor <init>(kotlin/Int, kotlin/String?, kotlinx.serialization.internal/SerializationConstructorMarker?) // ai.koog.prompt.dsl/ModerationCategory.<init>|<init>(kotlin.Int;kotlin.String?;kotlinx.serialization.internal.SerializationConstructorMarker?){}[0]
+    constructor <init>(kotlin/String) // ai.koog.prompt.dsl/ModerationCategory.<init>|<init>(kotlin.String){}[0]
+
+    final val name // ai.koog.prompt.dsl/ModerationCategory.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.koog.prompt.dsl/ModerationCategory.name.<get-name>|<get-name>(){}[0]
+
+    open fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.dsl/ModerationCategory.equals|equals(kotlin.Any?){}[0]
+    open fun hashCode(): kotlin/Int // ai.koog.prompt.dsl/ModerationCategory.hashCode|hashCode(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.dsl/ModerationCategory> { // ai.koog.prompt.dsl/ModerationCategory.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.dsl/ModerationCategory.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.dsl/ModerationCategory.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.dsl/ModerationCategory.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.dsl/ModerationCategory) // ai.koog.prompt.dsl/ModerationCategory.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.dsl.ModerationCategory){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.dsl/ModerationCategory.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.dsl/ModerationCategory> // ai.koog.prompt.dsl/ModerationCategory.Companion.serializer|serializer(){}[0]
+    }
+
+    final object Defamation : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.Defamation|null[0]
+
+    final object ElectionsMisinformation : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.ElectionsMisinformation|null[0]
+
+    final object Harassment : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.Harassment|null[0]
+
+    final object HarassmentThreatening : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.HarassmentThreatening|null[0]
+
+    final object Hate : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.Hate|null[0]
+
+    final object HateThreatening : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.HateThreatening|null[0]
+
+    final object Illicit : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.Illicit|null[0]
+
+    final object IllicitViolent : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.IllicitViolent|null[0]
+
+    final object IntellectualProperty : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.IntellectualProperty|null[0]
+
+    final object Misconduct : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.Misconduct|null[0]
+
+    final object Privacy : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.Privacy|null[0]
+
+    final object PromptAttack : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.PromptAttack|null[0]
+
+    final object SelfHarm : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.SelfHarm|null[0]
+
+    final object SelfHarmInstructions : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.SelfHarmInstructions|null[0]
+
+    final object SelfHarmIntent : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.SelfHarmIntent|null[0]
+
+    final object Sexual : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.Sexual|null[0]
+
+    final object SexualMinors : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.SexualMinors|null[0]
+
+    final object SpecializedAdvice : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.SpecializedAdvice|null[0]
+
+    final object Violence : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.Violence|null[0]
+
+    final object ViolenceGraphic : ai.koog.prompt.dsl/ModerationCategory // ai.koog.prompt.dsl/ModerationCategory.ViolenceGraphic|null[0]
+}
+
+open class ai.koog.prompt.params/LLMParams { // ai.koog.prompt.params/LLMParams|null[0]
+    constructor <init>(kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., ai.koog.prompt.params/LLMParams.Schema? = ..., ai.koog.prompt.params/LLMParams.ToolChoice? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? = ...) // ai.koog.prompt.params/LLMParams.<init>|<init>(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?){}[0]
+    constructor <init>(kotlin/Int, kotlin/Double?, kotlin/Int?, kotlin/Int?, kotlin/String?, ai.koog.prompt.params/LLMParams.Schema?, ai.koog.prompt.params/LLMParams.ToolChoice?, kotlin/String?, kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>?, kotlinx.serialization.internal/SerializationConstructorMarker?) // ai.koog.prompt.params/LLMParams.<init>|<init>(kotlin.Int;kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?;kotlinx.serialization.internal.SerializationConstructorMarker?){}[0]
+
+    final val additionalProperties // ai.koog.prompt.params/LLMParams.additionalProperties|{}additionalProperties[0]
+        final fun <get-additionalProperties>(): kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? // ai.koog.prompt.params/LLMParams.additionalProperties.<get-additionalProperties>|<get-additionalProperties>(){}[0]
+    final val maxTokens // ai.koog.prompt.params/LLMParams.maxTokens|{}maxTokens[0]
+        final fun <get-maxTokens>(): kotlin/Int? // ai.koog.prompt.params/LLMParams.maxTokens.<get-maxTokens>|<get-maxTokens>(){}[0]
+    final val numberOfChoices // ai.koog.prompt.params/LLMParams.numberOfChoices|{}numberOfChoices[0]
+        final fun <get-numberOfChoices>(): kotlin/Int? // ai.koog.prompt.params/LLMParams.numberOfChoices.<get-numberOfChoices>|<get-numberOfChoices>(){}[0]
+    final val schema // ai.koog.prompt.params/LLMParams.schema|{}schema[0]
+        final fun <get-schema>(): ai.koog.prompt.params/LLMParams.Schema? // ai.koog.prompt.params/LLMParams.schema.<get-schema>|<get-schema>(){}[0]
+    final val speculation // ai.koog.prompt.params/LLMParams.speculation|{}speculation[0]
+        final fun <get-speculation>(): kotlin/String? // ai.koog.prompt.params/LLMParams.speculation.<get-speculation>|<get-speculation>(){}[0]
+    final val temperature // ai.koog.prompt.params/LLMParams.temperature|{}temperature[0]
+        final fun <get-temperature>(): kotlin/Double? // ai.koog.prompt.params/LLMParams.temperature.<get-temperature>|<get-temperature>(){}[0]
+    final val toolChoice // ai.koog.prompt.params/LLMParams.toolChoice|{}toolChoice[0]
+        final fun <get-toolChoice>(): ai.koog.prompt.params/LLMParams.ToolChoice? // ai.koog.prompt.params/LLMParams.toolChoice.<get-toolChoice>|<get-toolChoice>(){}[0]
+    final val user // ai.koog.prompt.params/LLMParams.user|{}user[0]
+        final fun <get-user>(): kotlin/String? // ai.koog.prompt.params/LLMParams.user.<get-user>|<get-user>(){}[0]
+
+    final fun component1(): kotlin/Double? // ai.koog.prompt.params/LLMParams.component1|component1(){}[0]
+    final fun component10(): kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? // ai.koog.prompt.params/LLMParams.component10|component10(){}[0]
+    final fun component2(): kotlin/Int? // ai.koog.prompt.params/LLMParams.component2|component2(){}[0]
+    final fun component3(): kotlin/Int? // ai.koog.prompt.params/LLMParams.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // ai.koog.prompt.params/LLMParams.component4|component4(){}[0]
+    final fun component5(): ai.koog.prompt.params/LLMParams.Schema? // ai.koog.prompt.params/LLMParams.component5|component5(){}[0]
+    final fun component6(): ai.koog.prompt.params/LLMParams.ToolChoice? // ai.koog.prompt.params/LLMParams.component6|component6(){}[0]
+    final fun component7(): kotlin/String? // ai.koog.prompt.params/LLMParams.component7|component7(){}[0]
+    final fun default(ai.koog.prompt.params/LLMParams): ai.koog.prompt.params/LLMParams // ai.koog.prompt.params/LLMParams.default|default(ai.koog.prompt.params.LLMParams){}[0]
+    open fun copy(kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., ai.koog.prompt.params/LLMParams.Schema? = ..., ai.koog.prompt.params/LLMParams.ToolChoice? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? = ...): ai.koog.prompt.params/LLMParams // ai.koog.prompt.params/LLMParams.copy|copy(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?){}[0]
+    open fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.params/LLMParams.equals|equals(kotlin.Any?){}[0]
+    open fun hashCode(): kotlin/Int // ai.koog.prompt.params/LLMParams.hashCode|hashCode(){}[0]
+    open fun toString(): kotlin/String // ai.koog.prompt.params/LLMParams.toString|toString(){}[0]
+
+    sealed interface Schema { // ai.koog.prompt.params/LLMParams.Schema|null[0]
+        abstract val capability // ai.koog.prompt.params/LLMParams.Schema.capability|{}capability[0]
+            abstract fun <get-capability>(): ai.koog.prompt.llm/LLMCapability.Schema // ai.koog.prompt.params/LLMParams.Schema.capability.<get-capability>|<get-capability>(){}[0]
+        abstract val name // ai.koog.prompt.params/LLMParams.Schema.name|{}name[0]
+            abstract fun <get-name>(): kotlin/String // ai.koog.prompt.params/LLMParams.Schema.name.<get-name>|<get-name>(){}[0]
+
+        sealed interface JSON : ai.koog.prompt.params/LLMParams.Schema { // ai.koog.prompt.params/LLMParams.Schema.JSON|null[0]
+            abstract val schema // ai.koog.prompt.params/LLMParams.Schema.JSON.schema|{}schema[0]
+                abstract fun <get-schema>(): kotlinx.serialization.json/JsonObject // ai.koog.prompt.params/LLMParams.Schema.JSON.schema.<get-schema>|<get-schema>(){}[0]
+
+            final class Basic : ai.koog.prompt.params/LLMParams.Schema.JSON { // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic|null[0]
+                constructor <init>(kotlin/String, kotlinx.serialization.json/JsonObject) // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.<init>|<init>(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+
+                final val capability // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.capability|{}capability[0]
+                    final fun <get-capability>(): ai.koog.prompt.llm/LLMCapability.Schema // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.capability.<get-capability>|<get-capability>(){}[0]
+                final val name // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.name|{}name[0]
+                    final fun <get-name>(): kotlin/String // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.name.<get-name>|<get-name>(){}[0]
+                final val schema // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.schema|{}schema[0]
+                    final fun <get-schema>(): kotlinx.serialization.json/JsonObject // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.schema.<get-schema>|<get-schema>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.component1|component1(){}[0]
+                final fun component2(): kotlinx.serialization.json/JsonObject // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.component2|component2(){}[0]
+                final fun copy(kotlin/String = ..., kotlinx.serialization.json/JsonObject = ...): ai.koog.prompt.params/LLMParams.Schema.JSON.Basic // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.copy|copy(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.toString|toString(){}[0]
+
+                final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.params/LLMParams.Schema.JSON.Basic> { // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.$serializer|null[0]
+                    final val descriptor // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.$serializer.descriptor|{}descriptor[0]
+                        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                    final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.$serializer.childSerializers|childSerializers(){}[0]
+                    final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.params/LLMParams.Schema.JSON.Basic // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                    final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.params/LLMParams.Schema.JSON.Basic) // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.params.LLMParams.Schema.JSON.Basic){}[0]
+                }
+
+                final object Companion { // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.Companion|null[0]
+                    final val $childSerializers // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.Companion.$childSerializers|{}$childSerializers[0]
+
+                    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.params/LLMParams.Schema.JSON.Basic> // ai.koog.prompt.params/LLMParams.Schema.JSON.Basic.Companion.serializer|serializer(){}[0]
+                }
+            }
+
+            final class Standard : ai.koog.prompt.params/LLMParams.Schema.JSON { // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard|null[0]
+                constructor <init>(kotlin/String, kotlinx.serialization.json/JsonObject) // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.<init>|<init>(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+
+                final val capability // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.capability|{}capability[0]
+                    final fun <get-capability>(): ai.koog.prompt.llm/LLMCapability.Schema // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.capability.<get-capability>|<get-capability>(){}[0]
+                final val name // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.name|{}name[0]
+                    final fun <get-name>(): kotlin/String // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.name.<get-name>|<get-name>(){}[0]
+                final val schema // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.schema|{}schema[0]
+                    final fun <get-schema>(): kotlinx.serialization.json/JsonObject // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.schema.<get-schema>|<get-schema>(){}[0]
+
+                final fun component1(): kotlin/String // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.component1|component1(){}[0]
+                final fun component2(): kotlinx.serialization.json/JsonObject // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.component2|component2(){}[0]
+                final fun copy(kotlin/String = ..., kotlinx.serialization.json/JsonObject = ...): ai.koog.prompt.params/LLMParams.Schema.JSON.Standard // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.copy|copy(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.toString|toString(){}[0]
+
+                final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.params/LLMParams.Schema.JSON.Standard> { // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.$serializer|null[0]
+                    final val descriptor // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.$serializer.descriptor|{}descriptor[0]
+                        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                    final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.$serializer.childSerializers|childSerializers(){}[0]
+                    final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.params/LLMParams.Schema.JSON.Standard // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                    final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.params/LLMParams.Schema.JSON.Standard) // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.params.LLMParams.Schema.JSON.Standard){}[0]
+                }
+
+                final object Companion { // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.Companion|null[0]
+                    final val $childSerializers // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.Companion.$childSerializers|{}$childSerializers[0]
+
+                    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.params/LLMParams.Schema.JSON.Standard> // ai.koog.prompt.params/LLMParams.Schema.JSON.Standard.Companion.serializer|serializer(){}[0]
+                }
+            }
+
+            final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.params/LLMParams.Schema.JSON.Companion|null[0]
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.params/LLMParams.Schema.JSON> // ai.koog.prompt.params/LLMParams.Schema.JSON.Companion.serializer|serializer(){}[0]
+                final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.params/LLMParams.Schema.JSON.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+            }
+        }
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.params/LLMParams.Schema.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.params/LLMParams.Schema> // ai.koog.prompt.params/LLMParams.Schema.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.params/LLMParams.Schema.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    sealed class ToolChoice { // ai.koog.prompt.params/LLMParams.ToolChoice|null[0]
+        final class Named : ai.koog.prompt.params/LLMParams.ToolChoice { // ai.koog.prompt.params/LLMParams.ToolChoice.Named|null[0]
+            constructor <init>(kotlin/String) // ai.koog.prompt.params/LLMParams.ToolChoice.Named.<init>|<init>(kotlin.String){}[0]
+
+            final val name // ai.koog.prompt.params/LLMParams.ToolChoice.Named.name|{}name[0]
+                final fun <get-name>(): kotlin/String // ai.koog.prompt.params/LLMParams.ToolChoice.Named.name.<get-name>|<get-name>(){}[0]
+
+            final fun component1(): kotlin/String // ai.koog.prompt.params/LLMParams.ToolChoice.Named.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.koog.prompt.params/LLMParams.ToolChoice.Named // ai.koog.prompt.params/LLMParams.ToolChoice.Named.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.params/LLMParams.ToolChoice.Named.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.prompt.params/LLMParams.ToolChoice.Named.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.koog.prompt.params/LLMParams.ToolChoice.Named.toString|toString(){}[0]
+
+            final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.params/LLMParams.ToolChoice.Named> { // ai.koog.prompt.params/LLMParams.ToolChoice.Named.$serializer|null[0]
+                final val descriptor // ai.koog.prompt.params/LLMParams.ToolChoice.Named.$serializer.descriptor|{}descriptor[0]
+                    final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.params/LLMParams.ToolChoice.Named.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.params/LLMParams.ToolChoice.Named.$serializer.childSerializers|childSerializers(){}[0]
+                final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.params/LLMParams.ToolChoice.Named // ai.koog.prompt.params/LLMParams.ToolChoice.Named.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.params/LLMParams.ToolChoice.Named) // ai.koog.prompt.params/LLMParams.ToolChoice.Named.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.params.LLMParams.ToolChoice.Named){}[0]
+            }
+
+            final object Companion { // ai.koog.prompt.params/LLMParams.ToolChoice.Named.Companion|null[0]
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.params/LLMParams.ToolChoice.Named> // ai.koog.prompt.params/LLMParams.ToolChoice.Named.Companion.serializer|serializer(){}[0]
+            }
+        }
+
+        final object Auto : ai.koog.prompt.params/LLMParams.ToolChoice, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.params/LLMParams.ToolChoice.Auto|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.params/LLMParams.ToolChoice.Auto> // ai.koog.prompt.params/LLMParams.ToolChoice.Auto.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.params/LLMParams.ToolChoice.Auto.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.params/LLMParams.ToolChoice.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.params/LLMParams.ToolChoice> // ai.koog.prompt.params/LLMParams.ToolChoice.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.params/LLMParams.ToolChoice.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+
+        final object None : ai.koog.prompt.params/LLMParams.ToolChoice, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.params/LLMParams.ToolChoice.None|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.params/LLMParams.ToolChoice.None> // ai.koog.prompt.params/LLMParams.ToolChoice.None.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.params/LLMParams.ToolChoice.None.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+
+        final object Required : ai.koog.prompt.params/LLMParams.ToolChoice, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.params/LLMParams.ToolChoice.Required|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.params/LLMParams.ToolChoice.Required> // ai.koog.prompt.params/LLMParams.ToolChoice.Required.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.params/LLMParams.ToolChoice.Required.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.params/LLMParams> { // ai.koog.prompt.params/LLMParams.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.params/LLMParams.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.params/LLMParams.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.params/LLMParams.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.params/LLMParams // ai.koog.prompt.params/LLMParams.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.params/LLMParams) // ai.koog.prompt.params/LLMParams.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.params.LLMParams){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.params/LLMParams.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.params/LLMParams.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.params/LLMParams> // ai.koog.prompt.params/LLMParams.Companion.serializer|serializer(){}[0]
+    }
+}
+
+open class ai.koog.prompt.text/TextContentBuilder : ai.koog.prompt.text/TextContentBuilderBase<kotlin/String> { // ai.koog.prompt.text/TextContentBuilder|null[0]
+    constructor <init>() // ai.koog.prompt.text/TextContentBuilder.<init>|<init>(){}[0]
+
+    open fun build(): kotlin/String // ai.koog.prompt.text/TextContentBuilder.build|build(){}[0]
+}
+
+sealed class ai.koog.prompt.streaming/StreamFrameFlowBuilderError : kotlin/Throwable { // ai.koog.prompt.streaming/StreamFrameFlowBuilderError|null[0]
+    final class NoPartialToolCallToComplete : ai.koog.prompt.streaming/StreamFrameFlowBuilderError { // ai.koog.prompt.streaming/StreamFrameFlowBuilderError.NoPartialToolCallToComplete|null[0]
+        constructor <init>() // ai.koog.prompt.streaming/StreamFrameFlowBuilderError.NoPartialToolCallToComplete.<init>|<init>(){}[0]
+    }
+
+    final class UnexpectedPartialToolCallIndex : ai.koog.prompt.streaming/StreamFrameFlowBuilderError { // ai.koog.prompt.streaming/StreamFrameFlowBuilderError.UnexpectedPartialToolCallIndex|null[0]
+        constructor <init>(kotlin/Int?, kotlin/Int?) // ai.koog.prompt.streaming/StreamFrameFlowBuilderError.UnexpectedPartialToolCallIndex.<init>|<init>(kotlin.Int?;kotlin.Int?){}[0]
+    }
+}
+
+final fun (ai.koog.prompt.message/Message.Assistant).ai.koog.prompt.streaming/toStreamFrames(): kotlin.collections/List<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.streaming/toStreamFrames|toStreamFrames@ai.koog.prompt.message.Message.Assistant(){}[0]
+final fun (ai.koog.prompt.text/TextContentBuilderBase<*>).ai.koog.prompt.text/numbered(kotlin/Int = ..., kotlin/Function1<ai.koog.prompt.text/TextContentBuilderBase<*>, kotlin/Unit>): ai.koog.prompt.text/TextContentBuilderBase<*> // ai.koog.prompt.text/numbered|numbered@ai.koog.prompt.text.TextContentBuilderBase<*>(kotlin.Int;kotlin.Function1<ai.koog.prompt.text.TextContentBuilderBase<*>,kotlin.Unit>){}[0]
+final fun (kotlin.collections/Iterable<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/toMessageResponse(): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.streaming/toMessageResponse|toMessageResponse@kotlin.collections.Iterable<ai.koog.prompt.streaming.StreamFrame>(){}[0]
+final fun (kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/filterTextOnly(): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.koog.prompt.streaming/filterTextOnly|filterTextOnly@kotlinx.coroutines.flow.Flow<ai.koog.prompt.streaming.StreamFrame>(){}[0]
+final fun (kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/requireEndFrame(): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.streaming/requireEndFrame|requireEndFrame@kotlinx.coroutines.flow.Flow<ai.koog.prompt.streaming.StreamFrame>(){}[0]
+final fun ai.koog.prompt.dsl/emptyPrompt(): ai.koog.prompt/Prompt // ai.koog.prompt.dsl/emptyPrompt|emptyPrompt(){}[0]
+final fun ai.koog.prompt.dsl/prompt(ai.koog.prompt/Prompt, ai.koog.utils.time/KoogClock = ..., kotlin/Function1<ai.koog.prompt.dsl/PromptBuilder, kotlin/Unit>): ai.koog.prompt/Prompt // ai.koog.prompt.dsl/prompt|prompt(ai.koog.prompt.Prompt;ai.koog.utils.time.KoogClock;kotlin.Function1<ai.koog.prompt.dsl.PromptBuilder,kotlin.Unit>){}[0]
+final fun ai.koog.prompt.dsl/prompt(kotlin/String, ai.koog.prompt.params/LLMParams = ..., ai.koog.utils.time/KoogClock = ..., kotlin/Function1<ai.koog.prompt.dsl/PromptBuilder, kotlin/Unit>): ai.koog.prompt/Prompt // ai.koog.prompt.dsl/prompt|prompt(kotlin.String;ai.koog.prompt.params.LLMParams;ai.koog.utils.time.KoogClock;kotlin.Function1<ai.koog.prompt.dsl.PromptBuilder,kotlin.Unit>){}[0]
+final fun ai.koog.prompt.params/additionalPropertiesOf(kotlin/Array<out kotlin/Pair<kotlin/String, kotlin/Any>>...): kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement> // ai.koog.prompt.params/additionalPropertiesOf|additionalPropertiesOf(kotlin.Array<out|kotlin.Pair<kotlin.String,kotlin.Any>>...){}[0]
+final fun ai.koog.prompt.streaming/buildStreamFrameFlow(kotlin.coroutines/SuspendFunction1<ai.koog.prompt.streaming/StreamFrameFlowBuilder, kotlin/Unit>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.streaming/buildStreamFrameFlow|buildStreamFrameFlow(kotlin.coroutines.SuspendFunction1<ai.koog.prompt.streaming.StreamFrameFlowBuilder,kotlin.Unit>){}[0]
+final fun ai.koog.prompt.streaming/streamFrameFlow(kotlin.coroutines/SuspendFunction1<kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>, kotlin/Unit>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.streaming/streamFrameFlow|streamFrameFlow(kotlin.coroutines.SuspendFunction1<kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>,kotlin.Unit>){}[0]
+final fun ai.koog.prompt.streaming/streamFrameFlowOf(kotlin/Array<out kotlin/String>...): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame.TextDelta> // ai.koog.prompt.streaming/streamFrameFlowOf|streamFrameFlowOf(kotlin.Array<out|kotlin.String>...){}[0]
+final fun ai.koog.prompt.text/text(kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit>): kotlin/String // ai.koog.prompt.text/text|text(kotlin.Function1<ai.koog.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
+final inline fun (ai.koog.prompt.text/TextContentBuilderBase<*>).ai.koog.prompt.text/text(kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit>) // ai.koog.prompt.text/text|text@ai.koog.prompt.text.TextContentBuilderBase<*>(kotlin.Function1<ai.koog.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
+final inline fun <#A: reified ai.koog.prompt.message/CacheControl> (ai.koog.prompt.message/CacheControl).ai.koog.prompt.message/require(): #A // ai.koog.prompt.message/require|require@ai.koog.prompt.message.CacheControl(){0§<ai.koog.prompt.message.CacheControl>}[0]
+final suspend fun (kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/collectText(): kotlin/String // ai.koog.prompt.streaming/collectText|collectText@kotlinx.coroutines.flow.Flow<ai.koog.prompt.streaming.StreamFrame>(){}[0]
+final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitEnd(kotlin/String? = ..., ai.koog.prompt.message/ResponseMetaInfo? = ...) // ai.koog.prompt.streaming/emitEnd|emitEnd@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String?;ai.koog.prompt.message.ResponseMetaInfo?){}[0]
+final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitReasoningComplete(kotlin/String? = ..., kotlin.collections/List<kotlin/String>, kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/emitReasoningComplete|emitReasoningComplete@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String?;kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.Int?){}[0]
+final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitReasoningComplete(kotlin/String? = ..., kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/emitReasoningComplete|emitReasoningComplete@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String?;kotlin.String;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
+final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitReasoningDelta(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/emitReasoningDelta|emitReasoningDelta@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
+final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitTextComplete(kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/emitTextComplete|emitTextComplete@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String;kotlin.Int?){}[0]
+final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitTextDelta(kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/emitTextDelta|emitTextDelta@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String;kotlin.Int?){}[0]
+final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitToolCallComplete(kotlin/String?, kotlin/String, kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/emitToolCallComplete|emitToolCallComplete@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String?;kotlin.String;kotlin.String;kotlin.Int?){}[0]
+final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitToolCallDelta(kotlin/String?, kotlin/String?, kotlin/String?, kotlin/Int? = ...) // ai.koog.prompt.streaming/emitToolCallDelta|emitToolCallDelta@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]

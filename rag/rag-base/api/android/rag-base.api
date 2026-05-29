@@ -1,0 +1,704 @@
+public final class ai/koog/rag/base/DocumentWithPayload {
+	public fun <init> (Ljava/lang/Object;Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun component2 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;Ljava/lang/Object;)Lai/koog/rag/base/DocumentWithPayload;
+	public static synthetic fun copy$default (Lai/koog/rag/base/DocumentWithPayload;Ljava/lang/Object;Ljava/lang/Object;ILjava/lang/Object;)Lai/koog/rag/base/DocumentWithPayload;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDocument ()Ljava/lang/Object;
+	public final fun getPayload ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/rag/base/TextDocument {
+	public abstract fun getContent ()Ljava/lang/String;
+	public abstract fun getId ()Ljava/lang/String;
+	public abstract fun getMetadata ()Ljava/util/Map;
+}
+
+public abstract interface class ai/koog/rag/base/files/DocumentProvider {
+	public abstract fun document (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun text (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun textFragment (Ljava/lang/Object;Lai/koog/rag/base/files/DocumentProvider$DocumentRange;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/files/DocumentProvider$DefaultImpls {
+	public static fun textFragment (Lai/koog/rag/base/files/DocumentProvider;Ljava/lang/Object;Lai/koog/rag/base/files/DocumentProvider$DocumentRange;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/files/DocumentProvider$DocumentRange {
+	public static final field Companion Lai/koog/rag/base/files/DocumentProvider$DocumentRange$Companion;
+	public fun <init> (Lai/koog/rag/base/files/DocumentProvider$Position;Lai/koog/rag/base/files/DocumentProvider$Position;)V
+	public final fun component1 ()Lai/koog/rag/base/files/DocumentProvider$Position;
+	public final fun component2 ()Lai/koog/rag/base/files/DocumentProvider$Position;
+	public final fun copy (Lai/koog/rag/base/files/DocumentProvider$Position;Lai/koog/rag/base/files/DocumentProvider$Position;)Lai/koog/rag/base/files/DocumentProvider$DocumentRange;
+	public static synthetic fun copy$default (Lai/koog/rag/base/files/DocumentProvider$DocumentRange;Lai/koog/rag/base/files/DocumentProvider$Position;Lai/koog/rag/base/files/DocumentProvider$Position;ILjava/lang/Object;)Lai/koog/rag/base/files/DocumentProvider$DocumentRange;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnd ()Lai/koog/rag/base/files/DocumentProvider$Position;
+	public final fun getLines ()I
+	public final fun getStart ()Lai/koog/rag/base/files/DocumentProvider$Position;
+	public fun hashCode ()I
+	public final fun isMultiline ()Z
+	public final fun substring (Ljava/lang/CharSequence;)Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/rag/base/files/DocumentProvider$DocumentRange$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/rag/base/files/DocumentProvider$DocumentRange$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/rag/base/files/DocumentProvider$DocumentRange;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/rag/base/files/DocumentProvider$DocumentRange;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/DocumentProvider$DocumentRange$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/rag/base/files/DocumentProvider$Edit {
+	public abstract fun setText (Ljava/lang/Object;Ljava/lang/String;Lai/koog/rag/base/files/DocumentProvider$DocumentRange;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun setText$default (Lai/koog/rag/base/files/DocumentProvider$Edit;Ljava/lang/Object;Ljava/lang/String;Lai/koog/rag/base/files/DocumentProvider$DocumentRange;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/files/DocumentProvider$Edit$DefaultImpls {
+	public static synthetic fun setText$default (Lai/koog/rag/base/files/DocumentProvider$Edit;Ljava/lang/Object;Ljava/lang/String;Lai/koog/rag/base/files/DocumentProvider$DocumentRange;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/files/DocumentProvider$Position : java/lang/Comparable {
+	public static final field Companion Lai/koog/rag/base/files/DocumentProvider$Position$Companion;
+	public fun <init> (II)V
+	public fun compareTo (Lai/koog/rag/base/files/DocumentProvider$Position;)I
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun copy (II)Lai/koog/rag/base/files/DocumentProvider$Position;
+	public static synthetic fun copy$default (Lai/koog/rag/base/files/DocumentProvider$Position;IIILjava/lang/Object;)Lai/koog/rag/base/files/DocumentProvider$Position;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getColumn ()I
+	public final fun getLine ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/rag/base/files/DocumentProvider$Position$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/rag/base/files/DocumentProvider$Position$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/rag/base/files/DocumentProvider$Position;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/rag/base/files/DocumentProvider$Position;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/DocumentProvider$Position$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/DocumentUtilsKt {
+	public static final fun extendRangeByLines (Ljava/lang/CharSequence;Lai/koog/rag/base/files/DocumentProvider$DocumentRange;II)Lai/koog/rag/base/files/DocumentProvider$DocumentRange;
+	public static synthetic fun extendRangeByLines$default (Ljava/lang/CharSequence;Lai/koog/rag/base/files/DocumentProvider$DocumentRange;IIILjava/lang/Object;)Lai/koog/rag/base/files/DocumentProvider$DocumentRange;
+	public static final fun toPosition (ILjava/lang/CharSequence;)Lai/koog/rag/base/files/DocumentProvider$Position;
+}
+
+public final class ai/koog/rag/base/files/ExtensionsKt {
+	public static final fun createDirectory (Lai/koog/rag/base/files/FileSystemProvider$ReadWrite;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun createFile (Lai/koog/rag/base/files/FileSystemProvider$ReadWrite;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun readText (Lai/koog/rag/base/files/FileSystemProvider$ReadOnly;Ljava/lang/Object;Lai/koog/rag/base/files/DocumentProvider;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun readText (Lai/koog/rag/base/files/FileSystemProvider$ReadOnly;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun writeText (Lai/koog/rag/base/files/FileSystemProvider$ReadWrite;Ljava/lang/Object;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/files/FileMetadata {
+	public static final field Companion Lai/koog/rag/base/files/FileMetadata$Companion;
+	public fun <init> (Lai/koog/rag/base/files/FileMetadata$FileType;Z)V
+	public final fun component1 ()Lai/koog/rag/base/files/FileMetadata$FileType;
+	public final fun component2 ()Z
+	public final fun copy (Lai/koog/rag/base/files/FileMetadata$FileType;Z)Lai/koog/rag/base/files/FileMetadata;
+	public static synthetic fun copy$default (Lai/koog/rag/base/files/FileMetadata;Lai/koog/rag/base/files/FileMetadata$FileType;ZILjava/lang/Object;)Lai/koog/rag/base/files/FileMetadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHidden ()Z
+	public final fun getType ()Lai/koog/rag/base/files/FileMetadata$FileType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/rag/base/files/FileMetadata$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/rag/base/files/FileMetadata$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/rag/base/files/FileMetadata;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/rag/base/files/FileMetadata;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/FileMetadata$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/FileMetadata$FileContentType : java/lang/Enum {
+	public static final field Binary Lai/koog/rag/base/files/FileMetadata$FileContentType;
+	public static final field Text Lai/koog/rag/base/files/FileMetadata$FileContentType;
+	public final fun getDisplay ()Ljava/lang/String;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/rag/base/files/FileMetadata$FileContentType;
+	public static fun values ()[Lai/koog/rag/base/files/FileMetadata$FileContentType;
+}
+
+public final class ai/koog/rag/base/files/FileMetadata$FileType : java/lang/Enum {
+	public static final field Directory Lai/koog/rag/base/files/FileMetadata$FileType;
+	public static final field File Lai/koog/rag/base/files/FileMetadata$FileType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/rag/base/files/FileMetadata$FileType;
+	public static fun values ()[Lai/koog/rag/base/files/FileMetadata$FileType;
+}
+
+public final class ai/koog/rag/base/files/FileSystemProvider {
+	public static final field INSTANCE Lai/koog/rag/base/files/FileSystemProvider;
+}
+
+public abstract interface class ai/koog/rag/base/files/FileSystemProvider$ReadOnly {
+	public abstract fun exists (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun extension (Ljava/lang/Object;)Ljava/lang/String;
+	public abstract fun fromAbsolutePathString (Ljava/lang/String;)Ljava/lang/Object;
+	public abstract fun getFileContentType (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun inputStream (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun joinPath (Ljava/lang/Object;[Ljava/lang/String;)Ljava/lang/Object;
+	public abstract fun list (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun metadata (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun name (Ljava/lang/Object;)Ljava/lang/String;
+	public abstract fun parent (Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun readBytes (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun relativize (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/String;
+	public abstract fun size (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun toAbsolutePathString (Ljava/lang/Object;)Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/rag/base/files/FileSystemProvider$ReadWrite : ai/koog/rag/base/files/FileSystemProvider$ReadOnly {
+	public abstract fun copy (Ljava/lang/Object;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun create (Ljava/lang/Object;Lai/koog/rag/base/files/FileMetadata$FileType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun delete (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun move (Ljava/lang/Object;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun outputStream (Ljava/lang/Object;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun outputStream$default (Lai/koog/rag/base/files/FileSystemProvider$ReadWrite;Ljava/lang/Object;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun writeBytes (Ljava/lang/Object;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/files/FileSystemProvider$ReadWrite$DefaultImpls {
+	public static synthetic fun outputStream$default (Lai/koog/rag/base/files/FileSystemProvider$ReadWrite;Ljava/lang/Object;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/files/FilteredFileSystemProviderKt {
+	public static final fun filter (Lai/koog/rag/base/files/FileSystemProvider$ReadOnly;Lai/koog/rag/base/files/filter/TraversalFilter;)Lai/koog/rag/base/files/FileSystemProvider$ReadOnly;
+	public static final fun filter (Lai/koog/rag/base/files/FileSystemProvider$ReadWrite;Lai/koog/rag/base/files/filter/TraversalFilter;)Lai/koog/rag/base/files/FileSystemProvider$ReadWrite;
+}
+
+public final class ai/koog/rag/base/files/filter/GlobPattern {
+	public static final field Companion Lai/koog/rag/base/files/filter/GlobPattern$Companion;
+	public fun <init> (Ljava/lang/String;Z)V
+	public synthetic fun <init> (Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun matches (Ljava/lang/String;)Z
+}
+
+public final class ai/koog/rag/base/files/filter/GlobPattern$Companion {
+	public final fun getANY ()Lai/koog/rag/base/files/filter/GlobPattern;
+}
+
+public final class ai/koog/rag/base/files/filter/PathFilters {
+	public static final field INSTANCE Lai/koog/rag/base/files/filter/PathFilters;
+	public static final fun byRoot (Ljava/lang/Object;)Lai/koog/rag/base/files/filter/TraversalFilter;
+}
+
+public abstract interface class ai/koog/rag/base/files/filter/TraversalFilter {
+	public static final field Companion Lai/koog/rag/base/files/filter/TraversalFilter$Companion;
+	public fun and (Lai/koog/rag/base/files/filter/TraversalFilter;)Lai/koog/rag/base/files/filter/TraversalFilter;
+	public static fun any ()Lai/koog/rag/base/files/filter/TraversalFilter;
+	public fun hide (Ljava/lang/Object;Lai/koog/rag/base/files/FileSystemProvider$ReadOnly;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun not (Lai/koog/rag/base/files/filter/TraversalFilter;)Lai/koog/rag/base/files/filter/TraversalFilter;
+	public fun or (Lai/koog/rag/base/files/filter/TraversalFilter;)Lai/koog/rag/base/files/filter/TraversalFilter;
+	public abstract fun show (Ljava/lang/Object;Lai/koog/rag/base/files/FileSystemProvider$ReadOnly;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/files/filter/TraversalFilter$Companion {
+	public final fun any ()Lai/koog/rag/base/files/filter/TraversalFilter;
+	public final fun not (Lai/koog/rag/base/files/filter/TraversalFilter;)Lai/koog/rag/base/files/filter/TraversalFilter;
+}
+
+public final class ai/koog/rag/base/files/filter/TraversalFilter$DefaultImpls {
+	public static fun and (Lai/koog/rag/base/files/filter/TraversalFilter;Lai/koog/rag/base/files/filter/TraversalFilter;)Lai/koog/rag/base/files/filter/TraversalFilter;
+	public static fun hide (Lai/koog/rag/base/files/filter/TraversalFilter;Ljava/lang/Object;Lai/koog/rag/base/files/FileSystemProvider$ReadOnly;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun or (Lai/koog/rag/base/files/filter/TraversalFilter;Lai/koog/rag/base/files/filter/TraversalFilter;)Lai/koog/rag/base/files/filter/TraversalFilter;
+}
+
+public abstract interface class ai/koog/rag/base/files/model/FileSize {
+	public static final field Companion Lai/koog/rag/base/files/model/FileSize$Companion;
+	public static final field KIB J
+	public static final field MIB J
+	public abstract fun display ()Ljava/lang/String;
+}
+
+public final class ai/koog/rag/base/files/model/FileSize$Bytes : ai/koog/rag/base/files/model/FileSize {
+	public static final field Companion Lai/koog/rag/base/files/model/FileSize$Bytes$Companion;
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lai/koog/rag/base/files/model/FileSize$Bytes;
+	public static synthetic fun copy$default (Lai/koog/rag/base/files/model/FileSize$Bytes;JILjava/lang/Object;)Lai/koog/rag/base/files/model/FileSize$Bytes;
+	public fun display ()Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBytes ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/rag/base/files/model/FileSize$Bytes$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/rag/base/files/model/FileSize$Bytes$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/rag/base/files/model/FileSize$Bytes;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/rag/base/files/model/FileSize$Bytes;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSize$Bytes$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSize$Companion {
+	public static final field KIB J
+	public static final field MIB J
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSize$Lines : ai/koog/rag/base/files/model/FileSize {
+	public static final field Companion Lai/koog/rag/base/files/model/FileSize$Lines$Companion;
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lai/koog/rag/base/files/model/FileSize$Lines;
+	public static synthetic fun copy$default (Lai/koog/rag/base/files/model/FileSize$Lines;IILjava/lang/Object;)Lai/koog/rag/base/files/model/FileSize$Lines;
+	public fun display ()Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLines ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/rag/base/files/model/FileSize$Lines$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/rag/base/files/model/FileSize$Lines$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/rag/base/files/model/FileSize$Lines;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/rag/base/files/model/FileSize$Lines;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSize$Lines$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/rag/base/files/model/FileSystemEntry {
+	public static final field Companion Lai/koog/rag/base/files/model/FileSystemEntry$Companion;
+	public abstract fun getExtension ()Ljava/lang/String;
+	public abstract fun getHidden ()Z
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getPath ()Ljava/lang/String;
+	public abstract fun visit (ILkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$File : ai/koog/rag/base/files/model/FileSystemEntry {
+	public static final field Companion Lai/koog/rag/base/files/model/FileSystemEntry$File$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/util/List;Lai/koog/rag/base/files/FileMetadata$FileContentType;Lai/koog/rag/base/files/model/FileSystemEntry$File$Content;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/util/List;Lai/koog/rag/base/files/FileMetadata$FileContentType;Lai/koog/rag/base/files/model/FileSystemEntry$File$Content;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Z
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Lai/koog/rag/base/files/FileMetadata$FileContentType;
+	public final fun component7 ()Lai/koog/rag/base/files/model/FileSystemEntry$File$Content;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/util/List;Lai/koog/rag/base/files/FileMetadata$FileContentType;Lai/koog/rag/base/files/model/FileSystemEntry$File$Content;)Lai/koog/rag/base/files/model/FileSystemEntry$File;
+	public static synthetic fun copy$default (Lai/koog/rag/base/files/model/FileSystemEntry$File;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/util/List;Lai/koog/rag/base/files/FileMetadata$FileContentType;Lai/koog/rag/base/files/model/FileSystemEntry$File$Content;ILjava/lang/Object;)Lai/koog/rag/base/files/model/FileSystemEntry$File;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Lai/koog/rag/base/files/model/FileSystemEntry$File$Content;
+	public final fun getContentType ()Lai/koog/rag/base/files/FileMetadata$FileContentType;
+	public fun getExtension ()Ljava/lang/String;
+	public fun getHidden ()Z
+	public fun getName ()Ljava/lang/String;
+	public fun getPath ()Ljava/lang/String;
+	public final fun getSize ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public fun visit (ILkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final synthetic class ai/koog/rag/base/files/model/FileSystemEntry$File$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/rag/base/files/model/FileSystemEntry$File$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/rag/base/files/model/FileSystemEntry$File;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/rag/base/files/model/FileSystemEntry$File;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$File$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/rag/base/files/model/FileSystemEntry$File$Content {
+	public static final field Companion Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Companion;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$File$Content$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt : ai/koog/rag/base/files/model/FileSystemEntry$File$Content {
+	public static final field Companion Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Companion;
+	public fun <init> (Ljava/util/List;)V
+	public fun <init> ([Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Snippet;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt;
+	public static synthetic fun copy$default (Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt;Ljava/util/List;ILjava/lang/Object;)Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSnippets ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Snippet {
+	public static final field Companion Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Snippet$Companion;
+	public fun <init> (Ljava/lang/String;Lai/koog/rag/base/files/DocumentProvider$DocumentRange;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/koog/rag/base/files/DocumentProvider$DocumentRange;
+	public final fun copy (Ljava/lang/String;Lai/koog/rag/base/files/DocumentProvider$DocumentRange;)Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Snippet;
+	public static synthetic fun copy$default (Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Snippet;Ljava/lang/String;Lai/koog/rag/base/files/DocumentProvider$DocumentRange;ILjava/lang/Object;)Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Snippet;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRange ()Lai/koog/rag/base/files/DocumentProvider$DocumentRange;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Snippet$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Snippet$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Snippet;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Snippet;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$File$Content$Excerpt$Snippet$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$File$Content$None : ai/koog/rag/base/files/model/FileSystemEntry$File$Content {
+	public static final field INSTANCE Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$None;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$File$Content$Text : ai/koog/rag/base/files/model/FileSystemEntry$File$Content {
+	public static final field Companion Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Text$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Text;
+	public static synthetic fun copy$default (Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Text;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Text;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/rag/base/files/model/FileSystemEntry$File$Content$Text$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Text$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Text;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/rag/base/files/model/FileSystemEntry$File$Content$Text;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$File$Content$Text$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$Folder : ai/koog/rag/base/files/model/FileSystemEntry {
+	public static final field Companion Lai/koog/rag/base/files/model/FileSystemEntry$Folder$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;ZLjava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZLjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;ZLjava/util/List;)Lai/koog/rag/base/files/model/FileSystemEntry$Folder;
+	public static synthetic fun copy$default (Lai/koog/rag/base/files/model/FileSystemEntry$Folder;Ljava/lang/String;Ljava/lang/String;ZLjava/util/List;ILjava/lang/Object;)Lai/koog/rag/base/files/model/FileSystemEntry$Folder;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEntries ()Ljava/util/List;
+	public fun getExtension ()Ljava/lang/String;
+	public fun getHidden ()Z
+	public fun getName ()Ljava/lang/String;
+	public fun getPath ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public fun visit (ILkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final synthetic class ai/koog/rag/base/files/model/FileSystemEntry$Folder$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/rag/base/files/model/FileSystemEntry$Folder$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/rag/base/files/model/FileSystemEntry$Folder;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/rag/base/files/model/FileSystemEntry$Folder;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntry$Folder$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/rag/base/files/model/FileSystemEntryBuildersKt {
+	public static final fun buildFileEntry (Lai/koog/rag/base/files/FileSystemProvider$ReadOnly;Ljava/lang/Object;Lai/koog/rag/base/files/FileMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun buildFileSize (Lai/koog/rag/base/files/FileSystemProvider$ReadOnly;Ljava/lang/Object;Lai/koog/rag/base/files/FileMetadata$FileContentType;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun buildFileSize$default (Lai/koog/rag/base/files/FileSystemProvider$ReadOnly;Ljava/lang/Object;Lai/koog/rag/base/files/FileMetadata$FileContentType;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun buildFileSystemEntry (Lai/koog/rag/base/files/FileSystemProvider$ReadOnly;Ljava/lang/Object;Lai/koog/rag/base/files/FileMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun buildFolderEntry (Lai/koog/rag/base/files/FileSystemProvider$ReadOnly;Ljava/lang/Object;Lai/koog/rag/base/files/FileMetadata;Ljava/util/List;)Lai/koog/rag/base/files/model/FileSystemEntry$Folder;
+}
+
+public abstract interface class ai/koog/rag/base/storage/DeletionStorage {
+	public abstract fun delete (Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun delete$default (Lai/koog/rag/base/storage/DeletionStorage;Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/storage/DeletionStorage$DefaultImpls {
+	public static synthetic fun delete$default (Lai/koog/rag/base/storage/DeletionStorage;Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/rag/base/storage/FilteringDeletionStorage : ai/koog/rag/base/storage/DeletionStorage {
+	public abstract fun delete (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun delete$default (Lai/koog/rag/base/storage/FilteringDeletionStorage;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/storage/FilteringDeletionStorage$DefaultImpls {
+	public static synthetic fun delete$default (Lai/koog/rag/base/storage/FilteringDeletionStorage;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/rag/base/storage/LookupStorage {
+	public abstract fun get (Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun get$default (Lai/koog/rag/base/storage/LookupStorage;Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/storage/LookupStorage$DefaultImpls {
+	public static synthetic fun get$default (Lai/koog/rag/base/storage/LookupStorage;Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/rag/base/storage/SearchStorage {
+	public abstract fun search (Lai/koog/rag/base/storage/search/SearchRequest;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun search$default (Lai/koog/rag/base/storage/SearchStorage;Lai/koog/rag/base/storage/search/SearchRequest;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/storage/SearchStorage$DefaultImpls {
+	public static synthetic fun search$default (Lai/koog/rag/base/storage/SearchStorage;Lai/koog/rag/base/storage/search/SearchRequest;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/storage/SearchStorageKt {
+	public static final fun searchAsFlow (Lai/koog/rag/base/storage/SearchStorage;Lai/koog/rag/base/storage/search/SearchRequest;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun searchAsFlow$default (Lai/koog/rag/base/storage/SearchStorage;Lai/koog/rag/base/storage/search/SearchRequest;Ljava/lang/String;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public abstract interface class ai/koog/rag/base/storage/WriteStorage {
+	public abstract fun add (Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun add$default (Lai/koog/rag/base/storage/WriteStorage;Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun update (Ljava/util/Map;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun update$default (Lai/koog/rag/base/storage/WriteStorage;Ljava/util/Map;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class ai/koog/rag/base/storage/WriteStorage$DefaultImpls {
+	public static synthetic fun add$default (Lai/koog/rag/base/storage/WriteStorage;Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun update$default (Lai/koog/rag/base/storage/WriteStorage;Ljava/util/Map;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/rag/base/storage/capability/CapabilityAwareStorage {
+	public abstract fun getCapabilities ()Ljava/util/Set;
+	public fun supports (Lai/koog/rag/base/storage/capability/StorageCapability;)Z
+}
+
+public final class ai/koog/rag/base/storage/capability/CapabilityAwareStorage$DefaultImpls {
+	public static fun supports (Lai/koog/rag/base/storage/capability/CapabilityAwareStorage;Lai/koog/rag/base/storage/capability/StorageCapability;)Z
+}
+
+public final class ai/koog/rag/base/storage/capability/StorageCapability : java/lang/Enum {
+	public static final field FILTER_EXPRESSION Lai/koog/rag/base/storage/capability/StorageCapability;
+	public static final field HYBRID_SEARCH Lai/koog/rag/base/storage/capability/StorageCapability;
+	public static final field KEYWORD_SEARCH Lai/koog/rag/base/storage/capability/StorageCapability;
+	public static final field NAMESPACE_ISOLATION Lai/koog/rag/base/storage/capability/StorageCapability;
+	public static final field SIMILARITY_SEARCH Lai/koog/rag/base/storage/capability/StorageCapability;
+	public static final field VECTOR_QUERY Lai/koog/rag/base/storage/capability/StorageCapability;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/rag/base/storage/capability/StorageCapability;
+	public static fun values ()[Lai/koog/rag/base/storage/capability/StorageCapability;
+}
+
+public abstract interface class ai/koog/rag/base/storage/search/HasFilterExpression {
+	public abstract fun getFilterExpression ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/rag/base/storage/search/HasScoreThreshold {
+	public abstract fun getMinScore ()Ljava/lang/Double;
+}
+
+public abstract interface class ai/koog/rag/base/storage/search/HasTextQuery {
+	public abstract fun getQueryText ()Ljava/lang/String;
+}
+
+public final class ai/koog/rag/base/storage/search/HybridSearchRequest : ai/koog/rag/base/storage/search/HasFilterExpression, ai/koog/rag/base/storage/search/HasScoreThreshold, ai/koog/rag/base/storage/search/HasTextQuery, ai/koog/rag/base/storage/search/SearchRequest {
+	public fun <init> (Ljava/lang/String;DIILjava/lang/Double;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;DIILjava/lang/Double;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()D
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public final fun component5 ()Ljava/lang/Double;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;DIILjava/lang/Double;Ljava/lang/String;)Lai/koog/rag/base/storage/search/HybridSearchRequest;
+	public static synthetic fun copy$default (Lai/koog/rag/base/storage/search/HybridSearchRequest;Ljava/lang/String;DIILjava/lang/Double;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/rag/base/storage/search/HybridSearchRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlpha ()D
+	public fun getFilterExpression ()Ljava/lang/String;
+	public fun getLimit ()I
+	public fun getMinScore ()Ljava/lang/Double;
+	public fun getOffset ()I
+	public fun getQueryText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/rag/base/storage/search/KeywordSearchRequest : ai/koog/rag/base/storage/search/HasFilterExpression, ai/koog/rag/base/storage/search/HasScoreThreshold, ai/koog/rag/base/storage/search/HasTextQuery, ai/koog/rag/base/storage/search/SearchRequest {
+	public fun <init> (Ljava/lang/String;IILjava/lang/Double;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;IILjava/lang/Double;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;IILjava/lang/Double;Ljava/lang/String;)Lai/koog/rag/base/storage/search/KeywordSearchRequest;
+	public static synthetic fun copy$default (Lai/koog/rag/base/storage/search/KeywordSearchRequest;Ljava/lang/String;IILjava/lang/Double;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/rag/base/storage/search/KeywordSearchRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getFilterExpression ()Ljava/lang/String;
+	public fun getLimit ()I
+	public fun getMinScore ()Ljava/lang/Double;
+	public fun getOffset ()I
+	public fun getQueryText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/rag/base/storage/search/Score {
+	public fun <init> (DLai/koog/rag/base/storage/search/ScoreMetric;)V
+	public final fun component1 ()D
+	public final fun component2 ()Lai/koog/rag/base/storage/search/ScoreMetric;
+	public final fun copy (DLai/koog/rag/base/storage/search/ScoreMetric;)Lai/koog/rag/base/storage/search/Score;
+	public static synthetic fun copy$default (Lai/koog/rag/base/storage/search/Score;DLai/koog/rag/base/storage/search/ScoreMetric;ILjava/lang/Object;)Lai/koog/rag/base/storage/search/Score;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMetric ()Lai/koog/rag/base/storage/search/ScoreMetric;
+	public final fun getValue ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/rag/base/storage/search/ScoreMetric : java/lang/Enum {
+	public static final field BM25 Lai/koog/rag/base/storage/search/ScoreMetric;
+	public static final field COSINE_DISTANCE Lai/koog/rag/base/storage/search/ScoreMetric;
+	public static final field COSINE_SIMILARITY Lai/koog/rag/base/storage/search/ScoreMetric;
+	public static final field CUSTOM Lai/koog/rag/base/storage/search/ScoreMetric;
+	public static final field DOT_PRODUCT Lai/koog/rag/base/storage/search/ScoreMetric;
+	public static final field EUCLIDEAN_DISTANCE Lai/koog/rag/base/storage/search/ScoreMetric;
+	public static final field HYBRID Lai/koog/rag/base/storage/search/ScoreMetric;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/rag/base/storage/search/ScoreMetric;
+	public static fun values ()[Lai/koog/rag/base/storage/search/ScoreMetric;
+}
+
+public abstract interface class ai/koog/rag/base/storage/search/SearchRequest {
+	public abstract fun getLimit ()I
+	public abstract fun getOffset ()I
+}
+
+public final class ai/koog/rag/base/storage/search/SearchResult {
+	public fun <init> (Ljava/lang/Object;Lai/koog/rag/base/storage/search/Score;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Object;Lai/koog/rag/base/storage/search/Score;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun component2 ()Lai/koog/rag/base/storage/search/Score;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Object;Lai/koog/rag/base/storage/search/Score;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)Lai/koog/rag/base/storage/search/SearchResult;
+	public static synthetic fun copy$default (Lai/koog/rag/base/storage/search/SearchResult;Ljava/lang/Object;Lai/koog/rag/base/storage/search/Score;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/rag/base/storage/search/SearchResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDocument ()Ljava/lang/Object;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getMetadata ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getNamespace ()Ljava/lang/String;
+	public final fun getScore ()Lai/koog/rag/base/storage/search/Score;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/rag/base/storage/search/SimilaritySearchRequest : ai/koog/rag/base/storage/search/HasFilterExpression, ai/koog/rag/base/storage/search/HasScoreThreshold, ai/koog/rag/base/storage/search/HasTextQuery, ai/koog/rag/base/storage/search/SearchRequest {
+	public fun <init> (Ljava/lang/String;IILjava/lang/Double;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;IILjava/lang/Double;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;IILjava/lang/Double;Ljava/lang/String;)Lai/koog/rag/base/storage/search/SimilaritySearchRequest;
+	public static synthetic fun copy$default (Lai/koog/rag/base/storage/search/SimilaritySearchRequest;Ljava/lang/String;IILjava/lang/Double;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/rag/base/storage/search/SimilaritySearchRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getFilterExpression ()Ljava/lang/String;
+	public fun getLimit ()I
+	public fun getMinScore ()Ljava/lang/Double;
+	public fun getOffset ()I
+	public fun getQueryText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
