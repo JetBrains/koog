@@ -2,7 +2,7 @@
 
 ## Module Overview
 
-The A2A (Agent-to-Agent) module is a **meta-module** within the larger Koog project that implements a comprehensive client and server library for the A2A protocol, a standardized communication protocol for AI agents based on the specification at https://a2a-protocol.org/latest/specification/.
+The A2A (Agent-to-Agent) module is a **meta-module** within the larger Koog project that implements a comprehensive client and server library for the A2A protocol, a standardized communication protocol for AI agents based on the specification at https://a2a-protocol.org/v0.3.0/specification/.
 
 **Important**: Since this is a meta-module inside a bigger root project, the Gradle wrapper executable is located one directory up. All Gradle commands must use `../gradlew` when running from the a2a directory.
 

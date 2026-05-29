@@ -57,7 +57,7 @@ import kotlinx.coroutines.launch
 
 /**
  * Default implementation of A2A server responsible for handling requests from A2A clients according to the
- * [A2A protocol specification](https://a2a-protocol.org/latest/specification/).
+ * [A2A protocol specification](https://a2a-protocol.org/v0.3.0/specification/).
  *
  * This class provides a complete implementation of all A2A protocol methods including message sending, task management,
  * and push notifications. However, it **does not** provide any authorization, authentication, or custom validation

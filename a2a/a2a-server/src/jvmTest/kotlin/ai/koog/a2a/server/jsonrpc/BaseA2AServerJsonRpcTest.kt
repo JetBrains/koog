@@ -2,7 +2,7 @@ package ai.koog.a2a.server.jsonrpc
 
 import ai.koog.a2a.client.A2AClient
 import ai.koog.a2a.client.UrlAgentCardResolver
-import ai.koog.a2a.consts.A2AConsts
+import ai.koog.a2a.consts.A2APaths
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentSkill
@@ -63,7 +63,7 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
             path = testPath,
             wait = false,
             agentCard = agentCard,
-            agentCardPath = A2AConsts.AGENT_CARD_WELL_KNOWN_PATH,
+            agentCardPath = A2APaths.AGENT_CARD_WELL_KNOWN_PATH,
         )
 
         // Create client transport
@@ -83,7 +83,7 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
             transport = clientTransport,
             agentCardResolver = UrlAgentCardResolver(
                 baseUrl = serverUrl,
-                path = A2AConsts.AGENT_CARD_WELL_KNOWN_PATH,
+                path = A2APaths.AGENT_CARD_WELL_KNOWN_PATH,
                 baseHttpClient = httpClient,
             )
         )

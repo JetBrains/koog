@@ -14,7 +14,7 @@ import ai.koog.a2a.model.TaskQueryParams
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Server transport processing raw requests made to [A2A protocol methods](https://a2a-protocol.org/latest/specification/#7-protocol-rpc-methods)
+ * Server transport processing raw requests made to [A2A protocol methods](https://a2a-protocol.org/v0.3.0/specification/#7-protocol-rpc-methods)
  * and delegating the processing to [RequestHandler].
  *
  * Server transport must respond with appropriate [A2AException] in case of errors while processing the request
@@ -33,11 +33,11 @@ public interface ServerTransport {
 
 /**
  * Handler responsible for processing parsed A2A requests, implementing
- * [A2A protocol methods](https://a2a-protocol.org/latest/specification/#7-protocol-rpc-methods).
+ * [A2A protocol methods](https://a2a-protocol.org/v0.3.0/specification/#7-protocol-rpc-methods).
  */
 public interface RequestHandler {
     /**
-     * Handles [agent/getAuthenticatedExtendedCard](https://a2a-protocol.org/latest/specification/#710-agentgetauthenticatedextendedcard)
+     * Handles [agent/getAuthenticatedExtendedCard](https://a2a-protocol.org/v0.3.0/specification/#710-agentgetauthenticatedextendedcard)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
@@ -47,7 +47,7 @@ public interface RequestHandler {
     ): Response<AgentCard>
 
     /**
-     * Handles [message/send](https://a2a-protocol.org/latest/specification/#71-messagesend).
+     * Handles [message/send](https://a2a-protocol.org/v0.3.0/specification/#71-messagesend).
      *
      * @throws A2AException if there is an error with processsing the request.
      */
@@ -57,7 +57,7 @@ public interface RequestHandler {
     ): Response<CommunicationEvent>
 
     /**
-     * Handles [message/stream](https://a2a-protocol.org/latest/specification/#72-messagestream)
+     * Handles [message/stream](https://a2a-protocol.org/v0.3.0/specification/#72-messagestream)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
@@ -67,7 +67,7 @@ public interface RequestHandler {
     ): Flow<Response<Event>>
 
     /**
-     * Handles [tasks/get](https://a2a-protocol.org/latest/specification/#73-tasksget)
+     * Handles [tasks/get](https://a2a-protocol.org/v0.3.0/specification/#73-tasksget)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
@@ -77,7 +77,7 @@ public interface RequestHandler {
     ): Response<Task>
 
     /**
-     * Handles [tasks/resubscribe](https://a2a-protocol.org/latest/specification/#79-tasksresubscribe)
+     * Handles [tasks/resubscribe](https://a2a-protocol.org/v0.3.0/specification/#79-tasksresubscribe)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
@@ -87,7 +87,7 @@ public interface RequestHandler {
     ): Flow<Response<Event>>
 
     /**
-     * Handles [tasks/cancel](https://a2a-protocol.org/latest/specification/#74-taskscancel)
+     * Handles [tasks/cancel](https://a2a-protocol.org/v0.3.0/specification/#74-taskscancel)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
@@ -97,7 +97,7 @@ public interface RequestHandler {
     ): Response<Task>
 
     /**
-     * Handles [tasks/pushNotificationConfig/set](https://a2a-protocol.org/latest/specification/#75-taskspushnotificationconfigset)
+     * Handles [tasks/pushNotificationConfig/set](https://a2a-protocol.org/v0.3.0/specification/#75-taskspushnotificationconfigset)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
@@ -107,7 +107,7 @@ public interface RequestHandler {
     ): Response<TaskPushNotificationConfig>
 
     /**
-     * Handles [tasks/pushNotificationConfig/get](https://a2a-protocol.org/latest/specification/#76-taskspushnotificationconfigget)
+     * Handles [tasks/pushNotificationConfig/get](https://a2a-protocol.org/v0.3.0/specification/#76-taskspushnotificationconfigget)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
@@ -117,7 +117,7 @@ public interface RequestHandler {
     ): Response<TaskPushNotificationConfig>
 
     /**
-     * Handles [tasks/pushNotificationConfig/list](https://a2a-protocol.org/latest/specification/#77-taskspushnotificationconfiglist)
+     * Handles [tasks/pushNotificationConfig/list](https://a2a-protocol.org/v0.3.0/specification/#77-taskspushnotificationconfiglist)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
@@ -127,7 +127,7 @@ public interface RequestHandler {
     ): Response<List<TaskPushNotificationConfig>>
 
     /**
-     * Handles [tasks/pushNotificationConfig/delete](https://a2a-protocol.org/latest/specification/#78-taskspushnotificationconfigdelete)
+     * Handles [tasks/pushNotificationConfig/delete](https://a2a-protocol.org/v0.3.0/specification/#78-taskspushnotificationconfigdelete)
      *
      * @throws A2AException if there is an error with processsing the request.
      */

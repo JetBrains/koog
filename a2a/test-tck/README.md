@@ -1,7 +1,7 @@
 # A2A Testing Kit Integration
 
 This directory contains tooling to validate the A2A Kotlin SDK against the
-official [A2A protocol specification](https://a2a-protocol.org/latest/specification/) using the A2A Testing Kit (TCK).
+official [A2A protocol specification](https://a2a-protocol.org/v0.3.0/specification/) using the A2A Testing Kit (TCK).
 
 ## Contents
 
@@ -30,4 +30,4 @@ official [A2A protocol specification](https://a2a-protocol.org/latest/specificat
 
 ## More information
 
-For more information, see the [A2A Testing Kit repo](https://a2a-protocol.org/latest/tck/).
+For more information, see the [A2A Testing Kit repo](https://a2a-protocol.org/v0.3.0/tck/).

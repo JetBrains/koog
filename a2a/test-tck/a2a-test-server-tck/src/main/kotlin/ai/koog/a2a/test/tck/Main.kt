@@ -1,6 +1,6 @@
 package ai.koog.a2a.test.tck
 
-import ai.koog.a2a.consts.A2AConsts
+import ai.koog.a2a.consts.A2APaths
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentInterface
@@ -109,6 +109,6 @@ suspend fun main() {
         path = "/a2a",
         wait = true, // Block until server stops
         agentCard = agentCard,
-        agentCardPath = A2AConsts.AGENT_CARD_WELL_KNOWN_PATH
+        agentCardPath = A2APaths.AGENT_CARD_WELL_KNOWN_PATH
     )
 }

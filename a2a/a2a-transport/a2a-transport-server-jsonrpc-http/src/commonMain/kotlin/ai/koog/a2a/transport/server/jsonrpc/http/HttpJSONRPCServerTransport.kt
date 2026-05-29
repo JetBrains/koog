@@ -1,7 +1,7 @@
 package ai.koog.a2a.transport.server.jsonrpc.http
 
 import ai.koog.a2a.annotations.InternalA2AApi
-import ai.koog.a2a.consts.A2AConsts
+import ai.koog.a2a.consts.A2APaths
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
@@ -107,7 +107,7 @@ public class HttpJSONRPCServerTransport(
      * @param wait If true, the server will block until it is stopped. Defaults to false.
      * @param agentCard An optional [AgentCard] that will be served at the specified [agentCardPath].
      * @param agentCardPath The path at which the [agentCard] will be served, if specified.
-     * Defaults to [A2AConsts.AGENT_CARD_WELL_KNOWN_PATH].
+     * Defaults to [A2APaths.AGENT_CARD_WELL_KNOWN_PATH].
      *
      * @throws IllegalStateException if the server is already running.
      *
@@ -119,7 +119,7 @@ public class HttpJSONRPCServerTransport(
         path: String,
         wait: Boolean = false,
         agentCard: AgentCard? = null,
-        agentCardPath: String = A2AConsts.AGENT_CARD_WELL_KNOWN_PATH,
+        agentCardPath: String = A2APaths.AGENT_CARD_WELL_KNOWN_PATH,
     ): Unit = serverMutex.withLock {
         check(server == null) { "Server is already configured and running. Stop it before starting a new one." }
 

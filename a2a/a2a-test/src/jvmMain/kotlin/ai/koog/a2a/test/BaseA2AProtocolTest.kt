@@ -9,7 +9,7 @@ import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.MessageSendConfiguration
 import ai.koog.a2a.model.MessageSendParams
-import ai.koog.a2a.model.PushNotificationAuthenticationInfo
+import ai.koog.a2a.model.AuthenticationInfo
 import ai.koog.a2a.model.PushNotificationConfig
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
@@ -402,7 +402,7 @@ abstract class BaseA2AProtocolTest {
                 id = "push-id",
                 url = "https://localhost:3000",
                 token = "push-token",
-                authentication = PushNotificationAuthenticationInfo(
+                authentication = AuthenticationInfo(
                     schemes = listOf("bearer"),
                     credentials = "very-secret-credential"
                 )

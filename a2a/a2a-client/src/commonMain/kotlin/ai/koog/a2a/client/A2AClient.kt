@@ -56,7 +56,7 @@ public open class A2AClient(
     }
 
     /**
-     * Calls [agent/getAuthenticatedExtendedCard](https://a2a-protocol.org/latest/specification/#710-agentgetauthenticatedextendedcard).
+     * Calls [agent/getAuthenticatedExtendedCard](https://a2a-protocol.org/v0.3.0/specification/#710-agentgetauthenticatedextendedcard).
      * Updates cached [AgentCard].
      *
      * @throws A2AException if server returned an error.
@@ -75,7 +75,7 @@ public open class A2AClient(
     }
 
     /**
-     * Calls [message/send](https://a2a-protocol.org/latest/specification/#71-messagesend).
+     * Calls [message/send](https://a2a-protocol.org/v0.3.0/specification/#71-messagesend).
      *
      * @throws A2AException if server returned an error.
      */
@@ -87,7 +87,7 @@ public open class A2AClient(
     }
 
     /**
-     * Calls [message/stream](https://a2a-protocol.org/latest/specification/#72-messagestream)
+     * Calls [message/stream](https://a2a-protocol.org/v0.3.0/specification/#72-messagestream)
      *
      * @throws A2AException if server returned an error.
      */
@@ -103,7 +103,7 @@ public open class A2AClient(
     }
 
     /**
-     * Calls [tasks/get](https://a2a-protocol.org/latest/specification/#73-tasksget)
+     * Calls [tasks/get](https://a2a-protocol.org/v0.3.0/specification/#73-tasksget)
      *
      * @throws A2AException if server returned an error.
      */
@@ -115,7 +115,7 @@ public open class A2AClient(
     }
 
     /**
-     * Calls [tasks/cancel](https://a2a-protocol.org/latest/specification/#74-taskscancel)
+     * Calls [tasks/cancel](https://a2a-protocol.org/v0.3.0/specification/#74-taskscancel)
      *
      * @throws A2AException if server returned an error.
      */
@@ -127,7 +127,7 @@ public open class A2AClient(
     }
 
     /**
-     * Calls [tasks/resubscribe](https://a2a-protocol.org/latest/specification/#79-tasksresubscribe)
+     * Calls [tasks/resubscribe](https://a2a-protocol.org/v0.3.0/specification/#79-tasksresubscribe)
      *
      * @throws A2AException if server returned an error.
      */
@@ -139,7 +139,7 @@ public open class A2AClient(
     }
 
     /**
-     * Calls [tasks/pushNotificationConfig/set](https://a2a-protocol.org/latest/specification/#75-taskspushnotificationconfigset)
+     * Calls [tasks/pushNotificationConfig/set](https://a2a-protocol.org/v0.3.0/specification/#75-taskspushnotificationconfigset)
      *
      * @throws A2AException if server returned an error.
      */
@@ -153,7 +153,7 @@ public open class A2AClient(
     }
 
     /**
-     * Calls [tasks/pushNotificationConfig/get](https://a2a-protocol.org/latest/specification/#76-taskspushnotificationconfigget)
+     * Calls [tasks/pushNotificationConfig/get](https://a2a-protocol.org/v0.3.0/specification/#76-taskspushnotificationconfigget)
      *
      * @throws A2AException if server returned an error.
      */
@@ -167,7 +167,7 @@ public open class A2AClient(
     }
 
     /**
-     * Calls [tasks/pushNotificationConfig/list](https://a2a-protocol.org/latest/specification/#77-taskspushnotificationconfiglist)
+     * Calls [tasks/pushNotificationConfig/list](https://a2a-protocol.org/v0.3.0/specification/#77-taskspushnotificationconfiglist)
      *
      * @throws A2AException if server returned an error.
      */
@@ -181,7 +181,7 @@ public open class A2AClient(
     }
 
     /**
-     * Calls [tasks/pushNotificationConfig/delete](https://a2a-protocol.org/latest/specification/#78-taskspushnotificationconfigdelete)
+     * Calls [tasks/pushNotificationConfig/delete](https://a2a-protocol.org/v0.3.0/specification/#78-taskspushnotificationconfigdelete)
      *
      * @throws A2AException if server returned an error.
      */

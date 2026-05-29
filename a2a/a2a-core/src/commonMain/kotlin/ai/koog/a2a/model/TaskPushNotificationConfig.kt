@@ -5,29 +5,22 @@ import kotlinx.serialization.Serializable
 /**
  * A container associating a push notification configuration with a specific task.
  *
+ * @property url The callback URL where the agent should send push notifications.
  * @property taskId The unique identifier (e.g. UUID) of the task.
- * @property pushNotificationConfig The push notification configuration for this task.
+ * @property id A unique identifier (e.g. UUID) for the push notification configuration, set by the client to support multiple notification callbacks.
+ * @property token A unique token for this task or session to validate incoming push notifications.
+ * @property authentication Authentication details for the agent to use when calling the notification URL.
+ * @property tenant Optional. Opaque routing identifier. Must match the [AgentInterface.tenant] value from
+ * the selected [AgentInterface] in the Agent Card when that field is set.
  */
 @Serializable
 public data class TaskPushNotificationConfig(
-    public val taskId: String,
-    public val pushNotificationConfig: PushNotificationConfig,
-)
-
-/**
- * Defines the configuration for setting up push notifications for task updates.
- *
- * @property id A unique identifier (e.g. UUID) for the push notification configuration, set by the client to support multiple notification callbacks.
- * @property url The callback URL where the agent should send push notifications.
- * @property token A unique token for this task or session to validate incoming push notifications.
- * @property authentication Optional authentication details for the agent to use when calling the notification URL.
- */
-@Serializable
-public data class PushNotificationConfig(
-    public val id: String? = null,
     public val url: String,
+    public val taskId: String,
+    public val id: String? = null,
     public val token: String? = null,
-    public val authentication: PushNotificationAuthenticationInfo? = null,
+    public val authentication: AuthenticationInfo? = null,
+    public val tenant: String? = null,
 )
 
 /**
@@ -37,7 +30,7 @@ public data class PushNotificationConfig(
  * @property credentials Optional credentials required by the push notification endpoint.
  */
 @Serializable
-public data class PushNotificationAuthenticationInfo(
+public data class AuthenticationInfo(
     public val schemes: List<String>,
     public val credentials: String? = null,
 )
