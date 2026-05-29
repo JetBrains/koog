@@ -1,0 +1,22 @@
+public final class ai/koog/http/client/okhttp/OkHttpKoogHttpClient : ai/koog/http/client/KoogHttpClient {
+	public fun close ()V
+	public fun get (Ljava/lang/String;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getClientName ()Ljava/lang/String;
+	public fun lines (Ljava/lang/String;Ljava/lang/Object;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/util/Map;)Lkotlinx/coroutines/flow/Flow;
+	public fun post (Ljava/lang/String;Ljava/lang/Object;Lkotlin/reflect/KClass;Lkotlin/reflect/KClass;Ljava/util/Map;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sse (Ljava/lang/String;Ljava/lang/Object;Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Ljava/util/Map;Ljava/util/Map;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class ai/koog/http/client/okhttp/OkHttpKoogHttpClient$Factory : ai/koog/http/client/KoogHttpClient$Factory {
+	public fun <init> ()V
+	public fun <init> (Lio/github/oshai/kotlinlogging/KLogger;)V
+	public synthetic fun <init> (Lio/github/oshai/kotlinlogging/KLogger;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun create (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;JJJLkotlinx/serialization/json/Json;)Lai/koog/http/client/KoogHttpClient;
+	public fun create (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;JJJLkotlinx/serialization/json/Json;)Lai/koog/http/client/okhttp/OkHttpKoogHttpClient;
+}
+
+public final class ai/koog/http/client/okhttp/OkHttpKoogHttpClientKt {
+	public static final fun fromOkHttpClient (Lai/koog/http/client/KoogHttpClient$Companion;Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Lokhttp3/OkHttpClient;Lkotlinx/serialization/json/Json;)Lai/koog/http/client/KoogHttpClient;
+	public static synthetic fun fromOkHttpClient$default (Lai/koog/http/client/KoogHttpClient$Companion;Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Lokhttp3/OkHttpClient;Lkotlinx/serialization/json/Json;ILjava/lang/Object;)Lai/koog/http/client/KoogHttpClient;
+}
+

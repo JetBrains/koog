@@ -1,0 +1,69 @@
+public final class ai/koog/prompt/cache/memory/InMemoryPromptCache : ai/koog/prompt/cache/model/PromptCache {
+	public static final field Companion Lai/koog/prompt/cache/memory/InMemoryPromptCache$Companion;
+	public fun <init> (Ljava/lang/Integer;)V
+	public fun get (Lai/koog/prompt/cache/model/PromptCache$Request;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun put (Lai/koog/prompt/cache/model/PromptCache$Request;Lai/koog/prompt/message/Message$Assistant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/cache/memory/InMemoryPromptCache$Companion : ai/koog/prompt/cache/model/PromptCache$Factory$Named {
+	public fun create (Ljava/lang/String;)Lai/koog/prompt/cache/model/PromptCache;
+}
+
+public abstract interface class ai/koog/prompt/cache/model/PromptCache {
+	public abstract fun get (Lai/koog/prompt/cache/model/PromptCache$Request;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun put (Lai/koog/prompt/cache/model/PromptCache$Request;Lai/koog/prompt/message/Message$Assistant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/prompt/cache/model/PromptCache$Factory {
+	public abstract fun create (Ljava/lang/String;)Lai/koog/prompt/cache/model/PromptCache;
+	public fun elements (Ljava/lang/String;)Ljava/util/List;
+}
+
+public final class ai/koog/prompt/cache/model/PromptCache$Factory$Aggregated : ai/koog/prompt/cache/model/PromptCache$Factory {
+	public fun <init> (Ljava/util/List;)V
+	public fun <init> ([Lai/koog/prompt/cache/model/PromptCache$Factory$Named;)V
+	public fun create (Ljava/lang/String;)Lai/koog/prompt/cache/model/PromptCache;
+	public fun elements (Ljava/lang/String;)Ljava/util/List;
+}
+
+public final class ai/koog/prompt/cache/model/PromptCache$Factory$DefaultImpls {
+	public static fun elements (Lai/koog/prompt/cache/model/PromptCache$Factory;Ljava/lang/String;)Ljava/util/List;
+}
+
+public abstract class ai/koog/prompt/cache/model/PromptCache$Factory$Named : ai/koog/prompt/cache/model/PromptCache$Factory {
+	public fun <init> (Ljava/lang/String;)V
+	public fun elements (Ljava/lang/String;)Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public final fun supports (Ljava/lang/String;)Z
+}
+
+public final class ai/koog/prompt/cache/model/PromptCache$Request {
+	public static final field Companion Lai/koog/prompt/cache/model/PromptCache$Request$Companion;
+	public synthetic fun <init> (Lai/koog/prompt/Prompt;Ljava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAsCacheKey ()Ljava/lang/String;
+	public final fun getPrompt ()Lai/koog/prompt/Prompt;
+	public final fun getToolJsons ()Ljava/util/List;
+}
+
+public final synthetic class ai/koog/prompt/cache/model/PromptCache$Request$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/cache/model/PromptCache$Request$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/cache/model/PromptCache$Request;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/cache/model/PromptCache$Request;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/cache/model/PromptCache$Request$Companion {
+	public final fun create (Lai/koog/prompt/Prompt;Ljava/util/List;)Lai/koog/prompt/cache/model/PromptCache$Request;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/cache/model/PromptCacheKt {
+	public static final fun get (Lai/koog/prompt/cache/model/PromptCache;Lai/koog/prompt/Prompt;Ljava/util/List;Lai/koog/utils/time/KoogClock;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun get$default (Lai/koog/prompt/cache/model/PromptCache;Lai/koog/prompt/Prompt;Ljava/util/List;Lai/koog/utils/time/KoogClock;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun put (Lai/koog/prompt/cache/model/PromptCache;Lai/koog/prompt/Prompt;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

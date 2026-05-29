@@ -1,0 +1,14 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:embeddings-llm>
+final class ai.koog.embeddings.local/LLMEmbedder : ai.koog.embeddings.base/Embedder { // ai.koog.embeddings.local/LLMEmbedder|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients/LLMEmbeddingProvider, ai.koog.prompt.llm/LLModel) // ai.koog.embeddings.local/LLMEmbedder.<init>|<init>(ai.koog.prompt.executor.clients.LLMEmbeddingProvider;ai.koog.prompt.llm.LLModel){}[0]
+
+    final fun diff(ai.koog.embeddings.base/Vector, ai.koog.embeddings.base/Vector): kotlin/Double // ai.koog.embeddings.local/LLMEmbedder.diff|diff(ai.koog.embeddings.base.Vector;ai.koog.embeddings.base.Vector){}[0]
+    final suspend fun embed(kotlin/String): ai.koog.embeddings.base/Vector // ai.koog.embeddings.local/LLMEmbedder.embed|embed(kotlin.String){}[0]
+}

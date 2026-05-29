@@ -1,0 +1,99 @@
+public final class ai/koog/serialization/jackson/JSONArrayDeserializer : com/fasterxml/jackson/databind/JsonDeserializer {
+	public static final field INSTANCE Lai/koog/serialization/jackson/JSONArrayDeserializer;
+	public fun deserialize (Lcom/fasterxml/jackson/core/JsonParser;Lcom/fasterxml/jackson/databind/DeserializationContext;)Lai/koog/serialization/JSONArray;
+	public synthetic fun deserialize (Lcom/fasterxml/jackson/core/JsonParser;Lcom/fasterxml/jackson/databind/DeserializationContext;)Ljava/lang/Object;
+}
+
+public final class ai/koog/serialization/jackson/JSONArraySerializer : com/fasterxml/jackson/databind/JsonSerializer {
+	public static final field INSTANCE Lai/koog/serialization/jackson/JSONArraySerializer;
+	public fun serialize (Lai/koog/serialization/JSONArray;Lcom/fasterxml/jackson/core/JsonGenerator;Lcom/fasterxml/jackson/databind/SerializerProvider;)V
+	public synthetic fun serialize (Ljava/lang/Object;Lcom/fasterxml/jackson/core/JsonGenerator;Lcom/fasterxml/jackson/databind/SerializerProvider;)V
+}
+
+public final class ai/koog/serialization/jackson/JSONElementDeserializer : com/fasterxml/jackson/databind/JsonDeserializer {
+	public static final field INSTANCE Lai/koog/serialization/jackson/JSONElementDeserializer;
+	public fun deserialize (Lcom/fasterxml/jackson/core/JsonParser;Lcom/fasterxml/jackson/databind/DeserializationContext;)Lai/koog/serialization/JSONElement;
+	public synthetic fun deserialize (Lcom/fasterxml/jackson/core/JsonParser;Lcom/fasterxml/jackson/databind/DeserializationContext;)Ljava/lang/Object;
+}
+
+public final class ai/koog/serialization/jackson/JSONElementModule : com/fasterxml/jackson/databind/module/SimpleModule {
+	public fun <init> ()V
+}
+
+public final class ai/koog/serialization/jackson/JSONElementSerializer : com/fasterxml/jackson/databind/JsonSerializer {
+	public static final field INSTANCE Lai/koog/serialization/jackson/JSONElementSerializer;
+	public fun serialize (Lai/koog/serialization/JSONElement;Lcom/fasterxml/jackson/core/JsonGenerator;Lcom/fasterxml/jackson/databind/SerializerProvider;)V
+	public synthetic fun serialize (Ljava/lang/Object;Lcom/fasterxml/jackson/core/JsonGenerator;Lcom/fasterxml/jackson/databind/SerializerProvider;)V
+}
+
+public final class ai/koog/serialization/jackson/JSONLiteralDeserializer : com/fasterxml/jackson/databind/JsonDeserializer {
+	public static final field INSTANCE Lai/koog/serialization/jackson/JSONLiteralDeserializer;
+	public fun deserialize (Lcom/fasterxml/jackson/core/JsonParser;Lcom/fasterxml/jackson/databind/DeserializationContext;)Lai/koog/serialization/JSONLiteral;
+	public synthetic fun deserialize (Lcom/fasterxml/jackson/core/JsonParser;Lcom/fasterxml/jackson/databind/DeserializationContext;)Ljava/lang/Object;
+}
+
+public final class ai/koog/serialization/jackson/JSONLiteralSerializer : com/fasterxml/jackson/databind/JsonSerializer {
+	public static final field INSTANCE Lai/koog/serialization/jackson/JSONLiteralSerializer;
+	public fun serialize (Lai/koog/serialization/JSONLiteral;Lcom/fasterxml/jackson/core/JsonGenerator;Lcom/fasterxml/jackson/databind/SerializerProvider;)V
+	public synthetic fun serialize (Ljava/lang/Object;Lcom/fasterxml/jackson/core/JsonGenerator;Lcom/fasterxml/jackson/databind/SerializerProvider;)V
+}
+
+public final class ai/koog/serialization/jackson/JSONNullDeserializer : com/fasterxml/jackson/databind/JsonDeserializer {
+	public static final field INSTANCE Lai/koog/serialization/jackson/JSONNullDeserializer;
+	public fun deserialize (Lcom/fasterxml/jackson/core/JsonParser;Lcom/fasterxml/jackson/databind/DeserializationContext;)Lai/koog/serialization/JSONNull;
+	public synthetic fun deserialize (Lcom/fasterxml/jackson/core/JsonParser;Lcom/fasterxml/jackson/databind/DeserializationContext;)Ljava/lang/Object;
+}
+
+public final class ai/koog/serialization/jackson/JSONNullSerializer : com/fasterxml/jackson/databind/JsonSerializer {
+	public static final field INSTANCE Lai/koog/serialization/jackson/JSONNullSerializer;
+	public fun serialize (Lai/koog/serialization/JSONNull;Lcom/fasterxml/jackson/core/JsonGenerator;Lcom/fasterxml/jackson/databind/SerializerProvider;)V
+	public synthetic fun serialize (Ljava/lang/Object;Lcom/fasterxml/jackson/core/JsonGenerator;Lcom/fasterxml/jackson/databind/SerializerProvider;)V
+}
+
+public final class ai/koog/serialization/jackson/JSONObjectDeserializer : com/fasterxml/jackson/databind/JsonDeserializer {
+	public static final field INSTANCE Lai/koog/serialization/jackson/JSONObjectDeserializer;
+	public fun deserialize (Lcom/fasterxml/jackson/core/JsonParser;Lcom/fasterxml/jackson/databind/DeserializationContext;)Lai/koog/serialization/JSONObject;
+	public synthetic fun deserialize (Lcom/fasterxml/jackson/core/JsonParser;Lcom/fasterxml/jackson/databind/DeserializationContext;)Ljava/lang/Object;
+}
+
+public final class ai/koog/serialization/jackson/JSONObjectSerializer : com/fasterxml/jackson/databind/JsonSerializer {
+	public static final field INSTANCE Lai/koog/serialization/jackson/JSONObjectSerializer;
+	public fun serialize (Lai/koog/serialization/JSONObject;Lcom/fasterxml/jackson/core/JsonGenerator;Lcom/fasterxml/jackson/databind/SerializerProvider;)V
+	public synthetic fun serialize (Ljava/lang/Object;Lcom/fasterxml/jackson/core/JsonGenerator;Lcom/fasterxml/jackson/databind/SerializerProvider;)V
+}
+
+public final class ai/koog/serialization/jackson/JSONPrimitiveDeserializer : com/fasterxml/jackson/databind/JsonDeserializer {
+	public static final field INSTANCE Lai/koog/serialization/jackson/JSONPrimitiveDeserializer;
+	public fun deserialize (Lcom/fasterxml/jackson/core/JsonParser;Lcom/fasterxml/jackson/databind/DeserializationContext;)Lai/koog/serialization/JSONPrimitive;
+	public synthetic fun deserialize (Lcom/fasterxml/jackson/core/JsonParser;Lcom/fasterxml/jackson/databind/DeserializationContext;)Ljava/lang/Object;
+}
+
+public final class ai/koog/serialization/jackson/JSONPrimitiveSerializer : com/fasterxml/jackson/databind/JsonSerializer {
+	public static final field INSTANCE Lai/koog/serialization/jackson/JSONPrimitiveSerializer;
+	public fun serialize (Lai/koog/serialization/JSONPrimitive;Lcom/fasterxml/jackson/core/JsonGenerator;Lcom/fasterxml/jackson/databind/SerializerProvider;)V
+	public synthetic fun serialize (Ljava/lang/Object;Lcom/fasterxml/jackson/core/JsonGenerator;Lcom/fasterxml/jackson/databind/SerializerProvider;)V
+}
+
+public final class ai/koog/serialization/jackson/JacksonJSONElementMappers {
+	public static final fun toJacksonArrayNode (Lai/koog/serialization/JSONArray;)Lcom/fasterxml/jackson/databind/node/ArrayNode;
+	public static final fun toJacksonJsonNode (Lai/koog/serialization/JSONElement;)Lcom/fasterxml/jackson/databind/JsonNode;
+	public static final fun toJacksonJsonNode (Lai/koog/serialization/JSONPrimitive;)Lcom/fasterxml/jackson/databind/node/ValueNode;
+	public static final fun toJacksonObjectNode (Lai/koog/serialization/JSONObject;)Lcom/fasterxml/jackson/databind/node/ObjectNode;
+	public static final fun toKoogJSONArray (Lcom/fasterxml/jackson/databind/node/ArrayNode;)Lai/koog/serialization/JSONArray;
+	public static final fun toKoogJSONElement (Lcom/fasterxml/jackson/databind/JsonNode;)Lai/koog/serialization/JSONElement;
+	public static final fun toKoogJSONObject (Lcom/fasterxml/jackson/databind/node/ObjectNode;)Lai/koog/serialization/JSONObject;
+	public static final fun toKoogJSONPrimitive (Lcom/fasterxml/jackson/databind/node/ValueNode;)Lai/koog/serialization/JSONPrimitive;
+}
+
+public final class ai/koog/serialization/jackson/JacksonSerializer : ai/koog/serialization/JSONSerializer {
+	public fun <init> ()V
+	public fun <init> (Lcom/fasterxml/jackson/databind/ObjectMapper;)V
+	public synthetic fun <init> (Lcom/fasterxml/jackson/databind/ObjectMapper;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun decodeFromJSONElement (Lai/koog/serialization/JSONElement;Lai/koog/serialization/TypeToken;)Ljava/lang/Object;
+	public fun decodeFromString (Ljava/lang/String;Lai/koog/serialization/TypeToken;)Ljava/lang/Object;
+	public fun decodeJSONElementFromString (Ljava/lang/String;)Lai/koog/serialization/JSONElement;
+	public fun encodeJSONElementToString (Lai/koog/serialization/JSONElement;)Ljava/lang/String;
+	public fun encodeToJSONElement (Ljava/lang/Object;Lai/koog/serialization/TypeToken;)Lai/koog/serialization/JSONElement;
+	public fun encodeToString (Ljava/lang/Object;Lai/koog/serialization/TypeToken;)Ljava/lang/String;
+}
+

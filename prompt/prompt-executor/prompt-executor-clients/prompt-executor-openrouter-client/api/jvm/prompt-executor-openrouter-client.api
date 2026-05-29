@@ -1,0 +1,348 @@
+public final class ai/koog/prompt/executor/clients/openrouter/OpenRouterClientFactory {
+	public static final fun openRouterClient (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openrouter/OpenRouterLLMClient;
+	public static final fun openRouterClient (Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings;)Lai/koog/prompt/executor/clients/openrouter/OpenRouterLLMClient;
+	public static final fun openRouterClient (Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lai/koog/utils/time/KoogClock;)Lai/koog/prompt/executor/clients/openrouter/OpenRouterLLMClient;
+	public static final fun openRouterClient (Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/clients/openai/base/OpenAICompatibleToolDescriptorSchemaGenerator;)Lai/koog/prompt/executor/clients/openrouter/OpenRouterLLMClient;
+	public static synthetic fun openRouterClient$default (Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/clients/openai/base/OpenAICompatibleToolDescriptorSchemaGenerator;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/openrouter/OpenRouterLLMClient;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings : ai/koog/prompt/executor/clients/openai/base/OpenAIBaseSettings {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getEmbeddingsPath ()Ljava/lang/String;
+	public final fun getModelsPath ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/OpenRouterLLMClient : ai/koog/prompt/executor/clients/openai/base/AbstractOpenAILLMClient {
+	public fun <init> (Lai/koog/http/client/KoogHttpClient;)V
+	public fun <init> (Lai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lai/koog/http/client/KoogHttpClient;)V
+	public fun <init> (Lai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lai/koog/http/client/KoogHttpClient;Lai/koog/utils/time/KoogClock;)V
+	public fun <init> (Lai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lai/koog/http/client/KoogHttpClient;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/clients/openai/base/OpenAICompatibleToolDescriptorSchemaGenerator;)V
+	public synthetic fun <init> (Lai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lai/koog/http/client/KoogHttpClient;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/clients/openai/base/OpenAICompatibleToolDescriptorSchemaGenerator;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/http/client/KoogHttpClient$Factory;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lai/koog/http/client/KoogHttpClient$Factory;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lai/koog/http/client/KoogHttpClient$Factory;Lai/koog/utils/time/KoogClock;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lai/koog/http/client/KoogHttpClient$Factory;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/clients/openai/base/OpenAICompatibleToolDescriptorSchemaGenerator;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lai/koog/http/client/KoogHttpClient$Factory;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/clients/openai/base/OpenAICompatibleToolDescriptorSchemaGenerator;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun decodeResponse (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIBaseLLMResponse;
+	public synthetic fun decodeStreamingResponse (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/OpenAIBaseLLMStreamResponse;
+	public fun embed (Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun embed (Ljava/util/List;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getClientName ()Ljava/lang/String;
+	public fun llmProvider ()Lai/koog/prompt/llm/LLMProvider;
+	public fun models (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun processProviderChatResponse (Lai/koog/prompt/executor/clients/openai/base/models/OpenAIBaseLLMResponse;)Ljava/util/List;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/OpenRouterModels : ai/koog/prompt/executor/clients/LLModelDefinitions {
+	public static final field Claude3Haiku Lai/koog/prompt/llm/LLModel;
+	public static final field Claude3Opus Lai/koog/prompt/llm/LLModel;
+	public static final field Claude3Sonnet Lai/koog/prompt/llm/LLModel;
+	public static final field Claude3VisionHaiku Lai/koog/prompt/llm/LLModel;
+	public static final field Claude3VisionOpus Lai/koog/prompt/llm/LLModel;
+	public static final field Claude3VisionSonnet Lai/koog/prompt/llm/LLModel;
+	public static final field Claude3_5Sonnet Lai/koog/prompt/llm/LLModel;
+	public static final field Claude3_7Sonnet Lai/koog/prompt/llm/LLModel;
+	public static final field Claude4Sonnet Lai/koog/prompt/llm/LLModel;
+	public static final field Claude4_1Opus Lai/koog/prompt/llm/LLModel;
+	public static final field Claude4_5Haiku Lai/koog/prompt/llm/LLModel;
+	public static final field Claude4_5Opus Lai/koog/prompt/llm/LLModel;
+	public static final field Claude4_5Sonnet Lai/koog/prompt/llm/LLModel;
+	public static final field Claude4_6Opus Lai/koog/prompt/llm/LLModel;
+	public static final field Claude4_6Sonnet Lai/koog/prompt/llm/LLModel;
+	public static final field DeepSeekV30324 Lai/koog/prompt/llm/LLModel;
+	public static final field GPT35Turbo Lai/koog/prompt/llm/LLModel;
+	public static final field GPT4 Lai/koog/prompt/llm/LLModel;
+	public static final field GPT4Turbo Lai/koog/prompt/llm/LLModel;
+	public static final field GPT4o Lai/koog/prompt/llm/LLModel;
+	public static final field GPT4oMini Lai/koog/prompt/llm/LLModel;
+	public static final field GPT5 Lai/koog/prompt/llm/LLModel;
+	public static final field GPT5Chat Lai/koog/prompt/llm/LLModel;
+	public static final field GPT5Mini Lai/koog/prompt/llm/LLModel;
+	public static final field GPT5Nano Lai/koog/prompt/llm/LLModel;
+	public static final field GPT5_2 Lai/koog/prompt/llm/LLModel;
+	public static final field GPT5_2Pro Lai/koog/prompt/llm/LLModel;
+	public static final field GPT_OSS_120b Lai/koog/prompt/llm/LLModel;
+	public static final field Gemini2_5Flash Lai/koog/prompt/llm/LLModel;
+	public static final field Gemini2_5FlashLite Lai/koog/prompt/llm/LLModel;
+	public static final field Gemini2_5Pro Lai/koog/prompt/llm/LLModel;
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openrouter/OpenRouterModels;
+	public static final field Llama3 Lai/koog/prompt/llm/LLModel;
+	public static final field Llama3Instruct Lai/koog/prompt/llm/LLModel;
+	public static final field Mistral7B Lai/koog/prompt/llm/LLModel;
+	public static final field Mixtral8x7B Lai/koog/prompt/llm/LLModel;
+	public static final field Phi4Reasoning Lai/koog/prompt/llm/LLModel;
+	public static final field Qwen2_5 Lai/koog/prompt/llm/LLModel;
+	public static final field Qwen3VL Lai/koog/prompt/llm/LLModel;
+	public fun addCustomModel (Lai/koog/prompt/llm/LLModel;)V
+	public fun getModels ()Ljava/util/List;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/OpenRouterModels$Embeddings {
+	public static final field BaaiBgeLargeEnV15 Lai/koog/prompt/llm/LLModel;
+	public static final field BaaiBgeM3 Lai/koog/prompt/llm/LLModel;
+	public static final field BaaiGbeBaseEnV15 Lai/koog/prompt/llm/LLModel;
+	public static final field GoogleGeminiEmbedding001 Lai/koog/prompt/llm/LLModel;
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openrouter/OpenRouterModels$Embeddings;
+	public static final field IntfloatE5BaseV2 Lai/koog/prompt/llm/LLModel;
+	public static final field IntfloatE5LargeV2 Lai/koog/prompt/llm/LLModel;
+	public static final field IntfloatMultilingualE5Large Lai/koog/prompt/llm/LLModel;
+	public static final field MistralCodestralEmbed2505 Lai/koog/prompt/llm/LLModel;
+	public static final field MistralEmbed2312 Lai/koog/prompt/llm/LLModel;
+	public static final field OpenAITextEmbedding3Large Lai/koog/prompt/llm/LLModel;
+	public static final field OpenAITextEmbedding3Small Lai/koog/prompt/llm/LLModel;
+	public static final field OpenAITextEmbeddingAda002 Lai/koog/prompt/llm/LLModel;
+	public static final field Qwen3Embedding4B Lai/koog/prompt/llm/LLModel;
+	public static final field Qwen3Embedding8B Lai/koog/prompt/llm/LLModel;
+	public static final field SentenceTransformersAllMiniLmL12V2 Lai/koog/prompt/llm/LLModel;
+	public static final field SentenceTransformersAllMiniLmL6V2 Lai/koog/prompt/llm/LLModel;
+	public static final field SentenceTransformersAllMpnetBaseV2 Lai/koog/prompt/llm/LLModel;
+	public static final field SentenceTransformersMultiQaMpnetBaseDotV1 Lai/koog/prompt/llm/LLModel;
+	public static final field SentenceTransformersParaphraseMiniLmL6V2 Lai/koog/prompt/llm/LLModel;
+	public static final field ThenlperGteBase Lai/koog/prompt/llm/LLModel;
+	public static final field ThenlperGteLarge Lai/koog/prompt/llm/LLModel;
+}
+
+public class ai/koog/prompt/executor/clients/openrouter/OpenRouterParams : ai/koog/prompt/params/LLMParams {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/Integer;Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/models/ProviderPreferences;)V
+	public synthetic fun <init> (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/Integer;Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/models/ProviderPreferences;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun copy (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;)Lai/koog/prompt/executor/clients/openrouter/OpenRouterParams;
+	public synthetic fun copy (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;)Lai/koog/prompt/params/LLMParams;
+	public final fun copy (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/Integer;Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/models/ProviderPreferences;)Lai/koog/prompt/executor/clients/openrouter/OpenRouterParams;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/openrouter/OpenRouterParams;Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/Integer;Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Double;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/models/ProviderPreferences;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/openrouter/OpenRouterParams;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFrequencyPenalty ()Ljava/lang/Double;
+	public final fun getLogprobs ()Ljava/lang/Boolean;
+	public final fun getMinP ()Ljava/lang/Double;
+	public final fun getModels ()Ljava/util/List;
+	public final fun getPresencePenalty ()Ljava/lang/Double;
+	public final fun getProvider ()Lai/koog/prompt/executor/clients/openrouter/models/ProviderPreferences;
+	public final fun getRepetitionPenalty ()Ljava/lang/Double;
+	public final fun getRoute ()Ljava/lang/String;
+	public final fun getStop ()Ljava/util/List;
+	public final fun getTopA ()Ljava/lang/Double;
+	public final fun getTopK ()Ljava/lang/Integer;
+	public final fun getTopLogprobs ()Ljava/lang/Integer;
+	public final fun getTopP ()Ljava/lang/Double;
+	public final fun getTransforms ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/ErrorResponse {
+	public static final field Companion Lai/koog/prompt/executor/clients/openrouter/models/ErrorResponse$Companion;
+	public fun <init> (ILjava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (ILjava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCode ()I
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getMetadata ()Ljava/util/Map;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openrouter/models/ErrorResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openrouter/models/ErrorResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openrouter/models/ErrorResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openrouter/models/ErrorResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/ErrorResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionResponse : ai/koog/prompt/executor/clients/openai/base/models/OpenAIBaseLLMResponse {
+	public static final field Companion Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionResponse$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage;Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterError;)V
+	public synthetic fun <init> (Ljava/util/List;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage;Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterError;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getChoices ()Ljava/util/List;
+	public fun getCreated ()J
+	public final fun getError ()Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterError;
+	public fun getId ()Ljava/lang/String;
+	public fun getModel ()Ljava/lang/String;
+	public final fun getObjectType ()Ljava/lang/String;
+	public final fun getSystemFingerprint ()Ljava/lang/String;
+	public final fun getUsage ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionStreamResponse : ai/koog/prompt/executor/clients/openai/base/models/OpenAIBaseLLMStreamResponse {
+	public static final field Companion Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionStreamResponse$Companion;
+	public fun <init> (Ljava/util/List;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage;)V
+	public synthetic fun <init> (Ljava/util/List;JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getChoices ()Ljava/util/List;
+	public fun getCreated ()J
+	public fun getId ()Ljava/lang/String;
+	public fun getModel ()Ljava/lang/String;
+	public final fun getObjectType ()Ljava/lang/String;
+	public final fun getSystemFingerprint ()Ljava/lang/String;
+	public final fun getUsage ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIUsage;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionStreamResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionStreamResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionStreamResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionStreamResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterChatCompletionStreamResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterChoice {
+	public static final field Companion Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterChoice$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage;Lai/koog/prompt/executor/clients/openrouter/models/ErrorResponse;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage;Lai/koog/prompt/executor/clients/openrouter/models/ErrorResponse;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getError ()Lai/koog/prompt/executor/clients/openrouter/models/ErrorResponse;
+	public final fun getFinishReason ()Ljava/lang/String;
+	public final fun getMessage ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIMessage;
+	public final fun getNativeFinishReason ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterChoice$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterChoice$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterChoice;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterChoice;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterChoice$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterError {
+	public static final field Companion Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterError$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterError$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterError$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterError;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterError;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterError$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamChoice {
+	public static final field Companion Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamChoice$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamDelta;Lai/koog/prompt/executor/clients/openrouter/models/ErrorResponse;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamDelta;Lai/koog/prompt/executor/clients/openrouter/models/ErrorResponse;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDelta ()Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamDelta;
+	public final fun getError ()Lai/koog/prompt/executor/clients/openrouter/models/ErrorResponse;
+	public final fun getFinishReason ()Ljava/lang/String;
+	public final fun getNativeFinishReason ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamChoice$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamChoice$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamChoice;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamChoice;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamChoice$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamDelta {
+	public static final field Companion Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamDelta$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getContent ()Ljava/lang/String;
+	public final fun getReasoning ()Ljava/lang/String;
+	public final fun getReasoningDetails ()Ljava/util/List;
+	public final fun getRole ()Ljava/lang/String;
+	public final fun getToolCalls ()Ljava/util/List;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamDelta$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamDelta$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamDelta;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamDelta;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/OpenRouterStreamDelta$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/ProviderPreferences {
+	public static final field Companion Lai/koog/prompt/executor/clients/openrouter/models/ProviderPreferences$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAllowFallbacks ()Ljava/lang/Boolean;
+	public final fun getDataCollection ()Ljava/lang/String;
+	public final fun getIgnore ()Ljava/util/List;
+	public final fun getMaxPrice ()Ljava/util/Map;
+	public final fun getOnly ()Ljava/util/List;
+	public final fun getOrder ()Ljava/util/List;
+	public final fun getQuantizations ()Ljava/util/List;
+	public final fun getRequireParameters ()Ljava/lang/Boolean;
+	public final fun getSort ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/executor/clients/openrouter/models/ProviderPreferences$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/executor/clients/openrouter/models/ProviderPreferences$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/executor/clients/openrouter/models/ProviderPreferences;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/executor/clients/openrouter/models/ProviderPreferences;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/executor/clients/openrouter/models/ProviderPreferences$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
