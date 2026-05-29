@@ -11,6 +11,18 @@ kotlin {
     @OptIn(ExperimentalAbiValidation::class)
     abiValidation {
         enabled = true
+
+        filters {
+            excluded {
+                annotatedWith.add("ai.koog.agents.core.annotation.InternalAgentsApi")
+                annotatedWith.add("ai.koog.prompt.annotations.InternalPromptAPI")
+                annotatedWith.add("ai.koog.agents.core.tools.annotations.InternalAgentToolsApi")
+                annotatedWith.add("ai.koog.prompt.executor.clients.InternalLLMClientApi")
+                annotatedWith.add("ai.koog.prompt.structure.annotations.InternalStructuredOutputApi")
+                annotatedWith.add("ai.koog.serialization.annotations.InternalKoogSerializationApi")
+                annotatedWith.add("ai.koog.a2a.annotations.InternalA2AApi")
+            }
+        }
     }
 }
 

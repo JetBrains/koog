@@ -28,23 +28,6 @@ sealed interface ai.koog.serialization/JSONElement { // ai.koog.serialization/JS
 
 sealed interface ai.koog.serialization/TypeToken // ai.koog.serialization/TypeToken|null[0]
 
-final class <#A: kotlin/Any?> ai.koog.serialization.kotlinx/KotlinxDelegateSerializer : kotlinx.serialization/KSerializer<#A> { // ai.koog.serialization.kotlinx/KotlinxDelegateSerializer|null[0]
-    constructor <init>(ai.koog.serialization/JSONSerializer, ai.koog.serialization/TypeToken) // ai.koog.serialization.kotlinx/KotlinxDelegateSerializer.<init>|<init>(ai.koog.serialization.JSONSerializer;ai.koog.serialization.TypeToken){}[0]
-
-    final val descriptor // ai.koog.serialization.kotlinx/KotlinxDelegateSerializer.descriptor|{}descriptor[0]
-        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.serialization.kotlinx/KotlinxDelegateSerializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-    final fun deserialize(kotlinx.serialization.encoding/Decoder): #A // ai.koog.serialization.kotlinx/KotlinxDelegateSerializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-    final fun serialize(kotlinx.serialization.encoding/Encoder, #A) // ai.koog.serialization.kotlinx/KotlinxDelegateSerializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;1:0){}[0]
-}
-
-final class <#A: kotlin/Any?> ai.koog.serialization/KSerializerTypeToken : ai.koog.serialization/TypeToken { // ai.koog.serialization/KSerializerTypeToken|null[0]
-    constructor <init>(kotlinx.serialization/KSerializer<#A>) // ai.koog.serialization/KSerializerTypeToken.<init>|<init>(kotlinx.serialization.KSerializer<1:0>){}[0]
-
-    final val serializer // ai.koog.serialization/KSerializerTypeToken.serializer|{}serializer[0]
-        final fun <get-serializer>(): kotlinx.serialization/KSerializer<#A> // ai.koog.serialization/KSerializerTypeToken.serializer.<get-serializer>|<get-serializer>(){}[0]
-}
-
 final class ai.koog.serialization.kotlinx/KotlinxSerializer : ai.koog.serialization/JSONSerializer { // ai.koog.serialization.kotlinx/KotlinxSerializer|null[0]
     constructor <init>(kotlinx.serialization.json/Json = ...) // ai.koog.serialization.kotlinx/KotlinxSerializer.<init>|<init>(kotlinx.serialization.json.Json){}[0]
 

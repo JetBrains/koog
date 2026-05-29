@@ -170,7 +170,7 @@ CI checks these dumps on every PR via `./gradlew checkLegacyAbi` (part of the `c
 * The Gradle task `checkLegacyAbi` compares the current compiled public API against the committed `.api` dump files in each module's `api/` directory.
 * If the public API has changed without updating the dumps, the task fails and CI blocks the merge.
 * Beta modules (`isBeta = true` in `build.gradle.kts`) are excluded from ABI validation.
-* Internal APIs annotated with `@InternalAgentsApi` or `@InternalAgentToolsApi` are excluded from the check.
+* APIs annotated as internal (e.g. `@InternalAgentsApi`, `@InternalAgentToolsApi`) are excluded from the check.
 
 ### When you change a public API
 

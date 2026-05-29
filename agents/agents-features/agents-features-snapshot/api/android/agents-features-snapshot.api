@@ -64,8 +64,6 @@ public final class ai/koog/agents/snapshot/feature/AgentCheckpointData$Companion
 
 public final class ai/koog/agents/snapshot/feature/AgentCheckpointDataKt {
 	public static final fun isTombstone (Lai/koog/agents/snapshot/feature/AgentCheckpointData;)Z
-	public static final fun toAgentContextData (Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lai/koog/agents/core/agent/context/RollbackStrategy;Lkotlin/jvm/functions/Function2;)Lai/koog/agents/core/agent/context/AgentContextData;
-	public static synthetic fun toAgentContextData$default (Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lai/koog/agents/core/agent/context/RollbackStrategy;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lai/koog/agents/core/agent/context/AgentContextData;
 	public static final fun tombstoneCheckpoint (Lkotlin/time/Instant;J)Lai/koog/agents/snapshot/feature/AgentCheckpointData;
 }
 
@@ -112,7 +110,6 @@ public final class ai/koog/agents/snapshot/feature/Persistence {
 	public static synthetic fun createCheckpointAfterNode$default (Lai/koog/agents/snapshot/feature/Persistence;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Object;Lai/koog/serialization/TypeToken;JLjava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun createPlannerCheckpoint (Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/planner/PlannerAgentExecutionPoint;JLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun createPlannerCheckpoint$default (Lai/koog/agents/snapshot/feature/Persistence;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/planner/PlannerAgentExecutionPoint;JLjava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public final fun createTombstoneCheckpoint (Ljava/lang/String;Lkotlin/time/Instant;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getCheckpointById (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getLatestCheckpoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getRollbackStrategy ()Lai/koog/agents/core/agent/context/RollbackStrategy;

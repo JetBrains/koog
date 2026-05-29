@@ -56,10 +56,6 @@ abstract class <#A: kotlin/Any?, #B: kotlin/Any?> ai.koog.agents.core.tools/Tool
     final fun encodeArgsToStringUnsafe(kotlin/Any?, ai.koog.serialization/JSONSerializer): kotlin/String // ai.koog.agents.core.tools/ToolBase.encodeArgsToStringUnsafe|encodeArgsToStringUnsafe(kotlin.Any?;ai.koog.serialization.JSONSerializer){}[0]
     final fun encodeArgsUnsafe(kotlin/Any?, ai.koog.serialization/JSONSerializer): ai.koog.serialization/JSONObject // ai.koog.agents.core.tools/ToolBase.encodeArgsUnsafe|encodeArgsUnsafe(kotlin.Any?;ai.koog.serialization.JSONSerializer){}[0]
     final fun encodeResultToStringUnsafe(kotlin/Any?, ai.koog.serialization/JSONSerializer): kotlin/String // ai.koog.agents.core.tools/ToolBase.encodeResultToStringUnsafe|encodeResultToStringUnsafe(kotlin.Any?;ai.koog.serialization.JSONSerializer){}[0]
-    final fun encodeResultUnsafe(kotlin/Any?, ai.koog.serialization/JSONSerializer): ai.koog.serialization/JSONElement // ai.koog.agents.core.tools/ToolBase.encodeResultUnsafe|encodeResultUnsafe(kotlin.Any?;ai.koog.serialization.JSONSerializer){}[0]
-    final inline fun <#A1: kotlin/Any?, #B1: kotlin/Any?> withUnsafeCast(kotlin/Any?, kotlin/String, kotlin/Function1<#A1, #B1>): #B1 // ai.koog.agents.core.tools/ToolBase.withUnsafeCast|withUnsafeCast(kotlin.Any?;kotlin.String;kotlin.Function1<0:0,0:1>){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
-    final suspend fun executeUnsafe(kotlin/Any?): #B // ai.koog.agents.core.tools/ToolBase.executeUnsafe|executeUnsafe(kotlin.Any?){}[0]
-    final suspend fun executeUnsafe(kotlin/Any?, ai.koog.agents.core.tools/ToolCallMetadata): #B // ai.koog.agents.core.tools/ToolBase.executeUnsafe|executeUnsafe(kotlin.Any?;ai.koog.agents.core.tools.ToolCallMetadata){}[0]
     open fun decodeArgs(ai.koog.serialization/JSONObject, ai.koog.serialization/JSONSerializer): #A // ai.koog.agents.core.tools/ToolBase.decodeArgs|decodeArgs(ai.koog.serialization.JSONObject;ai.koog.serialization.JSONSerializer){}[0]
     open fun decodeResult(ai.koog.serialization/JSONElement, ai.koog.serialization/JSONSerializer): #B // ai.koog.agents.core.tools/ToolBase.decodeResult|decodeResult(ai.koog.serialization.JSONElement;ai.koog.serialization.JSONSerializer){}[0]
     open fun encodeArgs(#A, ai.koog.serialization/JSONSerializer): ai.koog.serialization/JSONObject // ai.koog.agents.core.tools/ToolBase.encodeArgs|encodeArgs(1:0;ai.koog.serialization.JSONSerializer){}[0]
@@ -71,15 +67,6 @@ abstract class <#A: kotlin/Any?> ai.koog.agents.core.tools/SimpleTool : ai.koog.
     constructor <init>(ai.koog.serialization/TypeToken, kotlin/String, kotlin/String) // ai.koog.agents.core.tools/SimpleTool.<init>|<init>(ai.koog.serialization.TypeToken;kotlin.String;kotlin.String){}[0]
 
     open fun encodeResultToString(kotlin/String, ai.koog.serialization/JSONSerializer): kotlin/String // ai.koog.agents.core.tools/SimpleTool.encodeResultToString|encodeResultToString(kotlin.String;ai.koog.serialization.JSONSerializer){}[0]
-}
-
-final class ai.koog.agents.core.tools.schema/ToolParameterInfo { // ai.koog.agents.core.tools.schema/ToolParameterInfo|null[0]
-    constructor <init>(ai.koog.agents.core.tools/ToolParameterType, kotlin/String) // ai.koog.agents.core.tools.schema/ToolParameterInfo.<init>|<init>(ai.koog.agents.core.tools.ToolParameterType;kotlin.String){}[0]
-
-    final val description // ai.koog.agents.core.tools.schema/ToolParameterInfo.description|{}description[0]
-        final fun <get-description>(): kotlin/String // ai.koog.agents.core.tools.schema/ToolParameterInfo.description.<get-description>|<get-description>(){}[0]
-    final val type // ai.koog.agents.core.tools.schema/ToolParameterInfo.type|{}type[0]
-        final fun <get-type>(): ai.koog.agents.core.tools/ToolParameterType // ai.koog.agents.core.tools.schema/ToolParameterInfo.type.<get-type>|<get-type>(){}[0]
 }
 
 final class ai.koog.agents.core.tools/ToolCallMetadata : kotlin.collections/Map<kotlin/String, kotlin/Any?> { // ai.koog.agents.core.tools/ToolCallMetadata|null[0]
@@ -211,7 +198,6 @@ sealed class ai.koog.agents.core.tools/ToolParameterType { // ai.koog.agents.cor
         final fun component1(): kotlin/Array<ai.koog.agents.core.tools/ToolParameterDescriptor> // ai.koog.agents.core.tools/ToolParameterType.AnyOf.component1|component1(){}[0]
         final fun copy(kotlin/Array<ai.koog.agents.core.tools/ToolParameterDescriptor> = ...): ai.koog.agents.core.tools/ToolParameterType.AnyOf // ai.koog.agents.core.tools/ToolParameterType.AnyOf.copy|copy(kotlin.Array<ai.koog.agents.core.tools.ToolParameterDescriptor>){}[0]
         final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolParameterType.AnyOf.equals|equals(kotlin.Any?){}[0]
-        final fun hackRepresentAnyOfWithNullAsTypeUnionWithNull(kotlin/Function1<ai.koog.agents.core.tools/ToolParameterType, kotlinx.serialization.json/JsonObject>): kotlinx.serialization.json/JsonObject? // ai.koog.agents.core.tools/ToolParameterType.AnyOf.hackRepresentAnyOfWithNullAsTypeUnionWithNull|hackRepresentAnyOfWithNullAsTypeUnionWithNull(kotlin.Function1<ai.koog.agents.core.tools.ToolParameterType,kotlinx.serialization.json.JsonObject>){}[0]
         final fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolParameterType.AnyOf.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolParameterType.AnyOf.toString|toString(){}[0]
     }
@@ -300,12 +286,7 @@ sealed class ai.koog.agents.core.tools/ToolParameterType { // ai.koog.agents.cor
     }
 }
 
-final val ai.koog.agents.core.tools.schema/defaultJsonSchemaConfig // ai.koog.agents.core.tools.schema/defaultJsonSchemaConfig|{}defaultJsonSchemaConfig[0]
-    final fun <get-defaultJsonSchemaConfig>(): kotlinx.schema.generator.json/JsonSchemaConfig // ai.koog.agents.core.tools.schema/defaultJsonSchemaConfig.<get-defaultJsonSchemaConfig>|<get-defaultJsonSchemaConfig>(){}[0]
-
-final fun (kotlinx.schema.json/PropertyDefinition).ai.koog.agents.core.tools.schema/toToolParameter(kotlin.collections/Map<kotlin/String, kotlinx.schema.json/PropertyDefinition>?): ai.koog.agents.core.tools.schema/ToolParameterInfo // ai.koog.agents.core.tools.schema/toToolParameter|toToolParameter@kotlinx.schema.json.PropertyDefinition(kotlin.collections.Map<kotlin.String,kotlinx.schema.json.PropertyDefinition>?){}[0]
 final fun <#A: kotlin/Any> ai.koog.agents.core.tools/validateNotNull(#A?, kotlin/Function0<kotlin/String>): #A // ai.koog.agents.core.tools/validateNotNull|validateNotNull(0:0?;kotlin.Function0<kotlin.String>){0§<kotlin.Any>}[0]
 final fun ai.koog.agents.core.tools.schema/getJsonSchema(ai.koog.serialization/TypeToken, kotlinx.schema.generator.json/JsonSchemaConfig = ...): kotlinx.schema.json/JsonSchema // ai.koog.agents.core.tools.schema/getJsonSchema|getJsonSchema(ai.koog.serialization.TypeToken;kotlinx.schema.generator.json.JsonSchemaConfig){}[0]
-final fun ai.koog.agents.core.tools.schema/getToolDescriptor(ai.koog.serialization/TypeToken, kotlin/String, kotlin/String? = ..., kotlinx.schema.generator.json/JsonSchemaConfig = ...): ai.koog.agents.core.tools/ToolDescriptor // ai.koog.agents.core.tools.schema/getToolDescriptor|getToolDescriptor(ai.koog.serialization.TypeToken;kotlin.String;kotlin.String?;kotlinx.schema.generator.json.JsonSchemaConfig){}[0]
 final fun ai.koog.agents.core.tools/fail(kotlin/String): kotlin/Nothing // ai.koog.agents.core.tools/fail|fail(kotlin.String){}[0]
 final fun ai.koog.agents.core.tools/validate(kotlin/Boolean, kotlin/Function0<kotlin/String>) // ai.koog.agents.core.tools/validate|validate(kotlin.Boolean;kotlin.Function0<kotlin.String>){}[0]

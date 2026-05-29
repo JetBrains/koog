@@ -27,16 +27,12 @@ public abstract class ai/koog/agents/core/tools/ToolBase {
 	public fun encodeResult (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Lai/koog/serialization/JSONElement;
 	public fun encodeResultToString (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Ljava/lang/String;
 	public final fun encodeResultToStringUnsafe (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Ljava/lang/String;
-	public final fun encodeResultUnsafe (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Lai/koog/serialization/JSONElement;
 	public abstract fun execute (Ljava/lang/Object;Lai/koog/agents/core/tools/ToolCallMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun executeUnsafe (Ljava/lang/Object;Lai/koog/agents/core/tools/ToolCallMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun executeUnsafe (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getArgsType ()Lai/koog/serialization/TypeToken;
 	public final fun getDescriptor ()Lai/koog/agents/core/tools/ToolDescriptor;
 	public final fun getMetadata ()Ljava/util/Map;
 	public final fun getName ()Ljava/lang/String;
 	public final fun getResultType ()Lai/koog/serialization/TypeToken;
-	protected final fun withUnsafeCast (Ljava/lang/Object;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 }
 
 public final class ai/koog/agents/core/tools/ToolCallMetadata : java/util/Map, kotlin/jvm/internal/markers/KMappedMarker {
@@ -155,7 +151,6 @@ public final class ai/koog/agents/core/tools/ToolParameterType$AnyOf : ai/koog/a
 	public static synthetic fun copy$default (Lai/koog/agents/core/tools/ToolParameterType$AnyOf;[Lai/koog/agents/core/tools/ToolParameterDescriptor;ILjava/lang/Object;)Lai/koog/agents/core/tools/ToolParameterType$AnyOf;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getTypes ()[Lai/koog/agents/core/tools/ToolParameterDescriptor;
-	public final fun hackRepresentAnyOfWithNullAsTypeUnionWithNull (Lkotlin/jvm/functions/Function1;)Lkotlinx/serialization/json/JsonObject;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -329,30 +324,13 @@ public final class ai/koog/agents/core/tools/reflect/ToolSet$DefaultImpls {
 }
 
 public final class ai/koog/agents/core/tools/reflect/java/JavaToolFromCallableExtensionsKt {
-	public static final fun asTool (Ljava/lang/reflect/Method;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)Lai/koog/agents/core/tools/reflect/ToolFromCallable;
-	public static synthetic fun asTool$default (Ljava/lang/reflect/Method;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/core/tools/reflect/ToolFromCallable;
 	public static final fun asTools (Ljava/lang/Class;Ljava/lang/Object;)Ljava/util/List;
 	public static synthetic fun asTools$default (Ljava/lang/Class;Ljava/lang/Object;ILjava/lang/Object;)Ljava/util/List;
-}
-
-public final class ai/koog/agents/core/tools/schema/SchemaGeneratorKt {
-	public static final fun getDefaultJsonSchemaConfig ()Lkotlinx/schema/generator/json/JsonSchemaConfig;
-	public static final fun getToolDescriptor (Lai/koog/serialization/TypeToken;Ljava/lang/String;Ljava/lang/String;Lkotlinx/schema/generator/json/JsonSchemaConfig;)Lai/koog/agents/core/tools/ToolDescriptor;
-	public static synthetic fun getToolDescriptor$default (Lai/koog/serialization/TypeToken;Ljava/lang/String;Ljava/lang/String;Lkotlinx/schema/generator/json/JsonSchemaConfig;ILjava/lang/Object;)Lai/koog/agents/core/tools/ToolDescriptor;
-	public static final fun toToolParameter (Lkotlinx/schema/json/PropertyDefinition;Ljava/util/Map;)Lai/koog/agents/core/tools/schema/ToolParameterInfo;
 }
 
 public final class ai/koog/agents/core/tools/schema/SchemaGenerator_jvmCommonKt {
 	public static final fun getJsonSchema (Lai/koog/serialization/TypeToken;Lkotlinx/schema/generator/json/JsonSchemaConfig;)Lkotlinx/schema/json/JsonSchema;
 	public static synthetic fun getJsonSchema$default (Lai/koog/serialization/TypeToken;Lkotlinx/schema/generator/json/JsonSchemaConfig;ILjava/lang/Object;)Lkotlinx/schema/json/JsonSchema;
-	public static final fun getToolDescriptor (Lkotlin/reflect/KCallable;Ljava/lang/String;Ljava/lang/String;Lkotlinx/schema/generator/json/JsonSchemaConfig;)Lai/koog/agents/core/tools/ToolDescriptor;
-	public static synthetic fun getToolDescriptor$default (Lkotlin/reflect/KCallable;Ljava/lang/String;Ljava/lang/String;Lkotlinx/schema/generator/json/JsonSchemaConfig;ILjava/lang/Object;)Lai/koog/agents/core/tools/ToolDescriptor;
-}
-
-public final class ai/koog/agents/core/tools/schema/ToolParameterInfo {
-	public fun <init> (Lai/koog/agents/core/tools/ToolParameterType;Ljava/lang/String;)V
-	public final fun getDescription ()Ljava/lang/String;
-	public final fun getType ()Lai/koog/agents/core/tools/ToolParameterType;
 }
 
 public abstract interface class ai/koog/agents/core/tools/serialization/ToolDescriptorSchemaGenerator {

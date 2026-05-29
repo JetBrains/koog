@@ -23,7 +23,6 @@ public abstract class ai/koog/agents/core/agent/AIAgentBase : ai/koog/agents/cor
 	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun createSession (Ljava/lang/String;)Lai/koog/agents/core/agent/session/AIAgentRunSession;
 	public final fun getId ()Ljava/lang/String;
-	public abstract fun getPipeline ()Lai/koog/agents/core/feature/pipeline/AIAgentPipeline;
 	public abstract fun getStrategy ()Lai/koog/agents/core/agent/entity/AIAgentStrategy;
 	public abstract fun prepareContext (Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun run (Ljava/lang/Object;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -129,8 +128,6 @@ public abstract class ai/koog/agents/core/agent/AIAgentServiceBase : ai/koog/age
 	public final fun agentById (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun createAgent (Ljava/lang/String;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun createAgentAndRun (Ljava/lang/Object;Ljava/lang/String;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun createManagedAgent (Ljava/lang/String;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;)Lai/koog/agents/core/agent/AIAgent;
-	public static synthetic fun createManagedAgent$default (Lai/koog/agents/core/agent/AIAgentServiceBase;Ljava/lang/String;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;ILjava/lang/Object;)Lai/koog/agents/core/agent/AIAgent;
 	public final fun removeAgent (Lai/koog/agents/core/agent/AIAgent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun removeAgentWithId (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -217,7 +214,6 @@ public final class ai/koog/agents/core/agent/AIAgentState$NotStarted : ai/koog/a
 public final class ai/koog/agents/core/agent/AIAgentState$Running : ai/koog/agents/core/agent/AIAgentState {
 	public fun <init> (Lai/koog/agents/core/agent/context/AIAgentContext;)V
 	public fun copy ()Lai/koog/agents/core/agent/AIAgentState;
-	public final fun getRootContext ()Lai/koog/agents/core/agent/context/AIAgentContext;
 }
 
 public final class ai/koog/agents/core/agent/AIAgentState$Starting : ai/koog/agents/core/agent/AIAgentState {
@@ -304,7 +300,6 @@ public final class ai/koog/agents/core/agent/FunctionalAIAgent : ai/koog/agents/
 	public synthetic fun <init> (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/AIAgentFunctionalStrategy;Lai/koog/agents/core/tools/ToolRegistry;Ljava/lang/String;Lai/koog/utils/time/KoogClock;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getAgentConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
 	public final fun getClock ()Lai/koog/utils/time/KoogClock;
-	public final fun getInstallFeatures ()Lkotlin/jvm/functions/Function1;
 	public fun getPipeline ()Lai/koog/agents/core/feature/pipeline/AIAgentFunctionalPipeline;
 	public synthetic fun getPipeline ()Lai/koog/agents/core/feature/pipeline/AIAgentPipeline;
 	public final fun getPromptExecutor ()Lai/koog/prompt/executor/model/PromptExecutor;
@@ -320,9 +315,7 @@ public final class ai/koog/agents/core/agent/FunctionalAIAgent$FeatureContext {
 }
 
 public final class ai/koog/agents/core/agent/FunctionalAIAgentService : ai/koog/agents/core/agent/AIAgentServiceBase {
-	public fun <init> (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/AIAgentFunctionalStrategy;Lai/koog/agents/core/tools/ToolRegistry;Lkotlin/jvm/functions/Function1;)V
 	public synthetic fun createManagedAgent (Ljava/lang/String;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;)Lai/koog/agents/core/agent/AIAgent;
-	public fun createManagedAgent (Ljava/lang/String;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;)Lai/koog/agents/core/agent/FunctionalAIAgent;
 	public fun getAgentConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
 	public final fun getInstallFeatures ()Lkotlin/jvm/functions/Function1;
 	public fun getPromptExecutor ()Lai/koog/prompt/executor/model/PromptExecutor;
@@ -350,7 +343,6 @@ public class ai/koog/agents/core/agent/GraphAIAgent : ai/koog/agents/core/agent/
 	public fun getAgentConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
 	public final fun getClock ()Lai/koog/utils/time/KoogClock;
 	public final fun getInputType ()Lai/koog/serialization/TypeToken;
-	public final fun getInstallFeatures ()Lkotlin/jvm/functions/Function1;
 	public final fun getOutputType ()Lai/koog/serialization/TypeToken;
 	public fun getPipeline ()Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;
 	public synthetic fun getPipeline ()Lai/koog/agents/core/feature/pipeline/AIAgentPipeline;
@@ -367,9 +359,7 @@ public final class ai/koog/agents/core/agent/GraphAIAgent$FeatureContext {
 }
 
 public final class ai/koog/agents/core/agent/GraphAIAgentService : ai/koog/agents/core/agent/AIAgentServiceBase {
-	public fun <init> (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/entity/AIAgentGraphStrategy;Lai/koog/agents/core/tools/ToolRegistry;Lkotlin/jvm/functions/Function1;)V
 	public synthetic fun createManagedAgent (Ljava/lang/String;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;)Lai/koog/agents/core/agent/AIAgent;
-	public fun createManagedAgent (Ljava/lang/String;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;)Lai/koog/agents/core/agent/GraphAIAgent;
 	public fun getAgentConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
 	public final fun getInstallFeatures ()Lkotlin/jvm/functions/Function1;
 	public fun getPromptExecutor ()Lai/koog/prompt/executor/model/PromptExecutor;
@@ -438,14 +428,12 @@ public final class ai/koog/agents/core/agent/config/AIAgentConfig : ai/koog/agen
 	public fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILjava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/serialization/JSONSerializer;)V
 	public synthetic fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILjava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/serialization/JSONSerializer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public static final fun builder ()Lai/koog/agents/core/agent/config/AIAgentConfig$Companion$InitialAIAgentBuilder;
-	public final fun getLlmRequestDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 	public final fun getMaxAgentIterations ()I
 	public final fun getMissingToolsConversionStrategy ()Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;
 	public fun getModel ()Lai/koog/prompt/llm/LLModel;
 	public fun getPrompt ()Lai/koog/prompt/Prompt;
 	public final fun getResponseProcessor ()Lai/koog/prompt/processor/ResponseProcessor;
 	public final fun getSerializer ()Lai/koog/serialization/JSONSerializer;
-	public final fun getStrategyDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 }
 
 public final class ai/koog/agents/core/agent/config/AIAgentConfig$Companion {
@@ -531,14 +519,11 @@ public abstract interface class ai/koog/agents/core/agent/context/AIAgentContext
 
 public final class ai/koog/agents/core/agent/context/AIAgentContextKt {
 	public static final fun feature (Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/reflect/KClass;Lai/koog/agents/core/feature/AIAgentFeature;)Ljava/lang/Object;
-	public static final fun getGraphAgentContextData (Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun getGraphAgentContextDataAdditionalKey ()Lai/koog/agents/core/agent/entity/AIAgentStorageKey;
-	public static final fun getPlannerAgentContextData (Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun getPlannerAgentContextDataAdditionalKey ()Lai/koog/agents/core/agent/entity/AIAgentStorageKey;
 	public static final fun removeGraphAgentContextData (Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun removePlannerAgentContextData (Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun rootContext (Lai/koog/agents/core/agent/context/AIAgentContext;)Lai/koog/agents/core/agent/context/AIAgentContext;
-	public static final fun store (Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/context/AgentContextData;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun with (Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lkotlin/jvm/functions/Function2;)Ljava/lang/Object;
 	public static final fun with (Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lkotlin/jvm/functions/Function2;)Ljava/lang/Object;
 }
@@ -653,7 +638,6 @@ public class ai/koog/agents/core/agent/context/AIAgentFunctionalContextBaseCommo
 public final class ai/koog/agents/core/agent/context/AIAgentGraphContext : ai/koog/agents/core/agent/context/AIAgentGraphContextBase {
 	public fun <init> (Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/String;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;)V
 	public fun copy (Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/String;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Ljava/lang/String;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;)Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;
-	public final fun copyWithTools (Ljava/util/List;)Lai/koog/agents/core/agent/context/AIAgentContext;
 	public fun fork (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getAgentId ()Ljava/lang/String;
 	public fun getAgentInput ()Ljava/lang/Object;
@@ -698,8 +682,6 @@ public class ai/koog/agents/core/agent/context/AIAgentLLMContext : ai/koog/agent
 }
 
 public abstract class ai/koog/agents/core/agent/context/AIAgentLLMContextCommon {
-	public final fun clock ()Lai/koog/utils/time/KoogClock;
-	public final fun config ()Lai/koog/agents/core/agent/config/AIAgentConfig;
 	public fun copy (Ljava/util/List;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/agents/core/environment/AIAgentEnvironment;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun copy (Ljava/util/List;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/agents/core/environment/AIAgentEnvironment;Lai/koog/agents/core/agent/config/AIAgentConfig;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun copy (Ljava/util/List;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/agents/core/environment/AIAgentEnvironment;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -713,16 +695,12 @@ public abstract class ai/koog/agents/core/agent/context/AIAgentLLMContextCommon 
 	public final fun copy (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun copy$default (Lai/koog/agents/core/agent/context/AIAgentLLMContextCommon;Ljava/util/List;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/agents/core/environment/AIAgentEnvironment;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun copy$default (Lai/koog/agents/core/agent/context/AIAgentLLMContextCommon;Ljava/util/List;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/agents/core/environment/AIAgentEnvironment;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;ILjava/lang/Object;)Lai/koog/agents/core/agent/context/AIAgentLLMContext;
-	public final fun environment ()Lai/koog/agents/core/environment/AIAgentEnvironment;
 	public final fun model ()Lai/koog/prompt/llm/LLModel;
 	public final fun prompt ()Lai/koog/prompt/Prompt;
 	public final fun promptExecutor ()Lai/koog/prompt/executor/model/PromptExecutor;
 	public fun readSession (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun responseProcessor ()Lai/koog/prompt/processor/ResponseProcessor;
-	public final fun setModel (Lai/koog/prompt/llm/LLModel;)V
 	public final fun setPrompt (Lai/koog/prompt/Prompt;)V
-	public final fun setResponseProcessor (Lai/koog/prompt/processor/ResponseProcessor;)V
-	public final fun setTools (Ljava/util/List;)V
 	public final fun toolRegistry ()Lai/koog/agents/core/tools/ToolRegistry;
 	public final fun tools ()Ljava/util/List;
 	public fun withPrompt (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -736,20 +714,7 @@ public final class ai/koog/agents/core/agent/context/AIAgentPlannerContext : ai/
 	public static synthetic fun copy$default (Lai/koog/agents/core/agent/context/AIAgentPlannerContext;Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/agent/context/AIAgentLLMContext;Lai/koog/agents/core/agent/entity/AIAgentStateManager;Lai/koog/agents/core/agent/entity/AIAgentStorage;Ljava/lang/String;Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;ILjava/lang/Object;)Lai/koog/agents/core/agent/context/AIAgentPlannerContext;
 }
 
-public abstract class ai/koog/agents/core/agent/context/AgentContextData {
-}
-
 public abstract interface annotation class ai/koog/agents/core/agent/context/DetachedPromptExecutorAPI : java/lang/annotation/Annotation {
-}
-
-public final class ai/koog/agents/core/agent/context/GraphAgentContextData : ai/koog/agents/core/agent/context/AgentContextData {
-	public fun <init> (Ljava/util/List;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/serialization/JSONObject;ILjava/lang/String;Lai/koog/serialization/JSONElement;Lai/koog/agents/core/agent/context/RollbackStrategy;Lkotlin/jvm/functions/Function2;)V
-	public synthetic fun <init> (Ljava/util/List;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/serialization/JSONObject;ILjava/lang/String;Lai/koog/serialization/JSONElement;Lai/koog/agents/core/agent/context/RollbackStrategy;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
-public final class ai/koog/agents/core/agent/context/PlannerAgentContextData : ai/koog/agents/core/agent/context/AgentContextData {
-	public fun <init> (Ljava/util/List;Lai/koog/serialization/JSONElement;Lai/koog/serialization/JSONElement;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/serialization/JSONObject;ILai/koog/agents/core/planner/PlannerAgentExecutionPoint;Lai/koog/agents/core/agent/context/RollbackStrategy;Lkotlin/jvm/functions/Function2;)V
-	public synthetic fun <init> (Ljava/util/List;Lai/koog/serialization/JSONElement;Lai/koog/serialization/JSONElement;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/serialization/JSONObject;ILai/koog/agents/core/planner/PlannerAgentExecutionPoint;Lai/koog/agents/core/agent/context/RollbackStrategy;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class ai/koog/agents/core/agent/context/RollbackStrategy : java/lang/Enum {
@@ -1281,7 +1246,6 @@ public abstract interface class ai/koog/agents/core/agent/entity/PromptBuilderAc
 }
 
 public class ai/koog/agents/core/agent/entity/SimpleAIAgentNodeImpl : ai/koog/agents/core/agent/entity/AIAgentNodeBase {
-	public fun execute (Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getExecute ()Lkotlin/jvm/functions/Function3;
 	public fun getInputType ()Lai/koog/serialization/TypeToken;
 	public fun getName ()Ljava/lang/String;
@@ -1565,12 +1529,10 @@ public abstract class ai/koog/agents/core/agent/session/AIAgentLLMWriteSessionCo
 	public final fun findTool (Lkotlin/reflect/KClass;)Lai/koog/agents/core/environment/SafeTool;
 	public final fun getClock ()Lai/koog/utils/time/KoogClock;
 	public final fun getConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
-	public final fun getEnvironment ()Lai/koog/agents/core/environment/AIAgentEnvironment;
 	public final fun getModel ()Lai/koog/prompt/llm/LLModel;
 	public final fun getPrompt ()Lai/koog/prompt/Prompt;
 	protected final fun getReadSession ()Lai/koog/agents/core/agent/session/AIAgentLLMReadSession;
 	public final fun getResponseProcessor ()Lai/koog/prompt/processor/ResponseProcessor;
-	public final fun getToolRegistry ()Lai/koog/agents/core/tools/ToolRegistry;
 	public final fun getTools ()Ljava/util/List;
 	public final fun leaveLastNMessages (IZ)V
 	public static synthetic fun leaveLastNMessages$default (Lai/koog/agents/core/agent/session/AIAgentLLMWriteSessionCommon;IZILjava/lang/Object;)V
@@ -1764,12 +1726,8 @@ public abstract class ai/koog/agents/core/dsl/builder/AIAgentSubgraphBuilderBase
 }
 
 public final class ai/koog/agents/core/dsl/builder/AIAgentSubgraphBuilderKt {
-	public static final fun node (Ljava/lang/String;Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lkotlin/jvm/functions/Function3;)Lai/koog/agents/core/dsl/builder/AIAgentNodeDelegate;
-	public static synthetic fun node$default (Ljava/lang/String;Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lkotlin/jvm/functions/Function3;ILjava/lang/Object;)Lai/koog/agents/core/dsl/builder/AIAgentNodeDelegate;
 	public static final fun parallel ([Lai/koog/agents/core/agent/entity/AIAgentNodeBase;Lkotlinx/coroutines/CoroutineDispatcher;Ljava/lang/String;Lkotlin/jvm/functions/Function2;)Lai/koog/agents/core/dsl/builder/AIAgentNodeDelegate;
 	public static synthetic fun parallel$default ([Lai/koog/agents/core/agent/entity/AIAgentNodeBase;Lkotlinx/coroutines/CoroutineDispatcher;Ljava/lang/String;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lai/koog/agents/core/dsl/builder/AIAgentNodeDelegate;
-	public static final fun subgraph (Ljava/lang/String;Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Lkotlin/jvm/functions/Function1;)Lai/koog/agents/core/dsl/builder/AIAgentSubgraphDelegate;
-	public static synthetic fun subgraph$default (Ljava/lang/String;Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/koog/agents/core/dsl/builder/AIAgentSubgraphDelegate;
 }
 
 public class ai/koog/agents/core/dsl/builder/AIAgentSubgraphDelegate {
@@ -1838,9 +1796,6 @@ public final class ai/koog/agents/core/dsl/extension/AIAgentEdgesKt {
 }
 
 public final class ai/koog/agents/core/dsl/extension/AIAgentNodesKt {
-	public static final fun appendPromptImpl (Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static final fun executeSingleToolImpl (Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/tools/Tool;Ljava/lang/Object;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static final fun llmCompressHistoryImpl (Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Ljava/lang/Object;Lai/koog/prompt/llm/LLModel;Lai/koog/agents/core/dsl/extension/HistoryCompressionStrategy;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun nodeExecuteSingleTool (Ljava/lang/String;Z)Lai/koog/agents/core/dsl/builder/AIAgentNodeDelegate;
 	public static synthetic fun nodeExecuteSingleTool$default (Ljava/lang/String;ZILjava/lang/Object;)Lai/koog/agents/core/dsl/builder/AIAgentNodeDelegate;
 	public static final fun nodeExecuteTools (Ljava/lang/String;Z)Lai/koog/agents/core/dsl/builder/AIAgentNodeDelegate;
@@ -1893,9 +1848,6 @@ public final class ai/koog/agents/core/dsl/extension/AIAgentNodesKt {
 	public static synthetic fun nodeLLMSendToolResultsStreaming$default (Ljava/lang/String;Lai/koog/prompt/structure/StructureDefinition;ILjava/lang/Object;)Lai/koog/agents/core/dsl/builder/AIAgentNodeDelegate;
 	public static final fun nodeLLMSendToolResultsWithoutTools (Ljava/lang/String;)Lai/koog/agents/core/dsl/builder/AIAgentNodeDelegate;
 	public static synthetic fun nodeLLMSendToolResultsWithoutTools$default (Ljava/lang/String;ILjava/lang/Object;)Lai/koog/agents/core/dsl/builder/AIAgentNodeDelegate;
-	public static final fun requestStreamingImpl (Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Ljava/lang/String;Lai/koog/prompt/structure/StructureDefinition;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun requestStreamingImpl$default (Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Ljava/lang/String;Lai/koog/prompt/structure/StructureDefinition;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun setStructuredOutputImpl (Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/prompt/structure/StructuredRequestConfig;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class ai/koog/agents/core/dsl/extension/ChunkedHistoryCompressionStrategy : ai/koog/agents/core/dsl/extension/HistoryCompressionStrategy {
@@ -2218,15 +2170,6 @@ public final class ai/koog/agents/core/environment/AIAgentEnvironment$DefaultImp
 	public static fun executeTools (Lai/koog/agents/core/environment/AIAgentEnvironment;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public final class ai/koog/agents/core/environment/ContextualAgentEnvironment : ai/koog/agents/core/environment/AIAgentEnvironment {
-	public fun <init> (Lai/koog/agents/core/environment/AIAgentEnvironment;Lai/koog/agents/core/agent/context/AIAgentContext;)V
-	public fun executeTool (Lai/koog/prompt/message/MessagePart$Tool$Call;Lai/koog/agents/core/tools/ToolCallMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun executeTool (Lai/koog/prompt/message/MessagePart$Tool$Call;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun executeTools (Ljava/util/List;Lai/koog/agents/core/tools/ToolCallMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun executeTools (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun reportProblem (Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-}
-
 public final class ai/koog/agents/core/environment/GenericAgentEnvironment : ai/koog/agents/core/environment/AIAgentEnvironment {
 	public fun <init> (Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/serialization/JSONSerializer;)V
 	public fun executeTool (Lai/koog/prompt/message/MessagePart$Tool$Call;Lai/koog/agents/core/tools/ToolCallMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -2255,7 +2198,6 @@ public final class ai/koog/agents/core/environment/ReceivedToolResult {
 	public final fun getOutput ()Ljava/lang/String;
 	public final fun getResult ()Lai/koog/serialization/JSONElement;
 	public final fun getResultKind ()Lai/koog/agents/core/environment/ToolResultKind;
-	public final fun getResultObject ()Ljava/lang/Object;
 	public final fun getTool ()Ljava/lang/String;
 	public final fun getToolArgs ()Lai/koog/serialization/JSONObject;
 	public final fun getToolDescription ()Ljava/lang/String;
@@ -2466,18 +2408,6 @@ public abstract interface class ai/koog/agents/core/feature/AIAgentGraphFeature 
 
 public abstract interface class ai/koog/agents/core/feature/AIAgentPlannerFeature : ai/koog/agents/core/feature/AIAgentFeature {
 	public abstract fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;)Ljava/lang/Object;
-}
-
-public final class ai/koog/agents/core/feature/ContextualPromptExecutor : ai/koog/prompt/executor/model/PromptExecutor {
-	public fun <init> (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/agents/core/agent/context/AIAgentContext;)V
-	public fun close ()V
-	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
-	public fun getBasicJsonSchemaGenerator (Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator;
-	public fun getStandardJsonSchemaGenerator (Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator;
-	public fun models (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract class ai/koog/agents/core/feature/config/FeatureConfig {
@@ -4175,10 +4105,6 @@ public final class ai/koog/agents/core/feature/model/events/StrategyEventGraphNo
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class ai/koog/agents/core/feature/model/events/StrategyEventsKt {
-	public static final fun startNodeToGraph (Lai/koog/agents/core/agent/entity/AIAgentGraphStrategy;)Lai/koog/agents/core/feature/model/events/StrategyEventGraph;
-}
-
 public final class ai/koog/agents/core/feature/model/events/StrategyStartingEvent : ai/koog/agents/core/feature/model/events/StrategyStartingEventBase {
 	public static final field Companion Lai/koog/agents/core/feature/model/events/StrategyStartingEvent$Companion;
 	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Ljava/lang/String;Ljava/lang/String;J)V
@@ -4524,8 +4450,6 @@ public class ai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline : ai/koog
 	public fun <init> (Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;)V
 	public fun <init> (Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;Lai/koog/agents/core/feature/pipeline/AIAgentPipelineImpl;)V
 	public synthetic fun <init> (Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;Lai/koog/agents/core/feature/pipeline/AIAgentPipelineImpl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun closeAllFeaturesMessageProcessors (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun collectToolCallMetadata (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun feature (Lkotlin/reflect/KClass;Lai/koog/agents/core/feature/AIAgentFeature;)Ljava/lang/Object;
 	public fun getClock ()Lai/koog/utils/time/KoogClock;
 	public fun getConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
@@ -4561,31 +4485,7 @@ public class ai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline : ai/koog
 	public synthetic fun interceptToolCallFailed (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun interceptToolCallStarting (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun interceptToolValidationFailed (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
-	public fun onAgentClosing (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentEnvironmentTransforming (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/environment/AIAgentEnvironment;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentExecutionFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMCallCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lai/koog/prompt/dsl/ModerationResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun onLLMCallFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMCallStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingFrameReceived (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/streaming/StreamFrame;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onNodeExecutionCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/agent/entity/AIAgentNodeBase;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onNodeExecutionFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/agent/entity/AIAgentNodeBase;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onNodeExecutionStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/agent/entity/AIAgentNodeBase;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStrategyCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStrategyStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onSubgraphExecutionCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onSubgraphExecutionFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onSubgraphExecutionStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lai/koog/serialization/JSONElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolValidationFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun prepareFeatures (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public synthetic fun provideToolCallMetadata (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public fun uninstall (Lai/koog/agents/core/agent/entity/AIAgentStorageKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -4597,18 +4497,10 @@ public abstract interface class ai/koog/agents/core/feature/pipeline/AIAgentGrap
 	public abstract synthetic fun interceptSubgraphExecutionCompleted (Lai/koog/agents/core/feature/AIAgentGraphFeature;Lkotlin/jvm/functions/Function2;)V
 	public abstract synthetic fun interceptSubgraphExecutionFailed (Lai/koog/agents/core/feature/AIAgentGraphFeature;Lkotlin/jvm/functions/Function2;)V
 	public abstract synthetic fun interceptSubgraphExecutionStarting (Lai/koog/agents/core/feature/AIAgentGraphFeature;Lkotlin/jvm/functions/Function2;)V
-	public abstract fun onNodeExecutionCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/agent/entity/AIAgentNodeBase;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onNodeExecutionFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/agent/entity/AIAgentNodeBase;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onNodeExecutionStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/agent/entity/AIAgentNodeBase;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onSubgraphExecutionCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onSubgraphExecutionFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onSubgraphExecutionStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract class ai/koog/agents/core/feature/pipeline/AIAgentPipeline : ai/koog/agents/core/feature/pipeline/AIAgentPipelineAPI {
 	public fun <init> (Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;)V
-	public fun closeAllFeaturesMessageProcessors (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun collectToolCallMetadata (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun feature (Lkotlin/reflect/KClass;Lai/koog/agents/core/feature/AIAgentFeature;)Ljava/lang/Object;
 	public fun getClock ()Lai/koog/utils/time/KoogClock;
 	public fun getConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
@@ -4649,32 +4541,12 @@ public abstract class ai/koog/agents/core/feature/pipeline/AIAgentPipeline : ai/
 	public synthetic fun interceptToolCallStarting (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public final fun interceptToolValidationFailed (Lai/koog/agents/core/feature/AIAgentFeature;Lai/koog/agents/core/feature/pipeline/Interceptor;)V
 	public synthetic fun interceptToolValidationFailed (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
-	public fun onAgentClosing (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentEnvironmentTransforming (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/environment/AIAgentEnvironment;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentExecutionFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMCallCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lai/koog/prompt/dsl/ModerationResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun onLLMCallFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMCallStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingFrameReceived (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/streaming/StreamFrame;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStrategyCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStrategyStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lai/koog/serialization/JSONElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolValidationFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun prepareFeatures (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public synthetic fun provideToolCallMetadata (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public fun uninstall (Lai/koog/agents/core/agent/entity/AIAgentStorageKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract interface class ai/koog/agents/core/feature/pipeline/AIAgentPipelineAPI {
-	public abstract fun closeAllFeaturesMessageProcessors (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun collectToolCallMetadata (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun feature (Lkotlin/reflect/KClass;Lai/koog/agents/core/feature/AIAgentFeature;)Ljava/lang/Object;
 	public abstract fun getClock ()Lai/koog/utils/time/KoogClock;
 	public abstract fun getConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
@@ -4697,26 +4569,7 @@ public abstract interface class ai/koog/agents/core/feature/pipeline/AIAgentPipe
 	public abstract synthetic fun interceptToolCallFailed (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public abstract synthetic fun interceptToolCallStarting (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public abstract synthetic fun interceptToolValidationFailed (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
-	public abstract fun onAgentClosing (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onAgentCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onAgentEnvironmentTransforming (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/environment/AIAgentEnvironment;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onAgentExecutionFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onAgentStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onLLMCallCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lai/koog/prompt/dsl/ModerationResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun onLLMCallCompleted$default (Lai/koog/agents/core/feature/pipeline/AIAgentPipelineAPI;Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lai/koog/prompt/dsl/ModerationResult;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun onLLMCallFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onLLMCallStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onLLMStreamingCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onLLMStreamingFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onLLMStreamingFrameReceived (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/streaming/StreamFrame;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onLLMStreamingStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onStrategyCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onStrategyStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onToolCallCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lai/koog/serialization/JSONElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onToolCallFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onToolCallStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onToolValidationFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun prepareFeatures (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract synthetic fun provideToolCallMetadata (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public abstract fun uninstall (Lai/koog/agents/core/agent/entity/AIAgentStorageKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -4727,8 +4580,6 @@ public final class ai/koog/agents/core/feature/pipeline/AIAgentPipelineAPI$Defau
 
 public final class ai/koog/agents/core/feature/pipeline/AIAgentPipelineImpl : ai/koog/agents/core/feature/pipeline/AIAgentPipelineAPI {
 	public fun <init> (Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;)V
-	public fun closeAllFeaturesMessageProcessors (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun collectToolCallMetadata (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun feature (Lkotlin/reflect/KClass;Lai/koog/agents/core/feature/AIAgentFeature;)Ljava/lang/Object;
 	public fun getClock ()Lai/koog/utils/time/KoogClock;
 	public fun getConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
@@ -4751,25 +4602,7 @@ public final class ai/koog/agents/core/feature/pipeline/AIAgentPipelineImpl : ai
 	public fun interceptToolCallFailed (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public fun interceptToolCallStarting (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public fun interceptToolValidationFailed (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
-	public fun onAgentClosing (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentEnvironmentTransforming (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/environment/AIAgentEnvironment;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentExecutionFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMCallCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lai/koog/prompt/dsl/ModerationResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun onLLMCallFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMCallStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingFrameReceived (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/streaming/StreamFrame;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStrategyCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStrategyStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lai/koog/serialization/JSONElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolValidationFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun prepareFeatures (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun provideToolCallMetadata (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public fun uninstall (Lai/koog/agents/core/agent/entity/AIAgentStorageKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -4779,8 +4612,6 @@ public class ai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline : ai/ko
 	public fun <init> (Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;)V
 	public fun <init> (Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;Lai/koog/agents/core/feature/pipeline/AIAgentPipelineImpl;)V
 	public synthetic fun <init> (Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;Lai/koog/agents/core/feature/pipeline/AIAgentPipelineImpl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun closeAllFeaturesMessageProcessors (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun collectToolCallMetadata (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun feature (Lkotlin/reflect/KClass;Lai/koog/agents/core/feature/AIAgentFeature;)Ljava/lang/Object;
 	public fun getClock ()Lai/koog/utils/time/KoogClock;
 	public fun getConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
@@ -4816,31 +4647,7 @@ public class ai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline : ai/ko
 	public synthetic fun interceptToolCallFailed (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun interceptToolCallStarting (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun interceptToolValidationFailed (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
-	public fun onAgentClosing (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentEnvironmentTransforming (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/environment/AIAgentEnvironment;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentExecutionFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMCallCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lai/koog/prompt/dsl/ModerationResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun onLLMCallFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMCallStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingFrameReceived (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/streaming/StreamFrame;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onPlanCompletionEvaluationCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;IZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onPlanCompletionEvaluationStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onPlanCreationCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILjava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onPlanCreationStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStepExecutionCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStepExecutionStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStrategyCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStrategyStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lai/koog/serialization/JSONElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolValidationFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun prepareFeatures (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public synthetic fun provideToolCallMetadata (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public fun uninstall (Lai/koog/agents/core/agent/entity/AIAgentStorageKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -4852,19 +4659,11 @@ public abstract interface class ai/koog/agents/core/feature/pipeline/AIAgentPlan
 	public abstract synthetic fun interceptPlanCreationStarting (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public abstract synthetic fun interceptStepExecutionCompleted (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public abstract synthetic fun interceptStepExecutionStarting (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
-	public abstract fun onPlanCompletionEvaluationCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;IZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onPlanCompletionEvaluationStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onPlanCreationCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILjava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onPlanCreationStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onStepExecutionCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun onStepExecutionStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class ai/koog/agents/core/feature/pipeline/AIAgentPlannerPipelineImpl : ai/koog/agents/core/feature/pipeline/AIAgentPipelineAPI, ai/koog/agents/core/feature/pipeline/AIAgentPlannerPipelineAPI {
 	public fun <init> (Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;Lai/koog/agents/core/feature/pipeline/AIAgentPipelineImpl;)V
 	public synthetic fun <init> (Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/utils/time/KoogClock;Lai/koog/agents/core/feature/pipeline/AIAgentPipelineImpl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun closeAllFeaturesMessageProcessors (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun collectToolCallMetadata (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun feature (Lkotlin/reflect/KClass;Lai/koog/agents/core/feature/AIAgentFeature;)Ljava/lang/Object;
 	public fun getClock ()Lai/koog/utils/time/KoogClock;
 	public fun getConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
@@ -4893,31 +4692,7 @@ public final class ai/koog/agents/core/feature/pipeline/AIAgentPlannerPipelineIm
 	public synthetic fun interceptToolCallFailed (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun interceptToolCallStarting (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun interceptToolValidationFailed (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
-	public fun onAgentClosing (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentEnvironmentTransforming (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/environment/AIAgentEnvironment;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentExecutionFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onAgentStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/AIAgent;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMCallCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lai/koog/prompt/dsl/ModerationResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun onLLMCallFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMCallStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingFrameReceived (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/streaming/StreamFrame;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onLLMStreamingStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onPlanCompletionEvaluationCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;IZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onPlanCompletionEvaluationStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onPlanCreationCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILjava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onPlanCreationStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStepExecutionCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStepExecutionStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStrategyCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onStrategyStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallCompleted (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lai/koog/serialization/JSONElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolCallStarting (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun onToolValidationFailed (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/serialization/JSONObject;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun prepareFeatures (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public synthetic fun provideToolCallMetadata (Lai/koog/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function2;)V
 	public fun uninstall (Lai/koog/agents/core/agent/entity/AIAgentStorageKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -5163,7 +4938,6 @@ public final class ai/koog/agents/core/planner/PlannerAIAgent : ai/koog/agents/c
 	public synthetic fun <init> (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/agents/core/agent/config/AIAgentConfig;Lai/koog/agents/core/planner/AIAgentPlannerStrategy;Lai/koog/agents/core/tools/ToolRegistry;Ljava/lang/String;Lai/koog/utils/time/KoogClock;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getAgentConfig ()Lai/koog/agents/core/agent/config/AIAgentConfig;
 	public final fun getClock ()Lai/koog/utils/time/KoogClock;
-	public final fun getInstallFeatures ()Lkotlin/jvm/functions/Function1;
 	public synthetic fun getPipeline ()Lai/koog/agents/core/feature/pipeline/AIAgentPipeline;
 	public fun getPipeline ()Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;
 	public final fun getPromptExecutor ()Lai/koog/prompt/executor/model/PromptExecutor;
@@ -5241,11 +5015,6 @@ public abstract interface class ai/koog/agents/core/utils/ConfigureAction {
 	public abstract fun configure (Ljava/lang/Object;)V
 }
 
-public final class ai/koog/agents/core/utils/CoroutineUtilsKt {
-	public static final fun runBlockingOnLLMDispatcher (Lai/koog/agents/core/agent/config/AIAgentConfig;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
-	public static final fun runBlockingOnStrategyDispatcher (Lai/koog/agents/core/agent/config/AIAgentConfig;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
-}
-
 public final class ai/koog/agents/ext/agent/AIAgentStrategies {
 	public static final fun chatAgentStrategy ()Lai/koog/agents/core/agent/entity/AIAgentGraphStrategy;
 	public static final fun reActStrategy ()Lai/koog/agents/core/agent/entity/AIAgentGraphStrategy;
@@ -5257,18 +5026,6 @@ public final class ai/koog/agents/ext/agent/AIAgentStrategies {
 	public static final synthetic fun structuredOutputWithToolsStrategy (Lai/koog/prompt/structure/StructuredRequestConfig;Lai/koog/prompt/executor/model/StructureFixingParser;)Lai/koog/agents/core/agent/entity/AIAgentGraphStrategy;
 	public static final synthetic fun structuredOutputWithToolsStrategy (Lai/koog/prompt/structure/StructuredRequestConfig;Lai/koog/prompt/executor/model/StructureFixingParser;Lkotlin/jvm/functions/Function2;)Lai/koog/agents/core/agent/entity/AIAgentGraphStrategy;
 	public static final synthetic fun structuredOutputWithToolsStrategy (Lai/koog/prompt/structure/StructuredRequestConfig;Lkotlin/jvm/functions/Function2;)Lai/koog/agents/core/agent/entity/AIAgentGraphStrategy;
-}
-
-public final class ai/koog/agents/ext/agent/AIAgentSubgraphExtKt {
-	public static final fun executeFinishTool (Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/prompt/message/MessagePart$Tool$Call;Lai/koog/agents/core/tools/Tool;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static final fun setupSubgraphWithTask (Lai/koog/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Lai/koog/agents/core/tools/Tool;Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function3;)V
-	public static synthetic fun setupSubgraphWithTask$default (Lai/koog/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Lai/koog/agents/core/tools/Tool;Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;ZLjava/lang/Integer;Lkotlin/jvm/functions/Function3;ILjava/lang/Object;)V
-	public static final fun subgraphWithTask (Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/agents/core/tools/Tool;Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;ZLjava/lang/Integer;Lai/koog/prompt/processor/ResponseProcessor;Lkotlin/jvm/functions/Function3;)Lai/koog/agents/core/dsl/builder/AIAgentSubgraphDelegate;
-	public static final fun subgraphWithTask (Ljava/lang/String;Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;ZLjava/lang/Integer;Lai/koog/prompt/processor/ResponseProcessor;Lkotlin/jvm/functions/Function3;)Lai/koog/agents/core/dsl/builder/AIAgentSubgraphDelegate;
-	public static synthetic fun subgraphWithTask$default (Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/agents/core/tools/Tool;Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;ZLjava/lang/Integer;Lai/koog/prompt/processor/ResponseProcessor;Lkotlin/jvm/functions/Function3;ILjava/lang/Object;)Lai/koog/agents/core/dsl/builder/AIAgentSubgraphDelegate;
-	public static synthetic fun subgraphWithTask$default (Ljava/lang/String;Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;ZLjava/lang/Integer;Lai/koog/prompt/processor/ResponseProcessor;Lkotlin/jvm/functions/Function3;ILjava/lang/Object;)Lai/koog/agents/core/dsl/builder/AIAgentSubgraphDelegate;
-	public static final fun subgraphWithVerification (Ljava/lang/String;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;ZLjava/lang/Integer;Lai/koog/prompt/processor/ResponseProcessor;Lkotlin/jvm/functions/Function3;)Lai/koog/agents/core/dsl/builder/AIAgentSubgraphDelegate;
-	public static synthetic fun subgraphWithVerification$default (Ljava/lang/String;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;ZLjava/lang/Integer;Lai/koog/prompt/processor/ResponseProcessor;Lkotlin/jvm/functions/Function3;ILjava/lang/Object;)Lai/koog/agents/core/dsl/builder/AIAgentSubgraphDelegate;
 }
 
 public abstract interface class ai/koog/agents/ext/agent/ConditionResult {
@@ -5297,21 +5054,6 @@ public final class ai/koog/agents/ext/agent/CriticResult {
 	public final fun getFeedback ()Ljava/lang/String;
 	public final fun getInput ()Ljava/lang/Object;
 	public final fun isSuccessful ()Z
-}
-
-public final class ai/koog/agents/ext/agent/CriticResultFromLLM {
-	public static final field Companion Lai/koog/agents/ext/agent/CriticResultFromLLM$Companion;
-	public fun <init> (ZLjava/lang/String;)V
-	public synthetic fun <init> (ZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Z
-	public final fun component2 ()Ljava/lang/String;
-	public final fun copy (ZLjava/lang/String;)Lai/koog/agents/ext/agent/CriticResultFromLLM;
-	public static synthetic fun copy$default (Lai/koog/agents/ext/agent/CriticResultFromLLM;ZLjava/lang/String;ILjava/lang/Object;)Lai/koog/agents/ext/agent/CriticResultFromLLM;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getFeedback ()Ljava/lang/String;
-	public fun hashCode ()I
-	public final fun isCorrect ()Z
-	public fun toString ()Ljava/lang/String;
 }
 
 public final synthetic class ai/koog/agents/ext/agent/CriticResultFromLLM$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
@@ -5354,10 +5096,6 @@ public final class ai/koog/agents/ext/agent/HistoryCompressionConfig {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class ai/koog/agents/ext/agent/LLMAsAJudgeKt {
-	public static final fun setupLLMAsAJudge (Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-}
-
 public final class ai/koog/agents/ext/agent/RetrySubgraphResult {
 	public fun <init> (Ljava/lang/Object;ZI)V
 	public final fun component1 ()Ljava/lang/Object;
@@ -5384,8 +5122,6 @@ public final class ai/koog/agents/ext/agent/SubgraphWithRetryKt {
 
 public final class ai/koog/agents/ext/agent/SubgraphWithTaskUtils {
 	public static final field ASSISTANT_RESPONSE_REPEAT_MAX I
-	public static final field FINALIZE_SUBGRAPH_TOOL_DESCRIPTION Ljava/lang/String;
-	public static final field FINALIZE_SUBGRAPH_TOOL_NAME Ljava/lang/String;
 	public static final field INSTANCE Lai/koog/agents/ext/agent/SubgraphWithTaskUtils;
 }
 

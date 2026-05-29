@@ -129,11 +129,6 @@ public final class ai/koog/serialization/JavaTypeToken : ai/koog/serialization/T
 	public final fun getType ()Ljava/lang/reflect/Type;
 }
 
-public final class ai/koog/serialization/KSerializerTypeToken : ai/koog/serialization/TypeToken {
-	public fun <init> (Lkotlinx/serialization/KSerializer;)V
-	public final fun getSerializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class ai/koog/serialization/KotlinClassToken : ai/koog/serialization/TypeToken {
 	public fun <init> (Lkotlin/reflect/KClass;Ljava/util/List;)V
 	public synthetic fun <init> (Lkotlin/reflect/KClass;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -233,13 +228,6 @@ public final class ai/koog/serialization/kotlinx/JSONPrimitiveSerializer : kotli
 	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/serialization/JSONPrimitive;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-}
-
-public final class ai/koog/serialization/kotlinx/KotlinxDelegateSerializer : kotlinx/serialization/KSerializer {
-	public fun <init> (Lai/koog/serialization/JSONSerializer;Lai/koog/serialization/TypeToken;)V
-	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
 }
 
 public final class ai/koog/serialization/kotlinx/KotlinxJSONElementMappersKt {
