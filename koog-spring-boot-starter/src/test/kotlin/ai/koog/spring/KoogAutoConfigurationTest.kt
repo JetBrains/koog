@@ -122,7 +122,7 @@ class KoogAutoConfigurationTest {
                     val responses = runBlocking {
                         executor.execute(
                             prompt = prompt("spring-test") { user("Hello from Spring?") },
-                            resolvedModel = OpenAIModels.Chat.GPT4o
+                            model = OpenAIModels.Chat.GPT4o
                         )
                     }
 
@@ -656,7 +656,7 @@ class KoogAutoConfigurationTest {
                     val responses = runBlocking {
                         executor.execute(
                             prompt = prompt("spring-ollama-test") { user("Hello from Spring?") },
-                            resolvedModel = OllamaModels.Meta.LLAMA_3_2,
+                            model = OllamaModels.Meta.LLAMA_3_2,
                         )
                     }
 

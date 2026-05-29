@@ -10,6 +10,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlin.jvm.JvmSynthetic
 
 /**
  * A [PromptExecutor] that introduces an explicit [resolveModel] step before every LLM operation.
@@ -35,6 +36,7 @@ public abstract class DynamicPromptExecutor : PromptExecutor() {
      * This is the single hook for model-resolution policy (e.g. fallback selection). Every entry
      * point of this executor flows through this method exactly once per call.
      */
+    @JvmSynthetic
     abstract override suspend fun resolveModel(
         requestedModel: LLModel,
         promptExecutorOperation: PromptExecutorOperation
@@ -46,6 +48,7 @@ public abstract class DynamicPromptExecutor : PromptExecutor() {
      * This is the actual extension point for subclasses; the [LLModel] overload of [execute] is
      * finalized and routes here after calling [resolveModel].
      */
+    @JvmSynthetic
     abstract override suspend fun execute(
         prompt: Prompt,
         resolvedModel: ResolvedModel,
@@ -58,6 +61,7 @@ public abstract class DynamicPromptExecutor : PromptExecutor() {
      * This is the actual extension point for subclasses; the [LLModel] overload of
      * [executeMultipleChoices] is finalized and routes here after calling [resolveModel].
      */
+    @JvmSynthetic
     abstract override suspend fun executeMultipleChoices(
         prompt: Prompt,
         resolvedModel: ResolvedModel,
@@ -70,6 +74,7 @@ public abstract class DynamicPromptExecutor : PromptExecutor() {
      * This is the actual extension point for subclasses; the [LLModel] overload of
      * [executeStreaming] is finalized and routes here after calling [resolveModel].
      */
+    @JvmSynthetic
     abstract override fun executeStreaming(
         prompt: Prompt,
         resolvedModel: ResolvedModel,
@@ -82,6 +87,7 @@ public abstract class DynamicPromptExecutor : PromptExecutor() {
      * This is the actual extension point for subclasses; the [LLModel] overload of [moderate] is
      * finalized and routes here after calling [resolveModel].
      */
+    @JvmSynthetic
     abstract override suspend fun moderate(prompt: Prompt, model: ResolvedModel): ModerationResult
 
     //endregion
@@ -91,6 +97,7 @@ public abstract class DynamicPromptExecutor : PromptExecutor() {
      * Finalized to enforce that every call resolves through [resolveModel] before dispatch.
      * Subclasses customize behavior by overriding the [ResolvedModel]-based [execute] overload.
      */
+    @JvmSynthetic
     final override suspend fun execute(
         prompt: Prompt,
         model: LLModel,
@@ -102,6 +109,7 @@ public abstract class DynamicPromptExecutor : PromptExecutor() {
      * Subclasses customize behavior by overriding the [ResolvedModel]-based [executeStreaming]
      * overload.
      */
+    @JvmSynthetic
     final override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
@@ -114,6 +122,7 @@ public abstract class DynamicPromptExecutor : PromptExecutor() {
      * Finalized to enforce that every call resolves through [resolveModel] before dispatch.
      * Subclasses customize behavior by overriding the [ResolvedModel]-based [moderate] overload.
      */
+    @JvmSynthetic
     final override suspend fun moderate(
         prompt: Prompt,
         model: LLModel
@@ -124,6 +133,7 @@ public abstract class DynamicPromptExecutor : PromptExecutor() {
      * Subclasses customize behavior by overriding the [ResolvedModel]-based
      * [executeMultipleChoices] overload.
      */
+    @JvmSynthetic
     final override suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
