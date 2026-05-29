@@ -86,7 +86,7 @@ internal object BedrockAmazonNovaSerialization {
         return NovaRequest(
             messages = conversationMessages,
             inferenceConfig = inferenceConfig,
-            system = systemMessages,
+            system = systemMessages.takeIf { it.isNotEmpty() },
             toolConfig = novaToolConfig,
         )
     }
