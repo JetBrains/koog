@@ -100,6 +100,7 @@ val included = setOf(
     ":agents:agents-cli",
     ":agents:agents-features:agents-features-longterm-memory",
     ":agents:agents-mcp",
+    ":agents:agents-model-selection",
     ":agents:agents-planner",
     ":prompt:prompt-cache:prompt-cache-redis",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client",
@@ -109,6 +110,7 @@ val included = setOf(
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-client",
     ":prompt:prompt-executor:prompt-executor-llms-all",
+    ":prompt:prompt-executor:prompt-executor-model-selection",
     ":rag:rag-vector"
 )
 

@@ -14,6 +14,7 @@ pluginManagement {
 
 include(":agents:agents-core")
 include(":agents:agents-ext")
+include(":agents:agents-model-selection")
 
 include(":agents:agents-features:agents-features-acp")
 include(":agents:agents-features:agents-features-event-handler")
@@ -66,6 +67,7 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-
 
 include(":prompt:prompt-executor:prompt-executor-llms-all")
 include(":prompt:prompt-executor:prompt-executor-model")
+include(":prompt:prompt-executor:prompt-executor-model-selection")
 include(":prompt:prompt-llm")
 include(":prompt:prompt-markdown")
 include(":prompt:prompt-model")

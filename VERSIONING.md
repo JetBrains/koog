@@ -143,6 +143,7 @@ A stable module at version `X.Y.Z` is always compatible with a beta module at ve
 | `agents-features-longterm-memory-aws` | `1.0.0-beta` |
 | `agents-mcp` | `1.0.0-beta` |
 | `agents-mcp-server` | `1.0.0-beta` |
+| `agents-model-selection` | `1.0.0-beta` |
 | `agents-planner` | `1.0.0-beta` |
 | `koog-agents-additions` | `1.0.0-beta` |
 | `koog-ktor` | `1.0.0-beta` |
@@ -158,5 +159,6 @@ A stable module at version `X.Y.Z` is always compatible with a beta module at ve
 | `prompt-executor-google-client` | `1.0.0-beta` |
 | `prompt-executor-litert-client` | `1.0.0-beta` |
 | `prompt-executor-llms-all` | `1.0.0-beta` |
+| `prompt-executor-model-selection` | `1.0.0-beta` |
 | `prompt-executor-mistralai-client` | `1.0.0-beta` |
 | `rag-vector` | `1.0.0-beta` |
