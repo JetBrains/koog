@@ -22,8 +22,9 @@ import kotlin.jvm.JvmSynthetic
  * once per call and subclasses cannot bypass it.
  *
  * Subclasses must implement [resolveModel] together with [execute], [executeStreaming],
- * [executeMultipleChoices], and [moderate] taking a [ResolvedModel]. Inside those overrides,
- * do not delegate to the [LLModel] overloads — they are finalized to re-enter resolution and will recurse.
+ * [executeMultipleChoices], and [moderate] taking a [ResolvedModel].
+ *
+ * Inside those overrides, DO NOT delegate to the [LLModel] overloads — they are finalized to re-enter resolution and will recurse.
  */
 public abstract class DynamicPromptExecutor : PromptExecutor() {
 
