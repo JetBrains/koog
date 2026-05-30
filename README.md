@@ -94,6 +94,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
     ```
     dependencies {
         implementation("ai.koog:koog-agents:1.0.0")
+        implementation("ai.koog:koog-agents-additions:1.0.0-beta")
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -104,6 +105,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
     ```
     dependencies {
         implementation 'ai.koog:koog-agents:1.0.0'
+        implementation 'ai.koog:koog-agents-additions:1.0.0-beta'
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -116,6 +118,11 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
         <groupId>ai.koog</groupId>
         <artifactId>koog-agents-jvm</artifactId>
         <version>1.0.0</version>
+    </dependency>
+    <dependency>
+        <groupId>ai.koog</groupId>
+        <artifactId>koog-agents-additions-jvm</artifactId>
+        <version>1.0.0-beta</version>
     </dependency>
     ```
 2. Make sure that you have `mavenCentral` in the list of repositories.

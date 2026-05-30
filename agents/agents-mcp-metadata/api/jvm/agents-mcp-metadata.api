@@ -1,0 +1,30 @@
+public final class ai/koog/agents/mcp/metadata/McpMetadataKeys {
+	public static final field INSTANCE Lai/koog/agents/mcp/metadata/McpMetadataKeys;
+	public static final field Instructions Ljava/lang/String;
+	public static final field McpProtocolVersion Ljava/lang/String;
+	public static final field McpSessionId Ljava/lang/String;
+	public static final field McpTransportType Ljava/lang/String;
+	public static final field ServerPort Ljava/lang/String;
+	public static final field ServerUrl Ljava/lang/String;
+	public static final field ToolId Ljava/lang/String;
+}
+
+public final class ai/koog/agents/mcp/metadata/McpServerInfo {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCommand ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/mcp/metadata/McpTransportType : java/lang/Enum {
+	public static final field Stdio Lai/koog/agents/mcp/metadata/McpTransportType;
+	public static final field StreamableHttp Lai/koog/agents/mcp/metadata/McpTransportType;
+	public static final field Tcp Lai/koog/agents/mcp/metadata/McpTransportType;
+	public static final field Unknown Lai/koog/agents/mcp/metadata/McpTransportType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/agents/mcp/metadata/McpTransportType;
+	public static fun values ()[Lai/koog/agents/mcp/metadata/McpTransportType;
+}
+

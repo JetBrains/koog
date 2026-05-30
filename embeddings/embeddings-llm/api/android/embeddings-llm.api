@@ -1,0 +1,6 @@
+public final class ai/koog/embeddings/local/LLMEmbedder : ai/koog/embeddings/base/Embedder {
+	public fun <init> (Lai/koog/prompt/executor/clients/LLMEmbeddingProvider;Lai/koog/prompt/llm/LLModel;)V
+	public fun diff (Lai/koog/embeddings/base/Vector;Lai/koog/embeddings/base/Vector;)D
+	public fun embed (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

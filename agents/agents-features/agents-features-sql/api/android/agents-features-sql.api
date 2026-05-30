@@ -1,0 +1,28 @@
+public final class ai/koog/agents/features/sql/providers/NoOpSQLPersistenceSchemaMigrator : ai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator {
+	public static final field INSTANCE Lai/koog/agents/features/sql/providers/NoOpSQLPersistenceSchemaMigrator;
+	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator {
+	public abstract fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class ai/koog/agents/features/sql/providers/SQLPersistenceStorageProvider : ai/koog/agents/snapshot/providers/PersistenceStorageProvider {
+	public fun <init> (Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun calculateTtlTimestamp (Lkotlin/time/Instant;)Ljava/lang/Long;
+	public abstract fun cleanupExpired (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun deleteAllCheckpoints (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun deleteCheckpoint (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getCheckpointCount (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCheckpoints (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getLatestCheckpoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun getMigrator ()Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;
+	protected final fun getTableName ()Ljava/lang/String;
+	protected final fun getTtlSeconds ()Ljava/lang/Long;
+	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected abstract fun transaction (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

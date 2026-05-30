@@ -1,0 +1,286 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-executor-anthropic-client>
+final enum class ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier : kotlin/Enum<ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier> { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier|null[0]
+    enum entry AUTO // ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier.AUTO|null[0]
+    enum entry STANDARD_ONLY // ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier.STANDARD_ONLY|null[0]
+
+    final val entries // ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier // ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType : kotlin/Enum<ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType> { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType|null[0]
+    enum entry INPUT_JSON_DELTA // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType.INPUT_JSON_DELTA|null[0]
+    enum entry TEXT_DELTA // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType.TEXT_DELTA|null[0]
+    enum entry THINKING_DELTA // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType.THINKING_DELTA|null[0]
+
+    final val entries // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val value // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType.value|{}value[0]
+        final fun <get-value>(): kotlin/String // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType.value.<get-value>|<get-value>(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamDeltaContentType.values|values#static(){}[0]
+}
+
+final enum class ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType : kotlin/Enum<ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType> { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType|null[0]
+    enum entry CONTENT_BLOCK_DELTA // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.CONTENT_BLOCK_DELTA|null[0]
+    enum entry CONTENT_BLOCK_START // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.CONTENT_BLOCK_START|null[0]
+    enum entry CONTENT_BLOCK_STOP // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.CONTENT_BLOCK_STOP|null[0]
+    enum entry ERROR // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.ERROR|null[0]
+    enum entry MESSAGE_DELTA // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.MESSAGE_DELTA|null[0]
+    enum entry MESSAGE_START // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.MESSAGE_START|null[0]
+    enum entry MESSAGE_STOP // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.MESSAGE_STOP|null[0]
+    enum entry PING // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.PING|null[0]
+
+    final val entries // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val value // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.value|{}value[0]
+        final fun <get-value>(): kotlin/String // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.value.<get-value>|<get-value>(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicStreamEventType.values|values#static(){}[0]
+}
+
+sealed interface ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking|null[0]
+    final class Disabled : ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled|null[0]
+        constructor <init>() // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled.<init>|<init>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled> { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled) // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking.Disabled){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Disabled.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Enabled : ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled|null[0]
+        constructor <init>(kotlin/Int) // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled.<init>|<init>(kotlin.Int){}[0]
+
+        final val budgetTokens // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled.budgetTokens|{}budgetTokens[0]
+            final fun <get-budgetTokens>(): kotlin/Int // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled.budgetTokens.<get-budgetTokens>|<get-budgetTokens>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled> { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled) // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking.Enabled){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Enabled.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl : ai.koog.prompt.message/CacheControl { // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl|null[0]
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl> // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+
+    final object Default : ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.Default|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.Default.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.Default.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.Default> // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.Default.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.Default.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.Default.toString|toString(){}[0]
+    }
+
+    final object OneHour : ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.OneHour|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.OneHour.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.OneHour.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.OneHour> // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.OneHour.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.OneHour.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl.OneHour.toString|toString(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String? = ..., ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration? = ...) // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?;ai.koog.prompt.executor.clients.anthropic.models.AnthropicToolConfiguration?){}[0]
+
+    final val authorizationToken // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.authorizationToken|{}authorizationToken[0]
+        final fun <get-authorizationToken>(): kotlin/String? // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.authorizationToken.<get-authorizationToken>|<get-authorizationToken>(){}[0]
+    final val name // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.name.<get-name>|<get-name>(){}[0]
+    final val toolConfiguration // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.toolConfiguration|{}toolConfiguration[0]
+        final fun <get-toolConfiguration>(): ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration? // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.toolConfiguration.<get-toolConfiguration>|<get-toolConfiguration>(){}[0]
+    final val type // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.type|{}type[0]
+        final fun <get-type>(): kotlin/String // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.type.<get-type>|<get-type>(){}[0]
+    final val url // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.url|{}url[0]
+        final fun <get-url>(): kotlin/String // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.url.<get-url>|<get-url>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition> { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition) // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.anthropic.models.AnthropicMCPServerURLDefinition){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration|null[0]
+    constructor <init>(kotlin.collections/List<kotlin/String>? = ..., kotlin/Boolean? = ...) // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.<init>|<init>(kotlin.collections.List<kotlin.String>?;kotlin.Boolean?){}[0]
+
+    final val allowedTools // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.allowedTools|{}allowedTools[0]
+        final fun <get-allowedTools>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.allowedTools.<get-allowedTools>|<get-allowedTools>(){}[0]
+    final val enabled // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.enabled|{}enabled[0]
+        final fun <get-enabled>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.enabled.<get-enabled>|<get-enabled>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration> { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration) // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.anthropic.models.AnthropicToolConfiguration){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration> // ai.koog.prompt.executor.clients.anthropic.models/AnthropicToolConfiguration.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings { // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings|null[0]
+    constructor <init>(kotlin.collections/Map<ai.koog.prompt.llm/LLModel, kotlin/String> = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., ai.koog.prompt.executor.clients/ConnectionTimeoutConfig = ...) // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.<init>|<init>(kotlin.collections.Map<ai.koog.prompt.llm.LLModel,kotlin.String>;kotlin.String;kotlin.String;kotlin.String;kotlin.String;ai.koog.prompt.executor.clients.ConnectionTimeoutConfig){}[0]
+
+    final val apiVersion // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.apiVersion|{}apiVersion[0]
+        final fun <get-apiVersion>(): kotlin/String // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.apiVersion.<get-apiVersion>|<get-apiVersion>(){}[0]
+    final val baseUrl // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.baseUrl|{}baseUrl[0]
+        final fun <get-baseUrl>(): kotlin/String // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+    final val messagesPath // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.messagesPath|{}messagesPath[0]
+        final fun <get-messagesPath>(): kotlin/String // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.messagesPath.<get-messagesPath>|<get-messagesPath>(){}[0]
+    final val modelVersionsMap // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.modelVersionsMap|{}modelVersionsMap[0]
+        final fun <get-modelVersionsMap>(): kotlin.collections/Map<ai.koog.prompt.llm/LLModel, kotlin/String> // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.modelVersionsMap.<get-modelVersionsMap>|<get-modelVersionsMap>(){}[0]
+    final val modelsPath // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.modelsPath|{}modelsPath[0]
+        final fun <get-modelsPath>(): kotlin/String // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.modelsPath.<get-modelsPath>|<get-modelsPath>(){}[0]
+    final val timeoutConfig // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.timeoutConfig|{}timeoutConfig[0]
+        final fun <get-timeoutConfig>(): ai.koog.prompt.executor.clients/ConnectionTimeoutConfig // ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings.timeoutConfig.<get-timeoutConfig>|<get-timeoutConfig>(){}[0]
+}
+
+final class ai.koog.prompt.executor.clients.anthropic/AnthropicParams : ai.koog.prompt.params/LLMParams { // ai.koog.prompt.executor.clients.anthropic/AnthropicParams|null[0]
+    constructor <init>(kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., ai.koog.prompt.params/LLMParams.Schema? = ..., ai.koog.prompt.params/LLMParams.ToolChoice? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? = ..., kotlin/Double? = ..., kotlin/Int? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition>? = ..., ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier? = ..., ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking? = ..., ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl? = ...) // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.<init>|<init>(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?;kotlin.Double?;kotlin.Int?;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.collections.List<ai.koog.prompt.executor.clients.anthropic.models.AnthropicMCPServerURLDefinition>?;ai.koog.prompt.executor.clients.anthropic.models.AnthropicServiceTier?;ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking?;ai.koog.prompt.executor.clients.anthropic.AnthropicCacheControl?){}[0]
+
+    final val cacheControl // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.cacheControl|{}cacheControl[0]
+        final fun <get-cacheControl>(): ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl? // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.cacheControl.<get-cacheControl>|<get-cacheControl>(){}[0]
+    final val container // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.container|{}container[0]
+        final fun <get-container>(): kotlin/String? // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.container.<get-container>|<get-container>(){}[0]
+    final val mcpServers // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.mcpServers|{}mcpServers[0]
+        final fun <get-mcpServers>(): kotlin.collections/List<ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition>? // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.mcpServers.<get-mcpServers>|<get-mcpServers>(){}[0]
+    final val serviceTier // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.serviceTier|{}serviceTier[0]
+        final fun <get-serviceTier>(): ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier? // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.serviceTier.<get-serviceTier>|<get-serviceTier>(){}[0]
+    final val stopSequences // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.stopSequences|{}stopSequences[0]
+        final fun <get-stopSequences>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.stopSequences.<get-stopSequences>|<get-stopSequences>(){}[0]
+    final val thinking // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.thinking|{}thinking[0]
+        final fun <get-thinking>(): ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking? // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.thinking.<get-thinking>|<get-thinking>(){}[0]
+    final val topK // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.topK|{}topK[0]
+        final fun <get-topK>(): kotlin/Int? // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.topK.<get-topK>|<get-topK>(){}[0]
+    final val topP // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.topP|{}topP[0]
+        final fun <get-topP>(): kotlin/Double? // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.topP.<get-topP>|<get-topP>(){}[0]
+
+    final fun copy(kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., ai.koog.prompt.params/LLMParams.Schema? = ..., ai.koog.prompt.params/LLMParams.ToolChoice? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? = ..., kotlin/Double? = ..., kotlin/Int? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.anthropic.models/AnthropicMCPServerURLDefinition>? = ..., ai.koog.prompt.executor.clients.anthropic.models/AnthropicServiceTier? = ..., ai.koog.prompt.executor.clients.anthropic.models/AnthropicThinking? = ..., ai.koog.prompt.executor.clients.anthropic/AnthropicCacheControl? = ...): ai.koog.prompt.executor.clients.anthropic/AnthropicParams // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.copy|copy(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?;kotlin.Double?;kotlin.Int?;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.collections.List<ai.koog.prompt.executor.clients.anthropic.models.AnthropicMCPServerURLDefinition>?;ai.koog.prompt.executor.clients.anthropic.models.AnthropicServiceTier?;ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking?;ai.koog.prompt.executor.clients.anthropic.AnthropicCacheControl?){}[0]
+    final fun copy(kotlin/Double?, kotlin/Int?, kotlin/Int?, kotlin/String?, ai.koog.prompt.params/LLMParams.Schema?, ai.koog.prompt.params/LLMParams.ToolChoice?, kotlin/String?, kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>?): ai.koog.prompt.executor.clients.anthropic/AnthropicParams // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.copy|copy(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.anthropic/AnthropicParams.toString|toString(){}[0]
+}
+
+open class ai.koog.prompt.executor.clients.anthropic.structure/AnthropicBasicJsonSchemaGenerator : ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator { // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicBasicJsonSchemaGenerator|null[0]
+    constructor <init>() // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicBasicJsonSchemaGenerator.<init>|<init>(){}[0]
+
+    open fun processMap(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicBasicJsonSchemaGenerator.processMap|processMap(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processObject(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicBasicJsonSchemaGenerator.processObject|processObject(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+
+    final object Companion : ai.koog.prompt.executor.clients.anthropic.structure/AnthropicBasicJsonSchemaGenerator // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicBasicJsonSchemaGenerator.Companion|null[0]
+}
+
+open class ai.koog.prompt.executor.clients.anthropic.structure/AnthropicStandardJsonSchemaGenerator : ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator { // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicStandardJsonSchemaGenerator|null[0]
+    constructor <init>() // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicStandardJsonSchemaGenerator.<init>|<init>(){}[0]
+
+    open fun generate(kotlinx.serialization.json/Json, kotlin/String, kotlinx.serialization/KSerializer<*>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Set<kotlin/String>): ai.koog.prompt.params/LLMParams.Schema.JSON.Standard // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicStandardJsonSchemaGenerator.generate|generate(kotlinx.serialization.json.Json;kotlin.String;kotlinx.serialization.KSerializer<*>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Set<kotlin.String>){}[0]
+    open fun processClassDiscriminator(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicStandardJsonSchemaGenerator.processClassDiscriminator|processClassDiscriminator(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processMap(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicStandardJsonSchemaGenerator.processMap|processMap(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processObject(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicStandardJsonSchemaGenerator.processObject|processObject(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processPolymorphic(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicStandardJsonSchemaGenerator.processPolymorphic|processPolymorphic(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+
+    final object Companion : ai.koog.prompt.executor.clients.anthropic.structure/AnthropicStandardJsonSchemaGenerator // ai.koog.prompt.executor.clients.anthropic.structure/AnthropicStandardJsonSchemaGenerator.Companion|null[0]
+}
+
+open class ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient : ai.koog.prompt.executor.clients/LLMClient { // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings = ..., ai.koog.http.client/KoogHttpClient, ai.koog.utils.time/KoogClock = ...) // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.<init>|<init>(ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings;ai.koog.http.client.KoogHttpClient;ai.koog.utils.time.KoogClock){}[0]
+    constructor <init>(kotlin/String, ai.koog.prompt.executor.clients.anthropic/AnthropicClientSettings = ..., ai.koog.http.client/KoogHttpClient.Factory, ai.koog.utils.time/KoogClock = ...) // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.<init>|<init>(kotlin.String;ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings;ai.koog.http.client.KoogHttpClient.Factory;ai.koog.utils.time.KoogClock){}[0]
+
+    final val httpClient // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.httpClient|{}httpClient[0]
+        final fun <get-httpClient>(): ai.koog.http.client/KoogHttpClient // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.httpClient.<get-httpClient>|<get-httpClient>(){}[0]
+    open val clientName // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.clientName|{}clientName[0]
+        open fun <get-clientName>(): kotlin/String // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.clientName.<get-clientName>|<get-clientName>(){}[0]
+
+    open fun close() // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.close|close(){}[0]
+    open fun executeStreaming(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.executeStreaming|executeStreaming(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    open fun getBasicJsonSchemaGenerator(): ai.koog.prompt.executor.clients.anthropic.structure/AnthropicBasicJsonSchemaGenerator // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.getBasicJsonSchemaGenerator|getBasicJsonSchemaGenerator(){}[0]
+    open fun getStandardJsonSchemaGenerator(): ai.koog.prompt.executor.clients.anthropic.structure/AnthropicStandardJsonSchemaGenerator // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.getStandardJsonSchemaGenerator|getStandardJsonSchemaGenerator(){}[0]
+    open fun llmProvider(): ai.koog.prompt.llm/LLMProvider // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.llmProvider|llmProvider(){}[0]
+    open suspend fun embed(kotlin.collections/List<kotlin/String>, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin.collections/List<kotlin/Double>> // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.embed|embed(kotlin.collections.List<kotlin.String>;ai.koog.prompt.llm.LLModel){}[0]
+    open suspend fun embed(kotlin/String, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin/Double> // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.embed|embed(kotlin.String;ai.koog.prompt.llm.LLModel){}[0]
+    open suspend fun execute(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.execute|execute(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    open suspend fun models(): kotlin.collections/List<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.models|models(){}[0]
+    open suspend fun moderate(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): ai.koog.prompt.dsl/ModerationResult // ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient.moderate|moderate(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+}
+
+final object ai.koog.prompt.executor.clients.anthropic/AnthropicModels : ai.koog.prompt.executor.clients/LLModelDefinitions { // ai.koog.prompt.executor.clients.anthropic/AnthropicModels|null[0]
+    final val Haiku_4_5 // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Haiku_4_5|{}Haiku_4_5[0]
+        final fun <get-Haiku_4_5>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Haiku_4_5.<get-Haiku_4_5>|<get-Haiku_4_5>(){}[0]
+    final val Opus_4 // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Opus_4|{}Opus_4[0]
+        final fun <get-Opus_4>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Opus_4.<get-Opus_4>|<get-Opus_4>(){}[0]
+    final val Opus_4_1 // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Opus_4_1|{}Opus_4_1[0]
+        final fun <get-Opus_4_1>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Opus_4_1.<get-Opus_4_1>|<get-Opus_4_1>(){}[0]
+    final val Opus_4_5 // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Opus_4_5|{}Opus_4_5[0]
+        final fun <get-Opus_4_5>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Opus_4_5.<get-Opus_4_5>|<get-Opus_4_5>(){}[0]
+    final val Opus_4_6 // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Opus_4_6|{}Opus_4_6[0]
+        final fun <get-Opus_4_6>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Opus_4_6.<get-Opus_4_6>|<get-Opus_4_6>(){}[0]
+    final val Opus_4_7 // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Opus_4_7|{}Opus_4_7[0]
+        final fun <get-Opus_4_7>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Opus_4_7.<get-Opus_4_7>|<get-Opus_4_7>(){}[0]
+    final val Sonnet_4 // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Sonnet_4|{}Sonnet_4[0]
+        final fun <get-Sonnet_4>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Sonnet_4.<get-Sonnet_4>|<get-Sonnet_4>(){}[0]
+    final val Sonnet_4_5 // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Sonnet_4_5|{}Sonnet_4_5[0]
+        final fun <get-Sonnet_4_5>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Sonnet_4_5.<get-Sonnet_4_5>|<get-Sonnet_4_5>(){}[0]
+    final val Sonnet_4_6 // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Sonnet_4_6|{}Sonnet_4_6[0]
+        final fun <get-Sonnet_4_6>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Sonnet_4_6.<get-Sonnet_4_6>|<get-Sonnet_4_6>(){}[0]
+    final val models // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.models|{}models[0]
+        final fun <get-models>(): kotlin.collections/List<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.models.<get-models>|<get-models>(){}[0]
+
+    final fun addCustomModel(ai.koog.prompt.llm/LLModel) // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.addCustomModel|addCustomModel(ai.koog.prompt.llm.LLModel){}[0]
+}

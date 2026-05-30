@@ -1,0 +1,115 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-processor>
+abstract class ai.koog.prompt.processor/ResponseProcessor { // ai.koog.prompt.processor/ResponseProcessor|null[0]
+    constructor <init>() // ai.koog.prompt.processor/ResponseProcessor.<init>|<init>(){}[0]
+
+    abstract suspend fun process(ai.koog.prompt.executor.model/PromptExecutor, ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>, ai.koog.prompt.message/Message.Assistant, ai.koog.serialization/JSONSerializer): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.processor/ResponseProcessor.process|process(ai.koog.prompt.executor.model.PromptExecutor;ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>;ai.koog.prompt.message.Message.Assistant;ai.koog.serialization.JSONSerializer){}[0]
+    final fun plus(ai.koog.prompt.processor/ResponseProcessor): ai.koog.prompt.processor/ResponseProcessor // ai.koog.prompt.processor/ResponseProcessor.plus|plus(ai.koog.prompt.processor.ResponseProcessor){}[0]
+
+    final class Chain : ai.koog.prompt.processor/ResponseProcessor { // ai.koog.prompt.processor/ResponseProcessor.Chain|null[0]
+        constructor <init>(kotlin/Array<out ai.koog.prompt.processor/ResponseProcessor>...) // ai.koog.prompt.processor/ResponseProcessor.Chain.<init>|<init>(kotlin.Array<out|ai.koog.prompt.processor.ResponseProcessor>...){}[0]
+
+        final suspend fun process(ai.koog.prompt.executor.model/PromptExecutor, ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>, ai.koog.prompt.message/Message.Assistant, ai.koog.serialization/JSONSerializer): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.processor/ResponseProcessor.Chain.process|process(ai.koog.prompt.executor.model.PromptExecutor;ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>;ai.koog.prompt.message.Message.Assistant;ai.koog.serialization.JSONSerializer){}[0]
+    }
+}
+
+abstract class ai.koog.prompt.processor/ToolJsonFixProcessor : ai.koog.prompt.processor/ResponseProcessor { // ai.koog.prompt.processor/ToolJsonFixProcessor|null[0]
+    constructor <init>(ai.koog.agents.core.tools/ToolRegistry, ai.koog.prompt.processor/ToolCallJsonConfig = ...) // ai.koog.prompt.processor/ToolJsonFixProcessor.<init>|<init>(ai.koog.agents.core.tools.ToolRegistry;ai.koog.prompt.processor.ToolCallJsonConfig){}[0]
+
+    final val toolCallDeserializer // ai.koog.prompt.processor/ToolJsonFixProcessor.toolCallDeserializer|{}toolCallDeserializer[0]
+        final fun <get-toolCallDeserializer>(): kotlinx.serialization/DeserializationStrategy<ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall> // ai.koog.prompt.processor/ToolJsonFixProcessor.toolCallDeserializer.<get-toolCallDeserializer>|<get-toolCallDeserializer>(){}[0]
+    final val toolCallJsonConfig // ai.koog.prompt.processor/ToolJsonFixProcessor.toolCallJsonConfig|{}toolCallJsonConfig[0]
+        final fun <get-toolCallJsonConfig>(): ai.koog.prompt.processor/ToolCallJsonConfig // ai.koog.prompt.processor/ToolJsonFixProcessor.toolCallJsonConfig.<get-toolCallJsonConfig>|<get-toolCallJsonConfig>(){}[0]
+    final val toolRegistry // ai.koog.prompt.processor/ToolJsonFixProcessor.toolRegistry|{}toolRegistry[0]
+        final fun <get-toolRegistry>(): ai.koog.agents.core.tools/ToolRegistry // ai.koog.prompt.processor/ToolJsonFixProcessor.toolRegistry.<get-toolRegistry>|<get-toolRegistry>(){}[0]
+
+    final fun extractToolCall(kotlin/String): ai.koog.prompt.message/MessagePart.Tool.Call? // ai.koog.prompt.processor/ToolJsonFixProcessor.extractToolCall|extractToolCall(kotlin.String){}[0]
+    final fun fixJsonString(kotlin/String): kotlin/String // ai.koog.prompt.processor/ToolJsonFixProcessor.fixJsonString|fixJsonString(kotlin.String){}[0]
+    final fun getKeyPattern(kotlin.collections/List<kotlin/String>): kotlin/String // ai.koog.prompt.processor/ToolJsonFixProcessor.getKeyPattern|getKeyPattern(kotlin.collections.List<kotlin.String>){}[0]
+    final fun getToolName(kotlin/String): kotlin/String? // ai.koog.prompt.processor/ToolJsonFixProcessor.getToolName|getToolName(kotlin.String){}[0]
+
+    final class ToolCall { // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String, kotlinx.serialization.json/JsonObject) // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.<init>|<init>(kotlin.String?;kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+
+        final val arguments // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.arguments|{}arguments[0]
+            final fun <get-arguments>(): kotlinx.serialization.json/JsonObject // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.arguments.<get-arguments>|<get-arguments>(){}[0]
+        final val id // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.id|{}id[0]
+            final fun <get-id>(): kotlin/String? // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.id.<get-id>|<get-id>(){}[0]
+        final val tool // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.tool|{}tool[0]
+            final fun <get-tool>(): kotlin/String // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.tool.<get-tool>|<get-tool>(){}[0]
+
+        final fun component1(): kotlin/String? // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.component1|component1(){}[0]
+        final fun component2(): kotlin/String // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.component2|component2(){}[0]
+        final fun component3(): kotlinx.serialization.json/JsonObject // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.component3|component3(){}[0]
+        final fun copy(kotlin/String? = ..., kotlin/String = ..., kotlinx.serialization.json/JsonObject = ...): ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.copy|copy(kotlin.String?;kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall> { // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall) // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.processor.ToolJsonFixProcessor.ToolCall){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall> // ai.koog.prompt.processor/ToolJsonFixProcessor.ToolCall.Companion.serializer|serializer(){}[0]
+        }
+    }
+}
+
+final class ai.koog.prompt.processor/LLMBasedToolCallFixProcessor : ai.koog.prompt.processor/ToolJsonFixProcessor { // ai.koog.prompt.processor/LLMBasedToolCallFixProcessor|null[0]
+    constructor <init>(ai.koog.agents.core.tools/ToolRegistry, ai.koog.prompt.processor/ToolCallJsonConfig = ..., ai.koog.prompt.processor/ResponseProcessor = ..., kotlin/String = ..., kotlin/String = ..., kotlin/Function1<kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>, kotlin/String> = ..., kotlin/Function2<kotlin/String, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>, kotlin/String> = ..., kotlin/Function2<kotlin/String, ai.koog.agents.core.tools/ToolDescriptor, kotlin/String> = ..., kotlin/Int = ...) // ai.koog.prompt.processor/LLMBasedToolCallFixProcessor.<init>|<init>(ai.koog.agents.core.tools.ToolRegistry;ai.koog.prompt.processor.ToolCallJsonConfig;ai.koog.prompt.processor.ResponseProcessor;kotlin.String;kotlin.String;kotlin.Function1<kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>,kotlin.String>;kotlin.Function2<kotlin.String,kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>,kotlin.String>;kotlin.Function2<kotlin.String,ai.koog.agents.core.tools.ToolDescriptor,kotlin.String>;kotlin.Int){}[0]
+
+    final suspend fun process(ai.koog.prompt.executor.model/PromptExecutor, ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>, ai.koog.prompt.message/Message.Assistant, ai.koog.serialization/JSONSerializer): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.processor/LLMBasedToolCallFixProcessor.process|process(ai.koog.prompt.executor.model.PromptExecutor;ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>;ai.koog.prompt.message.Message.Assistant;ai.koog.serialization.JSONSerializer){}[0]
+}
+
+final class ai.koog.prompt.processor/ManualToolCallFixProcessor : ai.koog.prompt.processor/ToolJsonFixProcessor { // ai.koog.prompt.processor/ManualToolCallFixProcessor|null[0]
+    constructor <init>(ai.koog.agents.core.tools/ToolRegistry, ai.koog.prompt.processor/ToolCallJsonConfig = ...) // ai.koog.prompt.processor/ManualToolCallFixProcessor.<init>|<init>(ai.koog.agents.core.tools.ToolRegistry;ai.koog.prompt.processor.ToolCallJsonConfig){}[0]
+
+    final suspend fun process(ai.koog.prompt.executor.model/PromptExecutor, ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>, ai.koog.prompt.message/Message.Assistant, ai.koog.serialization/JSONSerializer): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.processor/ManualToolCallFixProcessor.process|process(ai.koog.prompt.executor.model.PromptExecutor;ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>;ai.koog.prompt.message.Message.Assistant;ai.koog.serialization.JSONSerializer){}[0]
+}
+
+final class ai.koog.prompt.processor/ResponseProcessorConfig { // ai.koog.prompt.processor/ResponseProcessorConfig|null[0]
+    constructor <init>(ai.koog.prompt.processor/ResponseProcessor, ai.koog.serialization/JSONSerializer) // ai.koog.prompt.processor/ResponseProcessorConfig.<init>|<init>(ai.koog.prompt.processor.ResponseProcessor;ai.koog.serialization.JSONSerializer){}[0]
+
+    final val responseProcessor // ai.koog.prompt.processor/ResponseProcessorConfig.responseProcessor|{}responseProcessor[0]
+        final fun <get-responseProcessor>(): ai.koog.prompt.processor/ResponseProcessor // ai.koog.prompt.processor/ResponseProcessorConfig.responseProcessor.<get-responseProcessor>|<get-responseProcessor>(){}[0]
+    final val serializer // ai.koog.prompt.processor/ResponseProcessorConfig.serializer|{}serializer[0]
+        final fun <get-serializer>(): ai.koog.serialization/JSONSerializer // ai.koog.prompt.processor/ResponseProcessorConfig.serializer.<get-serializer>|<get-serializer>(){}[0]
+}
+
+final class ai.koog.prompt.processor/ToolCallJsonConfig { // ai.koog.prompt.processor/ToolCallJsonConfig|null[0]
+    constructor <init>(kotlinx.serialization.json/Json = ..., kotlin.collections/List<kotlin/String> = ..., kotlin.collections/List<kotlin/String> = ..., kotlin.collections/List<kotlin/String> = ...) // ai.koog.prompt.processor/ToolCallJsonConfig.<init>|<init>(kotlinx.serialization.json.Json;kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>){}[0]
+
+    final val argsJsonKeys // ai.koog.prompt.processor/ToolCallJsonConfig.argsJsonKeys|{}argsJsonKeys[0]
+        final fun <get-argsJsonKeys>(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.processor/ToolCallJsonConfig.argsJsonKeys.<get-argsJsonKeys>|<get-argsJsonKeys>(){}[0]
+    final val idJsonKeys // ai.koog.prompt.processor/ToolCallJsonConfig.idJsonKeys|{}idJsonKeys[0]
+        final fun <get-idJsonKeys>(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.processor/ToolCallJsonConfig.idJsonKeys.<get-idJsonKeys>|<get-idJsonKeys>(){}[0]
+    final val json // ai.koog.prompt.processor/ToolCallJsonConfig.json|{}json[0]
+        final fun <get-json>(): kotlinx.serialization.json/Json // ai.koog.prompt.processor/ToolCallJsonConfig.json.<get-json>|<get-json>(){}[0]
+    final val nameJsonKeys // ai.koog.prompt.processor/ToolCallJsonConfig.nameJsonKeys|{}nameJsonKeys[0]
+        final fun <get-nameJsonKeys>(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.processor/ToolCallJsonConfig.nameJsonKeys.<get-nameJsonKeys>|<get-nameJsonKeys>(){}[0]
+
+    final object Companion { // ai.koog.prompt.processor/ToolCallJsonConfig.Companion|null[0]
+        final val defaultArgsJsonKeys // ai.koog.prompt.processor/ToolCallJsonConfig.Companion.defaultArgsJsonKeys|{}defaultArgsJsonKeys[0]
+            final fun <get-defaultArgsJsonKeys>(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.processor/ToolCallJsonConfig.Companion.defaultArgsJsonKeys.<get-defaultArgsJsonKeys>|<get-defaultArgsJsonKeys>(){}[0]
+        final val defaultIdJsonKeys // ai.koog.prompt.processor/ToolCallJsonConfig.Companion.defaultIdJsonKeys|{}defaultIdJsonKeys[0]
+            final fun <get-defaultIdJsonKeys>(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.processor/ToolCallJsonConfig.Companion.defaultIdJsonKeys.<get-defaultIdJsonKeys>|<get-defaultIdJsonKeys>(){}[0]
+        final val defaultJson // ai.koog.prompt.processor/ToolCallJsonConfig.Companion.defaultJson|{}defaultJson[0]
+            final fun <get-defaultJson>(): kotlinx.serialization.json/Json // ai.koog.prompt.processor/ToolCallJsonConfig.Companion.defaultJson.<get-defaultJson>|<get-defaultJson>(){}[0]
+        final val defaultNameJsonKeys // ai.koog.prompt.processor/ToolCallJsonConfig.Companion.defaultNameJsonKeys|{}defaultNameJsonKeys[0]
+            final fun <get-defaultNameJsonKeys>(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.processor/ToolCallJsonConfig.Companion.defaultNameJsonKeys.<get-defaultNameJsonKeys>|<get-defaultNameJsonKeys>(){}[0]
+    }
+}
+
+final suspend fun (ai.koog.prompt.executor.model/PromptExecutor).ai.koog.prompt.processor/executeProcessed(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>, ai.koog.prompt.processor/ResponseProcessorConfig? = ...): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.processor/executeProcessed|executeProcessed@ai.koog.prompt.executor.model.PromptExecutor(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>;ai.koog.prompt.processor.ResponseProcessorConfig?){}[0]

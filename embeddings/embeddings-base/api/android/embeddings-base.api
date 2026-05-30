@@ -1,0 +1,33 @@
+public abstract interface class ai/koog/embeddings/base/Embedder {
+	public abstract fun diff (Lai/koog/embeddings/base/Vector;Lai/koog/embeddings/base/Vector;)D
+	public abstract fun embed (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/embeddings/base/Vector {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lai/koog/embeddings/base/Vector;
+	public static synthetic fun copy$default (Lai/koog/embeddings/base/Vector;Ljava/util/List;ILjava/lang/Object;)Lai/koog/embeddings/base/Vector;
+	public final fun cosineSimilarity (Lai/koog/embeddings/base/Vector;)D
+	public final fun dotProduct (Lai/koog/embeddings/base/Vector;)D
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun euclideanDistance (Lai/koog/embeddings/base/Vector;)D
+	public final fun getDimension ()I
+	public final fun getValues ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun isNull ()Z
+	public final fun magnitude ()D
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/embeddings/base/Vector$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/embeddings/base/Vector$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/embeddings/base/Vector;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/embeddings/base/Vector;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+

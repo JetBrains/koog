@@ -1,0 +1,281 @@
+public final class ai/koog/agents/snapshot/feature/AgentCheckpointData {
+	public static final field Companion Lai/koog/agents/snapshot/feature/AgentCheckpointData$Companion;
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;JLai/koog/agents/snapshot/feature/GraphCheckpointProperties;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;JLai/koog/agents/snapshot/feature/PlannerCheckpointProperties;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/GraphCheckpointProperties;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/GraphCheckpointProperties;Lai/koog/serialization/JSONObject;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/GraphCheckpointProperties;Lai/koog/serialization/JSONObject;Lai/koog/prompt/llm/LLModel;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/GraphCheckpointProperties;Lai/koog/serialization/JSONObject;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/GraphCheckpointProperties;Lai/koog/serialization/JSONObject;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/serialization/JSONObject;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/GraphCheckpointProperties;Lai/koog/serialization/JSONObject;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/serialization/JSONObject;I)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/GraphCheckpointProperties;Lai/koog/serialization/JSONObject;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/serialization/JSONObject;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/PlannerCheckpointProperties;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/PlannerCheckpointProperties;Lai/koog/serialization/JSONObject;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/PlannerCheckpointProperties;Lai/koog/serialization/JSONObject;Lai/koog/prompt/llm/LLModel;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/PlannerCheckpointProperties;Lai/koog/serialization/JSONObject;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/PlannerCheckpointProperties;Lai/koog/serialization/JSONObject;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/serialization/JSONObject;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/PlannerCheckpointProperties;Lai/koog/serialization/JSONObject;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/serialization/JSONObject;I)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;JLai/koog/agents/snapshot/feature/PlannerCheckpointProperties;Lai/koog/serialization/JSONObject;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/serialization/JSONObject;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Lai/koog/agents/snapshot/feature/GraphCheckpointProperties;
+	public final fun component11 ()Lai/koog/agents/snapshot/feature/PlannerCheckpointProperties;
+	public final fun component12 ()Lai/koog/serialization/JSONObject;
+	public final fun component2 ()Lkotlin/time/Instant;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Lai/koog/prompt/params/LLMParams;
+	public final fun component5 ()Lai/koog/prompt/llm/LLModel;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Lai/koog/serialization/JSONObject;
+	public final fun component8 ()I
+	public final fun component9 ()J
+	public final fun copy (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/serialization/JSONObject;IJLai/koog/agents/snapshot/feature/GraphCheckpointProperties;Lai/koog/agents/snapshot/feature/PlannerCheckpointProperties;Lai/koog/serialization/JSONObject;)Lai/koog/agents/snapshot/feature/AgentCheckpointData;
+	public static synthetic fun copy$default (Lai/koog/agents/snapshot/feature/AgentCheckpointData;Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/List;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/serialization/JSONObject;IJLai/koog/agents/snapshot/feature/GraphCheckpointProperties;Lai/koog/agents/snapshot/feature/PlannerCheckpointProperties;Lai/koog/serialization/JSONObject;ILjava/lang/Object;)Lai/koog/agents/snapshot/feature/AgentCheckpointData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAgentIterations ()I
+	public final fun getCheckpointId ()Ljava/lang/String;
+	public final fun getCreatedAt ()Lkotlin/time/Instant;
+	public final fun getGraphProperties ()Lai/koog/agents/snapshot/feature/GraphCheckpointProperties;
+	public final fun getLlmModel ()Lai/koog/prompt/llm/LLModel;
+	public final fun getLlmParams ()Lai/koog/prompt/params/LLMParams;
+	public final fun getMessageHistory ()Ljava/util/List;
+	public final fun getPlannerProperties ()Lai/koog/agents/snapshot/feature/PlannerCheckpointProperties;
+	public final fun getProperties ()Lai/koog/serialization/JSONObject;
+	public final fun getStorage ()Lai/koog/serialization/JSONObject;
+	public final fun getTools ()Ljava/util/List;
+	public final fun getVersion ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/agents/snapshot/feature/AgentCheckpointData$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/agents/snapshot/feature/AgentCheckpointData$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/agents/snapshot/feature/AgentCheckpointData;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/agents/snapshot/feature/AgentCheckpointData;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/snapshot/feature/AgentCheckpointData$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/snapshot/feature/AgentCheckpointDataKt {
+	public static final fun isTombstone (Lai/koog/agents/snapshot/feature/AgentCheckpointData;)Z
+	public static final fun tombstoneCheckpoint (Lkotlin/time/Instant;J)Lai/koog/agents/snapshot/feature/AgentCheckpointData;
+}
+
+public final class ai/koog/agents/snapshot/feature/AgentCheckpointDataSerializer : kotlinx/serialization/json/JsonTransformingSerializer {
+	public static final field INSTANCE Lai/koog/agents/snapshot/feature/AgentCheckpointDataSerializer;
+	public final fun isOldFormat (Ljava/lang/String;)Z
+}
+
+public final class ai/koog/agents/snapshot/feature/GraphCheckpointProperties {
+	public static final field Companion Lai/koog/agents/snapshot/feature/GraphCheckpointProperties$Companion;
+	public fun <init> (Ljava/lang/String;Lai/koog/serialization/JSONElement;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/serialization/JSONElement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/koog/serialization/JSONElement;
+	public final fun copy (Ljava/lang/String;Lai/koog/serialization/JSONElement;)Lai/koog/agents/snapshot/feature/GraphCheckpointProperties;
+	public static synthetic fun copy$default (Lai/koog/agents/snapshot/feature/GraphCheckpointProperties;Ljava/lang/String;Lai/koog/serialization/JSONElement;ILjava/lang/Object;)Lai/koog/agents/snapshot/feature/GraphCheckpointProperties;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLastOutput ()Lai/koog/serialization/JSONElement;
+	public final fun getNodePath ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/agents/snapshot/feature/GraphCheckpointProperties$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/agents/snapshot/feature/GraphCheckpointProperties$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/agents/snapshot/feature/GraphCheckpointProperties;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/agents/snapshot/feature/GraphCheckpointProperties;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/snapshot/feature/GraphCheckpointProperties$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/snapshot/feature/Persistence {
+	public static final field Feature Lai/koog/agents/snapshot/feature/Persistence$Feature;
+	public fun <init> (Lai/koog/agents/snapshot/providers/PersistenceStorageProvider;Lai/koog/serialization/JSONSerializer;Lai/koog/utils/time/KoogClock;)V
+	public synthetic fun <init> (Lai/koog/agents/snapshot/providers/PersistenceStorageProvider;Lai/koog/serialization/JSONSerializer;Lai/koog/utils/time/KoogClock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun createCheckpointAfterNode (Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Object;Lai/koog/serialization/TypeToken;JLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createCheckpointAfterNode$default (Lai/koog/agents/snapshot/feature/Persistence;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/lang/Object;Lai/koog/serialization/TypeToken;JLjava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun createPlannerCheckpoint (Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/planner/PlannerAgentExecutionPoint;JLjava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun createPlannerCheckpoint$default (Lai/koog/agents/snapshot/feature/Persistence;Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Ljava/lang/Object;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/planner/PlannerAgentExecutionPoint;JLjava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun getCheckpointById (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getLatestCheckpoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getRollbackStrategy ()Lai/koog/agents/core/agent/context/RollbackStrategy;
+	public final fun getRollbackToolRegistry ()Lai/koog/agents/snapshot/feature/RollbackToolRegistry;
+	public final fun rollbackToCheckpoint (Ljava/lang/String;Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun rollbackToLatestCheckpoint (Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun runFromCheckpoint (Lai/koog/agents/core/agent/AIAgent;Ljava/lang/Object;Lai/koog/agents/snapshot/feature/AgentCheckpointData;)Ljava/lang/Object;
+	public static final fun runFromCheckpoint (Lai/koog/agents/core/agent/AIAgent;Ljava/lang/Object;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lai/koog/agents/core/agent/context/RollbackStrategy;)Ljava/lang/Object;
+	public static final fun runFromCheckpoint (Lai/koog/agents/core/agent/AIAgent;Ljava/lang/Object;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lai/koog/agents/core/agent/context/RollbackStrategy;Ljava/lang/String;)Ljava/lang/Object;
+	public final fun saveCheckpoint (Ljava/lang/String;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setExecutionPointAfterNode (Lai/koog/agents/core/agent/context/AIAgentContext;Ljava/lang/String;Ljava/util/List;Lai/koog/serialization/JSONElement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setRollbackStrategy (Lai/koog/agents/core/agent/context/RollbackStrategy;)V
+	public final fun setRollbackToolRegistry (Lai/koog/agents/snapshot/feature/RollbackToolRegistry;)V
+}
+
+public final class ai/koog/agents/snapshot/feature/Persistence$Feature : ai/koog/agents/core/feature/AIAgentGraphFeature, ai/koog/agents/core/feature/AIAgentPlannerFeature {
+	public synthetic fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/core/feature/config/FeatureConfig;
+	public fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/snapshot/feature/PersistenceFeatureConfig;
+	public fun getKey ()Lai/koog/agents/core/agent/entity/AIAgentStorageKey;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Ljava/lang/Object;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;)Ljava/lang/Object;
+	public fun install (Lai/koog/agents/snapshot/feature/PersistenceFeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Lai/koog/agents/snapshot/feature/Persistence;
+	public fun install (Lai/koog/agents/snapshot/feature/PersistenceFeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;)Lai/koog/agents/snapshot/feature/Persistence;
+	public final fun runFromCheckpoint (Lai/koog/agents/core/agent/AIAgent;Ljava/lang/Object;Lai/koog/agents/snapshot/feature/AgentCheckpointData;)Ljava/lang/Object;
+	public final fun runFromCheckpoint (Lai/koog/agents/core/agent/AIAgent;Ljava/lang/Object;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lai/koog/agents/core/agent/context/RollbackStrategy;)Ljava/lang/Object;
+	public final fun runFromCheckpoint (Lai/koog/agents/core/agent/AIAgent;Ljava/lang/Object;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lai/koog/agents/core/agent/context/RollbackStrategy;Ljava/lang/String;)Ljava/lang/Object;
+	public final synthetic fun runFromCheckpoint (Lai/koog/agents/core/agent/AIAgent;Ljava/lang/Object;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lai/koog/agents/core/agent/context/RollbackStrategy;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final synthetic fun runFromCheckpoint (Lai/koog/agents/core/agent/session/AIAgentRunSession;Ljava/lang/Object;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lai/koog/agents/core/agent/context/RollbackStrategy;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun runFromCheckpoint$default (Lai/koog/agents/snapshot/feature/Persistence$Feature;Lai/koog/agents/core/agent/AIAgent;Ljava/lang/Object;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lai/koog/agents/core/agent/context/RollbackStrategy;Ljava/lang/String;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun runFromCheckpoint$default (Lai/koog/agents/snapshot/feature/Persistence$Feature;Lai/koog/agents/core/agent/AIAgent;Ljava/lang/Object;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lai/koog/agents/core/agent/context/RollbackStrategy;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun runFromCheckpoint$default (Lai/koog/agents/snapshot/feature/Persistence$Feature;Lai/koog/agents/core/agent/session/AIAgentRunSession;Ljava/lang/Object;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lai/koog/agents/core/agent/context/RollbackStrategy;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/snapshot/feature/PersistenceFeatureConfig : ai/koog/agents/core/feature/config/FeatureConfig {
+	public fun <init> ()V
+	public final fun getEnableAutomaticPersistence ()Z
+	public final fun getRollbackToolRegistry ()Lai/koog/agents/snapshot/feature/RollbackToolRegistry;
+	public final fun getStorage ()Lai/koog/agents/snapshot/providers/PersistenceStorageProvider;
+	public final fun setEnableAutomaticPersistence (Z)V
+	public final fun setRollbackToolRegistry (Lai/koog/agents/snapshot/feature/RollbackToolRegistry;)V
+	public final fun setStorage (Lai/koog/agents/snapshot/providers/PersistenceStorageProvider;)V
+}
+
+public final class ai/koog/agents/snapshot/feature/PersistenceKt {
+	public static final fun persistence (Lai/koog/agents/core/agent/context/AIAgentContext;)Lai/koog/agents/snapshot/feature/Persistence;
+	public static final fun persistence (Lai/koog/agents/core/agent/session/AIAgentRunSession;)Lai/koog/agents/snapshot/feature/Persistence;
+	public static final fun withPersistence (Lai/koog/agents/core/agent/context/AIAgentContext;Lkotlin/jvm/functions/Function3;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun withPersistence (Lai/koog/agents/core/agent/session/AIAgentRunSession;Lkotlin/jvm/functions/Function3;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/snapshot/feature/PlannerCheckpointProperties {
+	public static final field Companion Lai/koog/agents/snapshot/feature/PlannerCheckpointProperties$Companion;
+	public fun <init> (Lai/koog/agents/core/planner/PlannerAgentExecutionPoint;Lai/koog/serialization/JSONElement;Lai/koog/serialization/JSONElement;)V
+	public final fun component1 ()Lai/koog/agents/core/planner/PlannerAgentExecutionPoint;
+	public final fun component2 ()Lai/koog/serialization/JSONElement;
+	public final fun component3 ()Lai/koog/serialization/JSONElement;
+	public final fun copy (Lai/koog/agents/core/planner/PlannerAgentExecutionPoint;Lai/koog/serialization/JSONElement;Lai/koog/serialization/JSONElement;)Lai/koog/agents/snapshot/feature/PlannerCheckpointProperties;
+	public static synthetic fun copy$default (Lai/koog/agents/snapshot/feature/PlannerCheckpointProperties;Lai/koog/agents/core/planner/PlannerAgentExecutionPoint;Lai/koog/serialization/JSONElement;Lai/koog/serialization/JSONElement;ILjava/lang/Object;)Lai/koog/agents/snapshot/feature/PlannerCheckpointProperties;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getExecutionPoint ()Lai/koog/agents/core/planner/PlannerAgentExecutionPoint;
+	public final fun getPlan ()Lai/koog/serialization/JSONElement;
+	public final fun getState ()Lai/koog/serialization/JSONElement;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/agents/snapshot/feature/PlannerCheckpointProperties$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/agents/snapshot/feature/PlannerCheckpointProperties$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/agents/snapshot/feature/PlannerCheckpointProperties;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/agents/snapshot/feature/PlannerCheckpointProperties;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/snapshot/feature/PlannerCheckpointProperties$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/agents/snapshot/feature/RollbackToolRegistry {
+	public static final field Companion Lai/koog/agents/snapshot/feature/RollbackToolRegistry$Companion;
+	public fun <init> ()V
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public final fun add (Lai/koog/agents/core/tools/Tool;Lai/koog/agents/core/tools/Tool;)V
+	public static final fun builder ()Lai/koog/agents/snapshot/feature/RollbackToolRegistryBuilder;
+	public final fun getRollbackTool (Ljava/lang/String;)Lai/koog/agents/core/tools/Tool;
+	public final fun getRollbackToolsMap ()Ljava/util/Map;
+	public final fun plus (Lai/koog/agents/snapshot/feature/RollbackToolRegistry;)Lai/koog/agents/snapshot/feature/RollbackToolRegistry;
+}
+
+public final class ai/koog/agents/snapshot/feature/RollbackToolRegistry$Companion {
+	public final fun builder ()Lai/koog/agents/snapshot/feature/RollbackToolRegistryBuilder;
+	public final fun getEMPTY ()Lai/koog/agents/snapshot/feature/RollbackToolRegistry;
+}
+
+public class ai/koog/agents/snapshot/feature/RollbackToolRegistryBuilder : ai/koog/agents/snapshot/feature/RollbackToolRegistryBuilderCommon {
+	public fun <init> ()V
+	protected fun self ()Lai/koog/agents/snapshot/feature/RollbackToolRegistryBuilder;
+	public synthetic fun self ()Lai/koog/agents/snapshot/feature/RollbackToolRegistryBuilderCommon;
+}
+
+public abstract class ai/koog/agents/snapshot/feature/RollbackToolRegistryBuilderCommon {
+	public fun build ()Lai/koog/agents/snapshot/feature/RollbackToolRegistry;
+	public fun registerRollback (Lai/koog/agents/core/tools/Tool;Lai/koog/agents/core/tools/Tool;)Lai/koog/agents/snapshot/feature/RollbackToolRegistryBuilderCommon;
+	protected abstract fun self ()Lai/koog/agents/snapshot/feature/RollbackToolRegistryBuilderCommon;
+}
+
+public final class ai/koog/agents/snapshot/providers/InMemoryPersistenceStorageProvider : ai/koog/agents/snapshot/providers/PersistenceStorageProvider {
+	public fun <init> ()V
+	public fun getCheckpoints (Ljava/lang/String;Lai/koog/agents/snapshot/providers/filters/AgentCheckpointPredicateFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getCheckpoints (Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCheckpoints (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getLatestCheckpoint (Ljava/lang/String;Lai/koog/agents/snapshot/providers/filters/AgentCheckpointPredicateFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getLatestCheckpoint (Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getLatestCheckpoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun removeCheckpoints (Lai/koog/agents/snapshot/providers/filters/AgentCheckpointPredicateFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun removeCheckpoints$default (Lai/koog/agents/snapshot/providers/InMemoryPersistenceStorageProvider;Lai/koog/agents/snapshot/providers/filters/AgentCheckpointPredicateFilter;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun saveCheckpoint (Ljava/lang/String;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/snapshot/providers/NoPersistencyStorageProvider : ai/koog/agents/snapshot/providers/PersistenceStorageProvider {
+	public fun <init> ()V
+	public synthetic fun getCheckpoints (Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCheckpoints (Ljava/lang/String;Lkotlin/Unit;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCheckpoints (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getLatestCheckpoint (Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getLatestCheckpoint (Ljava/lang/String;Lkotlin/Unit;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getLatestCheckpoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun saveCheckpoint (Ljava/lang/String;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/agents/snapshot/providers/PersistenceStorageProvider {
+	public abstract fun getCheckpoints (Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCheckpoints (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getLatestCheckpoint (Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getLatestCheckpoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun saveCheckpoint (Ljava/lang/String;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/snapshot/providers/PersistenceStorageProvider$DefaultImpls {
+	public static fun getCheckpoints (Lai/koog/agents/snapshot/providers/PersistenceStorageProvider;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun getLatestCheckpoint (Lai/koog/agents/snapshot/providers/PersistenceStorageProvider;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/snapshot/providers/PersistenceUtils {
+	public static final field INSTANCE Lai/koog/agents/snapshot/providers/PersistenceUtils;
+	public static final field TOMBSTONE_CHECKPOINT_NAME Ljava/lang/String;
+	public final fun getDefaultCheckpointJson ()Lkotlinx/serialization/json/Json;
+}
+
+public class ai/koog/agents/snapshot/providers/file/FilePersistenceStorageProvider : ai/koog/agents/snapshot/providers/PersistenceStorageProvider {
+	public fun <init> (Lai/koog/rag/base/files/FileSystemProvider$ReadWrite;Ljava/lang/Object;)V
+	public fun <init> (Lai/koog/rag/base/files/FileSystemProvider$ReadWrite;Ljava/lang/Object;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lai/koog/rag/base/files/FileSystemProvider$ReadWrite;Ljava/lang/Object;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCheckpoints (Ljava/lang/String;Lai/koog/agents/snapshot/providers/filters/AgentCheckpointPredicateFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getCheckpoints (Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCheckpoints (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getLatestCheckpoint (Ljava/lang/String;Lai/koog/agents/snapshot/providers/filters/AgentCheckpointPredicateFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getLatestCheckpoint (Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getLatestCheckpoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun saveCheckpoint (Ljava/lang/String;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/agents/snapshot/providers/filters/AgentCheckpointPredicateFilter {
+	public abstract fun check (Lai/koog/agents/snapshot/feature/AgentCheckpointData;)Z
+}
+

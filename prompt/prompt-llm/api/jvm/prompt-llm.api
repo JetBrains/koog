@@ -1,0 +1,370 @@
+public final class ai/koog/prompt/llm/AlibabaLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/AlibabaLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/AnthropicLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/AnthropicLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/AzureLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/AzureLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/BedrockLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/BedrockLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/DeepSeekLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/DeepSeekLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/GoogleLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/GoogleLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/HuggingFaceLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/HuggingFaceLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class ai/koog/prompt/llm/LLMCapability {
+	public static final field Companion Lai/koog/prompt/llm/LLMCapability$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getId ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/koog/prompt/llm/LLMCapability;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Audio : ai/koog/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Audio;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Completion : ai/koog/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Completion;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Document : ai/koog/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Document;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Embed : ai/koog/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Embed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Moderation : ai/koog/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Moderation;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$MultipleChoices : ai/koog/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$MultipleChoices;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class ai/koog/prompt/llm/LLMCapability$OpenAIEndpoint : ai/koog/prompt/llm/LLMCapability {
+	public static final field Companion Lai/koog/prompt/llm/LLMCapability$OpenAIEndpoint$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getEndpoint ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/koog/prompt/llm/LLMCapability$OpenAIEndpoint;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$OpenAIEndpoint$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$OpenAIEndpoint$Completions : ai/koog/prompt/llm/LLMCapability$OpenAIEndpoint {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$OpenAIEndpoint$Completions;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$OpenAIEndpoint$Responses : ai/koog/prompt/llm/LLMCapability$OpenAIEndpoint {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$OpenAIEndpoint$Responses;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$PromptCaching : ai/koog/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$PromptCaching;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class ai/koog/prompt/llm/LLMCapability$Schema : ai/koog/prompt/llm/LLMCapability {
+	public static final field Companion Lai/koog/prompt/llm/LLMCapability$Schema$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getLang ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/koog/prompt/llm/LLMCapability$Schema;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Schema$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class ai/koog/prompt/llm/LLMCapability$Schema$JSON : ai/koog/prompt/llm/LLMCapability$Schema {
+	public static final field Companion Lai/koog/prompt/llm/LLMCapability$Schema$JSON$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getSupport ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/koog/prompt/llm/LLMCapability$Schema$JSON;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Schema$JSON$Basic : ai/koog/prompt/llm/LLMCapability$Schema$JSON {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Schema$JSON$Basic;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Schema$JSON$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Schema$JSON$Standard : ai/koog/prompt/llm/LLMCapability$Schema$JSON {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Schema$JSON$Standard;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Speculation : ai/koog/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Speculation;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Temperature : ai/koog/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Temperature;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Thinking : ai/koog/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Thinking;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$ToolChoice : ai/koog/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$ToolChoice;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Tools : ai/koog/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Tools;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class ai/koog/prompt/llm/LLMCapability$Vision : ai/koog/prompt/llm/LLMCapability {
+	public static final field Companion Lai/koog/prompt/llm/LLMCapability$Vision$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getVisionType ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/koog/prompt/llm/LLMCapability$Vision;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Vision$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Vision$Image : ai/koog/prompt/llm/LLMCapability$Vision {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Vision$Image;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/llm/LLMCapability$Vision$Video : ai/koog/prompt/llm/LLMCapability$Vision {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMCapability$Vision$Video;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class ai/koog/prompt/llm/LLMProvider {
+	public static final field Alibaba Lai/koog/prompt/llm/AlibabaLLMProvider;
+	public static final field Anthropic Lai/koog/prompt/llm/AnthropicLLMProvider;
+	public static final field Azure Lai/koog/prompt/llm/AzureLLMProvider;
+	public static final field Bedrock Lai/koog/prompt/llm/BedrockLLMProvider;
+	public static final field Companion Lai/koog/prompt/llm/LLMProvider$Companion;
+	public static final field DeepSeek Lai/koog/prompt/llm/DeepSeekLLMProvider;
+	public static final field Google Lai/koog/prompt/llm/GoogleLLMProvider;
+	public static final field HuggingFace Lai/koog/prompt/llm/HuggingFaceLLMProvider;
+	public static final field Meta Lai/koog/prompt/llm/MetaLLMProvider;
+	public static final field MiniMax Lai/koog/prompt/llm/MiniMaxLLMProvider;
+	public static final field MistralAI Lai/koog/prompt/llm/MistralAILLMProvider;
+	public static final field OCI Lai/koog/prompt/llm/OCILLMProvider;
+	public static final field Ollama Lai/koog/prompt/llm/OllamaLLMProvider;
+	public static final field OpenAI Lai/koog/prompt/llm/OpenAILLMProvider;
+	public static final field OpenRouter Lai/koog/prompt/llm/OpenRouterLLMProvider;
+	public static final field Vertex Lai/koog/prompt/llm/VertexLLMProvider;
+	public static final field ZhipuAI Lai/koog/prompt/llm/ZhipuAILLMProvider;
+	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDisplay ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static final synthetic fun write$Self (Lai/koog/prompt/llm/LLMProvider;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final synthetic class ai/koog/prompt/llm/LLMProvider$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLMProvider$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/llm/LLMProvider;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/llm/LLMProvider;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/LLMProvider$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/LLModel {
+	public static final field Companion Lai/koog/prompt/llm/LLModel$Companion;
+	public fun <init> (Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;)V
+	public fun <init> (Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Ljava/util/List;)V
+	public fun <init> (Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Ljava/util/List;Ljava/lang/Long;)V
+	public fun <init> (Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Ljava/util/List;Ljava/lang/Long;Ljava/lang/Long;)V
+	public synthetic fun <init> (Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Ljava/util/List;Ljava/lang/Long;Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lai/koog/prompt/llm/LLMProvider;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/lang/Long;
+	public final fun component5 ()Ljava/lang/Long;
+	public final fun copy (Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Ljava/util/List;Ljava/lang/Long;Ljava/lang/Long;)Lai/koog/prompt/llm/LLModel;
+	public static synthetic fun copy$default (Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/llm/LLMProvider;Ljava/lang/String;Ljava/util/List;Ljava/lang/Long;Ljava/lang/Long;ILjava/lang/Object;)Lai/koog/prompt/llm/LLModel;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCapabilities ()Ljava/util/List;
+	public final fun getContextLength ()Ljava/lang/Long;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getMaxOutputTokens ()Ljava/lang/Long;
+	public final fun getProvider ()Lai/koog/prompt/llm/LLMProvider;
+	public fun hashCode ()I
+	public final fun supports (Lai/koog/prompt/llm/LLMCapability;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/llm/LLModel$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/llm/LLModel$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/llm/LLModel;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/llm/LLModel;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/LLModel$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/LLModelExtensionsKt {
+	public static final fun toModelInfo (Lai/koog/prompt/llm/LLModel;)Lai/koog/agents/utils/ModelInfo;
+}
+
+public final class ai/koog/prompt/llm/MetaLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/MetaLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/MiniMaxLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/MiniMaxLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/MistralAILLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/MistralAILLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/OCILLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/OCILLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/OllamaLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/OllamaLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/OpenAILLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/OpenAILLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/OpenRouterLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/OpenRouterLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/VertexLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/VertexLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/ZhipuAILLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/ZhipuAILLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+

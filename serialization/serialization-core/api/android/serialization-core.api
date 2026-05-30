@@ -1,0 +1,256 @@
+public final class ai/koog/serialization/JSONArray : ai/koog/serialization/JSONElement {
+	public static final field Companion Lai/koog/serialization/JSONArray$Companion;
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lai/koog/serialization/JSONArray;
+	public static synthetic fun copy$default (Lai/koog/serialization/JSONArray;Ljava/util/List;ILjava/lang/Object;)Lai/koog/serialization/JSONArray;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getElements ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/serialization/JSONArray$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/serialization/JSONElement {
+	public static final field Companion Lai/koog/serialization/JSONElement$Companion;
+}
+
+public final class ai/koog/serialization/JSONElement$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/serialization/JSONElementKt {
+	public static final fun JSONPrimitive (Ljava/lang/Boolean;)Lai/koog/serialization/JSONPrimitive;
+	public static final fun JSONPrimitive (Ljava/lang/Double;)Lai/koog/serialization/JSONPrimitive;
+	public static final fun JSONPrimitive (Ljava/lang/Integer;)Lai/koog/serialization/JSONPrimitive;
+	public static final fun JSONPrimitive (Ljava/lang/Long;)Lai/koog/serialization/JSONPrimitive;
+	public static final fun JSONPrimitive (Ljava/lang/String;)Lai/koog/serialization/JSONPrimitive;
+	public static final fun JSONUnquotedPrimitive (Ljava/lang/String;)Lai/koog/serialization/JSONPrimitive;
+}
+
+public final class ai/koog/serialization/JSONLiteral : ai/koog/serialization/JSONPrimitive {
+	public static final field Companion Lai/koog/serialization/JSONLiteral$Companion;
+	public fun <init> (Ljava/lang/String;Z)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun copy (Ljava/lang/String;Z)Lai/koog/serialization/JSONLiteral;
+	public static synthetic fun copy$default (Lai/koog/serialization/JSONLiteral;Ljava/lang/String;ZILjava/lang/Object;)Lai/koog/serialization/JSONLiteral;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isString ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/serialization/JSONLiteral$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/serialization/JSONNull : ai/koog/serialization/JSONPrimitive {
+	public static final field INSTANCE Lai/koog/serialization/JSONNull;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isString ()Z
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/serialization/JSONObject : ai/koog/serialization/JSONElement {
+	public static final field Companion Lai/koog/serialization/JSONObject$Companion;
+	public fun <init> (Ljava/util/Map;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lai/koog/serialization/JSONObject;
+	public static synthetic fun copy$default (Lai/koog/serialization/JSONObject;Ljava/util/Map;ILjava/lang/Object;)Lai/koog/serialization/JSONObject;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEntries ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/serialization/JSONObject$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class ai/koog/serialization/JSONPrimitive : ai/koog/serialization/JSONElement {
+	public static final field Companion Lai/koog/serialization/JSONPrimitive$Companion;
+	public final fun getBooleanOrNull ()Ljava/lang/Boolean;
+	public abstract fun getContent ()Ljava/lang/String;
+	public final fun getContentOrNull ()Ljava/lang/String;
+	public final fun getDoubleOrNull ()Ljava/lang/Double;
+	public final fun getIntOrNull ()Ljava/lang/Integer;
+	public final fun getLongOrNull ()Ljava/lang/Long;
+	public abstract fun isString ()Z
+	public static final fun of (Ljava/lang/Boolean;)Lai/koog/serialization/JSONPrimitive;
+	public static final fun of (Ljava/lang/Double;)Lai/koog/serialization/JSONPrimitive;
+	public static final fun of (Ljava/lang/Integer;)Lai/koog/serialization/JSONPrimitive;
+	public static final fun of (Ljava/lang/Long;)Lai/koog/serialization/JSONPrimitive;
+	public static final fun of (Ljava/lang/String;)Lai/koog/serialization/JSONPrimitive;
+	public static final fun ofUnquoted (Ljava/lang/String;)Lai/koog/serialization/JSONPrimitive;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/serialization/JSONPrimitive$Companion {
+	public final fun of (Ljava/lang/Boolean;)Lai/koog/serialization/JSONPrimitive;
+	public final fun of (Ljava/lang/Double;)Lai/koog/serialization/JSONPrimitive;
+	public final fun of (Ljava/lang/Integer;)Lai/koog/serialization/JSONPrimitive;
+	public final fun of (Ljava/lang/Long;)Lai/koog/serialization/JSONPrimitive;
+	public final fun of (Ljava/lang/String;)Lai/koog/serialization/JSONPrimitive;
+	public final fun ofUnquoted (Ljava/lang/String;)Lai/koog/serialization/JSONPrimitive;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/koog/serialization/JSONSerializer {
+	public abstract fun decodeFromJSONElement (Lai/koog/serialization/JSONElement;Lai/koog/serialization/TypeToken;)Ljava/lang/Object;
+	public abstract fun decodeFromString (Ljava/lang/String;Lai/koog/serialization/TypeToken;)Ljava/lang/Object;
+	public fun decodeJSONElementFromString (Ljava/lang/String;)Lai/koog/serialization/JSONElement;
+	public fun encodeJSONElementToString (Lai/koog/serialization/JSONElement;)Ljava/lang/String;
+	public abstract fun encodeToJSONElement (Ljava/lang/Object;Lai/koog/serialization/TypeToken;)Lai/koog/serialization/JSONElement;
+	public abstract fun encodeToString (Ljava/lang/Object;Lai/koog/serialization/TypeToken;)Ljava/lang/String;
+}
+
+public final class ai/koog/serialization/JSONSerializer$DefaultImpls {
+	public static fun decodeJSONElementFromString (Lai/koog/serialization/JSONSerializer;Ljava/lang/String;)Lai/koog/serialization/JSONElement;
+	public static fun encodeJSONElementToString (Lai/koog/serialization/JSONSerializer;Lai/koog/serialization/JSONElement;)Ljava/lang/String;
+}
+
+public final class ai/koog/serialization/JavaClassToken : ai/koog/serialization/TypeToken {
+	public fun <init> (Ljava/lang/Class;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/Class;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getKlass ()Ljava/lang/Class;
+	public final fun getTypeArguments ()Ljava/util/List;
+}
+
+public final class ai/koog/serialization/JavaTypeToken : ai/koog/serialization/TypeToken {
+	public fun <init> (Ljava/lang/reflect/Type;)V
+	public final fun getType ()Ljava/lang/reflect/Type;
+}
+
+public final class ai/koog/serialization/KotlinClassToken : ai/koog/serialization/TypeToken {
+	public fun <init> (Lkotlin/reflect/KClass;Ljava/util/List;)V
+	public synthetic fun <init> (Lkotlin/reflect/KClass;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getKlass ()Lkotlin/reflect/KClass;
+	public final fun getTypeArguments ()Ljava/util/List;
+}
+
+public final class ai/koog/serialization/KotlinTypeToken : ai/koog/serialization/TypeToken {
+	public fun <init> (Lkotlin/reflect/KType;)V
+	public final fun getType ()Lkotlin/reflect/KType;
+}
+
+public abstract class ai/koog/serialization/TypeCapture {
+	public fun <init> ()V
+}
+
+public abstract interface class ai/koog/serialization/TypeToken {
+	public static final field Companion Lai/koog/serialization/TypeToken$Companion;
+	public static fun of (Lai/koog/serialization/TypeCapture;)Lai/koog/serialization/JavaTypeToken;
+	public static fun of (Ljava/lang/Class;)Lai/koog/serialization/JavaClassToken;
+	public static fun of (Ljava/lang/Class;Ljava/util/List;)Lai/koog/serialization/JavaClassToken;
+	public static fun of (Ljava/lang/reflect/Type;)Lai/koog/serialization/JavaTypeToken;
+}
+
+public final class ai/koog/serialization/TypeToken$Companion {
+	public final fun of (Lai/koog/serialization/TypeCapture;)Lai/koog/serialization/JavaTypeToken;
+	public final fun of (Ljava/lang/Class;)Lai/koog/serialization/JavaClassToken;
+	public final fun of (Ljava/lang/Class;Ljava/util/List;)Lai/koog/serialization/JavaClassToken;
+	public final fun of (Ljava/lang/reflect/Type;)Lai/koog/serialization/JavaTypeToken;
+	public static synthetic fun of$default (Lai/koog/serialization/TypeToken$Companion;Ljava/lang/Class;Ljava/util/List;ILjava/lang/Object;)Lai/koog/serialization/JavaClassToken;
+}
+
+public final class ai/koog/serialization/TypeTokenKt {
+	public static final fun typeToken (Lkotlin/reflect/KClass;Ljava/util/List;)Lai/koog/serialization/KotlinClassToken;
+	public static final fun typeToken (Lkotlin/reflect/KType;)Lai/koog/serialization/KotlinTypeToken;
+	public static synthetic fun typeToken$default (Lkotlin/reflect/KClass;Ljava/util/List;ILjava/lang/Object;)Lai/koog/serialization/KotlinClassToken;
+}
+
+public final class ai/koog/serialization/TypeToken_jvmCommonKt {
+	public static final fun typeToken (Ljava/lang/Class;Ljava/util/List;)Lai/koog/serialization/JavaClassToken;
+	public static final fun typeToken (Ljava/lang/reflect/Type;)Lai/koog/serialization/JavaTypeToken;
+	public static synthetic fun typeToken$default (Ljava/lang/Class;Ljava/util/List;ILjava/lang/Object;)Lai/koog/serialization/JavaClassToken;
+}
+
+public abstract interface annotation class ai/koog/serialization/annotations/InternalKoogSerializationApi : java/lang/annotation/Annotation {
+}
+
+public final class ai/koog/serialization/kotlinx/JSONArraySerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lai/koog/serialization/kotlinx/JSONArraySerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/serialization/JSONArray;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/serialization/JSONArray;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/koog/serialization/kotlinx/JSONElementSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lai/koog/serialization/kotlinx/JSONElementSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/serialization/JSONElement;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/serialization/JSONElement;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/koog/serialization/kotlinx/JSONLiteralSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lai/koog/serialization/kotlinx/JSONLiteralSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/serialization/JSONLiteral;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/serialization/JSONLiteral;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/koog/serialization/kotlinx/JSONNullSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lai/koog/serialization/kotlinx/JSONNullSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/serialization/JSONNull;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/serialization/JSONNull;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/koog/serialization/kotlinx/JSONObjectSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lai/koog/serialization/kotlinx/JSONObjectSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/serialization/JSONObject;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/serialization/JSONObject;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/koog/serialization/kotlinx/JSONPrimitiveSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lai/koog/serialization/kotlinx/JSONPrimitiveSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/serialization/JSONPrimitive;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/serialization/JSONPrimitive;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/koog/serialization/kotlinx/KotlinxJSONElementMappersKt {
+	public static final fun toKoogJSONArray (Lkotlinx/serialization/json/JsonArray;)Lai/koog/serialization/JSONArray;
+	public static final fun toKoogJSONElement (Lkotlinx/serialization/json/JsonElement;)Lai/koog/serialization/JSONElement;
+	public static final fun toKoogJSONObject (Lkotlinx/serialization/json/JsonObject;)Lai/koog/serialization/JSONObject;
+	public static final fun toKoogJSONPrimitive (Lkotlinx/serialization/json/JsonPrimitive;)Lai/koog/serialization/JSONPrimitive;
+	public static final fun toKotlinxJsonArray (Lai/koog/serialization/JSONArray;)Lkotlinx/serialization/json/JsonArray;
+	public static final fun toKotlinxJsonElement (Lai/koog/serialization/JSONElement;)Lkotlinx/serialization/json/JsonElement;
+	public static final fun toKotlinxJsonObject (Lai/koog/serialization/JSONObject;)Lkotlinx/serialization/json/JsonObject;
+	public static final fun toKotlinxJsonPrimitive (Lai/koog/serialization/JSONPrimitive;)Lkotlinx/serialization/json/JsonPrimitive;
+}
+
+public final class ai/koog/serialization/kotlinx/KotlinxSerializer : ai/koog/serialization/JSONSerializer {
+	public fun <init> ()V
+	public fun <init> (Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun decodeFromJSONElement (Lai/koog/serialization/JSONElement;Lai/koog/serialization/TypeToken;)Ljava/lang/Object;
+	public fun decodeFromString (Ljava/lang/String;Lai/koog/serialization/TypeToken;)Ljava/lang/Object;
+	public fun decodeJSONElementFromString (Ljava/lang/String;)Lai/koog/serialization/JSONElement;
+	public fun encodeJSONElementToString (Lai/koog/serialization/JSONElement;)Ljava/lang/String;
+	public fun encodeToJSONElement (Ljava/lang/Object;Lai/koog/serialization/TypeToken;)Lai/koog/serialization/JSONElement;
+	public fun encodeToString (Ljava/lang/Object;Lai/koog/serialization/TypeToken;)Ljava/lang/String;
+	public final fun getJson ()Lkotlinx/serialization/json/Json;
+}
+

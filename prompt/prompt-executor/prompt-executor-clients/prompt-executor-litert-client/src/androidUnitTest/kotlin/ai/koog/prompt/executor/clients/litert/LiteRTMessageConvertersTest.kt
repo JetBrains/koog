@@ -103,7 +103,7 @@ class LiteRTMessageConvertersTest {
     }
 
     @Test
-    fun testToolCallWithUnparseableContentProducesEmptyArguments() {
+    fun testToolCallWithUnparseableContentThrowsException() {
         val koog = Message.Assistant(
             MessagePart.Tool.Call(
                 id = null,
@@ -113,9 +113,9 @@ class LiteRTMessageConvertersTest {
             metaInfo = ResponseMetaInfo.Empty,
         )
 
-        val litert = koog.toLitertMessage()
-
-        assertTrue(litert.toolCalls.single().arguments.isEmpty())
+        assertFailsWith<IllegalArgumentException> {
+            koog.toLitertMessage()
+        }
     }
 
     @Test
@@ -199,6 +199,25 @@ class LiteRTMessageConvertersTest {
     }
 
     @Test
+    fun testMixedTextAndToolResultProducesToolRoleWithBothContents() {
+        val koog = Message.User(
+            listOf(
+                MessagePart.Tool.Result(id = "c1", tool = "search", output = """{"found":1}"""),
+                MessagePart.Text("some context text"),
+            ),
+            metaInfo = RequestMetaInfo.Empty,
+        )
+
+        val litert = koog.toLitertMessage()
+
+        assertEquals(Role.TOOL, litert.role)
+        assertEquals(2, litert.contents.contents.size)
+        assertTrue(litert.contents.contents[0] is Content.ToolResponse)
+        assertTrue(litert.contents.contents[1] is Content.Text)
+        assertEquals("some context text", (litert.contents.contents[1] as Content.Text).text)
+    }
+
+    @Test
     fun testToolCallAndToolResultProduceDifferentRoles() {
         // Regression guard for the converter previously collapsing both via role == Tool.
         val call = Message.Assistant(
@@ -224,10 +243,6 @@ class LiteRTMessageConvertersTest {
 
     @Test
     fun multiToolCallsMustHaveStableIdsOrFail() {
-        // LiteRT ToolCall does not expose a stable id, so Koog cannot correlate
-        // multiple MessagePart.Tool.Result back to their MessagePart.Tool.Call. Until
-        // proper support exists, the converter must fail fast instead of silently
-        // producing ambiguous tool calls with null ids.
         val litert = LitertMessage.model(
             contents = Contents.of(emptyList()),
             toolCalls = listOf(
@@ -236,9 +251,12 @@ class LiteRTMessageConvertersTest {
             ),
         )
 
-        assertFailsWith<UnsupportedOperationException> {
-            litert.toKoogMessage(KoogClock.System)
-        }
+        val assistantMessage = litert.toKoogMessage(KoogClock.System)
+        val toolCalls = assistantMessage
+            .parts
+            .filterIsInstance<MessagePart.Tool.Call>()
+
+        assertEquals(2, toolCalls.size)
     }
 
     @Test

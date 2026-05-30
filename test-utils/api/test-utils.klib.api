@@ -1,0 +1,37 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:test-utils>
+final class ai.koog.test.utils/CapturingKoogHttpClient : ai.koog.http.client/KoogHttpClient { // ai.koog.test.utils/CapturingKoogHttpClient|null[0]
+    constructor <init>(kotlin/String, kotlin/Function1<kotlin.reflect/KClass<*>, kotlin/Any>) // ai.koog.test.utils/CapturingKoogHttpClient.<init>|<init>(kotlin.String;kotlin.Function1<kotlin.reflect.KClass<*>,kotlin.Any>){}[0]
+
+    final val clientName // ai.koog.test.utils/CapturingKoogHttpClient.clientName|{}clientName[0]
+        final fun <get-clientName>(): kotlin/String // ai.koog.test.utils/CapturingKoogHttpClient.clientName.<get-clientName>|<get-clientName>(){}[0]
+
+    final var lastPath // ai.koog.test.utils/CapturingKoogHttpClient.lastPath|{}lastPath[0]
+        final fun <get-lastPath>(): kotlin/String? // ai.koog.test.utils/CapturingKoogHttpClient.lastPath.<get-lastPath>|<get-lastPath>(){}[0]
+        final fun <set-lastPath>(kotlin/String?) // ai.koog.test.utils/CapturingKoogHttpClient.lastPath.<set-lastPath>|<set-lastPath>(kotlin.String?){}[0]
+    final var lastRequest // ai.koog.test.utils/CapturingKoogHttpClient.lastRequest|{}lastRequest[0]
+        final fun <get-lastRequest>(): kotlin/Any? // ai.koog.test.utils/CapturingKoogHttpClient.lastRequest.<get-lastRequest>|<get-lastRequest>(){}[0]
+        final fun <set-lastRequest>(kotlin/Any?) // ai.koog.test.utils/CapturingKoogHttpClient.lastRequest.<set-lastRequest>|<set-lastRequest>(kotlin.Any?){}[0]
+
+    final fun <#A1: kotlin/Any, #B1: kotlin/Any, #C1: kotlin/Any> sse(kotlin/String, #A1, kotlin.reflect/KClass<#A1>, kotlin/Function1<kotlin/String?, kotlin/Boolean>, kotlin/Function1<kotlin/String, #B1>, kotlin/Function1<#B1, #C1?>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Map<kotlin/String, kotlin/String>): kotlinx.coroutines.flow/Flow<#C1> // ai.koog.test.utils/CapturingKoogHttpClient.sse|sse(kotlin.String;0:0;kotlin.reflect.KClass<0:0>;kotlin.Function1<kotlin.String?,kotlin.Boolean>;kotlin.Function1<kotlin.String,0:1>;kotlin.Function1<0:1,0:2?>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>;1§<kotlin.Any>;2§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> lines(kotlin/String, #A1, kotlin.reflect/KClass<#A1>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Map<kotlin/String, kotlin/String>): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.koog.test.utils/CapturingKoogHttpClient.lines|lines(kotlin.String;0:0;kotlin.reflect.KClass<0:0>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>}[0]
+    final fun close() // ai.koog.test.utils/CapturingKoogHttpClient.close|close(){}[0]
+    final suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> post(kotlin/String, #A1, kotlin.reflect/KClass<#A1>, kotlin.reflect/KClass<#B1>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Map<kotlin/String, kotlin/String>): #B1 // ai.koog.test.utils/CapturingKoogHttpClient.post|post(kotlin.String;0:0;kotlin.reflect.KClass<0:0>;kotlin.reflect.KClass<0:1>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    final suspend fun <#A1: kotlin/Any> get(kotlin/String, kotlin.reflect/KClass<#A1>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Map<kotlin/String, kotlin/String>): #A1 // ai.koog.test.utils/CapturingKoogHttpClient.get|get(kotlin.String;kotlin.reflect.KClass<0:0>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>}[0]
+}
+
+final val ai.koog.test.utils/testJson // ai.koog.test.utils/testJson|{}testJson[0]
+    final fun <get-testJson>(): kotlinx.serialization.json/Json // ai.koog.test.utils/testJson.<get-testJson>|<get-testJson>(){}[0]
+final val ai.koog.test.utils/testJsonIgnoreUnknown // ai.koog.test.utils/testJsonIgnoreUnknown|{}testJsonIgnoreUnknown[0]
+    final fun <get-testJsonIgnoreUnknown>(): kotlinx.serialization.json/Json // ai.koog.test.utils/testJsonIgnoreUnknown.<get-testJsonIgnoreUnknown>|<get-testJsonIgnoreUnknown>(){}[0]
+
+final fun ai.koog.test.utils/runWithBothJsonConfigurations(kotlin/String, kotlin/Function1<kotlinx.serialization.json/Json, kotlin/Unit>) // ai.koog.test.utils/runWithBothJsonConfigurations|runWithBothJsonConfigurations(kotlin.String;kotlin.Function1<kotlinx.serialization.json.Json,kotlin.Unit>){}[0]
+final fun ai.koog.test.utils/testJsonConfigurations(): kotlin.collections/List<kotlin/Pair<kotlinx.serialization.json/Json, kotlin/String>> // ai.koog.test.utils/testJsonConfigurations|testJsonConfigurations(){}[0]
+final inline fun <#A: reified kotlin/Any> ai.koog.test.utils/verifyDeserialization(kotlin/String, kotlinx.serialization.json/Json = ..., kotlinx.serialization/KSerializer<#A> = ...): #A // ai.koog.test.utils/verifyDeserialization|verifyDeserialization(kotlin.String;kotlinx.serialization.json.Json;kotlinx.serialization.KSerializer<0:0>){0§<kotlin.Any>}[0]
+final inline fun <#A: reified kotlin/Any> ai.koog.test.utils/verifyDeserialization(kotlin/String, kotlinx.serialization/SerializationStrategy<#A> = ..., kotlinx.serialization/DeserializationStrategy<#A> = ..., kotlinx.serialization.json/Json = ...): #A // ai.koog.test.utils/verifyDeserialization|verifyDeserialization(kotlin.String;kotlinx.serialization.SerializationStrategy<0:0>;kotlinx.serialization.DeserializationStrategy<0:0>;kotlinx.serialization.json.Json){0§<kotlin.Any>}[0]

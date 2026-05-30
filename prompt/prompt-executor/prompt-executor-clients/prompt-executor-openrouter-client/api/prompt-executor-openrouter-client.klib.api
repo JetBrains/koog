@@ -1,0 +1,439 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-executor-openrouter-client>
+final class ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse { // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse|null[0]
+    constructor <init>(kotlin/Int, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String>? = ...) // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.<init>|<init>(kotlin.Int;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
+
+    final val code // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.code|{}code[0]
+        final fun <get-code>(): kotlin/Int // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.code.<get-code>|<get-code>(){}[0]
+    final val message // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.message|{}message[0]
+        final fun <get-message>(): kotlin/String // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.message.<get-message>|<get-message>(){}[0]
+    final val metadata // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.metadata|{}metadata[0]
+        final fun <get-metadata>(): kotlin.collections/Map<kotlin/String, kotlin/String>? // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.metadata.<get-metadata>|<get-metadata>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse> { // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse) // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openrouter.models.ErrorResponse){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse> // ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse : ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMResponse { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse|null[0]
+    constructor <init>(kotlin.collections/List<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice> = ..., kotlin/Long = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String? = ..., kotlin/String = ..., ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage? = ..., ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError? = ...) // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.<init>|<init>(kotlin.collections.List<ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChoice>;kotlin.Long;kotlin.String;kotlin.String;kotlin.String?;kotlin.String;ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage?;ai.koog.prompt.executor.clients.openrouter.models.OpenRouterError?){}[0]
+
+    final val choices // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.choices|{}choices[0]
+        final fun <get-choices>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.choices.<get-choices>|<get-choices>(){}[0]
+    final val created // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.created|{}created[0]
+        final fun <get-created>(): kotlin/Long // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.created.<get-created>|<get-created>(){}[0]
+    final val error // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.error|{}error[0]
+        final fun <get-error>(): ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.error.<get-error>|<get-error>(){}[0]
+    final val id // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.id.<get-id>|<get-id>(){}[0]
+    final val model // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.model|{}model[0]
+        final fun <get-model>(): kotlin/String // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.model.<get-model>|<get-model>(){}[0]
+    final val objectType // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.objectType|{}objectType[0]
+        final fun <get-objectType>(): kotlin/String // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.objectType.<get-objectType>|<get-objectType>(){}[0]
+    final val systemFingerprint // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.systemFingerprint|{}systemFingerprint[0]
+        final fun <get-systemFingerprint>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.systemFingerprint.<get-systemFingerprint>|<get-systemFingerprint>(){}[0]
+    final val usage // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.usage|{}usage[0]
+        final fun <get-usage>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.usage.<get-usage>|<get-usage>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse> { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse) // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionResponse){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse : ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMStreamResponse { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse|null[0]
+    constructor <init>(kotlin.collections/List<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice>, kotlin/Long, kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/String = ..., ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage? = ...) // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.<init>|<init>(kotlin.collections.List<ai.koog.prompt.executor.clients.openrouter.models.OpenRouterStreamChoice>;kotlin.Long;kotlin.String;kotlin.String;kotlin.String?;kotlin.String;ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage?){}[0]
+
+    final val choices // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.choices|{}choices[0]
+        final fun <get-choices>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.choices.<get-choices>|<get-choices>(){}[0]
+    final val created // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.created|{}created[0]
+        final fun <get-created>(): kotlin/Long // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.created.<get-created>|<get-created>(){}[0]
+    final val id // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.id.<get-id>|<get-id>(){}[0]
+    final val model // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.model|{}model[0]
+        final fun <get-model>(): kotlin/String // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.model.<get-model>|<get-model>(){}[0]
+    final val objectType // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.objectType|{}objectType[0]
+        final fun <get-objectType>(): kotlin/String // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.objectType.<get-objectType>|<get-objectType>(){}[0]
+    final val systemFingerprint // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.systemFingerprint|{}systemFingerprint[0]
+        final fun <get-systemFingerprint>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.systemFingerprint.<get-systemFingerprint>|<get-systemFingerprint>(){}[0]
+    final val usage // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.usage|{}usage[0]
+        final fun <get-usage>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.usage.<get-usage>|<get-usage>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse> { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse) // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionStreamResponse){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice|null[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage, ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse? = ...) // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.<init>|<init>(kotlin.String?;kotlin.String?;ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage;ai.koog.prompt.executor.clients.openrouter.models.ErrorResponse?){}[0]
+
+    final val error // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.error|{}error[0]
+        final fun <get-error>(): ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.error.<get-error>|<get-error>(){}[0]
+    final val finishReason // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.finishReason|{}finishReason[0]
+        final fun <get-finishReason>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.finishReason.<get-finishReason>|<get-finishReason>(){}[0]
+    final val message // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.message|{}message[0]
+        final fun <get-message>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.message.<get-message>|<get-message>(){}[0]
+    final val nativeFinishReason // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.nativeFinishReason|{}nativeFinishReason[0]
+        final fun <get-nativeFinishReason>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.nativeFinishReason.<get-nativeFinishReason>|<get-nativeFinishReason>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice> { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice) // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChoice){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChoice.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError|null[0]
+    constructor <init>(kotlin/String, kotlin/String? = ..., kotlin/String? = ...) // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.<init>|<init>(kotlin.String;kotlin.String?;kotlin.String?){}[0]
+
+    final val code // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.code|{}code[0]
+        final fun <get-code>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.code.<get-code>|<get-code>(){}[0]
+    final val message // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.message|{}message[0]
+        final fun <get-message>(): kotlin/String // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.message.<get-message>|<get-message>(){}[0]
+    final val type // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.type|{}type[0]
+        final fun <get-type>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.type.<get-type>|<get-type>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError> { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError) // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openrouter.models.OpenRouterError){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterError.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice|null[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta, ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse? = ...) // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.<init>|<init>(kotlin.String?;kotlin.String?;ai.koog.prompt.executor.clients.openrouter.models.OpenRouterStreamDelta;ai.koog.prompt.executor.clients.openrouter.models.ErrorResponse?){}[0]
+
+    final val delta // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.delta|{}delta[0]
+        final fun <get-delta>(): ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.delta.<get-delta>|<get-delta>(){}[0]
+    final val error // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.error|{}error[0]
+        final fun <get-error>(): ai.koog.prompt.executor.clients.openrouter.models/ErrorResponse? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.error.<get-error>|<get-error>(){}[0]
+    final val finishReason // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.finishReason|{}finishReason[0]
+        final fun <get-finishReason>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.finishReason.<get-finishReason>|<get-finishReason>(){}[0]
+    final val nativeFinishReason // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.nativeFinishReason|{}nativeFinishReason[0]
+        final fun <get-nativeFinishReason>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.nativeFinishReason.<get-nativeFinishReason>|<get-nativeFinishReason>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice> { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice) // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openrouter.models.OpenRouterStreamChoice){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamChoice.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta|null[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall>? = ..., kotlin/String? = ..., kotlin.collections/List<kotlinx.serialization.json/JsonElement>? = ...) // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamToolCall>?;kotlin.String?;kotlin.collections.List<kotlinx.serialization.json.JsonElement>?){}[0]
+
+    final val content // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.content|{}content[0]
+        final fun <get-content>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.content.<get-content>|<get-content>(){}[0]
+    final val reasoning // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.reasoning|{}reasoning[0]
+        final fun <get-reasoning>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.reasoning.<get-reasoning>|<get-reasoning>(){}[0]
+    final val reasoningDetails // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.reasoningDetails|{}reasoningDetails[0]
+        final fun <get-reasoningDetails>(): kotlin.collections/List<kotlinx.serialization.json/JsonElement>? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.reasoningDetails.<get-reasoningDetails>|<get-reasoningDetails>(){}[0]
+    final val role // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.role|{}role[0]
+        final fun <get-role>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.role.<get-role>|<get-role>(){}[0]
+    final val toolCalls // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.toolCalls|{}toolCalls[0]
+        final fun <get-toolCalls>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall>? // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.toolCalls.<get-toolCalls>|<get-toolCalls>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta> { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta) // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openrouter.models.OpenRouterStreamDelta){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta> // ai.koog.prompt.executor.clients.openrouter.models/OpenRouterStreamDelta.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences { // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences|null[0]
+    constructor <init>(kotlin.collections/List<kotlin/String>? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ..., kotlin/String? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ...) // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.<init>|<init>(kotlin.collections.List<kotlin.String>?;kotlin.Boolean?;kotlin.Boolean?;kotlin.String?;kotlin.collections.List<kotlin.String>?;kotlin.collections.List<kotlin.String>?;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
+
+    final val allowFallbacks // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.allowFallbacks|{}allowFallbacks[0]
+        final fun <get-allowFallbacks>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.allowFallbacks.<get-allowFallbacks>|<get-allowFallbacks>(){}[0]
+    final val dataCollection // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.dataCollection|{}dataCollection[0]
+        final fun <get-dataCollection>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.dataCollection.<get-dataCollection>|<get-dataCollection>(){}[0]
+    final val ignore // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.ignore|{}ignore[0]
+        final fun <get-ignore>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.ignore.<get-ignore>|<get-ignore>(){}[0]
+    final val maxPrice // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.maxPrice|{}maxPrice[0]
+        final fun <get-maxPrice>(): kotlin.collections/Map<kotlin/String, kotlin/String>? // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.maxPrice.<get-maxPrice>|<get-maxPrice>(){}[0]
+    final val only // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.only|{}only[0]
+        final fun <get-only>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.only.<get-only>|<get-only>(){}[0]
+    final val order // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.order|{}order[0]
+        final fun <get-order>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.order.<get-order>|<get-order>(){}[0]
+    final val quantizations // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.quantizations|{}quantizations[0]
+        final fun <get-quantizations>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.quantizations.<get-quantizations>|<get-quantizations>(){}[0]
+    final val requireParameters // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.requireParameters|{}requireParameters[0]
+        final fun <get-requireParameters>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.requireParameters.<get-requireParameters>|<get-requireParameters>(){}[0]
+    final val sort // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.sort|{}sort[0]
+        final fun <get-sort>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.sort.<get-sort>|<get-sort>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences> { // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences) // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openrouter.models.ProviderPreferences){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences> // ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openrouter/OpenRouterClientSettings : ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings { // ai.koog.prompt.executor.clients.openrouter/OpenRouterClientSettings|null[0]
+    constructor <init>(kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., ai.koog.prompt.executor.clients/ConnectionTimeoutConfig = ...) // ai.koog.prompt.executor.clients.openrouter/OpenRouterClientSettings.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;kotlin.String;ai.koog.prompt.executor.clients.ConnectionTimeoutConfig){}[0]
+
+    final val embeddingsPath // ai.koog.prompt.executor.clients.openrouter/OpenRouterClientSettings.embeddingsPath|{}embeddingsPath[0]
+        final fun <get-embeddingsPath>(): kotlin/String // ai.koog.prompt.executor.clients.openrouter/OpenRouterClientSettings.embeddingsPath.<get-embeddingsPath>|<get-embeddingsPath>(){}[0]
+    final val modelsPath // ai.koog.prompt.executor.clients.openrouter/OpenRouterClientSettings.modelsPath|{}modelsPath[0]
+        final fun <get-modelsPath>(): kotlin/String // ai.koog.prompt.executor.clients.openrouter/OpenRouterClientSettings.modelsPath.<get-modelsPath>|<get-modelsPath>(){}[0]
+}
+
+final class ai.koog.prompt.executor.clients.openrouter/OpenRouterLLMClient : ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient<ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionResponse, ai.koog.prompt.executor.clients.openrouter.models/OpenRouterChatCompletionStreamResponse> { // ai.koog.prompt.executor.clients.openrouter/OpenRouterLLMClient|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients.openrouter/OpenRouterClientSettings = ..., ai.koog.http.client/KoogHttpClient, ai.koog.utils.time/KoogClock = ..., ai.koog.prompt.executor.clients.openai.base/OpenAICompatibleToolDescriptorSchemaGenerator = ...) // ai.koog.prompt.executor.clients.openrouter/OpenRouterLLMClient.<init>|<init>(ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings;ai.koog.http.client.KoogHttpClient;ai.koog.utils.time.KoogClock;ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator){}[0]
+    constructor <init>(kotlin/String, ai.koog.prompt.executor.clients.openrouter/OpenRouterClientSettings = ..., ai.koog.http.client/KoogHttpClient.Factory, ai.koog.utils.time/KoogClock = ..., ai.koog.prompt.executor.clients.openai.base/OpenAICompatibleToolDescriptorSchemaGenerator = ...) // ai.koog.prompt.executor.clients.openrouter/OpenRouterLLMClient.<init>|<init>(kotlin.String;ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings;ai.koog.http.client.KoogHttpClient.Factory;ai.koog.utils.time.KoogClock;ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator){}[0]
+
+    final val clientName // ai.koog.prompt.executor.clients.openrouter/OpenRouterLLMClient.clientName|{}clientName[0]
+        final fun <get-clientName>(): kotlin/String // ai.koog.prompt.executor.clients.openrouter/OpenRouterLLMClient.clientName.<get-clientName>|<get-clientName>(){}[0]
+
+    final fun llmProvider(): ai.koog.prompt.llm/LLMProvider // ai.koog.prompt.executor.clients.openrouter/OpenRouterLLMClient.llmProvider|llmProvider(){}[0]
+    final suspend fun embed(kotlin.collections/List<kotlin/String>, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin.collections/List<kotlin/Double>> // ai.koog.prompt.executor.clients.openrouter/OpenRouterLLMClient.embed|embed(kotlin.collections.List<kotlin.String>;ai.koog.prompt.llm.LLModel){}[0]
+    final suspend fun embed(kotlin/String, ai.koog.prompt.llm/LLModel): kotlin.collections/List<kotlin/Double> // ai.koog.prompt.executor.clients.openrouter/OpenRouterLLMClient.embed|embed(kotlin.String;ai.koog.prompt.llm.LLModel){}[0]
+    final suspend fun models(): kotlin.collections/List<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.clients.openrouter/OpenRouterLLMClient.models|models(){}[0]
+    final suspend fun moderate(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): ai.koog.prompt.dsl/ModerationResult // ai.koog.prompt.executor.clients.openrouter/OpenRouterLLMClient.moderate|moderate(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+}
+
+open class ai.koog.prompt.executor.clients.openrouter/OpenRouterParams : ai.koog.prompt.params/LLMParams { // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams|null[0]
+    constructor <init>(kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., ai.koog.prompt.params/LLMParams.Schema? = ..., ai.koog.prompt.params/LLMParams.ToolChoice? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? = ..., kotlin/Double? = ..., kotlin/Double? = ..., kotlin/Boolean? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/Int? = ..., kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Double? = ..., kotlin/Double? = ..., kotlin/Double? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences? = ...) // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.<init>|<init>(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?;kotlin.Double?;kotlin.Double?;kotlin.Boolean?;kotlin.collections.List<kotlin.String>?;kotlin.Int?;kotlin.Double?;kotlin.Int?;kotlin.Double?;kotlin.Double?;kotlin.Double?;kotlin.collections.List<kotlin.String>?;kotlin.collections.List<kotlin.String>?;kotlin.String?;ai.koog.prompt.executor.clients.openrouter.models.ProviderPreferences?){}[0]
+
+    final val frequencyPenalty // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.frequencyPenalty|{}frequencyPenalty[0]
+        final fun <get-frequencyPenalty>(): kotlin/Double? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.frequencyPenalty.<get-frequencyPenalty>|<get-frequencyPenalty>(){}[0]
+    final val logprobs // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.logprobs|{}logprobs[0]
+        final fun <get-logprobs>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.logprobs.<get-logprobs>|<get-logprobs>(){}[0]
+    final val minP // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.minP|{}minP[0]
+        final fun <get-minP>(): kotlin/Double? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.minP.<get-minP>|<get-minP>(){}[0]
+    final val models // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.models|{}models[0]
+        final fun <get-models>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.models.<get-models>|<get-models>(){}[0]
+    final val presencePenalty // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.presencePenalty|{}presencePenalty[0]
+        final fun <get-presencePenalty>(): kotlin/Double? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.presencePenalty.<get-presencePenalty>|<get-presencePenalty>(){}[0]
+    final val provider // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.provider|{}provider[0]
+        final fun <get-provider>(): ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.provider.<get-provider>|<get-provider>(){}[0]
+    final val repetitionPenalty // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.repetitionPenalty|{}repetitionPenalty[0]
+        final fun <get-repetitionPenalty>(): kotlin/Double? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.repetitionPenalty.<get-repetitionPenalty>|<get-repetitionPenalty>(){}[0]
+    final val route // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.route|{}route[0]
+        final fun <get-route>(): kotlin/String? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.route.<get-route>|<get-route>(){}[0]
+    final val stop // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.stop|{}stop[0]
+        final fun <get-stop>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.stop.<get-stop>|<get-stop>(){}[0]
+    final val topA // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.topA|{}topA[0]
+        final fun <get-topA>(): kotlin/Double? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.topA.<get-topA>|<get-topA>(){}[0]
+    final val topK // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.topK|{}topK[0]
+        final fun <get-topK>(): kotlin/Int? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.topK.<get-topK>|<get-topK>(){}[0]
+    final val topLogprobs // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.topLogprobs|{}topLogprobs[0]
+        final fun <get-topLogprobs>(): kotlin/Int? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.topLogprobs.<get-topLogprobs>|<get-topLogprobs>(){}[0]
+    final val topP // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.topP|{}topP[0]
+        final fun <get-topP>(): kotlin/Double? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.topP.<get-topP>|<get-topP>(){}[0]
+    final val transforms // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.transforms|{}transforms[0]
+        final fun <get-transforms>(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.transforms.<get-transforms>|<get-transforms>(){}[0]
+
+    final fun copy(kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., ai.koog.prompt.params/LLMParams.Schema? = ..., ai.koog.prompt.params/LLMParams.ToolChoice? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>? = ..., kotlin/Double? = ..., kotlin/Double? = ..., kotlin/Boolean? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/Int? = ..., kotlin/Double? = ..., kotlin/Int? = ..., kotlin/Double? = ..., kotlin/Double? = ..., kotlin/Double? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., ai.koog.prompt.executor.clients.openrouter.models/ProviderPreferences? = ...): ai.koog.prompt.executor.clients.openrouter/OpenRouterParams // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.copy|copy(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?;kotlin.Double?;kotlin.Double?;kotlin.Boolean?;kotlin.collections.List<kotlin.String>?;kotlin.Int?;kotlin.Double?;kotlin.Int?;kotlin.Double?;kotlin.Double?;kotlin.Double?;kotlin.collections.List<kotlin.String>?;kotlin.collections.List<kotlin.String>?;kotlin.String?;ai.koog.prompt.executor.clients.openrouter.models.ProviderPreferences?){}[0]
+    open fun copy(kotlin/Double?, kotlin/Int?, kotlin/Int?, kotlin/String?, ai.koog.prompt.params/LLMParams.Schema?, ai.koog.prompt.params/LLMParams.ToolChoice?, kotlin/String?, kotlin.collections/Map<kotlin/String, kotlinx.serialization.json/JsonElement>?): ai.koog.prompt.executor.clients.openrouter/OpenRouterParams // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.copy|copy(kotlin.Double?;kotlin.Int?;kotlin.Int?;kotlin.String?;ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.params.LLMParams.ToolChoice?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlinx.serialization.json.JsonElement>?){}[0]
+    open fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.equals|equals(kotlin.Any?){}[0]
+    open fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.hashCode|hashCode(){}[0]
+    open fun toString(): kotlin/String // ai.koog.prompt.executor.clients.openrouter/OpenRouterParams.toString|toString(){}[0]
+}
+
+final object ai.koog.prompt.executor.clients.openrouter/OpenRouterModels : ai.koog.prompt.executor.clients/LLModelDefinitions { // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels|null[0]
+    final val Claude3Haiku // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3Haiku|{}Claude3Haiku[0]
+        final fun <get-Claude3Haiku>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3Haiku.<get-Claude3Haiku>|<get-Claude3Haiku>(){}[0]
+    final val Claude3Opus // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3Opus|{}Claude3Opus[0]
+        final fun <get-Claude3Opus>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3Opus.<get-Claude3Opus>|<get-Claude3Opus>(){}[0]
+    final val Claude3Sonnet // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3Sonnet|{}Claude3Sonnet[0]
+        final fun <get-Claude3Sonnet>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3Sonnet.<get-Claude3Sonnet>|<get-Claude3Sonnet>(){}[0]
+    final val Claude3VisionHaiku // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3VisionHaiku|{}Claude3VisionHaiku[0]
+        final fun <get-Claude3VisionHaiku>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3VisionHaiku.<get-Claude3VisionHaiku>|<get-Claude3VisionHaiku>(){}[0]
+    final val Claude3VisionOpus // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3VisionOpus|{}Claude3VisionOpus[0]
+        final fun <get-Claude3VisionOpus>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3VisionOpus.<get-Claude3VisionOpus>|<get-Claude3VisionOpus>(){}[0]
+    final val Claude3VisionSonnet // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3VisionSonnet|{}Claude3VisionSonnet[0]
+        final fun <get-Claude3VisionSonnet>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3VisionSonnet.<get-Claude3VisionSonnet>|<get-Claude3VisionSonnet>(){}[0]
+    final val Claude3_5Sonnet // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3_5Sonnet|{}Claude3_5Sonnet[0]
+        final fun <get-Claude3_5Sonnet>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3_5Sonnet.<get-Claude3_5Sonnet>|<get-Claude3_5Sonnet>(){}[0]
+    final val Claude3_7Sonnet // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3_7Sonnet|{}Claude3_7Sonnet[0]
+        final fun <get-Claude3_7Sonnet>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude3_7Sonnet.<get-Claude3_7Sonnet>|<get-Claude3_7Sonnet>(){}[0]
+    final val Claude4Sonnet // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4Sonnet|{}Claude4Sonnet[0]
+        final fun <get-Claude4Sonnet>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4Sonnet.<get-Claude4Sonnet>|<get-Claude4Sonnet>(){}[0]
+    final val Claude4_1Opus // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4_1Opus|{}Claude4_1Opus[0]
+        final fun <get-Claude4_1Opus>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4_1Opus.<get-Claude4_1Opus>|<get-Claude4_1Opus>(){}[0]
+    final val Claude4_5Haiku // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4_5Haiku|{}Claude4_5Haiku[0]
+        final fun <get-Claude4_5Haiku>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4_5Haiku.<get-Claude4_5Haiku>|<get-Claude4_5Haiku>(){}[0]
+    final val Claude4_5Opus // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4_5Opus|{}Claude4_5Opus[0]
+        final fun <get-Claude4_5Opus>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4_5Opus.<get-Claude4_5Opus>|<get-Claude4_5Opus>(){}[0]
+    final val Claude4_5Sonnet // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4_5Sonnet|{}Claude4_5Sonnet[0]
+        final fun <get-Claude4_5Sonnet>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4_5Sonnet.<get-Claude4_5Sonnet>|<get-Claude4_5Sonnet>(){}[0]
+    final val Claude4_6Opus // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4_6Opus|{}Claude4_6Opus[0]
+        final fun <get-Claude4_6Opus>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4_6Opus.<get-Claude4_6Opus>|<get-Claude4_6Opus>(){}[0]
+    final val Claude4_6Sonnet // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4_6Sonnet|{}Claude4_6Sonnet[0]
+        final fun <get-Claude4_6Sonnet>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Claude4_6Sonnet.<get-Claude4_6Sonnet>|<get-Claude4_6Sonnet>(){}[0]
+    final val DeepSeekV30324 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.DeepSeekV30324|{}DeepSeekV30324[0]
+        final fun <get-DeepSeekV30324>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.DeepSeekV30324.<get-DeepSeekV30324>|<get-DeepSeekV30324>(){}[0]
+    final val GPT35Turbo // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT35Turbo|{}GPT35Turbo[0]
+        final fun <get-GPT35Turbo>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT35Turbo.<get-GPT35Turbo>|<get-GPT35Turbo>(){}[0]
+    final val GPT4 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT4|{}GPT4[0]
+        final fun <get-GPT4>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT4.<get-GPT4>|<get-GPT4>(){}[0]
+    final val GPT4Turbo // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT4Turbo|{}GPT4Turbo[0]
+        final fun <get-GPT4Turbo>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT4Turbo.<get-GPT4Turbo>|<get-GPT4Turbo>(){}[0]
+    final val GPT4o // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT4o|{}GPT4o[0]
+        final fun <get-GPT4o>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT4o.<get-GPT4o>|<get-GPT4o>(){}[0]
+    final val GPT4oMini // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT4oMini|{}GPT4oMini[0]
+        final fun <get-GPT4oMini>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT4oMini.<get-GPT4oMini>|<get-GPT4oMini>(){}[0]
+    final val GPT5 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT5|{}GPT5[0]
+        final fun <get-GPT5>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT5.<get-GPT5>|<get-GPT5>(){}[0]
+    final val GPT5Chat // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT5Chat|{}GPT5Chat[0]
+        final fun <get-GPT5Chat>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT5Chat.<get-GPT5Chat>|<get-GPT5Chat>(){}[0]
+    final val GPT5Mini // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT5Mini|{}GPT5Mini[0]
+        final fun <get-GPT5Mini>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT5Mini.<get-GPT5Mini>|<get-GPT5Mini>(){}[0]
+    final val GPT5Nano // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT5Nano|{}GPT5Nano[0]
+        final fun <get-GPT5Nano>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT5Nano.<get-GPT5Nano>|<get-GPT5Nano>(){}[0]
+    final val GPT5_2 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT5_2|{}GPT5_2[0]
+        final fun <get-GPT5_2>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT5_2.<get-GPT5_2>|<get-GPT5_2>(){}[0]
+    final val GPT5_2Pro // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT5_2Pro|{}GPT5_2Pro[0]
+        final fun <get-GPT5_2Pro>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT5_2Pro.<get-GPT5_2Pro>|<get-GPT5_2Pro>(){}[0]
+    final val GPT_OSS_120b // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT_OSS_120b|{}GPT_OSS_120b[0]
+        final fun <get-GPT_OSS_120b>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.GPT_OSS_120b.<get-GPT_OSS_120b>|<get-GPT_OSS_120b>(){}[0]
+    final val Gemini2_5Flash // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Gemini2_5Flash|{}Gemini2_5Flash[0]
+        final fun <get-Gemini2_5Flash>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Gemini2_5Flash.<get-Gemini2_5Flash>|<get-Gemini2_5Flash>(){}[0]
+    final val Gemini2_5FlashLite // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Gemini2_5FlashLite|{}Gemini2_5FlashLite[0]
+        final fun <get-Gemini2_5FlashLite>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Gemini2_5FlashLite.<get-Gemini2_5FlashLite>|<get-Gemini2_5FlashLite>(){}[0]
+    final val Gemini2_5Pro // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Gemini2_5Pro|{}Gemini2_5Pro[0]
+        final fun <get-Gemini2_5Pro>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Gemini2_5Pro.<get-Gemini2_5Pro>|<get-Gemini2_5Pro>(){}[0]
+    final val Llama3 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Llama3|{}Llama3[0]
+        final fun <get-Llama3>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Llama3.<get-Llama3>|<get-Llama3>(){}[0]
+    final val Llama3Instruct // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Llama3Instruct|{}Llama3Instruct[0]
+        final fun <get-Llama3Instruct>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Llama3Instruct.<get-Llama3Instruct>|<get-Llama3Instruct>(){}[0]
+    final val Mistral7B // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Mistral7B|{}Mistral7B[0]
+        final fun <get-Mistral7B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Mistral7B.<get-Mistral7B>|<get-Mistral7B>(){}[0]
+    final val Mixtral8x7B // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Mixtral8x7B|{}Mixtral8x7B[0]
+        final fun <get-Mixtral8x7B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Mixtral8x7B.<get-Mixtral8x7B>|<get-Mixtral8x7B>(){}[0]
+    final val Phi4Reasoning // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Phi4Reasoning|{}Phi4Reasoning[0]
+        final fun <get-Phi4Reasoning>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Phi4Reasoning.<get-Phi4Reasoning>|<get-Phi4Reasoning>(){}[0]
+    final val Qwen2_5 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Qwen2_5|{}Qwen2_5[0]
+        final fun <get-Qwen2_5>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Qwen2_5.<get-Qwen2_5>|<get-Qwen2_5>(){}[0]
+    final val Qwen3VL // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Qwen3VL|{}Qwen3VL[0]
+        final fun <get-Qwen3VL>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Qwen3VL.<get-Qwen3VL>|<get-Qwen3VL>(){}[0]
+    final val models // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.models|{}models[0]
+        final fun <get-models>(): kotlin.collections/List<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.models.<get-models>|<get-models>(){}[0]
+
+    final fun addCustomModel(ai.koog.prompt.llm/LLModel) // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.addCustomModel|addCustomModel(ai.koog.prompt.llm.LLModel){}[0]
+
+    final object Embeddings { // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings|null[0]
+        final val BaaiBgeLargeEnV15 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.BaaiBgeLargeEnV15|{}BaaiBgeLargeEnV15[0]
+            final fun <get-BaaiBgeLargeEnV15>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.BaaiBgeLargeEnV15.<get-BaaiBgeLargeEnV15>|<get-BaaiBgeLargeEnV15>(){}[0]
+        final val BaaiBgeM3 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.BaaiBgeM3|{}BaaiBgeM3[0]
+            final fun <get-BaaiBgeM3>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.BaaiBgeM3.<get-BaaiBgeM3>|<get-BaaiBgeM3>(){}[0]
+        final val BaaiGbeBaseEnV15 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.BaaiGbeBaseEnV15|{}BaaiGbeBaseEnV15[0]
+            final fun <get-BaaiGbeBaseEnV15>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.BaaiGbeBaseEnV15.<get-BaaiGbeBaseEnV15>|<get-BaaiGbeBaseEnV15>(){}[0]
+        final val GoogleGeminiEmbedding001 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.GoogleGeminiEmbedding001|{}GoogleGeminiEmbedding001[0]
+            final fun <get-GoogleGeminiEmbedding001>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.GoogleGeminiEmbedding001.<get-GoogleGeminiEmbedding001>|<get-GoogleGeminiEmbedding001>(){}[0]
+        final val IntfloatE5BaseV2 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.IntfloatE5BaseV2|{}IntfloatE5BaseV2[0]
+            final fun <get-IntfloatE5BaseV2>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.IntfloatE5BaseV2.<get-IntfloatE5BaseV2>|<get-IntfloatE5BaseV2>(){}[0]
+        final val IntfloatE5LargeV2 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.IntfloatE5LargeV2|{}IntfloatE5LargeV2[0]
+            final fun <get-IntfloatE5LargeV2>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.IntfloatE5LargeV2.<get-IntfloatE5LargeV2>|<get-IntfloatE5LargeV2>(){}[0]
+        final val IntfloatMultilingualE5Large // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.IntfloatMultilingualE5Large|{}IntfloatMultilingualE5Large[0]
+            final fun <get-IntfloatMultilingualE5Large>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.IntfloatMultilingualE5Large.<get-IntfloatMultilingualE5Large>|<get-IntfloatMultilingualE5Large>(){}[0]
+        final val MistralCodestralEmbed2505 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.MistralCodestralEmbed2505|{}MistralCodestralEmbed2505[0]
+            final fun <get-MistralCodestralEmbed2505>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.MistralCodestralEmbed2505.<get-MistralCodestralEmbed2505>|<get-MistralCodestralEmbed2505>(){}[0]
+        final val MistralEmbed2312 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.MistralEmbed2312|{}MistralEmbed2312[0]
+            final fun <get-MistralEmbed2312>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.MistralEmbed2312.<get-MistralEmbed2312>|<get-MistralEmbed2312>(){}[0]
+        final val OpenAITextEmbedding3Large // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.OpenAITextEmbedding3Large|{}OpenAITextEmbedding3Large[0]
+            final fun <get-OpenAITextEmbedding3Large>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.OpenAITextEmbedding3Large.<get-OpenAITextEmbedding3Large>|<get-OpenAITextEmbedding3Large>(){}[0]
+        final val OpenAITextEmbedding3Small // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.OpenAITextEmbedding3Small|{}OpenAITextEmbedding3Small[0]
+            final fun <get-OpenAITextEmbedding3Small>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.OpenAITextEmbedding3Small.<get-OpenAITextEmbedding3Small>|<get-OpenAITextEmbedding3Small>(){}[0]
+        final val OpenAITextEmbeddingAda002 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.OpenAITextEmbeddingAda002|{}OpenAITextEmbeddingAda002[0]
+            final fun <get-OpenAITextEmbeddingAda002>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.OpenAITextEmbeddingAda002.<get-OpenAITextEmbeddingAda002>|<get-OpenAITextEmbeddingAda002>(){}[0]
+        final val Qwen3Embedding4B // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.Qwen3Embedding4B|{}Qwen3Embedding4B[0]
+            final fun <get-Qwen3Embedding4B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.Qwen3Embedding4B.<get-Qwen3Embedding4B>|<get-Qwen3Embedding4B>(){}[0]
+        final val Qwen3Embedding8B // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.Qwen3Embedding8B|{}Qwen3Embedding8B[0]
+            final fun <get-Qwen3Embedding8B>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.Qwen3Embedding8B.<get-Qwen3Embedding8B>|<get-Qwen3Embedding8B>(){}[0]
+        final val SentenceTransformersAllMiniLmL12V2 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.SentenceTransformersAllMiniLmL12V2|{}SentenceTransformersAllMiniLmL12V2[0]
+            final fun <get-SentenceTransformersAllMiniLmL12V2>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.SentenceTransformersAllMiniLmL12V2.<get-SentenceTransformersAllMiniLmL12V2>|<get-SentenceTransformersAllMiniLmL12V2>(){}[0]
+        final val SentenceTransformersAllMiniLmL6V2 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.SentenceTransformersAllMiniLmL6V2|{}SentenceTransformersAllMiniLmL6V2[0]
+            final fun <get-SentenceTransformersAllMiniLmL6V2>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.SentenceTransformersAllMiniLmL6V2.<get-SentenceTransformersAllMiniLmL6V2>|<get-SentenceTransformersAllMiniLmL6V2>(){}[0]
+        final val SentenceTransformersAllMpnetBaseV2 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.SentenceTransformersAllMpnetBaseV2|{}SentenceTransformersAllMpnetBaseV2[0]
+            final fun <get-SentenceTransformersAllMpnetBaseV2>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.SentenceTransformersAllMpnetBaseV2.<get-SentenceTransformersAllMpnetBaseV2>|<get-SentenceTransformersAllMpnetBaseV2>(){}[0]
+        final val SentenceTransformersMultiQaMpnetBaseDotV1 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.SentenceTransformersMultiQaMpnetBaseDotV1|{}SentenceTransformersMultiQaMpnetBaseDotV1[0]
+            final fun <get-SentenceTransformersMultiQaMpnetBaseDotV1>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.SentenceTransformersMultiQaMpnetBaseDotV1.<get-SentenceTransformersMultiQaMpnetBaseDotV1>|<get-SentenceTransformersMultiQaMpnetBaseDotV1>(){}[0]
+        final val SentenceTransformersParaphraseMiniLmL6V2 // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.SentenceTransformersParaphraseMiniLmL6V2|{}SentenceTransformersParaphraseMiniLmL6V2[0]
+            final fun <get-SentenceTransformersParaphraseMiniLmL6V2>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.SentenceTransformersParaphraseMiniLmL6V2.<get-SentenceTransformersParaphraseMiniLmL6V2>|<get-SentenceTransformersParaphraseMiniLmL6V2>(){}[0]
+        final val ThenlperGteBase // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.ThenlperGteBase|{}ThenlperGteBase[0]
+            final fun <get-ThenlperGteBase>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.ThenlperGteBase.<get-ThenlperGteBase>|<get-ThenlperGteBase>(){}[0]
+        final val ThenlperGteLarge // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.ThenlperGteLarge|{}ThenlperGteLarge[0]
+            final fun <get-ThenlperGteLarge>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.openrouter/OpenRouterModels.Embeddings.ThenlperGteLarge.<get-ThenlperGteLarge>|<get-ThenlperGteLarge>(){}[0]
+    }
+}

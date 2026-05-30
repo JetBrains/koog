@@ -1,0 +1,61 @@
+public abstract interface annotation class ai/koog/utils/annotations/InternalKoogUtils : java/lang/annotation/Annotation {
+}
+
+public final class ai/koog/utils/concurrency/ReentrantCoroutineUtilsKt {
+	public static final fun runBlockingReentrant (Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static final fun runBlockingReentrant (Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static synthetic fun runBlockingReentrant$default (Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun withContextReentrant (Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/koog/utils/io/Closeable {
+	public abstract fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/utils/io/CloseableKt {
+	public static final fun use (Lai/koog/utils/io/Closeable;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/utils/io/Coroutines_androidKt {
+	public static final fun getSuitableForIO (Lkotlinx/coroutines/Dispatchers;)Lkotlinx/coroutines/CoroutineDispatcher;
+}
+
+public final class ai/koog/utils/lang/StringExtensionsKt {
+	public static final fun masked (Ljava/lang/String;C)Ljava/lang/String;
+	public static synthetic fun masked$default (Ljava/lang/String;CILjava/lang/Object;)Ljava/lang/String;
+}
+
+public final class ai/koog/utils/serializers/ByteArrayAsBase64Serializer : kotlinx/serialization/KSerializer {
+	public fun <init> ()V
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)[B
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;[B)V
+}
+
+public abstract interface class ai/koog/utils/system/SystemConfigReader {
+	public abstract fun getConfigVariable (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/koog/utils/system/SystemConfigReader_androidKt {
+	public static final fun systemConfigReader ()Lai/koog/utils/system/SystemConfigReader;
+}
+
+public abstract interface class ai/koog/utils/system/SystemSecretsReader {
+	public abstract fun getSecret (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/koog/utils/system/SystemSecretsReader_androidKt {
+	public static final fun systemSecretsReader ()Lai/koog/utils/system/SystemSecretsReader;
+}
+
+public abstract interface class ai/koog/utils/time/KoogClock {
+	public static final field Companion Lai/koog/utils/time/KoogClock$Companion;
+	public static final field System Lai/koog/utils/time/KoogClock;
+	public abstract fun now ()Lkotlin/time/Instant;
+}
+
+public final class ai/koog/utils/time/KoogClock$Companion {
+}
+

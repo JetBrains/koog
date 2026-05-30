@@ -1,0 +1,335 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-structure>
+open annotation class ai.koog.prompt.structure.annotations/InternalStructuredOutputApi : kotlin/Annotation { // ai.koog.prompt.structure.annotations/InternalStructuredOutputApi|null[0]
+    constructor <init>() // ai.koog.prompt.structure.annotations/InternalStructuredOutputApi.<init>|<init>(){}[0]
+}
+
+abstract interface ai.koog.prompt.structure/StructureDefinition { // ai.koog.prompt.structure/StructureDefinition|null[0]
+    abstract fun definition(ai.koog.prompt.text/TextContentBuilderBase<*>): ai.koog.prompt.text/TextContentBuilderBase<*> // ai.koog.prompt.structure/StructureDefinition.definition|definition(ai.koog.prompt.text.TextContentBuilderBase<*>){}[0]
+}
+
+sealed interface <#A: kotlin/Any?> ai.koog.prompt.structure/StructuredRequest { // ai.koog.prompt.structure/StructuredRequest|null[0]
+    abstract val structure // ai.koog.prompt.structure/StructuredRequest.structure|{}structure[0]
+        abstract fun <get-structure>(): ai.koog.prompt.structure/Structure<#A, *> // ai.koog.prompt.structure/StructuredRequest.structure.<get-structure>|<get-structure>(){}[0]
+
+    final class <#A1: kotlin/Any?> Manual : ai.koog.prompt.structure/StructuredRequest<#A1> { // ai.koog.prompt.structure/StructuredRequest.Manual|null[0]
+        constructor <init>(ai.koog.prompt.structure/Structure<#A1, *>) // ai.koog.prompt.structure/StructuredRequest.Manual.<init>|<init>(ai.koog.prompt.structure.Structure<1:0,*>){}[0]
+
+        final val structure // ai.koog.prompt.structure/StructuredRequest.Manual.structure|{}structure[0]
+            final fun <get-structure>(): ai.koog.prompt.structure/Structure<#A1, *> // ai.koog.prompt.structure/StructuredRequest.Manual.structure.<get-structure>|<get-structure>(){}[0]
+
+        final fun component1(): ai.koog.prompt.structure/Structure<#A1, *> // ai.koog.prompt.structure/StructuredRequest.Manual.component1|component1(){}[0]
+        final fun copy(ai.koog.prompt.structure/Structure<#A1, *> = ...): ai.koog.prompt.structure/StructuredRequest.Manual<#A1> // ai.koog.prompt.structure/StructuredRequest.Manual.copy|copy(ai.koog.prompt.structure.Structure<1:0,*>){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.structure/StructuredRequest.Manual.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.structure/StructuredRequest.Manual.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.structure/StructuredRequest.Manual.toString|toString(){}[0]
+    }
+
+    final class <#A1: kotlin/Any?> Native : ai.koog.prompt.structure/StructuredRequest<#A1> { // ai.koog.prompt.structure/StructuredRequest.Native|null[0]
+        constructor <init>(ai.koog.prompt.structure/Structure<#A1, *>) // ai.koog.prompt.structure/StructuredRequest.Native.<init>|<init>(ai.koog.prompt.structure.Structure<1:0,*>){}[0]
+
+        final val structure // ai.koog.prompt.structure/StructuredRequest.Native.structure|{}structure[0]
+            final fun <get-structure>(): ai.koog.prompt.structure/Structure<#A1, *> // ai.koog.prompt.structure/StructuredRequest.Native.structure.<get-structure>|<get-structure>(){}[0]
+
+        final fun component1(): ai.koog.prompt.structure/Structure<#A1, *> // ai.koog.prompt.structure/StructuredRequest.Native.component1|component1(){}[0]
+        final fun copy(ai.koog.prompt.structure/Structure<#A1, *> = ...): ai.koog.prompt.structure/StructuredRequest.Native<#A1> // ai.koog.prompt.structure/StructuredRequest.Native.copy|copy(ai.koog.prompt.structure.Structure<1:0,*>){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.structure/StructuredRequest.Native.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.structure/StructuredRequest.Native.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.structure/StructuredRequest.Native.toString|toString(){}[0]
+    }
+}
+
+abstract class <#A: kotlin/Any?, #B: ai.koog.prompt.params/LLMParams.Schema> ai.koog.prompt.structure/Structure : ai.koog.prompt.structure/StructureDefinition { // ai.koog.prompt.structure/Structure|null[0]
+    constructor <init>(kotlin/String, #B, kotlin.collections/List<#A>) // ai.koog.prompt.structure/Structure.<init>|<init>(kotlin.String;1:1;kotlin.collections.List<1:0>){}[0]
+
+    final val examples // ai.koog.prompt.structure/Structure.examples|{}examples[0]
+        final fun <get-examples>(): kotlin.collections/List<#A> // ai.koog.prompt.structure/Structure.examples.<get-examples>|<get-examples>(){}[0]
+    final val id // ai.koog.prompt.structure/Structure.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.prompt.structure/Structure.id.<get-id>|<get-id>(){}[0]
+    final val schema // ai.koog.prompt.structure/Structure.schema|{}schema[0]
+        final fun <get-schema>(): #B // ai.koog.prompt.structure/Structure.schema.<get-schema>|<get-schema>(){}[0]
+
+    abstract fun examples(ai.koog.prompt.text/TextContentBuilderBase<*>): ai.koog.prompt.text/TextContentBuilderBase<*> // ai.koog.prompt.structure/Structure.examples|examples(ai.koog.prompt.text.TextContentBuilderBase<*>){}[0]
+    abstract fun parse(kotlin/String): #A // ai.koog.prompt.structure/Structure.parse|parse(kotlin.String){}[0]
+    abstract fun pretty(#A): kotlin/String // ai.koog.prompt.structure/Structure.pretty|pretty(1:0){}[0]
+}
+
+abstract class ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator : ai.koog.prompt.structure.json.generator/JsonSchemaGenerator { // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator|null[0]
+    constructor <init>() // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.<init>|<init>(){}[0]
+
+    final fun (kotlinx.serialization.json/JsonObjectBuilder).putDescription(kotlin/String?) // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.putDescription|putDescription@kotlinx.serialization.json.JsonObjectBuilder(kotlin.String?){}[0]
+    open fun process(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.process|process(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processBoolean(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.processBoolean|processBoolean(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processClassDiscriminator(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.processClassDiscriminator|processClassDiscriminator(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processEnum(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.processEnum|processEnum(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processInteger(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.processInteger|processInteger(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processJsonElement(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.processJsonElement|processJsonElement(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processList(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.processList|processList(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processMap(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.processMap|processMap(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processNumber(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.processNumber|processNumber(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processObject(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.processObject|processObject(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processPolymorphic(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.processPolymorphic|processPolymorphic(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processString(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator.processString|processString(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+}
+
+abstract class ai.koog.prompt.structure.json.generator/JsonSchemaGenerator { // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator|null[0]
+    constructor <init>() // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.<init>|<init>(){}[0]
+
+    abstract fun generate(kotlinx.serialization.json/Json, kotlin/String, kotlinx.serialization/KSerializer<*>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Set<kotlin/String> = ...): ai.koog.prompt.params/LLMParams.Schema.JSON // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.generate|generate(kotlinx.serialization.json.Json;kotlin.String;kotlinx.serialization.KSerializer<*>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Set<kotlin.String>){}[0]
+    abstract fun process(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.process|process(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    abstract fun processBoolean(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.processBoolean|processBoolean(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    abstract fun processClassDiscriminator(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.processClassDiscriminator|processClassDiscriminator(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    abstract fun processEnum(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.processEnum|processEnum(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    abstract fun processInteger(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.processInteger|processInteger(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    abstract fun processJsonElement(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.processJsonElement|processJsonElement(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    abstract fun processList(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.processList|processList(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    abstract fun processMap(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.processMap|processMap(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    abstract fun processNumber(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.processNumber|processNumber(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    abstract fun processObject(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.processObject|processObject(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    abstract fun processPolymorphic(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.processPolymorphic|processPolymorphic(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    abstract fun processString(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.processString|processString(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+
+    final class GenerationContext { // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext|null[0]
+        constructor <init>(kotlinx.serialization.json/Json, kotlinx.serialization.descriptors/SerialDescriptor, kotlin.collections/MutableMap<kotlinx.serialization.descriptors/SerialDescriptor, kotlinx.serialization.json/JsonObject>, kotlin.collections/List<kotlinx.serialization.descriptors/SerialDescriptor>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Set<kotlin/String>, kotlin/String?) // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.<init>|<init>(kotlinx.serialization.json.Json;kotlinx.serialization.descriptors.SerialDescriptor;kotlin.collections.MutableMap<kotlinx.serialization.descriptors.SerialDescriptor,kotlinx.serialization.json.JsonObject>;kotlin.collections.List<kotlinx.serialization.descriptors.SerialDescriptor>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Set<kotlin.String>;kotlin.String?){}[0]
+
+        final val currentDefPath // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.currentDefPath|{}currentDefPath[0]
+            final fun <get-currentDefPath>(): kotlin.collections/List<kotlinx.serialization.descriptors/SerialDescriptor> // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.currentDefPath.<get-currentDefPath>|<get-currentDefPath>(){}[0]
+        final val currentDescription // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.currentDescription|{}currentDescription[0]
+            final fun <get-currentDescription>(): kotlin/String? // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.currentDescription.<get-currentDescription>|<get-currentDescription>(){}[0]
+        final val descriptionOverrides // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.descriptionOverrides|{}descriptionOverrides[0]
+            final fun <get-descriptionOverrides>(): kotlin.collections/Map<kotlin/String, kotlin/String> // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.descriptionOverrides.<get-descriptionOverrides>|<get-descriptionOverrides>(){}[0]
+        final val descriptor // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+        final val excludedProperties // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.excludedProperties|{}excludedProperties[0]
+            final fun <get-excludedProperties>(): kotlin.collections/Set<kotlin/String> // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.excludedProperties.<get-excludedProperties>|<get-excludedProperties>(){}[0]
+        final val json // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.json|{}json[0]
+            final fun <get-json>(): kotlinx.serialization.json/Json // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.json.<get-json>|<get-json>(){}[0]
+        final val processedTypeDefs // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.processedTypeDefs|{}processedTypeDefs[0]
+            final fun <get-processedTypeDefs>(): kotlin.collections/MutableMap<kotlinx.serialization.descriptors/SerialDescriptor, kotlinx.serialization.json/JsonObject> // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.processedTypeDefs.<get-processedTypeDefs>|<get-processedTypeDefs>(){}[0]
+
+        final fun component1(): kotlinx.serialization.json/Json // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.component1|component1(){}[0]
+        final fun component2(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.component2|component2(){}[0]
+        final fun component3(): kotlin.collections/MutableMap<kotlinx.serialization.descriptors/SerialDescriptor, kotlinx.serialization.json/JsonObject> // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.component3|component3(){}[0]
+        final fun component4(): kotlin.collections/List<kotlinx.serialization.descriptors/SerialDescriptor> // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.component4|component4(){}[0]
+        final fun component5(): kotlin.collections/Map<kotlin/String, kotlin/String> // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.component5|component5(){}[0]
+        final fun component6(): kotlin.collections/Set<kotlin/String> // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.component6|component6(){}[0]
+        final fun component7(): kotlin/String? // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.component7|component7(){}[0]
+        final fun copy(kotlinx.serialization.json/Json = ..., kotlinx.serialization.descriptors/SerialDescriptor = ..., kotlin.collections/MutableMap<kotlinx.serialization.descriptors/SerialDescriptor, kotlinx.serialization.json/JsonObject> = ..., kotlin.collections/List<kotlinx.serialization.descriptors/SerialDescriptor> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Set<kotlin/String> = ..., kotlin/String? = ...): ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.copy|copy(kotlinx.serialization.json.Json;kotlinx.serialization.descriptors.SerialDescriptor;kotlin.collections.MutableMap<kotlinx.serialization.descriptors.SerialDescriptor,kotlinx.serialization.json.JsonObject>;kotlin.collections.List<kotlinx.serialization.descriptors.SerialDescriptor>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Set<kotlin.String>;kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.equals|equals(kotlin.Any?){}[0]
+        final fun getElementDescription(kotlin/Int): kotlin/String? // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.getElementDescription|getElementDescription(kotlin.Int){}[0]
+        final fun getTypeDescription(): kotlin/String? // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.getTypeDescription|getTypeDescription(){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext.toString|toString(){}[0]
+    }
+}
+
+final class <#A: kotlin/Any?> ai.koog.prompt.structure.json/JsonStructure : ai.koog.prompt.structure/Structure<#A, ai.koog.prompt.params/LLMParams.Schema.JSON> { // ai.koog.prompt.structure.json/JsonStructure|null[0]
+    constructor <init>(kotlin/String, ai.koog.prompt.params/LLMParams.Schema.JSON, kotlin.collections/List<#A>, kotlinx.serialization/KSerializer<#A>, kotlinx.serialization.json/Json, kotlin/Function2<ai.koog.prompt.text/TextContentBuilderBase<*>, ai.koog.prompt.structure.json/JsonStructure<#A>, ai.koog.prompt.text/TextContentBuilderBase<*>> = ..., kotlin/Function2<ai.koog.prompt.text/TextContentBuilderBase<*>, ai.koog.prompt.structure.json/JsonStructure<#A>, ai.koog.prompt.text/TextContentBuilderBase<*>> = ...) // ai.koog.prompt.structure.json/JsonStructure.<init>|<init>(kotlin.String;ai.koog.prompt.params.LLMParams.Schema.JSON;kotlin.collections.List<1:0>;kotlinx.serialization.KSerializer<1:0>;kotlinx.serialization.json.Json;kotlin.Function2<ai.koog.prompt.text.TextContentBuilderBase<*>,ai.koog.prompt.structure.json.JsonStructure<1:0>,ai.koog.prompt.text.TextContentBuilderBase<*>>;kotlin.Function2<ai.koog.prompt.text.TextContentBuilderBase<*>,ai.koog.prompt.structure.json.JsonStructure<1:0>,ai.koog.prompt.text.TextContentBuilderBase<*>>){}[0]
+
+    final val json // ai.koog.prompt.structure.json/JsonStructure.json|{}json[0]
+        final fun <get-json>(): kotlinx.serialization.json/Json // ai.koog.prompt.structure.json/JsonStructure.json.<get-json>|<get-json>(){}[0]
+    final val serializer // ai.koog.prompt.structure.json/JsonStructure.serializer|{}serializer[0]
+        final fun <get-serializer>(): kotlinx.serialization/KSerializer<#A> // ai.koog.prompt.structure.json/JsonStructure.serializer.<get-serializer>|<get-serializer>(){}[0]
+
+    final fun definition(ai.koog.prompt.text/TextContentBuilderBase<*>): ai.koog.prompt.text/TextContentBuilderBase<*> // ai.koog.prompt.structure.json/JsonStructure.definition|definition(ai.koog.prompt.text.TextContentBuilderBase<*>){}[0]
+    final fun examples(ai.koog.prompt.text/TextContentBuilderBase<*>): ai.koog.prompt.text/TextContentBuilderBase<*> // ai.koog.prompt.structure.json/JsonStructure.examples|examples(ai.koog.prompt.text.TextContentBuilderBase<*>){}[0]
+    final fun parse(kotlin/String): #A // ai.koog.prompt.structure.json/JsonStructure.parse|parse(kotlin.String){}[0]
+    final fun pretty(#A): kotlin/String // ai.koog.prompt.structure.json/JsonStructure.pretty|pretty(1:0){}[0]
+
+    final object Companion { // ai.koog.prompt.structure.json/JsonStructure.Companion|null[0]
+        final val defaultJson // ai.koog.prompt.structure.json/JsonStructure.Companion.defaultJson|{}defaultJson[0]
+            final fun <get-defaultJson>(): kotlinx.serialization.json/Json // ai.koog.prompt.structure.json/JsonStructure.Companion.defaultJson.<get-defaultJson>|<get-defaultJson>(){}[0]
+
+        final fun <#A2: kotlin/Any?> create(kotlin/String? = ..., kotlinx.serialization/KSerializer<#A2>, kotlinx.serialization.json/Json = ..., ai.koog.prompt.structure.json.generator/JsonSchemaGenerator = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Set<kotlin/String> = ..., kotlin.collections/List<#A2> = ..., kotlin/Function2<ai.koog.prompt.text/TextContentBuilderBase<*>, ai.koog.prompt.structure.json/JsonStructure<#A2>, ai.koog.prompt.text/TextContentBuilderBase<*>> = ...): ai.koog.prompt.structure.json/JsonStructure<#A2> // ai.koog.prompt.structure.json/JsonStructure.Companion.create|create(kotlin.String?;kotlinx.serialization.KSerializer<0:0>;kotlinx.serialization.json.Json;ai.koog.prompt.structure.json.generator.JsonSchemaGenerator;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Set<kotlin.String>;kotlin.collections.List<0:0>;kotlin.Function2<ai.koog.prompt.text.TextContentBuilderBase<*>,ai.koog.prompt.structure.json.JsonStructure<0:0>,ai.koog.prompt.text.TextContentBuilderBase<*>>){0§<kotlin.Any?>}[0]
+        final fun <#A2: kotlin/Any?> defaultDefinitionPrompt(ai.koog.prompt.text/TextContentBuilderBase<*>, ai.koog.prompt.structure.json/JsonStructure<#A2>): ai.koog.prompt.text/TextContentBuilderBase<*> // ai.koog.prompt.structure.json/JsonStructure.Companion.defaultDefinitionPrompt|defaultDefinitionPrompt(ai.koog.prompt.text.TextContentBuilderBase<*>;ai.koog.prompt.structure.json.JsonStructure<0:0>){0§<kotlin.Any?>}[0]
+        final inline fun <#A2: reified kotlin/Any?> create(kotlinx.serialization.json/Json = ..., ai.koog.prompt.structure.json.generator/JsonSchemaGenerator = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Set<kotlin/String> = ..., kotlin.collections/List<#A2> = ..., noinline kotlin/Function2<ai.koog.prompt.text/TextContentBuilderBase<*>, ai.koog.prompt.structure.json/JsonStructure<#A2>, ai.koog.prompt.text/TextContentBuilderBase<*>> = ...): ai.koog.prompt.structure.json/JsonStructure<#A2> // ai.koog.prompt.structure.json/JsonStructure.Companion.create|create(kotlinx.serialization.json.Json;ai.koog.prompt.structure.json.generator.JsonSchemaGenerator;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Set<kotlin.String>;kotlin.collections.List<0:0>;kotlin.Function2<ai.koog.prompt.text.TextContentBuilderBase<*>,ai.koog.prompt.structure.json.JsonStructure<0:0>,ai.koog.prompt.text.TextContentBuilderBase<*>>){0§<kotlin.Any?>}[0]
+    }
+}
+
+final class <#A: kotlin/Any?> ai.koog.prompt.structure/StructuredRequestConfig { // ai.koog.prompt.structure/StructuredRequestConfig|null[0]
+    constructor <init>(ai.koog.prompt.structure/StructuredRequest<#A>? = ..., kotlin.collections/Map<ai.koog.prompt.llm/LLMProvider, ai.koog.prompt.structure/StructuredRequest<#A>> = ...) // ai.koog.prompt.structure/StructuredRequestConfig.<init>|<init>(ai.koog.prompt.structure.StructuredRequest<1:0>?;kotlin.collections.Map<ai.koog.prompt.llm.LLMProvider,ai.koog.prompt.structure.StructuredRequest<1:0>>){}[0]
+
+    final val byProvider // ai.koog.prompt.structure/StructuredRequestConfig.byProvider|{}byProvider[0]
+        final fun <get-byProvider>(): kotlin.collections/Map<ai.koog.prompt.llm/LLMProvider, ai.koog.prompt.structure/StructuredRequest<#A>> // ai.koog.prompt.structure/StructuredRequestConfig.byProvider.<get-byProvider>|<get-byProvider>(){}[0]
+    final val default // ai.koog.prompt.structure/StructuredRequestConfig.default|{}default[0]
+        final fun <get-default>(): ai.koog.prompt.structure/StructuredRequest<#A>? // ai.koog.prompt.structure/StructuredRequestConfig.default.<get-default>|<get-default>(){}[0]
+
+    final fun component1(): ai.koog.prompt.structure/StructuredRequest<#A>? // ai.koog.prompt.structure/StructuredRequestConfig.component1|component1(){}[0]
+    final fun component2(): kotlin.collections/Map<ai.koog.prompt.llm/LLMProvider, ai.koog.prompt.structure/StructuredRequest<#A>> // ai.koog.prompt.structure/StructuredRequestConfig.component2|component2(){}[0]
+    final fun copy(ai.koog.prompt.structure/StructuredRequest<#A>? = ..., kotlin.collections/Map<ai.koog.prompt.llm/LLMProvider, ai.koog.prompt.structure/StructuredRequest<#A>> = ...): ai.koog.prompt.structure/StructuredRequestConfig<#A> // ai.koog.prompt.structure/StructuredRequestConfig.copy|copy(ai.koog.prompt.structure.StructuredRequest<1:0>?;kotlin.collections.Map<ai.koog.prompt.llm.LLMProvider,ai.koog.prompt.structure.StructuredRequest<1:0>>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.structure/StructuredRequestConfig.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.structure/StructuredRequestConfig.hashCode|hashCode(){}[0]
+    final fun structure(ai.koog.prompt.llm/LLModel): ai.koog.prompt.structure/Structure<#A, *> // ai.koog.prompt.structure/StructuredRequestConfig.structure|structure(ai.koog.prompt.llm.LLModel){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.structure/StructuredRequestConfig.toString|toString(){}[0]
+    final fun updatePrompt(ai.koog.prompt.llm/LLModel, ai.koog.prompt/Prompt): ai.koog.prompt/Prompt // ai.koog.prompt.structure/StructuredRequestConfig.updatePrompt|updatePrompt(ai.koog.prompt.llm.LLModel;ai.koog.prompt.Prompt){}[0]
+}
+
+final class <#A: kotlin/Any?> ai.koog.prompt.structure/StructuredResponse { // ai.koog.prompt.structure/StructuredResponse|null[0]
+    constructor <init>(#A, ai.koog.prompt.structure/Structure<#A, *>, ai.koog.prompt.message/Message.Assistant) // ai.koog.prompt.structure/StructuredResponse.<init>|<init>(1:0;ai.koog.prompt.structure.Structure<1:0,*>;ai.koog.prompt.message.Message.Assistant){}[0]
+
+    final val data // ai.koog.prompt.structure/StructuredResponse.data|{}data[0]
+        final fun <get-data>(): #A // ai.koog.prompt.structure/StructuredResponse.data.<get-data>|<get-data>(){}[0]
+    final val message // ai.koog.prompt.structure/StructuredResponse.message|{}message[0]
+        final fun <get-message>(): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.structure/StructuredResponse.message.<get-message>|<get-message>(){}[0]
+    final val structure // ai.koog.prompt.structure/StructuredResponse.structure|{}structure[0]
+        final fun <get-structure>(): ai.koog.prompt.structure/Structure<#A, *> // ai.koog.prompt.structure/StructuredResponse.structure.<get-structure>|<get-structure>(){}[0]
+
+    final fun component1(): #A // ai.koog.prompt.structure/StructuredResponse.component1|component1(){}[0]
+    final fun component2(): ai.koog.prompt.structure/Structure<#A, *> // ai.koog.prompt.structure/StructuredResponse.component2|component2(){}[0]
+    final fun component3(): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.structure/StructuredResponse.component3|component3(){}[0]
+    final fun copy(#A = ..., ai.koog.prompt.structure/Structure<#A, *> = ..., ai.koog.prompt.message/Message.Assistant = ...): ai.koog.prompt.structure/StructuredResponse<#A> // ai.koog.prompt.structure/StructuredResponse.copy|copy(1:0;ai.koog.prompt.structure.Structure<1:0,*>;ai.koog.prompt.message.Message.Assistant){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.structure/StructuredResponse.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.structure/StructuredResponse.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.structure/StructuredResponse.toString|toString(){}[0]
+}
+
+final class ai.koog.prompt.structure.markdown/MarkdownParserBuilder { // ai.koog.prompt.structure.markdown/MarkdownParserBuilder|null[0]
+    constructor <init>() // ai.koog.prompt.structure.markdown/MarkdownParserBuilder.<init>|<init>(){}[0]
+
+    final fun build(): kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit> // ai.koog.prompt.structure.markdown/MarkdownParserBuilder.build|build(){}[0]
+    final fun buildStreaming(): ai.koog.prompt.structure.markdown/MarkdownParserBuilder.MarkdownStreamingParser // ai.koog.prompt.structure.markdown/MarkdownParserBuilder.buildStreaming|buildStreaming(){}[0]
+    final fun onBullet(kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit>) // ai.koog.prompt.structure.markdown/MarkdownParserBuilder.onBullet|onBullet(kotlin.coroutines.SuspendFunction1<kotlin.String,kotlin.Unit>){}[0]
+    final fun onCodeBlock(kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit>) // ai.koog.prompt.structure.markdown/MarkdownParserBuilder.onCodeBlock|onCodeBlock(kotlin.coroutines.SuspendFunction1<kotlin.String,kotlin.Unit>){}[0]
+    final fun onFinishStream(kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit>) // ai.koog.prompt.structure.markdown/MarkdownParserBuilder.onFinishStream|onFinishStream(kotlin.coroutines.SuspendFunction1<kotlin.String,kotlin.Unit>){}[0]
+    final fun onHeader(kotlin/Int, kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit>) // ai.koog.prompt.structure.markdown/MarkdownParserBuilder.onHeader|onHeader(kotlin.Int;kotlin.coroutines.SuspendFunction1<kotlin.String,kotlin.Unit>){}[0]
+    final fun onLineMatching(kotlin.text/Regex?, kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit>) // ai.koog.prompt.structure.markdown/MarkdownParserBuilder.onLineMatching|onLineMatching(kotlin.text.Regex?;kotlin.coroutines.SuspendFunction1<kotlin.String,kotlin.Unit>){}[0]
+
+    final inner class MarkdownStreamingParser { // ai.koog.prompt.structure.markdown/MarkdownParserBuilder.MarkdownStreamingParser|null[0]
+        constructor <init>(kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit>) // ai.koog.prompt.structure.markdown/MarkdownParserBuilder.MarkdownStreamingParser.<init>|<init>(kotlin.coroutines.SuspendFunction1<kotlin.String,kotlin.Unit>){}[0]
+
+        final suspend fun parseStream(kotlinx.coroutines.flow/Flow<kotlin/String>) // ai.koog.prompt.structure.markdown/MarkdownParserBuilder.MarkdownStreamingParser.parseStream|parseStream(kotlinx.coroutines.flow.Flow<kotlin.String>){}[0]
+    }
+}
+
+final class ai.koog.prompt.structure.markdown/MarkdownStructureDefinition : ai.koog.prompt.structure/StructureDefinition { // ai.koog.prompt.structure.markdown/MarkdownStructureDefinition|null[0]
+    constructor <init>(kotlin/String, kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit>, kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit>? = ..., kotlin/Function2<ai.koog.prompt.text/TextContentBuilderBase<*>, ai.koog.prompt.structure.markdown/MarkdownStructureDefinition, ai.koog.prompt.text/TextContentBuilderBase<*>> = ...) // ai.koog.prompt.structure.markdown/MarkdownStructureDefinition.<init>|<init>(kotlin.String;kotlin.Function1<ai.koog.prompt.text.TextContentBuilder,kotlin.Unit>;kotlin.Function1<ai.koog.prompt.text.TextContentBuilder,kotlin.Unit>?;kotlin.Function2<ai.koog.prompt.text.TextContentBuilderBase<*>,ai.koog.prompt.structure.markdown.MarkdownStructureDefinition,ai.koog.prompt.text.TextContentBuilderBase<*>>){}[0]
+
+    final val examples // ai.koog.prompt.structure.markdown/MarkdownStructureDefinition.examples|{}examples[0]
+        final fun <get-examples>(): kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit>? // ai.koog.prompt.structure.markdown/MarkdownStructureDefinition.examples.<get-examples>|<get-examples>(){}[0]
+    final val id // ai.koog.prompt.structure.markdown/MarkdownStructureDefinition.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.prompt.structure.markdown/MarkdownStructureDefinition.id.<get-id>|<get-id>(){}[0]
+    final val schema // ai.koog.prompt.structure.markdown/MarkdownStructureDefinition.schema|{}schema[0]
+        final fun <get-schema>(): kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit> // ai.koog.prompt.structure.markdown/MarkdownStructureDefinition.schema.<get-schema>|<get-schema>(){}[0]
+
+    final fun definition(ai.koog.prompt.text/TextContentBuilderBase<*>): ai.koog.prompt.text/TextContentBuilderBase<*> // ai.koog.prompt.structure.markdown/MarkdownStructureDefinition.definition|definition(ai.koog.prompt.text.TextContentBuilderBase<*>){}[0]
+
+    final object Companion { // ai.koog.prompt.structure.markdown/MarkdownStructureDefinition.Companion|null[0]
+        final fun defaultDefinitionPrompt(ai.koog.prompt.text/TextContentBuilderBase<*>, ai.koog.prompt.structure.markdown/MarkdownStructureDefinition): ai.koog.prompt.text/TextContentBuilderBase<*> // ai.koog.prompt.structure.markdown/MarkdownStructureDefinition.Companion.defaultDefinitionPrompt|defaultDefinitionPrompt(ai.koog.prompt.text.TextContentBuilderBase<*>;ai.koog.prompt.structure.markdown.MarkdownStructureDefinition){}[0]
+    }
+}
+
+final class ai.koog.prompt.structure/LLMStructuredParsingError : kotlin/Exception { // ai.koog.prompt.structure/LLMStructuredParsingError|null[0]
+    constructor <init>(kotlin/String, kotlinx.serialization/SerializationException?) // ai.koog.prompt.structure/LLMStructuredParsingError.<init>|<init>(kotlin.String;kotlinx.serialization.SerializationException?){}[0]
+}
+
+open class ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator : ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator { // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator|null[0]
+    constructor <init>() // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator.<init>|<init>(){}[0]
+
+    final fun (kotlinx.serialization.json/JsonObject).asNullableType(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator.asNullableType|asNullableType@kotlinx.serialization.json.JsonObject(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun generate(kotlinx.serialization.json/Json, kotlin/String, kotlinx.serialization/KSerializer<*>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Set<kotlin/String>): ai.koog.prompt.params/LLMParams.Schema.JSON.Basic // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator.generate|generate(kotlinx.serialization.json.Json;kotlin.String;kotlinx.serialization.KSerializer<*>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Set<kotlin.String>){}[0]
+    open fun processBoolean(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator.processBoolean|processBoolean(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processEnum(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator.processEnum|processEnum(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processInteger(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator.processInteger|processInteger(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processList(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator.processList|processList(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processMap(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator.processMap|processMap(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processNumber(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator.processNumber|processNumber(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processObject(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator.processObject|processObject(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processString(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator.processString|processString(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+
+    final object Default : ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator // ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator.Default|null[0]
+}
+
+open class ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator : ai.koog.prompt.structure.json.generator/GenericJsonSchemaGenerator { // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator|null[0]
+    constructor <init>() // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.<init>|<init>(){}[0]
+
+    final fun (kotlinx.serialization.json/JsonObject).asNullableType(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.asNullableType|asNullableType@kotlinx.serialization.json.JsonObject(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun generate(kotlinx.serialization.json/Json, kotlin/String, kotlinx.serialization/KSerializer<*>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Set<kotlin/String>): ai.koog.prompt.params/LLMParams.Schema.JSON.Standard // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.generate|generate(kotlinx.serialization.json.Json;kotlin.String;kotlinx.serialization.KSerializer<*>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Set<kotlin.String>){}[0]
+    open fun processBoolean(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.processBoolean|processBoolean(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processClassDiscriminator(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.processClassDiscriminator|processClassDiscriminator(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processEnum(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.processEnum|processEnum(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processInteger(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.processInteger|processInteger(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processJsonElement(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.processJsonElement|processJsonElement(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processList(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.processList|processList(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processMap(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.processMap|processMap(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processNumber(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.processNumber|processNumber(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processObject(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.processObject|processObject(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processPolymorphic(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.processPolymorphic|processPolymorphic(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processString(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.processString|processString(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+
+    final object Default : ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator // ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator.Default|null[0]
+}
+
+final object ai.koog.prompt.structure.json.generator/JsonSchemaConsts { // ai.koog.prompt.structure.json.generator/JsonSchemaConsts|null[0]
+    final object Keys { // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys|null[0]
+        final const val ADDITIONAL_PROPERTIES // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ADDITIONAL_PROPERTIES|{}ADDITIONAL_PROPERTIES[0]
+            final fun <get-ADDITIONAL_PROPERTIES>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ADDITIONAL_PROPERTIES.<get-ADDITIONAL_PROPERTIES>|<get-ADDITIONAL_PROPERTIES>(){}[0]
+        final const val ALL_OF // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ALL_OF|{}ALL_OF[0]
+            final fun <get-ALL_OF>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ALL_OF.<get-ALL_OF>|<get-ALL_OF>(){}[0]
+        final const val ANY_OF // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ANY_OF|{}ANY_OF[0]
+            final fun <get-ANY_OF>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ANY_OF.<get-ANY_OF>|<get-ANY_OF>(){}[0]
+        final const val CONST // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.CONST|{}CONST[0]
+            final fun <get-CONST>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.CONST.<get-CONST>|<get-CONST>(){}[0]
+        final const val DEFS // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.DEFS|{}DEFS[0]
+            final fun <get-DEFS>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.DEFS.<get-DEFS>|<get-DEFS>(){}[0]
+        final const val DESCRIPTION // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.DESCRIPTION|{}DESCRIPTION[0]
+            final fun <get-DESCRIPTION>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.DESCRIPTION.<get-DESCRIPTION>|<get-DESCRIPTION>(){}[0]
+        final const val ENUM // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ENUM|{}ENUM[0]
+            final fun <get-ENUM>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ENUM.<get-ENUM>|<get-ENUM>(){}[0]
+        final const val ID // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ID|{}ID[0]
+            final fun <get-ID>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ID.<get-ID>|<get-ID>(){}[0]
+        final const val ITEMS // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ITEMS|{}ITEMS[0]
+            final fun <get-ITEMS>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ITEMS.<get-ITEMS>|<get-ITEMS>(){}[0]
+        final const val NULLABLE // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.NULLABLE|{}NULLABLE[0]
+            final fun <get-NULLABLE>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.NULLABLE.<get-NULLABLE>|<get-NULLABLE>(){}[0]
+        final const val ONE_OF // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ONE_OF|{}ONE_OF[0]
+            final fun <get-ONE_OF>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.ONE_OF.<get-ONE_OF>|<get-ONE_OF>(){}[0]
+        final const val PATTERN // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.PATTERN|{}PATTERN[0]
+            final fun <get-PATTERN>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.PATTERN.<get-PATTERN>|<get-PATTERN>(){}[0]
+        final const val PROPERTIES // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.PROPERTIES|{}PROPERTIES[0]
+            final fun <get-PROPERTIES>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.PROPERTIES.<get-PROPERTIES>|<get-PROPERTIES>(){}[0]
+        final const val REF // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.REF|{}REF[0]
+            final fun <get-REF>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.REF.<get-REF>|<get-REF>(){}[0]
+        final const val REF_PREFIX // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.REF_PREFIX|{}REF_PREFIX[0]
+            final fun <get-REF_PREFIX>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.REF_PREFIX.<get-REF_PREFIX>|<get-REF_PREFIX>(){}[0]
+        final const val REQUIRED // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.REQUIRED|{}REQUIRED[0]
+            final fun <get-REQUIRED>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.REQUIRED.<get-REQUIRED>|<get-REQUIRED>(){}[0]
+        final const val SCHEMA // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.SCHEMA|{}SCHEMA[0]
+            final fun <get-SCHEMA>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.SCHEMA.<get-SCHEMA>|<get-SCHEMA>(){}[0]
+        final const val TYPE // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.TYPE|{}TYPE[0]
+            final fun <get-TYPE>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Keys.TYPE.<get-TYPE>|<get-TYPE>(){}[0]
+    }
+
+    final object Types { // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types|null[0]
+        final const val ARRAY // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.ARRAY|{}ARRAY[0]
+            final fun <get-ARRAY>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.ARRAY.<get-ARRAY>|<get-ARRAY>(){}[0]
+        final const val BOOLEAN // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.BOOLEAN|{}BOOLEAN[0]
+            final fun <get-BOOLEAN>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.BOOLEAN.<get-BOOLEAN>|<get-BOOLEAN>(){}[0]
+        final const val INTEGER // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.INTEGER|{}INTEGER[0]
+            final fun <get-INTEGER>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.INTEGER.<get-INTEGER>|<get-INTEGER>(){}[0]
+        final const val NULL // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.NULL|{}NULL[0]
+            final fun <get-NULL>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.NULL.<get-NULL>|<get-NULL>(){}[0]
+        final const val NUMBER // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.NUMBER|{}NUMBER[0]
+            final fun <get-NUMBER>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.NUMBER.<get-NUMBER>|<get-NUMBER>(){}[0]
+        final const val OBJECT // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.OBJECT|{}OBJECT[0]
+            final fun <get-OBJECT>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.OBJECT.<get-OBJECT>|<get-OBJECT>(){}[0]
+        final const val STRING // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.STRING|{}STRING[0]
+            final fun <get-STRING>(): kotlin/String // ai.koog.prompt.structure.json.generator/JsonSchemaConsts.Types.STRING.<get-STRING>|<get-STRING>(){}[0]
+    }
+}
+
+final object ai.koog.prompt.structure/StructuredOutputPrompts { // ai.koog.prompt.structure/StructuredOutputPrompts|null[0]
+    final fun <#A1: kotlin/Any?> examplesPrompt(ai.koog.prompt.text/TextContentBuilderBase<*>, ai.koog.prompt.structure/Structure<#A1, *>): ai.koog.prompt.text/TextContentBuilderBase<*> // ai.koog.prompt.structure/StructuredOutputPrompts.examplesPrompt|examplesPrompt(ai.koog.prompt.text.TextContentBuilderBase<*>;ai.koog.prompt.structure.Structure<0:0,*>){0§<kotlin.Any?>}[0]
+    final fun outputInstructionPrompt(ai.koog.prompt.text/TextContentBuilderBase<*>, ai.koog.prompt.structure/Structure<*, *>): ai.koog.prompt.text/TextContentBuilderBase<*> // ai.koog.prompt.structure/StructuredOutputPrompts.outputInstructionPrompt|outputInstructionPrompt(ai.koog.prompt.text.TextContentBuilderBase<*>;ai.koog.prompt.structure.Structure<*,*>){}[0]
+}
+
+final fun (kotlinx.serialization.descriptors/SerialDescriptor).ai.koog.prompt.structure.json.generator/getPolymorphicDescriptors(kotlinx.serialization.json/Json): kotlin.collections/List<kotlinx.serialization.descriptors/SerialDescriptor> // ai.koog.prompt.structure.json.generator/getPolymorphicDescriptors|getPolymorphicDescriptors@kotlinx.serialization.descriptors.SerialDescriptor(kotlinx.serialization.json.Json){}[0]
+final fun (kotlinx.serialization.json/JsonElement).ai.koog.prompt.structure.json.generator/countElements(kotlinx.serialization.json/JsonElement): kotlin/Int // ai.koog.prompt.structure.json.generator/countElements|countElements@kotlinx.serialization.json.JsonElement(kotlinx.serialization.json.JsonElement){}[0]
+final fun <#A: kotlin/Any?> (ai.koog.prompt.text/TextContentBuilderBase<*>).ai.koog.prompt.structure/structure(ai.koog.prompt.structure/Structure<#A, *>, #A) // ai.koog.prompt.structure/structure|structure@ai.koog.prompt.text.TextContentBuilderBase<*>(ai.koog.prompt.structure.Structure<0:0,*>;0:0){0§<kotlin.Any?>}[0]
+final fun ai.koog.prompt.structure.markdown/markdownParser(kotlin/Function1<ai.koog.prompt.structure.markdown/MarkdownParserBuilder, kotlin/Unit>): kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit> // ai.koog.prompt.structure.markdown/markdownParser|markdownParser(kotlin.Function1<ai.koog.prompt.structure.markdown.MarkdownParserBuilder,kotlin.Unit>){}[0]
+final fun ai.koog.prompt.structure.markdown/markdownStreamingParser(kotlin/Function1<ai.koog.prompt.structure.markdown/MarkdownParserBuilder, kotlin/Unit>): ai.koog.prompt.structure.markdown/MarkdownParserBuilder.MarkdownStreamingParser // ai.koog.prompt.structure.markdown/markdownStreamingParser|markdownStreamingParser(kotlin.Function1<ai.koog.prompt.structure.markdown.MarkdownParserBuilder,kotlin.Unit>){}[0]

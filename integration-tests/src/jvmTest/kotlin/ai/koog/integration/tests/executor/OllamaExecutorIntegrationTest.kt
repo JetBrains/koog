@@ -170,6 +170,29 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         integration_testToolChoiceNamed(model)
     }
 
+    @ParameterizedTest
+    @MethodSource("modelParams")
+    fun ollama_testAssistantMultiPartRoundTrip(model: LLModel) {
+        super.integration_testAssistantMultiPartRoundTrip(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("modelParams")
+    fun ollama_testToolCallResultCorrelationById(model: LLModel) {
+        super.integration_testToolCallResultCorrelationById(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("modelParams")
+    fun ollama_testReasoningPreservationRoundTrip(model: LLModel) {
+        super.integration_testReasoningPreservationRoundTrip(model)
+    }
+
+    @Test
+    fun `ollama_test attachment text round trip`() = runTest(timeout = 600.seconds) {
+        super.integration_testAttachmentTextRoundTrip(visionModel)
+    }
+
     // Ollama-specific moderation tests
     @Test
     fun `ollama_test moderate single message`() = runTest(timeout = 600.seconds) {

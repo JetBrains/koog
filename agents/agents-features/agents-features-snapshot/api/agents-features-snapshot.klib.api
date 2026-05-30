@@ -1,0 +1,265 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:agents-features-snapshot>
+abstract interface <#A: kotlin/Any?> ai.koog.agents.snapshot.providers/PersistenceStorageProvider { // ai.koog.agents.snapshot.providers/PersistenceStorageProvider|null[0]
+    abstract suspend fun getCheckpoints(kotlin/String, #A?): kotlin.collections/List<ai.koog.agents.snapshot.feature/AgentCheckpointData> // ai.koog.agents.snapshot.providers/PersistenceStorageProvider.getCheckpoints|getCheckpoints(kotlin.String;1:0?){}[0]
+    abstract suspend fun getLatestCheckpoint(kotlin/String, #A?): ai.koog.agents.snapshot.feature/AgentCheckpointData? // ai.koog.agents.snapshot.providers/PersistenceStorageProvider.getLatestCheckpoint|getLatestCheckpoint(kotlin.String;1:0?){}[0]
+    abstract suspend fun saveCheckpoint(kotlin/String, ai.koog.agents.snapshot.feature/AgentCheckpointData) // ai.koog.agents.snapshot.providers/PersistenceStorageProvider.saveCheckpoint|saveCheckpoint(kotlin.String;ai.koog.agents.snapshot.feature.AgentCheckpointData){}[0]
+    open suspend fun getCheckpoints(kotlin/String): kotlin.collections/List<ai.koog.agents.snapshot.feature/AgentCheckpointData> // ai.koog.agents.snapshot.providers/PersistenceStorageProvider.getCheckpoints|getCheckpoints(kotlin.String){}[0]
+    open suspend fun getLatestCheckpoint(kotlin/String): ai.koog.agents.snapshot.feature/AgentCheckpointData? // ai.koog.agents.snapshot.providers/PersistenceStorageProvider.getLatestCheckpoint|getLatestCheckpoint(kotlin.String){}[0]
+}
+
+abstract interface ai.koog.agents.snapshot.providers.filters/AgentCheckpointPredicateFilter { // ai.koog.agents.snapshot.providers.filters/AgentCheckpointPredicateFilter|null[0]
+    abstract fun check(ai.koog.agents.snapshot.feature/AgentCheckpointData): kotlin/Boolean // ai.koog.agents.snapshot.providers.filters/AgentCheckpointPredicateFilter.check|check(ai.koog.agents.snapshot.feature.AgentCheckpointData){}[0]
+}
+
+abstract class <#A: ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilderCommon<#A>> ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilderCommon { // ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilderCommon|null[0]
+    abstract fun self(): #A // ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilderCommon.self|self(){}[0]
+    open fun <#A1: kotlin/Any?> registerRollback(ai.koog.agents.core.tools/Tool<#A1, *>, ai.koog.agents.core.tools/Tool<#A1, *>): #A // ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilderCommon.registerRollback|registerRollback(ai.koog.agents.core.tools.Tool<0:0,*>;ai.koog.agents.core.tools.Tool<0:0,*>){0§<kotlin.Any?>}[0]
+    open fun build(): ai.koog.agents.snapshot.feature/RollbackToolRegistry // ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilderCommon.build|build(){}[0]
+}
+
+final class ai.koog.agents.snapshot.feature/AgentCheckpointData { // ai.koog.agents.snapshot.feature/AgentCheckpointData|null[0]
+    constructor <init>(kotlin/String, kotlin.time/Instant, kotlin.collections/List<ai.koog.prompt.message/Message>, ai.koog.prompt.params/LLMParams? = ..., kotlin/Long, ai.koog.agents.snapshot.feature/GraphCheckpointProperties, ai.koog.serialization/JSONObject? = ..., ai.koog.prompt.llm/LLModel? = ..., kotlin.collections/List<kotlin/String>? = ..., ai.koog.serialization/JSONObject? = ..., kotlin/Int = ...) // ai.koog.agents.snapshot.feature/AgentCheckpointData.<init>|<init>(kotlin.String;kotlin.time.Instant;kotlin.collections.List<ai.koog.prompt.message.Message>;ai.koog.prompt.params.LLMParams?;kotlin.Long;ai.koog.agents.snapshot.feature.GraphCheckpointProperties;ai.koog.serialization.JSONObject?;ai.koog.prompt.llm.LLModel?;kotlin.collections.List<kotlin.String>?;ai.koog.serialization.JSONObject?;kotlin.Int){}[0]
+    constructor <init>(kotlin/String, kotlin.time/Instant, kotlin.collections/List<ai.koog.prompt.message/Message>, ai.koog.prompt.params/LLMParams? = ..., kotlin/Long, ai.koog.agents.snapshot.feature/PlannerCheckpointProperties, ai.koog.serialization/JSONObject? = ..., ai.koog.prompt.llm/LLModel? = ..., kotlin.collections/List<kotlin/String>? = ..., ai.koog.serialization/JSONObject? = ..., kotlin/Int = ...) // ai.koog.agents.snapshot.feature/AgentCheckpointData.<init>|<init>(kotlin.String;kotlin.time.Instant;kotlin.collections.List<ai.koog.prompt.message.Message>;ai.koog.prompt.params.LLMParams?;kotlin.Long;ai.koog.agents.snapshot.feature.PlannerCheckpointProperties;ai.koog.serialization.JSONObject?;ai.koog.prompt.llm.LLModel?;kotlin.collections.List<kotlin.String>?;ai.koog.serialization.JSONObject?;kotlin.Int){}[0]
+
+    final val agentIterations // ai.koog.agents.snapshot.feature/AgentCheckpointData.agentIterations|{}agentIterations[0]
+        final fun <get-agentIterations>(): kotlin/Int // ai.koog.agents.snapshot.feature/AgentCheckpointData.agentIterations.<get-agentIterations>|<get-agentIterations>(){}[0]
+    final val checkpointId // ai.koog.agents.snapshot.feature/AgentCheckpointData.checkpointId|{}checkpointId[0]
+        final fun <get-checkpointId>(): kotlin/String // ai.koog.agents.snapshot.feature/AgentCheckpointData.checkpointId.<get-checkpointId>|<get-checkpointId>(){}[0]
+    final val createdAt // ai.koog.agents.snapshot.feature/AgentCheckpointData.createdAt|{}createdAt[0]
+        final fun <get-createdAt>(): kotlin.time/Instant // ai.koog.agents.snapshot.feature/AgentCheckpointData.createdAt.<get-createdAt>|<get-createdAt>(){}[0]
+    final val graphProperties // ai.koog.agents.snapshot.feature/AgentCheckpointData.graphProperties|{}graphProperties[0]
+        final fun <get-graphProperties>(): ai.koog.agents.snapshot.feature/GraphCheckpointProperties? // ai.koog.agents.snapshot.feature/AgentCheckpointData.graphProperties.<get-graphProperties>|<get-graphProperties>(){}[0]
+    final val llmModel // ai.koog.agents.snapshot.feature/AgentCheckpointData.llmModel|{}llmModel[0]
+        final fun <get-llmModel>(): ai.koog.prompt.llm/LLModel? // ai.koog.agents.snapshot.feature/AgentCheckpointData.llmModel.<get-llmModel>|<get-llmModel>(){}[0]
+    final val llmParams // ai.koog.agents.snapshot.feature/AgentCheckpointData.llmParams|{}llmParams[0]
+        final fun <get-llmParams>(): ai.koog.prompt.params/LLMParams? // ai.koog.agents.snapshot.feature/AgentCheckpointData.llmParams.<get-llmParams>|<get-llmParams>(){}[0]
+    final val messageHistory // ai.koog.agents.snapshot.feature/AgentCheckpointData.messageHistory|{}messageHistory[0]
+        final fun <get-messageHistory>(): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.agents.snapshot.feature/AgentCheckpointData.messageHistory.<get-messageHistory>|<get-messageHistory>(){}[0]
+    final val plannerProperties // ai.koog.agents.snapshot.feature/AgentCheckpointData.plannerProperties|{}plannerProperties[0]
+        final fun <get-plannerProperties>(): ai.koog.agents.snapshot.feature/PlannerCheckpointProperties? // ai.koog.agents.snapshot.feature/AgentCheckpointData.plannerProperties.<get-plannerProperties>|<get-plannerProperties>(){}[0]
+    final val properties // ai.koog.agents.snapshot.feature/AgentCheckpointData.properties|{}properties[0]
+        final fun <get-properties>(): ai.koog.serialization/JSONObject? // ai.koog.agents.snapshot.feature/AgentCheckpointData.properties.<get-properties>|<get-properties>(){}[0]
+    final val storage // ai.koog.agents.snapshot.feature/AgentCheckpointData.storage|{}storage[0]
+        final fun <get-storage>(): ai.koog.serialization/JSONObject? // ai.koog.agents.snapshot.feature/AgentCheckpointData.storage.<get-storage>|<get-storage>(){}[0]
+    final val tools // ai.koog.agents.snapshot.feature/AgentCheckpointData.tools|{}tools[0]
+        final fun <get-tools>(): kotlin.collections/List<kotlin/String>? // ai.koog.agents.snapshot.feature/AgentCheckpointData.tools.<get-tools>|<get-tools>(){}[0]
+    final val version // ai.koog.agents.snapshot.feature/AgentCheckpointData.version|{}version[0]
+        final fun <get-version>(): kotlin/Long // ai.koog.agents.snapshot.feature/AgentCheckpointData.version.<get-version>|<get-version>(){}[0]
+
+    final fun component1(): kotlin/String // ai.koog.agents.snapshot.feature/AgentCheckpointData.component1|component1(){}[0]
+    final fun component10(): ai.koog.agents.snapshot.feature/GraphCheckpointProperties? // ai.koog.agents.snapshot.feature/AgentCheckpointData.component10|component10(){}[0]
+    final fun component11(): ai.koog.agents.snapshot.feature/PlannerCheckpointProperties? // ai.koog.agents.snapshot.feature/AgentCheckpointData.component11|component11(){}[0]
+    final fun component12(): ai.koog.serialization/JSONObject? // ai.koog.agents.snapshot.feature/AgentCheckpointData.component12|component12(){}[0]
+    final fun component2(): kotlin.time/Instant // ai.koog.agents.snapshot.feature/AgentCheckpointData.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.agents.snapshot.feature/AgentCheckpointData.component3|component3(){}[0]
+    final fun component4(): ai.koog.prompt.params/LLMParams? // ai.koog.agents.snapshot.feature/AgentCheckpointData.component4|component4(){}[0]
+    final fun component5(): ai.koog.prompt.llm/LLModel? // ai.koog.agents.snapshot.feature/AgentCheckpointData.component5|component5(){}[0]
+    final fun component6(): kotlin.collections/List<kotlin/String>? // ai.koog.agents.snapshot.feature/AgentCheckpointData.component6|component6(){}[0]
+    final fun component7(): ai.koog.serialization/JSONObject? // ai.koog.agents.snapshot.feature/AgentCheckpointData.component7|component7(){}[0]
+    final fun component8(): kotlin/Int // ai.koog.agents.snapshot.feature/AgentCheckpointData.component8|component8(){}[0]
+    final fun component9(): kotlin/Long // ai.koog.agents.snapshot.feature/AgentCheckpointData.component9|component9(){}[0]
+    final fun copy(kotlin/String = ..., kotlin.time/Instant = ..., kotlin.collections/List<ai.koog.prompt.message/Message> = ..., ai.koog.prompt.params/LLMParams? = ..., ai.koog.prompt.llm/LLModel? = ..., kotlin.collections/List<kotlin/String>? = ..., ai.koog.serialization/JSONObject? = ..., kotlin/Int = ..., kotlin/Long = ..., ai.koog.agents.snapshot.feature/GraphCheckpointProperties? = ..., ai.koog.agents.snapshot.feature/PlannerCheckpointProperties? = ..., ai.koog.serialization/JSONObject? = ...): ai.koog.agents.snapshot.feature/AgentCheckpointData // ai.koog.agents.snapshot.feature/AgentCheckpointData.copy|copy(kotlin.String;kotlin.time.Instant;kotlin.collections.List<ai.koog.prompt.message.Message>;ai.koog.prompt.params.LLMParams?;ai.koog.prompt.llm.LLModel?;kotlin.collections.List<kotlin.String>?;ai.koog.serialization.JSONObject?;kotlin.Int;kotlin.Long;ai.koog.agents.snapshot.feature.GraphCheckpointProperties?;ai.koog.agents.snapshot.feature.PlannerCheckpointProperties?;ai.koog.serialization.JSONObject?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.snapshot.feature/AgentCheckpointData.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.snapshot.feature/AgentCheckpointData.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.snapshot.feature/AgentCheckpointData.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.agents.snapshot.feature/AgentCheckpointData> { // ai.koog.agents.snapshot.feature/AgentCheckpointData.$serializer|null[0]
+        final val descriptor // ai.koog.agents.snapshot.feature/AgentCheckpointData.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.agents.snapshot.feature/AgentCheckpointData.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.agents.snapshot.feature/AgentCheckpointData.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.agents.snapshot.feature/AgentCheckpointData // ai.koog.agents.snapshot.feature/AgentCheckpointData.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.agents.snapshot.feature/AgentCheckpointData) // ai.koog.agents.snapshot.feature/AgentCheckpointData.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.agents.snapshot.feature.AgentCheckpointData){}[0]
+    }
+
+    final object Companion { // ai.koog.agents.snapshot.feature/AgentCheckpointData.Companion|null[0]
+        final val $childSerializers // ai.koog.agents.snapshot.feature/AgentCheckpointData.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.agents.snapshot.feature/AgentCheckpointData> // ai.koog.agents.snapshot.feature/AgentCheckpointData.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.agents.snapshot.feature/GraphCheckpointProperties { // ai.koog.agents.snapshot.feature/GraphCheckpointProperties|null[0]
+    constructor <init>(kotlin/String, ai.koog.serialization/JSONElement = ...) // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.<init>|<init>(kotlin.String;ai.koog.serialization.JSONElement){}[0]
+
+    final val lastOutput // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.lastOutput|{}lastOutput[0]
+        final fun <get-lastOutput>(): ai.koog.serialization/JSONElement // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.lastOutput.<get-lastOutput>|<get-lastOutput>(){}[0]
+    final val nodePath // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.nodePath|{}nodePath[0]
+        final fun <get-nodePath>(): kotlin/String // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.nodePath.<get-nodePath>|<get-nodePath>(){}[0]
+
+    final fun component1(): kotlin/String // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.component1|component1(){}[0]
+    final fun component2(): ai.koog.serialization/JSONElement // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., ai.koog.serialization/JSONElement = ...): ai.koog.agents.snapshot.feature/GraphCheckpointProperties // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.copy|copy(kotlin.String;ai.koog.serialization.JSONElement){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.agents.snapshot.feature/GraphCheckpointProperties> { // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.$serializer|null[0]
+        final val descriptor // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.agents.snapshot.feature/GraphCheckpointProperties // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.agents.snapshot.feature/GraphCheckpointProperties) // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.agents.snapshot.feature.GraphCheckpointProperties){}[0]
+    }
+
+    final object Companion { // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.agents.snapshot.feature/GraphCheckpointProperties> // ai.koog.agents.snapshot.feature/GraphCheckpointProperties.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.agents.snapshot.feature/Persistence { // ai.koog.agents.snapshot.feature/Persistence|null[0]
+    constructor <init>(ai.koog.agents.snapshot.providers/PersistenceStorageProvider<*>, ai.koog.serialization/JSONSerializer, ai.koog.utils.time/KoogClock = ...) // ai.koog.agents.snapshot.feature/Persistence.<init>|<init>(ai.koog.agents.snapshot.providers.PersistenceStorageProvider<*>;ai.koog.serialization.JSONSerializer;ai.koog.utils.time.KoogClock){}[0]
+
+    final var rollbackStrategy // ai.koog.agents.snapshot.feature/Persistence.rollbackStrategy|{}rollbackStrategy[0]
+        final fun <get-rollbackStrategy>(): ai.koog.agents.core.agent.context/RollbackStrategy // ai.koog.agents.snapshot.feature/Persistence.rollbackStrategy.<get-rollbackStrategy>|<get-rollbackStrategy>(){}[0]
+        final fun <set-rollbackStrategy>(ai.koog.agents.core.agent.context/RollbackStrategy) // ai.koog.agents.snapshot.feature/Persistence.rollbackStrategy.<set-rollbackStrategy>|<set-rollbackStrategy>(ai.koog.agents.core.agent.context.RollbackStrategy){}[0]
+    final var rollbackToolRegistry // ai.koog.agents.snapshot.feature/Persistence.rollbackToolRegistry|{}rollbackToolRegistry[0]
+        final fun <get-rollbackToolRegistry>(): ai.koog.agents.snapshot.feature/RollbackToolRegistry // ai.koog.agents.snapshot.feature/Persistence.rollbackToolRegistry.<get-rollbackToolRegistry>|<get-rollbackToolRegistry>(){}[0]
+        final fun <set-rollbackToolRegistry>(ai.koog.agents.snapshot.feature/RollbackToolRegistry) // ai.koog.agents.snapshot.feature/Persistence.rollbackToolRegistry.<set-rollbackToolRegistry>|<set-rollbackToolRegistry>(ai.koog.agents.snapshot.feature.RollbackToolRegistry){}[0]
+
+    final suspend fun createCheckpointAfterNode(ai.koog.agents.core.agent.context/AIAgentContext, kotlin/String, kotlin/Any?, ai.koog.serialization/TypeToken, kotlin/Long, kotlin/String? = ...): ai.koog.agents.snapshot.feature/AgentCheckpointData? // ai.koog.agents.snapshot.feature/Persistence.createCheckpointAfterNode|createCheckpointAfterNode(ai.koog.agents.core.agent.context.AIAgentContext;kotlin.String;kotlin.Any?;ai.koog.serialization.TypeToken;kotlin.Long;kotlin.String?){}[0]
+    final suspend fun createPlannerCheckpoint(ai.koog.agents.core.agent.context/AIAgentContext, kotlin/Any, ai.koog.serialization/TypeToken, kotlin/Any, ai.koog.serialization/TypeToken, ai.koog.agents.core.planner/PlannerAgentExecutionPoint, kotlin/Long, kotlin/String? = ...): ai.koog.agents.snapshot.feature/AgentCheckpointData? // ai.koog.agents.snapshot.feature/Persistence.createPlannerCheckpoint|createPlannerCheckpoint(ai.koog.agents.core.agent.context.AIAgentContext;kotlin.Any;ai.koog.serialization.TypeToken;kotlin.Any;ai.koog.serialization.TypeToken;ai.koog.agents.core.planner.PlannerAgentExecutionPoint;kotlin.Long;kotlin.String?){}[0]
+    final suspend fun getCheckpointById(kotlin/String, kotlin/String): ai.koog.agents.snapshot.feature/AgentCheckpointData? // ai.koog.agents.snapshot.feature/Persistence.getCheckpointById|getCheckpointById(kotlin.String;kotlin.String){}[0]
+    final suspend fun getLatestCheckpoint(kotlin/String): ai.koog.agents.snapshot.feature/AgentCheckpointData? // ai.koog.agents.snapshot.feature/Persistence.getLatestCheckpoint|getLatestCheckpoint(kotlin.String){}[0]
+    final suspend fun rollbackToCheckpoint(kotlin/String, ai.koog.agents.core.agent.context/AIAgentContext): ai.koog.agents.snapshot.feature/AgentCheckpointData? // ai.koog.agents.snapshot.feature/Persistence.rollbackToCheckpoint|rollbackToCheckpoint(kotlin.String;ai.koog.agents.core.agent.context.AIAgentContext){}[0]
+    final suspend fun rollbackToLatestCheckpoint(ai.koog.agents.core.agent.context/AIAgentContext): ai.koog.agents.snapshot.feature/AgentCheckpointData? // ai.koog.agents.snapshot.feature/Persistence.rollbackToLatestCheckpoint|rollbackToLatestCheckpoint(ai.koog.agents.core.agent.context.AIAgentContext){}[0]
+    final suspend fun saveCheckpoint(kotlin/String, ai.koog.agents.snapshot.feature/AgentCheckpointData) // ai.koog.agents.snapshot.feature/Persistence.saveCheckpoint|saveCheckpoint(kotlin.String;ai.koog.agents.snapshot.feature.AgentCheckpointData){}[0]
+    final suspend fun setExecutionPointAfterNode(ai.koog.agents.core.agent.context/AIAgentContext, kotlin/String, kotlin.collections/List<ai.koog.prompt.message/Message>, ai.koog.serialization/JSONElement) // ai.koog.agents.snapshot.feature/Persistence.setExecutionPointAfterNode|setExecutionPointAfterNode(ai.koog.agents.core.agent.context.AIAgentContext;kotlin.String;kotlin.collections.List<ai.koog.prompt.message.Message>;ai.koog.serialization.JSONElement){}[0]
+
+    final object Feature : ai.koog.agents.core.feature/AIAgentGraphFeature<ai.koog.agents.snapshot.feature/PersistenceFeatureConfig, ai.koog.agents.snapshot.feature/Persistence>, ai.koog.agents.core.feature/AIAgentPlannerFeature<ai.koog.agents.snapshot.feature/PersistenceFeatureConfig, ai.koog.agents.snapshot.feature/Persistence> { // ai.koog.agents.snapshot.feature/Persistence.Feature|null[0]
+        final val key // ai.koog.agents.snapshot.feature/Persistence.Feature.key|{}key[0]
+            final fun <get-key>(): ai.koog.agents.core.agent.entity/AIAgentStorageKey<ai.koog.agents.snapshot.feature/Persistence> // ai.koog.agents.snapshot.feature/Persistence.Feature.key.<get-key>|<get-key>(){}[0]
+
+        final fun <#A2: kotlin/Any?, #B2: kotlin/Any?> runFromCheckpointBlocking(ai.koog.agents.core.agent/AIAgent<#A2, #B2>, #A2, ai.koog.agents.snapshot.feature/AgentCheckpointData, ai.koog.agents.core.agent.context/RollbackStrategy = ..., kotlin/String? = ...): #B2 // ai.koog.agents.snapshot.feature/Persistence.Feature.runFromCheckpointBlocking|runFromCheckpointBlocking(ai.koog.agents.core.agent.AIAgent<0:0,0:1>;0:0;ai.koog.agents.snapshot.feature.AgentCheckpointData;ai.koog.agents.core.agent.context.RollbackStrategy;kotlin.String?){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+        final fun createInitialConfig(ai.koog.agents.core.agent.config/AIAgentConfig): ai.koog.agents.snapshot.feature/PersistenceFeatureConfig // ai.koog.agents.snapshot.feature/Persistence.Feature.createInitialConfig|createInitialConfig(ai.koog.agents.core.agent.config.AIAgentConfig){}[0]
+        final fun install(ai.koog.agents.snapshot.feature/PersistenceFeatureConfig, ai.koog.agents.core.feature.pipeline/AIAgentGraphPipeline): ai.koog.agents.snapshot.feature/Persistence // ai.koog.agents.snapshot.feature/Persistence.Feature.install|install(ai.koog.agents.snapshot.feature.PersistenceFeatureConfig;ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline){}[0]
+        final fun install(ai.koog.agents.snapshot.feature/PersistenceFeatureConfig, ai.koog.agents.core.feature.pipeline/AIAgentPlannerPipeline): ai.koog.agents.snapshot.feature/Persistence // ai.koog.agents.snapshot.feature/Persistence.Feature.install|install(ai.koog.agents.snapshot.feature.PersistenceFeatureConfig;ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline){}[0]
+        final suspend fun <#A2: kotlin/Any?, #B2: kotlin/Any?, #C2: ai.koog.agents.core.agent.context/AIAgentContext> runFromCheckpoint(ai.koog.agents.core.agent.session/AIAgentRunSession<#A2, #B2, #C2>, #A2, ai.koog.agents.snapshot.feature/AgentCheckpointData, ai.koog.agents.core.agent.context/RollbackStrategy = ...): #B2 // ai.koog.agents.snapshot.feature/Persistence.Feature.runFromCheckpoint|runFromCheckpoint(ai.koog.agents.core.agent.session.AIAgentRunSession<0:0,0:1,0:2>;0:0;ai.koog.agents.snapshot.feature.AgentCheckpointData;ai.koog.agents.core.agent.context.RollbackStrategy){0§<kotlin.Any?>;1§<kotlin.Any?>;2§<ai.koog.agents.core.agent.context.AIAgentContext>}[0]
+        final suspend fun <#A2: kotlin/Any?, #B2: kotlin/Any?> runFromCheckpoint(ai.koog.agents.core.agent/AIAgent<#A2, #B2>, #A2, ai.koog.agents.snapshot.feature/AgentCheckpointData, ai.koog.agents.core.agent.context/RollbackStrategy = ..., kotlin/String? = ...): #B2 // ai.koog.agents.snapshot.feature/Persistence.Feature.runFromCheckpoint|runFromCheckpoint(ai.koog.agents.core.agent.AIAgent<0:0,0:1>;0:0;ai.koog.agents.snapshot.feature.AgentCheckpointData;ai.koog.agents.core.agent.context.RollbackStrategy;kotlin.String?){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+    }
+}
+
+final class ai.koog.agents.snapshot.feature/PersistenceFeatureConfig : ai.koog.agents.core.feature.config/FeatureConfig { // ai.koog.agents.snapshot.feature/PersistenceFeatureConfig|null[0]
+    constructor <init>() // ai.koog.agents.snapshot.feature/PersistenceFeatureConfig.<init>|<init>(){}[0]
+
+    final var enableAutomaticPersistence // ai.koog.agents.snapshot.feature/PersistenceFeatureConfig.enableAutomaticPersistence|{}enableAutomaticPersistence[0]
+        final fun <get-enableAutomaticPersistence>(): kotlin/Boolean // ai.koog.agents.snapshot.feature/PersistenceFeatureConfig.enableAutomaticPersistence.<get-enableAutomaticPersistence>|<get-enableAutomaticPersistence>(){}[0]
+        final fun <set-enableAutomaticPersistence>(kotlin/Boolean) // ai.koog.agents.snapshot.feature/PersistenceFeatureConfig.enableAutomaticPersistence.<set-enableAutomaticPersistence>|<set-enableAutomaticPersistence>(kotlin.Boolean){}[0]
+    final var rollbackToolRegistry // ai.koog.agents.snapshot.feature/PersistenceFeatureConfig.rollbackToolRegistry|{}rollbackToolRegistry[0]
+        final fun <get-rollbackToolRegistry>(): ai.koog.agents.snapshot.feature/RollbackToolRegistry // ai.koog.agents.snapshot.feature/PersistenceFeatureConfig.rollbackToolRegistry.<get-rollbackToolRegistry>|<get-rollbackToolRegistry>(){}[0]
+        final fun <set-rollbackToolRegistry>(ai.koog.agents.snapshot.feature/RollbackToolRegistry) // ai.koog.agents.snapshot.feature/PersistenceFeatureConfig.rollbackToolRegistry.<set-rollbackToolRegistry>|<set-rollbackToolRegistry>(ai.koog.agents.snapshot.feature.RollbackToolRegistry){}[0]
+    final var storage // ai.koog.agents.snapshot.feature/PersistenceFeatureConfig.storage|{}storage[0]
+        final fun <get-storage>(): ai.koog.agents.snapshot.providers/PersistenceStorageProvider<*> // ai.koog.agents.snapshot.feature/PersistenceFeatureConfig.storage.<get-storage>|<get-storage>(){}[0]
+        final fun <set-storage>(ai.koog.agents.snapshot.providers/PersistenceStorageProvider<*>) // ai.koog.agents.snapshot.feature/PersistenceFeatureConfig.storage.<set-storage>|<set-storage>(ai.koog.agents.snapshot.providers.PersistenceStorageProvider<*>){}[0]
+}
+
+final class ai.koog.agents.snapshot.feature/PlannerCheckpointProperties { // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties|null[0]
+    constructor <init>(ai.koog.agents.core.planner/PlannerAgentExecutionPoint, ai.koog.serialization/JSONElement, ai.koog.serialization/JSONElement) // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.<init>|<init>(ai.koog.agents.core.planner.PlannerAgentExecutionPoint;ai.koog.serialization.JSONElement;ai.koog.serialization.JSONElement){}[0]
+
+    final val executionPoint // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.executionPoint|{}executionPoint[0]
+        final fun <get-executionPoint>(): ai.koog.agents.core.planner/PlannerAgentExecutionPoint // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.executionPoint.<get-executionPoint>|<get-executionPoint>(){}[0]
+    final val plan // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.plan|{}plan[0]
+        final fun <get-plan>(): ai.koog.serialization/JSONElement // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.plan.<get-plan>|<get-plan>(){}[0]
+    final val state // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.state|{}state[0]
+        final fun <get-state>(): ai.koog.serialization/JSONElement // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.state.<get-state>|<get-state>(){}[0]
+
+    final fun component1(): ai.koog.agents.core.planner/PlannerAgentExecutionPoint // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.component1|component1(){}[0]
+    final fun component2(): ai.koog.serialization/JSONElement // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.component2|component2(){}[0]
+    final fun component3(): ai.koog.serialization/JSONElement // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.component3|component3(){}[0]
+    final fun copy(ai.koog.agents.core.planner/PlannerAgentExecutionPoint = ..., ai.koog.serialization/JSONElement = ..., ai.koog.serialization/JSONElement = ...): ai.koog.agents.snapshot.feature/PlannerCheckpointProperties // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.copy|copy(ai.koog.agents.core.planner.PlannerAgentExecutionPoint;ai.koog.serialization.JSONElement;ai.koog.serialization.JSONElement){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.agents.snapshot.feature/PlannerCheckpointProperties> { // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.$serializer|null[0]
+        final val descriptor // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.agents.snapshot.feature/PlannerCheckpointProperties // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.agents.snapshot.feature/PlannerCheckpointProperties) // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.agents.snapshot.feature.PlannerCheckpointProperties){}[0]
+    }
+
+    final object Companion { // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.Companion|null[0]
+        final val $childSerializers // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.agents.snapshot.feature/PlannerCheckpointProperties> // ai.koog.agents.snapshot.feature/PlannerCheckpointProperties.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.agents.snapshot.feature/RollbackToolRegistry { // ai.koog.agents.snapshot.feature/RollbackToolRegistry|null[0]
+    constructor <init>(kotlin/Function1<ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilder, kotlin/Unit>) // ai.koog.agents.snapshot.feature/RollbackToolRegistry.<init>|<init>(kotlin.Function1<ai.koog.agents.snapshot.feature.RollbackToolRegistryBuilder,kotlin.Unit>){}[0]
+
+    final val rollbackToolsMap // ai.koog.agents.snapshot.feature/RollbackToolRegistry.rollbackToolsMap|{}rollbackToolsMap[0]
+        final fun <get-rollbackToolsMap>(): kotlin.collections/Map<ai.koog.agents.core.tools/Tool<*, *>, ai.koog.agents.core.tools/Tool<*, *>> // ai.koog.agents.snapshot.feature/RollbackToolRegistry.rollbackToolsMap.<get-rollbackToolsMap>|<get-rollbackToolsMap>(){}[0]
+
+    final fun <#A1: kotlin/Any?> add(ai.koog.agents.core.tools/Tool<#A1, *>, ai.koog.agents.core.tools/Tool<#A1, *>) // ai.koog.agents.snapshot.feature/RollbackToolRegistry.add|add(ai.koog.agents.core.tools.Tool<0:0,*>;ai.koog.agents.core.tools.Tool<0:0,*>){0§<kotlin.Any?>}[0]
+    final fun getRollbackTool(kotlin/String): ai.koog.agents.core.tools/Tool<*, *>? // ai.koog.agents.snapshot.feature/RollbackToolRegistry.getRollbackTool|getRollbackTool(kotlin.String){}[0]
+    final fun plus(ai.koog.agents.snapshot.feature/RollbackToolRegistry): ai.koog.agents.snapshot.feature/RollbackToolRegistry // ai.koog.agents.snapshot.feature/RollbackToolRegistry.plus|plus(ai.koog.agents.snapshot.feature.RollbackToolRegistry){}[0]
+
+    final object Companion { // ai.koog.agents.snapshot.feature/RollbackToolRegistry.Companion|null[0]
+        final val EMPTY // ai.koog.agents.snapshot.feature/RollbackToolRegistry.Companion.EMPTY|{}EMPTY[0]
+            final fun <get-EMPTY>(): ai.koog.agents.snapshot.feature/RollbackToolRegistry // ai.koog.agents.snapshot.feature/RollbackToolRegistry.Companion.EMPTY.<get-EMPTY>|<get-EMPTY>(){}[0]
+
+        final fun builder(): ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilder // ai.koog.agents.snapshot.feature/RollbackToolRegistry.Companion.builder|builder(){}[0]
+    }
+}
+
+final class ai.koog.agents.snapshot.providers/InMemoryPersistenceStorageProvider : ai.koog.agents.snapshot.providers/PersistenceStorageProvider<ai.koog.agents.snapshot.providers.filters/AgentCheckpointPredicateFilter> { // ai.koog.agents.snapshot.providers/InMemoryPersistenceStorageProvider|null[0]
+    constructor <init>() // ai.koog.agents.snapshot.providers/InMemoryPersistenceStorageProvider.<init>|<init>(){}[0]
+
+    final suspend fun getCheckpoints(kotlin/String, ai.koog.agents.snapshot.providers.filters/AgentCheckpointPredicateFilter?): kotlin.collections/List<ai.koog.agents.snapshot.feature/AgentCheckpointData> // ai.koog.agents.snapshot.providers/InMemoryPersistenceStorageProvider.getCheckpoints|getCheckpoints(kotlin.String;ai.koog.agents.snapshot.providers.filters.AgentCheckpointPredicateFilter?){}[0]
+    final suspend fun getLatestCheckpoint(kotlin/String, ai.koog.agents.snapshot.providers.filters/AgentCheckpointPredicateFilter?): ai.koog.agents.snapshot.feature/AgentCheckpointData? // ai.koog.agents.snapshot.providers/InMemoryPersistenceStorageProvider.getLatestCheckpoint|getLatestCheckpoint(kotlin.String;ai.koog.agents.snapshot.providers.filters.AgentCheckpointPredicateFilter?){}[0]
+    final suspend fun removeCheckpoints(ai.koog.agents.snapshot.providers.filters/AgentCheckpointPredicateFilter? = ...) // ai.koog.agents.snapshot.providers/InMemoryPersistenceStorageProvider.removeCheckpoints|removeCheckpoints(ai.koog.agents.snapshot.providers.filters.AgentCheckpointPredicateFilter?){}[0]
+    final suspend fun saveCheckpoint(kotlin/String, ai.koog.agents.snapshot.feature/AgentCheckpointData) // ai.koog.agents.snapshot.providers/InMemoryPersistenceStorageProvider.saveCheckpoint|saveCheckpoint(kotlin.String;ai.koog.agents.snapshot.feature.AgentCheckpointData){}[0]
+}
+
+final class ai.koog.agents.snapshot.providers/NoPersistencyStorageProvider : ai.koog.agents.snapshot.providers/PersistenceStorageProvider<kotlin/Unit> { // ai.koog.agents.snapshot.providers/NoPersistencyStorageProvider|null[0]
+    constructor <init>() // ai.koog.agents.snapshot.providers/NoPersistencyStorageProvider.<init>|<init>(){}[0]
+
+    final suspend fun getCheckpoints(kotlin/String, kotlin/Unit?): kotlin.collections/List<ai.koog.agents.snapshot.feature/AgentCheckpointData> // ai.koog.agents.snapshot.providers/NoPersistencyStorageProvider.getCheckpoints|getCheckpoints(kotlin.String;kotlin.Unit?){}[0]
+    final suspend fun getLatestCheckpoint(kotlin/String, kotlin/Unit?): ai.koog.agents.snapshot.feature/AgentCheckpointData? // ai.koog.agents.snapshot.providers/NoPersistencyStorageProvider.getLatestCheckpoint|getLatestCheckpoint(kotlin.String;kotlin.Unit?){}[0]
+    final suspend fun saveCheckpoint(kotlin/String, ai.koog.agents.snapshot.feature/AgentCheckpointData) // ai.koog.agents.snapshot.providers/NoPersistencyStorageProvider.saveCheckpoint|saveCheckpoint(kotlin.String;ai.koog.agents.snapshot.feature.AgentCheckpointData){}[0]
+}
+
+open class <#A: kotlin/Any?> ai.koog.agents.snapshot.providers.file/FilePersistenceStorageProvider : ai.koog.agents.snapshot.providers/PersistenceStorageProvider<ai.koog.agents.snapshot.providers.filters/AgentCheckpointPredicateFilter> { // ai.koog.agents.snapshot.providers.file/FilePersistenceStorageProvider|null[0]
+    constructor <init>(ai.koog.rag.base.files/FileSystemProvider.ReadWrite<#A>, #A, kotlinx.serialization.json/Json = ...) // ai.koog.agents.snapshot.providers.file/FilePersistenceStorageProvider.<init>|<init>(ai.koog.rag.base.files.FileSystemProvider.ReadWrite<1:0>;1:0;kotlinx.serialization.json.Json){}[0]
+
+    open suspend fun getCheckpoints(kotlin/String, ai.koog.agents.snapshot.providers.filters/AgentCheckpointPredicateFilter?): kotlin.collections/List<ai.koog.agents.snapshot.feature/AgentCheckpointData> // ai.koog.agents.snapshot.providers.file/FilePersistenceStorageProvider.getCheckpoints|getCheckpoints(kotlin.String;ai.koog.agents.snapshot.providers.filters.AgentCheckpointPredicateFilter?){}[0]
+    open suspend fun getLatestCheckpoint(kotlin/String, ai.koog.agents.snapshot.providers.filters/AgentCheckpointPredicateFilter?): ai.koog.agents.snapshot.feature/AgentCheckpointData? // ai.koog.agents.snapshot.providers.file/FilePersistenceStorageProvider.getLatestCheckpoint|getLatestCheckpoint(kotlin.String;ai.koog.agents.snapshot.providers.filters.AgentCheckpointPredicateFilter?){}[0]
+    open suspend fun saveCheckpoint(kotlin/String, ai.koog.agents.snapshot.feature/AgentCheckpointData) // ai.koog.agents.snapshot.providers.file/FilePersistenceStorageProvider.saveCheckpoint|saveCheckpoint(kotlin.String;ai.koog.agents.snapshot.feature.AgentCheckpointData){}[0]
+}
+
+open class ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilder : ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilderCommon<ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilder> { // ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilder|null[0]
+    constructor <init>() // ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilder.<init>|<init>(){}[0]
+
+    open fun self(): ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilder // ai.koog.agents.snapshot.feature/RollbackToolRegistryBuilder.self|self(){}[0]
+}
+
+final object ai.koog.agents.snapshot.feature/AgentCheckpointDataSerializer : kotlinx.serialization.json/JsonTransformingSerializer<ai.koog.agents.snapshot.feature/AgentCheckpointData> { // ai.koog.agents.snapshot.feature/AgentCheckpointDataSerializer|null[0]
+    final fun isOldFormat(kotlin/String): kotlin/Boolean // ai.koog.agents.snapshot.feature/AgentCheckpointDataSerializer.isOldFormat|isOldFormat(kotlin.String){}[0]
+}
+
+final object ai.koog.agents.snapshot.providers/PersistenceUtils { // ai.koog.agents.snapshot.providers/PersistenceUtils|null[0]
+    final const val TOMBSTONE_CHECKPOINT_NAME // ai.koog.agents.snapshot.providers/PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME|{}TOMBSTONE_CHECKPOINT_NAME[0]
+        final fun <get-TOMBSTONE_CHECKPOINT_NAME>(): kotlin/String // ai.koog.agents.snapshot.providers/PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME.<get-TOMBSTONE_CHECKPOINT_NAME>|<get-TOMBSTONE_CHECKPOINT_NAME>(){}[0]
+
+    final val defaultCheckpointJson // ai.koog.agents.snapshot.providers/PersistenceUtils.defaultCheckpointJson|{}defaultCheckpointJson[0]
+        final fun <get-defaultCheckpointJson>(): kotlinx.serialization.json/Json // ai.koog.agents.snapshot.providers/PersistenceUtils.defaultCheckpointJson.<get-defaultCheckpointJson>|<get-defaultCheckpointJson>(){}[0]
+}
+
+final fun (ai.koog.agents.core.agent.context/AIAgentContext).ai.koog.agents.snapshot.feature/persistence(): ai.koog.agents.snapshot.feature/Persistence // ai.koog.agents.snapshot.feature/persistence|persistence@ai.koog.agents.core.agent.context.AIAgentContext(){}[0]
+final fun (ai.koog.agents.snapshot.feature/AgentCheckpointData).ai.koog.agents.snapshot.feature/isTombstone(): kotlin/Boolean // ai.koog.agents.snapshot.feature/isTombstone|isTombstone@ai.koog.agents.snapshot.feature.AgentCheckpointData(){}[0]
+final fun <#A: kotlin/Any?, #B: kotlin/Any?, #C: ai.koog.agents.core.agent.context/AIAgentContext> (ai.koog.agents.core.agent.session/AIAgentRunSession<#A, #B, #C>).ai.koog.agents.snapshot.feature/persistence(): ai.koog.agents.snapshot.feature/Persistence // ai.koog.agents.snapshot.feature/persistence|persistence@ai.koog.agents.core.agent.session.AIAgentRunSession<0:0,0:1,0:2>(){0§<kotlin.Any?>;1§<kotlin.Any?>;2§<ai.koog.agents.core.agent.context.AIAgentContext>}[0]
+final fun ai.koog.agents.snapshot.feature/tombstoneCheckpoint(kotlin.time/Instant, kotlin/Long): ai.koog.agents.snapshot.feature/AgentCheckpointData // ai.koog.agents.snapshot.feature/tombstoneCheckpoint|tombstoneCheckpoint(kotlin.time.Instant;kotlin.Long){}[0]
+final inline fun <#A: reified kotlin/Any?> ai.koog.agents.snapshot.feature/serializeInput(#A?): kotlin/String? // ai.koog.agents.snapshot.feature/serializeInput|serializeInput(0:0?){0§<kotlin.Any?>}[0]
+final suspend fun <#A: kotlin/Any?, #B: kotlin/Any?, #C: ai.koog.agents.core.agent.context/AIAgentContext, #D: kotlin/Any?> (ai.koog.agents.core.agent.session/AIAgentRunSession<#A, #B, #C>).ai.koog.agents.snapshot.feature/withPersistence(kotlin.coroutines/SuspendFunction2<ai.koog.agents.snapshot.feature/Persistence, ai.koog.agents.core.agent.context/AIAgentContext, #D>): #D // ai.koog.agents.snapshot.feature/withPersistence|withPersistence@ai.koog.agents.core.agent.session.AIAgentRunSession<0:0,0:1,0:2>(kotlin.coroutines.SuspendFunction2<ai.koog.agents.snapshot.feature.Persistence,ai.koog.agents.core.agent.context.AIAgentContext,0:3>){0§<kotlin.Any?>;1§<kotlin.Any?>;2§<ai.koog.agents.core.agent.context.AIAgentContext>;3§<kotlin.Any?>}[0]
+final suspend fun <#A: kotlin/Any?> (ai.koog.agents.core.agent.context/AIAgentContext).ai.koog.agents.snapshot.feature/withPersistence(kotlin.coroutines/SuspendFunction2<ai.koog.agents.snapshot.feature/Persistence, ai.koog.agents.core.agent.context/AIAgentContext, #A>): #A // ai.koog.agents.snapshot.feature/withPersistence|withPersistence@ai.koog.agents.core.agent.context.AIAgentContext(kotlin.coroutines.SuspendFunction2<ai.koog.agents.snapshot.feature.Persistence,ai.koog.agents.core.agent.context.AIAgentContext,0:0>){0§<kotlin.Any?>}[0]
