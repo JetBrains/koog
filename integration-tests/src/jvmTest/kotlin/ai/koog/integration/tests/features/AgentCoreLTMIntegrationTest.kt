@@ -9,6 +9,7 @@ import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceResolver
 import ai.koog.agents.features.longtermmemory.aws.discovery.AgentcoreDiscoveredStrategyType
 import ai.koog.agents.features.longtermmemory.aws.discovery.AgentcoreStrategyDiscovery
 import ai.koog.agents.features.longtermmemory.aws.dsl.agentcore
+import ai.koog.agents.features.longtermmemory.aws.dsl.agentcoreDiscovered
 import ai.koog.agents.longtermmemory.feature.LongTermMemory
 import ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter
 import ai.koog.integration.tests.utils.TestCredentials.readAwsAccessKeyIdFromEnv
@@ -279,33 +280,29 @@ class AgentCoreLTMIntegrationTest {
     }
 
     /**
-     * Structural test for [AgentcoreStrategyDiscovery]: verifies that `discover(memoryId)`
-     * faithfully maps the AgentCore memory descriptor to [AgentcoreDiscoveredStrategy]
-     * instances. End-to-end retrieval through the discovered DSL is not exercised here
-     * because per-strategy retrieval is already covered by `agent answers from LTM after
-     * async extraction` and the discovered DSL is pure dispatch over the discovery
-     * output — if discovery returns the right model and the manual DSL functions retrieve
-     * correctly, the discovered DSL works by composition.
+     * End-to-end test for the auto-discovery feature.
      *
-     * Asserts:
-     *  - All four supported strategy types are present (SEMANTIC, USER_PREFERENCE,
-     *    SUMMARY, EPISODIC); the configured test memory must have all four.
-     *  - Each entry has a non-blank `strategyId` and at least one namespace template.
-     *  - Namespace templates carry the `{memoryStrategyId}` and `{actorId}` placeholders
-     *    so the resolver has the substitutions the DSL needs at runtime. Session-scoped
-     *    strategies (EPISODIC, SUMMARY here) additionally carry `{sessionId}`.
-     *  - The EPISODIC entry carries reflection namespace templates extracted from
-     *    `EpisodicReflectionConfiguration`. AWS allows reflection templates to be 'less
-     *    nested' than the episode template (e.g. strategy-wide instead of actor-scoped),
-     *    so the test only requires `{memoryStrategyId}` on reflections and that each
-     *    reflection template be a segment-prefix of at least one episode template.
+     * Verifies in two phases:
      *
-     * Placeholder presence is asserted instead of literal templates so the test is
-     * robust to AgentCore template renames; literal-template tests would lock in an
-     * implementation detail of AWS.
+     *  1. **Discovery** — [AgentcoreStrategyDiscovery] returns the configured strategies of the
+     *     memory with namespace templates and reflection-episode hierarchy intact. Asserts that
+     *     all four supported strategy types (SEMANTIC, USER_PREFERENCE, SUMMARY, EPISODIC) are
+     *     present, that namespace templates carry the expected placeholders, and that EPISODIC
+     *     reflection namespaces are segment-prefixes of episode namespaces.
+     *
+     *  2. **DSL wiring** — the [LongTermMemory.RetrievalSettingsBuilder.agentcoreDiscovered] DSL
+     *     accepts the discovered list and produces a working `LongTermMemory` retrieval. A single
+     *     `agent.run(...)` exercises the retriever for every discovered strategy with an unseeded
+     *     actor; assertions are intentionally about *not throwing*. Per-strategy retrieval
+     *     correctness is owned by `agent answers from LTM after async extraction`.
+     *
+     * Placeholder presence is asserted instead of literal templates so the test is robust to
+     * AgentCore template renames; literal-template tests would lock in an implementation detail
+     * of AWS.
      */
     @Test
-    fun `discovers all configured strategies with namespace templates`() = runBlocking {
+    fun `agentcoreDiscovered DSL discovers strategies and wires LongTermMemory retrieval`(): Unit = runBlocking {
+        // ── 1. Discovery ──────────────────────────────────────────────────────────
         val discovered = AgentcoreStrategyDiscovery(controlClient).discover(memoryId)
 
         val byType = discovered.associateBy { it.type }
@@ -340,12 +337,7 @@ class AgentCoreLTMIntegrationTest {
         // EPISODIC reflection namespaces — the only non-trivial mapping in the discovery
         // logic — must be populated. AWS rule: a reflection namespace must be 'less
         // nested' than at least one episode namespace, i.e. a segment-aligned prefix of
-        // it (equality allowed). This permits both the actor-wide form
-        // /strategy/{memoryStrategyId}/actor/{actorId}/ and the strategy-wide form
-        // /strategy/{memoryStrategyId}/ when episodes are
-        // /strategy/{memoryStrategyId}/actor/{actorId}/. Reflections legitimately may
-        // omit {actorId}, so we don't require it; we require {memoryStrategyId} since
-        // reflections are scoped to the strategy by definition.
+        // it (equality allowed).
         val episodic = byType.getValue(AgentcoreDiscoveredStrategyType.EPISODIC)
         assert(episodic.reflectionsNamespaces.isNotEmpty()) {
             "EPISODIC strategy '${episodic.strategyId}' has no reflection namespaces; " +
@@ -365,12 +357,39 @@ class AgentCoreLTMIntegrationTest {
         for (type in listOf(
             AgentcoreDiscoveredStrategyType.SEMANTIC,
             AgentcoreDiscoveredStrategyType.USER_PREFERENCE,
-            AgentcoreDiscoveredStrategyType.SUMMARY
+            AgentcoreDiscoveredStrategyType.SUMMARY,
         )) {
             assert(byType.getValue(type).reflectionsNamespaces.isEmpty()) {
                 "$type unexpectedly carries reflection namespaces: ${byType.getValue(type).reflectionsNamespaces}"
             }
         }
+
+        // ── 2. DSL wiring ─────────────────────────────────────────────────────────
+        val actorId = "ltm-actor-discovered-${UUID.randomUUID()}"
+        val sessionId = "ltm-session-discovered-${UUID.randomUUID()}"
+        val conversationId = "$actorId:$sessionId"
+
+        val agent = AIAgent(
+            promptExecutor = llmExecutor,
+            llmModel = BedrockModels.AmazonNovaMicro,
+            toolRegistry = ToolRegistry.EMPTY,
+            systemPrompt = "You are a helpful assistant.",
+        ) {
+            install(LongTermMemory) {
+                retrieval {
+                    agentcoreDiscovered(
+                        client = agentCoreClient,
+                        memoryId = memoryId,
+                        discoveredStrategies = discovered,
+                        actorId = actorId,
+                        sessionId = sessionId,
+                    )
+                }
+            }
+        }
+
+        val response = agent.run("hello", conversationId)
+        assert(response.isNotBlank()) { "agent.run produced an empty response: '$response'" }
     }
 
     private companion object {
