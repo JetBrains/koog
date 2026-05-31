@@ -1,0 +1,3 @@
+package = foundationModels
+language = Objective-C
+headers = KoogFMBridge.h
