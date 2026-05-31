@@ -466,8 +466,8 @@ public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/Bedrock
 
 public final class ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolResult : ai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent {
 	public static final field Companion Lai/koog/prompt/executor/clients/bedrock/modelfamilies/BedrockAnthropicInvokeModelContent$ToolResult$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Z)V
-	public final fun getContent ()Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Z)V
+	public final fun getContent ()Ljava/util/List;
 	public final fun getToolUseId ()Ljava/lang/String;
 	public final fun isError ()Z
 }

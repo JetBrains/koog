@@ -2080,12 +2080,14 @@ final class ai.koog.agents.core.environment/GenericAgentEnvironment : ai.koog.ag
 }
 
 final class ai.koog.agents.core.environment/ReceivedToolResult { // ai.koog.agents.core.environment/ReceivedToolResult|null[0]
-    constructor <init>(kotlin/String?, kotlin/String, ai.koog.serialization/JSONObject, kotlin/String?, kotlin/String, ai.koog.agents.core.environment/ToolResultKind, ai.koog.serialization/JSONElement?, kotlin/Any? = ...) // ai.koog.agents.core.environment/ReceivedToolResult.<init>|<init>(kotlin.String?;kotlin.String;ai.koog.serialization.JSONObject;kotlin.String?;kotlin.String;ai.koog.agents.core.environment.ToolResultKind;ai.koog.serialization.JSONElement?;kotlin.Any?){}[0]
+    constructor <init>(kotlin/String?, kotlin/String, ai.koog.serialization/JSONObject, kotlin/String?, kotlin/String, ai.koog.agents.core.environment/ToolResultKind, ai.koog.serialization/JSONElement?, kotlin/Any? = ..., kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart>? = ...) // ai.koog.agents.core.environment/ReceivedToolResult.<init>|<init>(kotlin.String?;kotlin.String;ai.koog.serialization.JSONObject;kotlin.String?;kotlin.String;ai.koog.agents.core.environment.ToolResultKind;ai.koog.serialization.JSONElement?;kotlin.Any?;kotlin.collections.List<ai.koog.prompt.message.MessagePart.ContentPart>?){}[0]
 
     final val id // ai.koog.agents.core.environment/ReceivedToolResult.id|{}id[0]
         final fun <get-id>(): kotlin/String? // ai.koog.agents.core.environment/ReceivedToolResult.id.<get-id>|<get-id>(){}[0]
     final val output // ai.koog.agents.core.environment/ReceivedToolResult.output|{}output[0]
         final fun <get-output>(): kotlin/String // ai.koog.agents.core.environment/ReceivedToolResult.output.<get-output>|<get-output>(){}[0]
+    final val parts // ai.koog.agents.core.environment/ReceivedToolResult.parts|{}parts[0]
+        final fun <get-parts>(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart>? // ai.koog.agents.core.environment/ReceivedToolResult.parts.<get-parts>|<get-parts>(){}[0]
     final val result // ai.koog.agents.core.environment/ReceivedToolResult.result|{}result[0]
         final fun <get-result>(): ai.koog.serialization/JSONElement? // ai.koog.agents.core.environment/ReceivedToolResult.result.<get-result>|<get-result>(){}[0]
     final val resultKind // ai.koog.agents.core.environment/ReceivedToolResult.resultKind|{}resultKind[0]
@@ -2105,7 +2107,8 @@ final class ai.koog.agents.core.environment/ReceivedToolResult { // ai.koog.agen
     final fun component6(): ai.koog.agents.core.environment/ToolResultKind // ai.koog.agents.core.environment/ReceivedToolResult.component6|component6(){}[0]
     final fun component7(): ai.koog.serialization/JSONElement? // ai.koog.agents.core.environment/ReceivedToolResult.component7|component7(){}[0]
     final fun component8(): kotlin/Any? // ai.koog.agents.core.environment/ReceivedToolResult.component8|component8(){}[0]
-    final fun copy(kotlin/String? = ..., kotlin/String = ..., ai.koog.serialization/JSONObject = ..., kotlin/String? = ..., kotlin/String = ..., ai.koog.agents.core.environment/ToolResultKind = ..., ai.koog.serialization/JSONElement? = ..., kotlin/Any? = ...): ai.koog.agents.core.environment/ReceivedToolResult // ai.koog.agents.core.environment/ReceivedToolResult.copy|copy(kotlin.String?;kotlin.String;ai.koog.serialization.JSONObject;kotlin.String?;kotlin.String;ai.koog.agents.core.environment.ToolResultKind;ai.koog.serialization.JSONElement?;kotlin.Any?){}[0]
+    final fun component9(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart>? // ai.koog.agents.core.environment/ReceivedToolResult.component9|component9(){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/String = ..., ai.koog.serialization/JSONObject = ..., kotlin/String? = ..., kotlin/String = ..., ai.koog.agents.core.environment/ToolResultKind = ..., ai.koog.serialization/JSONElement? = ..., kotlin/Any? = ..., kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart>? = ...): ai.koog.agents.core.environment/ReceivedToolResult // ai.koog.agents.core.environment/ReceivedToolResult.copy|copy(kotlin.String?;kotlin.String;ai.koog.serialization.JSONObject;kotlin.String?;kotlin.String;ai.koog.agents.core.environment.ToolResultKind;ai.koog.serialization.JSONElement?;kotlin.Any?;kotlin.collections.List<ai.koog.prompt.message.MessagePart.ContentPart>?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.environment/ReceivedToolResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // ai.koog.agents.core.environment/ReceivedToolResult.hashCode|hashCode(){}[0]
     final fun toMessagePart(): ai.koog.prompt.message/MessagePart.Tool.Result // ai.koog.agents.core.environment/ReceivedToolResult.toMessagePart|toMessagePart(){}[0]

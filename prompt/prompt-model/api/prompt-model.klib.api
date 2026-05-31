@@ -540,6 +540,7 @@ sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/
         }
 
         final class Result : ai.koog.prompt.message/MessagePart.RequestPart, ai.koog.prompt.message/MessagePart.Tool { // ai.koog.prompt.message/MessagePart.Tool.Result|null[0]
+            constructor <init>(kotlin/String? = ..., kotlin/String, kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart>, kotlin/Boolean = ...) // ai.koog.prompt.message/MessagePart.Tool.Result.<init>|<init>(kotlin.String?;kotlin.String;kotlin.collections.List<ai.koog.prompt.message.MessagePart.ContentPart>;kotlin.Boolean){}[0]
             constructor <init>(kotlin/String? = ..., kotlin/String, kotlin/String, kotlin/Boolean = ...) // ai.koog.prompt.message/MessagePart.Tool.Result.<init>|<init>(kotlin.String?;kotlin.String;kotlin.String;kotlin.Boolean){}[0]
 
             final val cacheControl // ai.koog.prompt.message/MessagePart.Tool.Result.cacheControl|{}cacheControl[0]
@@ -550,14 +551,16 @@ sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/
                 final fun <get-isError>(): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Tool.Result.isError.<get-isError>|<get-isError>(){}[0]
             final val output // ai.koog.prompt.message/MessagePart.Tool.Result.output|{}output[0]
                 final fun <get-output>(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Result.output.<get-output>|<get-output>(){}[0]
+            final val parts // ai.koog.prompt.message/MessagePart.Tool.Result.parts|{}parts[0]
+                final fun <get-parts>(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart> // ai.koog.prompt.message/MessagePart.Tool.Result.parts.<get-parts>|<get-parts>(){}[0]
             final val tool // ai.koog.prompt.message/MessagePart.Tool.Result.tool|{}tool[0]
                 final fun <get-tool>(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Result.tool.<get-tool>|<get-tool>(){}[0]
 
             final fun component1(): kotlin/String? // ai.koog.prompt.message/MessagePart.Tool.Result.component1|component1(){}[0]
             final fun component2(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Result.component2|component2(){}[0]
-            final fun component3(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Result.component3|component3(){}[0]
+            final fun component3(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart> // ai.koog.prompt.message/MessagePart.Tool.Result.component3|component3(){}[0]
             final fun component4(): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Tool.Result.component4|component4(){}[0]
-            final fun copy(kotlin/String? = ..., kotlin/String = ..., kotlin/String = ..., kotlin/Boolean = ...): ai.koog.prompt.message/MessagePart.Tool.Result // ai.koog.prompt.message/MessagePart.Tool.Result.copy|copy(kotlin.String?;kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+            final fun copy(kotlin/String? = ..., kotlin/String = ..., kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart> = ..., kotlin/Boolean = ...): ai.koog.prompt.message/MessagePart.Tool.Result // ai.koog.prompt.message/MessagePart.Tool.Result.copy|copy(kotlin.String?;kotlin.String;kotlin.collections.List<ai.koog.prompt.message.MessagePart.ContentPart>;kotlin.Boolean){}[0]
             final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Tool.Result.equals|equals(kotlin.Any?){}[0]
             final fun hashCode(): kotlin/Int // ai.koog.prompt.message/MessagePart.Tool.Result.hashCode|hashCode(){}[0]
             final fun toString(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Result.toString|toString(){}[0]
