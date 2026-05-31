@@ -19,6 +19,11 @@ kotlin {
                 api(project(":prompt:prompt-llm"))
             }
         }
+        appleTest {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
     }
 
     explicitApi()
@@ -30,9 +35,11 @@ kotlin {
     //   2. feed that header to a hand-written cinterop (.def) to generate Kotlin bindings,
     //   3. link the static lib + FoundationModels.framework into every binary.
     // Verified on this machine (Xcode 26.3, Swift 6.2.4, iPhoneSimulator26.2 SDK): the
-    // simulator/device/x64 swiftc + cinterop + link all succeed with the flags below and
-    // require NO extra Swift-runtime -L/-rpath paths (proven by linking test.kexe for the
-    // simulator, which resolves -lKoogFMBridge + -framework FoundationModels).
+    // simulator/device/x64 swiftc + cinterop + link all succeed with the flags below and need
+    // no extra Swift-runtime -L paths at LINK time. They do need one -rpath at RUNTIME so the
+    // statically-linked Swift shim can load libswift_Concurrency.dylib etc. — see the -rpath
+    // note on target.binaries.all{} below (first surfaces when a simulator test that links the
+    // shim is actually run, not at link time).
     //
     // NOTE for the integration author (Task 6): the `foundationModels` cinterop is created
     // on each iOS target, so its generated bindings are visible ONLY from the leaf
@@ -113,13 +120,24 @@ kotlin {
         }
 
         // Link the static shim + the framework into every binary; the link must also wait for
-        // the .a so `-lKoogFMBridge` resolves. Spike-verified: no extra Swift-runtime paths
-        // are needed for sim/device/x64 — the K/N linker picks up the Swift runtime from the SDK.
+        // the .a so `-lKoogFMBridge` resolves.
+        //
+        // -rpath /usr/lib/swift: the static Swift shim references the Swift runtime
+        // (libswift_Concurrency.dylib etc. — KoogFMBridge uses `Task`/async). The OS ships those
+        // dylibs in `/usr/lib/swift`: on a real iOS-26 device that is the literal path, and on the
+        // simulator the loader reroots it under the runtime root via DYLD_ROOT_PATH
+        // (…/<runtime>.simruntime/Contents/Resources/RuntimeRoot/usr/lib/swift). This is the OS's
+        // own copy, so it loads exactly once. Do NOT point this at the Xcode toolchain's
+        // usr/lib/swift-5.5 overlay — that loads a second, back-deploy runtime alongside the OS
+        // one and triggers "Class … implemented in both …" objc duplicate-class warnings
+        // ("may cause spurious casting failures and mysterious crashes"). First surfaces when a
+        // simulator TEST that links the shim is actually run (Task 7), not at link time.
         target.binaries.all {
             linkerOpts(
                 "-L${outDir.get().asFile.absolutePath}",
                 "-lKoogFMBridge",
                 "-framework", "FoundationModels",
+                "-rpath", "/usr/lib/swift",
             )
             linkTaskProvider.configure { dependsOn(swiftcTask) }
         }
