@@ -17,7 +17,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class GenericAgentEnvironmentTest {
@@ -197,13 +196,11 @@ class GenericAgentEnvironmentTest {
         assertEquals("ok:value", result.output)
     }
 
-    private class ImageTool :
-        SimpleTool<RequiredArgs>(
-            argsType = typeToken<RequiredArgs>(),
-            name = "image_tool",
-            description = "Tool that returns an image alongside its text result.",
-        ),
-        MultimodalTool<RequiredArgs, String> {
+    private class ImageTool : SimpleTool<RequiredArgs>(
+        argsType = typeToken<RequiredArgs>(),
+        name = "image_tool",
+        description = "Tool that returns an image alongside its text result.",
+    ) {
         val fakeImageBytes = byteArrayOf(1, 2, 3, 4)
 
         override suspend fun execute(args: RequiredArgs): String = "image data"
@@ -261,11 +258,11 @@ class GenericAgentEnvironmentTest {
         )
 
         assertEquals(ToolResultKind.Success, result.resultKind)
-        assertNull(result.parts)
+        val textPart = result.parts?.single() as? MessagePart.Text
+        assertEquals("ok:value", textPart?.text)
 
         val messagePart = result.toMessagePart()
-        val textPart = messagePart.parts.single() as MessagePart.Text
-        assertEquals("ok:value", textPart.text)
+        assertEquals("ok:value", (messagePart.parts.single() as MessagePart.Text).text)
     }
 
     @Test

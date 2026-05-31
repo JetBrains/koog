@@ -288,10 +288,9 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                         // First add tool results
                         message.parts.filterIsInstance<MessagePart.Tool.Result>().forEach { part ->
                             if (part.parts.any { it !is MessagePart.Text }) {
-                                throw LLMClientException(
-                                    clientName,
-                                    "OpenAI Chat Completions API does not support non-text content in tool results (tool: '${part.tool}')"
-                                )
+                                logger.warn {
+                                    "OpenAI Chat Completions API does not support non-text content in tool results (tool: '${part.tool}'). Non-text parts will be ignored."
+                                }
                             }
                             add(
                                 OpenAIMessage.Tool(

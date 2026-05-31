@@ -148,9 +148,7 @@ public class GenericAgentEnvironment(
         val (content, result, parts) = try {
             val content = tool.encodeResultToStringUnsafe(toolResult, serializer)
             val result = tool.encodeResult(toolResult, serializer)
-
-            @Suppress("UNCHECKED_CAST")
-            val parts = (tool as? MultimodalTool<Any?, Any?>)?.encodeResultToParts(toolResult, serializer)
+            val parts = tool.encodeResultToPartsUnsafe(toolResult, serializer)
             Triple(content, result, parts)
         } catch (e: CancellationException) {
             throw e
