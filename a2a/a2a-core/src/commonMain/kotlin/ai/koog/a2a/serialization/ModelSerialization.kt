@@ -1,22 +1,13 @@
 package ai.koog.a2a.serialization
 
-import ai.koog.a2a.model.APIKeySecurityScheme
-import ai.koog.a2a.model.CommunicationEvent
 import ai.koog.a2a.model.DataPart
-import ai.koog.a2a.model.Event
-import ai.koog.a2a.model.HTTPAuthSecurityScheme
-import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.MutualTLSSecurityScheme
-import ai.koog.a2a.model.OAuth2SecurityScheme
-import ai.koog.a2a.model.OpenIdConnectSecurityScheme
+import ai.koog.a2a.model.FileBytesPart
+import ai.koog.a2a.model.FileUrlPart
+import ai.koog.a2a.model.OAuthFlows
 import ai.koog.a2a.model.Part
-import ai.koog.a2a.model.SecurityScheme
-import ai.koog.a2a.model.Task
-import ai.koog.a2a.model.TaskArtifactUpdateEvent
-import ai.koog.a2a.model.TaskEvent
-import ai.koog.a2a.model.TaskStatusUpdateEvent
+import ai.koog.a2a.model.SendMessageResponse
+import ai.koog.a2a.model.StreamResponse
 import ai.koog.a2a.model.TextPart
-import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -26,94 +17,79 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.JsonObject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.reflect.KClass
 
-public object SecuritySchemeSerializer : JsonContentPolymorphicSerializer<SecurityScheme>(SecurityScheme::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<SecurityScheme> {
-        val jsonObject = element.jsonObject
-        val type = jsonObject["type"]?.jsonPrimitive?.content ?: throw SerializationException("Missing 'type' field in SecurityScheme")
+/**
+ * Serializer that selects a subclass based on the presence of a discriminator property in the JSON object.
+ *
+ * @param baseClass The base class to be used for deserialization.
+ * @param subclasses A map of discriminator property names to their corresponding serializer classes.
+ */
+public abstract class PropertyPresencePolymorphicSerializer<T : Any>(
+    private val baseClass: KClass<T>,
+    private val subclasses: Map<String, KSerializer<out T>>,
+) : JsonContentPolymorphicSerializer<T>(baseClass) {
+    override fun selectDeserializer(element: JsonElement): KSerializer<out T> {
+        val obj = element as? JsonObject
+            ?: throw SerializationException("Expected JSON object for polymorphic value")
 
-        return when (type) {
-            "apiKey" -> APIKeySecurityScheme.serializer()
-            "http" -> HTTPAuthSecurityScheme.serializer()
-            "oauth2" -> OAuth2SecurityScheme.serializer()
-            "openIdConnect" -> OpenIdConnectSecurityScheme.serializer()
-            "mutualTLS" -> MutualTLSSecurityScheme.serializer()
-            else -> throw SerializationException("Unknown SecurityScheme type: $type")
+        val matching = subclasses.filterKeys { it in obj }
+
+        return when (matching.size) {
+            1 ->
+                matching.values.single()
+
+            0 ->
+                throw SerializationException(
+                    "Unknown ${baseClass.simpleName} variant. Expected one of the ${subclasses.keys} to be present as property, found ${obj.keys}"
+                )
+
+            else ->
+                throw SerializationException("Ambiguous ${baseClass.simpleName} variant. Multiple discriminator properties found: ${matching.keys}")
         }
     }
 }
 
-public object PartSerializer : JsonContentPolymorphicSerializer<Part>(Part::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<Part> {
-        val jsonObject = element.jsonObject
-        val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: throw SerializationException("Missing 'kind' field in Part")
+public object SendMessageResponseSerializer : PropertyPresencePolymorphicSerializer<SendMessageResponse>(
+    baseClass = SendMessageResponse::class,
+    subclasses = mapOf(
+        "task" to SendMessageResponse.TaskResponse.serializer(),
+        "message" to SendMessageResponse.MessageResponse.serializer(),
+    )
+)
 
-        return when (kind) {
-            "text" -> TextPart.serializer()
-            "file" -> FilePart.serializer()
-            "data" -> DataPart.serializer()
-            else -> throw SerializationException("Unknown Part kind: $kind")
-        }
-    }
-}
+public object StreamResponseSerializer : PropertyPresencePolymorphicSerializer<StreamResponse>(
+    baseClass = StreamResponse::class,
+    subclasses = mapOf(
+        "task" to StreamResponse.TaskResponse.serializer(),
+        "message" to StreamResponse.MessageResponse.serializer(),
+        "statusUpdate" to StreamResponse.TaskStatusUpdateEventResponse.serializer(),
+        "artifactUpdate" to StreamResponse.TaskArtifactUpdateEventResponse.serializer(),
+    )
+)
 
-public object FileSerializer : JsonContentPolymorphicSerializer<File>(File::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<File> {
-        val jsonObject = element.jsonObject
+public object PartSerializer : PropertyPresencePolymorphicSerializer<Part>(
+    baseClass = Part::class,
+    subclasses = mapOf(
+        "text" to TextPart.serializer(),
+        "raw" to FileBytesPart.serializer(),
+        "url" to FileUrlPart.serializer(),
+        "data" to DataPart.serializer(),
+    )
+)
 
-        return when {
-            "bytes" in jsonObject -> FileWithBytes.serializer()
-            "uri" in jsonObject -> FileWithUri.serializer()
-            else -> throw SerializationException("Unknown File type")
-        }
-    }
-}
-
-public object EventSerializer : JsonContentPolymorphicSerializer<Event>(Event::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<Event> {
-        val jsonObject = element.jsonObject
-        val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: throw SerializationException("Missing 'kind' field in Event")
-
-        return when (kind) {
-            "status-update" -> TaskStatusUpdateEvent.serializer()
-            "artifact-update" -> TaskArtifactUpdateEvent.serializer()
-            "task" -> Task.serializer()
-            "message" -> Message.serializer()
-            else -> throw SerializationException("Unknown kind: $kind")
-        }
-    }
-}
-
-public object CommunicationEventSerializer : JsonContentPolymorphicSerializer<CommunicationEvent>(CommunicationEvent::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<CommunicationEvent> {
-        val jsonObject = element.jsonObject
-        val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: throw SerializationException("Missing 'kind' field in CommunicationEvent")
-
-        return when (kind) {
-            "task" -> Task.serializer()
-            "message" -> Message.serializer()
-            else -> throw SerializationException("Unknown kind: $kind")
-        }
-    }
-}
-
-public object TaskEventSerializer : JsonContentPolymorphicSerializer<TaskEvent>(TaskEvent::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<TaskEvent> {
-        val jsonObject = element.jsonObject
-        val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: throw SerializationException("Missing 'kind' field in TaskEvent")
-
-        return when (kind) {
-            "task" -> Task.serializer()
-            "status-update" -> TaskStatusUpdateEvent.serializer()
-            "artifact-update" -> TaskArtifactUpdateEvent.serializer()
-            else -> throw SerializationException("Unknown kind: $kind")
-        }
-    }
-}
+public object OAuthFlowsSerializer : PropertyPresencePolymorphicSerializer<OAuthFlows>(
+    baseClass = OAuthFlows::class,
+    subclasses = mapOf(
+        "authorizationCode" to OAuthFlows.AuthorizationCode.serializer(),
+        "clientCredentials" to OAuthFlows.ClientCredentials.serializer(),
+        "implicit" to OAuthFlows.Implicit.serializer(),
+        "password" to OAuthFlows.Password.serializer(),
+    )
+)
 
 @OptIn(ExperimentalEncodingApi::class)
 public object ByteArrayAsBase64Serializer : KSerializer<ByteArray> {

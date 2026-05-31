@@ -3,7 +3,7 @@ package ai.koog.a2a.transport.jsonrpc
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.exceptions.createA2AException
 import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.model.Task
@@ -128,7 +128,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     override suspend fun sendMessage(
         request: Request<MessageSendParams>,
         ctx: ClientCallContext
-    ): Response<CommunicationEvent> =
+    ): Response<ResponseEvent> =
         request(A2AMethod.SendMessage, request, ctx)
 
     override fun sendMessageStreaming(

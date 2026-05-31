@@ -31,8 +31,8 @@ public data class Message(
     public val role: Role,
     public val parts: List<Part>,
     public val extensions: List<String>? = null,
-    public val taskId: String? = null,
+    override val taskId: String? = null,
     public val referenceTaskIds: List<String>? = null,
-    public val contextId: String? = null,
+    override val contextId: String? = null,
     public val metadata: JsonObject? = null,
-) : CommunicationEvent
+) : ResponseEvent

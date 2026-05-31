@@ -2,7 +2,7 @@ package ai.koog.a2a.client
 
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.model.Task
@@ -82,7 +82,7 @@ public open class A2AClient(
     public suspend fun sendMessage(
         request: Request<MessageSendParams>,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Response<CommunicationEvent> {
+    ): Response<ResponseEvent> {
         return transport.sendMessage(request, ctx)
     }
 

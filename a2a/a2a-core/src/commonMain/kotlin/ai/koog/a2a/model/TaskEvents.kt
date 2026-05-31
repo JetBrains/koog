@@ -11,7 +11,6 @@ import kotlinx.serialization.json.JsonObject
  * @property taskId The ID of the task that was updated.
  * @property contextId The context ID associated with the task.
  * @property status The new status of the task.
- * @property final If true, this is the final event in the stream for this interaction.
  * @property metadata Optional metadata for extensions.
  */
 @Serializable
@@ -19,12 +18,8 @@ public data class TaskStatusUpdateEvent(
     override val taskId: String,
     override val contextId: String,
     public val status: TaskStatus,
-    public val final: Boolean,
     public val metadata: JsonObject? = null,
-) : TaskEvent {
-    @EncodeDefault
-    override val kind: String = "status-update"
-}
+) : TaskEvent
 
 /**
  * An event sent by the agent to notify the client that an artifact has been
@@ -45,7 +40,5 @@ public data class TaskArtifactUpdateEvent(
     public val append: Boolean? = null,
     public val lastChunk: Boolean? = null,
     public val metadata: JsonObject? = null,
-) : TaskEvent {
-    @EncodeDefault
-    override val kind: String = "artifact-update"
-}
+) : TaskEvent
+

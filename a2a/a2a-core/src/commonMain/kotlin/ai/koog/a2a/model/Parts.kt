@@ -1,9 +1,7 @@
 package ai.koog.a2a.model
 
 import ai.koog.a2a.serialization.ByteArrayAsBase64Serializer
-import ai.koog.a2a.serialization.FileSerializer
 import ai.koog.a2a.serialization.PartSerializer
-import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 

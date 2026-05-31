@@ -7,7 +7,7 @@ import ai.koog.a2a.exceptions.A2ATaskNotCancelableException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.MessageSendParams
@@ -460,7 +460,7 @@ public open class A2AServer(
     override suspend fun onSendMessage(
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
-    ): Response<CommunicationEvent> {
+    ): Response<ResponseEvent> {
         val messageConfiguration = request.data.configuration
         // Reusing streaming logic here, because it's essentially the same, only we need some particular event from the stream
         val eventStream = onSendMessageCommon(request, ctx)

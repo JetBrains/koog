@@ -1,7 +1,7 @@
 package ai.koog.agents.a2a.client.feature
 
 import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.model.Task
@@ -123,7 +123,7 @@ public fun nodeA2AClientGetAuthenticatedExtendedAgentCard(
 @AIAgentBuilderDslMarker
 public fun nodeA2AClientSendMessage(
     name: String? = null,
-): AIAgentNodeDelegate<A2AClientRequest<MessageSendParams>, CommunicationEvent> =
+): AIAgentNodeDelegate<A2AClientRequest<MessageSendParams>, ResponseEvent> =
     node(name) { request ->
         withA2AAgentClient {
             a2aClientOrThrow(request.agentId)

@@ -2,7 +2,7 @@ package ai.koog.a2a.transport
 
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.model.Task
@@ -44,7 +44,7 @@ public interface ClientTransport : AutoCloseable {
     public suspend fun sendMessage(
         request: Request<MessageSendParams>,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Response<CommunicationEvent>
+    ): Response<ResponseEvent>
 
     /**
      * Calls [message/stream](https://a2a-protocol.org/v0.3.0/specification/#72-messagestream)
