@@ -1,7 +1,6 @@
 package ai.koog.prompt.executor.clients.foundationmodels
 
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -11,7 +10,10 @@ import kotlin.test.assertTrue
 
 class FoundationModelsLLMClientTest {
 
-    private val p = prompt("t") { system("be brief"); user("hi") }
+    private val p = prompt("t") {
+        system("be brief")
+        user("hi")
+    }
 
     @Test
     fun testExecuteReturnsAssistantTextAndForwardsInput() = runTest {

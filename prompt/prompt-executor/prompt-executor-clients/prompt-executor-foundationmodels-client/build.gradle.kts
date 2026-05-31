@@ -138,8 +138,10 @@ kotlin {
             linkerOpts(
                 "-L${outDir.get().asFile.absolutePath}",
                 "-lKoogFMBridge",
-                "-framework", "FoundationModels",
-                "-rpath", "/usr/lib/swift",
+                "-framework",
+                "FoundationModels",
+                "-rpath",
+                "/usr/lib/swift",
             )
             linkTaskProvider.configure { dependsOn(swiftcTask) }
         }

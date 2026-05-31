@@ -3,9 +3,9 @@
 package ai.koog.prompt.executor.clients.foundationmodels
 
 import foundationModels.KoogFMBridge
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
  * Production [FoundationModelsSession] backed by the bundled `@objc` shim.
