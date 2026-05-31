@@ -22,6 +22,8 @@ kotlin {
         appleTest {
             dependencies {
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":agents:agents-core"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-model"))
             }
         }
     }
