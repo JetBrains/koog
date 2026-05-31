@@ -55,6 +55,7 @@ The LLM providers and platforms whose LLMs you can use to power your agent capab
 - OpenRouter
 - Ollama
 - Bedrock
+- Apple Foundation Models (on-device, iOS 26+, beta)
 
 ### Quickstart example
 
