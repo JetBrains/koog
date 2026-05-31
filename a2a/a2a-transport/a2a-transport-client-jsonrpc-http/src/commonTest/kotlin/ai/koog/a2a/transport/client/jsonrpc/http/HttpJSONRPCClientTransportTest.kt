@@ -5,7 +5,7 @@ import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentSkill
-import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.model.PushNotificationConfig
@@ -150,7 +150,7 @@ class HttpJSONRPCClientTransportTest {
             data = messageSendParams,
         )
 
-        val expectedResponse: Response<CommunicationEvent> = Response(
+        val expectedResponse: Response<ResponseEvent> = Response(
             id = id,
             data = Message(
                 messageId = "msg-456",

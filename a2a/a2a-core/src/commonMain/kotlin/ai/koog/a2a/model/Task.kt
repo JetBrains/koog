@@ -1,7 +1,5 @@
 package ai.koog.a2a.model
 
-import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlin.time.Clock
@@ -25,7 +23,7 @@ public data class Task(
     public val history: List<Message>? = null,
     public val artifacts: List<Artifact>? = null,
     public val metadata: JsonObject? = null,
-) : CommunicationEvent, TaskEvent {
+) : ResponseEvent, TaskEvent {
     override val taskId: String get() = id
 }
 

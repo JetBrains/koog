@@ -3,7 +3,7 @@ package ai.koog.a2a.transport
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.model.Task
@@ -54,7 +54,7 @@ public interface RequestHandler {
     public suspend fun onSendMessage(
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
-    ): Response<CommunicationEvent>
+    ): Response<ResponseEvent>
 
     /**
      * Handles [message/stream](https://a2a-protocol.org/v0.3.0/specification/#72-messagestream)

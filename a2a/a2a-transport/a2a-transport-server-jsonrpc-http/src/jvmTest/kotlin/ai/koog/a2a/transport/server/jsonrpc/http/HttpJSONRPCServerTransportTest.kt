@@ -4,7 +4,7 @@ import ai.koog.a2a.exceptions.A2AErrorCodes
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentSkill
-import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.MessageSendParams
@@ -137,7 +137,7 @@ class HttpJSONRPCServerTransportTest {
         override suspend fun onSendMessage(
             request: Request<MessageSendParams>,
             ctx: ServerCallContext
-        ): Response<CommunicationEvent> {
+        ): Response<ResponseEvent> {
             return Response(
                 id = request.id,
                 data = communicationEvent

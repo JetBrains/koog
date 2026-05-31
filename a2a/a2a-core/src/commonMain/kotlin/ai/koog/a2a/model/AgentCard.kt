@@ -1,7 +1,6 @@
 package ai.koog.a2a.model
 
-import ai.koog.a2a.serialization.SecuritySchemeSerializer
-import kotlinx.serialization.EncodeDefault
+import ai.koog.a2a.serialization.OAuthFlowsSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -205,12 +204,7 @@ public typealias SecurityRequirement = Map<String, List<String>>
  * @see [https://swagger.io/specification/#security-scheme-object]
  */
 @Serializable(with = SecuritySchemeSerializer::class)
-public sealed interface SecurityScheme {
-    /**
-     * The type of the security scheme, used as discriminator.
-     */
-    public val type: String
-}
+public sealed interface SecurityScheme
 
 /**
  * Defines a security scheme using an API key.
@@ -225,10 +219,7 @@ public data class APIKeySecurityScheme(
     public val `in`: In,
     public val name: String,
     public val description: String? = null,
-) : SecurityScheme {
-    @EncodeDefault
-    override val type: String = "apiKey"
-}
+) : SecurityScheme
 
 /**
  * The location of the API key.
@@ -259,10 +250,7 @@ public data class HTTPAuthSecurityScheme(
     public val scheme: String,
     public val bearerFormat: String? = null,
     public val description: String? = null,
-) : SecurityScheme {
-    @EncodeDefault
-    override val type: String = "http"
-}
+) : SecurityScheme
 
 /**
  * Defines a security scheme using OAuth 2.0.
@@ -277,26 +265,46 @@ public data class OAuth2SecurityScheme(
     public val flows: OAuthFlows,
     public val oauth2MetadataUrl: String? = null,
     public val description: String? = null,
-) : SecurityScheme {
-    @EncodeDefault
-    override val type: String = "oauth2"
-}
+) : SecurityScheme
 
 /**
  * Defines the configuration for the supported OAuth 2.0 flows.
- *
- * @property authorizationCode Configuration for the OAuth Authorization Code flow. Previously called accessCode in OpenAPI 2.0.
- * @property clientCredentials Configuration for the OAuth Client Credentials flow. Previously called application in OpenAPI 2.0.
- * @property implicit Configuration for the OAuth Implicit flow.
- * @property password Configuration for the OAuth Resource Owner Password flow.
+ * The sealed hierarchy models the protocol-defined `oneof` `flows`.
  */
-@Serializable
-public data class OAuthFlows(
-    public val authorizationCode: AuthorizationCodeOAuthFlow? = null,
-    public val clientCredentials: ClientCredentialsOAuthFlow? = null,
-    public val implicit: ImplicitOAuthFlow? = null,
-    public val password: PasswordOAuthFlow? = null
-)
+@Serializable(with = OAuthFlowsSerializer::class)
+public sealed interface OAuthFlows {
+    @Serializable
+    public data class AuthorizationCode(public val authorizationCode: AuthorizationCodeOAuthFlow) : OAuthFlows
+
+    @Serializable
+    public data class ClientCredentials(public val clientCredentials: ClientCredentialsOAuthFlow) : OAuthFlows
+
+    @Serializable
+    public data class Implicit(public val implicit: ImplicitOAuthFlow) : OAuthFlows
+
+    @Serializable
+    public data class Password(public val password: PasswordOAuthFlow) : OAuthFlows
+}
+
+/**
+ * Convert `oneof` representation [OAuthFlows] to an actual instance of [OAuthFlow].
+ */
+public fun OAuthFlows.toOAuthFlow(): OAuthFlow = when (this) {
+    is OAuthFlows.AuthorizationCode -> authorizationCode
+    is OAuthFlows.ClientCredentials -> clientCredentials
+    is OAuthFlows.Implicit -> implicit
+    is OAuthFlows.Password -> password
+}
+
+/**
+ * Convert [OAuthFlow] to `oneof` representation [OAuthFlows].
+ */
+public fun OAuthFlow.toOAuthFlows(): OAuthFlows = when (this) {
+    is AuthorizationCodeOAuthFlow -> OAuthFlows.AuthorizationCode(this)
+    is ClientCredentialsOAuthFlow -> OAuthFlows.ClientCredentials(this)
+    is ImplicitOAuthFlow -> OAuthFlows.Implicit(this)
+    is PasswordOAuthFlow -> OAuthFlows.Password(this)
+}
 
 /**
  * Common interface for OAuth 2.0 flows.
@@ -374,10 +382,7 @@ public data class PasswordOAuthFlow(
 public data class OpenIdConnectSecurityScheme(
     public val openIdConnectUrl: String,
     public val description: String? = null,
-) : SecurityScheme {
-    @EncodeDefault
-    override val type: String = "openIdConnect"
-}
+) : SecurityScheme
 
 /**
  * Defines a security scheme using mTLS authentication.
@@ -387,10 +392,7 @@ public data class OpenIdConnectSecurityScheme(
 @Serializable
 public data class MutualTLSSecurityScheme(
     public val description: String? = null,
-) : SecurityScheme {
-    @EncodeDefault
-    override val type: String = "mutualTLS"
-}
+) : SecurityScheme
 
 /**
  * Represents a distinct capability or function that an agent can perform.
