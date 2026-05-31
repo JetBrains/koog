@@ -25,6 +25,7 @@ public abstract class ai/koog/agents/core/tools/ToolBase {
 	public final fun encodeArgsToStringUnsafe (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Ljava/lang/String;
 	public final fun encodeArgsUnsafe (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Lai/koog/serialization/JSONObject;
 	public fun encodeResult (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Lai/koog/serialization/JSONElement;
+	public fun encodeResultToParts (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Ljava/util/List;
 	public fun encodeResultToString (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Ljava/lang/String;
 	public final fun encodeResultToStringUnsafe (Ljava/lang/Object;Lai/koog/serialization/JSONSerializer;)Ljava/lang/String;
 	public abstract fun execute (Ljava/lang/Object;Lai/koog/agents/core/tools/ToolCallMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
