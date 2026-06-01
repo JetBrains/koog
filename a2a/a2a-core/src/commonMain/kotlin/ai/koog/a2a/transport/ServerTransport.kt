@@ -3,9 +3,9 @@ package ai.koog.a2a.transport
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
@@ -42,9 +42,8 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public suspend fun onGetAuthenticatedExtendedAgentCard(
-        request: Request<Nothing?>,
         ctx: ServerCallContext
-    ): Response<AgentCard>
+    ): AgentCard
 
     /**
      * Handles [message/send](https://a2a-protocol.org/v0.3.0/specification/#71-messagesend).
@@ -52,9 +51,9 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public suspend fun onSendMessage(
-        request: Request<MessageSendParams>,
+        request: MessageSendParams,
         ctx: ServerCallContext
-    ): Response<ResponseEvent>
+    ): ResponseEvent
 
     /**
      * Handles [message/stream](https://a2a-protocol.org/v0.3.0/specification/#72-messagestream)
@@ -62,9 +61,9 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public fun onSendMessageStreaming(
-        request: Request<MessageSendParams>,
+        request: MessageSendParams,
         ctx: ServerCallContext
-    ): Flow<Response<Event>>
+    ): Flow<Event>
 
     /**
      * Handles [tasks/get](https://a2a-protocol.org/v0.3.0/specification/#73-tasksget)
@@ -72,9 +71,9 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public suspend fun onGetTask(
-        request: Request<TaskQueryParams>,
+        request: TaskQueryParams,
         ctx: ServerCallContext
-    ): Response<Task>
+    ): Task
 
     /**
      * Handles [tasks/resubscribe](https://a2a-protocol.org/v0.3.0/specification/#79-tasksresubscribe)
@@ -82,9 +81,9 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public fun onResubscribeTask(
-        request: Request<TaskIdParams>,
+        request: TaskIdParams,
         ctx: ServerCallContext
-    ): Flow<Response<Event>>
+    ): Flow<Event>
 
     /**
      * Handles [tasks/cancel](https://a2a-protocol.org/v0.3.0/specification/#74-taskscancel)
@@ -92,9 +91,9 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public suspend fun onCancelTask(
-        request: Request<TaskIdParams>,
+        request: TaskIdParams,
         ctx: ServerCallContext
-    ): Response<Task>
+    ): Task
 
     /**
      * Handles [tasks/pushNotificationConfig/set](https://a2a-protocol.org/v0.3.0/specification/#75-taskspushnotificationconfigset)
@@ -102,9 +101,9 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public suspend fun onSetTaskPushNotificationConfig(
-        request: Request<TaskPushNotificationConfig>,
+        request: TaskPushNotificationConfig,
         ctx: ServerCallContext
-    ): Response<TaskPushNotificationConfig>
+    ): TaskPushNotificationConfig
 
     /**
      * Handles [tasks/pushNotificationConfig/get](https://a2a-protocol.org/v0.3.0/specification/#76-taskspushnotificationconfigget)
@@ -112,9 +111,9 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public suspend fun onGetTaskPushNotificationConfig(
-        request: Request<TaskPushNotificationConfigParams>,
+        request: TaskPushNotificationConfigParams,
         ctx: ServerCallContext
-    ): Response<TaskPushNotificationConfig>
+    ): TaskPushNotificationConfig
 
     /**
      * Handles [tasks/pushNotificationConfig/list](https://a2a-protocol.org/v0.3.0/specification/#77-taskspushnotificationconfiglist)
@@ -122,9 +121,9 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public suspend fun onListTaskPushNotificationConfig(
-        request: Request<TaskIdParams>,
+        request: TaskIdParams,
         ctx: ServerCallContext
-    ): Response<List<TaskPushNotificationConfig>>
+    ): List<TaskPushNotificationConfig>
 
     /**
      * Handles [tasks/pushNotificationConfig/delete](https://a2a-protocol.org/v0.3.0/specification/#78-taskspushnotificationconfigdelete)
@@ -132,9 +131,9 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public suspend fun onDeleteTaskPushNotificationConfig(
-        request: Request<TaskPushNotificationConfigParams>,
+        request: TaskPushNotificationConfigParams,
         ctx: ServerCallContext
-    ): Response<Nothing?>
+    ): Nothing?
 }
 
 /**
@@ -160,9 +159,9 @@ public interface RequestHandler {
  *
  * // On the handler side - copying supplied context and populating state
  * override suspend fun onSendMessage(
- *     request: Request<MessageSendParams>,
+ *     request: MessageSendParams,
  *     ctx: ServerCallContext
- * ): Response<CommunicationEvent> {
+ * ): CommunicationEvent {
  *    val user = ctx.headers.getValue("user-id").let { User(it) }
  *    val newCtx = ctx.copy(state = ctx.state + (StateKeys.USER_KEY to user))
  *

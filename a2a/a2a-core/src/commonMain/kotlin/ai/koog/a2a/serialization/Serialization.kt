@@ -38,9 +38,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.serializer
-import kotlinx.serialization.serializerOrNull
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.reflect.KClass
@@ -161,10 +158,10 @@ public object ByteArrayAsBase64Serializer : KSerializer<ByteArray> {
 public object PartSerializer : PropertyPresencePolymorphicSerializer<Part>(
     baseClass = Part::class,
     variants = mapOf(
-        TextPart.KIND to TextPart.serializer(),
-        FileBytesPart.KIND to FileBytesPart.serializer(),
-        FileUrlPart.KIND to FileUrlPart.serializer(),
-        DataPart.KIND to DataPart.serializer(),
+        TextPart.DISCRIMINATOR to TextPart.serializer(),
+        FileBytesPart.DISCRIMINATOR to FileBytesPart.serializer(),
+        FileUrlPart.DISCRIMINATOR to FileUrlPart.serializer(),
+        DataPart.DISCRIMINATOR to DataPart.serializer(),
     )
 )
 

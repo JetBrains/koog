@@ -2,7 +2,7 @@ package ai.koog.a2a.transport.client.jsonrpc.http
 
 import ai.koog.a2a.transport.ClientCallContext
 import ai.koog.a2a.transport.jsonrpc.JSONRPCClientTransport
-import ai.koog.a2a.transport.jsonrpc.model.JSONRPCJson
+import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCResponse
 import io.ktor.client.HttpClient
@@ -56,7 +56,7 @@ public class HttpJSONRPCClientTransport(
     ): JSONRPCResponse {
         val response = httpClient.post {
             headers {
-                ctx.additionalHeaders.forEach { (key, values) ->
+                ctx.headers.forEach { (key, values) ->
                     appendAll(key, values)
                 }
             }
@@ -76,7 +76,7 @@ public class HttpJSONRPCClientTransport(
                 method = HttpMethod.Post
 
                 headers {
-                    ctx.additionalHeaders.forEach { (key, values) ->
+                    ctx.headers.forEach { (key, values) ->
                         appendAll(key, values)
                     }
                 }

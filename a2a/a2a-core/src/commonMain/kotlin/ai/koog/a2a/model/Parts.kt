@@ -41,7 +41,7 @@ public data class TextPart(
 ) : Part {
     public companion object {
         @JvmStatic
-        public const val KIND: String = "text"
+        public const val DISCRIMINATOR: String = "text"
     }
 }
 
@@ -80,7 +80,7 @@ public data class FileBytesPart(
 
     public companion object {
         @JvmStatic
-        public const val KIND: String = "raw"
+        public const val DISCRIMINATOR: String = "raw"
     }
 }
 
@@ -98,7 +98,7 @@ public data class FileUrlPart(
 ) : Part {
     public companion object {
         @JvmStatic
-        public const val KIND: String = "url"
+        public const val DISCRIMINATOR: String = "url"
     }
 }
 
@@ -116,6 +116,6 @@ public data class DataPart(
 ) : Part {
     public companion object {
         @JvmStatic
-        public const val KIND: String = "data"
+        public const val DISCRIMINATOR: String = "data"
     }
 }

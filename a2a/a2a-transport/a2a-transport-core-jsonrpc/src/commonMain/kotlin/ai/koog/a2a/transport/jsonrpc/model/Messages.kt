@@ -2,7 +2,8 @@
 
 package ai.koog.a2a.transport.jsonrpc.model
 
-import ai.koog.a2a.transport.RequestId
+import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCMessageSerializer
+import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCResponseSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull

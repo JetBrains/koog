@@ -6,7 +6,7 @@ import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.transport.jsonrpc.JSONRPCServerTransport
-import ai.koog.a2a.transport.jsonrpc.model.JSONRPCJson
+import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.utils.runCatchingCancellable
 import io.ktor.http.ContentType
