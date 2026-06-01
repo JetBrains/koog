@@ -59,6 +59,14 @@ suspend fun processPrompt(executor: PromptExecutor, prompt: Prompt, model: LLMod
 
 These executors handle both standard and streaming execution of prompts, delegating the actual LLM interaction to the provided LLM clients.
 
+### Custom executors and model resolution
+
+Use `DynamicPromptExecutor` as the base class for new custom executors that need fallback, routing, model substitution, or any other model-resolution policy. Implement `resolveModel(...)` and the `ResolvedModel`-based execution methods. The `LLModel`-based methods are finalized there so each request passes through model resolution once before execution.
+
+Use `PromptExecutor` directly only when the executor does not need a model-resolution hook.
+
+`MultiLLMPromptExecutor` and `RoutingLLMPromptExecutor` remain `open` for source and binary compatibility with existing subclasses, but they are not the preferred base classes for new custom executor implementations. If you subclass either class, override the `ResolvedModel`-based methods by default so the built-in fallback and routing resolution still runs. Override the `LLModel`-based methods only when you intentionally take over the full model-resolution and execution flow; if those overrides do not call `super`, `resolveModel(...)` is bypassed.
+
 ```kotlin
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
