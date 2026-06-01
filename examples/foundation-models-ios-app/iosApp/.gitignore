@@ -1,0 +1,9 @@
+# Xcode user-specific state (per-developer, never commit)
+xcuserdata/
+*.xcuserstate
+
+# Build output / DerivedData
+build/
+DerivedData/
+
+.DS_Store
