@@ -233,7 +233,12 @@ internal object OpenTelemetryTestAPI {
                 addSpanProcessor { simpleSpanProcessor(mockExporter) }
                 setVerbose(verbose)
             }.use { agent ->
-                agent.run(userPrompt ?: USER_PROMPT_PARIS)
+                try {
+                    agent.run(userPrompt ?: USER_PROMPT_PARIS)
+                } catch (throwable: Throwable) {
+                    waitSpansCollected(mockExporter)
+                    throw throwable
+                }
             }
 
             waitSpansCollected(mockExporter)
