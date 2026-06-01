@@ -59,7 +59,7 @@ public fun MessagePart.Attachment.toAcpContentBlock(): ContentBlock {
     return when (val source = this.source) {
         is AttachmentSource.Audio -> {
             when (val content = source.content) {
-                is AttachmentContent.Binary.Base64,
+                is Base64,
                 is AttachmentContent.Binary.Bytes -> {
                     ContentBlock.Audio(
                         data = content.asBase64(),
@@ -67,7 +67,7 @@ public fun MessagePart.Attachment.toAcpContentBlock(): ContentBlock {
                     )
                 }
 
-                is AttachmentContent.URL -> {
+                is URL -> {
                     ContentBlock.ResourceLink(
                         name = source.fileName ?: UNKNOWN_FILE_NAME,
                         uri = content.url,
@@ -75,15 +75,15 @@ public fun MessagePart.Attachment.toAcpContentBlock(): ContentBlock {
                     )
                 }
 
-                is AttachmentContent.PlainText -> {
+                is PlainText -> {
                     throw IllegalArgumentException("Audio attachment can’t have plain text content")
                 }
             }
         }
 
-        is AttachmentSource.File ->
+        is File ->
             when (val content = source.content) {
-                is AttachmentContent.Binary.Base64 -> ContentBlock.Resource(
+                is Base64 -> ContentBlock.Resource(
                     resource = EmbeddedResourceResource.BlobResourceContents(
                         blob = content.base64,
                         uri = source.fileName ?: UNKNOWN_URI,
@@ -99,7 +99,7 @@ public fun MessagePart.Attachment.toAcpContentBlock(): ContentBlock {
                     )
                 )
 
-                is AttachmentContent.PlainText -> ContentBlock.Resource(
+                is PlainText -> ContentBlock.Resource(
                     resource = EmbeddedResourceResource.TextResourceContents(
                         text = content.text,
                         uri = source.fileName ?: UNKNOWN_URI,
@@ -107,7 +107,7 @@ public fun MessagePart.Attachment.toAcpContentBlock(): ContentBlock {
                     )
                 )
 
-                is AttachmentContent.URL -> {
+                is URL -> {
                     ContentBlock.ResourceLink(
                         name = source.fileName ?: UNKNOWN_FILE_NAME,
                         uri = content.url,
@@ -118,7 +118,7 @@ public fun MessagePart.Attachment.toAcpContentBlock(): ContentBlock {
 
         is AttachmentSource.Image -> {
             when (val content = source.content) {
-                is AttachmentContent.Binary.Base64,
+                is Base64,
                 is AttachmentContent.Binary.Bytes -> {
                     ContentBlock.Image(
                         data = content.asBase64(),
@@ -127,7 +127,7 @@ public fun MessagePart.Attachment.toAcpContentBlock(): ContentBlock {
                     )
                 }
 
-                is AttachmentContent.URL -> {
+                is URL -> {
                     ContentBlock.ResourceLink(
                         name = source.fileName ?: UNKNOWN_FILE_NAME,
                         uri = content.url,
@@ -135,7 +135,7 @@ public fun MessagePart.Attachment.toAcpContentBlock(): ContentBlock {
                     )
                 }
 
-                is AttachmentContent.PlainText -> {
+                is PlainText -> {
                     throw IllegalArgumentException("Image attachment can’t have plain text content")
                 }
             }
@@ -250,7 +250,7 @@ public fun Message.Assistant.toAcpEvents(tools: List<ToolDescriptor> = emptyList
                     add(
                         SessionUpdateEvent(
                             update = SessionUpdate.ToolCall(
-                                toolCallId = ToolCallId(response.id ?: UNKNOWN_TOOL_CALL_ID),
+                                toolCallId = ToolCallId(part.id ?: UNKNOWN_TOOL_CALL_ID),
                                 title = tools.firstOrNull { it.name == part.tool }?.description
                                     ?: UNKNOWN_TOOL_DESCRIPTION,
                                 // TODO: Support kind for tools

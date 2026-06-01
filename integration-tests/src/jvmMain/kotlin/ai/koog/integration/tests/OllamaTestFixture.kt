@@ -3,6 +3,7 @@ package ai.koog.integration.tests
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.llm.LLModel
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Volume
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -15,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 import org.testcontainers.DockerClientFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
+import java.util.Collections
 
 /**
  * Utility class used for setting up and tearing down resources needed for testing
@@ -38,14 +40,20 @@ class OllamaTestFixture {
     lateinit var executor: MultiLLMPromptExecutor
         private set
 
-    val model = OllamaModels.Alibaba.QWEN_3_5_9B
-    val embeddingsModel = OllamaModels.Embeddings.NOMIC_EMBED_TEXT
-    val visionModel = OllamaModels.Granite.GRANITE_3_2_VISION
-    val moderationModel = OllamaModels.Meta.LLAMA_GUARD_3
-    val thinkingModel = OllamaModels.DeepSeek.DEEPSEEK_R1_DISTILL_LLAMA_1_5B
-    val modelsWithHallucinations = listOf(model, OllamaModels.Groq.LLAMA_3_GROK_TOOL_USE_8B)
+    val model get() = prepareModel(OllamaModels.Meta.LLAMA_3_2)
+    val toolChoiceModel get() = prepareModel(OllamaModels.Alibaba.QWEN_3_5_9B)
+    val embeddingsModel get() = prepareModel(OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
+    val visionModel get() = prepareModel(OllamaModels.Granite.GRANITE_3_2_VISION)
+    val moderationModel get() = prepareModel(OllamaModels.Meta.LLAMA_GUARD_3)
+    val thinkingModel get() = prepareModel(OllamaModels.DeepSeek.DEEPSEEK_R1_DISTILL_LLAMA_1_5B)
+    val modelsWithHallucinations
+        get() = listOf(
+            model,
+            prepareModel(OllamaModels.Groq.LLAMA_3_GROK_TOOL_USE_8B)
+        )
 
     private lateinit var ollamaContainer: GenericContainer<*>
+    private val preparedModels = Collections.synchronizedSet(mutableSetOf<String>())
 
     fun setup() {
         val localUrl = System.getenv("OLLAMA_LOCAL_URL")
@@ -63,28 +71,7 @@ class OllamaTestFixture {
             )
         }
 
-        try {
-            // Always pull the models to ensure they're available
-            runBlocking {
-                try {
-                    client.getModelOrNull(model.id, pullIfMissing = true)
-                    client.getModelOrNull(embeddingsModel.id, pullIfMissing = true)
-                    client.getModelOrNull(visionModel.id, pullIfMissing = true)
-                    client.getModelOrNull(moderationModel.id, pullIfMissing = true)
-                    client.getModelOrNull(thinkingModel.id, pullIfMissing = true)
-                    modelsWithHallucinations.forEach { client.getModelOrNull(it.id, pullIfMissing = true) }
-                } catch (e: Exception) {
-                    logger.error(e) { "Failed to pull models: ${e.message}" }
-                    cleanContainer()
-                    throw e
-                }
-            }
-
-            executor = MultiLLMPromptExecutor(client)
-        } catch (e: Exception) {
-            teardown()
-            throw e
-        }
+        executor = MultiLLMPromptExecutor(client)
     }
 
     fun teardown() {
@@ -134,6 +121,27 @@ class OllamaTestFixture {
      */
     private fun setupLocal(localUrl: String) {
         client = OllamaClient(localUrl)
+    }
+
+    private fun prepareModel(model: LLModel): LLModel {
+        if (preparedModels.contains(model.id)) return model
+
+        synchronized(preparedModels) {
+            if (preparedModels.contains(model.id)) return model
+
+            try {
+                runBlocking {
+                    client.getModelOrNull(model.id, pullIfMissing = true)
+                }
+                preparedModels.add(model.id)
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to pull model '${model.id}': ${e.message}" }
+                teardown()
+                throw e
+            }
+        }
+
+        return model
     }
 
     private fun cleanContainer() {

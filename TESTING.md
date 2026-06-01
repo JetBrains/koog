@@ -159,6 +159,7 @@ Available provider IDs:
 - `openai` - Skip tests using OpenAI models
 - `anthropic` - Skip tests using Anthropic models
 - `google` - Skip tests using Google models
+- `deepseek` - Skip tests using DeepSeek models
 - `openrouter` - Skip tests using OpenRouter models
 
 You can also run a specific test class with provider skipping:
