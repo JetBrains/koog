@@ -178,6 +178,7 @@ the predefined executors will return a PromptExecutor instance configured with a
 | Amazon Bedrock | [simpleBedrockExecutorWithBearerToken](api:prompt-executor-llms-all::ai.koog.prompt.executor.llms.all.simpleBedrockExecutorWithBearerToken) | Wraps `BedrockLLMClient` and uses the provided Bedrock API key to send requests. |
 | Mistral        | [simpleMistralAIExecutor](api:prompt-executor-llms-all::ai.koog.prompt.executor.llms.all.simpleMistralAIExecutor)                            | Wraps `MistralAILLMClient` that runs prompts with Mistral models.                |
 | Ollama         | [simpleOllamaAIExecutor](api:prompt-executor-llms-all::ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor)                              | Wraps `OllamaClient` that runs prompts with Ollama.                              |
+| DeepSeek       | [simpleDeepSeekExecutor](api:prompt-executor-llms-all::ai.koog.prompt.executor.llms.all.simpleDeepSeekExecutor)                              | Wraps `DeepSeekLLMClient` that runs prompts with DeepSeek models.                |
 
 Here is an example of creating a pre-defined executor:
 
