@@ -24,6 +24,7 @@ import kotlin.reflect.KFunction
  * @param llmModel The language model to be used within the subgraph, if specified.
  * @param llmParams Parameters to configure the language model's behavior, if specified.
  * @param responseProcessor An optional processor defining the post-processing of messages returned from the LLM.
+ * @param toolChoice Controls how the language model chooses tools while running the task. Defaults to [LLMParams.ToolChoice.Required].
  * @param defineTask A suspend function defining the task logic for the subgraph.
  * @return An AIAgentSubgraphDelegate representing the constructed subgraph with the specified configuration.
  */
@@ -35,6 +36,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     responseProcessor: ResponseProcessor? = null,
+    toolChoice: LLMParams.ToolChoice = LLMParams.ToolChoice.Required,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraphWithTask(
     toolSelectionStrategy = toolSelectionStrategy,
@@ -42,6 +44,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    toolChoice = toolChoice,
     defineTask = defineTask
 )
 
@@ -56,6 +59,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
  * @param llmModel An optional LLModel to use within the subgraph for task execution. Defaults to null.
  * @param llmParams Optional parameters for configuring the behavior of the LLModel. Defaults to null.
  * @param responseProcessor An optional processor defining the post-processing of messages returned from the LLM.
+ * @param toolChoice Controls how the language model chooses tools while running the task. Defaults to [LLMParams.ToolChoice.Required].
  * @param defineTask A suspend lambda function that defines the task, taking an input of type Input and returning a task description as a String.
  * @return An instance of AIAgentSubgraphDelegate that represents the defined subgraph with input and output types.
  */
@@ -67,6 +71,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     responseProcessor: ResponseProcessor? = null,
+    toolChoice: LLMParams.ToolChoice = LLMParams.ToolChoice.Required,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraphWithTask(
     tools = tools,
@@ -74,5 +79,6 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    toolChoice = toolChoice,
     defineTask = defineTask
 )

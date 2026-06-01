@@ -131,6 +131,49 @@ class SubgraphWithTaskTest {
     }
 
     @Test
+    @JsName("testSubgraphWithTaskUsesRequiredToolChoiceByDefault")
+    fun `test subgraphWithTask uses required tool choice by default`() = runTest {
+        val finishTool = TestFinishTool
+        val executor = ToolChoiceCapturingExecutor(
+            finishToolName = finishTool.name,
+            finishToolArgsJson = finishTool.encodeArgsToString(TestFinishTool.Args(), serializer),
+        )
+
+        createAgent(
+            model = OpenAIModels.Chat.GPT4o,
+            parallelTools = false,
+            executor = executor,
+            finishTool = finishTool,
+        ).use { agent ->
+            agent.run("Test input", null)
+        }
+
+        assertEquals(listOf<LLMParams.ToolChoice?>(LLMParams.ToolChoice.Required), executor.toolChoices)
+    }
+
+    @Test
+    @JsName("testSubgraphWithTaskUsesConfiguredToolChoice")
+    fun `test subgraphWithTask uses configured tool choice`() = runTest {
+        val finishTool = TestFinishTool
+        val executor = ToolChoiceCapturingExecutor(
+            finishToolName = finishTool.name,
+            finishToolArgsJson = finishTool.encodeArgsToString(TestFinishTool.Args(), serializer),
+        )
+
+        createAgent(
+            model = OpenAIModels.Chat.GPT4o,
+            parallelTools = false,
+            executor = executor,
+            finishTool = finishTool,
+            toolChoice = LLMParams.ToolChoice.Auto,
+        ).use { agent ->
+            agent.run("Test input", null)
+        }
+
+        assertEquals(listOf<LLMParams.ToolChoice?>(LLMParams.ToolChoice.Auto), executor.toolChoices)
+    }
+
+    @Test
     @JsName("testParallelSubgraphWithTaskToolChoiceSupportSuccess")
     fun `test parallel subgraphWithTask tool_choice support success`() = runTest {
         val blankTool1 = TestBlankTool("blank-tool-1")
@@ -752,6 +795,37 @@ class SubgraphWithTaskTest {
         override fun close() {}
     }
 
+    private class ToolChoiceCapturingExecutor(
+        private val finishToolName: String,
+        private val finishToolArgsJson: String,
+    ) : PromptExecutor() {
+        val toolChoices = mutableListOf<LLMParams.ToolChoice?>()
+
+        override suspend fun execute(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Message.Assistant {
+            toolChoices += prompt.params.toolChoice
+            return Message.Assistant(
+                part = MessagePart.Tool.Call(
+                    id = toolChoices.size.toString(),
+                    tool = finishToolName,
+                    args = finishToolArgsJson,
+                ),
+                metaInfo = ResponseMetaInfo.Empty,
+            )
+        }
+
+        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
+            emptyFlow()
+
+        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
+            ModerationResult(isHarmful = false, categories = emptyMap())
+
+        override fun close() {}
+    }
+
     @Test
     @JsName("testSubgraphWithTaskRecoversFromInvalidFinishToolArgs")
     fun `test subgraphWithTask recovers fom invalid finish tool args`() = runTest {
@@ -798,6 +872,7 @@ class SubgraphWithTaskTest {
         toolRegistry: ToolRegistry? = null,
         finishTool: Tool<TestFinishTool.Args, String>? = null,
         executor: PromptExecutor? = null,
+        toolChoice: LLMParams.ToolChoice = LLMParams.ToolChoice.Required,
         installFeatures: FeatureContext.() -> Unit = {},
     ): AIAgent<String, String> {
         val finishTool = finishTool ?: TestFinishTool
@@ -811,6 +886,7 @@ class SubgraphWithTaskTest {
                 llmModel = model,
                 llmParams = llmParams,
                 parallelTools = parallelTools,
+                toolChoice = toolChoice,
             ) { input -> input }
 
             nodeStart then testSubgraphWithTask then nodeFinish
