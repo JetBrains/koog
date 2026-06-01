@@ -2,16 +2,15 @@ package ai.koog.a2a.transport
 
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskPushNotificationConfigParams
 import ai.koog.a2a.model.TaskQueryParams
 import kotlinx.coroutines.flow.Flow
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 
 /**
@@ -32,9 +31,8 @@ public interface ClientTransport : AutoCloseable {
      * @throws A2AException if server returned an error.
      */
     public suspend fun getAuthenticatedExtendedAgentCard(
-        request: Request<Nothing?>,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Response<AgentCard>
+    ): AgentCard
 
     /**
      * Calls [message/send](https://a2a-protocol.org/v0.3.0/specification/#71-messagesend).
@@ -42,9 +40,9 @@ public interface ClientTransport : AutoCloseable {
      * @throws A2AException if server returned an error.
      */
     public suspend fun sendMessage(
-        request: Request<MessageSendParams>,
+        request: MessageSendParams,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Response<ResponseEvent>
+    ): ResponseEvent
 
     /**
      * Calls [message/stream](https://a2a-protocol.org/v0.3.0/specification/#72-messagestream)
@@ -52,9 +50,9 @@ public interface ClientTransport : AutoCloseable {
      * @throws A2AException if server returned an error.
      */
     public fun sendMessageStreaming(
-        request: Request<MessageSendParams>,
+        request: MessageSendParams,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Flow<Response<Event>>
+    ): Flow<Event>
 
     /**
      * Calls [tasks/get](https://a2a-protocol.org/v0.3.0/specification/#73-tasksget)
@@ -62,9 +60,9 @@ public interface ClientTransport : AutoCloseable {
      * @throws A2AException if server returned an error.
      */
     public suspend fun getTask(
-        request: Request<TaskQueryParams>,
+        request: TaskQueryParams,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Response<Task>
+    ): Task
 
     /**
      * Calls [tasks/cancel](https://a2a-protocol.org/v0.3.0/specification/#74-taskscancel)
@@ -72,9 +70,9 @@ public interface ClientTransport : AutoCloseable {
      * @throws A2AException if server returned an error.
      */
     public suspend fun cancelTask(
-        request: Request<TaskIdParams>,
+        request: TaskIdParams,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Response<Task>
+    ): Task
 
     /**
      * Calls [tasks/resubscribe](https://a2a-protocol.org/v0.3.0/specification/#79-tasksresubscribe)
@@ -82,9 +80,9 @@ public interface ClientTransport : AutoCloseable {
      * @throws A2AException if server returned an error.
      */
     public fun resubscribeTask(
-        request: Request<TaskIdParams>,
+        request: TaskIdParams,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Flow<Response<Event>>
+    ): Flow<Event>
 
     /**
      * Calls [tasks/pushNotificationConfig/set](https://a2a-protocol.org/v0.3.0/specification/#75-taskspushnotificationconfigset)
@@ -92,9 +90,9 @@ public interface ClientTransport : AutoCloseable {
      * @throws A2AException if server returned an error.
      */
     public suspend fun setTaskPushNotificationConfig(
-        request: Request<TaskPushNotificationConfig>,
+        request: TaskPushNotificationConfig,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Response<TaskPushNotificationConfig>
+    ): TaskPushNotificationConfig
 
     /**
      * Calls [tasks/pushNotificationConfig/get](https://a2a-protocol.org/v0.3.0/specification/#76-taskspushnotificationconfigget)
@@ -102,9 +100,9 @@ public interface ClientTransport : AutoCloseable {
      * @throws A2AException if server returned an error.
      */
     public suspend fun getTaskPushNotificationConfig(
-        request: Request<TaskPushNotificationConfigParams>,
+        request: TaskPushNotificationConfigParams,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Response<TaskPushNotificationConfig>
+    ): TaskPushNotificationConfig
 
     /**
      * Calls [tasks/pushNotificationConfig/list](https://a2a-protocol.org/v0.3.0/specification/#77-taskspushnotificationconfiglist)
@@ -112,9 +110,9 @@ public interface ClientTransport : AutoCloseable {
      * @throws A2AException if server returned an error.
      */
     public suspend fun listTaskPushNotificationConfig(
-        request: Request<TaskIdParams>,
+        request: TaskIdParams,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Response<List<TaskPushNotificationConfig>>
+    ): List<TaskPushNotificationConfig>
 
     /**
      * Calls [tasks/pushNotificationConfig/delete](https://a2a-protocol.org/v0.3.0/specification/#78-taskspushnotificationconfigdelete)
@@ -122,19 +120,18 @@ public interface ClientTransport : AutoCloseable {
      * @throws A2AException if server returned an error.
      */
     public suspend fun deleteTaskPushNotificationConfig(
-        request: Request<TaskPushNotificationConfigParams>,
+        request: TaskPushNotificationConfigParams,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Response<Nothing?>
+    )
 }
 
 /**
  * Represents the client context of a call.
  *
- * @property additionalHeaders Additional call-specific headers associated with the call.
+ * @property headers Additional call-specific headers associated with the call.
  */
-@Serializable
-public data class ClientCallContext(
-    public val additionalHeaders: Map<String, List<String>> = emptyMap(),
+public class ClientCallContext(
+    public val headers: Map<String, List<String>> = emptyMap(),
 ) {
     @Suppress("MissingKDocForPublicAPI")
     public companion object {

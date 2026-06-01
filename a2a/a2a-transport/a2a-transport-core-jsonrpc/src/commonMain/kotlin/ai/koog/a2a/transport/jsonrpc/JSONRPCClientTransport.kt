@@ -18,7 +18,7 @@ import ai.koog.a2a.transport.RequestId
 import ai.koog.a2a.transport.Response
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCError
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
-import ai.koog.a2a.transport.jsonrpc.model.JSONRPCJson
+import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse

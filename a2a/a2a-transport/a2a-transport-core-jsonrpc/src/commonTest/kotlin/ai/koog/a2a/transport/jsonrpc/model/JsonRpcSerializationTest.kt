@@ -1,6 +1,6 @@
 package ai.koog.a2a.transport.jsonrpc.model
 
-import ai.koog.a2a.transport.RequestId
+import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
