@@ -2,6 +2,7 @@ package ai.koog.a2a.model
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlin.jvm.JvmStatic
 
 /**
  * Message role.
@@ -35,4 +36,9 @@ public data class Message(
     public val referenceTaskIds: List<String>? = null,
     override val contextId: String? = null,
     public val metadata: JsonObject? = null,
-) : ResponseEvent
+) : ResponseEvent {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "message"
+    }
+}

@@ -1,10 +1,12 @@
 package ai.koog.a2a.model
 
-import ai.koog.a2a.serialization.OAuthFlowsSerializer
+import ai.koog.a2a.serialization.OAuthFlowSerializer
+import ai.koog.a2a.serialization.SecuritySchemeSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlin.jvm.JvmInline
+import kotlin.jvm.JvmStatic
 
 /**
  * The [AgentCard] is a self-describing manifest for an agent. It provides essential metadata including the agent's
@@ -219,7 +221,12 @@ public data class APIKeySecurityScheme(
     public val `in`: In,
     public val name: String,
     public val description: String? = null,
-) : SecurityScheme
+) : SecurityScheme {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "apiKeySecurityScheme"
+    }
+}
 
 /**
  * The location of the API key.
@@ -250,7 +257,12 @@ public data class HTTPAuthSecurityScheme(
     public val scheme: String,
     public val bearerFormat: String? = null,
     public val description: String? = null,
-) : SecurityScheme
+) : SecurityScheme {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "httpAuthSecurityScheme"
+    }
+}
 
 /**
  * Defines a security scheme using OAuth 2.0.
@@ -262,54 +274,20 @@ public data class HTTPAuthSecurityScheme(
  */
 @Serializable
 public data class OAuth2SecurityScheme(
-    public val flows: OAuthFlows,
+    public val flows: OAuthFlow,
     public val oauth2MetadataUrl: String? = null,
     public val description: String? = null,
-) : SecurityScheme
-
-/**
- * Defines the configuration for the supported OAuth 2.0 flows.
- * The sealed hierarchy models the protocol-defined `oneof` `flows`.
- */
-@Serializable(with = OAuthFlowsSerializer::class)
-public sealed interface OAuthFlows {
-    @Serializable
-    public data class AuthorizationCode(public val authorizationCode: AuthorizationCodeOAuthFlow) : OAuthFlows
-
-    @Serializable
-    public data class ClientCredentials(public val clientCredentials: ClientCredentialsOAuthFlow) : OAuthFlows
-
-    @Serializable
-    public data class Implicit(public val implicit: ImplicitOAuthFlow) : OAuthFlows
-
-    @Serializable
-    public data class Password(public val password: PasswordOAuthFlow) : OAuthFlows
-}
-
-/**
- * Convert `oneof` representation [OAuthFlows] to an actual instance of [OAuthFlow].
- */
-public fun OAuthFlows.toOAuthFlow(): OAuthFlow = when (this) {
-    is OAuthFlows.AuthorizationCode -> authorizationCode
-    is OAuthFlows.ClientCredentials -> clientCredentials
-    is OAuthFlows.Implicit -> implicit
-    is OAuthFlows.Password -> password
-}
-
-/**
- * Convert [OAuthFlow] to `oneof` representation [OAuthFlows].
- */
-public fun OAuthFlow.toOAuthFlows(): OAuthFlows = when (this) {
-    is AuthorizationCodeOAuthFlow -> OAuthFlows.AuthorizationCode(this)
-    is ClientCredentialsOAuthFlow -> OAuthFlows.ClientCredentials(this)
-    is ImplicitOAuthFlow -> OAuthFlows.Implicit(this)
-    is PasswordOAuthFlow -> OAuthFlows.Password(this)
+) : SecurityScheme {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "oauth2SecurityScheme"
+    }
 }
 
 /**
  * Common interface for OAuth 2.0 flows.
  */
-@Serializable
+@Serializable(with = OAuthFlowSerializer::class)
 public sealed interface OAuthFlow {
     /**
      * The available scopes for the OAuth2 security scheme. A map between the scope name and a short description for it.
@@ -327,14 +305,21 @@ public sealed interface OAuthFlow {
  *
  * @property authorizationUrl The authorization URL to be used for this flow. This MUST be a URL and use TLS.
  * @property tokenUrl The token URL to be used for this flow. This MUST be a URL and use TLS.
+ * @property pkceRequired Indicates if PKCE (RFC 7636) is required for this flow.
  */
 @Serializable
 public data class AuthorizationCodeOAuthFlow(
     public val authorizationUrl: String,
     public val tokenUrl: String,
     override val scopes: Map<String, String>,
-    override val refreshUrl: String? = null
-) : OAuthFlow
+    override val refreshUrl: String? = null,
+    public val pkceRequired: Boolean? = null,
+) : OAuthFlow {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "authorizationCode"
+    }
+}
 
 /**
  * Defines configuration details for the OAuth 2.0 Client Credentials flow.
@@ -346,31 +331,71 @@ public data class ClientCredentialsOAuthFlow(
     public val tokenUrl: String,
     override val scopes: Map<String, String>,
     override val refreshUrl: String? = null
-) : OAuthFlow
+) : OAuthFlow {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "clientCredentials"
+    }
+}
 
 /**
  * Defines configuration details for the OAuth 2.0 Implicit flow.
  *
  * @property authorizationUrl The authorization URL to be used for this flow. This MUST be a URL.
  */
+@Deprecated("Deprecated in A2A 1.0. Use Authorization Code + PKCE instead")
 @Serializable
 public data class ImplicitOAuthFlow(
     public val authorizationUrl: String,
     override val scopes: Map<String, String>,
     override val refreshUrl: String? = null
-) : OAuthFlow
+) : OAuthFlow {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "implicit"
+    }
+}
 
 /**
  * Defines configuration details for the OAuth 2.0 Resource Owner Password flow.
  *
  * @property tokenUrl The token URL to be used for this flow. This MUST be a URL.
  */
+@Deprecated("Deprecated in A2A 1.0. Use Authorization Code + PKCE instead")
 @Serializable
 public data class PasswordOAuthFlow(
     public val tokenUrl: String,
     override val scopes: Map<String, String>,
     override val refreshUrl: String? = null
-) : OAuthFlow
+) : OAuthFlow {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "password"
+    }
+}
+
+/**
+ * Defines configuration details for the OAuth 2.0 Device Code flow (RFC 8628).
+ * This flow is designed for input-constrained devices such as IoT devices,
+ * and CLI tools where the user authenticates on a separate device.
+ *
+ * @property deviceAuthorizationUrl The device authorization endpoint URL.
+ * @property tokenUrl The token URL to be used for this flow.
+ * @property scopes The available scopes for the OAuth2 security scheme.
+ * @property refreshUrl The available scopes for the OAuth2 security scheme.
+ */
+@Serializable
+public data class DeviceCodeOAuthFlow(
+    public val deviceAuthorizationUrl: String,
+    public val tokenUrl: String,
+    override val scopes: Map<String, String>,
+    override val refreshUrl: String? = null,
+) : OAuthFlow {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "deviceCode"
+    }
+}
 
 /**
  * Defines a security scheme using OpenID Connect.
@@ -382,7 +407,12 @@ public data class PasswordOAuthFlow(
 public data class OpenIdConnectSecurityScheme(
     public val openIdConnectUrl: String,
     public val description: String? = null,
-) : SecurityScheme
+) : SecurityScheme {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "openIdConnectSecurityScheme"
+    }
+}
 
 /**
  * Defines a security scheme using mTLS authentication.
@@ -392,7 +422,12 @@ public data class OpenIdConnectSecurityScheme(
 @Serializable
 public data class MutualTLSSecurityScheme(
     public val description: String? = null,
-) : SecurityScheme
+) : SecurityScheme {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "mtlsSecurityScheme"
+    }
+}
 
 /**
  * Represents a distinct capability or function that an agent can perform.

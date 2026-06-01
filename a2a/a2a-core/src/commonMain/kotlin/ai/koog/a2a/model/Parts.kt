@@ -4,6 +4,7 @@ import ai.koog.a2a.serialization.ByteArrayAsBase64Serializer
 import ai.koog.a2a.serialization.PartSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlin.jvm.JvmStatic
 
 /**
  * Represents a part of a message or artifact.
@@ -37,7 +38,12 @@ public data class TextPart(
     override val filename: String? = null,
     override val mediaType: String? = null,
     override val metadata: JsonObject? = null,
-) : Part
+) : Part {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "text"
+    }
+}
 
 /**
  * Represents a file part with content provided as bytes.
@@ -71,6 +77,11 @@ public data class FileBytesPart(
         result = 31 * result + (metadata?.hashCode() ?: 0)
         return result
     }
+
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "raw"
+    }
 }
 
 /**
@@ -84,7 +95,12 @@ public data class FileUrlPart(
     override val filename: String? = null,
     override val mediaType: String? = null,
     override val metadata: JsonObject? = null,
-) : Part
+) : Part {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "url"
+    }
+}
 
 /**
  * Represents a structured data part (e.g., JSON).
@@ -97,4 +113,9 @@ public data class DataPart(
     override val filename: String? = null,
     override val mediaType: String? = null,
     override val metadata: JsonObject? = null,
-) : Part
+) : Part {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "data"
+    }
+}
