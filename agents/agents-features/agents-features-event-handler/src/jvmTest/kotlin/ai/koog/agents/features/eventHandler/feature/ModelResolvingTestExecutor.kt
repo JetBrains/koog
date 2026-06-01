@@ -24,7 +24,7 @@ class ModelResolvingTestExecutor(
 ) : PromptExecutor() {
 
     override suspend fun resolveModel(
-        requestedModel: LLModel,
+        model: LLModel,
         promptExecutorOperation: PromptExecutorOperation,
     ): ResolvedModel = ResolvedModel(effectiveModel)
 

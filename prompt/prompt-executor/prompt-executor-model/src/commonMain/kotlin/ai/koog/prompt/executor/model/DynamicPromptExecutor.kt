@@ -35,7 +35,7 @@ public abstract class DynamicPromptExecutor : PromptExecutor() {
     //region Model resolution related methods
 
     /**
-     * Resolves [requestedModel] into the [ResolvedModel] to actually use for the given
+     * Resolves [model] into the [ResolvedModel] to actually use for the given
      * [promptExecutorOperation].
      *
      * This is the single hook for model-resolution policy (e.g. fallback selection). Every entry
@@ -43,7 +43,7 @@ public abstract class DynamicPromptExecutor : PromptExecutor() {
      */
     @JvmSynthetic
     abstract override suspend fun resolveModel(
-        requestedModel: LLModel,
+        model: LLModel,
         promptExecutorOperation: PromptExecutorOperation
     ): ResolvedModel
 

@@ -146,16 +146,16 @@ public open class MultiLLMPromptExecutor @JvmOverloads constructor(
      * @throws ModelResolutionException If no client is found for the model's provider and no fallback settings are configured.
      */
     override suspend fun resolveModel(
-        requestedModel: LLModel,
+        model: LLModel,
         promptExecutorOperation: PromptExecutorOperation
     ): ResolvedModel = when {
-        requestedModel.provider in llmClients -> ResolvedModel(effectiveModel = requestedModel)
+        model.provider in llmClients -> ResolvedModel(effectiveModel = model)
 
         fallback != null -> ResolvedModel(effectiveModel = fallback.fallbackModel)
 
         else -> throw ModelResolutionException(
-            requestedModel,
-            "No client found for provider: ${requestedModel.provider}"
+            model,
+            "No client found for provider: ${model.provider}"
         )
     }
 

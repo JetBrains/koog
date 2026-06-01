@@ -80,21 +80,21 @@ public interface PromptExecutorAPI : AutoCloseable {
     public suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult
 
     /**
-     * Resolves the requested [requestedModel] to a [ResolvedModel] to actually use for the given [promptExecutorOperation].
+     * Resolves the requested [model] to a [ResolvedModel] to actually use for the given [promptExecutorOperation].
      *
      * Implementations may swap the requested model for a different one (e.g. a fallback) based on availability.
      * The default implementation returns the requested model unchanged.
      *
-     * @param requestedModel The requested [LLModel] to resolve.
+     * @param model The requested [LLModel] to resolve.
      * @param promptExecutorOperation The operation the resolved model will be used for.
      * @return A [ResolvedModel] wrapping the effective model to use.
      * @throws ModelResolutionException If the requested model cannot be resolved.
      */
     @JvmSynthetic
     public suspend fun resolveModel(
-        requestedModel: LLModel,
+        model: LLModel,
         promptExecutorOperation: PromptExecutorOperation
-    ): ResolvedModel = ResolvedModel(effectiveModel = requestedModel)
+    ): ResolvedModel = ResolvedModel(effectiveModel = model)
 
     /**
      * Executes a given prompt against an already-resolved model and returns the assistant response.
