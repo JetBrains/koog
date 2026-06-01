@@ -18,13 +18,18 @@ public class ai/koog/prompt/executor/llms/MultiLLMPromptExecutor : ai/koog/promp
 	public fun <init> ([Lkotlin/Pair;Lai/koog/prompt/executor/llms/MultiLLMPromptExecutor$FallbackPromptExecutorSettings;)V
 	public synthetic fun <init> ([Lkotlin/Pair;Lai/koog/prompt/executor/llms/MultiLLMPromptExecutor$FallbackPromptExecutorSettings;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun close ()V
+	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
 	public synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
 	public fun getBasicJsonSchemaGenerator (Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator;
 	public fun getStandardJsonSchemaGenerator (Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator;
 	public fun models (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveModel (Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/executor/model/PromptExecutorOperation;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class ai/koog/prompt/executor/llms/MultiLLMPromptExecutor$FallbackPromptExecutorSettings {
@@ -63,11 +68,16 @@ public class ai/koog/prompt/executor/llms/RoutingLLMPromptExecutor : ai/koog/pro
 	public fun <init> ([Lai/koog/prompt/executor/clients/LLMClient;Lai/koog/prompt/executor/llms/RoutingLLMPromptExecutor$FallbackPromptExecutorSettings;)V
 	public synthetic fun <init> ([Lai/koog/prompt/executor/clients/LLMClient;Lai/koog/prompt/executor/llms/RoutingLLMPromptExecutor$FallbackPromptExecutorSettings;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun close ()V
+	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
 	public synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
 	public fun models (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun resolveModel (Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/executor/model/PromptExecutorOperation;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class ai/koog/prompt/executor/llms/RoutingLLMPromptExecutor$FallbackPromptExecutorSettings {
@@ -81,33 +91,80 @@ public final class ai/koog/prompt/executor/llms/RoutingLLMPromptExecutor$Fallbac
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract class ai/koog/prompt/executor/model/DynamicPromptExecutor : ai/koog/prompt/executor/model/PromptExecutor {
+	public fun <init> ()V
+	public abstract synthetic fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final synthetic fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract synthetic fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final synthetic fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public final synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public abstract synthetic fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final synthetic fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract synthetic fun resolveModel (Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/executor/model/PromptExecutorOperation;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/executor/model/ModelResolutionException : java/lang/Exception {
+	public fun <init> (Lai/koog/prompt/llm/LLModel;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lai/koog/prompt/llm/LLModel;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
 public abstract class ai/koog/prompt/executor/model/PromptExecutor : ai/koog/prompt/executor/model/PromptExecutorAPI {
 	public fun <init> ()V
+	public synthetic fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public synthetic fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
 	public fun getBasicJsonSchemaGenerator (Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator;
 	public fun getStandardJsonSchemaGenerator (Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator;
 	public synthetic fun models (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun resolveModel (Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/executor/model/PromptExecutorOperation;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract interface class ai/koog/prompt/executor/model/PromptExecutorAPI : java/lang/AutoCloseable {
+	public synthetic fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract synthetic fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun execute$default (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun execute$default (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public synthetic fun executeMultipleChoices (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
 	public abstract synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun executeStreaming$default (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public static synthetic fun executeStreaming$default (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public fun getBasicJsonSchemaGenerator (Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator;
 	public fun getStandardJsonSchemaGenerator (Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator;
 	public synthetic fun models (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract synthetic fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun resolveModel (Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/executor/model/PromptExecutorOperation;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class ai/koog/prompt/executor/model/PromptExecutorAPI$DefaultImpls {
+	public static synthetic fun execute (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun execute$default (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun execute$default (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun executeMultipleChoices (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun executeMultipleChoices (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun executeStreaming (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun executeStreaming$default (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Ljava/util/List;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public static synthetic fun executeStreaming$default (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public static fun getBasicJsonSchemaGenerator (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator;
 	public static fun getStandardJsonSchemaGenerator (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator;
 	public static synthetic fun models (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun moderate (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/Prompt;Lai/koog/prompt/executor/model/ResolvedModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun resolveModel (Lai/koog/prompt/executor/model/PromptExecutorAPI;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/executor/model/PromptExecutorOperation;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/executor/model/PromptExecutorOperation : java/lang/Enum {
+	public static final field Execute Lai/koog/prompt/executor/model/PromptExecutorOperation;
+	public static final field Moderate Lai/koog/prompt/executor/model/PromptExecutorOperation;
+	public static final field MultipleChoices Lai/koog/prompt/executor/model/PromptExecutorOperation;
+	public static final field Streaming Lai/koog/prompt/executor/model/PromptExecutorOperation;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/executor/model/PromptExecutorOperation;
+	public static fun values ()[Lai/koog/prompt/executor/model/PromptExecutorOperation;
 }
 
 public final class ai/koog/prompt/executor/model/PromptExecutorStructuredKt {
@@ -117,6 +174,17 @@ public final class ai/koog/prompt/executor/model/PromptExecutorStructuredKt {
 	public static synthetic fun executeStructured$default (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlinx/serialization/KSerializer;Ljava/util/List;Lai/koog/prompt/executor/model/StructureFixingParser;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun parseResponseToStructuredResponse (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/prompt/message/Message$Assistant;Lai/koog/prompt/structure/StructuredRequestConfig;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/executor/model/StructureFixingParser;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun parseResponseToStructuredResponse$default (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/prompt/message/Message$Assistant;Lai/koog/prompt/structure/StructuredRequestConfig;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/executor/model/StructureFixingParser;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/executor/model/ResolvedModel {
+	public fun <init> (Lai/koog/prompt/llm/LLModel;)V
+	public final fun component1 ()Lai/koog/prompt/llm/LLModel;
+	public final fun copy (Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/executor/model/ResolvedModel;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/model/ResolvedModel;Lai/koog/prompt/llm/LLModel;ILjava/lang/Object;)Lai/koog/prompt/executor/model/ResolvedModel;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEffectiveModel ()Lai/koog/prompt/llm/LLModel;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class ai/koog/prompt/executor/model/StructureFixingParser {
