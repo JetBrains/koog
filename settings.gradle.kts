@@ -114,6 +114,8 @@ include(":docs")
 include(":test-utils")
 include(":utils")
 
+include(":examples:foundation-models-ios-app")
+
 include(":agents:agents-planner")
 
 include("agents:agents-cli")

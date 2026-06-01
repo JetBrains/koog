@@ -18,6 +18,7 @@ val excluded = setOf(
     ":agents:agents-mcp-server",
     ":integration-tests",
     ":test-utils",
+    ":examples:foundation-models-ios-app", // On-device FoundationModels example, not published
     ":koog-spring-boot-starter",
     ":koog-ktor",
     ":docs",
