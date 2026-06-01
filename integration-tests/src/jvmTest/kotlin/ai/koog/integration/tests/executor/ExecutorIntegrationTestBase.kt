@@ -57,6 +57,7 @@ import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.model.executeStructured
 import ai.koog.prompt.llm.AnthropicLLMProvider
+import ai.koog.prompt.llm.BedrockLLMProvider
 import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -205,6 +206,8 @@ abstract class ExecutorIntegrationTestBase {
                 OpenAIChatParams(toolChoice = ToolChoice.None, maxTokens = extendedLimit)
             }
 
+        is BedrockLLMProvider -> LLMParams(maxTokens = extendedLimit)
+
         else -> LLMParams(toolChoice = ToolChoice.None, maxTokens = extendedLimit)
     }
 
@@ -255,6 +258,7 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
             val endFrames = mutableListOf<StreamFrame.End>()
             val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+            val textCompleteFrames = mutableListOf<StreamFrame.TextComplete>()
             val toolDeltaFrames = mutableListOf<StreamFrame.ToolCallDelta>()
             val toolCompleteFrames = mutableListOf<StreamFrame.ToolCallComplete>()
 
@@ -262,6 +266,7 @@ abstract class ExecutorIntegrationTestBase {
                 prompt = prompt,
                 model = model,
                 textDeltaFrames = textDeltaFrames,
+                textCompleteFrames = textCompleteFrames,
                 toolDeltaFrames = toolDeltaFrames,
                 toolCompleteFrames = toolCompleteFrames,
                 endFrame = endFrames,
@@ -269,6 +274,11 @@ abstract class ExecutorIntegrationTestBase {
 
             toolDeltaFrames.shouldBeEmpty()
             toolCompleteFrames.shouldBeEmpty()
+            textCompleteFrames.forEach { complete ->
+                withClue("Streaming should not emit empty text-complete frames for ${model.id}") {
+                    complete.text.shouldNotBeBlank()
+                }
+            }
             when (model.provider) {
                 is OllamaLLMProvider -> endFrames.size shouldBe 0
 

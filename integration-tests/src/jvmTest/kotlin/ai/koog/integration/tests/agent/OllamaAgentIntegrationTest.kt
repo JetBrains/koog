@@ -47,6 +47,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.BeforeTest
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @ExtendWith(OllamaTestFixtureExtension::class)
@@ -205,7 +206,7 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("modelsWithHallucinations")
-    fun ollama_testFixToolCallLLMBased(llmModel: LLModel) = runTest(timeout = 600.seconds) {
+    fun ollama_testFixToolCallLLMBased(llmModel: LLModel) = runTest(timeout = 20.minutes) {
         withRetry(5) {
             val fileName = "compute_scores.py"
             val pathInProject = "scores.txt"

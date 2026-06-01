@@ -2,6 +2,7 @@ package ai.koog.integration.tests.utils
 
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -40,6 +41,11 @@ object Models {
     fun openRouterModels(): Stream<LLModel> = Stream.of(
         OpenRouterModels.DeepSeekV30324,
         OpenRouterModels.Qwen2_5,
+    )
+
+    @JvmStatic
+    fun deepSeekModels(): Stream<LLModel> = Stream.of(
+        DeepSeekModels.DeepSeekV4Flash,
     )
 
     @JvmStatic
@@ -120,7 +126,7 @@ object Models {
             // KG-733 [Java API] OpenAILLMClient error: 'reasoning' is provided without its required following item
             // OpenAIModels.Chat.GPT5_2,
             AnthropicModels.Haiku_4_5,
-            GoogleModels.Gemini3_1Pro_Preview,
+            GoogleModels.Gemini3_Flash_Preview,
         )
     }
 
