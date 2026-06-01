@@ -3,6 +3,7 @@ package ai.koog.a2a.model
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlin.jvm.JvmStatic
 
 /**
  * An event sent by the agent to notify the client of a change in a task's status.
@@ -19,7 +20,12 @@ public data class TaskStatusUpdateEvent(
     override val contextId: String,
     public val status: TaskStatus,
     public val metadata: JsonObject? = null,
-) : TaskEvent
+) : TaskEvent {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "statusUpdate"
+    }
+}
 
 /**
  * An event sent by the agent to notify the client that an artifact has been
@@ -40,5 +46,10 @@ public data class TaskArtifactUpdateEvent(
     public val append: Boolean? = null,
     public val lastChunk: Boolean? = null,
     public val metadata: JsonObject? = null,
-) : TaskEvent
+) : TaskEvent {
+    public companion object {
+        @JvmStatic
+        public const val KIND: String = "artifactUpdate"
+    }
+}
 
