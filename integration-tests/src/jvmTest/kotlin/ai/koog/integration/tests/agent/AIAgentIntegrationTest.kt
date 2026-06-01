@@ -80,6 +80,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
@@ -273,7 +274,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): Flow<ai.koog.prompt.streaming.StreamFrame> = emptyFlow()
+        ): Flow<StreamFrame> = emptyFlow()
 
         override suspend fun moderate(
             prompt: Prompt,
@@ -340,7 +341,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): Flow<ai.koog.prompt.streaming.StreamFrame> = emptyFlow()
+        ): Flow<StreamFrame> = emptyFlow()
 
         override suspend fun moderate(
             prompt: Prompt,

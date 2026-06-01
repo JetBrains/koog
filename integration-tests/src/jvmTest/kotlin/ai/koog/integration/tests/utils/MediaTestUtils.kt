@@ -36,6 +36,7 @@ object MediaTestUtils {
 
     private fun createSmallJpegImage(): Path {
         val file = Files.createTempFile("koog-basic-jpg-", ".jpeg")
+        file.toFile().deleteOnExit()
         val image = BufferedImage(96, 96, BufferedImage.TYPE_INT_RGB)
         val graphics = image.createGraphics()
         try {

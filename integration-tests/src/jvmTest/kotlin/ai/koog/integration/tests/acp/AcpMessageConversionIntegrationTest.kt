@@ -86,7 +86,7 @@ class AcpMessageConversionIntegrationTest {
         }
         updates.shouldForAny {
             it is SessionUpdate.ToolCall &&
-                it.toolCallId.value == "assistant-message-1" &&
+                it.toolCallId.value == "tool-call-1" &&
                 it.title == toolDescriptor.description &&
                 it.status == ToolCallStatus.PENDING &&
                 (it.rawInput as JsonObject)["orderId"]?.jsonPrimitive?.content == "A-42"
