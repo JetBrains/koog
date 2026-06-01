@@ -232,6 +232,7 @@ class ToolSchemaExecutorIntegrationTest {
     fun integration_testToolSchemaExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.ToolChoice), "Model $model does not support tool choice")
 
         val fileTools = FileTools()
 

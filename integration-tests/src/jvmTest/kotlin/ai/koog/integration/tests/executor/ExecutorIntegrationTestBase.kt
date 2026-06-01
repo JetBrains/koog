@@ -57,6 +57,7 @@ import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.model.executeStructured
 import ai.koog.prompt.llm.AnthropicLLMProvider
+import ai.koog.prompt.llm.BedrockLLMProvider
 import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -204,6 +205,8 @@ abstract class ExecutorIntegrationTestBase {
             } else {
                 OpenAIChatParams(toolChoice = ToolChoice.None, maxTokens = extendedLimit)
             }
+
+        is BedrockLLMProvider -> LLMParams(maxTokens = extendedLimit)
 
         else -> LLMParams(toolChoice = ToolChoice.None, maxTokens = extendedLimit)
     }
