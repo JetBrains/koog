@@ -4,8 +4,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.model.DynamicPromptExecutor
 import ai.koog.prompt.executor.model.ModelResolutionException
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutorOperation
 import ai.koog.prompt.executor.model.ResolvedModel
 import ai.koog.prompt.llm.LLMProvider
@@ -29,12 +29,18 @@ import kotlin.jvm.JvmSynthetic
  *
  * @param clientRouter Router responsible for selecting appropriate clients for each request
  * @param fallback Optional fallback configuration when no client is available for the requested model
+ *
+ * This class remains open for source and binary compatibility with existing subclasses. For new
+ * custom prompt executors, prefer extending [ai.koog.prompt.executor.model.DynamicPromptExecutor].
+ * If you subclass this class, prefer overriding the [ResolvedModel]-based overloads. Override the
+ * [LLModel]-based overloads only when you intentionally take over the full model-resolution and
+ * execution flow.
  */
 @OptIn(ExperimentalRoutingApi::class)
 public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     private val clientRouter: LLMClientRouter,
     private val fallback: FallbackPromptExecutorSettings? = null,
-) : DynamicPromptExecutor() {
+) : PromptExecutor() {
 
     /**
      * Represents configuration for a fallback large language model (LLM) execution strategy.
@@ -132,7 +138,21 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     }
 
     /**
+     * Executes a given prompt using the specified tools and model, and returns the assistant response.
+     *
+     * This legacy extension point is kept open for existing subclasses. New subclasses should prefer
+     * overriding the [ResolvedModel]-based overload. If this method is overridden without calling
+     * `super`, [resolveModel] is bypassed.
+     */
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Message.Assistant = execute(prompt, resolveModel(model, PromptExecutorOperation.Execute), tools)
+
+    /**
      * Executes a given prompt using the specified tools and resolved model, and returns the assistant response.
+     * Preferred extension point for subclasses that want to preserve this executor's model-resolution flow.
      *
      * @param prompt The `Prompt` to be executed, containing the input messages and parameters.
      * @param resolvedModel The resolved LLM model to use for execution.
@@ -141,10 +161,10 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
      */
     override suspend fun execute(
         prompt: Prompt,
-        resolvedModel: ResolvedModel,
+        model: ResolvedModel,
         tools: List<ToolDescriptor>
     ): Message.Assistant {
-        val effectiveModel = resolvedModel.effectiveModel
+        val effectiveModel = model.effectiveModel
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $effectiveModel" }
 
         val response = clientFor(effectiveModel).execute(prompt, effectiveModel, tools)
@@ -155,10 +175,27 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     }
 
     /**
+     * Executes the given prompt with the specified model and streams the response in chunks as a flow.
+     *
+     * This legacy extension point is kept open for existing subclasses. New subclasses should prefer
+     * overriding the [ResolvedModel]-based overload. If this method is overridden without calling
+     * `super`, [resolveModel] is bypassed.
+     */
+    @JvmSynthetic
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> = flow {
+        emitAll(executeStreaming(prompt, resolveModel(model, PromptExecutorOperation.Streaming), tools))
+    }
+
+    /**
      * Executes the given prompt with the specified resolved model and streams the response in chunks as a flow.
+     * Preferred extension point for subclasses that want to preserve this executor's model-resolution flow.
      *
      * @param prompt The prompt to execute, containing the messages and parameters.
-     * @param resolvedModel The resolved LLM model to use for execution.
+     * @param model The resolved LLM model to use for execution.
      * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
      **/
     @JvmSynthetic
@@ -175,7 +212,21 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     }
 
     /**
+     * Executes a given prompt using the specified tools and model and returns the model choices.
+     *
+     * This legacy extension point is kept open for existing subclasses. New subclasses should prefer
+     * overriding the [ResolvedModel]-based overload. If this method is overridden without calling
+     * `super`, [resolveModel] is bypassed.
+     */
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): LLMChoice = executeMultipleChoices(prompt, resolveModel(model, PromptExecutorOperation.MultipleChoices), tools)
+
+    /**
      * Executes a given prompt using the specified tools and resolved model and returns the model choices.
+     * Preferred extension point for subclasses that want to preserve this executor's model-resolution flow.
      *
      * @param prompt The `Prompt` to be executed, containing the input messages and parameters.
      * @param resolvedModel The resolved LLM model to use for execution.
@@ -198,14 +249,25 @@ public open class RoutingLLMPromptExecutor @JvmOverloads constructor(
     }
 
     /**
+     * Moderates the provided multi-modal content using the specified model.
+     *
+     * This legacy extension point is kept open for existing subclasses. New subclasses should prefer
+     * overriding the [ResolvedModel]-based overload. If this method is overridden without calling
+     * `super`, [resolveModel] is bypassed.
+     */
+    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
+        moderate(prompt, resolveModel(model, PromptExecutorOperation.Moderate))
+
+    /**
      * Moderates the provided multi-modal content using the specified resolved model.
+     * Preferred extension point for subclasses that want to preserve this executor's model-resolution flow.
      *
      * @param prompt The `Prompt` containing the content to be moderated.
-     * @param resolvedModel The resolved `LLModel` to use for moderation.
+     * @param model The resolved `LLModel` to use for moderation.
      * @return A `ModerationResult` representing the result of the moderation process.
      */
-    override suspend fun moderate(prompt: Prompt, resolvedModel: ResolvedModel): ModerationResult {
-        val effectiveModel = resolvedModel.effectiveModel
+    override suspend fun moderate(prompt: Prompt, model: ResolvedModel): ModerationResult {
+        val effectiveModel = model.effectiveModel
         logger.debug { "Moderating multi-modal content with model: ${effectiveModel.id}" }
 
         return clientFor(effectiveModel).moderate(prompt, effectiveModel)

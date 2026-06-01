@@ -15,16 +15,20 @@ import kotlin.jvm.JvmSynthetic
 /**
  * A [PromptExecutor] that introduces an explicit [resolveModel] step before every LLM operation.
  *
+ * Prefer this base class for new custom prompt executors that need fallback, routing, model
+ * substitution, or any other model-resolution policy.
+ *
  * Subclasses use [resolveModel] to translate a caller-requested [LLModel] into a [ResolvedModel]
  * — for example, to swap in a fallback model when the requested one is not directly available.
  * Each [PromptExecutor] entry point taking a plain [LLModel] is finalized here and delegates
  * to the matching [ResolvedModel]-based overload, so model resolution always happens exactly
  * once per call and subclasses cannot bypass it.
  *
- * Subclasses must implement [resolveModel] together with [execute], [executeStreaming],
- * [executeMultipleChoices], and [moderate] taking a [ResolvedModel].
+ * Subclasses must implement [resolveModel] together with the [ResolvedModel]-based [execute],
+ * [executeStreaming], [executeMultipleChoices], and [moderate] overloads.
  *
- * Inside those overrides, DO NOT delegate to the [LLModel] overloads — they are finalized to re-enter resolution and will recurse.
+ * Inside those overrides, do not delegate to the [LLModel]-based overloads. They are finalized
+ * to re-enter model resolution and will recurse.
  */
 public abstract class DynamicPromptExecutor : PromptExecutor() {
 

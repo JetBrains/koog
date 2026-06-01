@@ -1,6 +1,8 @@
 package ai.koog.prompt.executor.llms
 
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.Prompt
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
@@ -10,8 +12,12 @@ import ai.koog.prompt.executor.model.PromptExecutorOperation
 import ai.koog.prompt.executor.model.ResolvedModel
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.filterTextOnly
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -32,6 +38,48 @@ class RoutingLLMPromptExecutorTest {
 
         override fun clientFor(model: LLModel): LLMClient? =
             clients.firstOrNull { it.llmProvider() == model.provider }
+    }
+
+    private class LegacyOverrideRoutingLLMPromptExecutor(
+        router: LLMClientRouter
+    ) : RoutingLLMPromptExecutor(router) {
+
+        var executeCalls = 0
+        var executeStreamingCalls = 0
+        var executeMultipleChoicesCalls = 0
+        var moderateCalls = 0
+
+        override suspend fun execute(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Message.Assistant {
+            executeCalls++
+            return super.execute(prompt, model, tools)
+        }
+
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamFrame> {
+            executeStreamingCalls++
+            return super.executeStreaming(prompt, model, tools)
+        }
+
+        override suspend fun executeMultipleChoices(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): LLMChoice {
+            executeMultipleChoicesCalls++
+            return super.executeMultipleChoices(prompt, model, tools)
+        }
+
+        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+            moderateCalls++
+            return super.moderate(prompt, model)
+        }
     }
 
     @Test
@@ -375,5 +423,23 @@ class RoutingLLMPromptExecutorTest {
         assertFailsWith<IllegalStateException> {
             RoutingLLMPromptExecutor(clientRouter = router, fallback = fallback)
         }
+    }
+
+    @Test
+    fun testLegacyLLModelOverridesRemainSupported() = runTest {
+        val executor = LegacyOverrideRoutingLLMPromptExecutor(
+            SimpleTestRouter(MockLLMClient(provider = LLMProvider.OpenAI))
+        )
+        val model = OpenAIModels.Chat.GPT4o
+
+        executor.execute(prompt, model)
+        executor.executeStreaming(prompt, model).collect()
+        executor.executeMultipleChoices(prompt, model, emptyList())
+        executor.moderate(prompt, model)
+
+        assertEquals(1, executor.executeCalls)
+        assertEquals(1, executor.executeStreamingCalls)
+        assertEquals(1, executor.executeMultipleChoicesCalls)
+        assertEquals(1, executor.moderateCalls)
     }
 }
