@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.serialization.typeToken
+import kotlinx.schema.generator.json.JsonSchemaConfig
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -78,6 +79,18 @@ class SerializableSchemaGeneratorTest {
     @SerialName("TestObject")
     @Serializable
     data object TestObject
+
+    @Serializable
+    @SerialName("SealedOutput")
+    sealed interface SealedOutput {
+        @Serializable
+        @SerialName("SealedOutputA")
+        data class A(val payload: String) : SealedOutput
+
+        @Serializable
+        @SerialName("SealedOutputB")
+        data class B(val value: Int) : SealedOutput
+    }
 
     @OptIn(InternalAgentToolsApi::class)
     @Test
@@ -270,5 +283,65 @@ class SerializableSchemaGeneratorTest {
         )
 
         assertEquals(expectedDescriptor, actualDescriptor)
+    }
+
+    @OptIn(InternalAgentToolsApi::class)
+    @Test
+    fun testGeneratesAnyOfWithDiscriminatorForTopLevelSealedType() {
+        // A top-level sealed type produces a polymorphic schema with `oneOf`/`anyOf` rather than top-level
+        // properties, so it is converted directly via toToolParameter instead of getToolDescriptor.
+        val schema = getJsonSchema(
+            typeToken<SealedOutput>(),
+            JsonSchemaConfig(includePolymorphicDiscriminator = true),
+        )
+
+        val expectedType = ToolParameterType.AnyOf(
+            types = arrayOf(
+                ToolParameterDescriptor(
+                    name = "",
+                    description = "",
+                    type = ToolParameterType.Object(
+                        properties = listOf(
+                            ToolParameterDescriptor(
+                                name = "type",
+                                description = "",
+                                type = ToolParameterType.Enum(arrayOf("SealedOutputA")),
+                            ),
+                            ToolParameterDescriptor(
+                                name = "payload",
+                                description = "",
+                                type = ToolParameterType.String,
+                            ),
+                        ),
+                        requiredProperties = listOf("type", "payload"),
+                        additionalProperties = false,
+                    ),
+                ),
+                ToolParameterDescriptor(
+                    name = "",
+                    description = "",
+                    type = ToolParameterType.Object(
+                        properties = listOf(
+                            ToolParameterDescriptor(
+                                name = "type",
+                                description = "",
+                                type = ToolParameterType.Enum(arrayOf("SealedOutputB")),
+                            ),
+                            ToolParameterDescriptor(
+                                name = "value",
+                                description = "",
+                                type = ToolParameterType.Integer,
+                            ),
+                        ),
+                        requiredProperties = listOf("type", "value"),
+                        additionalProperties = false,
+                    ),
+                ),
+            )
+        )
+
+        val actualType = schema.toToolParameter(schema.defs).type
+
+        assertEquals(expectedType, actualType)
     }
 }

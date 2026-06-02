@@ -109,28 +109,63 @@ class AIAgentSubgraphFinishToolTest {
     @Test
     fun `generates ToolDescriptor for sealed output with anyOf and discriminator`() {
         val finishTool = FinishTool<SealedOutput>(typeToken<SealedOutput>())
-        val resultParameter = finishTool.descriptor.requiredParameters.single { it.name == "result" }
 
-        val anyOf = resultParameter.type
-        check(anyOf is ToolParameterType.AnyOf) {
-            "Expected result parameter to be AnyOf for sealed output, got: $anyOf"
-        }
-        anyOf.types.size shouldBe 2
+        val expectedDescriptor = ToolDescriptor(
+            name = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME,
+            description = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION,
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "result",
+                    description = "",
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(
+                                name = "",
+                                description = "",
+                                type = ToolParameterType.Object(
+                                    properties = listOf(
+                                        ToolParameterDescriptor(
+                                            name = "type",
+                                            description = "",
+                                            type = ToolParameterType.Enum(arrayOf("sealed_a")),
+                                        ),
+                                        ToolParameterDescriptor(
+                                            name = "payload",
+                                            description = "",
+                                            type = ToolParameterType.String,
+                                        ),
+                                    ),
+                                    requiredProperties = listOf("type", "payload"),
+                                    additionalProperties = false,
+                                ),
+                            ),
+                            ToolParameterDescriptor(
+                                name = "",
+                                description = "",
+                                type = ToolParameterType.Object(
+                                    properties = listOf(
+                                        ToolParameterDescriptor(
+                                            name = "type",
+                                            description = "",
+                                            type = ToolParameterType.Enum(arrayOf("sealed_b")),
+                                        ),
+                                        ToolParameterDescriptor(
+                                            name = "number",
+                                            description = "",
+                                            type = ToolParameterType.Integer,
+                                        ),
+                                    ),
+                                    requiredProperties = listOf("type", "number"),
+                                    additionalProperties = false,
+                                ),
+                            ),
+                        )
+                    )
+                )
+            )
+        )
 
-        anyOf.types.forEach { branchDescriptor ->
-            val branch = branchDescriptor.type
-            check(branch is ToolParameterType.Object) {
-                "Expected each branch to be Object, got: $branch"
-            }
-            val discriminator = branch.properties.firstOrNull { it.name == "type" }
-            check(discriminator != null) {
-                "Each branch must declare a type discriminator property, got: $branch"
-            }
-            val enumType = discriminator.type
-            check(enumType is ToolParameterType.Enum && enumType.entries.size == 1) {
-                "Discriminator must be a single-value enum (const), got: ${discriminator.type}"
-            }
-        }
+        finishTool.descriptor shouldBe expectedDescriptor
     }
 
     @Test
