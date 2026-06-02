@@ -69,7 +69,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
         setx ANTHROPIC_API_KEY "your-api-key"
         ```
 
-=== "Google"
+=== "Google β"
 
     Get your [Gemini API key](https://aistudio.google.com/app/api-keys) and assign it to the `GOOGLE_API_KEY` environment variable.
 
@@ -85,7 +85,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
         setx GOOGLE_API_KEY "your-api-key"
         ```  
 
-=== "DeepSeek"
+=== "DeepSeek β"
 
     Get your [DeepSeek API key](https://platform.deepseek.com/api_keys) and assign it to the `DEEPSEEK_API_KEY` environment variable.
 
@@ -133,7 +133,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
         setx BEDROCK_API_KEY "your-api-key"
         ```  
 
-=== "Mistral"
+=== "Mistral β"
 
     Get your [Mistral API key](https://console.mistral.ai/api-keys) and assign it to the `MISTRAL_API_KEY` environment variable.
 
