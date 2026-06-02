@@ -7,7 +7,7 @@ import ai.koog.a2a.model.AgentSkill
 import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.PushNotificationConfig
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
@@ -135,7 +135,7 @@ class HttpJSONRPCServerTransportTest {
         }
 
         override suspend fun onSendMessage(
-            request: Request<MessageSendParams>,
+            request: Request<SendMessageRequest>,
             ctx: ServerCallContext
         ): Response<ResponseEvent> {
             return Response(
@@ -145,7 +145,7 @@ class HttpJSONRPCServerTransportTest {
         }
 
         override fun onSendMessageStreaming(
-            request: Request<MessageSendParams>,
+            request: Request<SendMessageRequest>,
             ctx: ServerCallContext
         ): Flow<Response<Event>> {
             return updateEvents
@@ -354,7 +354,7 @@ class HttpJSONRPCServerTransportTest {
     fun testSendMessage() = runTest {
         val requestId = RequestId.StringId("test-2")
 
-        val messageSendParams = MessageSendParams(
+        val sendMessageRequest = SendMessageRequest(
             message = Message(
                 messageId = "msg-1",
                 role = Role.ROLE_USER,
@@ -365,7 +365,7 @@ class HttpJSONRPCServerTransportTest {
 
         val request = Request(
             id = requestId,
-            data = messageSendParams,
+            data = sendMessageRequest,
         )
 
         val expectedResponse = Response(
@@ -384,7 +384,7 @@ class HttpJSONRPCServerTransportTest {
     fun testSendMessageStreaming() = runTest {
         val requestId = RequestId.StringId("test-2")
 
-        val messageSendParams = MessageSendParams(
+        val sendMessageRequest = SendMessageRequest(
             message = Message(
                 messageId = "msg-1",
                 role = Role.ROLE_USER,
@@ -395,7 +395,7 @@ class HttpJSONRPCServerTransportTest {
 
         val request = Request(
             id = requestId,
-            data = messageSendParams,
+            data = sendMessageRequest,
         )
 
         val expectedResponses = MockRequestHandler.updateEvents.map {

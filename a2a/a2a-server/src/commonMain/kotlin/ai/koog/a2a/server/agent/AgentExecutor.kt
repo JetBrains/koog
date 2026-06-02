@@ -4,7 +4,7 @@ import ai.koog.a2a.exceptions.A2AContentTypeNotSupportedException
 import ai.koog.a2a.exceptions.A2ATaskNotCancelableException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskState
@@ -78,7 +78,7 @@ public interface AgentExecutor {
      * e.g., [A2AContentTypeNotSupportedException], [A2AUnsupportedOperationException], etc. See full list of available
      * A2A exceptions in [ai.koog.a2a.exceptions].
      */
-    public suspend fun execute(context: RequestContext<MessageSendParams>, eventProcessor: SessionEventProcessor)
+    public suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: SessionEventProcessor)
 
     /**
      * Request to cancel a task.

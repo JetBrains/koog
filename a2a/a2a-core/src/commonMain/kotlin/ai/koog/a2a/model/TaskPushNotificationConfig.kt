@@ -20,8 +20,8 @@ public data class TaskPushNotificationConfig(
     public val id: String? = null,
     public val token: String? = null,
     public val authentication: AuthenticationInfo? = null,
-    public val tenant: String? = null,
-)
+    override val tenant: String? = null,
+) : Request
 
 /**
  * Defines authentication details for a push notification endpoint.

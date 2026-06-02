@@ -4,7 +4,7 @@ import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
@@ -69,7 +69,7 @@ public open class A2AClient(
             "Agent card reports that authenticated extended agent card is not supported."
         }
 
-        return transport.getAuthenticatedExtendedAgentCard(request, ctx).also {
+        return transport.getExtendedAgentCard(request, ctx).also {
             agentCard.exchange(it.data)
         }
     }
@@ -80,7 +80,7 @@ public open class A2AClient(
      * @throws A2AException if server returned an error.
      */
     public suspend fun sendMessage(
-        request: Request<MessageSendParams>,
+        request: Request<SendMessageRequest>,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Response<ResponseEvent> {
         return transport.sendMessage(request, ctx)
@@ -92,7 +92,7 @@ public open class A2AClient(
      * @throws A2AException if server returned an error.
      */
     public fun sendMessageStreaming(
-        request: Request<MessageSendParams>,
+        request: Request<SendMessageRequest>,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Flow<Response<Event>> {
         check(cachedAgentCard().capabilities.streaming == true) {
@@ -135,7 +135,7 @@ public open class A2AClient(
         request: Request<TaskIdParams>,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Flow<Response<Event>> {
-        return transport.resubscribeTask(request, ctx)
+        return transport.subscribeToTask(request, ctx)
     }
 
     /**
@@ -149,7 +149,7 @@ public open class A2AClient(
     ): Response<TaskPushNotificationConfig> {
         checkPushNotificationsSupported()
 
-        return transport.setTaskPushNotificationConfig(request, ctx)
+        return transport.createTaskPushNotificationConfig(request, ctx)
     }
 
     /**
@@ -177,7 +177,7 @@ public open class A2AClient(
     ): Response<List<TaskPushNotificationConfig>> {
         checkPushNotificationsSupported()
 
-        return transport.listTaskPushNotificationConfig(request, ctx)
+        return transport.listTaskPushNotificationConfigs(request, ctx)
     }
 
     /**

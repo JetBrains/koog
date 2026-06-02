@@ -3,7 +3,7 @@ package ai.koog.agents.a2a.client.feature
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
@@ -123,7 +123,7 @@ public fun nodeA2AClientGetAuthenticatedExtendedAgentCard(
 @AIAgentBuilderDslMarker
 public fun nodeA2AClientSendMessage(
     name: String? = null,
-): AIAgentNodeDelegate<A2AClientRequest<MessageSendParams>, ResponseEvent> =
+): AIAgentNodeDelegate<A2AClientRequest<SendMessageRequest>, ResponseEvent> =
     node(name) { request ->
         withA2AAgentClient {
             a2aClientOrThrow(request.agentId)
@@ -143,7 +143,7 @@ public fun nodeA2AClientSendMessage(
 @AIAgentBuilderDslMarker
 public fun nodeA2AClientSendMessageStreaming(
     name: String? = null,
-): AIAgentNodeDelegate<A2AClientRequest<MessageSendParams>, Flow<Response<Event>>> =
+): AIAgentNodeDelegate<A2AClientRequest<SendMessageRequest>, Flow<Response<Event>>> =
     node(name) { request ->
         withA2AAgentClient {
             a2aClientOrThrow(request.agentId)

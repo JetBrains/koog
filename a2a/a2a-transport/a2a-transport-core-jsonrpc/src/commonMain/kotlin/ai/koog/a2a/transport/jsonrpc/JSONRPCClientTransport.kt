@@ -5,7 +5,7 @@ import ai.koog.a2a.exceptions.createA2AException
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
@@ -126,13 +126,13 @@ public abstract class JSONRPCClientTransport : ClientTransport {
         request(A2AMethod.GetAuthenticatedExtendedAgentCard, request, ctx)
 
     override suspend fun sendMessage(
-        request: Request<MessageSendParams>,
+        request: Request<SendMessageRequest>,
         ctx: ClientCallContext
     ): Response<ResponseEvent> =
         request(A2AMethod.SendMessage, request, ctx)
 
     override fun sendMessageStreaming(
-        request: Request<MessageSendParams>,
+        request: Request<SendMessageRequest>,
         ctx: ClientCallContext
     ): Flow<Response<Event>> =
         requestStreaming(A2AMethod.SendMessageStreaming, request, ctx)

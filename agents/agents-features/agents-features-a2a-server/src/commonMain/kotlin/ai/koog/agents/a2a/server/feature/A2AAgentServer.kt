@@ -1,6 +1,6 @@
 package ai.koog.agents.a2a.server.feature
 
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -41,7 +41,7 @@ import kotlin.contracts.contract
  * @see ai.koog.a2a.server.session.SessionEventProcessor
  */
 public class A2AAgentServer(
-    public val context: RequestContext<MessageSendParams>,
+    public val context: RequestContext<SendMessageRequest>,
     public val eventProcessor: SessionEventProcessor
 ) {
     /**
@@ -52,7 +52,7 @@ public class A2AAgentServer(
          * The A2A [RequestContext] from [ai.koog.a2a.server.agent.AgentExecutor.execute]
          * @see RequestContext
          */
-        public lateinit var context: RequestContext<MessageSendParams>
+        public lateinit var context: RequestContext<SendMessageRequest>
 
         /**
          * The A2A [SessionEventProcessor] from [ai.koog.a2a.server.agent.AgentExecutor.execute]
