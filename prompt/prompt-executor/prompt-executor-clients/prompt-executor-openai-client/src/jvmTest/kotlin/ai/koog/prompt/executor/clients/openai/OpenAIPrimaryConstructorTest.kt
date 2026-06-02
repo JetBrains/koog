@@ -77,7 +77,7 @@ class OpenAIPrimaryConstructorTest {
     }
 
     @Test
-    fun `responses API should preserve assistant phase and suppress commentary output messages`() = runTest {
+    fun testResponsesAPIPreservesAssistantPhaseForReplayAndKeepsCommentaryOutput() = runTest {
         val transport = CapturingKoogHttpClient(clientName = "CapturingOpenAIResponsesClient") { responseType ->
             when (responseType) {
                 OpenAIResponsesAPIResponse::class -> OpenAIResponsesAPIResponse(
@@ -127,11 +127,14 @@ class OpenAIPrimaryConstructorTest {
 
         assertEquals("v1/responses", transport.lastPath)
         assertEquals(true, transport.lastRequest.toString().contains("\"phase\":\"final_answer\""))
-        assertEquals(1, responses.size)
+        assertEquals(2, responses.parts.size)
+        assertEquals(null, responses.phase)
 
-        val message = assertIs<Message.Assistant>(responses.single())
-        assertEquals("Final answer", message.content)
-        assertEquals("final_answer", message.phase)
+        val commentary = assertIs<MessagePart.Text>(responses.parts[0])
+        assertEquals("Working through it", commentary.text)
+
+        val finalAnswer = assertIs<MessagePart.Text>(responses.parts[1])
+        assertEquals("Final answer", finalAnswer.text)
     }
 
     @Test
@@ -282,7 +285,7 @@ class OpenAIPrimaryConstructorTest {
     }
 
     @Test
-    fun `responses streaming should suppress commentary text deltas`() = runTest {
+    fun testResponsesStreamingEmitsCommentaryTextDeltas() = runTest {
         val responsesPath = "v1/responses"
 
         val transport = object : KoogHttpClient {
@@ -292,24 +295,27 @@ class OpenAIPrimaryConstructorTest {
                 path: String,
                 responseType: KClass<R>,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): R = error("GET is not expected in this test")
 
             override suspend fun <T : Any, R : Any> post(
                 path: String,
-                request: T,
+                requestBody: T,
                 requestBodyType: KClass<T>,
                 responseType: KClass<R>,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): R = error("POST is not expected in this test")
 
             override fun <T : Any, R : Any, O : Any> sse(
                 path: String,
-                request: T,
+                requestBody: T,
                 requestBodyType: KClass<T>,
                 dataFilter: (String?) -> Boolean,
                 decodeStreamingResponse: (String) -> R,
                 processStreamingChunk: (R) -> O?,
                 parameters: Map<String, String>,
+                headers: Map<String, String>,
             ): Flow<O> {
                 assertEquals(responsesPath, path)
 
@@ -375,6 +381,14 @@ class OpenAIPrimaryConstructorTest {
                 }
             }
 
+            override fun <T : Any> lines(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<String> = error("lines is not expected in this test")
+
             override fun close(): Unit = Unit
         }
         val client = OpenAILLMClient(
@@ -391,8 +405,9 @@ class OpenAIPrimaryConstructorTest {
             model = OpenAIModels.Chat.GPT4o
         ).toList()
 
-        assertEquals(2, frames.size)
-        assertEquals(StreamFrame.TextDelta(text = "Final", index = 1), frames[0])
-        assertIs<StreamFrame.End>(frames[1])
+        assertEquals(3, frames.size)
+        assertEquals(StreamFrame.TextDelta(text = "Working", index = 0), frames[0])
+        assertEquals(StreamFrame.TextDelta(text = "Final", index = 1), frames[1])
+        assertIs<StreamFrame.End>(frames[2])
     }
 }

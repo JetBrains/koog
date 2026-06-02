@@ -260,8 +260,6 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
     private companion object {
         private const val OPENAI_CLIENT_NAME = "OpenAILLMClient"
-        private const val OPENAI_MESSAGE_PHASE_COMMENTARY = "commentary"
-        private const val OPENAI_MESSAGE_PHASE_FINAL_ANSWER = "final_answer"
         private val staticLogger = KotlinLogging.logger { }
     }
 
@@ -362,8 +360,6 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             stream = true
         )
 
-        val outputMessagePhases = mutableMapOf<Int, String?>()
-
         return try {
             httpClient.sse(
                 path = settings.responsesAPIPath,
@@ -375,11 +371,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                 processStreamingChunk = {
                     when (it) {
                         is OpenAIStreamEvent.ResponseOutputTextDelta -> {
-                            if (outputMessagePhases[it.outputIndex] == OPENAI_MESSAGE_PHASE_COMMENTARY) {
-                                null
-                            } else {
-                                StreamFrame.TextDelta(text = it.delta, index = it.outputIndex)
-                            }
+                            StreamFrame.TextDelta(text = it.delta, index = it.outputIndex)
                         }
 
                         is OpenAIStreamEvent.ResponseReasoningTextDelta -> {
@@ -407,10 +399,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                     StreamFrame.TextComplete(item.value, it.outputIndex)
                                 }
 
-                                is Item.OutputMessage -> {
-                                    outputMessagePhases[it.outputIndex] = item.phase
-                                    null
-                                }
+                                is Item.OutputMessage -> null
 
                                 is Item.Reasoning -> {
                                     // https://developers.openai.com/api/reference/resources/responses/streaming-events#response.reasoning_text.done
@@ -441,12 +430,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                             }
                         }
 
-                        is OpenAIStreamEvent.ResponseOutputItemAdded -> {
-                            if (it.item is Item.OutputMessage) {
-                                outputMessagePhases[it.outputIndex] = it.item.phase
-                            }
-                            null
-                        }
+                        is OpenAIStreamEvent.ResponseOutputItemAdded -> null
 
                         is OpenAIStreamEvent.ResponseCompleted -> {
                             StreamFrame.End(
