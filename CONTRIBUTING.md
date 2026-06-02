@@ -159,6 +159,29 @@ When you're pairing with an AI assistant on this project:
 The documentation is published on https://docs.koog.ai/, and its sources are located in the
 [docs](https://github.com/JetBrains/koog/tree/develop/docs) directory.
 
+## Public API Compatibility
+
+This project uses Kotlin's built-in ABI validation to prevent accidental breaking changes to the public API.
+Every stable (non-beta) module has committed `.api` dump files that describe its public binary interface.
+CI checks these dumps on every PR via `./gradlew checkLegacyAbi` (part of the `compilation` job).
+
+### How it works
+
+* The Gradle task `checkLegacyAbi` compares the current compiled public API against the committed `.api` dump files in each module's `api/` directory.
+* If the public API has changed without updating the dumps, the task fails and CI blocks the merge.
+* Beta modules (`isBeta = true` in `build.gradle.kts`) are excluded from ABI validation.
+* APIs annotated as internal (e.g. `@InternalAgentsApi`, `@InternalAgentToolsApi`) are excluded from the check.
+
+### When you change a public API
+
+If you intentionally add, remove, or modify a public API in a stable module:
+
+1. Make your code changes.
+2. Run `./gradlew updateLegacyAbi` to regenerate the `.api` dump files.
+3. Review the diff in the `api/` directories to confirm only your intended changes are reflected.
+4. Commit the updated `.api` files alongside your code changes.
+5. CI will pass because the dumps now match the actual API.
+
 ## Building
 
 ### Prerequisites

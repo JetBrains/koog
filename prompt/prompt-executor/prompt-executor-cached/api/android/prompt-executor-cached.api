@@ -1,0 +1,12 @@
+public final class ai/koog/prompt/executor/cached/CachedPromptExecutor : ai/koog/prompt/executor/model/PromptExecutor {
+	public fun <init> (Lai/koog/prompt/cache/model/PromptCache;Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/utils/time/KoogClock;)V
+	public synthetic fun <init> (Lai/koog/prompt/cache/model/PromptCache;Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/utils/time/KoogClock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public fun getBasicJsonSchemaGenerator (Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/json/generator/BasicJsonSchemaGenerator;
+	public fun getStandardJsonSchemaGenerator (Lai/koog/prompt/llm/LLModel;)Lai/koog/prompt/structure/json/generator/StandardJsonSchemaGenerator;
+	public fun models (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

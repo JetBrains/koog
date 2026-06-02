@@ -1,0 +1,51 @@
+public final class ai/koog/prompt/tokenizer/CachingTokenizer : ai/koog/prompt/tokenizer/PromptTokenizer {
+	public fun <init> (Lai/koog/prompt/tokenizer/Tokenizer;)V
+	public final fun clearCache ()V
+	public fun tokenCountFor (Lai/koog/prompt/Prompt;)I
+	public fun tokenCountFor (Lai/koog/prompt/message/Message;)I
+}
+
+public final class ai/koog/prompt/tokenizer/NoTokenizer : ai/koog/prompt/tokenizer/Tokenizer {
+	public fun <init> ()V
+	public fun countTokens (Ljava/lang/String;)I
+}
+
+public final class ai/koog/prompt/tokenizer/OnDemandTokenizer : ai/koog/prompt/tokenizer/PromptTokenizer {
+	public fun <init> (Lai/koog/prompt/tokenizer/Tokenizer;)V
+	public fun tokenCountFor (Lai/koog/prompt/Prompt;)I
+	public fun tokenCountFor (Lai/koog/prompt/message/Message;)I
+}
+
+public abstract interface class ai/koog/prompt/tokenizer/PromptTokenizer {
+	public abstract fun tokenCountFor (Lai/koog/prompt/Prompt;)I
+	public abstract fun tokenCountFor (Lai/koog/prompt/message/Message;)I
+}
+
+public final class ai/koog/prompt/tokenizer/SimpleRegexBasedTokenizer : ai/koog/prompt/tokenizer/Tokenizer {
+	public fun <init> ()V
+	public fun countTokens (Ljava/lang/String;)I
+}
+
+public abstract interface class ai/koog/prompt/tokenizer/Tokenizer {
+	public abstract fun countTokens (Ljava/lang/String;)I
+}
+
+public final class ai/koog/prompt/tokenizer/tiktoken/ByteArrayKey {
+	public fun <init> ([B)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSize ()I
+	public fun hashCode ()I
+	public final fun range (II)Lai/koog/prompt/tokenizer/tiktoken/ByteArrayKey;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class ai/koog/prompt/tokenizer/tiktoken/TiktokenEncoder : ai/koog/prompt/tokenizer/Tokenizer {
+	public fun <init> (Ljava/util/Map;Lkotlin/text/Regex;I)V
+	public fun countTokens (Ljava/lang/String;)I
+	protected final fun encodeAsIds (Ljava/lang/String;)Ljava/util/List;
+}
+
+public final class ai/koog/prompt/tokenizer/tiktoken/UtilsKt {
+	public static final fun toByteArrayKey (Ljava/lang/String;)Lai/koog/prompt/tokenizer/tiktoken/ByteArrayKey;
+}
+

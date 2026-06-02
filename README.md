@@ -63,16 +63,16 @@ To help you get started with AI agents, here is a quick example:
 ```kotlin
 fun main() = runBlocking {
     // Before you run the example, assign a corresponding API key as an environment variable.
-   val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
+    val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
 
-   val agent = AIAgent(
-      promptExecutor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
-      systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
-      llmModel = OpenAIModels.Chat.GPT4o
-   )
+    val agent = AIAgent(
+        promptExecutor = MultiLLMPromptExecutor(OpenAILLMClient(apiKey)), // or Anthropic, Google, OpenRouter, etc.
+        systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
+        llmModel = OpenAIModels.Chat.GPT4o
+    )
 
-   val result = agent.run("Hello! How can you help me?")
-   println(result)
+    val result = agent.run("Hello! How can you help me?")
+    println(result)
 }
 ```
 
@@ -94,6 +94,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
     ```
     dependencies {
         implementation("ai.koog:koog-agents:1.0.0")
+        implementation("ai.koog:koog-agents-additions:1.0.0-beta")
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -104,6 +105,7 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
     ```
     dependencies {
         implementation 'ai.koog:koog-agents:1.0.0'
+        implementation 'ai.koog:koog-agents-additions:1.0.0-beta'
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -115,7 +117,12 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
     <dependency>
         <groupId>ai.koog</groupId>
         <artifactId>koog-agents-jvm</artifactId>
-        <version>0.7.3</version>
+        <version>1.0.0</version>
+    </dependency>
+    <dependency>
+        <groupId>ai.koog</groupId>
+        <artifactId>koog-agents-additions-jvm</artifactId>
+        <version>1.0.0-beta</version>
     </dependency>
     ```
 2. Make sure that you have `mavenCentral` in the list of repositories.

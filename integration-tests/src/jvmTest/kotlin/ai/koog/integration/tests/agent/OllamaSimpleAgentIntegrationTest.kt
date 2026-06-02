@@ -34,7 +34,7 @@ class OllamaSimpleAgentIntegrationTest : AIAgentTestBase() {
         @field:InjectOllamaTestFixture
         private lateinit var fixture: OllamaTestFixture
         private val ollamaSimpleExecutor get() = fixture.executor
-        private val ollamaModel get() = fixture.model
+        private val ollamaModel get() = fixture.toolChoiceModel
         private const val WORD = "Wiedergabegeschwindigkeitsmesserverwendungserlaubnis"
     }
 

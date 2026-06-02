@@ -226,7 +226,7 @@ Here are some response examples with different temperature values:
 
 ## Add tools
 
-Agents can use [tools](../tools-overview.md) to perform specific tasks.
+Agents can use [tools](../tools/index.md) to perform specific tasks.
 
 First, create a tool by annotating a function (Kotlin) or method (Java) with the [`@Tool`](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools.annotations/-tool/index.html) annotation:
 

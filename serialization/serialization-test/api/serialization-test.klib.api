@@ -1,0 +1,29 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:serialization-test>
+abstract class ai.koog.serialization/JSONElementSerializationTestBase { // ai.koog.serialization/JSONElementSerializationTestBase|null[0]
+    constructor <init>() // ai.koog.serialization/JSONElementSerializationTestBase.<init>|<init>(){}[0]
+
+    abstract val serializer // ai.koog.serialization/JSONElementSerializationTestBase.serializer|{}serializer[0]
+        abstract fun <get-serializer>(): ai.koog.serialization/JSONSerializer // ai.koog.serialization/JSONElementSerializationTestBase.serializer.<get-serializer>|<get-serializer>(){}[0]
+
+    open fun testJSONArrayEmpty() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONArrayEmpty|testJSONArrayEmpty(){}[0]
+    open fun testJSONArrayWithPrimitives() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONArrayWithPrimitives|testJSONArrayWithPrimitives(){}[0]
+    open fun testJSONElementArray() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONElementArray|testJSONElementArray(){}[0]
+    open fun testJSONElementNestedStructure() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONElementNestedStructure|testJSONElementNestedStructure(){}[0]
+    open fun testJSONLiteralBoolean() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONLiteralBoolean|testJSONLiteralBoolean(){}[0]
+    open fun testJSONLiteralNumber() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONLiteralNumber|testJSONLiteralNumber(){}[0]
+    open fun testJSONLiteralString() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONLiteralString|testJSONLiteralString(){}[0]
+    open fun testJSONNull() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONNull|testJSONNull(){}[0]
+    open fun testJSONObjectEmpty() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONObjectEmpty|testJSONObjectEmpty(){}[0]
+    open fun testJSONObjectWithPrimitives() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONObjectWithPrimitives|testJSONObjectWithPrimitives(){}[0]
+    open fun testJSONPrimitiveNull() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONPrimitiveNull|testJSONPrimitiveNull(){}[0]
+    open fun testJSONPrimitiveString() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONPrimitiveString|testJSONPrimitiveString(){}[0]
+    open fun testJSONUnquotedPrimitive() // ai.koog.serialization/JSONElementSerializationTestBase.testJSONUnquotedPrimitive|testJSONUnquotedPrimitive(){}[0]
+    open fun testRoundTripSerialization() // ai.koog.serialization/JSONElementSerializationTestBase.testRoundTripSerialization|testRoundTripSerialization(){}[0]
+}

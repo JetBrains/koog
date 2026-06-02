@@ -1,0 +1,219 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:serialization-core>
+open annotation class ai.koog.serialization.annotations/InternalKoogSerializationApi : kotlin/Annotation { // ai.koog.serialization.annotations/InternalKoogSerializationApi|null[0]
+    constructor <init>() // ai.koog.serialization.annotations/InternalKoogSerializationApi.<init>|<init>(){}[0]
+}
+
+abstract interface ai.koog.serialization/JSONSerializer { // ai.koog.serialization/JSONSerializer|null[0]
+    abstract fun <#A1: kotlin/Any?> decodeFromJSONElement(ai.koog.serialization/JSONElement, ai.koog.serialization/TypeToken): #A1 // ai.koog.serialization/JSONSerializer.decodeFromJSONElement|decodeFromJSONElement(ai.koog.serialization.JSONElement;ai.koog.serialization.TypeToken){0§<kotlin.Any?>}[0]
+    abstract fun <#A1: kotlin/Any?> decodeFromString(kotlin/String, ai.koog.serialization/TypeToken): #A1 // ai.koog.serialization/JSONSerializer.decodeFromString|decodeFromString(kotlin.String;ai.koog.serialization.TypeToken){0§<kotlin.Any?>}[0]
+    abstract fun <#A1: kotlin/Any?> encodeToJSONElement(#A1, ai.koog.serialization/TypeToken): ai.koog.serialization/JSONElement // ai.koog.serialization/JSONSerializer.encodeToJSONElement|encodeToJSONElement(0:0;ai.koog.serialization.TypeToken){0§<kotlin.Any?>}[0]
+    abstract fun <#A1: kotlin/Any?> encodeToString(#A1, ai.koog.serialization/TypeToken): kotlin/String // ai.koog.serialization/JSONSerializer.encodeToString|encodeToString(0:0;ai.koog.serialization.TypeToken){0§<kotlin.Any?>}[0]
+    open fun decodeJSONElementFromString(kotlin/String): ai.koog.serialization/JSONElement // ai.koog.serialization/JSONSerializer.decodeJSONElementFromString|decodeJSONElementFromString(kotlin.String){}[0]
+    open fun encodeJSONElementToString(ai.koog.serialization/JSONElement): kotlin/String // ai.koog.serialization/JSONSerializer.encodeJSONElementToString|encodeJSONElementToString(ai.koog.serialization.JSONElement){}[0]
+}
+
+sealed interface ai.koog.serialization/JSONElement { // ai.koog.serialization/JSONElement|null[0]
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.serialization/JSONElement.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.serialization/JSONElement> // ai.koog.serialization/JSONElement.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.serialization/JSONElement.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.koog.serialization/TypeToken // ai.koog.serialization/TypeToken|null[0]
+
+final class ai.koog.serialization.kotlinx/KotlinxSerializer : ai.koog.serialization/JSONSerializer { // ai.koog.serialization.kotlinx/KotlinxSerializer|null[0]
+    constructor <init>(kotlinx.serialization.json/Json = ...) // ai.koog.serialization.kotlinx/KotlinxSerializer.<init>|<init>(kotlinx.serialization.json.Json){}[0]
+
+    final val json // ai.koog.serialization.kotlinx/KotlinxSerializer.json|{}json[0]
+        final fun <get-json>(): kotlinx.serialization.json/Json // ai.koog.serialization.kotlinx/KotlinxSerializer.json.<get-json>|<get-json>(){}[0]
+
+    final fun <#A1: kotlin/Any?> decodeFromJSONElement(ai.koog.serialization/JSONElement, ai.koog.serialization/TypeToken): #A1 // ai.koog.serialization.kotlinx/KotlinxSerializer.decodeFromJSONElement|decodeFromJSONElement(ai.koog.serialization.JSONElement;ai.koog.serialization.TypeToken){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> decodeFromString(kotlin/String, ai.koog.serialization/TypeToken): #A1 // ai.koog.serialization.kotlinx/KotlinxSerializer.decodeFromString|decodeFromString(kotlin.String;ai.koog.serialization.TypeToken){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> encodeToJSONElement(#A1, ai.koog.serialization/TypeToken): ai.koog.serialization/JSONElement // ai.koog.serialization.kotlinx/KotlinxSerializer.encodeToJSONElement|encodeToJSONElement(0:0;ai.koog.serialization.TypeToken){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> encodeToString(#A1, ai.koog.serialization/TypeToken): kotlin/String // ai.koog.serialization.kotlinx/KotlinxSerializer.encodeToString|encodeToString(0:0;ai.koog.serialization.TypeToken){0§<kotlin.Any?>}[0]
+}
+
+final class ai.koog.serialization/JSONArray : ai.koog.serialization/JSONElement { // ai.koog.serialization/JSONArray|null[0]
+    constructor <init>(kotlin.collections/List<ai.koog.serialization/JSONElement>) // ai.koog.serialization/JSONArray.<init>|<init>(kotlin.collections.List<ai.koog.serialization.JSONElement>){}[0]
+
+    final val elements // ai.koog.serialization/JSONArray.elements|{}elements[0]
+        final fun <get-elements>(): kotlin.collections/List<ai.koog.serialization/JSONElement> // ai.koog.serialization/JSONArray.elements.<get-elements>|<get-elements>(){}[0]
+
+    final fun component1(): kotlin.collections/List<ai.koog.serialization/JSONElement> // ai.koog.serialization/JSONArray.component1|component1(){}[0]
+    final fun copy(kotlin.collections/List<ai.koog.serialization/JSONElement> = ...): ai.koog.serialization/JSONArray // ai.koog.serialization/JSONArray.copy|copy(kotlin.collections.List<ai.koog.serialization.JSONElement>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.serialization/JSONArray.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.serialization/JSONArray.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.serialization/JSONArray.toString|toString(){}[0]
+
+    final object Companion { // ai.koog.serialization/JSONArray.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.serialization/JSONArray> // ai.koog.serialization/JSONArray.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.serialization/JSONLiteral : ai.koog.serialization/JSONPrimitive { // ai.koog.serialization/JSONLiteral|null[0]
+    constructor <init>(kotlin/String, kotlin/Boolean) // ai.koog.serialization/JSONLiteral.<init>|<init>(kotlin.String;kotlin.Boolean){}[0]
+
+    final val content // ai.koog.serialization/JSONLiteral.content|{}content[0]
+        final fun <get-content>(): kotlin/String // ai.koog.serialization/JSONLiteral.content.<get-content>|<get-content>(){}[0]
+    final val isString // ai.koog.serialization/JSONLiteral.isString|{}isString[0]
+        final fun <get-isString>(): kotlin/Boolean // ai.koog.serialization/JSONLiteral.isString.<get-isString>|<get-isString>(){}[0]
+
+    final fun component1(): kotlin/String // ai.koog.serialization/JSONLiteral.component1|component1(){}[0]
+    final fun component2(): kotlin/Boolean // ai.koog.serialization/JSONLiteral.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Boolean = ...): ai.koog.serialization/JSONLiteral // ai.koog.serialization/JSONLiteral.copy|copy(kotlin.String;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.serialization/JSONLiteral.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.serialization/JSONLiteral.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.serialization/JSONLiteral.toString|toString(){}[0]
+
+    final object Companion { // ai.koog.serialization/JSONLiteral.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.serialization/JSONLiteral> // ai.koog.serialization/JSONLiteral.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.serialization/JSONObject : ai.koog.serialization/JSONElement { // ai.koog.serialization/JSONObject|null[0]
+    constructor <init>(kotlin.collections/Map<kotlin/String, ai.koog.serialization/JSONElement>) // ai.koog.serialization/JSONObject.<init>|<init>(kotlin.collections.Map<kotlin.String,ai.koog.serialization.JSONElement>){}[0]
+
+    final val entries // ai.koog.serialization/JSONObject.entries|{}entries[0]
+        final fun <get-entries>(): kotlin.collections/Map<kotlin/String, ai.koog.serialization/JSONElement> // ai.koog.serialization/JSONObject.entries.<get-entries>|<get-entries>(){}[0]
+
+    final fun component1(): kotlin.collections/Map<kotlin/String, ai.koog.serialization/JSONElement> // ai.koog.serialization/JSONObject.component1|component1(){}[0]
+    final fun copy(kotlin.collections/Map<kotlin/String, ai.koog.serialization/JSONElement> = ...): ai.koog.serialization/JSONObject // ai.koog.serialization/JSONObject.copy|copy(kotlin.collections.Map<kotlin.String,ai.koog.serialization.JSONElement>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.serialization/JSONObject.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.serialization/JSONObject.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.serialization/JSONObject.toString|toString(){}[0]
+
+    final object Companion { // ai.koog.serialization/JSONObject.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.serialization/JSONObject> // ai.koog.serialization/JSONObject.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.serialization/KotlinClassToken : ai.koog.serialization/TypeToken { // ai.koog.serialization/KotlinClassToken|null[0]
+    constructor <init>(kotlin.reflect/KClass<*>, kotlin.collections/List<ai.koog.serialization/TypeToken> = ...) // ai.koog.serialization/KotlinClassToken.<init>|<init>(kotlin.reflect.KClass<*>;kotlin.collections.List<ai.koog.serialization.TypeToken>){}[0]
+
+    final val klass // ai.koog.serialization/KotlinClassToken.klass|{}klass[0]
+        final fun <get-klass>(): kotlin.reflect/KClass<*> // ai.koog.serialization/KotlinClassToken.klass.<get-klass>|<get-klass>(){}[0]
+    final val typeArguments // ai.koog.serialization/KotlinClassToken.typeArguments|{}typeArguments[0]
+        final fun <get-typeArguments>(): kotlin.collections/List<ai.koog.serialization/TypeToken> // ai.koog.serialization/KotlinClassToken.typeArguments.<get-typeArguments>|<get-typeArguments>(){}[0]
+}
+
+final class ai.koog.serialization/KotlinTypeToken : ai.koog.serialization/TypeToken { // ai.koog.serialization/KotlinTypeToken|null[0]
+    constructor <init>(kotlin.reflect/KType) // ai.koog.serialization/KotlinTypeToken.<init>|<init>(kotlin.reflect.KType){}[0]
+
+    final val type // ai.koog.serialization/KotlinTypeToken.type|{}type[0]
+        final fun <get-type>(): kotlin.reflect/KType // ai.koog.serialization/KotlinTypeToken.type.<get-type>|<get-type>(){}[0]
+}
+
+sealed class ai.koog.serialization/JSONPrimitive : ai.koog.serialization/JSONElement { // ai.koog.serialization/JSONPrimitive|null[0]
+    abstract val content // ai.koog.serialization/JSONPrimitive.content|{}content[0]
+        abstract fun <get-content>(): kotlin/String // ai.koog.serialization/JSONPrimitive.content.<get-content>|<get-content>(){}[0]
+    abstract val isString // ai.koog.serialization/JSONPrimitive.isString|{}isString[0]
+        abstract fun <get-isString>(): kotlin/Boolean // ai.koog.serialization/JSONPrimitive.isString.<get-isString>|<get-isString>(){}[0]
+    final val booleanOrNull // ai.koog.serialization/JSONPrimitive.booleanOrNull|{}booleanOrNull[0]
+        final fun <get-booleanOrNull>(): kotlin/Boolean? // ai.koog.serialization/JSONPrimitive.booleanOrNull.<get-booleanOrNull>|<get-booleanOrNull>(){}[0]
+    final val contentOrNull // ai.koog.serialization/JSONPrimitive.contentOrNull|{}contentOrNull[0]
+        final fun <get-contentOrNull>(): kotlin/String? // ai.koog.serialization/JSONPrimitive.contentOrNull.<get-contentOrNull>|<get-contentOrNull>(){}[0]
+    final val doubleOrNull // ai.koog.serialization/JSONPrimitive.doubleOrNull|{}doubleOrNull[0]
+        final fun <get-doubleOrNull>(): kotlin/Double? // ai.koog.serialization/JSONPrimitive.doubleOrNull.<get-doubleOrNull>|<get-doubleOrNull>(){}[0]
+    final val intOrNull // ai.koog.serialization/JSONPrimitive.intOrNull|{}intOrNull[0]
+        final fun <get-intOrNull>(): kotlin/Int? // ai.koog.serialization/JSONPrimitive.intOrNull.<get-intOrNull>|<get-intOrNull>(){}[0]
+    final val longOrNull // ai.koog.serialization/JSONPrimitive.longOrNull|{}longOrNull[0]
+        final fun <get-longOrNull>(): kotlin/Long? // ai.koog.serialization/JSONPrimitive.longOrNull.<get-longOrNull>|<get-longOrNull>(){}[0]
+
+    open fun toString(): kotlin/String // ai.koog.serialization/JSONPrimitive.toString|toString(){}[0]
+
+    final object Companion { // ai.koog.serialization/JSONPrimitive.Companion|null[0]
+        final fun of(kotlin/Boolean?): ai.koog.serialization/JSONPrimitive // ai.koog.serialization/JSONPrimitive.Companion.of|of(kotlin.Boolean?){}[0]
+        final fun of(kotlin/Double?): ai.koog.serialization/JSONPrimitive // ai.koog.serialization/JSONPrimitive.Companion.of|of(kotlin.Double?){}[0]
+        final fun of(kotlin/Int?): ai.koog.serialization/JSONPrimitive // ai.koog.serialization/JSONPrimitive.Companion.of|of(kotlin.Int?){}[0]
+        final fun of(kotlin/Long?): ai.koog.serialization/JSONPrimitive // ai.koog.serialization/JSONPrimitive.Companion.of|of(kotlin.Long?){}[0]
+        final fun of(kotlin/String?): ai.koog.serialization/JSONPrimitive // ai.koog.serialization/JSONPrimitive.Companion.of|of(kotlin.String?){}[0]
+        final fun ofUnquoted(kotlin/String?): ai.koog.serialization/JSONPrimitive // ai.koog.serialization/JSONPrimitive.Companion.ofUnquoted|ofUnquoted(kotlin.String?){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.serialization/JSONPrimitive> // ai.koog.serialization/JSONPrimitive.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final object ai.koog.serialization.kotlinx/JSONArraySerializer : kotlinx.serialization/KSerializer<ai.koog.serialization/JSONArray> { // ai.koog.serialization.kotlinx/JSONArraySerializer|null[0]
+    final val descriptor // ai.koog.serialization.kotlinx/JSONArraySerializer.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.serialization.kotlinx/JSONArraySerializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.serialization/JSONArray // ai.koog.serialization.kotlinx/JSONArraySerializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+    final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.serialization/JSONArray) // ai.koog.serialization.kotlinx/JSONArraySerializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.serialization.JSONArray){}[0]
+}
+
+final object ai.koog.serialization.kotlinx/JSONElementSerializer : kotlinx.serialization/KSerializer<ai.koog.serialization/JSONElement> { // ai.koog.serialization.kotlinx/JSONElementSerializer|null[0]
+    final val descriptor // ai.koog.serialization.kotlinx/JSONElementSerializer.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.serialization.kotlinx/JSONElementSerializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.serialization/JSONElement // ai.koog.serialization.kotlinx/JSONElementSerializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+    final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.serialization/JSONElement) // ai.koog.serialization.kotlinx/JSONElementSerializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.serialization.JSONElement){}[0]
+}
+
+final object ai.koog.serialization.kotlinx/JSONLiteralSerializer : kotlinx.serialization/KSerializer<ai.koog.serialization/JSONLiteral> { // ai.koog.serialization.kotlinx/JSONLiteralSerializer|null[0]
+    final val descriptor // ai.koog.serialization.kotlinx/JSONLiteralSerializer.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.serialization.kotlinx/JSONLiteralSerializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.serialization/JSONLiteral // ai.koog.serialization.kotlinx/JSONLiteralSerializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+    final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.serialization/JSONLiteral) // ai.koog.serialization.kotlinx/JSONLiteralSerializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.serialization.JSONLiteral){}[0]
+}
+
+final object ai.koog.serialization.kotlinx/JSONNullSerializer : kotlinx.serialization/KSerializer<ai.koog.serialization/JSONNull> { // ai.koog.serialization.kotlinx/JSONNullSerializer|null[0]
+    final val descriptor // ai.koog.serialization.kotlinx/JSONNullSerializer.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.serialization.kotlinx/JSONNullSerializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.serialization/JSONNull // ai.koog.serialization.kotlinx/JSONNullSerializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+    final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.serialization/JSONNull) // ai.koog.serialization.kotlinx/JSONNullSerializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.serialization.JSONNull){}[0]
+}
+
+final object ai.koog.serialization.kotlinx/JSONObjectSerializer : kotlinx.serialization/KSerializer<ai.koog.serialization/JSONObject> { // ai.koog.serialization.kotlinx/JSONObjectSerializer|null[0]
+    final val descriptor // ai.koog.serialization.kotlinx/JSONObjectSerializer.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.serialization.kotlinx/JSONObjectSerializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.serialization/JSONObject // ai.koog.serialization.kotlinx/JSONObjectSerializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+    final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.serialization/JSONObject) // ai.koog.serialization.kotlinx/JSONObjectSerializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.serialization.JSONObject){}[0]
+}
+
+final object ai.koog.serialization.kotlinx/JSONPrimitiveSerializer : kotlinx.serialization/KSerializer<ai.koog.serialization/JSONPrimitive> { // ai.koog.serialization.kotlinx/JSONPrimitiveSerializer|null[0]
+    final val descriptor // ai.koog.serialization.kotlinx/JSONPrimitiveSerializer.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.serialization.kotlinx/JSONPrimitiveSerializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.serialization/JSONPrimitive // ai.koog.serialization.kotlinx/JSONPrimitiveSerializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+    final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.serialization/JSONPrimitive) // ai.koog.serialization.kotlinx/JSONPrimitiveSerializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.serialization.JSONPrimitive){}[0]
+}
+
+final object ai.koog.serialization/JSONNull : ai.koog.serialization/JSONPrimitive, kotlinx.serialization.internal/SerializerFactory { // ai.koog.serialization/JSONNull|null[0]
+    final val content // ai.koog.serialization/JSONNull.content|{}content[0]
+        final fun <get-content>(): kotlin/String // ai.koog.serialization/JSONNull.content.<get-content>|<get-content>(){}[0]
+    final val isString // ai.koog.serialization/JSONNull.isString|{}isString[0]
+        final fun <get-isString>(): kotlin/Boolean // ai.koog.serialization/JSONNull.isString.<get-isString>|<get-isString>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.serialization/JSONNull.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.serialization/JSONNull.hashCode|hashCode(){}[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.serialization/JSONNull> // ai.koog.serialization/JSONNull.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.serialization/JSONNull.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    final fun toString(): kotlin/String // ai.koog.serialization/JSONNull.toString|toString(){}[0]
+}
+
+final fun (ai.koog.serialization/JSONArray).ai.koog.serialization.kotlinx/toKotlinxJsonArray(): kotlinx.serialization.json/JsonArray // ai.koog.serialization.kotlinx/toKotlinxJsonArray|toKotlinxJsonArray@ai.koog.serialization.JSONArray(){}[0]
+final fun (ai.koog.serialization/JSONElement).ai.koog.serialization.kotlinx/toKotlinxJsonElement(): kotlinx.serialization.json/JsonElement // ai.koog.serialization.kotlinx/toKotlinxJsonElement|toKotlinxJsonElement@ai.koog.serialization.JSONElement(){}[0]
+final fun (ai.koog.serialization/JSONObject).ai.koog.serialization.kotlinx/toKotlinxJsonObject(): kotlinx.serialization.json/JsonObject // ai.koog.serialization.kotlinx/toKotlinxJsonObject|toKotlinxJsonObject@ai.koog.serialization.JSONObject(){}[0]
+final fun (ai.koog.serialization/JSONPrimitive).ai.koog.serialization.kotlinx/toKotlinxJsonPrimitive(): kotlinx.serialization.json/JsonPrimitive // ai.koog.serialization.kotlinx/toKotlinxJsonPrimitive|toKotlinxJsonPrimitive@ai.koog.serialization.JSONPrimitive(){}[0]
+final fun (kotlinx.serialization.json/JsonArray).ai.koog.serialization.kotlinx/toKoogJSONArray(): ai.koog.serialization/JSONArray // ai.koog.serialization.kotlinx/toKoogJSONArray|toKoogJSONArray@kotlinx.serialization.json.JsonArray(){}[0]
+final fun (kotlinx.serialization.json/JsonElement).ai.koog.serialization.kotlinx/toKoogJSONElement(): ai.koog.serialization/JSONElement // ai.koog.serialization.kotlinx/toKoogJSONElement|toKoogJSONElement@kotlinx.serialization.json.JsonElement(){}[0]
+final fun (kotlinx.serialization.json/JsonObject).ai.koog.serialization.kotlinx/toKoogJSONObject(): ai.koog.serialization/JSONObject // ai.koog.serialization.kotlinx/toKoogJSONObject|toKoogJSONObject@kotlinx.serialization.json.JsonObject(){}[0]
+final fun (kotlinx.serialization.json/JsonPrimitive).ai.koog.serialization.kotlinx/toKoogJSONPrimitive(): ai.koog.serialization/JSONPrimitive // ai.koog.serialization.kotlinx/toKoogJSONPrimitive|toKoogJSONPrimitive@kotlinx.serialization.json.JsonPrimitive(){}[0]
+final fun ai.koog.serialization/JSONPrimitive(kotlin/Boolean?): ai.koog.serialization/JSONPrimitive // ai.koog.serialization/JSONPrimitive|JSONPrimitive(kotlin.Boolean?){}[0]
+final fun ai.koog.serialization/JSONPrimitive(kotlin/Double?): ai.koog.serialization/JSONPrimitive // ai.koog.serialization/JSONPrimitive|JSONPrimitive(kotlin.Double?){}[0]
+final fun ai.koog.serialization/JSONPrimitive(kotlin/Int?): ai.koog.serialization/JSONPrimitive // ai.koog.serialization/JSONPrimitive|JSONPrimitive(kotlin.Int?){}[0]
+final fun ai.koog.serialization/JSONPrimitive(kotlin/Long?): ai.koog.serialization/JSONPrimitive // ai.koog.serialization/JSONPrimitive|JSONPrimitive(kotlin.Long?){}[0]
+final fun ai.koog.serialization/JSONPrimitive(kotlin/String?): ai.koog.serialization/JSONPrimitive // ai.koog.serialization/JSONPrimitive|JSONPrimitive(kotlin.String?){}[0]
+final fun ai.koog.serialization/JSONUnquotedPrimitive(kotlin/String?): ai.koog.serialization/JSONPrimitive // ai.koog.serialization/JSONUnquotedPrimitive|JSONUnquotedPrimitive(kotlin.String?){}[0]
+final fun ai.koog.serialization/typeToken(kotlin.reflect/KClass<*>, kotlin.collections/List<ai.koog.serialization/TypeToken> = ...): ai.koog.serialization/KotlinClassToken // ai.koog.serialization/typeToken|typeToken(kotlin.reflect.KClass<*>;kotlin.collections.List<ai.koog.serialization.TypeToken>){}[0]
+final fun ai.koog.serialization/typeToken(kotlin.reflect/KType): ai.koog.serialization/KotlinTypeToken // ai.koog.serialization/typeToken|typeToken(kotlin.reflect.KType){}[0]
+final inline fun <#A: reified kotlin/Any?> ai.koog.serialization/typeToken(): ai.koog.serialization/KotlinTypeToken // ai.koog.serialization/typeToken|typeToken(){0§<kotlin.Any?>}[0]

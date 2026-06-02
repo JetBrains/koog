@@ -1,4 +1,10 @@
+---
+status: beta
+---
+
 # GOAP agents
+
+--8<-- "versioning-snippets.md:beta"
 
 GOAP is an algorithmic planning approach that uses [A* search] find optimal action sequences
 that satisfy the goal conditions while minimizing the total cost.

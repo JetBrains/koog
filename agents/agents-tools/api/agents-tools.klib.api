@@ -1,0 +1,292 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:agents-tools>
+open annotation class ai.koog.agents.core.tools.annotations/InternalAgentToolsApi : kotlin/Annotation { // ai.koog.agents.core.tools.annotations/InternalAgentToolsApi|null[0]
+    constructor <init>() // ai.koog.agents.core.tools.annotations/InternalAgentToolsApi.<init>|<init>(){}[0]
+}
+
+open annotation class ai.koog.agents.core.tools.annotations/LLMDescription : kotlin/Annotation { // ai.koog.agents.core.tools.annotations/LLMDescription|null[0]
+    constructor <init>(kotlin/String) // ai.koog.agents.core.tools.annotations/LLMDescription.<init>|<init>(kotlin.String){}[0]
+
+    final val value // ai.koog.agents.core.tools.annotations/LLMDescription.value|{}value[0]
+        final fun <get-value>(): kotlin/String // ai.koog.agents.core.tools.annotations/LLMDescription.value.<get-value>|<get-value>(){}[0]
+}
+
+open annotation class ai.koog.agents.core.tools.annotations/Tool : kotlin/Annotation { // ai.koog.agents.core.tools.annotations/Tool|null[0]
+    constructor <init>(kotlin/String = ...) // ai.koog.agents.core.tools.annotations/Tool.<init>|<init>(kotlin.String){}[0]
+
+    final val customName // ai.koog.agents.core.tools.annotations/Tool.customName|{}customName[0]
+        final fun <get-customName>(): kotlin/String // ai.koog.agents.core.tools.annotations/Tool.customName.<get-customName>|<get-customName>(){}[0]
+}
+
+abstract interface ai.koog.agents.core.tools.serialization/ToolDescriptorSchemaGenerator { // ai.koog.agents.core.tools.serialization/ToolDescriptorSchemaGenerator|null[0]
+    abstract fun generate(ai.koog.agents.core.tools/ToolDescriptor): kotlinx.serialization.json/JsonObject // ai.koog.agents.core.tools.serialization/ToolDescriptorSchemaGenerator.generate|generate(ai.koog.agents.core.tools.ToolDescriptor){}[0]
+}
+
+abstract class <#A: kotlin/Any?, #B: kotlin/Any?> ai.koog.agents.core.tools/Tool : ai.koog.agents.core.tools/ToolBase<#A, #B> { // ai.koog.agents.core.tools/Tool|null[0]
+    constructor <init>(ai.koog.serialization/TypeToken, ai.koog.serialization/TypeToken, ai.koog.agents.core.tools/ToolDescriptor, kotlin.collections/Map<kotlin/String, kotlin/String> = ...) // ai.koog.agents.core.tools/Tool.<init>|<init>(ai.koog.serialization.TypeToken;ai.koog.serialization.TypeToken;ai.koog.agents.core.tools.ToolDescriptor;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    constructor <init>(ai.koog.serialization/TypeToken, ai.koog.serialization/TypeToken, kotlin/String, kotlin/String, kotlinx.schema.generator.json/JsonSchemaConfig = ...) // ai.koog.agents.core.tools/Tool.<init>|<init>(ai.koog.serialization.TypeToken;ai.koog.serialization.TypeToken;kotlin.String;kotlin.String;kotlinx.schema.generator.json.JsonSchemaConfig){}[0]
+
+    abstract suspend fun execute(#A): #B // ai.koog.agents.core.tools/Tool.execute|execute(1:0){}[0]
+    final suspend fun execute(#A, ai.koog.agents.core.tools/ToolCallMetadata): #B // ai.koog.agents.core.tools/Tool.execute|execute(1:0;ai.koog.agents.core.tools.ToolCallMetadata){}[0]
+}
+
+abstract class <#A: kotlin/Any?, #B: kotlin/Any?> ai.koog.agents.core.tools/ToolBase { // ai.koog.agents.core.tools/ToolBase|null[0]
+    constructor <init>(ai.koog.serialization/TypeToken, ai.koog.serialization/TypeToken, ai.koog.agents.core.tools/ToolDescriptor, kotlin.collections/Map<kotlin/String, kotlin/String> = ...) // ai.koog.agents.core.tools/ToolBase.<init>|<init>(ai.koog.serialization.TypeToken;ai.koog.serialization.TypeToken;ai.koog.agents.core.tools.ToolDescriptor;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    constructor <init>(ai.koog.serialization/TypeToken, ai.koog.serialization/TypeToken, kotlin/String, kotlin/String, kotlinx.schema.generator.json/JsonSchemaConfig = ...) // ai.koog.agents.core.tools/ToolBase.<init>|<init>(ai.koog.serialization.TypeToken;ai.koog.serialization.TypeToken;kotlin.String;kotlin.String;kotlinx.schema.generator.json.JsonSchemaConfig){}[0]
+
+    final val argsType // ai.koog.agents.core.tools/ToolBase.argsType|{}argsType[0]
+        final fun <get-argsType>(): ai.koog.serialization/TypeToken // ai.koog.agents.core.tools/ToolBase.argsType.<get-argsType>|<get-argsType>(){}[0]
+    final val descriptor // ai.koog.agents.core.tools/ToolBase.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): ai.koog.agents.core.tools/ToolDescriptor // ai.koog.agents.core.tools/ToolBase.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+    final val metadata // ai.koog.agents.core.tools/ToolBase.metadata|{}metadata[0]
+        final fun <get-metadata>(): kotlin.collections/Map<kotlin/String, kotlin/String> // ai.koog.agents.core.tools/ToolBase.metadata.<get-metadata>|<get-metadata>(){}[0]
+    final val name // ai.koog.agents.core.tools/ToolBase.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.koog.agents.core.tools/ToolBase.name.<get-name>|<get-name>(){}[0]
+    final val resultType // ai.koog.agents.core.tools/ToolBase.resultType|{}resultType[0]
+        final fun <get-resultType>(): ai.koog.serialization/TypeToken // ai.koog.agents.core.tools/ToolBase.resultType.<get-resultType>|<get-resultType>(){}[0]
+
+    abstract suspend fun execute(#A, ai.koog.agents.core.tools/ToolCallMetadata): #B // ai.koog.agents.core.tools/ToolBase.execute|execute(1:0;ai.koog.agents.core.tools.ToolCallMetadata){}[0]
+    final fun encodeArgsToString(#A, ai.koog.serialization/JSONSerializer): kotlin/String // ai.koog.agents.core.tools/ToolBase.encodeArgsToString|encodeArgsToString(1:0;ai.koog.serialization.JSONSerializer){}[0]
+    final fun encodeArgsToStringUnsafe(kotlin/Any?, ai.koog.serialization/JSONSerializer): kotlin/String // ai.koog.agents.core.tools/ToolBase.encodeArgsToStringUnsafe|encodeArgsToStringUnsafe(kotlin.Any?;ai.koog.serialization.JSONSerializer){}[0]
+    final fun encodeArgsUnsafe(kotlin/Any?, ai.koog.serialization/JSONSerializer): ai.koog.serialization/JSONObject // ai.koog.agents.core.tools/ToolBase.encodeArgsUnsafe|encodeArgsUnsafe(kotlin.Any?;ai.koog.serialization.JSONSerializer){}[0]
+    final fun encodeResultToStringUnsafe(kotlin/Any?, ai.koog.serialization/JSONSerializer): kotlin/String // ai.koog.agents.core.tools/ToolBase.encodeResultToStringUnsafe|encodeResultToStringUnsafe(kotlin.Any?;ai.koog.serialization.JSONSerializer){}[0]
+    open fun decodeArgs(ai.koog.serialization/JSONObject, ai.koog.serialization/JSONSerializer): #A // ai.koog.agents.core.tools/ToolBase.decodeArgs|decodeArgs(ai.koog.serialization.JSONObject;ai.koog.serialization.JSONSerializer){}[0]
+    open fun decodeResult(ai.koog.serialization/JSONElement, ai.koog.serialization/JSONSerializer): #B // ai.koog.agents.core.tools/ToolBase.decodeResult|decodeResult(ai.koog.serialization.JSONElement;ai.koog.serialization.JSONSerializer){}[0]
+    open fun encodeArgs(#A, ai.koog.serialization/JSONSerializer): ai.koog.serialization/JSONObject // ai.koog.agents.core.tools/ToolBase.encodeArgs|encodeArgs(1:0;ai.koog.serialization.JSONSerializer){}[0]
+    open fun encodeResult(#B, ai.koog.serialization/JSONSerializer): ai.koog.serialization/JSONElement // ai.koog.agents.core.tools/ToolBase.encodeResult|encodeResult(1:1;ai.koog.serialization.JSONSerializer){}[0]
+    open fun encodeResultToString(#B, ai.koog.serialization/JSONSerializer): kotlin/String // ai.koog.agents.core.tools/ToolBase.encodeResultToString|encodeResultToString(1:1;ai.koog.serialization.JSONSerializer){}[0]
+}
+
+abstract class <#A: kotlin/Any?> ai.koog.agents.core.tools/SimpleTool : ai.koog.agents.core.tools/Tool<#A, kotlin/String> { // ai.koog.agents.core.tools/SimpleTool|null[0]
+    constructor <init>(ai.koog.serialization/TypeToken, kotlin/String, kotlin/String) // ai.koog.agents.core.tools/SimpleTool.<init>|<init>(ai.koog.serialization.TypeToken;kotlin.String;kotlin.String){}[0]
+
+    open fun encodeResultToString(kotlin/String, ai.koog.serialization/JSONSerializer): kotlin/String // ai.koog.agents.core.tools/SimpleTool.encodeResultToString|encodeResultToString(kotlin.String;ai.koog.serialization.JSONSerializer){}[0]
+}
+
+final class ai.koog.agents.core.tools/ToolCallMetadata : kotlin.collections/Map<kotlin/String, kotlin/Any?> { // ai.koog.agents.core.tools/ToolCallMetadata|null[0]
+    constructor <init>(kotlin.collections/Map<kotlin/String, kotlin/Any?>) // ai.koog.agents.core.tools/ToolCallMetadata.<init>|<init>(kotlin.collections.Map<kotlin.String,kotlin.Any?>){}[0]
+
+    final val entries // ai.koog.agents.core.tools/ToolCallMetadata.entries|{}entries[0]
+        final fun <get-entries>(): kotlin.collections/Set<kotlin.collections/Map.Entry<kotlin/String, kotlin/Any?>> // ai.koog.agents.core.tools/ToolCallMetadata.entries.<get-entries>|<get-entries>(){}[0]
+    final val keys // ai.koog.agents.core.tools/ToolCallMetadata.keys|{}keys[0]
+        final fun <get-keys>(): kotlin.collections/Set<kotlin/String> // ai.koog.agents.core.tools/ToolCallMetadata.keys.<get-keys>|<get-keys>(){}[0]
+    final val size // ai.koog.agents.core.tools/ToolCallMetadata.size|{}size[0]
+        final fun <get-size>(): kotlin/Int // ai.koog.agents.core.tools/ToolCallMetadata.size.<get-size>|<get-size>(){}[0]
+    final val values // ai.koog.agents.core.tools/ToolCallMetadata.values|{}values[0]
+        final fun <get-values>(): kotlin.collections/Collection<kotlin/Any?> // ai.koog.agents.core.tools/ToolCallMetadata.values.<get-values>|<get-values>(){}[0]
+
+    final fun containsKey(kotlin/String): kotlin/Boolean // ai.koog.agents.core.tools/ToolCallMetadata.containsKey|containsKey(kotlin.String){}[0]
+    final fun containsValue(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolCallMetadata.containsValue|containsValue(kotlin.Any?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolCallMetadata.equals|equals(kotlin.Any?){}[0]
+    final fun get(kotlin/String): kotlin/Any? // ai.koog.agents.core.tools/ToolCallMetadata.get|get(kotlin.String){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolCallMetadata.hashCode|hashCode(){}[0]
+    final fun isEmpty(): kotlin/Boolean // ai.koog.agents.core.tools/ToolCallMetadata.isEmpty|isEmpty(){}[0]
+    final fun plus(ai.koog.agents.core.tools/ToolCallMetadata): ai.koog.agents.core.tools/ToolCallMetadata // ai.koog.agents.core.tools/ToolCallMetadata.plus|plus(ai.koog.agents.core.tools.ToolCallMetadata){}[0]
+    final fun plus(kotlin.collections/Map<kotlin/String, kotlin/Any?>): ai.koog.agents.core.tools/ToolCallMetadata // ai.koog.agents.core.tools/ToolCallMetadata.plus|plus(kotlin.collections.Map<kotlin.String,kotlin.Any?>){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolCallMetadata.toString|toString(){}[0]
+
+    final object Companion { // ai.koog.agents.core.tools/ToolCallMetadata.Companion|null[0]
+        final val EMPTY // ai.koog.agents.core.tools/ToolCallMetadata.Companion.EMPTY|{}EMPTY[0]
+            final fun <get-EMPTY>(): ai.koog.agents.core.tools/ToolCallMetadata // ai.koog.agents.core.tools/ToolCallMetadata.Companion.EMPTY.<get-EMPTY>|<get-EMPTY>(){}[0]
+
+        final fun of(kotlin/Array<out kotlin/Pair<kotlin/String, kotlin/Any?>>...): ai.koog.agents.core.tools/ToolCallMetadata // ai.koog.agents.core.tools/ToolCallMetadata.Companion.of|of(kotlin.Array<out|kotlin.Pair<kotlin.String,kotlin.Any?>>...){}[0]
+    }
+
+    // Targets: [js]
+    final fun asJsReadonlyMapView(): kotlin.js.collections/JsReadonlyMap<kotlin/String, kotlin/Any?> // ai.koog.agents.core.tools/ToolCallMetadata.asJsReadonlyMapView|asJsReadonlyMapView(){}[0]
+}
+
+final class ai.koog.agents.core.tools/ToolParameterDescriptor { // ai.koog.agents.core.tools/ToolParameterDescriptor|null[0]
+    constructor <init>(kotlin/String, kotlin/String, ai.koog.agents.core.tools/ToolParameterType) // ai.koog.agents.core.tools/ToolParameterDescriptor.<init>|<init>(kotlin.String;kotlin.String;ai.koog.agents.core.tools.ToolParameterType){}[0]
+
+    final val description // ai.koog.agents.core.tools/ToolParameterDescriptor.description|{}description[0]
+        final fun <get-description>(): kotlin/String // ai.koog.agents.core.tools/ToolParameterDescriptor.description.<get-description>|<get-description>(){}[0]
+    final val name // ai.koog.agents.core.tools/ToolParameterDescriptor.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.koog.agents.core.tools/ToolParameterDescriptor.name.<get-name>|<get-name>(){}[0]
+    final val type // ai.koog.agents.core.tools/ToolParameterDescriptor.type|{}type[0]
+        final fun <get-type>(): ai.koog.agents.core.tools/ToolParameterType // ai.koog.agents.core.tools/ToolParameterDescriptor.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/String // ai.koog.agents.core.tools/ToolParameterDescriptor.component1|component1(){}[0]
+    final fun component2(): kotlin/String // ai.koog.agents.core.tools/ToolParameterDescriptor.component2|component2(){}[0]
+    final fun component3(): ai.koog.agents.core.tools/ToolParameterType // ai.koog.agents.core.tools/ToolParameterDescriptor.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., ai.koog.agents.core.tools/ToolParameterType = ...): ai.koog.agents.core.tools/ToolParameterDescriptor // ai.koog.agents.core.tools/ToolParameterDescriptor.copy|copy(kotlin.String;kotlin.String;ai.koog.agents.core.tools.ToolParameterType){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolParameterDescriptor.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolParameterDescriptor.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolParameterDescriptor.toString|toString(){}[0]
+}
+
+final class ai.koog.agents.core.tools/ToolRegistry { // ai.koog.agents.core.tools/ToolRegistry|null[0]
+    constructor <init>(kotlin/Function1<ai.koog.agents.core.tools/ToolRegistryBuilder, kotlin/Unit>) // ai.koog.agents.core.tools/ToolRegistry.<init>|<init>(kotlin.Function1<ai.koog.agents.core.tools.ToolRegistryBuilder,kotlin.Unit>){}[0]
+
+    final val tools // ai.koog.agents.core.tools/ToolRegistry.tools|{}tools[0]
+        final fun <get-tools>(): kotlin.collections/List<ai.koog.agents.core.tools/ToolBase<*, *>> // ai.koog.agents.core.tools/ToolRegistry.tools.<get-tools>|<get-tools>(){}[0]
+
+    final fun add(ai.koog.agents.core.tools/ToolBase<*, *>) // ai.koog.agents.core.tools/ToolRegistry.add|add(ai.koog.agents.core.tools.ToolBase<*,*>){}[0]
+    final fun addAll(kotlin/Array<out ai.koog.agents.core.tools/ToolBase<*, *>>...) // ai.koog.agents.core.tools/ToolRegistry.addAll|addAll(kotlin.Array<out|ai.koog.agents.core.tools.ToolBase<*,*>>...){}[0]
+    final fun getTool(kotlin/String): ai.koog.agents.core.tools/ToolBase<*, *> // ai.koog.agents.core.tools/ToolRegistry.getTool|getTool(kotlin.String){}[0]
+    final fun getToolOrNull(kotlin/String): ai.koog.agents.core.tools/ToolBase<*, *>? // ai.koog.agents.core.tools/ToolRegistry.getToolOrNull|getToolOrNull(kotlin.String){}[0]
+    final fun plus(ai.koog.agents.core.tools/ToolRegistry): ai.koog.agents.core.tools/ToolRegistry // ai.koog.agents.core.tools/ToolRegistry.plus|plus(ai.koog.agents.core.tools.ToolRegistry){}[0]
+    final inline fun <#A1: reified ai.koog.agents.core.tools/ToolBase<*, *>> getTool(): #A1 // ai.koog.agents.core.tools/ToolRegistry.getTool|getTool(){0§<ai.koog.agents.core.tools.ToolBase<*,*>>}[0]
+
+    final object Companion { // ai.koog.agents.core.tools/ToolRegistry.Companion|null[0]
+        final val EMPTY // ai.koog.agents.core.tools/ToolRegistry.Companion.EMPTY|{}EMPTY[0]
+            final fun <get-EMPTY>(): ai.koog.agents.core.tools/ToolRegistry // ai.koog.agents.core.tools/ToolRegistry.Companion.EMPTY.<get-EMPTY>|<get-EMPTY>(){}[0]
+
+        final fun builder(): ai.koog.agents.core.tools/ToolRegistryBuilder // ai.koog.agents.core.tools/ToolRegistry.Companion.builder|builder(){}[0]
+    }
+}
+
+final class ai.koog.agents.core.tools/ToolRegistryBuilder { // ai.koog.agents.core.tools/ToolRegistryBuilder|null[0]
+    constructor <init>() // ai.koog.agents.core.tools/ToolRegistryBuilder.<init>|<init>(){}[0]
+
+    final fun build(): ai.koog.agents.core.tools/ToolRegistry // ai.koog.agents.core.tools/ToolRegistryBuilder.build|build(){}[0]
+    final fun tool(ai.koog.agents.core.tools/ToolBase<*, *>): ai.koog.agents.core.tools/ToolRegistryBuilder // ai.koog.agents.core.tools/ToolRegistryBuilder.tool|tool(ai.koog.agents.core.tools.ToolBase<*,*>){}[0]
+    final fun tools(kotlin.collections/List<ai.koog.agents.core.tools/ToolBase<*, *>>): ai.koog.agents.core.tools/ToolRegistryBuilder // ai.koog.agents.core.tools/ToolRegistryBuilder.tools|tools(kotlin.collections.List<ai.koog.agents.core.tools.ToolBase<*,*>>){}[0]
+}
+
+open class ai.koog.agents.core.tools/ToolDescriptor { // ai.koog.agents.core.tools/ToolDescriptor|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin.collections/List<ai.koog.agents.core.tools/ToolParameterDescriptor> = ..., kotlin.collections/List<ai.koog.agents.core.tools/ToolParameterDescriptor> = ..., ai.koog.prompt.message/CacheControl? = ...) // ai.koog.agents.core.tools/ToolDescriptor.<init>|<init>(kotlin.String;kotlin.String;kotlin.collections.List<ai.koog.agents.core.tools.ToolParameterDescriptor>;kotlin.collections.List<ai.koog.agents.core.tools.ToolParameterDescriptor>;ai.koog.prompt.message.CacheControl?){}[0]
+
+    final val cacheControl // ai.koog.agents.core.tools/ToolDescriptor.cacheControl|{}cacheControl[0]
+        final fun <get-cacheControl>(): ai.koog.prompt.message/CacheControl? // ai.koog.agents.core.tools/ToolDescriptor.cacheControl.<get-cacheControl>|<get-cacheControl>(){}[0]
+    final val description // ai.koog.agents.core.tools/ToolDescriptor.description|{}description[0]
+        final fun <get-description>(): kotlin/String // ai.koog.agents.core.tools/ToolDescriptor.description.<get-description>|<get-description>(){}[0]
+    final val name // ai.koog.agents.core.tools/ToolDescriptor.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.koog.agents.core.tools/ToolDescriptor.name.<get-name>|<get-name>(){}[0]
+    final val optionalParameters // ai.koog.agents.core.tools/ToolDescriptor.optionalParameters|{}optionalParameters[0]
+        final fun <get-optionalParameters>(): kotlin.collections/List<ai.koog.agents.core.tools/ToolParameterDescriptor> // ai.koog.agents.core.tools/ToolDescriptor.optionalParameters.<get-optionalParameters>|<get-optionalParameters>(){}[0]
+    final val requiredParameters // ai.koog.agents.core.tools/ToolDescriptor.requiredParameters|{}requiredParameters[0]
+        final fun <get-requiredParameters>(): kotlin.collections/List<ai.koog.agents.core.tools/ToolParameterDescriptor> // ai.koog.agents.core.tools/ToolDescriptor.requiredParameters.<get-requiredParameters>|<get-requiredParameters>(){}[0]
+
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin.collections/List<ai.koog.agents.core.tools/ToolParameterDescriptor> = ..., kotlin.collections/List<ai.koog.agents.core.tools/ToolParameterDescriptor> = ..., ai.koog.prompt.message/CacheControl? = ...): ai.koog.agents.core.tools/ToolDescriptor // ai.koog.agents.core.tools/ToolDescriptor.copy|copy(kotlin.String;kotlin.String;kotlin.collections.List<ai.koog.agents.core.tools.ToolParameterDescriptor>;kotlin.collections.List<ai.koog.agents.core.tools.ToolParameterDescriptor>;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun withCacheControl(ai.koog.prompt.message/CacheControl): ai.koog.agents.core.tools/ToolDescriptor // ai.koog.agents.core.tools/ToolDescriptor.withCacheControl|withCacheControl(ai.koog.prompt.message.CacheControl){}[0]
+    open fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolDescriptor.equals|equals(kotlin.Any?){}[0]
+    open fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolDescriptor.hashCode|hashCode(){}[0]
+    open fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolDescriptor.toString|toString(){}[0]
+}
+
+sealed class ai.koog.agents.core.tools/ToolException : kotlin/Exception { // ai.koog.agents.core.tools/ToolException|null[0]
+    open val message // ai.koog.agents.core.tools/ToolException.message|{}message[0]
+        open fun <get-message>(): kotlin/String // ai.koog.agents.core.tools/ToolException.message.<get-message>|<get-message>(){}[0]
+
+    final class ValidationFailure : ai.koog.agents.core.tools/ToolException { // ai.koog.agents.core.tools/ToolException.ValidationFailure|null[0]
+        constructor <init>(kotlin/String) // ai.koog.agents.core.tools/ToolException.ValidationFailure.<init>|<init>(kotlin.String){}[0]
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.agents.core.tools/ToolException.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.agents.core.tools/ToolException> // ai.koog.agents.core.tools/ToolException.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.agents.core.tools/ToolException.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed class ai.koog.agents.core.tools/ToolParameterType { // ai.koog.agents.core.tools/ToolParameterType|null[0]
+    final val name // ai.koog.agents.core.tools/ToolParameterType.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.koog.agents.core.tools/ToolParameterType.name.<get-name>|<get-name>(){}[0]
+
+    final class AnyOf : ai.koog.agents.core.tools/ToolParameterType { // ai.koog.agents.core.tools/ToolParameterType.AnyOf|null[0]
+        constructor <init>(kotlin/Array<ai.koog.agents.core.tools/ToolParameterDescriptor>) // ai.koog.agents.core.tools/ToolParameterType.AnyOf.<init>|<init>(kotlin.Array<ai.koog.agents.core.tools.ToolParameterDescriptor>){}[0]
+
+        final val types // ai.koog.agents.core.tools/ToolParameterType.AnyOf.types|{}types[0]
+            final fun <get-types>(): kotlin/Array<ai.koog.agents.core.tools/ToolParameterDescriptor> // ai.koog.agents.core.tools/ToolParameterType.AnyOf.types.<get-types>|<get-types>(){}[0]
+
+        final fun component1(): kotlin/Array<ai.koog.agents.core.tools/ToolParameterDescriptor> // ai.koog.agents.core.tools/ToolParameterType.AnyOf.component1|component1(){}[0]
+        final fun copy(kotlin/Array<ai.koog.agents.core.tools/ToolParameterDescriptor> = ...): ai.koog.agents.core.tools/ToolParameterType.AnyOf // ai.koog.agents.core.tools/ToolParameterType.AnyOf.copy|copy(kotlin.Array<ai.koog.agents.core.tools.ToolParameterDescriptor>){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolParameterType.AnyOf.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolParameterType.AnyOf.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolParameterType.AnyOf.toString|toString(){}[0]
+    }
+
+    final class Enum : ai.koog.agents.core.tools/ToolParameterType { // ai.koog.agents.core.tools/ToolParameterType.Enum|null[0]
+        constructor <init>(kotlin/Array<kotlin/String>) // ai.koog.agents.core.tools/ToolParameterType.Enum.<init>|<init>(kotlin.Array<kotlin.String>){}[0]
+
+        final val entries // ai.koog.agents.core.tools/ToolParameterType.Enum.entries|{}entries[0]
+            final fun <get-entries>(): kotlin/Array<kotlin/String> // ai.koog.agents.core.tools/ToolParameterType.Enum.entries.<get-entries>|<get-entries>(){}[0]
+
+        final fun component1(): kotlin/Array<kotlin/String> // ai.koog.agents.core.tools/ToolParameterType.Enum.component1|component1(){}[0]
+        final fun copy(kotlin/Array<kotlin/String> = ...): ai.koog.agents.core.tools/ToolParameterType.Enum // ai.koog.agents.core.tools/ToolParameterType.Enum.copy|copy(kotlin.Array<kotlin.String>){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolParameterType.Enum.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolParameterType.Enum.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolParameterType.Enum.toString|toString(){}[0]
+    }
+
+    final class List : ai.koog.agents.core.tools/ToolParameterType { // ai.koog.agents.core.tools/ToolParameterType.List|null[0]
+        constructor <init>(ai.koog.agents.core.tools/ToolParameterType) // ai.koog.agents.core.tools/ToolParameterType.List.<init>|<init>(ai.koog.agents.core.tools.ToolParameterType){}[0]
+
+        final val itemsType // ai.koog.agents.core.tools/ToolParameterType.List.itemsType|{}itemsType[0]
+            final fun <get-itemsType>(): ai.koog.agents.core.tools/ToolParameterType // ai.koog.agents.core.tools/ToolParameterType.List.itemsType.<get-itemsType>|<get-itemsType>(){}[0]
+
+        final fun component1(): ai.koog.agents.core.tools/ToolParameterType // ai.koog.agents.core.tools/ToolParameterType.List.component1|component1(){}[0]
+        final fun copy(ai.koog.agents.core.tools/ToolParameterType = ...): ai.koog.agents.core.tools/ToolParameterType.List // ai.koog.agents.core.tools/ToolParameterType.List.copy|copy(ai.koog.agents.core.tools.ToolParameterType){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolParameterType.List.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolParameterType.List.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolParameterType.List.toString|toString(){}[0]
+    }
+
+    final class Object : ai.koog.agents.core.tools/ToolParameterType { // ai.koog.agents.core.tools/ToolParameterType.Object|null[0]
+        constructor <init>(kotlin.collections/List<ai.koog.agents.core.tools/ToolParameterDescriptor>, kotlin.collections/List<kotlin/String> = ..., kotlin/Boolean? = ..., ai.koog.agents.core.tools/ToolParameterType? = ...) // ai.koog.agents.core.tools/ToolParameterType.Object.<init>|<init>(kotlin.collections.List<ai.koog.agents.core.tools.ToolParameterDescriptor>;kotlin.collections.List<kotlin.String>;kotlin.Boolean?;ai.koog.agents.core.tools.ToolParameterType?){}[0]
+
+        final val additionalProperties // ai.koog.agents.core.tools/ToolParameterType.Object.additionalProperties|{}additionalProperties[0]
+            final fun <get-additionalProperties>(): kotlin/Boolean? // ai.koog.agents.core.tools/ToolParameterType.Object.additionalProperties.<get-additionalProperties>|<get-additionalProperties>(){}[0]
+        final val additionalPropertiesType // ai.koog.agents.core.tools/ToolParameterType.Object.additionalPropertiesType|{}additionalPropertiesType[0]
+            final fun <get-additionalPropertiesType>(): ai.koog.agents.core.tools/ToolParameterType? // ai.koog.agents.core.tools/ToolParameterType.Object.additionalPropertiesType.<get-additionalPropertiesType>|<get-additionalPropertiesType>(){}[0]
+        final val properties // ai.koog.agents.core.tools/ToolParameterType.Object.properties|{}properties[0]
+            final fun <get-properties>(): kotlin.collections/List<ai.koog.agents.core.tools/ToolParameterDescriptor> // ai.koog.agents.core.tools/ToolParameterType.Object.properties.<get-properties>|<get-properties>(){}[0]
+        final val requiredProperties // ai.koog.agents.core.tools/ToolParameterType.Object.requiredProperties|{}requiredProperties[0]
+            final fun <get-requiredProperties>(): kotlin.collections/List<kotlin/String> // ai.koog.agents.core.tools/ToolParameterType.Object.requiredProperties.<get-requiredProperties>|<get-requiredProperties>(){}[0]
+
+        final fun component1(): kotlin.collections/List<ai.koog.agents.core.tools/ToolParameterDescriptor> // ai.koog.agents.core.tools/ToolParameterType.Object.component1|component1(){}[0]
+        final fun component2(): kotlin.collections/List<kotlin/String> // ai.koog.agents.core.tools/ToolParameterType.Object.component2|component2(){}[0]
+        final fun component3(): kotlin/Boolean? // ai.koog.agents.core.tools/ToolParameterType.Object.component3|component3(){}[0]
+        final fun component4(): ai.koog.agents.core.tools/ToolParameterType? // ai.koog.agents.core.tools/ToolParameterType.Object.component4|component4(){}[0]
+        final fun copy(kotlin.collections/List<ai.koog.agents.core.tools/ToolParameterDescriptor> = ..., kotlin.collections/List<kotlin/String> = ..., kotlin/Boolean? = ..., ai.koog.agents.core.tools/ToolParameterType? = ...): ai.koog.agents.core.tools/ToolParameterType.Object // ai.koog.agents.core.tools/ToolParameterType.Object.copy|copy(kotlin.collections.List<ai.koog.agents.core.tools.ToolParameterDescriptor>;kotlin.collections.List<kotlin.String>;kotlin.Boolean?;ai.koog.agents.core.tools.ToolParameterType?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolParameterType.Object.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolParameterType.Object.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolParameterType.Object.toString|toString(){}[0]
+    }
+
+    final object Boolean : ai.koog.agents.core.tools/ToolParameterType { // ai.koog.agents.core.tools/ToolParameterType.Boolean|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolParameterType.Boolean.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolParameterType.Boolean.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolParameterType.Boolean.toString|toString(){}[0]
+    }
+
+    final object Companion { // ai.koog.agents.core.tools/ToolParameterType.Companion|null[0]
+        final fun Enum(kotlin.enums/EnumEntries<*>): ai.koog.agents.core.tools/ToolParameterType.Enum // ai.koog.agents.core.tools/ToolParameterType.Companion.Enum|Enum(kotlin.enums.EnumEntries<*>){}[0]
+        final fun Enum(kotlin/Array<kotlin/Enum<*>>): ai.koog.agents.core.tools/ToolParameterType.Enum // ai.koog.agents.core.tools/ToolParameterType.Companion.Enum|Enum(kotlin.Array<kotlin.Enum<*>>){}[0]
+    }
+
+    final object Float : ai.koog.agents.core.tools/ToolParameterType { // ai.koog.agents.core.tools/ToolParameterType.Float|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolParameterType.Float.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolParameterType.Float.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolParameterType.Float.toString|toString(){}[0]
+    }
+
+    final object Integer : ai.koog.agents.core.tools/ToolParameterType { // ai.koog.agents.core.tools/ToolParameterType.Integer|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolParameterType.Integer.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolParameterType.Integer.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolParameterType.Integer.toString|toString(){}[0]
+    }
+
+    final object Null : ai.koog.agents.core.tools/ToolParameterType { // ai.koog.agents.core.tools/ToolParameterType.Null|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolParameterType.Null.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolParameterType.Null.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolParameterType.Null.toString|toString(){}[0]
+    }
+
+    final object String : ai.koog.agents.core.tools/ToolParameterType { // ai.koog.agents.core.tools/ToolParameterType.String|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.tools/ToolParameterType.String.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.agents.core.tools/ToolParameterType.String.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.agents.core.tools/ToolParameterType.String.toString|toString(){}[0]
+    }
+}
+
+final fun <#A: kotlin/Any> ai.koog.agents.core.tools/validateNotNull(#A?, kotlin/Function0<kotlin/String>): #A // ai.koog.agents.core.tools/validateNotNull|validateNotNull(0:0?;kotlin.Function0<kotlin.String>){0§<kotlin.Any>}[0]
+final fun ai.koog.agents.core.tools.schema/getJsonSchema(ai.koog.serialization/TypeToken, kotlinx.schema.generator.json/JsonSchemaConfig = ...): kotlinx.schema.json/JsonSchema // ai.koog.agents.core.tools.schema/getJsonSchema|getJsonSchema(ai.koog.serialization.TypeToken;kotlinx.schema.generator.json.JsonSchemaConfig){}[0]
+final fun ai.koog.agents.core.tools/fail(kotlin/String): kotlin/Nothing // ai.koog.agents.core.tools/fail|fail(kotlin.String){}[0]
+final fun ai.koog.agents.core.tools/validate(kotlin/Boolean, kotlin/Function0<kotlin/String>) // ai.koog.agents.core.tools/validate|validate(kotlin.Boolean;kotlin.Function0<kotlin.String>){}[0]

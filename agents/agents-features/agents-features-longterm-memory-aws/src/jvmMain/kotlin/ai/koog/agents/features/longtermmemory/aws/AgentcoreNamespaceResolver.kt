@@ -64,6 +64,7 @@ public fun interface AgentcoreNamespaceResolver {
         /**
          * Default resolver that produces AWS's documented namespace layout.
          */
+        @JvmStatic
         public val Default: AgentcoreNamespaceResolver = AgentcoreNamespaceResolver { scope ->
             require(scope.strategyId.isNotBlank()) { "strategyId must not be blank" }
             require(scope.actorId.isNotBlank()) { "actorId must not be blank" }
@@ -74,6 +75,65 @@ public fun interface AgentcoreNamespaceResolver {
                     require(scope.sessionId.isNotBlank()) { "sessionId must not be blank" }
                     "/strategies/${scope.strategyId}/actors/${scope.actorId}/sessions/${scope.sessionId}/"
                 }
+            }
+        }
+
+        @Suppress("RegExpRedundantEscape")
+        private val PLACEHOLDER_REGEX: Regex = Regex("""\{[^{}]+}""")
+
+        /**
+         * Build a resolver from a single AWS-native namespace template as returned by
+         * Bedrock AgentCore's `GetMemory` (e.g. `/strategies/{memoryStrategyId}/actors/{actorId}/`
+         * or `/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/`).
+         *
+         * AgentCore templates use the placeholder `{memoryStrategyId}` whereas this resolver
+         * uses `{strategyId}`; both are accepted and treated as synonyms. The template is bound
+         * to the [AgentcoreNamespaceScope] kind it can satisfy: a template that contains
+         * `{sessionId}` is used as the *session-scoped* template, otherwise as the *actor-scoped*
+         * template. Requests against the unsupported scope fail with a clear error.
+         *
+         * After substitution, any remaining `{...}` placeholder triggers an
+         * [IllegalStateException] — this catches templates that reference variables the resolver
+         * doesn't know about (e.g. `{tenantId}`) before they reach AgentCore as malformed
+         * namespaces.
+         */
+        @JvmStatic
+        public fun fromAwsTemplate(rawTemplate: String): AgentcoreNamespaceResolver {
+            require(rawTemplate.isNotBlank()) { "rawTemplate must not be blank" }
+            val normalized = rawTemplate.replace("{memoryStrategyId}", "{strategyId}")
+            val isSessionScoped = normalized.contains("{sessionId}")
+            return AgentcoreNamespaceResolver { scope ->
+                require(scope.strategyId.isNotBlank()) { "strategyId must not be blank" }
+                require(scope.actorId.isNotBlank()) { "actorId must not be blank" }
+                val resolved = when (scope) {
+                    is AgentcoreNamespaceScope.Actor -> {
+                        check(!isSessionScoped) {
+                            "AWS template '$rawTemplate' is session-scoped (contains {sessionId}); " +
+                                "cannot resolve actor-scoped namespace for strategyId='${scope.strategyId}'."
+                        }
+                        normalized
+                            .replace("{strategyId}", scope.strategyId)
+                            .replace("{actorId}", scope.actorId)
+                    }
+
+                    is AgentcoreNamespaceScope.Session -> {
+                        require(scope.sessionId.isNotBlank()) { "sessionId must not be blank" }
+                        check(isSessionScoped) {
+                            "AWS template '$rawTemplate' is actor-scoped (no {sessionId} placeholder); " +
+                                "cannot resolve session-scoped namespace for strategyId='${scope.strategyId}'."
+                        }
+                        normalized
+                            .replace("{strategyId}", scope.strategyId)
+                            .replace("{actorId}", scope.actorId)
+                            .replace("{sessionId}", scope.sessionId)
+                    }
+                }
+                val leftover = PLACEHOLDER_REGEX.find(resolved)
+                check(leftover == null) {
+                    "AWS template '$rawTemplate' contains unresolved placeholder '${leftover!!.value}' " +
+                        "after substitution; only {memoryStrategyId}/{strategyId}, {actorId} and {sessionId} are supported."
+                }
+                resolved
             }
         }
 

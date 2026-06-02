@@ -21,6 +21,8 @@ object TestCredentials {
 
     fun readTestOpenRouterKeyFromEnv(): String = requireEnv("OPEN_ROUTER_API_TEST_KEY")
 
+    fun readTestDeepSeekKeyFromEnv(): String = requireEnv("DEEPSEEK_API_TEST_KEY")
+
     fun readTestMistralAiKeyFromEnv(): String = requireEnv("MISTRAL_AI_API_TEST_KEY")
 
     fun readTestDashscopeKeyFromEnv(): String = requireEnv("DASHSCOPE_API_TEST_KEY")

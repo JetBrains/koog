@@ -1,0 +1,34 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:agents-features-sql>
+abstract interface ai.koog.agents.features.sql.providers/SQLPersistenceSchemaMigrator { // ai.koog.agents.features.sql.providers/SQLPersistenceSchemaMigrator|null[0]
+    abstract suspend fun migrate() // ai.koog.agents.features.sql.providers/SQLPersistenceSchemaMigrator.migrate|migrate(){}[0]
+}
+
+abstract class <#A: kotlin/Any?> ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider : ai.koog.agents.snapshot.providers/PersistenceStorageProvider<#A> { // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider|null[0]
+    constructor <init>(kotlin/String = ..., kotlin/Long? = ..., ai.koog.agents.features.sql.providers/SQLPersistenceSchemaMigrator) // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.<init>|<init>(kotlin.String;kotlin.Long?;ai.koog.agents.features.sql.providers.SQLPersistenceSchemaMigrator){}[0]
+
+    final val migrator // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.migrator|{}migrator[0]
+        final fun <get-migrator>(): ai.koog.agents.features.sql.providers/SQLPersistenceSchemaMigrator // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.migrator.<get-migrator>|<get-migrator>(){}[0]
+    final val tableName // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.tableName|{}tableName[0]
+        final fun <get-tableName>(): kotlin/String // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.tableName.<get-tableName>|<get-tableName>(){}[0]
+    final val ttlSeconds // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.ttlSeconds|{}ttlSeconds[0]
+        final fun <get-ttlSeconds>(): kotlin/Long? // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.ttlSeconds.<get-ttlSeconds>|<get-ttlSeconds>(){}[0]
+
+    abstract suspend fun <#A1: kotlin/Any?> transaction(kotlin.coroutines/SuspendFunction0<#A1>): #A1 // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.transaction|transaction(kotlin.coroutines.SuspendFunction0<0:0>){0§<kotlin.Any?>}[0]
+    abstract suspend fun cleanupExpired() // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.cleanupExpired|cleanupExpired(){}[0]
+    abstract suspend fun deleteAllCheckpoints(kotlin/String) // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.deleteAllCheckpoints|deleteAllCheckpoints(kotlin.String){}[0]
+    abstract suspend fun deleteCheckpoint(kotlin/String, kotlin/String) // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.deleteCheckpoint|deleteCheckpoint(kotlin.String;kotlin.String){}[0]
+    abstract suspend fun getCheckpointCount(kotlin/String): kotlin/Long // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.getCheckpointCount|getCheckpointCount(kotlin.String){}[0]
+    final fun calculateTtlTimestamp(kotlin.time/Instant): kotlin/Long? // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.calculateTtlTimestamp|calculateTtlTimestamp(kotlin.time.Instant){}[0]
+    open suspend fun migrate() // ai.koog.agents.features.sql.providers/SQLPersistenceStorageProvider.migrate|migrate(){}[0]
+}
+
+final object ai.koog.agents.features.sql.providers/NoOpSQLPersistenceSchemaMigrator : ai.koog.agents.features.sql.providers/SQLPersistenceSchemaMigrator { // ai.koog.agents.features.sql.providers/NoOpSQLPersistenceSchemaMigrator|null[0]
+    final suspend fun migrate() // ai.koog.agents.features.sql.providers/NoOpSQLPersistenceSchemaMigrator.migrate|migrate(){}[0]
+}

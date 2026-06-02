@@ -39,6 +39,7 @@ val excluded = setOf(
     ":http-client:http-client-test",
     ":http-client:http-client-okhttp",
     ":http-client:http-client-java",
+    ":http-client:http-client-spring-webclient",
 
     ":serialization:serialization-test",
     ":serialization:serialization-jackson",

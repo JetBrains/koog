@@ -1,0 +1,39 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:agents-features-trace>
+final class <#A: kotlin/Any?> ai.koog.agents.features.tracing.writer/TraceFeatureMessageFileWriter : ai.koog.agents.core.feature.writer/FeatureMessageFileWriter<#A> { // ai.koog.agents.features.tracing.writer/TraceFeatureMessageFileWriter|null[0]
+    constructor <init>(#A, kotlin/Function1<#A, kotlinx.io/Sink>, kotlin/Function1<ai.koog.agents.core.feature.message/FeatureMessage, kotlin/String>? = ...) // ai.koog.agents.features.tracing.writer/TraceFeatureMessageFileWriter.<init>|<init>(1:0;kotlin.Function1<1:0,kotlinx.io.Sink>;kotlin.Function1<ai.koog.agents.core.feature.message.FeatureMessage,kotlin.String>?){}[0]
+
+    final fun (ai.koog.agents.core.feature.message/FeatureMessage).toFileString(): kotlin/String // ai.koog.agents.features.tracing.writer/TraceFeatureMessageFileWriter.toFileString|toFileString@ai.koog.agents.core.feature.message.FeatureMessage(){}[0]
+}
+
+final class ai.koog.agents.features.tracing.feature/TraceFeatureConfig : ai.koog.agents.core.feature.config/FeatureConfig { // ai.koog.agents.features.tracing.feature/TraceFeatureConfig|null[0]
+    constructor <init>() // ai.koog.agents.features.tracing.feature/TraceFeatureConfig.<init>|<init>(){}[0]
+}
+
+final class ai.koog.agents.features.tracing.feature/Tracing { // ai.koog.agents.features.tracing.feature/Tracing|null[0]
+    constructor <init>() // ai.koog.agents.features.tracing.feature/Tracing.<init>|<init>(){}[0]
+
+    final object Feature : ai.koog.agents.core.feature/AIAgentGraphFeature<ai.koog.agents.features.tracing.feature/TraceFeatureConfig, ai.koog.agents.features.tracing.feature/Tracing> { // ai.koog.agents.features.tracing.feature/Tracing.Feature|null[0]
+        final val key // ai.koog.agents.features.tracing.feature/Tracing.Feature.key|{}key[0]
+            final fun <get-key>(): ai.koog.agents.core.agent.entity/AIAgentStorageKey<ai.koog.agents.features.tracing.feature/Tracing> // ai.koog.agents.features.tracing.feature/Tracing.Feature.key.<get-key>|<get-key>(){}[0]
+
+        final fun createInitialConfig(ai.koog.agents.core.agent.config/AIAgentConfig): ai.koog.agents.features.tracing.feature/TraceFeatureConfig // ai.koog.agents.features.tracing.feature/Tracing.Feature.createInitialConfig|createInitialConfig(ai.koog.agents.core.agent.config.AIAgentConfig){}[0]
+        final fun install(ai.koog.agents.features.tracing.feature/TraceFeatureConfig, ai.koog.agents.core.feature.pipeline/AIAgentGraphPipeline): ai.koog.agents.features.tracing.feature/Tracing // ai.koog.agents.features.tracing.feature/Tracing.Feature.install|install(ai.koog.agents.features.tracing.feature.TraceFeatureConfig;ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline){}[0]
+    }
+}
+
+final class ai.koog.agents.features.tracing.writer/TraceFeatureMessageLogWriter : ai.koog.agents.core.feature.writer/FeatureMessageLogWriter { // ai.koog.agents.features.tracing.writer/TraceFeatureMessageLogWriter|null[0]
+    constructor <init>(io.github.oshai.kotlinlogging/KLogger, ai.koog.agents.core.feature.writer/FeatureMessageLogWriter.LogLevel = ..., kotlin/Function1<ai.koog.agents.core.feature.message/FeatureMessage, kotlin/String>? = ...) // ai.koog.agents.features.tracing.writer/TraceFeatureMessageLogWriter.<init>|<init>(io.github.oshai.kotlinlogging.KLogger;ai.koog.agents.core.feature.writer.FeatureMessageLogWriter.LogLevel;kotlin.Function1<ai.koog.agents.core.feature.message.FeatureMessage,kotlin.String>?){}[0]
+
+    final fun (ai.koog.agents.core.feature.message/FeatureMessage).toLoggerMessage(): kotlin/String // ai.koog.agents.features.tracing.writer/TraceFeatureMessageLogWriter.toLoggerMessage|toLoggerMessage@ai.koog.agents.core.feature.message.FeatureMessage(){}[0]
+}
+
+final class ai.koog.agents.features.tracing.writer/TraceFeatureMessageRemoteWriter : ai.koog.agents.core.feature.writer/FeatureMessageRemoteWriter { // ai.koog.agents.features.tracing.writer/TraceFeatureMessageRemoteWriter|null[0]
+    constructor <init>(ai.koog.agents.core.feature.remote.server.config/ServerConnectionConfig? = ...) // ai.koog.agents.features.tracing.writer/TraceFeatureMessageRemoteWriter.<init>|<init>(ai.koog.agents.core.feature.remote.server.config.ServerConnectionConfig?){}[0]
+}

@@ -1,0 +1,69 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:agents-features-memory>
+abstract fun interface ai.koog.agents.chatMemory.feature/MessageFilter { // ai.koog.agents.chatMemory.feature/MessageFilter|null[0]
+    abstract fun test(ai.koog.prompt.message/Message): kotlin/Boolean // ai.koog.agents.chatMemory.feature/MessageFilter.test|test(ai.koog.prompt.message.Message){}[0]
+}
+
+abstract interface ai.koog.agents.chatMemory.feature/ChatHistoryProvider { // ai.koog.agents.chatMemory.feature/ChatHistoryProvider|null[0]
+    abstract suspend fun load(kotlin/String): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.agents.chatMemory.feature/ChatHistoryProvider.load|load(kotlin.String){}[0]
+    abstract suspend fun store(kotlin/String, kotlin.collections/List<ai.koog.prompt.message/Message>) // ai.koog.agents.chatMemory.feature/ChatHistoryProvider.store|store(kotlin.String;kotlin.collections.List<ai.koog.prompt.message.Message>){}[0]
+}
+
+abstract interface ai.koog.agents.chatMemory.feature/ChatMemoryPreProcessor { // ai.koog.agents.chatMemory.feature/ChatMemoryPreProcessor|null[0]
+    abstract fun preprocess(kotlin.collections/List<ai.koog.prompt.message/Message>): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.agents.chatMemory.feature/ChatMemoryPreProcessor.preprocess|preprocess(kotlin.collections.List<ai.koog.prompt.message.Message>){}[0]
+}
+
+final class ai.koog.agents.chatMemory.feature/ChatMemory { // ai.koog.agents.chatMemory.feature/ChatMemory|null[0]
+    constructor <init>() // ai.koog.agents.chatMemory.feature/ChatMemory.<init>|<init>(){}[0]
+
+    final object Feature : ai.koog.agents.core.feature/AIAgentFunctionalFeature<ai.koog.agents.chatMemory.feature/ChatMemoryConfig, ai.koog.agents.chatMemory.feature/ChatMemory>, ai.koog.agents.core.feature/AIAgentGraphFeature<ai.koog.agents.chatMemory.feature/ChatMemoryConfig, ai.koog.agents.chatMemory.feature/ChatMemory>, ai.koog.agents.core.feature/AIAgentPlannerFeature<ai.koog.agents.chatMemory.feature/ChatMemoryConfig, ai.koog.agents.chatMemory.feature/ChatMemory> { // ai.koog.agents.chatMemory.feature/ChatMemory.Feature|null[0]
+        final val key // ai.koog.agents.chatMemory.feature/ChatMemory.Feature.key|{}key[0]
+            final fun <get-key>(): ai.koog.agents.core.agent.entity/AIAgentStorageKey<ai.koog.agents.chatMemory.feature/ChatMemory> // ai.koog.agents.chatMemory.feature/ChatMemory.Feature.key.<get-key>|<get-key>(){}[0]
+
+        final fun createInitialConfig(ai.koog.agents.core.agent.config/AIAgentConfig): ai.koog.agents.chatMemory.feature/ChatMemoryConfig // ai.koog.agents.chatMemory.feature/ChatMemory.Feature.createInitialConfig|createInitialConfig(ai.koog.agents.core.agent.config.AIAgentConfig){}[0]
+        final fun install(ai.koog.agents.chatMemory.feature/ChatMemoryConfig, ai.koog.agents.core.feature.pipeline/AIAgentFunctionalPipeline): ai.koog.agents.chatMemory.feature/ChatMemory // ai.koog.agents.chatMemory.feature/ChatMemory.Feature.install|install(ai.koog.agents.chatMemory.feature.ChatMemoryConfig;ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline){}[0]
+        final fun install(ai.koog.agents.chatMemory.feature/ChatMemoryConfig, ai.koog.agents.core.feature.pipeline/AIAgentGraphPipeline): ai.koog.agents.chatMemory.feature/ChatMemory // ai.koog.agents.chatMemory.feature/ChatMemory.Feature.install|install(ai.koog.agents.chatMemory.feature.ChatMemoryConfig;ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline){}[0]
+        final fun install(ai.koog.agents.chatMemory.feature/ChatMemoryConfig, ai.koog.agents.core.feature.pipeline/AIAgentPlannerPipeline): ai.koog.agents.chatMemory.feature/ChatMemory // ai.koog.agents.chatMemory.feature/ChatMemory.Feature.install|install(ai.koog.agents.chatMemory.feature.ChatMemoryConfig;ai.koog.agents.core.feature.pipeline.AIAgentPlannerPipeline){}[0]
+    }
+}
+
+final class ai.koog.agents.chatMemory.feature/ChatMemoryConfig : ai.koog.agents.core.feature.config/FeatureConfig { // ai.koog.agents.chatMemory.feature/ChatMemoryConfig|null[0]
+    constructor <init>() // ai.koog.agents.chatMemory.feature/ChatMemoryConfig.<init>|<init>(){}[0]
+
+    final val preprocessors // ai.koog.agents.chatMemory.feature/ChatMemoryConfig.preprocessors|{}preprocessors[0]
+        final fun <get-preprocessors>(): kotlin.collections/MutableList<ai.koog.agents.chatMemory.feature/ChatMemoryPreProcessor> // ai.koog.agents.chatMemory.feature/ChatMemoryConfig.preprocessors.<get-preprocessors>|<get-preprocessors>(){}[0]
+
+    final var chatHistoryProvider // ai.koog.agents.chatMemory.feature/ChatMemoryConfig.chatHistoryProvider|{}chatHistoryProvider[0]
+        final fun <get-chatHistoryProvider>(): ai.koog.agents.chatMemory.feature/ChatHistoryProvider // ai.koog.agents.chatMemory.feature/ChatMemoryConfig.chatHistoryProvider.<get-chatHistoryProvider>|<get-chatHistoryProvider>(){}[0]
+        final fun <set-chatHistoryProvider>(ai.koog.agents.chatMemory.feature/ChatHistoryProvider) // ai.koog.agents.chatMemory.feature/ChatMemoryConfig.chatHistoryProvider.<set-chatHistoryProvider>|<set-chatHistoryProvider>(ai.koog.agents.chatMemory.feature.ChatHistoryProvider){}[0]
+
+    final fun addPreProcessor(ai.koog.agents.chatMemory.feature/ChatMemoryPreProcessor): ai.koog.agents.chatMemory.feature/ChatMemoryConfig // ai.koog.agents.chatMemory.feature/ChatMemoryConfig.addPreProcessor|addPreProcessor(ai.koog.agents.chatMemory.feature.ChatMemoryPreProcessor){}[0]
+    final fun chatHistoryProvider(ai.koog.agents.chatMemory.feature/ChatHistoryProvider): ai.koog.agents.chatMemory.feature/ChatMemoryConfig // ai.koog.agents.chatMemory.feature/ChatMemoryConfig.chatHistoryProvider|chatHistoryProvider(ai.koog.agents.chatMemory.feature.ChatHistoryProvider){}[0]
+    final fun filterMessages(ai.koog.agents.chatMemory.feature/MessageFilter): ai.koog.agents.chatMemory.feature/ChatMemoryConfig // ai.koog.agents.chatMemory.feature/ChatMemoryConfig.filterMessages|filterMessages(ai.koog.agents.chatMemory.feature.MessageFilter){}[0]
+    final fun windowSize(kotlin/Int): ai.koog.agents.chatMemory.feature/ChatMemoryConfig // ai.koog.agents.chatMemory.feature/ChatMemoryConfig.windowSize|windowSize(kotlin.Int){}[0]
+}
+
+final class ai.koog.agents.chatMemory.feature/FilterMessagesPreProcessor : ai.koog.agents.chatMemory.feature/ChatMemoryPreProcessor { // ai.koog.agents.chatMemory.feature/FilterMessagesPreProcessor|null[0]
+    constructor <init>(ai.koog.agents.chatMemory.feature/MessageFilter) // ai.koog.agents.chatMemory.feature/FilterMessagesPreProcessor.<init>|<init>(ai.koog.agents.chatMemory.feature.MessageFilter){}[0]
+
+    final fun preprocess(kotlin.collections/List<ai.koog.prompt.message/Message>): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.agents.chatMemory.feature/FilterMessagesPreProcessor.preprocess|preprocess(kotlin.collections.List<ai.koog.prompt.message.Message>){}[0]
+}
+
+final class ai.koog.agents.chatMemory.feature/InMemoryChatHistoryProvider : ai.koog.agents.chatMemory.feature/ChatHistoryProvider { // ai.koog.agents.chatMemory.feature/InMemoryChatHistoryProvider|null[0]
+    constructor <init>() // ai.koog.agents.chatMemory.feature/InMemoryChatHistoryProvider.<init>|<init>(){}[0]
+
+    final suspend fun load(kotlin/String): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.agents.chatMemory.feature/InMemoryChatHistoryProvider.load|load(kotlin.String){}[0]
+    final suspend fun store(kotlin/String, kotlin.collections/List<ai.koog.prompt.message/Message>) // ai.koog.agents.chatMemory.feature/InMemoryChatHistoryProvider.store|store(kotlin.String;kotlin.collections.List<ai.koog.prompt.message.Message>){}[0]
+}
+
+final class ai.koog.agents.chatMemory.feature/WindowSizePreProcessor : ai.koog.agents.chatMemory.feature/ChatMemoryPreProcessor { // ai.koog.agents.chatMemory.feature/WindowSizePreProcessor|null[0]
+    constructor <init>(kotlin/Int) // ai.koog.agents.chatMemory.feature/WindowSizePreProcessor.<init>|<init>(kotlin.Int){}[0]
+
+    final fun preprocess(kotlin.collections/List<ai.koog.prompt.message/Message>): kotlin.collections/List<ai.koog.prompt.message/Message> // ai.koog.agents.chatMemory.feature/WindowSizePreProcessor.preprocess|preprocess(kotlin.collections.List<ai.koog.prompt.message.Message>){}[0]
+}

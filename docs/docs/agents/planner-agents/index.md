@@ -1,4 +1,10 @@
+---
+status: beta
+---
+
 # Planner agents
+
+--8<-- "versioning-snippets.md:beta"
 
 Planner agents are AI agents that plan and execute multistep tasks through iterative planning cycles.
 They continuously build or update plans, execute steps, and check completion criteria against the current state.
