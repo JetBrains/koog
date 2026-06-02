@@ -1,8 +1,8 @@
 package ai.koog.a2a.server.jsonrpc
 
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.MessageSendConfiguration
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageConfiguration
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
@@ -106,7 +106,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
         // Need real time for this test
         withContext(Dispatchers.Default) {
             val createTaskRequest = Request(
-                data = MessageSendParams(
+                data = SendMessageRequest(
                     message = Message(
                         messageId = Uuid.Companion.random().toString(),
                         role = Role.ROLE_USER,
@@ -206,7 +206,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
             taskId: String?,
             blocking: Boolean,
         ) = Request(
-            data = MessageSendParams(
+            data = SendMessageRequest(
                 message = Message(
                     messageId = Uuid.Companion.random().toString(),
                     role = Role.ROLE_USER,
@@ -216,7 +216,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
                     taskId = taskId,
                     contextId = "test-context"
                 ),
-                configuration = MessageSendConfiguration(
+                configuration = SendMessageConfiguration(
                     blocking = blocking
                 )
             )

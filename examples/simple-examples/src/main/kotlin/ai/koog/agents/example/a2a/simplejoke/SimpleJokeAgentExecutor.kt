@@ -1,7 +1,7 @@
 package ai.koog.agents.example.a2a.simplejoke
 
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
@@ -31,7 +31,7 @@ class SimpleJokeAgentExecutor : AgentExecutor {
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun execute(
-        context: RequestContext<MessageSendParams>,
+        context: RequestContext<SendMessageRequest>,
         eventProcessor: SessionEventProcessor
     ) {
         val userMessage = context.params.message

@@ -10,7 +10,7 @@ import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskIdParams
@@ -371,7 +371,7 @@ public open class A2AServer(
      * @return A stream of events from the agent
      */
     protected open fun onSendMessageCommon(
-        request: Request<MessageSendParams>,
+        request: Request<SendMessageRequest>,
         ctx: ServerCallContext
     ): Flow<Response<Event>> = channelFlow {
         val message = request.data.message
@@ -458,7 +458,7 @@ public open class A2AServer(
     }
 
     override suspend fun onSendMessage(
-        request: Request<MessageSendParams>,
+        request: Request<SendMessageRequest>,
         ctx: ServerCallContext
     ): Response<ResponseEvent> {
         val messageConfiguration = request.data.configuration
@@ -487,7 +487,7 @@ public open class A2AServer(
     }
 
     override fun onSendMessageStreaming(
-        request: Request<MessageSendParams>,
+        request: Request<SendMessageRequest>,
         ctx: ServerCallContext
     ): Flow<Response<Event>> = flow {
         checkStreamingSupport()

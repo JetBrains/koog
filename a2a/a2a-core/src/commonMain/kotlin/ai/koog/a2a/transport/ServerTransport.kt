@@ -4,7 +4,7 @@ import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.Event
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
@@ -51,7 +51,7 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public suspend fun onSendMessage(
-        request: MessageSendParams,
+        request: SendMessageRequest,
         ctx: ServerCallContext
     ): ResponseEvent
 
@@ -61,7 +61,7 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public fun onSendMessageStreaming(
-        request: MessageSendParams,
+        request: SendMessageRequest,
         ctx: ServerCallContext
     ): Flow<Event>
 

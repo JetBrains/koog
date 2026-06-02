@@ -3,7 +3,7 @@
 package ai.koog.a2a.server
 
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
@@ -22,7 +22,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 private suspend fun sayHello(
-    context: RequestContext<MessageSendParams>,
+    context: RequestContext<SendMessageRequest>,
     eventProcessor: SessionEventProcessor,
 ) {
     eventProcessor.sendMessage(
@@ -37,7 +37,7 @@ private suspend fun sayHello(
 }
 
 private suspend fun doTask(
-    context: RequestContext<MessageSendParams>,
+    context: RequestContext<SendMessageRequest>,
     eventProcessor: SessionEventProcessor,
 ) {
     val task = Task(
@@ -95,7 +95,7 @@ private suspend fun doTask(
 }
 
 private suspend fun doCancelableTask(
-    context: RequestContext<MessageSendParams>,
+    context: RequestContext<SendMessageRequest>,
     eventProcessor: SessionEventProcessor,
 ) {
     val task = Task(
@@ -112,7 +112,7 @@ private suspend fun doCancelableTask(
 }
 
 private suspend fun doLongRunningTask(
-    context: RequestContext<MessageSendParams>,
+    context: RequestContext<SendMessageRequest>,
     eventProcessor: SessionEventProcessor,
 ) {
     val task = Task(
@@ -153,7 +153,7 @@ private suspend fun doLongRunningTask(
 }
 
 class TestAgentExecutor : AgentExecutor {
-    override suspend fun execute(context: RequestContext<MessageSendParams>, eventProcessor: SessionEventProcessor) {
+    override suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: SessionEventProcessor) {
         val userMessage = context.params.message
         val userInput = userMessage.parts.filterIsInstance<TextPart>()
             .joinToString(" ") { it.text }

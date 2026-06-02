@@ -7,7 +7,7 @@ import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentSkill
 import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.PushNotificationConfig
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
@@ -126,7 +126,7 @@ class HttpJSONRPCClientTransportTest {
             method = A2AMethod.GetAuthenticatedExtendedAgentCard,
             request = request,
             expectedResponse = expectedResponse,
-            invoke = { getAuthenticatedExtendedAgentCard(it) }
+            invoke = { getExtendedAgentCard(it) }
         )
     }
 
@@ -141,13 +141,13 @@ class HttpJSONRPCClientTransportTest {
             taskId = "task-123"
         )
 
-        val messageSendParams = MessageSendParams(
+        val sendMessageRequest = SendMessageRequest(
             message = testMessage
         )
 
         val request = Request(
             id = id,
-            data = messageSendParams,
+            data = sendMessageRequest,
         )
 
         val expectedResponse: Response<ResponseEvent> = Response(
@@ -262,7 +262,7 @@ class HttpJSONRPCClientTransportTest {
     }
 
     @Test
-    fun testSetTaskPushNotificationConfig() = runTest {
+    fun testCreateTaskPushNotificationConfig() = runTest {
         val id = RequestId.StringId("test-5")
 
         val pushNotificationConfig = TaskPushNotificationConfig(
@@ -288,7 +288,7 @@ class HttpJSONRPCClientTransportTest {
             method = A2AMethod.SetTaskPushNotificationConfig,
             request = request,
             expectedResponse = expectedResponse,
-            invoke = { setTaskPushNotificationConfig(it) }
+            invoke = { createTaskPushNotificationConfig(it) }
         )
     }
 
@@ -327,7 +327,7 @@ class HttpJSONRPCClientTransportTest {
     }
 
     @Test
-    fun testListTaskPushNotificationConfig() = runTest {
+    fun testListTaskPushNotificationConfigs() = runTest {
         val id = RequestId.StringId("test-7")
 
         val taskIdParams = TaskIdParams(id = "task-123")
@@ -363,7 +363,7 @@ class HttpJSONRPCClientTransportTest {
             method = A2AMethod.ListTaskPushNotificationConfig,
             request = request,
             expectedResponse = expectedResponse,
-            invoke = { listTaskPushNotificationConfig(it) }
+            invoke = { listTaskPushNotificationConfigs(it) }
         )
     }
 
@@ -405,13 +405,13 @@ class HttpJSONRPCClientTransportTest {
             taskId = "invalid-task-id"
         )
 
-        val messageSendParams = MessageSendParams(
+        val sendMessageRequest = SendMessageRequest(
             message = testMessage
         )
 
         val request = Request(
             id = id,
-            data = messageSendParams,
+            data = sendMessageRequest,
         )
 
         val mockEngine = MockEngine { receivedRequest ->

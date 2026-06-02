@@ -2,7 +2,7 @@ package ai.koog.agents.example.a2a.advancedjoke
 
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.Artifact
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskArtifactUpdateEvent
@@ -60,7 +60,7 @@ class JokeWriterAgentExecutor : AgentExecutor {
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun execute(
-        context: RequestContext<MessageSendParams>,
+        context: RequestContext<SendMessageRequest>,
         eventProcessor: SessionEventProcessor
     ) {
         val agent = jokeWriterAgent(promptExecutor, context, eventProcessor)
@@ -70,7 +70,7 @@ class JokeWriterAgentExecutor : AgentExecutor {
 
 private fun jokeWriterAgent(
     promptExecutor: PromptExecutor,
-    context: RequestContext<MessageSendParams>,
+    context: RequestContext<SendMessageRequest>,
     eventProcessor: SessionEventProcessor
 ): GraphAIAgent<A2AMessage, Unit> {
     val agentConfig = AIAgentConfig(

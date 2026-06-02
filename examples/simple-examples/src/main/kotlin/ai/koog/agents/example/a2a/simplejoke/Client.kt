@@ -5,7 +5,7 @@ package ai.koog.agents.example.a2a.simplejoke
 import ai.koog.a2a.client.A2AClient
 import ai.koog.a2a.client.UrlAgentCardResolver
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.transport.Request
@@ -71,7 +71,7 @@ suspend fun main() {
         )
 
         val response = client.sendMessage(
-            Request(MessageSendParams(message = message))
+            Request(SendMessageRequest(message = message))
         )
 
         val reply = (response.data as Message).toKoogMessage().parts

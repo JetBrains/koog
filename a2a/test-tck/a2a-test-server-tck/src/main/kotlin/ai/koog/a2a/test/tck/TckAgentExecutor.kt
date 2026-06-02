@@ -2,7 +2,7 @@ package ai.koog.a2a.test.tck
 
 import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskArtifactUpdateEvent
@@ -25,7 +25,7 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 class TckAgentExecutor : AgentExecutor {
     override suspend fun execute(
-        context: RequestContext<MessageSendParams>,
+        context: RequestContext<SendMessageRequest>,
         eventProcessor: SessionEventProcessor
     ) {
         val userMessage = context.params.message
@@ -102,7 +102,7 @@ class TckAgentExecutor : AgentExecutor {
     }
 
     private suspend fun processNewTask(
-        context: RequestContext<MessageSendParams>,
+        context: RequestContext<SendMessageRequest>,
         eventProcessor: SessionEventProcessor,
         userMessage: Message,
         userInput: String,
@@ -178,7 +178,7 @@ class TckAgentExecutor : AgentExecutor {
     }
 
     private suspend fun processExistingTask(
-        context: RequestContext<MessageSendParams>,
+        context: RequestContext<SendMessageRequest>,
         eventProcessor: SessionEventProcessor,
         userMessage: Message,
         userInput: String,

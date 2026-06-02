@@ -6,7 +6,7 @@ import ai.koog.a2a.client.A2AClient
 import ai.koog.a2a.client.UrlAgentCardResolver
 import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskArtifactUpdateEvent
@@ -70,7 +70,7 @@ suspend fun main() {
         )
 
         try {
-            client.sendMessageStreaming(Request(MessageSendParams(message = message))).collect { response ->
+            client.sendMessageStreaming(Request(SendMessageRequest(message = message))).collect { response ->
                 val event = response.data
                 println("${BLUE}[${event.kind}]$RESET")
                 println("${json.encodeToString(event)}\n")

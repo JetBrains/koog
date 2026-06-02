@@ -7,8 +7,8 @@ import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentSkill
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.MessageSendConfiguration
-import ai.koog.a2a.model.MessageSendParams
+import ai.koog.a2a.model.SendMessageConfiguration
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.AuthenticationInfo
 import ai.koog.a2a.model.PushNotificationConfig
 import ai.koog.a2a.model.Role
@@ -159,7 +159,7 @@ abstract class BaseA2AProtocolTest {
 
     open fun `test send message`() = runTest(timeout = testTimeout) {
         val request = Request(
-            data = MessageSendParams(
+            data = SendMessageRequest(
                 message = Message(
                     messageId = Uuid.random().toString(),
                     role = Role.ROLE_USER,
@@ -186,7 +186,7 @@ abstract class BaseA2AProtocolTest {
 
     open fun `test send message streaming`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
-            data = MessageSendParams(
+            data = SendMessageRequest(
                 message = Message(
                     messageId = Uuid.random().toString(),
                     role = Role.ROLE_USER,
@@ -251,7 +251,7 @@ abstract class BaseA2AProtocolTest {
 
     open fun `test get task`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
-            data = MessageSendParams(
+            data = SendMessageRequest(
                 message = Message(
                     messageId = Uuid.random().toString(),
                     role = Role.ROLE_USER,
@@ -289,7 +289,7 @@ abstract class BaseA2AProtocolTest {
 
     open fun `test cancel task`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
-            data = MessageSendParams(
+            data = SendMessageRequest(
                 message = Message(
                     messageId = Uuid.random().toString(),
                     role = Role.ROLE_USER,
@@ -326,7 +326,7 @@ abstract class BaseA2AProtocolTest {
 
     open fun `test resubscribe task`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
-            data = MessageSendParams(
+            data = SendMessageRequest(
                 message = Message(
                     messageId = Uuid.random().toString(),
                     role = Role.ROLE_USER,
@@ -335,7 +335,7 @@ abstract class BaseA2AProtocolTest {
                     ),
                     contextId = "test-context"
                 ),
-                configuration = MessageSendConfiguration(
+                configuration = SendMessageConfiguration(
                     blocking = false
                 )
             ),
@@ -382,7 +382,7 @@ abstract class BaseA2AProtocolTest {
 
     open fun `test push notification configs`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
-            data = MessageSendParams(
+            data = SendMessageRequest(
                 message = Message(
                     messageId = Uuid.random().toString(),
                     role = Role.ROLE_USER,
