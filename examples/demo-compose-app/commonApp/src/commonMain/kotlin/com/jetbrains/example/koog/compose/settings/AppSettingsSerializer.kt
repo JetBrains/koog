@@ -25,6 +25,7 @@ internal object AppSettingsSerializer : OkioSerializer<AppSettingsData> {
             selectedOption = when (data.selectedProvider) {
                 SelectedOption.Anthropic.title -> SelectedOption.Anthropic
                 SelectedOption.Gemini.title -> SelectedOption.Gemini
+                SelectedOption.Ollama.title -> SelectedOption.Ollama
                 else -> SelectedOption.OpenAI
             }
         )

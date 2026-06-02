@@ -1,5 +1,6 @@
 package com.jetbrains.example.koog.compose
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -38,6 +39,7 @@ fun KoinApp() = KoinApplication(
                     {
                         val appSettings: AppSettings = get()
                         val currentSettings = appSettings.getCurrentSettings()
+                        val httpClientFactory = KtorKoogHttpClient.Factory()
                         when (currentSettings.selectedOption) {
                             SelectedOption.Ollama -> {
                                 val model = LLModel(
@@ -56,7 +58,7 @@ fun KoinApp() = KoinApplication(
                                 val baseUrl = currentSettings.ollamaUrl
                                 println("Container baseUrl: $baseUrl")
                                 require(baseUrl.isNotEmpty()) { "Ollama baseUrl is not configured." }
-                                val client = OllamaClient(baseUrl = baseUrl)
+                                val client = OllamaClient(httpClientFactory = httpClientFactory, baseUrl = baseUrl)
                                 println("Model loading: $model")
                                 client.getModelOrNull(model.id, pullIfMissing = true)
                                 println("Model is ready: $model")
@@ -65,17 +67,17 @@ fun KoinApp() = KoinApplication(
                             SelectedOption.OpenAI -> {
                                 val openAiToken = appSettings.getCurrentSettings().openAiToken
                                 require(openAiToken.isNotEmpty()) { "OpenAI token is not configured." }
-                                Pair(OpenAILLMClient(openAiToken), OpenAIModels.Chat.GPT4o)
+                                Pair(OpenAILLMClient(apiKey = openAiToken, httpClientFactory = httpClientFactory), OpenAIModels.Chat.GPT4o)
                             }
                             SelectedOption.Anthropic -> {
                                 val anthropicToken = appSettings.getCurrentSettings().anthropicToken
                                 require(anthropicToken.isNotEmpty()) { "Anthropic token is not configured." }
-                                Pair(AnthropicLLMClient(anthropicToken), AnthropicModels.Sonnet_4)
+                                Pair(AnthropicLLMClient(apiKey = anthropicToken, httpClientFactory = httpClientFactory), AnthropicModels.Sonnet_4)
                             }
                             SelectedOption.Gemini -> {
                                 val geminiToken = appSettings.getCurrentSettings().geminiToken
                                 require(geminiToken.isNotEmpty()) { "Gemini token is not configured." }
-                                Pair(GoogleLLMClient(geminiToken), GoogleModels.Gemini2_5FlashLite)
+                                Pair(GoogleLLMClient(geminiToken, httpClientFactory = httpClientFactory), GoogleModels.Gemini2_5FlashLite)
                             }
                         }
                     }
