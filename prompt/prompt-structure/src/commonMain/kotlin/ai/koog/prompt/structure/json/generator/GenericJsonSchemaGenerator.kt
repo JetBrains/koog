@@ -1,11 +1,13 @@
 package ai.koog.prompt.structure.json.generator
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.descriptors.elementNames
+import kotlinx.serialization.descriptors.getContextualDescriptor
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -24,6 +26,7 @@ import kotlinx.serialization.serializer
  * Note: it does not handle nullability because these might be different in different schema specs.
  * Implementations must handle these themselves.
  */
+@OptIn(ExperimentalSerializationApi::class)
 public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
     /**
      * Generic implementation that provides basic routing to appropriate visit method and adds description.
@@ -60,6 +63,20 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
                 } else {
                     processPolymorphic(context)
                 }
+            }
+
+            SerialKind.CONTEXTUAL -> {
+                // Resolve the actual serializer from the SerializersModule and delegate to it.
+                // This handles properties annotated with @Contextual (e.g. java.util.UUID).
+                val resolvedDescriptor = context.json.serializersModule
+                    .getContextualDescriptor(context.descriptor)
+                    ?: throw IllegalArgumentException(
+                        "Cannot generate JSON schema for @Contextual type '${context.descriptor.serialName}': " +
+                            "no contextual serializer was found in the SerializersModule. " +
+                            "Register one via SerializersModule { contextual(...) }, or use " +
+                            "@Serializable(with = ...) on the property instead."
+                    )
+                process(context.copy(descriptor = resolvedDescriptor))
             }
 
             else ->
