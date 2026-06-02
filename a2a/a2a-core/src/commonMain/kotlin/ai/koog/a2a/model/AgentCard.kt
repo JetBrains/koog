@@ -6,7 +6,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlin.jvm.JvmInline
-import kotlin.jvm.JvmStatic
 
 /**
  * The [AgentCard] is a self-describing manifest for an agent. It provides essential metadata including the agent's
@@ -223,7 +222,6 @@ public data class APIKeySecurityScheme(
     public val description: String? = null,
 ) : SecurityScheme {
     public companion object {
-        @JvmStatic
         public const val KIND: String = "apiKeySecurityScheme"
     }
 }
@@ -259,7 +257,6 @@ public data class HTTPAuthSecurityScheme(
     public val description: String? = null,
 ) : SecurityScheme {
     public companion object {
-        @JvmStatic
         public const val KIND: String = "httpAuthSecurityScheme"
     }
 }
@@ -279,7 +276,6 @@ public data class OAuth2SecurityScheme(
     public val description: String? = null,
 ) : SecurityScheme {
     public companion object {
-        @JvmStatic
         public const val KIND: String = "oauth2SecurityScheme"
     }
 }
@@ -316,7 +312,6 @@ public data class AuthorizationCodeOAuthFlow(
     public val pkceRequired: Boolean? = null,
 ) : OAuthFlow {
     public companion object {
-        @JvmStatic
         public const val KIND: String = "authorizationCode"
     }
 }
@@ -333,7 +328,6 @@ public data class ClientCredentialsOAuthFlow(
     override val refreshUrl: String? = null
 ) : OAuthFlow {
     public companion object {
-        @JvmStatic
         public const val KIND: String = "clientCredentials"
     }
 }
@@ -351,7 +345,6 @@ public data class ImplicitOAuthFlow(
     override val refreshUrl: String? = null
 ) : OAuthFlow {
     public companion object {
-        @JvmStatic
         public const val KIND: String = "implicit"
     }
 }
@@ -369,7 +362,6 @@ public data class PasswordOAuthFlow(
     override val refreshUrl: String? = null
 ) : OAuthFlow {
     public companion object {
-        @JvmStatic
         public const val KIND: String = "password"
     }
 }
@@ -392,7 +384,6 @@ public data class DeviceCodeOAuthFlow(
     override val refreshUrl: String? = null,
 ) : OAuthFlow {
     public companion object {
-        @JvmStatic
         public const val KIND: String = "deviceCode"
     }
 }
@@ -409,7 +400,6 @@ public data class OpenIdConnectSecurityScheme(
     public val description: String? = null,
 ) : SecurityScheme {
     public companion object {
-        @JvmStatic
         public const val KIND: String = "openIdConnectSecurityScheme"
     }
 }
@@ -424,7 +414,6 @@ public data class MutualTLSSecurityScheme(
     public val description: String? = null,
 ) : SecurityScheme {
     public companion object {
-        @JvmStatic
         public const val KIND: String = "mtlsSecurityScheme"
     }
 }

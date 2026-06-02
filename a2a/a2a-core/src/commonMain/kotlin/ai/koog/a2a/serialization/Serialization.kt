@@ -38,6 +38,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.serializer
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.reflect.KClass
@@ -94,11 +95,7 @@ public abstract class PropertyWrappingPolymorphicSerializer<T : Any>(
         val subClassName = value::class.simpleName ?: value::class.toString()
 
         val actualSerializer = encoder.serializersModule
-            .getPolymorphic(baseClass, value)
-            ?: throw SerializationException(
-                "Class '$subClassName' is not registered for polymorphic serialization in the scope of ${baseClass.simpleName}.\n" +
-                    "Mark the base class as 'sealed' or register the serializer explicitly."
-            )
+            .serializer(value::class, typeArgumentsSerializers = emptyList(), isNullable = false)
 
         val variant = variants
             .filterValues { it == actualSerializer }.keys

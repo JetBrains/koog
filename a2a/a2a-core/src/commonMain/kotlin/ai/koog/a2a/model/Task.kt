@@ -2,7 +2,6 @@ package ai.koog.a2a.model
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import kotlin.jvm.JvmStatic
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -28,7 +27,6 @@ public data class Task(
     override val taskId: String get() = id
 
     public companion object {
-        @JvmStatic
         public const val KIND: String = "task"
     }
 }
@@ -50,7 +48,6 @@ public data class TaskStatusUpdateEvent(
     public val metadata: JsonObject? = null,
 ) : TaskEvent {
     public companion object {
-        @JvmStatic
         public const val KIND: String = "statusUpdate"
     }
 }
@@ -76,7 +73,6 @@ public data class TaskArtifactUpdateEvent(
     public val metadata: JsonObject? = null,
 ) : TaskEvent {
     public companion object {
-        @JvmStatic
         public const val KIND: String = "artifactUpdate"
     }
 }
