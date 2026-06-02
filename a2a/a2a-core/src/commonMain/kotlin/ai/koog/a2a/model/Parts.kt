@@ -4,7 +4,6 @@ import ai.koog.a2a.serialization.ByteArrayAsBase64Serializer
 import ai.koog.a2a.serialization.PartSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import kotlin.jvm.JvmStatic
 
 /**
  * Represents a part of a message or artifact.
@@ -40,7 +39,6 @@ public data class TextPart(
     override val metadata: JsonObject? = null,
 ) : Part {
     public companion object {
-        @JvmStatic
         public const val DISCRIMINATOR: String = "text"
     }
 }
@@ -79,7 +77,6 @@ public data class FileBytesPart(
     }
 
     public companion object {
-        @JvmStatic
         public const val DISCRIMINATOR: String = "raw"
     }
 }
@@ -97,7 +94,6 @@ public data class FileUrlPart(
     override val metadata: JsonObject? = null,
 ) : Part {
     public companion object {
-        @JvmStatic
         public const val DISCRIMINATOR: String = "url"
     }
 }
@@ -115,7 +111,6 @@ public data class DataPart(
     override val metadata: JsonObject? = null,
 ) : Part {
     public companion object {
-        @JvmStatic
         public const val DISCRIMINATOR: String = "data"
     }
 }

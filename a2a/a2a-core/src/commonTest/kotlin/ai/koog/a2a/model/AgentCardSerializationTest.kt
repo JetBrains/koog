@@ -16,7 +16,13 @@ class AgentCardSerializationTest {
         val agentCard = AgentCard(
             name = "Test Agent",
             description = "A test agent",
-            url = "https://api.example.com/a2a",
+            supportedInterfaces = listOf(
+                AgentInterface(
+                    url = "https://api.example.com/a2a",
+                    protocolBinding = TransportProtocol.JSONRPC,
+                    protocolVersion = "1.0.0"
+                )
+            ),
             version = "1.0.0",
             capabilities = AgentCapabilities(),
             defaultInputModes = listOf("text/plain"),
@@ -34,13 +40,16 @@ class AgentCardSerializationTest {
         //language=JSON
         val expectedJson = """
             {
-                "protocolVersion": "0.3.0",
                 "name": "Test Agent",
                 "description": "A test agent",
-                "url": "https://api.example.com/a2a",
-                "preferredTransport": "JSONRPC",
+                "supportedInterfaces": [
+                    {
+                        "url": "https://api.example.com/a2a",
+                        "protocolBinding": "JSONRPC",
+                        "protocolVersion": "1.0.0"
+                    }
+                ],
                 "version": "1.0.0",
-                "capabilities": {},
                 "defaultInputModes": [
                     "text/plain"
                 ],
@@ -56,7 +65,8 @@ class AgentCardSerializationTest {
                             "test"
                         ]
                     }
-                ]
+                ],
+                "capabilities": {}
             }
         """.trimIndent()
 
@@ -73,19 +83,21 @@ class AgentCardSerializationTest {
         val agentCard = AgentCard(
             name = "GeoSpatial Route Planner Agent",
             description = "Provides advanced route planning, traffic analysis, and custom map generation services. This agent can calculate optimal routes, estimate travel times considering real-time traffic, and create personalized maps with points of interest.",
-            url = "https://georoute-agent.example.com/a2a/v1",
             supportedInterfaces = listOf(
                 AgentInterface(
                     url = "https://georoute-agent.example.com/a2a/v1",
-                    protocolBinding = TransportProtocol.JSONRPC
+                    protocolBinding = TransportProtocol.JSONRPC,
+                    protocolVersion = "1.0.0"
                 ),
                 AgentInterface(
                     url = "https://georoute-agent.example.com/a2a/grpc",
-                    protocolBinding = TransportProtocol.GRPC
+                    protocolBinding = TransportProtocol.GRPC,
+                    protocolVersion = "1.0.0"
                 ),
                 AgentInterface(
                     url = "https://georoute-agent.example.com/a2a/json",
-                    protocolBinding = TransportProtocol.HTTP_JSON_REST
+                    protocolBinding = TransportProtocol.HTTP_JSON_REST,
+                    protocolVersion = "1.0.0"
                 )
             ),
             provider = AgentProvider(
@@ -98,7 +110,7 @@ class AgentCardSerializationTest {
             capabilities = AgentCapabilities(
                 streaming = true,
                 pushNotifications = true,
-                stateTransitionHistory = false
+                extendedAgentCard = true
             ),
             securitySchemes = mapOf(
                 "google" to OpenIdConnectSecurityScheme(
@@ -145,7 +157,6 @@ class AgentCardSerializationTest {
                     )
                 )
             ),
-            supportsAuthenticatedExtendedCard = true,
             signatures = listOf(
                 AgentCardSignature(
                     `protected` = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpPU0UiLCJraWQiOiJrZXktMSIsImprdSI6Imh0dHBzOi8vZXhhbXBsZS5jb20vYWdlbnQvandrcy5qc29uIn0",
@@ -157,52 +168,26 @@ class AgentCardSerializationTest {
         //language=JSON
         val expectedJson = """
         {
-            "protocolVersion": "0.3.0",
             "name": "GeoSpatial Route Planner Agent",
             "description": "Provides advanced route planning, traffic analysis, and custom map generation services. This agent can calculate optimal routes, estimate travel times considering real-time traffic, and create personalized maps with points of interest.",
-            "url": "https://georoute-agent.example.com/a2a/v1",
-            "preferredTransport": "JSONRPC",
-            "additionalInterfaces": [
+            "supportedInterfaces": [
                 {
                     "url": "https://georoute-agent.example.com/a2a/v1",
-                    "transport": "JSONRPC"
+                    "protocolBinding": "JSONRPC",
+                    "protocolVersion": "1.0.0"
                 },
                 {
                     "url": "https://georoute-agent.example.com/a2a/grpc",
-                    "transport": "GRPC"
+                    "protocolBinding": "GRPC",
+                    "protocolVersion": "1.0.0"
                 },
                 {
                     "url": "https://georoute-agent.example.com/a2a/json",
-                    "transport": "HTTP+JSON/REST"
+                    "protocolBinding": "HTTP+JSON/REST",
+                    "protocolVersion": "1.0.0"
                 }
             ],
-            "iconUrl": "https://georoute-agent.example.com/icon.png",
-            "provider": {
-                "organization": "Example Geo Services Inc.",
-                "url": "https://www.examplegeoservices.com"
-            },
             "version": "1.2.0",
-            "documentationUrl": "https://docs.examplegeoservices.com/georoute-agent/api",
-            "capabilities": {
-                "streaming": true,
-                "pushNotifications": true,
-                "stateTransitionHistory": false
-            },
-            "securitySchemes": {
-                "google": {
-                    "openIdConnectUrl": "https://accounts.google.com/.well-known/openid-configuration",
-                    "type": "openIdConnect"
-                }
-            },
-            "security": [
-                {
-                    "google": [
-                        "openid",
-                        "profile",
-                        "email"
-                    ]
-                }
-            ],
             "defaultInputModes": [
                 "application/json",
                 "text/plain"
@@ -262,7 +247,33 @@ class AgentCardSerializationTest {
                     ]
                 }
             ],
-            "supportsAuthenticatedExtendedCard": true,
+            "iconUrl": "https://georoute-agent.example.com/icon.png",
+            "provider": {
+                "organization": "Example Geo Services Inc.",
+                "url": "https://www.examplegeoservices.com"
+            },
+            "documentationUrl": "https://docs.examplegeoservices.com/georoute-agent/api",
+            "capabilities": {
+                "streaming": true,
+                "pushNotifications": true,
+                "extendedAgentCard": true
+            },
+            "securitySchemes": {
+                "google": {
+                    "openIdConnectSecurityScheme": {
+                        "openIdConnectUrl": "https://accounts.google.com/.well-known/openid-configuration"
+                    }
+                }
+            },
+            "security": [
+                {
+                    "google": [
+                        "openid",
+                        "profile",
+                        "email"
+                    ]
+                }
+            ],
             "signatures": [
                 {
                     "protected": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpPU0UiLCJraWQiOiJrZXktMSIsImprdSI6Imh0dHBzOi8vZXhhbXBsZS5jb20vYWdlbnQvandrcy5qc29uIn0",
@@ -272,9 +283,13 @@ class AgentCardSerializationTest {
         }
         """.trimIndent()
 
+        // Test serialization
         val actualJson = TestJson.encodeToString(agentCard)
-
         assertEquals(expectedJson, actualJson)
+
+        // Test deserialization
+        val deserializedCard = TestJson.decodeFromString<AgentCard>(actualJson)
+        assertEquals(agentCard, deserializedCard)
     }
 
     @Test
@@ -284,6 +299,7 @@ class AgentCardSerializationTest {
         val grpc = TransportProtocol.GRPC
         val custom = TransportProtocol("CUSTOM")
 
+        // Test serialization
         assertEquals("\"JSONRPC\"", TestJson.encodeToString(jsonRpc))
         assertEquals("\"HTTP+JSON/REST\"", TestJson.encodeToString(httpJson))
         assertEquals("\"GRPC\"", TestJson.encodeToString(grpc))
@@ -307,10 +323,11 @@ class AgentCardSerializationTest {
         //language=JSON
         val apiKeyJson = """
             {
-                "in": "header",
-                "name": "Authorization",
-                "description": "Bearer token",
-                "type": "apiKey"
+                "apiKeySecurityScheme": {
+                    "in": "header",
+                    "name": "Authorization",
+                    "description": "Bearer token"
+                }
             }
         """.trimIndent()
         assertEquals(apiKeyJson, TestJson.encodeToString<SecurityScheme>(apiKeyScheme))
@@ -324,40 +341,40 @@ class AgentCardSerializationTest {
         //language=JSON
         val httpJson = """
             {
-                "scheme": "Bearer",
-                "bearerFormat": "JWT",
-                "description": "JWT Bearer token",
-                "type": "http"
+                "httpAuthSecurityScheme": {
+                    "scheme": "Bearer",
+                    "bearerFormat": "JWT",
+                    "description": "JWT Bearer token"
+                }
             }
         """.trimIndent()
         assertEquals(httpJson, TestJson.encodeToString<SecurityScheme>(httpScheme))
 
         // OAuth2 Security Scheme
         val oauth2Scheme = OAuth2SecurityScheme(
-            flows = OAuthFlows(
-                authorizationCode = AuthorizationCodeOAuthFlow(
-                    authorizationUrl = "https://auth.example.com/oauth/authorize",
-                    tokenUrl = "https://auth.example.com/oauth/token",
-                    scopes = mapOf("read" to "Read access", "write" to "Write access")
-                )
+            flows = AuthorizationCodeOAuthFlow(
+                authorizationUrl = "https://auth.example.com/oauth/authorize",
+                tokenUrl = "https://auth.example.com/oauth/token",
+                scopes = mapOf("read" to "Read access", "write" to "Write access")
             ),
             description = "OAuth2 with authorization code flow"
         )
         //language=JSON
         val expectedOAuth2Json = """
             {
-                "flows": {
-                    "authorizationCode": {
-                        "authorizationUrl": "https://auth.example.com/oauth/authorize",
-                        "tokenUrl": "https://auth.example.com/oauth/token",
-                        "scopes": {
-                            "read": "Read access",
-                            "write": "Write access"
+                "oauth2SecurityScheme": {
+                    "flows": {
+                        "authorizationCode": {
+                            "authorizationUrl": "https://auth.example.com/oauth/authorize",
+                            "tokenUrl": "https://auth.example.com/oauth/token",
+                            "scopes": {
+                                "read": "Read access",
+                                "write": "Write access"
+                            }
                         }
-                    }
-                },
-                "description": "OAuth2 with authorization code flow",
-                "type": "oauth2"
+                    },
+                    "description": "OAuth2 with authorization code flow"
+                }
             }
         """.trimIndent()
 
@@ -371,8 +388,9 @@ class AgentCardSerializationTest {
         //language=JSON
         val oidcJson = """
             {
-                "openIdConnectUrl": "https://auth.example.com/.well-known/openid_configuration",
-                "type": "openIdConnect"
+                "openIdConnectSecurityScheme": {
+                    "openIdConnectUrl": "https://auth.example.com/.well-known/openid_configuration"
+                }
             }
         """.trimIndent()
         assertEquals(oidcJson, TestJson.encodeToString<SecurityScheme>(oidcScheme))
@@ -384,8 +402,9 @@ class AgentCardSerializationTest {
         //language=JSON
         val mtlsJson = """
             {
-                "description": "Client certificate authentication",
-                "type": "mutualTLS"
+                "mtlsSecurityScheme": {
+                    "description": "Client certificate authentication"
+                }
             }
         """.trimIndent()
         assertEquals(mtlsJson, TestJson.encodeToString<SecurityScheme>(mtlsScheme))
@@ -398,32 +417,35 @@ class AgentCardSerializationTest {
         assertEquals(mtlsScheme, TestJson.decodeFromString<SecurityScheme>(mtlsJson))
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun testOAuthFlowsSerialization() {
-        val flows = OAuthFlows(
-            authorizationCode = AuthorizationCodeOAuthFlow(
+        val flows: List<OAuthFlow> = listOf(
+            AuthorizationCodeOAuthFlow(
                 authorizationUrl = "https://auth.example.com/oauth/authorize",
                 tokenUrl = "https://auth.example.com/oauth/token",
                 scopes = mapOf("read" to "Read access"),
                 refreshUrl = "https://auth.example.com/oauth/refresh"
             ),
-            clientCredentials = ClientCredentialsOAuthFlow(
+            ClientCredentialsOAuthFlow(
                 tokenUrl = "https://auth.example.com/oauth/token",
                 scopes = mapOf("admin" to "Admin access")
             ),
-            implicit = ImplicitOAuthFlow(
+            ImplicitOAuthFlow(
                 authorizationUrl = "https://auth.example.com/oauth/authorize",
                 scopes = mapOf("read" to "Read access")
             ),
-            password = PasswordOAuthFlow(
+            PasswordOAuthFlow(
                 tokenUrl = "https://auth.example.com/oauth/token",
                 scopes = mapOf("user" to "User access")
             )
         )
 
-        val json = TestJson.encodeToString(flows)
-        val deserialized = TestJson.decodeFromString<OAuthFlows>(json)
-        assertEquals(flows, deserialized)
+        flows.forEach { flow ->
+            val json = TestJson.encodeToString<OAuthFlow>(flow)
+            val deserialized = TestJson.decodeFromString<OAuthFlow>(json)
+            assertEquals(flow, deserialized)
+        }
     }
 
     @Test
@@ -440,7 +462,7 @@ class AgentCardSerializationTest {
         val fullCapabilities = AgentCapabilities(
             streaming = true,
             pushNotifications = true,
-            stateTransitionHistory = true,
+            extendedAgentCard = true,
             extensions = listOf(
                 AgentExtension(
                     uri = "https://example.com/ext/v1",
@@ -454,14 +476,14 @@ class AgentCardSerializationTest {
             {
                 "streaming": true,
                 "pushNotifications": true,
-                "stateTransitionHistory": true,
                 "extensions": [
                     {
                         "uri": "https://example.com/ext/v1",
                         "description": "Test extension",
                         "required": true
                     }
-                ]
+                ],
+                "extendedAgentCard": true
             }
         """.trimIndent()
 
