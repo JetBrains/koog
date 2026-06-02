@@ -20,7 +20,7 @@ import com.jetbrains.example.koog.compose.screens.settings.SettingsViewModel
 import com.jetbrains.example.koog.compose.screens.start.StartViewModel
 import com.jetbrains.example.koog.compose.settings.AppSettings
 import com.jetbrains.example.koog.compose.settings.SelectedOption
-import org.koin.compose.KoinMultiplatformApplication
+import org.koin.compose.KoinApplication
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -29,8 +29,8 @@ import org.koin.dsl.module
 
 @OptIn(KoinExperimentalAPI::class)
 @Composable
-fun KoinApp() = KoinMultiplatformApplication(
-    config = KoinConfiguration {
+fun KoinApp() = KoinApplication(
+    configuration = KoinConfiguration {
         modules(
             appPlatformModule,
             module {
