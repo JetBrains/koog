@@ -12,10 +12,10 @@ plugins {
 kotlin {
     jvmToolchain(libs.versions.javaVersion.get().toInt())
 
-    androidLibrary {
+    android {
         namespace = "com.jetbrains.example.koog.share.ui"
-        compileSdk = 36
-        minSdk = 23
+        compileSdk = libs.versions.build.android.compileSdk.get().toInt()
+        minSdk = libs.versions.build.android.minSdk.get().toInt()
     }
 
     jvm()
@@ -43,10 +43,12 @@ kotlin {
             implementation(libs.jetbrains.navigation3.ui)
             implementation(libs.koin.compose)
             implementation(libs.koog.agents)
+            implementation(libs.koog.agents.additions)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.ktor.client.engine.defaults)
             implementation(libs.markdown.renderer)
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(project.dependencies.platform(libs.ktor.bom))
@@ -60,25 +62,11 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.jetbrains.compose.ui.tooling)
             implementation(libs.kotlinx.coroutines.android)
-            implementation(libs.ktor.client.okhttp)
         }
 
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.ktor.client.apache5)
-        }
-
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-        }
-
-        webMain.dependencies {
-            implementation(libs.ktor.client.js)
-        }
-
-        wasmJsMain.dependencies {
-            implementation(libs.ktor.client.js)
         }
     }
 
