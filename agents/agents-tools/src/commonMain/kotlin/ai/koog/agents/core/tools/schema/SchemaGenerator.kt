@@ -275,9 +275,24 @@ public fun PropertyDefinition.toToolParameter(
 
 /**
  * Transform JsonSchema to suitable property definition, copying only these fields that are actually used by
- * [toToolParameter]
+ * [toToolParameter].
+ *
+ * Polymorphic schemas (e.g. a top-level sealed type) carry both `type: ["object"]` and `oneOf`/`anyOf` listing
+ * the branches; the composition keyword is the load-bearing constraint, so it takes precedence over the type.
  */
 private fun JsonSchema.toActualPropertyDefinition(): PropertyDefinition = when {
+    oneOf != null ->
+        OneOfPropertyDefinition(
+            oneOf = oneOf!!,
+            description = description,
+        )
+
+    anyOf != null ->
+        AnyOfPropertyDefinition(
+            anyOf = anyOf!!,
+            description = description,
+        )
+
     JsonSchemaConstants.Types.STRING in type ->
         StringPropertyDefinition(
             type = type,
@@ -314,27 +329,14 @@ private fun JsonSchema.toActualPropertyDefinition(): PropertyDefinition = when {
             additionalProperties = additionalProperties,
         )
 
-    type.isEmpty() -> when {
-        ref != null ->
-            ReferencePropertyDefinition(
-                ref = ref,
-                description = description,
-            )
+    type.isEmpty() && ref != null ->
+        ReferencePropertyDefinition(
+            ref = ref,
+            description = description,
+        )
 
-        anyOf != null ->
-            AnyOfPropertyDefinition(
-                anyOf = anyOf!!,
-                description = description,
-            )
-
-        oneOf != null ->
-            OneOfPropertyDefinition(
-                oneOf = oneOf!!,
-                description = description,
-            )
-
-        else -> throw IllegalArgumentException("Empty type in JSON schema for JsonSchema to PropertyDefinition conversion")
-    }
+    type.isEmpty() ->
+        throw IllegalArgumentException("Empty type in JSON schema for JsonSchema to PropertyDefinition conversion")
 
     else -> throw IllegalArgumentException("Unsupported type for JsonSchema to PropertyDefinition conversion: $type")
 }
