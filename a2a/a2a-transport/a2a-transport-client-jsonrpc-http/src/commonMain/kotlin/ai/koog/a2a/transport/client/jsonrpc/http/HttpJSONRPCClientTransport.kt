@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.map
  * @param url The URL of the JSON-RPC server endpoint.
  * @param baseHttpClient The base [HttpClient] instance, which will be configured internally.
  */
-public class HttpJSONRPCClientTransport(
+public open class HttpJSONRPCClientTransport(
     url: String,
     baseHttpClient: HttpClient = HttpClient()
 ) : JSONRPCClientTransport() {

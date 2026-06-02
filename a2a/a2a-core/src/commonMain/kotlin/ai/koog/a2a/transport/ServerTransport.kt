@@ -215,12 +215,3 @@ public class ServerCallContext(
     ): ServerCallContext = ServerCallContext(headers, state)
 }
 
-/**
- * Helper class to be used with [ServerCallContext.state] to store and retrieve values associated with a key in a typed
- * manner.
- *
- * @see ServerCallContext
- */
-public class StateKey<@Suppress("unused") T>(public val name: String) {
-    override fun toString(): String = "${super.toString()}(name=$name)"
-}

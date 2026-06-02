@@ -12,8 +12,8 @@ import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsResponse
 import ai.koog.a2a.model.ListTasksRequest
 import ai.koog.a2a.model.ListTasksResponse
-import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.ResponseEvent
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskPushNotificationConfig
@@ -82,7 +82,6 @@ public interface ClientTransport : AutoCloseable {
         ctx: ClientCallContext = ClientCallContext.Default
     ): ListTasksResponse
 
-
     /**
      * Calls [CancelTask](https://a2a-protocol.org/v1.0.1/specification/#315-cancel-task)
      *
@@ -147,11 +146,88 @@ public interface ClientTransport : AutoCloseable {
 /**
  * Represents the client context of a call.
  *
- * @property headers Additional call-specific headers associated with the call.
+ * This context has [state] associated with it, which is essentially an untyped map. It can be used to pass arbitrary
+ * user-defined data. This is useful for extending the base logic with business-dependent logic, e.g., passing user
+ * information to authorize particular requests. This untyped [state] map has typed accessors for more convenient access,
+ * so it is recommended to use them when reading from state: [getFromState], [getFromStateOrNull].
+ *
+ * **Note**: Make sure the types of [StateKey] and the value match when populating [state], otherwise [getFromState]
+ * and [getFromStateOrNull] will throw [IllegalStateException].
+ *
+ * Example usage:
+ * ```kotlin
+ * // User-defined data class
+ * data class User(val id: String)
+ *
+ * // Collection of user-defined state keys
+ * object StateKeys {
+ *     val USER_KEY = StateKey<User>("42")
+ * }
+ *
+ * // On the caller side - create a context and provide user data
+ * val client: A2AClient = ...
+ * val user = User("42")
+ * val ctx = ClientCallContext(state = mapOf(StateKeys.USER_KEY to user))
+ * client.sendMessage(SendMessageRequest(...), ctx)
+ *
+ * // Inside a custom ClientTransport/A2AClient override
+ *
+ * // Extending existing client transport to add custom logic
+ * class CustomClientTransport : HttpJSONRPCClientTransport(...) {
+ *   override suspend fun request(
+ *       request: JSONRPCRequest,
+ *       ctx: ClientCallContext
+ *   ): JSONRPCResponse {
+ *         val user: User = ctx.getFromState(StateKeys.USER_KEY)
+ *         // Use retrieved information to construct a custom request: adding query parameters, modifying headers, etc.
+ *         // ...
+ *     }
+ * }
+ * ```
+ *
+ * @property headers Headers associated with the call.
+ * @property state State associated with the call, allows storing arbitrary values. To get typed value from the state,
+ * use [getFromState] or [getFromStateOrNull] with appropriate [StateKey].
  */
 public class ClientCallContext(
     public val headers: Map<String, List<String>> = emptyMap(),
+    public val state: Map<StateKey<*>, Any> = emptyMap(),
 ) {
+
+    /**
+     * Retrieves a value of type [T] associated with the specified [key] from the [state] map.
+     * If the [key] is not found in the state, returns `null`.
+     *
+     * Performs unsafe cast under the hood, so make sure the value is of the expected type.
+     *
+     * @param key The state key for which the associated value needs to be retrieved.
+     */
+    public inline fun <reified T> getFromStateOrNull(key: StateKey<T>): T? {
+        return state[key]?.let {
+            it as? T ?: throw IllegalStateException("State value for key $key is not of expected type ${T::class}")
+        }
+    }
+
+    /**
+     * Retrieves a value of type [T] associated with the specified [key] from the [state] map.
+     *
+     * Performs unsafe cast under the hood, so make sure the value is of the expected type.
+     *
+     * @param key The state key for which the associated value needs to be retrieved.
+     * @throws NoSuchElementException if the [key] is not found in the state.
+     */
+    public inline fun <reified T> getFromState(key: StateKey<T>): T {
+        return getFromStateOrNull(key) ?: throw NoSuchElementException("State key $key not found or null")
+    }
+
+    /**
+     * Creates a copy of this [ClientCallContext].
+     */
+    public fun copy(
+        headers: Map<String, List<String>> = this.headers,
+        state: Map<StateKey<*>, Any> = this.state,
+    ): ClientCallContext = ClientCallContext(headers, state)
+
     @Suppress("MissingKDocForPublicAPI")
     public companion object {
         public val Default: ClientCallContext = ClientCallContext()
