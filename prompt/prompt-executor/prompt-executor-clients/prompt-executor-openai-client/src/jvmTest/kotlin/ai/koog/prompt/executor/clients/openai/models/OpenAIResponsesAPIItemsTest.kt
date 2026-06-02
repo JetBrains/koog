@@ -89,7 +89,8 @@ class OpenAIResponsesAPIItemsTest {
                     ),
                     id = "msg-123",
                     role = "assistant",
-                    status = OpenAIInputStatus.COMPLETED
+                    status = OpenAIInputStatus.COMPLETED,
+                    phase = "final_answer"
                 )
             ) shouldEqualJson """
             {
@@ -97,7 +98,8 @@ class OpenAIResponsesAPIItemsTest {
                 "content": [{"type": "output_text", "annotations": [], "text": "Response text"}],
                 "id": "msg-123",
                 "role": "assistant",
-                "status": "completed"
+                "status": "completed",
+                "phase": "final_answer"
             }
             """.trimIndent()
         }

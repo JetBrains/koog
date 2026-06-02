@@ -8,10 +8,12 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIInputStatus
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesAPIResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIStreamEvent
 import ai.koog.prompt.executor.clients.openai.models.OpenAITextConfig
+import ai.koog.prompt.executor.clients.openai.models.OutputContent
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.test.utils.CapturingKoogHttpClient
 import kotlinx.coroutines.flow.Flow
@@ -72,6 +74,64 @@ class OpenAIPrimaryConstructorTest {
         assertEquals(1, responses.parts.size)
         val textPart = assertIs<MessagePart.Text>(responses.parts.single())
         assertEquals("Hello from KoogHttpClient", textPart.text)
+    }
+
+    @Test
+    fun `responses API should preserve assistant phase and suppress commentary output messages`() = runTest {
+        val transport = CapturingKoogHttpClient(clientName = "CapturingOpenAIResponsesClient") { responseType ->
+            when (responseType) {
+                OpenAIResponsesAPIResponse::class -> OpenAIResponsesAPIResponse(
+                    created = 1716920005,
+                    id = "resp_123",
+                    model = "gpt-5.4",
+                    output = listOf(
+                        Item.OutputMessage(
+                            content = listOf(OutputContent.Text(annotations = emptyList(), text = "Working through it")),
+                            id = "msg_commentary",
+                            phase = "commentary",
+                            status = OpenAIInputStatus.COMPLETED
+                        ),
+                        Item.OutputMessage(
+                            content = listOf(OutputContent.Text(annotations = emptyList(), text = "Final answer")),
+                            id = "msg_final",
+                            phase = "final_answer",
+                            status = OpenAIInputStatus.COMPLETED
+                        )
+                    ),
+                    parallelToolCalls = false,
+                    status = OpenAIInputStatus.COMPLETED,
+                    text = OpenAITextConfig()
+                )
+                else -> error("Unexpected response type: $responseType")
+            }
+        }
+        val client = OpenAILLMClient(
+            settings = OpenAIClientSettings(baseUrl = "https://unused.test"),
+            httpClient = transport
+        )
+
+        val responses = client.execute(
+            prompt = Prompt(
+                messages = listOf(
+                    Message.Assistant(
+                        content = "Earlier final answer",
+                        metaInfo = ResponseMetaInfo.Empty,
+                        phase = "final_answer"
+                    )
+                ),
+                id = "test",
+                params = OpenAIResponsesParams()
+            ),
+            model = OpenAIModels.Chat.GPT4o
+        )
+
+        assertEquals("v1/responses", transport.lastPath)
+        assertEquals(true, transport.lastRequest.toString().contains("\"phase\":\"final_answer\""))
+        assertEquals(1, responses.size)
+
+        val message = assertIs<Message.Assistant>(responses.single())
+        assertEquals("Final answer", message.content)
+        assertEquals("final_answer", message.phase)
     }
 
     @Test
@@ -219,5 +279,120 @@ class OpenAIPrimaryConstructorTest {
         assertEquals(totalTokens, end.metaInfo.totalTokensCount)
         assertEquals(inputTokens, end.metaInfo.inputTokensCount)
         assertEquals(outputTokens, end.metaInfo.outputTokensCount)
+    }
+
+    @Test
+    fun `responses streaming should suppress commentary text deltas`() = runTest {
+        val responsesPath = "v1/responses"
+
+        val transport = object : KoogHttpClient {
+            override val clientName: String = "StreamingOpenAIClient"
+
+            override suspend fun <R : Any> get(
+                path: String,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+            ): R = error("GET is not expected in this test")
+
+            override suspend fun <T : Any, R : Any> post(
+                path: String,
+                request: T,
+                requestBodyType: KClass<T>,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+            ): R = error("POST is not expected in this test")
+
+            override fun <T : Any, R : Any, O : Any> sse(
+                path: String,
+                request: T,
+                requestBodyType: KClass<T>,
+                dataFilter: (String?) -> Boolean,
+                decodeStreamingResponse: (String) -> R,
+                processStreamingChunk: (R) -> O?,
+                parameters: Map<String, String>,
+            ): Flow<O> {
+                assertEquals(responsesPath, path)
+
+                val events = listOfNotNull(
+                    processStreamingChunk(
+                        OpenAIStreamEvent.ResponseOutputItemAdded(
+                            item = Item.OutputMessage(
+                                content = emptyList(),
+                                id = "msg_commentary",
+                                phase = "commentary"
+                            ),
+                            outputIndex = 0,
+                            sequenceNumber = 1
+                        ) as R
+                    ),
+                    processStreamingChunk(
+                        OpenAIStreamEvent.ResponseOutputTextDelta(
+                            itemId = "msg_commentary",
+                            outputIndex = 0,
+                            contentIndex = 0,
+                            delta = "Working",
+                            sequenceNumber = 2
+                        ) as R
+                    ),
+                    processStreamingChunk(
+                        OpenAIStreamEvent.ResponseOutputItemAdded(
+                            item = Item.OutputMessage(
+                                content = emptyList(),
+                                id = "msg_final",
+                                phase = "final_answer"
+                            ),
+                            outputIndex = 1,
+                            sequenceNumber = 3
+                        ) as R
+                    ),
+                    processStreamingChunk(
+                        OpenAIStreamEvent.ResponseOutputTextDelta(
+                            itemId = "msg_final",
+                            outputIndex = 1,
+                            contentIndex = 0,
+                            delta = "Final",
+                            sequenceNumber = 4
+                        ) as R
+                    ),
+                    processStreamingChunk(
+                        OpenAIStreamEvent.ResponseCompleted(
+                            response = OpenAIResponsesAPIResponse(
+                                created = 1716920005,
+                                id = "resp_123",
+                                model = "gpt-5.4",
+                                output = emptyList(),
+                                parallelToolCalls = false,
+                                status = OpenAIInputStatus.COMPLETED,
+                                text = OpenAITextConfig()
+                            ),
+                            sequenceNumber = 5
+                        ) as R
+                    )
+                )
+
+                return flow {
+                    events.forEach { emit(it) }
+                }
+            }
+
+            override fun close(): Unit = Unit
+        }
+        val client = OpenAILLMClient(
+            settings = OpenAIClientSettings(baseUrl = "https://unused.test"),
+            httpClient = transport
+        )
+
+        val frames = client.executeStreaming(
+            prompt = Prompt(
+                messages = listOf(Message.User("Hello?", RequestMetaInfo.Empty)),
+                id = "test",
+                params = OpenAIResponsesParams()
+            ),
+            model = OpenAIModels.Chat.GPT4o
+        ).toList()
+
+        assertEquals(2, frames.size)
+        assertEquals(StreamFrame.TextDelta(text = "Final", index = 1), frames[0])
+        assertIs<StreamFrame.End>(frames[1])
     }
 }

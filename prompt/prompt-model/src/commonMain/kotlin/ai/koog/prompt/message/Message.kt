@@ -164,6 +164,7 @@ public sealed interface Message {
      * @property finishReason The reason the LLM stopped generating (e.g. `"stop"`, `"tool_calls"`), or null if unknown.
      * @property rawResponse The raw JSON response body from the provider, or null if not captured.
      * @property id Optional unique identifier for the message.
+     * @property phase An optional provider-specific phase label for assistant messages.
      */
     @Serializable
     public data class Assistant @JvmOverloads constructor(
@@ -173,6 +174,7 @@ public sealed interface Message {
         // TODO: replace with JSONObject?
         public val rawResponse: JsonObject? = null,
         override val id: String? = null,
+        public val phase: String? = null,
     ) : Message {
         override val role: Role = Role.Assistant
 
@@ -186,12 +188,14 @@ public sealed interface Message {
             finishReason: String? = null,
             rawResponse: JsonObject? = null,
             id: String? = null,
+            phase: String? = null,
         ) : this(
             listOf(part),
             metaInfo,
             finishReason,
             rawResponse,
-            id
+            id,
+            phase,
         )
 
         /**
@@ -206,12 +210,14 @@ public sealed interface Message {
             finishReason: String? = null,
             rawResponse: JsonObject? = null,
             id: String? = null,
+            phase: String? = null,
         ) : this(
             MessagePart.Text(content),
             metaInfo,
             finishReason,
             rawResponse,
-            id
+            id,
+            phase,
         )
     }
 

@@ -260,6 +260,8 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
     private companion object {
         private const val OPENAI_CLIENT_NAME = "OpenAILLMClient"
+        private const val OPENAI_MESSAGE_PHASE_COMMENTARY = "commentary"
+        private const val OPENAI_MESSAGE_PHASE_FINAL_ANSWER = "final_answer"
         private val staticLogger = KotlinLogging.logger { }
     }
 
@@ -360,6 +362,8 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             stream = true
         )
 
+        val outputMessagePhases = mutableMapOf<Int, String?>()
+
         return try {
             httpClient.sse(
                 path = settings.responsesAPIPath,
@@ -371,7 +375,11 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                 processStreamingChunk = {
                     when (it) {
                         is OpenAIStreamEvent.ResponseOutputTextDelta -> {
-                            StreamFrame.TextDelta(text = it.delta, index = it.outputIndex)
+                            if (outputMessagePhases[it.outputIndex] == OPENAI_MESSAGE_PHASE_COMMENTARY) {
+                                null
+                            } else {
+                                StreamFrame.TextDelta(text = it.delta, index = it.outputIndex)
+                            }
                         }
 
                         is OpenAIStreamEvent.ResponseReasoningTextDelta -> {
@@ -397,6 +405,11 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                             when (val item = it.item) {
                                 is Item.Text -> {
                                     StreamFrame.TextComplete(item.value, it.outputIndex)
+                                }
+
+                                is Item.OutputMessage -> {
+                                    outputMessagePhases[it.outputIndex] = item.phase
+                                    null
                                 }
 
                                 is Item.Reasoning -> {
@@ -426,6 +439,13 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
                                 else -> null
                             }
+                        }
+
+                        is OpenAIStreamEvent.ResponseOutputItemAdded -> {
+                            if (it.item is Item.OutputMessage) {
+                                outputMessagePhases[it.outputIndex] = it.item.phase
+                            }
+                            null
                         }
 
                         is OpenAIStreamEvent.ResponseCompleted -> {
@@ -810,6 +830,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                                     content = listOf(
                                                         OutputContent.Text(text = part.text, annotations = emptyList())
                                                     ),
+                                                    phase = message.phase,
                                                 )
                                             )
                                         }
@@ -925,6 +946,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         )
 
         var finishReason: String? = null
+        val outputMessagePhases = mutableSetOf<String>()
 
         val parts = buildList {
             response.output.forEach { output ->
@@ -942,6 +964,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
                     is Item.OutputMessage -> {
                         finishReason = output.status?.name
+                        output.phase?.let { outputMessagePhases.add(it) }
                         output.content.forEach { content ->
                             when (content) {
                                 is OutputContent.Text -> {
@@ -976,7 +999,8 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         return Message.Assistant(
             parts = parts,
             finishReason = finishReason,
-            metaInfo = metaInfo
+            metaInfo = metaInfo,
+            phase = outputMessagePhases.singleOrNull(),
         )
     }
 
