@@ -1,4 +1,10 @@
+---
+status: beta
+---
+
 # A2A Client
+
+--8<-- "versioning-snippets.md:beta"
 
 The A2A client enables you to communicate with A2A-compliant agents over the network.
 It provides a complete implementation of

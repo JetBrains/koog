@@ -1,4 +1,10 @@
+---
+status: beta
+---
+
 # Spring Boot Integration
+
+--8<-- "versioning-snippets.md:beta"
 
 Koog provides seamless Spring Boot integration through its auto-configuration starter, making it easy to incorporate AI
 agents into your Spring Boot applications with minimal setup.
@@ -429,6 +435,6 @@ The auto-configuration creates the following beans (when configured):
 
 - Learn about the [basic agents](agents/basic-agents.md) to build minimal AI workflows
 - Explore [graph-based agents](agents/graph-based-agents.md) for advanced use cases
-- See the [tools overview](tools-overview.md) to extend your agents' capabilities
+- See the [tools overview](tools/index.md) to extend your agents' capabilities
 - Check out [examples](examples.md) for real-world implementations
 - Read the [glossary](glossary.md) to understand the framework better

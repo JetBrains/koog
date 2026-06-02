@@ -1,3 +1,48 @@
+/* Override beta status icon in nav sidebar */
+.md-status--beta:after {
+    -webkit-mask-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.23 17.59v5.53H6.88V6.72c0-1.45.43-2.59 1.28-3.44C9 2.43 10.17 2 11.61 2c1.39 0 2.46.34 3.26 1 .79.68 1.18 1.62 1.18 2.81 0 .82-.26 1.59-.78 2.3s-1.19 1.2-2.02 1.47v.04c1.25.2 2.22.65 2.88 1.38.66.71.99 1.62.99 2.74 0 1.32-.46 2.4-1.37 3.23-.92.83-2.12 1.24-3.62 1.24-1.06 0-2.03-.21-2.9-.62m1.49-6.84V8.83c.87-.11 1.58-.43 2.15-.97.56-.55.84-1.16.84-1.86 0-1.38-.71-2.08-2.11-2.08-.76 0-1.35.24-1.76.73s-.61 1.17-.61 2.06v8.79c.91.53 1.8.79 2.66.79.84 0 1.5-.22 1.97-.65.47-.44.7-1.06.7-1.85 0-1.79-1.28-2.79-3.84-3.04"/></svg>');
+    mask-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.23 17.59v5.53H6.88V6.72c0-1.45.43-2.59 1.28-3.44C9 2.43 10.17 2 11.61 2c1.39 0 2.46.34 3.26 1 .79.68 1.18 1.62 1.18 2.81 0 .82-.26 1.59-.78 2.3s-1.19 1.2-2.02 1.47v.04c1.25.2 2.22.65 2.88 1.38.66.71.99 1.62.99 2.74 0 1.32-.46 2.4-1.37 3.23-.92.83-2.12 1.24-3.62 1.24-1.06 0-2.03-.21-2.9-.62m1.49-6.84V8.83c.87-.11 1.58-.43 2.15-.97.56-.55.84-1.16.84-1.86 0-1.38-.71-2.08-2.11-2.08-.76 0-1.35.24-1.76.73s-.61 1.17-.61 2.06v8.79c.91.53 1.8.79 2.66.79.84 0 1.5-.22 1.97-.65.47-.44.7-1.06.7-1.85 0-1.79-1.28-2.79-3.84-3.04"/></svg>');
+}
+
+/* Custom beta admonition */
+:root {
+    --md-admonition-icon--beta: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.23 17.59v5.53H6.88V6.72c0-1.45.43-2.59 1.28-3.44C9 2.43 10.17 2 11.61 2c1.39 0 2.46.34 3.26 1 .79.68 1.18 1.62 1.18 2.81 0 .82-.26 1.59-.78 2.3s-1.19 1.2-2.02 1.47v.04c1.25.2 2.22.65 2.88 1.38.66.71.99 1.62.99 2.74 0 1.32-.46 2.4-1.37 3.23-.92.83-2.12 1.24-3.62 1.24-1.06 0-2.03-.21-2.9-.62m1.49-6.84V8.83c.87-.11 1.58-.43 2.15-.97.56-.55.84-1.16.84-1.86 0-1.38-.71-2.08-2.11-2.08-.76 0-1.35.24-1.76.73s-.61 1.17-.61 2.06v8.79c.91.53 1.8.79 2.66.79.84 0 1.5-.22 1.97-.65.47-.44.7-1.06.7-1.85 0-1.79-1.28-2.79-3.84-3.04"/></svg>');
+}
+
+.md-typeset .admonition.beta,
+.md-typeset details.beta {
+    border-color: #7c3aed;
+}
+
+.md-typeset .beta > .admonition-title,
+.md-typeset .beta > summary {
+    background-color: rgba(124, 58, 237, .1);
+}
+
+.md-typeset .beta > .admonition-title::before,
+.md-typeset .beta > summary::before {
+    background-color: #7c3aed;
+    -webkit-mask-image: var(--md-admonition-icon--beta);
+    mask-image: var(--md-admonition-icon--beta);
+}
+
+/* Beta badge for experimental features */
+.beta-badge {
+    display: inline-block;
+    padding: 0.1em 0.4em;
+    margin-left: 0.4em;
+    font-size: 0.65em;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff;
+    background-color: #f59e0b;
+    border-radius: 0.25em;
+    vertical-align: middle;
+    cursor: default;
+}
+
 .md_header__social {
     display: none;
 

@@ -1,4 +1,10 @@
+---
+status: beta
+---
+
 # A2A and Koog Integration
+
+--8<-- "versioning-snippets.md:beta"
 
 Koog provides seamless integration with the A2A protocol, allowing you to expose Koog agents as A2A servers and connect
 Koog agents to other A2A-compliant agents.

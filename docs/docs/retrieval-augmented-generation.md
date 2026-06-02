@@ -1,4 +1,10 @@
+---
+status: beta
+---
+
 # Retrieval-augmented generation (RAG)
+
+--8<-- "versioning-snippets.md:beta"
 
 Koog provides building blocks for retrieval-augmented generation (RAG): embedding text, storing embedded documents, and retrieving the most relevant results for a query.
 

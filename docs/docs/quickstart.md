@@ -10,6 +10,13 @@ This guide will help you start using Koog in your project.
 
 --8<-- "quickstart-snippets.md:dependencies"
 
+??? tip "Module Versioning"
+
+    Koog follows Semantic Versioning (`X.Y.Z`). Stable modules (e.g., `1.0.0`) have guaranteed APIs,
+    while beta modules (e.g., `1.0.0-beta`) are experimental and may change between releases.
+
+    See [Module versioning](module-versioning.md) for details.
+
 ??? tip "Nightly builds"
 
     Nightly builds from the develop branch are published to the [JetBrains Grazie Maven](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public) repository.
@@ -157,8 +164,9 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         <!--- INCLUDE
         import ai.koog.agents.core.agent.AIAgent
-        import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+        import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
         import ai.koog.prompt.executor.clients.openai.OpenAIModels
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
         import kotlinx.coroutines.runBlocking
         -->
         ```kotlin
@@ -166,10 +174,10 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
             // Get the OpenAI API key from the OPENAI_API_KEY environment variable
             val apiKey = System.getenv("OPENAI_API_KEY")
                 ?: error("The API key is not set.")
-            
+
             // Create an agent
             val agent = AIAgent(
-                promptExecutor = simpleOpenAIExecutor(apiKey),
+                promptExecutor = MultiLLMPromptExecutor(OpenAILLMClient(apiKey)),
                 llmModel = OpenAIModels.Chat.GPT4o
             )
         
@@ -183,10 +191,16 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     === "Java"
 
         <!--- INCLUDE
-        /**
+        import ai.koog.agents.core.agent.AIAgent;
+        import ai.koog.prompt.executor.clients.openai.OpenAIModels;
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+        import static ai.koog.prompt.executor.clients.openai.OpenAIClientFactory.openAIClient;
+        class exampleGettingStartedJava01 {
+            public static void main(String[] args) {
         -->
         <!--- SUFFIX
-        **/
+            }
+        }
         -->
         ```java
         // Get the OpenAI API key from the OPENAI_API_KEY environment variable
@@ -197,7 +211,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         // Create an agent
         AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(simpleOpenAIExecutor(apiKey))
+            .promptExecutor(new MultiLLMPromptExecutor(openAIClient(apiKey)))
             .llmModel(OpenAIModels.Chat.GPT4o)
             .build();
 
@@ -233,8 +247,9 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         <!--- INCLUDE
         import ai.koog.agents.core.agent.AIAgent
-        import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
+        import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
         import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
         import kotlinx.coroutines.runBlocking
         -->
         ```kotlin
@@ -242,10 +257,10 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
             // Get the Anthropic API key from the ANTHROPIC_API_KEY environment variable
             val apiKey = System.getenv("ANTHROPIC_API_KEY")
                 ?: error("The API key is not set.")
-            
+
             // Create an agent
             val agent = AIAgent(
-                promptExecutor = simpleAnthropicExecutor(apiKey),
+                promptExecutor = MultiLLMPromptExecutor(AnthropicLLMClient(apiKey)),
                 llmModel = AnthropicModels.Opus_4_1
             )
         
@@ -259,10 +274,16 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     === "Java"
 
         <!--- INCLUDE
-        /**
+        import ai.koog.agents.core.agent.AIAgent;
+        import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+        import static ai.koog.prompt.executor.clients.anthropic.AnthropicClientFactory.anthropicClient;
+        class exampleGettingStartedJava02 {
+            public static void main(String[] args) {
         -->
         <!--- SUFFIX
-        **/
+            }
+        }
         -->
         ```java
         // Get the Anthropic API key from the ANTHROPIC_API_KEY environment variable
@@ -273,7 +294,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         // Create an agent
         AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(simpleAnthropicExecutor(apiKey))
+            .promptExecutor(new MultiLLMPromptExecutor(anthropicClient(apiKey)))
             .llmModel(AnthropicModels.Opus_4_1)
             .build();
 
@@ -299,7 +320,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     ```
     <!--- KNIT example-getting-started-03.txt -->
 
-=== "Google"
+=== "Google β"
 
     The following example creates and runs a simple Koog agent using the [`Gemini 2.5 Pro`](https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-pro) model via the Gemini API.
 
@@ -307,8 +328,9 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         <!--- INCLUDE
         import ai.koog.agents.core.agent.AIAgent
-        import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
+        import ai.koog.prompt.executor.clients.google.GoogleLLMClient
         import ai.koog.prompt.executor.clients.google.GoogleModels
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
         import kotlinx.coroutines.runBlocking
         -->
         ```kotlin
@@ -316,10 +338,10 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
             // Get the Gemini API key from the GOOGLE_API_KEY environment variable
             val apiKey = System.getenv("GOOGLE_API_KEY")
                 ?: error("The API key is not set.")
-            
+
             // Create an agent
             val agent = AIAgent(
-                promptExecutor = simpleGoogleAIExecutor(apiKey),
+                promptExecutor = MultiLLMPromptExecutor(GoogleLLMClient(apiKey)),
                 llmModel = GoogleModels.Gemini2_5Pro
             )
         
@@ -333,10 +355,16 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     === "Java"
 
         <!--- INCLUDE
-        /**
+        import ai.koog.agents.core.agent.AIAgent;
+        import ai.koog.prompt.executor.clients.google.GoogleModels;
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+        import static ai.koog.prompt.executor.clients.google.GoogleClientFactory.googleClient;
+        class exampleGettingStartedJava03 {
+            public static void main(String[] args) {
         -->
         <!--- SUFFIX
-        **/
+            }
+        }
         -->
         ```java
         // Get the Gemini API key from the GOOGLE_API_KEY environment variable
@@ -347,7 +375,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         // Create an agent
         AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(simpleGoogleAIExecutor(apiKey))
+            .promptExecutor(new MultiLLMPromptExecutor(googleClient(apiKey)))
             .llmModel(GoogleModels.Gemini2_5Pro)
             .build();
 
@@ -373,7 +401,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     ```
     <!--- KNIT example-getting-started-04.txt -->
 
-=== "DeepSeek"
+=== "DeepSeek β"
 
     The following example creates and runs a simple Koog agent using the `deepseek-v4-flash` model via the DeepSeek API.
 
@@ -391,18 +419,13 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
             // Get the DeepSeek API key from the DEEPSEEK_API_KEY environment variable
             val apiKey = System.getenv("DEEPSEEK_API_KEY")
                 ?: error("The API key is not set.")
-            
-            // Create an LLM client
-            val deepSeekClient = DeepSeekLLMClient(apiKey)
-        
+
             // Create an agent
             val agent = AIAgent(
-                // Create a prompt executor using the LLM client
-                promptExecutor = MultiLLMPromptExecutor(deepSeekClient),
-                // Provide a model
+                promptExecutor = MultiLLMPromptExecutor(DeepSeekLLMClient(apiKey)),
                 llmModel = DeepSeekModels.DeepSeekV4Flash
             )
-        
+
             // Run the agent
             val result = agent.run("Hello! How can you help me?")
             println(result)
@@ -413,10 +436,16 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     === "Java"
 
         <!--- INCLUDE
-        /**
+        import ai.koog.agents.core.agent.AIAgent;
+        import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels;
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+        import static ai.koog.prompt.executor.clients.deepseek.DeepSeekClientFactory.deepSeekClient;
+        class exampleGettingStartedJava04 {
+            public static void main(String[] args) {
         -->
         <!--- SUFFIX
-        **/
+            }
+        }
         -->
         ```java
         // Get the DeepSeek API key from the DEEPSEEK_API_KEY environment variable
@@ -425,14 +454,9 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
             throw new RuntimeException("The API key is not set.");
         }
 
-        // Create an LLM client
-        DeepSeekLLMClient deepSeekClient = deepSeekClient(apiKey);
-
         // Create an agent
         AIAgent<String, String> agent = AIAgent.builder()
-            // Create a prompt executor using the LLM client
-            .promptExecutor(new MultiLLMPromptExecutor(deepSeekClient))
-            // Provide a model
+            .promptExecutor(new MultiLLMPromptExecutor(deepSeekClient(apiKey)))
             .llmModel(DeepSeekModels.DeepSeekV4Flash)
             .build();
 
@@ -457,8 +481,9 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         <!--- INCLUDE
         import ai.koog.agents.core.agent.AIAgent
-        import ai.koog.prompt.executor.llms.all.simpleOpenRouterExecutor
+        import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
         import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
         import kotlinx.coroutines.runBlocking
         -->
         ```kotlin
@@ -469,7 +494,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
             
             // Create an agent
             val agent = AIAgent(
-                promptExecutor = simpleOpenRouterExecutor(apiKey),
+                promptExecutor = MultiLLMPromptExecutor(OpenRouterLLMClient(apiKey)),
                 llmModel = OpenRouterModels.GPT4o
             )
         
@@ -483,10 +508,16 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     === "Java"
 
         <!--- INCLUDE
-        /**
+        import ai.koog.agents.core.agent.AIAgent;
+        import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels;
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+        import static ai.koog.prompt.executor.clients.openrouter.OpenRouterClientFactory.openRouterClient;
+        class exampleGettingStartedJava05 {
+            public static void main(String[] args) {
         -->
         <!--- SUFFIX
-        **/
+            }
+        }
         -->
         ```java
         // Get the OpenRouter API key from the OPENROUTER_API_KEY environment variable
@@ -497,7 +528,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         // Create an agent
         AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(simpleOpenRouterExecutor(apiKey))
+            .promptExecutor(new MultiLLMPromptExecutor(openRouterClient(apiKey)))
             .llmModel(OpenRouterModels.GPT4o)
             .build();
 
@@ -522,8 +553,11 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         <!--- INCLUDE
         import ai.koog.agents.core.agent.AIAgent
-        import ai.koog.prompt.executor.llms.all.simpleBedrockExecutorWithBearerToken
+        import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
+        import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
         import ai.koog.prompt.executor.clients.bedrock.BedrockModels
+        import ai.koog.prompt.executor.clients.bedrock.StaticBearerTokenProvider
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
         import kotlinx.coroutines.runBlocking
         -->
         ```kotlin
@@ -534,7 +568,12 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
             
             // Create an agent
             val agent = AIAgent(
-                promptExecutor = simpleBedrockExecutorWithBearerToken(apiKey),
+                promptExecutor = MultiLLMPromptExecutor(
+                    BedrockLLMClient(
+                        StaticBearerTokenProvider(apiKey),
+                        BedrockClientSettings()
+                    )
+                ),
                 llmModel = BedrockModels.AnthropicClaude4_5Sonnet
             )
         
@@ -548,10 +587,16 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     === "Java"
 
         <!--- INCLUDE
-        /**
+        import ai.koog.agents.core.agent.AIAgent;
+        import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings;
+        import ai.koog.prompt.executor.clients.bedrock.BedrockModels;
+        import static ai.koog.prompt.executor.llms.all.SimplePromptExecutors.simpleBedrockExecutorWithBearerToken;
+        class exampleGettingStartedJava06 {
+            public static void main(String[] args) {
         -->
         <!--- SUFFIX
-        **/
+            }
+        }
         -->
         ```java
         // Get the Bedrock API key from the BEDROCK_API_KEY environment variable
@@ -590,7 +635,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     ```
     <!--- KNIT example-getting-started-07.txt -->
 
-=== "Mistral"
+=== "Mistral β"
 
     The following example creates and runs a simple Koog agent using the [`Mistral Medium 3.1`](https://docs.mistral.ai/models/mistral-medium-3-1-25-08) model via the Mistral AI API.
 
@@ -598,8 +643,9 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         <!--- INCLUDE
         import ai.koog.agents.core.agent.AIAgent
-        import ai.koog.prompt.executor.llms.all.simpleMistralAIExecutor
+        import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
         import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
         import kotlinx.coroutines.runBlocking
         -->
         ```kotlin
@@ -610,7 +656,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
             
             // Create an agent
             val agent = AIAgent(
-                promptExecutor = simpleMistralAIExecutor(apiKey),
+                promptExecutor = MultiLLMPromptExecutor(MistralAILLMClient(apiKey)),
                 llmModel = MistralAIModels.Chat.MistralMedium31
             )
         
@@ -624,11 +670,17 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     === "Java"
 
         <!--- INCLUDE
-        /**
+        import ai.koog.agents.core.agent.AIAgent;
+        import ai.koog.prompt.executor.clients.mistralai.MistralAIModels;
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+        import static ai.koog.prompt.executor.clients.mistralai.MistralAIClientFactory.mistralAIClient;
+        class exampleGettingStartedJava07 {
+            public static void main(String[] args) {
         -->
         <!--- SUFFIX
-        **/
-        -->   
+            }
+        }
+        -->
         ```java
         // Get the Mistral AI API key from the MISTRAL_API_KEY environment variable
         String apiKey = System.getenv("MISTRAL_API_KEY");
@@ -638,7 +690,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         // Create an agent
         AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(simpleMistralAIExecutor(apiKey))
+            .promptExecutor(new MultiLLMPromptExecutor(mistralAIClient(apiKey)))
             .llmModel(MistralAIModels.Chat.MistralMedium31)
             .build();
 
@@ -674,7 +726,8 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
         <!--- INCLUDE
         import ai.koog.agents.core.agent.AIAgent
-        import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+        import ai.koog.prompt.executor.ollama.client.OllamaClient
         import ai.koog.prompt.executor.ollama.client.OllamaModels
         import kotlinx.coroutines.runBlocking
         -->
@@ -682,7 +735,7 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
         fun main() = runBlocking {
             // Create an agent
             val agent = AIAgent(
-                promptExecutor = simpleOllamaAIExecutor(),
+                promptExecutor = MultiLLMPromptExecutor(OllamaClient()),
                 llmModel = OllamaModels.Meta.LLAMA_3_2
             )
 
@@ -696,15 +749,21 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     === "Java"
 
         <!--- INCLUDE
-        /**
+        import ai.koog.agents.core.agent.AIAgent;
+        import ai.koog.prompt.executor.ollama.client.OllamaModels;
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+        import static ai.koog.prompt.executor.ollama.client.OllamaClientFactory.ollamaClient;
+        class exampleGettingStartedJava08 {
+            public static void main(String[] args) {
         -->
         <!--- SUFFIX
-        **/
-        -->  
+            }
+        }
+        -->
         ```java
         // Create an agent
         AIAgent<String, String> agent = AIAgent.builder()
-            .promptExecutor(simpleOllamaAIExecutor("http://localhost:11434"))
+            .promptExecutor(new MultiLLMPromptExecutor(ollamaClient("http://localhost:11434")))
             .llmModel(OllamaModels.Meta.LLAMA_3_2)
             .build();
 

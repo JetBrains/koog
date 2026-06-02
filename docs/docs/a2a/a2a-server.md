@@ -1,4 +1,10 @@
+---
+status: beta
+---
+
 # A2A Server
+
+--8<-- "versioning-snippets.md:beta"
 
 The A2A server enables you to expose AI agents through the standardized A2A (Agent-to-Agent) protocol. It provides a complete implementation of the [A2A protocol specification](https://a2a-protocol.org/latest/specification/), handling client requests, executing agent logic, managing complex task lifecycles, and supporting real-time streaming responses.
 

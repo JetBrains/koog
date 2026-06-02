@@ -359,7 +359,7 @@ Then the LLM will be able to decide to call tools that perform the calculations 
 
 ## Add tools
 
-Define [tools](../tools-overview.md) for performing math operations and add them to a [ToolRegistry](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool-registry/index.html):
+Define [tools](../tools/index.md) for performing math operations and add them to a [ToolRegistry](https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool-registry/index.html):
 
 === "Kotlin"
 
