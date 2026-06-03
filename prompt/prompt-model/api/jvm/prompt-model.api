@@ -673,35 +673,30 @@ public final class ai/koog/prompt/message/Message$Assistant : ai/koog/prompt/mes
 	public fun <init> (Lai/koog/prompt/message/MessagePart$ResponsePart;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;)V
 	public fun <init> (Lai/koog/prompt/message/MessagePart$ResponsePart;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
 	public fun <init> (Lai/koog/prompt/message/MessagePart$ResponsePart;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)V
-	public fun <init> (Lai/koog/prompt/message/MessagePart$ResponsePart;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Lai/koog/prompt/message/MessagePart$ResponsePart;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lai/koog/prompt/message/MessagePart$ResponsePart;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Ljava/lang/String;Lai/koog/prompt/message/ResponseMetaInfo;)V
 	public fun <init> (Ljava/lang/String;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
 	public fun <init> (Ljava/lang/String;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)V
-	public fun <init> (Ljava/lang/String;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;)V
 	public fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;)V
 	public fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
 	public fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)V
-	public fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/util/List;
 	public final fun component2 ()Lai/koog/prompt/message/ResponseMetaInfo;
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Lkotlinx/serialization/json/JsonObject;
 	public final fun component5 ()Ljava/lang/String;
-	public final fun component6 ()Ljava/lang/String;
-	public final fun copy (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/message/Message$Assistant;
-	public static synthetic fun copy$default (Lai/koog/prompt/message/Message$Assistant;Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/message/Message$Assistant;
+	public final fun copy (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)Lai/koog/prompt/message/Message$Assistant;
+	public static synthetic fun copy$default (Lai/koog/prompt/message/Message$Assistant;Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/message/Message$Assistant;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getFinishReason ()Ljava/lang/String;
 	public fun getId ()Ljava/lang/String;
 	public synthetic fun getMetaInfo ()Lai/koog/prompt/message/MessageMetaInfo;
 	public fun getMetaInfo ()Lai/koog/prompt/message/ResponseMetaInfo;
 	public fun getParts ()Ljava/util/List;
-	public final fun getPhase ()Ljava/lang/String;
 	public final fun getRawResponse ()Lkotlinx/serialization/json/JsonObject;
 	public fun getRole ()Lai/koog/prompt/message/Message$Role;
 	public fun hashCode ()I
@@ -963,13 +958,16 @@ public final class ai/koog/prompt/message/MessagePart$Text : ai/koog/prompt/mess
 	public static final field Companion Lai/koog/prompt/message/MessagePart$Text$Companion;
 	public fun <init> (Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)V
-	public synthetic fun <init> (Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/message/CacheControl;Lai/koog/prompt/message/MessagePart$Text$Phase;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/prompt/message/CacheControl;Lai/koog/prompt/message/MessagePart$Text$Phase;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Lai/koog/prompt/message/CacheControl;
-	public final fun copy (Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)Lai/koog/prompt/message/MessagePart$Text;
-	public static synthetic fun copy$default (Lai/koog/prompt/message/MessagePart$Text;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)Lai/koog/prompt/message/MessagePart$Text;
+	public final fun component3 ()Lai/koog/prompt/message/MessagePart$Text$Phase;
+	public final fun copy (Ljava/lang/String;Lai/koog/prompt/message/CacheControl;Lai/koog/prompt/message/MessagePart$Text$Phase;)Lai/koog/prompt/message/MessagePart$Text;
+	public static synthetic fun copy$default (Lai/koog/prompt/message/MessagePart$Text;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;Lai/koog/prompt/message/MessagePart$Text$Phase;ILjava/lang/Object;)Lai/koog/prompt/message/MessagePart$Text;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getCacheControl ()Lai/koog/prompt/message/CacheControl;
+	public final fun getPhase ()Lai/koog/prompt/message/MessagePart$Text$Phase;
 	public final fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -987,6 +985,19 @@ public final synthetic class ai/koog/prompt/message/MessagePart$Text$$serializer
 }
 
 public final class ai/koog/prompt/message/MessagePart$Text$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/message/MessagePart$Text$Phase : java/lang/Enum {
+	public static final field COMMENTARY Lai/koog/prompt/message/MessagePart$Text$Phase;
+	public static final field Companion Lai/koog/prompt/message/MessagePart$Text$Phase$Companion;
+	public static final field FINAL_ANSWER Lai/koog/prompt/message/MessagePart$Text$Phase;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/message/MessagePart$Text$Phase;
+	public static fun values ()[Lai/koog/prompt/message/MessagePart$Text$Phase;
+}
+
+public final class ai/koog/prompt/message/MessagePart$Text$Phase$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -1547,14 +1558,16 @@ public final class ai/koog/prompt/streaming/StreamFrame$ReasoningDelta$Companion
 
 public final class ai/koog/prompt/streaming/StreamFrame$TextComplete : ai/koog/prompt/streaming/StreamFrame, ai/koog/prompt/streaming/StreamFrame$CompleteFrame {
 	public static final field Companion Lai/koog/prompt/streaming/StreamFrame$TextComplete$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/Integer;
-	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;)Lai/koog/prompt/streaming/StreamFrame$TextComplete;
-	public static synthetic fun copy$default (Lai/koog/prompt/streaming/StreamFrame$TextComplete;Ljava/lang/String;Ljava/lang/Integer;ILjava/lang/Object;)Lai/koog/prompt/streaming/StreamFrame$TextComplete;
+	public final fun component3 ()Lai/koog/prompt/message/MessagePart$Text$Phase;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;)Lai/koog/prompt/streaming/StreamFrame$TextComplete;
+	public static synthetic fun copy$default (Lai/koog/prompt/streaming/StreamFrame$TextComplete;Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;ILjava/lang/Object;)Lai/koog/prompt/streaming/StreamFrame$TextComplete;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getIndex ()Ljava/lang/Integer;
+	public final fun getPhase ()Lai/koog/prompt/message/MessagePart$Text$Phase;
 	public final fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -1577,14 +1590,16 @@ public final class ai/koog/prompt/streaming/StreamFrame$TextComplete$Companion {
 
 public final class ai/koog/prompt/streaming/StreamFrame$TextDelta : ai/koog/prompt/streaming/StreamFrame, ai/koog/prompt/streaming/StreamFrame$DeltaFrame {
 	public static final field Companion Lai/koog/prompt/streaming/StreamFrame$TextDelta$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/Integer;
-	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;)Lai/koog/prompt/streaming/StreamFrame$TextDelta;
-	public static synthetic fun copy$default (Lai/koog/prompt/streaming/StreamFrame$TextDelta;Ljava/lang/String;Ljava/lang/Integer;ILjava/lang/Object;)Lai/koog/prompt/streaming/StreamFrame$TextDelta;
+	public final fun component3 ()Lai/koog/prompt/message/MessagePart$Text$Phase;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;)Lai/koog/prompt/streaming/StreamFrame$TextDelta;
+	public static synthetic fun copy$default (Lai/koog/prompt/streaming/StreamFrame$TextDelta;Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;ILjava/lang/Object;)Lai/koog/prompt/streaming/StreamFrame$TextDelta;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getIndex ()Ljava/lang/Integer;
+	public final fun getPhase ()Lai/koog/prompt/message/MessagePart$Text$Phase;
 	public final fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -1686,8 +1701,8 @@ public final class ai/koog/prompt/streaming/StreamFrameFlowBuilder {
 	public static synthetic fun emitEnd$default (Lai/koog/prompt/streaming/StreamFrameFlowBuilder;Ljava/lang/String;Lai/koog/prompt/message/ResponseMetaInfo;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun emitReasoningDelta (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun emitReasoningDelta$default (Lai/koog/prompt/streaming/StreamFrameFlowBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public final fun emitTextDelta (Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun emitTextDelta$default (Lai/koog/prompt/streaming/StreamFrameFlowBuilder;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun emitTextDelta (Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun emitTextDelta$default (Lai/koog/prompt/streaming/StreamFrameFlowBuilder;Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun emitToolCallDelta (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun emitToolCallDelta$default (Lai/koog/prompt/streaming/StreamFrameFlowBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun tryEmitPendingReasoning (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -1717,10 +1732,10 @@ public final class ai/koog/prompt/streaming/StreamFrameFlowBuilderKt {
 	public static synthetic fun emitReasoningComplete$default (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun emitReasoningDelta (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun emitReasoningDelta$default (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun emitTextComplete (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun emitTextComplete$default (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static final fun emitTextDelta (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun emitTextDelta$default (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun emitTextComplete (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun emitTextComplete$default (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun emitTextDelta (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun emitTextDelta$default (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/Integer;Lai/koog/prompt/message/MessagePart$Text$Phase;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun emitToolCallComplete (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun emitToolCallComplete$default (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static final fun emitToolCallDelta (Lkotlinx/coroutines/flow/FlowCollector;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

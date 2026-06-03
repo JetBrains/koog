@@ -359,6 +359,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             params = params,
             stream = true
         )
+        val outputMessagePhases = mutableMapOf<Int, MessagePart.Text.Phase?>()
 
         return try {
             httpClient.sse(
@@ -371,7 +372,19 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                 processStreamingChunk = {
                     when (it) {
                         is OpenAIStreamEvent.ResponseOutputTextDelta -> {
-                            StreamFrame.TextDelta(text = it.delta, index = it.outputIndex)
+                            StreamFrame.TextDelta(
+                                text = it.delta,
+                                index = it.outputIndex,
+                                phase = outputMessagePhases[it.outputIndex]
+                            )
+                        }
+
+                        is OpenAIStreamEvent.ResponseOutputTextDone -> {
+                            StreamFrame.TextComplete(
+                                text = it.text,
+                                index = it.outputIndex,
+                                phase = outputMessagePhases[it.outputIndex]
+                            )
                         }
 
                         is OpenAIStreamEvent.ResponseReasoningTextDelta -> {
@@ -396,10 +409,12 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                         is OpenAIStreamEvent.ResponseOutputItemDone -> {
                             when (val item = it.item) {
                                 is Item.Text -> {
-                                    StreamFrame.TextComplete(item.value, it.outputIndex)
+                                    StreamFrame.TextComplete(
+                                        text = item.value,
+                                        index = it.outputIndex,
+                                        phase = outputMessagePhases[it.outputIndex]
+                                    )
                                 }
-
-                                is Item.OutputMessage -> null
 
                                 is Item.Reasoning -> {
                                     // https://developers.openai.com/api/reference/resources/responses/streaming-events#response.reasoning_text.done
@@ -430,7 +445,13 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                             }
                         }
 
-                        is OpenAIStreamEvent.ResponseOutputItemAdded -> null
+                        is OpenAIStreamEvent.ResponseOutputItemAdded -> {
+                            val outputMessage = it.item as? Item.OutputMessage
+                            if (outputMessage != null) {
+                                outputMessagePhases[it.outputIndex] = outputMessage.phase
+                            }
+                            null
+                        }
 
                         is OpenAIStreamEvent.ResponseCompleted -> {
                             StreamFrame.End(
@@ -814,7 +835,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                                     content = listOf(
                                                         OutputContent.Text(text = part.text, annotations = emptyList())
                                                     ),
-                                                    phase = message.phase,
+                                                    phase = part.phase,
                                                 )
                                             )
                                         }
@@ -930,8 +951,6 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         )
 
         var finishReason: String? = null
-        val outputMessagePhases = mutableSetOf<String>()
-
         val parts = buildList {
             response.output.forEach { output ->
                 when (output) {
@@ -948,15 +967,14 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
                     is Item.OutputMessage -> {
                         finishReason = output.status?.name
-                        output.phase?.let { outputMessagePhases.add(it) }
                         output.content.forEach { content ->
                             when (content) {
                                 is OutputContent.Text -> {
-                                    add(MessagePart.Text(content.text))
+                                    add(MessagePart.Text(content.text, phase = output.phase))
                                 }
 
                                 is OutputContent.Refusal -> {
-                                    add(MessagePart.Text(content.refusal))
+                                    add(MessagePart.Text(content.refusal, phase = output.phase))
                                 }
                             }
                         }
@@ -984,7 +1002,6 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             parts = parts,
             finishReason = finishReason,
             metaInfo = metaInfo,
-            phase = outputMessagePhases.singleOrNull(),
         )
     }
 

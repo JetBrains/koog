@@ -12,6 +12,7 @@ import ai.koog.prompt.executor.clients.openai.models.OutputContent
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
+import ai.koog.prompt.message.MessagePart.Text.Phase
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -21,6 +22,10 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.reflect.KClass
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -88,13 +93,13 @@ class OpenAIPrimaryConstructorTest {
                         Item.OutputMessage(
                             content = listOf(OutputContent.Text(annotations = emptyList(), text = "Working through it")),
                             id = "msg_commentary",
-                            phase = "commentary",
+                            phase = Phase.COMMENTARY,
                             status = OpenAIInputStatus.COMPLETED
                         ),
                         Item.OutputMessage(
                             content = listOf(OutputContent.Text(annotations = emptyList(), text = "Final answer")),
                             id = "msg_final",
-                            phase = "final_answer",
+                            phase = Phase.FINAL_ANSWER,
                             status = OpenAIInputStatus.COMPLETED
                         )
                     ),
@@ -114,9 +119,11 @@ class OpenAIPrimaryConstructorTest {
             prompt = Prompt(
                 messages = listOf(
                     Message.Assistant(
-                        content = "Earlier final answer",
+                        part = MessagePart.Text(
+                            text = "Earlier final answer",
+                            phase = Phase.FINAL_ANSWER
+                        ),
                         metaInfo = ResponseMetaInfo.Empty,
-                        phase = "final_answer"
                     )
                 ),
                 id = "test",
@@ -125,16 +132,19 @@ class OpenAIPrimaryConstructorTest {
             model = OpenAIModels.Chat.GPT4o
         )
 
-        assertEquals("v1/responses", transport.lastPath)
-        assertEquals(true, transport.lastRequest.toString().contains("\"phase\":\"final_answer\""))
+        val request = Json.parseToJsonElement(transport.lastRequest.toString()).jsonObject
+        val replayedAssistant = request.getValue("input").jsonArray.single().jsonObject
+        assertEquals("final_answer", replayedAssistant.getValue("phase").jsonPrimitive.content)
+
         assertEquals(2, responses.parts.size)
-        assertEquals(null, responses.phase)
 
         val commentary = assertIs<MessagePart.Text>(responses.parts[0])
         assertEquals("Working through it", commentary.text)
+        assertEquals(Phase.COMMENTARY, commentary.phase)
 
         val finalAnswer = assertIs<MessagePart.Text>(responses.parts[1])
         assertEquals("Final answer", finalAnswer.text)
+        assertEquals(Phase.FINAL_ANSWER, finalAnswer.phase)
     }
 
     @Test
@@ -325,7 +335,7 @@ class OpenAIPrimaryConstructorTest {
                             item = Item.OutputMessage(
                                 content = emptyList(),
                                 id = "msg_commentary",
-                                phase = "commentary"
+                                phase = Phase.COMMENTARY
                             ),
                             outputIndex = 0,
                             sequenceNumber = 1
@@ -341,14 +351,23 @@ class OpenAIPrimaryConstructorTest {
                         ) as R
                     ),
                     processStreamingChunk(
+                        OpenAIStreamEvent.ResponseOutputTextDone(
+                            itemId = "msg_commentary",
+                            outputIndex = 0,
+                            contentIndex = 0,
+                            text = "Working",
+                            sequenceNumber = 3
+                        ) as R
+                    ),
+                    processStreamingChunk(
                         OpenAIStreamEvent.ResponseOutputItemAdded(
                             item = Item.OutputMessage(
                                 content = emptyList(),
                                 id = "msg_final",
-                                phase = "final_answer"
+                                phase = Phase.FINAL_ANSWER
                             ),
                             outputIndex = 1,
-                            sequenceNumber = 3
+                            sequenceNumber = 4
                         ) as R
                     ),
                     processStreamingChunk(
@@ -357,7 +376,16 @@ class OpenAIPrimaryConstructorTest {
                             outputIndex = 1,
                             contentIndex = 0,
                             delta = "Final",
-                            sequenceNumber = 4
+                            sequenceNumber = 5
+                        ) as R
+                    ),
+                    processStreamingChunk(
+                        OpenAIStreamEvent.ResponseOutputTextDone(
+                            itemId = "msg_final",
+                            outputIndex = 1,
+                            contentIndex = 0,
+                            text = "Final",
+                            sequenceNumber = 6
                         ) as R
                     ),
                     processStreamingChunk(
@@ -371,7 +399,7 @@ class OpenAIPrimaryConstructorTest {
                                 status = OpenAIInputStatus.COMPLETED,
                                 text = OpenAITextConfig()
                             ),
-                            sequenceNumber = 5
+                            sequenceNumber = 7
                         ) as R
                     )
                 )
@@ -405,9 +433,11 @@ class OpenAIPrimaryConstructorTest {
             model = OpenAIModels.Chat.GPT4o
         ).toList()
 
-        assertEquals(3, frames.size)
-        assertEquals(StreamFrame.TextDelta(text = "Working", index = 0), frames[0])
-        assertEquals(StreamFrame.TextDelta(text = "Final", index = 1), frames[1])
-        assertIs<StreamFrame.End>(frames[2])
+        assertEquals(5, frames.size)
+        assertEquals(StreamFrame.TextDelta(text = "Working", index = 0, phase = Phase.COMMENTARY), frames[0])
+        assertEquals(StreamFrame.TextComplete(text = "Working", index = 0, phase = Phase.COMMENTARY), frames[1])
+        assertEquals(StreamFrame.TextDelta(text = "Final", index = 1, phase = Phase.FINAL_ANSWER), frames[2])
+        assertEquals(StreamFrame.TextComplete(text = "Final", index = 1, phase = Phase.FINAL_ANSWER), frames[3])
+        assertIs<StreamFrame.End>(frames[4])
     }
 }
