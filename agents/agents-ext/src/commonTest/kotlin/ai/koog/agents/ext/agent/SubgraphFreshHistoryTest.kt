@@ -1,14 +1,13 @@
 package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.TestFinishTool
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
@@ -34,7 +33,7 @@ class SubgraphFreshHistoryTest {
                 toolSelectionStrategy = ai.koog.agents.core.agent.entity.ToolSelectionStrategy.ALL,
                 finishTool = finishTool,
                 llmModel = model,
-                runMode = ToolCalls.SEQUENTIAL,
+                parallelTools = false,
                 freshHistory = freshHistory,
             ) { input -> "Instruction for: $input" }
 
@@ -97,17 +96,17 @@ class SubgraphFreshHistoryTest {
         // defineTask result ("Instruction for: hello") should be a system message
         assertEquals(1, systemMessages.size, "Expected exactly one system message from defineTask")
         assertTrue(
-            systemMessages.first().content.contains("Instruction for: hello"),
-            "System message should contain defineTask result, got: ${systemMessages.first().content}"
+            systemMessages.first().textContent().contains("Instruction for: hello"),
+            "System message should contain defineTask result, got: ${systemMessages.first().textContent()}"
         )
 
         // Parent's user/assistant messages should NOT be present
         assertTrue(
-            userMessages.none { it.content.contains("Some prior conversation message") },
+            userMessages.none { it.textContent().contains("Some prior conversation message") },
             "Parent's user message should not be in fresh history"
         )
         assertTrue(
-            assistantMessages.none { it.content.contains("Some prior assistant response") },
+            assistantMessages.none { it.textContent().contains("Some prior assistant response") },
             "Parent's assistant message should not be in fresh history"
         )
     }
@@ -141,19 +140,19 @@ class SubgraphFreshHistoryTest {
 
         // Parent's system message should be preserved
         assertTrue(
-            systemMessages.any { it.content.contains("You are a parent system prompt") },
+            systemMessages.any { it.textContent().contains("You are a parent system prompt") },
             "Parent's system message should be preserved"
         )
 
         // Parent's prior user message should be present
         assertTrue(
-            userMessages.any { it.content.contains("Some prior conversation message") },
+            userMessages.any { it.textContent().contains("Some prior conversation message") },
             "Parent's user message should be preserved in default mode"
         )
 
         // defineTask result should be a user message
         assertTrue(
-            userMessages.any { it.content.contains("Instruction for: hello") },
+            userMessages.any { it.textContent().contains("Instruction for: hello") },
             "defineTask result should be appended as a user message in default mode"
         )
     }
@@ -174,7 +173,7 @@ class SubgraphFreshHistoryTest {
                 toolSelectionStrategy = ai.koog.agents.core.agent.entity.ToolSelectionStrategy.ALL,
                 finishTool = finishTool,
                 llmModel = model,
-                runMode = ToolCalls.SEQUENTIAL,
+                parallelTools = false,
                 freshHistory = true,
             ) { input -> "Fresh instruction: $input" }
 
@@ -182,7 +181,7 @@ class SubgraphFreshHistoryTest {
                 toolSelectionStrategy = ai.koog.agents.core.agent.entity.ToolSelectionStrategy.ALL,
                 finishTool = finishTool,
                 llmModel = model,
-                runMode = ToolCalls.SEQUENTIAL,
+                parallelTools = false,
                 freshHistory = false,
             ) { input -> "Normal instruction: $input" }
 
@@ -221,12 +220,12 @@ class SubgraphFreshHistoryTest {
         val secondMessages = secondPrompt.messages
 
         assertTrue(
-            secondMessages.filterIsInstance<Message.System>().any { it.content.contains("Parent system prompt") },
+            secondMessages.filterIsInstance<Message.System>().any { it.textContent().contains("Parent system prompt") },
             "Second subgraph should see parent's system prompt"
         )
 
         assertTrue(
-            secondMessages.none { it.content.contains("Fresh instruction:") },
+            secondMessages.none { it.textContent().contains("Fresh instruction:") },
             "Fresh subgraph's system message should not leak into the second subgraph"
         )
     }
