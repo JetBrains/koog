@@ -176,12 +176,14 @@ public final class ai/koog/prompt/executor/ollama/client/OllamaModels$OpenAI {
 
 public final class ai/koog/prompt/executor/ollama/client/OllamaParams : ai/koog/prompt/params/LLMParams {
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Boolean;)V
-	public synthetic fun <init> (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun copy (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Boolean;)Lai/koog/prompt/executor/ollama/client/OllamaParams;
-	public static synthetic fun copy$default (Lai/koog/prompt/executor/ollama/client/OllamaParams;Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Boolean;ILjava/lang/Object;)Lai/koog/prompt/executor/ollama/client/OllamaParams;
+	public fun <init> (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Integer;)Lai/koog/prompt/executor/ollama/client/OllamaParams;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/ollama/client/OllamaParams;Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Integer;ILjava/lang/Object;)Lai/koog/prompt/executor/ollama/client/OllamaParams;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLogprobs ()Ljava/lang/Boolean;
 	public final fun getThink ()Ljava/lang/Boolean;
+	public final fun getTopLogprobs ()Ljava/lang/Integer;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

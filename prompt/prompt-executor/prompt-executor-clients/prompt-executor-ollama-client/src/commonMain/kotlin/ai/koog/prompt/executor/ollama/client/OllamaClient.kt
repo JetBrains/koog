@@ -30,6 +30,7 @@ import ai.koog.prompt.executor.ollama.client.dto.OllamaToolDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaToolDTO.Definition
 import ai.koog.prompt.executor.ollama.client.dto.extractOllamaJsonFormat
 import ai.koog.prompt.executor.ollama.client.dto.generateToolCallId
+import ai.koog.prompt.executor.ollama.client.dto.toLogProb
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaChatMessages
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaModelCard
 import ai.koog.prompt.executor.ollama.tools.json.OllamaToolDescriptorSchemaGenerator
@@ -220,7 +221,9 @@ public class OllamaClient @JvmOverloads constructor(
                 options = extractOllamaOptions(prompt, model),
                 stream = false,
                 additionalProperties = params.additionalProperties,
-                think = params.think
+                think = params.think,
+                logprobs = params.logprobs,
+                topLogprobs = params.topLogprobs,
             )
         )
 
@@ -286,6 +289,7 @@ public class OllamaClient @JvmOverloads constructor(
                 }
             },
             metaInfo = responseMetadata,
+            logprobs = response.logprobs?.map { it.toLogProb() },
         )
     }
 
@@ -306,7 +310,9 @@ public class OllamaClient @JvmOverloads constructor(
                 options = extractOllamaOptions(prompt, model),
                 stream = true,
                 additionalProperties = params.additionalProperties,
-                think = params.think
+                think = params.think,
+                logprobs = params.logprobs,
+                topLogprobs = params.topLogprobs,
             )
         )
 
