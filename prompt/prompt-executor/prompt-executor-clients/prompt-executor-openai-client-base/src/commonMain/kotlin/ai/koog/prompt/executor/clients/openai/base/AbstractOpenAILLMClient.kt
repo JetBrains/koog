@@ -39,6 +39,11 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.jvm.JvmOverloads
@@ -320,17 +325,35 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                                     .takeIf { it.isNotEmpty() }?.toMessageContent(model),
                                 // FIXME: how to handle multiple reasoning messages
                                 reasoningContent = message.parts.filterIsInstance<MessagePart.Reasoning>()
-                                    .firstOrNull()?.content?.firstOrNull(),
-                                toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
-                                    .takeIf { it.isNotEmpty() }
-                                    ?.map {
-                                        OpenAIToolCall(
-                                            it.id ?: Uuid.random().toString(),
-                                            // `args` already holds the JSON-encoded arguments; re-encoding here would
-                                            // double-encode it into a quoted string that strict backends (e.g. DashScope) reject.
-                                            function = OpenAIFunction(it.tool, it.args)
-                                        )
+                                    .firstOrNull { it.content.isNotEmpty() }?.content?.firstOrNull(),
+                                toolCalls = buildList {
+                                    var pendingSignature: String? = null
+                                    message.parts.forEach { part ->
+                                        when (part) {
+                                            is MessagePart.Reasoning ->
+                                                if (part.encrypted != null) pendingSignature = part.encrypted
+
+                                            is MessagePart.Tool.Call -> {
+                                                add(
+                                                    OpenAIToolCall(
+                                                        id = part.id ?: Uuid.random().toString(),
+                                                        function = OpenAIFunction(part.tool, part.args),
+                                                        extraContent = pendingSignature?.let { signature ->
+                                                            buildJsonObject {
+                                                                putJsonObject("google") {
+                                                                    put("thought_signature", signature)
+                                                                }
+                                                            }
+                                                        },
+                                                    )
+                                                )
+                                                pendingSignature = null
+                                            }
+
+                                            else -> {}
+                                        }
                                     }
+                                }.takeIf { it.isNotEmpty() }
                             )
                         )
                     }
@@ -436,20 +459,35 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             null
         }
 
-    private fun OpenAIMessage.Assistant.toolCallPartsOrNull(): List<MessagePart.Tool.Call> =
-        toolCalls?.map { toolCall ->
-            MessagePart.Tool.Call(
-                id = toolCall.id,
-                tool = toolCall.function.name,
-                /*
-                 If the tool has no arguments, OpenRouter puts an empty string in the arguments instead of an empty object
-                 But we always expect arguments to be a JSON object. Fixing this.
-                 */
-                args = toolCall.function.arguments
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { Json.parseToJsonElement(it).jsonObject }
-                    ?: JsonObject(mapOf()),
-            )
+    private fun OpenAIMessage.Assistant.toolCallPartsWithSignaturesOrNull(): List<MessagePart.ResponsePart> =
+        toolCalls?.flatMap { toolCall ->
+            // Gemini 3 (Vertex OpenAI-compat) returns the thought_signature for each function call in
+            // tool_calls[].extra_content.google.thought_signature. Lift it into a signature-only
+            // Reasoning part placed right before its Tool.Call so convertPromptToMessages can echo it
+            // back on the next turn (mirrors GoogleLLMClient). Absent for OpenAI/OpenRouter/Gemini 2.5.
+            val signature = (toolCall.extraContent?.get("google") as? JsonObject)
+                ?.get("thought_signature")
+                ?.let { it as? JsonPrimitive }
+                ?.contentOrNull
+            buildList<MessagePart.ResponsePart> {
+                if (signature != null) {
+                    add(MessagePart.Reasoning(content = emptyList(), encrypted = signature))
+                }
+                add(
+                    MessagePart.Tool.Call(
+                        id = toolCall.id,
+                        tool = toolCall.function.name,
+                        /*
+                         If the tool has no arguments, OpenRouter puts an empty string in the arguments
+                         instead of an empty object. But we always expect arguments to be a JSON object.
+                         */
+                        args = toolCall.function.arguments
+                            .takeIf { it.isNotEmpty() }
+                            ?.let { Json.parseToJsonElement(it).jsonObject }
+                            ?: JsonObject(mapOf()),
+                    ),
+                )
+            }
         } ?: emptyList()
 
     private fun OpenAIMessage.Assistant.contentPartsOrNull(): List<MessagePart.ResponsePart> =
@@ -503,7 +541,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         val parts: List<MessagePart.ResponsePart> = buildList {
             message.contentPartsOrNull().forEach { add(it) }
             message.reasoningPartOrNull()?.let { add(it) }
-            message.toolCallPartsOrNull().forEach { add(it) }
+            message.toolCallPartsWithSignaturesOrNull().forEach { add(it) }
         }
 
         return Message.Assistant(
